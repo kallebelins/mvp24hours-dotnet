@@ -1,4 +1,4 @@
-# <img  style="vertical-align:middle" width="42" height="42" src="/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET8 (v8.2.101)
+# <img  style="vertical-align:middle" width="42" height="42" src="/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET8 (v8.2.102)
 Este projeto foi desenvolvido para contribuir com a construção rápida de serviços com [.NET](https://learn.microsoft.com/pt-br/training/dotnet/). Usei a referência de soluções de mercado para construção de microserviços.
 
 ## Características

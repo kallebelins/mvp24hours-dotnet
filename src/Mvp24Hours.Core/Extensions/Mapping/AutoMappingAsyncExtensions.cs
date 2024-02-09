@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using System;
 using System.Linq;

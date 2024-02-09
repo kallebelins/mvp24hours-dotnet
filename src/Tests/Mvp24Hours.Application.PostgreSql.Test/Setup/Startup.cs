@@ -60,13 +60,13 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Setup
                     options
                         .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
 #else
-            var services = new ServiceCollection()
-                .AddSingleton(ConfigurationHelper.AppSettings);
+                var services = new ServiceCollection()
+                    .AddSingleton(ConfigurationHelper.AppSettings);
 
-            services.AddDbContext<DataContext>(
-                options => options.UseNpgsql(ConfigurationHelper.AppSettings.GetConnectionString("DataContext").Format(StringHelper.GenerateKey(10)),
-                options => options.SetPostgresVersion(new Version(9, 6)))
-            );
+                services.AddDbContext<DataContext>(
+                    options => options.UseNpgsql(ConfigurationHelper.AppSettings.GetConnectionString("DataContext").Format(StringHelper.GenerateKey(10)),
+                    options => options.SetPostgresVersion(new Version(9, 6)))
+                );
 #endif
                 services.AddMvp24HoursDbContext<DataContext>();
                 services.AddMvp24HoursRepository(options: options =>

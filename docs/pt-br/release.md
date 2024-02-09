@@ -1,10 +1,15 @@
 # O que há de novo?
 
 # NET8
+
+## 8.2.102
+* Implementação de manipuladores de rotas para conversão e vinculação de parâmetros para Minimal API.
+
 ## 8.2.101
 * Migração e refatoração de evolução para NET8.
 
 # NETCORE
+
 ## 4.1.191
 * Refatoração para mapeamento de resultados assíncronos;
 

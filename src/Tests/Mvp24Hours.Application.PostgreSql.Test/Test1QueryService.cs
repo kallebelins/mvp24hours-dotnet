@@ -20,7 +20,7 @@ namespace Mvp24Hours.Application.PostgreSql.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    public class Test1QueryService 
+    public class Test1QueryService
     {
         private readonly IServiceProvider serviceProvider;
 

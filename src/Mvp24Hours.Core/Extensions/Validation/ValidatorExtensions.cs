@@ -317,7 +317,7 @@ namespace Mvp24Hours.Extensions
             var year = int.Parse(dateParts[1]);
             var month = int.Parse(dateParts[0]);
             var lastDateOfExpiryMonth = DateTime.DaysInMonth(year, month); //get actual expiry date
-            DateTime cardExpiry = new (year, month, lastDateOfExpiryMonth, 23, 59, 59, DateTimeKind.Utc);
+            DateTime cardExpiry = new(year, month, lastDateOfExpiryMonth, 23, 59, 59, DateTimeKind.Utc);
 
             //check expiry greater than today & within next 6 years <7, 8>>
             return (cardExpiry > DateTime.Now && cardExpiry < DateTime.Now.AddYears(6));

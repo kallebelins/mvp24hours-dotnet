@@ -10,7 +10,7 @@ public class MyEntityConfiguration : IBsonClassMap<MyEntity>
 public class MyEntityConfiguration : IBsonClassMap
 ```
 
-## Versão v8.2.101
+## Versão v8.2.102
 ### EntityBase
 ```csharp
 // antes

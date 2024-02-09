@@ -19,7 +19,7 @@ namespace Mvp24Hours.Application.MySql.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    public class Test5QueryPagingService 
+    public class Test5QueryPagingService
     {
         private readonly IServiceProvider serviceProvider;
 

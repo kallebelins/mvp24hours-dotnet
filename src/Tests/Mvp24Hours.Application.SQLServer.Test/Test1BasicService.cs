@@ -20,7 +20,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    public class Test1BasicService 
+    public class Test1BasicService
     {
         private readonly IServiceProvider serviceProvider;
 

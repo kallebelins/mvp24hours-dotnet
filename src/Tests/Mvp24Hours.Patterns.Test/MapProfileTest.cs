@@ -3,7 +3,6 @@ using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Core.Mappings;
 using Mvp24Hours.Extensions;
 using System.Reflection;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 

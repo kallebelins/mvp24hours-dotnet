@@ -2,7 +2,6 @@ using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using System;
 using System.Threading.Tasks;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers

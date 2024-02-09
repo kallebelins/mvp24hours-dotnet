@@ -157,3 +157,49 @@ var factory = serviceProvider.GetService<IHttpClientFactory>();
 var client = factory.CreateClient(typeof(MyClassClient).Name);
 var result = await client.HttpGetAsync("api/myService");
 ```
+
+## Minimal API
+Utilize a classe ExtensionBinder para manipular conversão de parâmetros em objeto:
+```csharp
+    public class CustomerFilter : ExtensionBinder<CustomerFilter>
+    {
+        public string Name { get; set; }
+        public bool? Active { get; set; }
+    }
+```
+
+Você também pode usar a classe ModelBinder como parâmetro de entrada da Action, caso não queira atualizar suas classes existentes:
+```csharp
+app.MapGet("/customer", async (CustomerFilter model, ModelBinder<PagingCriteriaRequest> pagingCriteriaBinder, [FromServices] IUnitOfWorkAsync uoW) =>
+{
+    if (pagingCriteriaBinder.Error != null)
+        return Results.BadRequest(pagingCriteriaBinder.Error);
+
+    var pagingCriteria = pagingCriteriaBinder.Data;
+
+    //...
+
+    return Results.Ok(result);
+})
+.WithName("CustomerGetBy")
+.WithOpenApi();
+```
+
+Caso tenha desejo de implementar sua própria conversão, use a interface IExtensionBinder:
+```csharp
+public class Customer : IExtensionBinder<Customer>
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public string Nome { get; private set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static ValueTask<Customer> BindAsync(HttpContext context)
+    {
+        return ValueTask.FromResult(context.Request.GetFromQueryString<T>() ?? new());
+    }
+}
+```

@@ -1,5 +1,5 @@
 # Migration
-## Version v8.2.101
+## Version v8.2.102
 ### EntityBase
 ```csharp
 // before

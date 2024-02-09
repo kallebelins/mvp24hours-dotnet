@@ -6,6 +6,7 @@
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
+using System;
 using System.Collections.Generic;
 
 namespace Mvp24Hours.Extensions
@@ -73,6 +74,16 @@ namespace Mvp24Hours.Extensions
         public static IMessageResult ToMessageResult(this string message, string customMessageType)
         {
             return new MessageResult(message ?? "Undefined message.", MessageType.Custom, customMessageType);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static IMessageResult ToMessageResult(this Exception exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return new MessageResult((exception.InnerException ?? exception).Message, MessageType.Error);
         }
     }
 }

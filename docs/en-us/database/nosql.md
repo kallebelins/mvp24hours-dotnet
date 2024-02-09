@@ -24,7 +24,7 @@ You may be able to use direct database connection, which is not recommended. Acc
 /// Package Manager Console >
 
 Install-Package MongoDB.Driver -Version 2.13.2
-Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 8.2.101
+Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 8.2.102
 ```
 #### Settings
 ```csharp
@@ -80,7 +80,7 @@ You can use structural configuration or connection string.
 #### Setup
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.Caching.Redis -Version 8.2.101
+Install-Package Mvp24Hours.Infrastructure.Caching.Redis -Version 8.2.102
 ```
 
 #### Settings

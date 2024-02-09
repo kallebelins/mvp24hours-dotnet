@@ -387,7 +387,7 @@ namespace Mvp24Hours.Application.Pipe.Test
                 Trace.WriteLine("Conditional-Operation.");
             },
             input =>
-            {   
+            {
                 return input.HasContent<int>();
             });
 

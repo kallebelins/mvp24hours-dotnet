@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 #if !InMemory 
 using Microsoft.Extensions.Configuration;
-using Mvp24Hours.Helpers;
 #endif
 
 namespace Mvp24Hours.Application.SQLServer.Test.Setup
@@ -40,7 +39,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
             }
             return serviceProvider;
         }
-        
+
         public static IServiceProvider InitializeBasic(bool canLoadData = true)
         {
             var serviceProvider = ConfigureServices;
@@ -110,13 +109,13 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
                     options
                         .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
 #else
-            var services = new ServiceCollection()
-                .AddSingleton(Helpers.ConfigurationHelper.AppSettings);
+                var services = new ServiceCollection()
+                    .AddSingleton(Helpers.ConfigurationHelper.AppSettings);
 
-            services.AddDbContext<DataContext>(options =>
-                options
-                    .UseSqlServer(Helpers.ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
-                        .Format(StringHelper.GenerateKey(10))));
+                services.AddDbContext<DataContext>(options =>
+                    options
+                        .UseSqlServer(Helpers.ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                            .Format(StringHelper.GenerateKey(10))));
 #endif
                 services.AddMvp24HoursDbContext<DataContext>();
                 services.AddMvp24HoursRepository(options: options =>

@@ -21,7 +21,7 @@ namespace Mvp24Hours.Application.MySql.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    public class Test2QueryServiceAsync 
+    public class Test2QueryServiceAsync
     {
         private readonly IServiceProvider serviceProvider;
 

@@ -10,7 +10,6 @@ using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Helpers;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -36,43 +35,6 @@ namespace Mvp24Hours.Extensions
         /// 
         /// </summary>
         public static Encoding EncodingRequest { get; set; } = Encoding.UTF8;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static string ToQueryString(params object[] objs)
-        {
-            if (objs == null)
-            {
-                return string.Empty;
-            }
-
-            var result = new List<string>();
-            foreach (var obj in objs)
-            {
-                var props = obj
-                    .GetType()
-                    .GetProperties()
-                    .Where(p => p.GetValue(obj, null) != null);
-
-                foreach (var p in props)
-                {
-                    var value = p.GetValue(obj, null);
-                    if (value is ICollection enumerable)
-                    {
-                        result.AddRange(from object v in enumerable select string.Format("{0}={1}", p.Name, HttpUtility.UrlEncode(v.ToString())));
-                    }
-                    else
-                    {
-                        result.Add(string.Format("{0}={1}", p.Name, HttpUtility.UrlEncode(value.ToString())));
-                    }
-                }
-            }
-
-#pragma warning disable IDE0305 // Simplify collection initialization
-            return string.Join("&", result.ToArray());
-#pragma warning restore IDE0305 // Simplify collection initialization
-        }
 
         /// <summary>
         /// 
@@ -335,6 +297,28 @@ namespace Mvp24Hours.Extensions
                 return value.ToString();
             }
             return null;
+        }
+
+        public static string GetQueryStringFrom<T>(this T model)
+        {
+            if (model == null) return null;
+            return WebRequestHelper.ToQueryString(model);
+        }
+
+        public static T GetFromQueryString<T>(this HttpRequest request)
+           where T : class
+        {
+            if (request == null) return null;
+            return GetFromQueryString<T>(request.QueryString.Value);
+        }
+
+        public static T GetFromQueryString<T>(this string queryString)
+            where T : class
+        {
+            if (!queryString.HasValue()) return null;
+            var dict = HttpUtility.ParseQueryString(queryString);
+            string json = JsonConvert.SerializeObject(dict.Cast<string>().ToDictionary(k => k, v => dict[v]));
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }

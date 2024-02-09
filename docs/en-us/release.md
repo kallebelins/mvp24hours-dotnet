@@ -1,10 +1,15 @@
 # What's new?
 
 # NET8
+
+## 8.2.102
+* Implementation of route handlers for conversion and binding of parameters for Minimal API.
+
 ## 8.2.101
 * Migration and refactoring of evolution to NET8.
 
 # NETCORE
+
 ## 4.1.191
 * Refactoring for asynchronous result mapping;
 

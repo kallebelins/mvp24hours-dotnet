@@ -8,7 +8,6 @@ using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
 {
