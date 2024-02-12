@@ -4,19 +4,19 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Application.Logic;
-using Mvp24Hours.Application.SQLServer.Test.Support.Entities.Logs;
+using Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using System.Collections.Generic;
 
 namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
 {
-    public class CustomerLogService(IUnitOfWork unitOfWork) : RepositoryService<CustomerLog, IUnitOfWork>(unitOfWork)
+    public class CustomerLogService(IUnitOfWork unitOfWork) : RepositoryService<CustomerBasicLog, IUnitOfWork>(unitOfWork)
     {
 
         // custom methods here
 
-        public IList<CustomerLog> GetWithContacts()
+        public IList<CustomerBasicLog> GetWithContacts()
         {
             var paging = new PagingCriteria(3, 0);
 
@@ -29,7 +29,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
             return customers;
         }
 
-        public IList<CustomerLog> GetWithPagedContacts()
+        public IList<CustomerBasicLog> GetWithPagedContacts()
         {
             var paging = new PagingCriteria(3, 0);
 
