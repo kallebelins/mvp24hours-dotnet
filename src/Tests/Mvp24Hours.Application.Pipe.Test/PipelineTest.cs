@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Application.Pipe.Test.Operations;
+using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
@@ -554,6 +555,28 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.Equal(1, result);
+        }
+
+        [Fact, Priority(12)]
+        public void PipelineMessageWithError()
+        {
+            // arrange
+            Pipeline pipeline = new();
+
+            // act
+            pipeline.Add(input =>
+            {
+                input.AddError("minha mensagem de erro");
+            }); 
+
+            // operations
+            pipeline.Execute();
+            var pipelineMessage = pipeline.GetMessage();
+
+            // assert
+            Assert.True(pipelineMessage.IsFaulty);
+            Assert.Single(pipelineMessage.Messages);
+            Assert.Equal(MessageType.Error, pipelineMessage.Messages[0].Type);
         }
     }
 }
