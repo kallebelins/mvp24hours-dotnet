@@ -10,6 +10,7 @@ using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe;
 using System.Collections.Generic;
+using System.ServiceModel.Channels;
 
 namespace Mvp24Hours.Extensions
 {
@@ -148,5 +149,13 @@ namespace Mvp24Hours.Extensions
             return messages;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="errorMessage"></param>
+        public static void AddError(this IPipelineMessage pipelineMessage, string errorMessage)
+        {
+            pipelineMessage.Messages.Add(errorMessage.ToMessageResult(MessageType.Error));
+        }
     }
 }
