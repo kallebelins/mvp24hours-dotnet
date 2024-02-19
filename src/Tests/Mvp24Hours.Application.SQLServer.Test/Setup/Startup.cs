@@ -9,7 +9,6 @@ using Mvp24Hours.Application.SQLServer.Test.Support.Data;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities.Basics;
-using Mvp24Hours.Application.SQLServer.Test.Support.Entities.Logs;
 using Mvp24Hours.Application.SQLServer.Test.Support.Enums;
 using Mvp24Hours.Application.SQLServer.Test.Support.Services;
 using Mvp24Hours.Core.Helpers;
@@ -195,21 +194,21 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
         private static void LoadDataLog(IServiceProvider serviceProvider)
         {
             var service = serviceProvider.GetService<CustomerLogService>();
-            List<CustomerLog> customers = [];
+            List<CustomerBasicLog> customers = [];
             for (int i = 1; i <= 10; i++)
             {
-                var customer = new CustomerLog
+                var customer = new CustomerBasicLog
                 {
                     Name = $"Test {i}",
                     Active = true
                 };
-                customer.Contacts.Add(new ContactLog
+                customer.Contacts.Add(new ContactBasicLog
                 {
                     Description = $"202-555-014{i}",
                     Type = ContactType.CellPhone,
                     Active = true
                 });
-                customer.Contacts.Add(new ContactLog
+                customer.Contacts.Add(new ContactBasicLog
                 {
                     Description = $"test{i}@sample.com",
                     Type = ContactType.Email,

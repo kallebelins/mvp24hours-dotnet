@@ -6,7 +6,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
-using Mvp24Hours.Application.SQLServer.Test.Support.Entities.Logs;
+using Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs;
 using Mvp24Hours.Application.SQLServer.Test.Support.Services;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             var service = serviceProvider.GetService<CustomerLogService>();
             // act
-            var customer = new CustomerLog
+            var customer = new CustomerBasicLog
             {
                 Name = "Test 1",
                 Active = true
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             var service = serviceProvider.GetService<CustomerLogService>();
             // act
-            var customer = new CustomerLog
+            var customer = new CustomerBasicLog
             {
                 Name = "Test 1",
                 Active = true
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             var service = serviceProvider.GetService<CustomerLogService>();
             // act
-            var customer = new CustomerLog
+            var customer = new CustomerBasicLog
             {
                 Name = "Test 1",
                 Active = true
