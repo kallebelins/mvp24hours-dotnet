@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Authors>Kallebe Lins</Authors>
+    <Description>Series architectures for fast product construction.</Description>
+    <Copyright></Copyright>
+    <PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
+    <Company>Kallebe Lins</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>8.2.102</Version>
+    <AssemblyVersion>8.2.10.2</AssemblyVersion>
+    <FileVersion>8.2.10.2</FileVersion>
+    <RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
+    <ProjectReference Include="..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SonarQubeSetting Include="sonar.stylecop.projectFilePath">
+      <Value>$(MSBuildProjectFullPath)</Value>
+    </SonarQubeSetting>
+  </ItemGroup>
+
+</Project>
