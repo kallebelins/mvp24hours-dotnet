@@ -1,7 +1,8 @@
 ﻿using Cronos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Enums.Infrastructure;
+using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using System;
 using System.Threading;
@@ -16,7 +17,6 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private readonly CronExpression _expression;
         private readonly TimeZoneInfo _timeZoneInfo;
         private readonly IHostApplicationLifetime _hostApplication;
-        private IServiceScope _serviceScope;
         private IServiceProvider _serviceProvider;
 
         protected CronJobService(
@@ -35,7 +35,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
-            //_logger.LogInformation("::StartAsync");
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-starting", $"name: {typeof(CronJobService<T>)}, scheduler: {_expression}");
             if (_expression != null)
             {
                 await ScheduleJob(cancellationToken);
@@ -49,25 +49,24 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         {
             try
             {
-                //_logger.LogInformation("::ExecuteOnce");
-                //_logger.LogInformation("::Before DoWork");
+                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-before", $"name:{typeof(T)}");
                 await DoWork(cancellationToken);
-                //_logger.LogInformation("::After DoWork");
-                //_logger.LogInformation("::Shutdown application...");
+                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-after", $"name:{typeof(T)}");
+
             }
             catch (Exception ex)
             {
-                //_logger.LogError(ex, "Ocorreu um erro durante o processamento");
+                TelemetryHelper.Execute(TelemetryLevels.Error, "cronjob-execute-once-failure", $"name:{typeof(T)}", ex);
             }
             finally
             {
+                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-ending", $"name:{typeof(T)}");
                 _hostApplication.StopApplication();
             }
         }
 
         protected virtual async Task ScheduleJob(CancellationToken cancellationToken)
         {
-            //_logger.LogInformation("::ScheduleJob");
             var next = _expression.GetNextOccurrence(DateTimeOffset.Now, _timeZoneInfo);
             if (next.HasValue)
             {
@@ -81,20 +80,20 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 {
                     try
                     {
-                        ResetServiceProvider(); 
+                        ResetServiceProvider();
                         _timer.Dispose();
                         _timer = null;
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            //_logger.LogInformation("::Before DoWork");
+                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-before", $"name:{typeof(T)}");
                             await DoWork(cancellationToken);
-                            //_logger.LogInformation("::After DoWork");
+                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-after", $"name:{typeof(T)}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        //_logger.LogError(ex, "Ocorreu um erro durante o processamento");
+                        TelemetryHelper.Execute(TelemetryLevels.Error, "cronjob-execute-failure", $"name:{typeof(T)}", ex);
                     }
                     finally
                     {
@@ -104,6 +103,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         }
                     }
                 };
+                TelemetryHelper.Execute(TelemetryLevels.Error, "cronjob-next-execution", $"name:{typeof(T)}, time: {next}, ms: {_timer.Interval}");
                 _timer.Start();
             }
             await Task.CompletedTask;
@@ -113,17 +113,16 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
-            //_logger.LogInformation("::StopAsync");
             _timer?.Stop();
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-stoped", $"name:{typeof(T)}");
             await Task.CompletedTask;
         }
 
         public virtual void Dispose()
         {
-            _logger.LogInformation("::Dispose");
             _timer?.Dispose();
         }
-    
+
         private void ResetServiceProvider() => _serviceProvider = _serviceProvider.CreateScope().ServiceProvider;
     }
 }
