@@ -17,7 +17,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private readonly CronExpression _expression;
         private readonly TimeZoneInfo _timeZoneInfo;
         private readonly IHostApplicationLifetime _hostApplication;
-        private IServiceProvider _serviceProvider;
+        public IServiceProvider _serviceProvider;
 
         protected CronJobService(
             IScheduleConfig<T> config,
