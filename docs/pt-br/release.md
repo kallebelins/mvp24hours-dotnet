@@ -2,6 +2,9 @@
 
 # NET8
 
+## 8.3.261
+* Implementação de CronJob.
+
 ## 8.2.102
 * Implementação de manipuladores de rotas para conversão e vinculação de parâmetros para Minimal API.
 

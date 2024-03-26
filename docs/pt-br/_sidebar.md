@@ -8,6 +8,7 @@
 * [Mapeamento](pt-br/mapping.md)
 * [Logging](pt-br/logging.md)
 * [Telemetry](pt-br/telemetry.md)
+* [CronJob](pt-br/cronjob.md)
 * Padrões
 * * [Entidade](pt-br/database/use-entity.md)
 * * [Contexto de Banco](pt-br/database/use-context.md)

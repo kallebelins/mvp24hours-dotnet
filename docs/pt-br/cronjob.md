@@ -1,24 +1,24 @@
 # CronJob
-Solução criada para habilitar tarefas para serem executadas em background. Para configurar o agendamento, você deve utilizar o padrão UNIX `cron` informando o periodo da execução.
+SoluÃ§Ã£o criada para permitir que tarefas sejam agendadas para serem executadas em background. Para agendar, deve-se utilizar o formato `cron` do UNIX, informando a periodicidade da execuÃ§Ã£o.
 
-## CronJob Service
+## ServiÃ§o CronJob
 ```csharp
 class MyCronJob : CronJobService<MyCronJob>
 {
     public MyCronJob(
-        IScheduleConfig<CustomerCronJob> config, 
+        IScheduleConfig<MyCronJob> config, 
         IHostApplicationLifetime hostApplication, 
         IServiceProvider serviceProvider) : base(config, hostApplication, serviceProvider)
     { }
 
     public override Task DoWork(CancellationToken cancellationToken)
     {
-       //Coloque sua lógica aqui
+       //coloque a lÃ³gica aqui
     }
 }
 ```
 
-## Configurações
+## ConfiguraÃ§Ãµes
 ```csharp
 ...
 services.AddCronJob<MyCronJob>(options => 
@@ -28,4 +28,6 @@ services.AddCronJob<MyCronJob>(options =>
 })
 ```
 
-No exemplo acima, o serviço será executada `a todo minuto`.
+No exemplo acima, o Job serÃ¡ executado `a cada minuto`.
+
+VocÃª poderÃ¡ realizar a configuraÃ§Ã£o usando a ferramenta [Cronitor](https://crontab.guru/).

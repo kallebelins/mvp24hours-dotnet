@@ -6,7 +6,7 @@ Solution created to enable tasks to be scheduled to run in the background. To sc
 class MyCronJob : CronJobService<MyCronJob>
 {
     public MyCronJob(
-        IScheduleConfig<CustomerCronJob> config, 
+        IScheduleConfig<MyCronJob> config, 
         IHostApplicationLifetime hostApplication, 
         IServiceProvider serviceProvider) : base(config, hostApplication, serviceProvider)
     { }
@@ -29,3 +29,5 @@ services.AddCronJob<MyCronJob>(options =>
 ```
 
 In the exemple above, the Job will be executed `every minute`. 
+
+You can perform the configuration using the [Cronitor](https://crontab.guru/) tool.

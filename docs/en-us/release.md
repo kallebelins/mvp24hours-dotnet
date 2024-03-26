@@ -2,6 +2,9 @@
 
 # NET8
 
+## 8.3.261
+* CronJob implementation.
+
 ## 8.2.102
 * Implementation of route handlers for conversion and binding of parameters for Minimal API.
 
