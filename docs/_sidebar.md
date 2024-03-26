@@ -8,6 +8,7 @@
 * [Mapping](en-us/mapping.md)
 * [Logging](en-us/logging.md)
 * [Telemetry](en-us/telemetry.md)
+* [CronJob](en-us/cronjob.md)
 * Patterns
 * * [Entity](en-us/database/use-entity.md)
 * * [Database Context](en-us/database/use-context.md)
