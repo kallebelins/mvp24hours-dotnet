@@ -6,4 +6,4 @@
 
 ---
 
-Version 8.2.102. [.NET8](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.io).
+Version 8.3.261. [.NET8](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.io).
