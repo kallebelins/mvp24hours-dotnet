@@ -6,7 +6,7 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.Services
     public class TimerService
     {
         public DateTime StartTime { get; set; }
-        public int CurrentCounter { get; set; } = 0; 
+        public int CurrentCounter { get; set; } = 0;
         public Dictionary<int, DateTime> Counters { get; set; } = new Dictionary<int, DateTime>();
 
         public void Start()
@@ -25,7 +25,7 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.Services
             var countersSize = Counters.Count;
             var countersTimeSum = 0;
             var lastDate = DateTime.MinValue;
-            
+
             foreach (var counter in Counters)
             {
                 if (countersTimeSum == 0)
@@ -40,7 +40,7 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.Services
             }
 
             double timeDiffInMinutes = countersTimeSum / 60;
-            var avg = (int) Math.Ceiling(timeDiffInMinutes / countersSize);
+            var avg = (int)Math.Ceiling(timeDiffInMinutes / countersSize);
 
             return avg;
         }

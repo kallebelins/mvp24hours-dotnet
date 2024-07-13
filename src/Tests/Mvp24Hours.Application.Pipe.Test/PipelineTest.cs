@@ -567,7 +567,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             pipeline.Add(input =>
             {
                 input.AddError("minha mensagem de erro");
-            }); 
+            });
 
             // operations
             pipeline.Execute();

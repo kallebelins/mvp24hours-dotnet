@@ -16,6 +16,7 @@ namespace Mvp24Hours.Extensions
 {
     public static class RabbitMQServiceExtensions
     {
+
         /// <summary>
         /// Add rabbitmq
         /// </summary>
@@ -24,29 +25,7 @@ namespace Mvp24Hours.Extensions
             Action<RabbitMQConnectionOptions> connectionOptions = null,
             Action<RabbitMQClientOptions> clientOptions = null)
         {
-            ArgumentNullException.ThrowIfNull(assemblyConsumers);
-
-            if (connectionOptions != null)
-            {
-                services.Configure(connectionOptions);
-            }
-            else
-            {
-                services.Configure<RabbitMQConnectionOptions>(connectionOptions => { });
-            }
-
-            services.AddSingleton<IMvpRabbitMQConnection, MvpRabbitMQConnection>();
-
-            if (clientOptions != null)
-            {
-                services.Configure(clientOptions);
-            }
-            else
-            {
-                services.Configure<RabbitMQClientOptions>(options => { });
-            }
-
-            services.AddSingleton(sp =>
+            return services.AddMvp24HoursRabbitMQ(sp =>
             {
                 var client = new MvpRabbitMQClient(sp);
 
@@ -56,9 +35,7 @@ namespace Mvp24Hours.Extensions
                     .ForEach(x => client.Register(x));
 
                 return client;
-            });
-
-            return services;
+            }, connectionOptions, clientOptions);
         }
 
         /// <summary>
@@ -69,6 +46,29 @@ namespace Mvp24Hours.Extensions
             Action<RabbitMQConnectionOptions> connectionOptions = null,
             Action<RabbitMQClientOptions> clientOptions = null)
         {
+            return services.AddMvp24HoursRabbitMQ(sp =>
+            {
+                var client = new MvpRabbitMQClient(sp);
+
+                if (typeConsumers.AnySafe())
+                    foreach (var item in typeConsumers)
+                        client.Register(item);
+
+                return client;
+            }, connectionOptions, clientOptions);
+        }
+
+        /// <summary>
+        /// Add rabbitmq
+        /// </summary>
+        public static IServiceCollection AddMvp24HoursRabbitMQ<TService>(this IServiceCollection services,
+            Func<IServiceProvider, TService> implementationFactory,
+            Action<RabbitMQConnectionOptions> connectionOptions = null,
+            Action<RabbitMQClientOptions> clientOptions = null)
+            where TService : class, IMvpRabbitMQClient
+        {
+            ArgumentNullException.ThrowIfNull(implementationFactory);
+
             if (connectionOptions != null)
             {
                 services.Configure(connectionOptions);
@@ -89,16 +89,7 @@ namespace Mvp24Hours.Extensions
                 services.Configure<RabbitMQClientOptions>(options => { });
             }
 
-            services.AddSingleton(sp =>
-            {
-                var client = new MvpRabbitMQClient(sp);
-
-                if (typeConsumers.AnySafe())
-                    foreach (var item in typeConsumers)
-                        client.Register(item);
-
-                return client;
-            });
+            services.AddSingleton(typeof(TService), implementationFactory);
 
             return services;
         }

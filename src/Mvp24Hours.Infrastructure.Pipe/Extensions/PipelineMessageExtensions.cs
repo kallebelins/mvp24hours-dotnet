@@ -10,7 +10,6 @@ using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe;
 using System.Collections.Generic;
-using System.ServiceModel.Channels;
 
 namespace Mvp24Hours.Extensions
 {

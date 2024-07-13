@@ -24,9 +24,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         private bool _disposed;
         private readonly object sync_root = new();
 
-        public MvpRabbitMQConnection(IOptions<RabbitMQConnectionOptions> options)
+        public MvpRabbitMQConnection(IOptions<RabbitMQConnectionOptions> _options)
+            : this(_options?.Value ?? throw new ArgumentNullException(nameof(_options)))
         {
-            this._options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        }
+
+        public MvpRabbitMQConnection(RabbitMQConnectionOptions _options)
+        {
+            ArgumentNullException.ThrowIfNull(_options);
 
             if (_options.ConnectionString.HasValue())
             {
@@ -50,8 +55,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
             else
             {
-                throw new ArgumentNullException(nameof(options), "Connection string/configuration is required.");
+                throw new ArgumentNullException(nameof(_options), "Connection string/configuration is required.");
             }
+
+            this._options = _options;
         }
 
         public RabbitMQConnectionOptions Options => _options;

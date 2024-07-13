@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ
 {
-    public class MvpRabbitMQClient
+    public class MvpRabbitMQClient : IMvpRabbitMQClient
     {
         #region [ Properties / Fields ]
         private readonly RabbitMQClientOptions _options;
@@ -38,8 +38,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-ctor");
             this._provider = _provider;
-            this._options = _provider.GetService<IOptions<RabbitMQClientOptions>>()?.Value ?? throw new ArgumentNullException(nameof(_provider));
-            this._connection = _provider.GetService<IMvpRabbitMQConnection>() ?? throw new ArgumentNullException(nameof(_provider));
+            this._options = _provider.GetService<IOptions<RabbitMQClientOptions>>()?.Value
+                ?? _provider.GetService<RabbitMQClientOptions>()
+                ?? throw new ArgumentNullException(nameof(_provider));
+            this._connection = _provider.GetService<IMvpRabbitMQConnection>()
+                ?? throw new ArgumentNullException(nameof(_provider));
             this._channels = [];
             this._consumers = [];
         }

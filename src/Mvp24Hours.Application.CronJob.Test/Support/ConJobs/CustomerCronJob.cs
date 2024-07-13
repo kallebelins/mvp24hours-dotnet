@@ -12,8 +12,8 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.ConJobs
     public class CustomerCronJob : CronJobService<CustomerCronJob>
     {
         public CustomerCronJob(
-            IScheduleConfig<CustomerCronJob> config, 
-            IHostApplicationLifetime hostApplication, 
+            IScheduleConfig<CustomerCronJob> config,
+            IHostApplicationLifetime hostApplication,
             IServiceProvider serviceProvider) : base(config, hostApplication, serviceProvider)
         { }
 
@@ -21,7 +21,7 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.ConJobs
         {
             Console.WriteLine("Cronjob começou a contar");
             var timerService = _serviceProvider.GetService<TimerService>();
-            timerService.CountTime(); 
+            timerService.CountTime();
             return Task.CompletedTask;
         }
     }

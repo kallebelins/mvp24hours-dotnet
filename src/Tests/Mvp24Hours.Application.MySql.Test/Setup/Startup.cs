@@ -11,8 +11,8 @@ using Mvp24Hours.Application.MySql.Test.Support.Enums;
 using Mvp24Hours.Application.MySql.Test.Support.Services;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Extensions;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 #if !InMemory
 using Microsoft.Extensions.Configuration;
