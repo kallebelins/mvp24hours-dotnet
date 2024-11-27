@@ -9,9 +9,9 @@
     <Company>Kallebe Lins</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>8.3.261</Version>
-    <AssemblyVersion>8.3.62.1</AssemblyVersion>
-    <FileVersion>8.3.26.1</FileVersion>
+    <Version>9.0.101</Version>
+    <AssemblyVersion>9.0.10.1</AssemblyVersion>
+    <FileVersion>9.0.10.1</FileVersion>
     <RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
