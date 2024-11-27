@@ -1,19 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-
+    <TargetFramework>net9.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Operations\**" />
     <EmbeddedResource Remove="Operations\**" />
     <None Remove="Operations\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="xunit" Version="2.6.6" />
     <PackageReference Include="Xunit.Priority" Version="1.1.6" />
@@ -26,10 +22,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
     <ProjectReference Include="..\..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
   </ItemGroup>
-
 </Project>

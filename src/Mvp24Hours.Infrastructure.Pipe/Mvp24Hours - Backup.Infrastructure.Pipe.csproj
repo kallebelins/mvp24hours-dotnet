@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Authors>Kallebe Lins</Authors>
     <Description>Series architectures for fast product construction.</Description>
-    <Copyright></Copyright>
+    <Copyright>
+    </Copyright>
     <PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
     <Company>Kallebe Lins</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -15,10 +15,8 @@
     <FileVersion>4.1.19.1</FileVersion>
     <RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
     <ProjectReference Include="..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
   </ItemGroup>
-
 </Project>
