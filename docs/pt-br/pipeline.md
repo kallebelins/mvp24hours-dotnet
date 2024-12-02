@@ -4,7 +4,7 @@
 ## Instalação
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.Pipe -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.Pipe -Version 9.0.101
 ```
 
 ## Configuração Básica

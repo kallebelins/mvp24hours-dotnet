@@ -1,5 +1,9 @@
 # O que há de novo?
 
+# NET9
+## 9.0.101
+    * Migração e refatoração de evolução para NET9.
+
 # NET8
 
 ## 8.3.261
