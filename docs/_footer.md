@@ -6,4 +6,4 @@
 
 ---
 
-Version 8.0.101. [.NET9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.io).
+Version 9.0.101. [.NET9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0). Maintained by [@kallebelins](https://www.linkedin.com/in/kallebelins). Proudly published with [Docsify](https://docsify.js.io).
