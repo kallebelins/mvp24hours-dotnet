@@ -12,6 +12,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Rollbacks
 
         public override void Rollback(IPipelineMessage input)
         {
+            RollbackTestContext.Results.Add("key-test-rollback-step1");
             input.AddContent("key-test-rollback-step1", 10);
         }
     }
