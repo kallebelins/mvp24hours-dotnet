@@ -4,11 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Application.Pipe.Test.Operations;
+using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 
@@ -577,6 +579,50 @@ namespace Mvp24Hours.Application.Pipe.Test
             Assert.True(pipelineMessage.IsFaulty);
             Assert.Single(pipelineMessage.Messages);
             Assert.Equal(MessageType.Error, pipelineMessage.Messages[0].Type);
+        }
+
+        [Fact, Priority(13)]
+        public void PipelineWithRollbackOperations()
+        {
+            // arrange
+            Pipeline pipeline = new() { ForceRollbackOnFalure = true };
+
+            // act
+            pipeline.Add<RollbackOperationTestStep1>();
+            pipeline.Add<RollbackOperationTestStep2>();
+
+            // operations
+            pipeline.Execute();
+            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+            var resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");
+            var resultRollbackStep2 = pipeline.GetMessage().HasContent("key-test-rollback-step2");
+
+            // assert
+            Assert.Equal(1, resultExecutionStep1);
+            Assert.Equal(10, resultRollbackStep1);
+            Assert.False(resultRollbackStep2);
+        }
+
+        [Fact, Priority(14)]
+        public void PipelineWithRollbackOperationsWithoutForceRollbackOnFalure()
+        {
+            // arrange
+            Pipeline pipeline = new() { ForceRollbackOnFalure = false };
+
+            // act
+            pipeline.Add<RollbackOperationTestStep1>();
+            pipeline.Add<RollbackOperationTestStep2>();
+
+            // operations
+            pipeline.Execute();
+            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+            var resultRollbackStep1 = pipeline.GetMessage().HasContent("key-test-rollback-step1");
+            var resultRollbackStep2 = pipeline.GetMessage().HasContent("key-test-rollback-step2");
+
+            // assert
+            Assert.Equal(1, resultExecutionStep1);
+            Assert.False(resultRollbackStep1);
+            Assert.False(resultRollbackStep2);
         }
     }
 }
