@@ -63,6 +63,29 @@ public class MyOperation : OperationBase
 pipeline.Add<MyOperation>();
 ```
 
+#### Rollback Síncronos
+```csharp
+/// MyOperation.cs
+public class MyOperation : OperationBase
+{
+    public override void Execute(IPipelineMessage input) 
+	{ 
+		// executa ação 
+	}
+	
+	public override void Rollback(IPipelineMessage input)
+	{
+		// desfaz a ação executada
+	}
+}
+
+// Habilita o pipeline a executar o rollback em caso de erro. Default é false.
+pipeline.ForceRollbackOnFalure = true;
+
+// adicionar ao pipeline
+pipeline.Add<MyOperation>();
+```
+
 #### Operações/Filtros Assíncronas
 ```csharp
 /// MyOperationAsync.cs
@@ -75,6 +98,31 @@ public class MyOperationAsync : OperationBaseAsync
         await Task.CompletedTask;
     }
 }
+
+// adicionar ao pipeline assíncrono
+pipeline.Add<MyOperationAsync>();
+```
+
+#### Rollback Assíncronos
+```csharp
+/// MyOperationAsync.cs
+public class MyOperationAsync : OperationBaseAsync
+{
+    public override async Task ExecuteAsync(IPipelineMessage input)
+    {
+		// executa ação
+        await Task.CompletedTask;
+    }
+	
+	public override async Task RollbackAsync(IPipelineMessage input)
+	{
+		// desfaz a ação executada
+		await Task.CompletedTask;
+	}
+}
+
+// Habilita o pipeline a executar o rollback em caso de erro. Default é false.
+pipeline.ForceRollbackOnFalure = true;
 
 // adicionar ao pipeline assíncrono
 pipeline.Add<MyOperationAsync>();

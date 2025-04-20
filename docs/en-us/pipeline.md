@@ -63,6 +63,29 @@ public class MyOperation : OperationBase
 pipeline.Add<MyOperation>();
 ```
 
+#### Synchronous Rollback
+```csharp
+/// MyOperation.cs
+public class MyOperation : OperationBase
+{
+    public override void Execute(IPipelineMessage input) 
+	{ 
+		// performs action 
+	}
+	
+	public override void Rollback(IPipelineMessage input)
+	{
+		// undo the executed action
+	}
+}
+
+// Enable pipelines to execute rollback on error case. Default is false.
+pipeline.ForceRollbackOnFalure = true;
+
+// add to pipeline
+pipeline.Add<MyOperation>();
+```
+
 #### Asynchronous Operations/Filters
 ```csharp
 /// MyOperationAsync.cs
@@ -75,6 +98,31 @@ public class MyOperationAsync : OperationBaseAsync
         await Task.CompletedTask;
     }
 }
+
+// add to async pipeline
+pipeline.Add<MyOperationAsync>();
+```
+
+#### Asynchronous Rollback
+```csharp
+/// MyOperationAsync.cs
+public class MyOperationAsync : OperationBaseAsync
+{
+    public override async Task ExecuteAsync(IPipelineMessage input)
+    {
+		// performs action 
+        await Task.CompletedTask;
+    }
+	
+	public override async Task RollbackAsync(IPipelineMessage input)
+	{
+		// undo the executed action
+		await Task.CompletedTask;
+	}
+}
+
+// Enable pipelines to execute rollback on error case. Default is false.
+pipeline.ForceRollbackOnFalure = true;
 
 // add to async pipeline
 pipeline.Add<MyOperationAsync>();
