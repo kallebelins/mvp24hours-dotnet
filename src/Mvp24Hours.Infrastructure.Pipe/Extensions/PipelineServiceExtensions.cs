@@ -30,6 +30,7 @@ namespace Mvp24Hours.Extensions
                 services.Configure<PipelineOptions>(options =>
                 {
                     options.IsBreakOnFail = false;
+                    options.ForceRollbackOnFalure = false;
                 });
             }
 
@@ -62,6 +63,7 @@ namespace Mvp24Hours.Extensions
                 services.Configure<PipelineAsyncOptions>(options =>
                 {
                     options.IsBreakOnFail = false;
+                    options.ForceRollbackOnFalure = false;
                 });
             }
 

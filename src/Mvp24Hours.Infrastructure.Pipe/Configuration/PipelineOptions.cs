@@ -12,5 +12,6 @@ namespace Mvp24Hours.Infrastructure.Pipe.Configuration
     public sealed class PipelineOptions
     {
         public bool IsBreakOnFail { get; set; }
+        public bool ForceRollbackOnFalure { get; set; }
     }
 }

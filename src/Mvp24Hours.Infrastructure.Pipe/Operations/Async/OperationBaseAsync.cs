@@ -19,6 +19,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations
 
         #region [ Methods ]
         public abstract Task ExecuteAsync(IPipelineMessage input);
+        /// <summary>
+        /// Rollback execution in an error or eception scenario
+        /// </summary>
+        public virtual async Task RollbackAsync(IPipelineMessage input)
+        {
+            await Task.FromResult(true);
+        }
         #endregion
     }
 }

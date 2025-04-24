@@ -17,8 +17,13 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
         /// </summary>
         Task ExecuteAsync(IPipelineMessage input);
         /// <summary>
+        /// Perform rollback when an exception is thrown or a error occured
+        /// </summary>        
+        Task RollbackAsync(IPipelineMessage input);
+        /// <summary>
         /// Indicates whether operation is mandatory (even with failure)
         /// </summary>
         public bool IsRequired { get; }
+
     }
 }

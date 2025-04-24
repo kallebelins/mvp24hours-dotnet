@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Application.Pipe.Test.Operations;
+using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
@@ -555,6 +556,71 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.Equal(1, result);
+        }
+
+        [Fact, Priority(12)]
+        public async Task PipelineWithRollbackOperations()
+        {
+            // arrange
+            PipelineAsync pipeline = new() { ForceRollbackOnFalure = true };
+            RollbackTestContext.Results.Clear();
+
+            // act
+            pipeline.Add<RollbackOperationTestAsyncStep1>();
+            pipeline.Add<RollbackOperationTestAsyncStep2>();
+            pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+            // operations
+            await pipeline.ExecuteAsync();
+            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+            var resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
+            var resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
+            var resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");            
+            var resultRollbackStep2 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step2");            
+            var resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
+
+            var resultIndexStep1 = RollbackTestContext.Results.IndexOf("key-test-rollback-step1");
+            var resultIndexStep2 = RollbackTestContext.Results.IndexOf("key-test-rollback-step2");
+
+            // assert
+            Assert.Equal(1, resultExecutionStep1);
+            Assert.Equal(10, resultRollbackStep1);
+            Assert.Equal(2, resultExecutionStep2);
+            Assert.Equal(20, resultRollbackStep2);
+            Assert.Equal(3, resultExecutionStep3);
+            Assert.False(resultRollbackStep3);
+
+            Assert.Equal(1, resultIndexStep1); //Step 1 must be after step 2 because all rollbacks are executed top-down
+            Assert.Equal(0, resultIndexStep2);
+        }
+
+        [Fact, Priority(13)]
+        public async Task PipelineWithRollbackOperationsWithoutForceRollbackOnFalure()
+        {
+            // arrange
+            PipelineAsync pipeline = new() { ForceRollbackOnFalure = false };
+
+            // act
+            pipeline.Add<RollbackOperationTestAsyncStep1>();
+            pipeline.Add<RollbackOperationTestAsyncStep2>();
+            pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+            // operations
+            await pipeline.ExecuteAsync();
+            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+            var resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
+            var resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
+            var resultRollbackStep1 = pipeline.GetMessage().HasContent("key-test-rollback-step1");
+            var resultRollbackStep2 = pipeline.GetMessage().HasContent("key-test-rollback-step2");
+            var resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
+
+            // assert
+            Assert.Equal(1, resultExecutionStep1);
+            Assert.Equal(2, resultExecutionStep2);
+            Assert.Equal(3, resultExecutionStep3);
+            Assert.False(resultRollbackStep1);
+            Assert.False(resultRollbackStep2);
+            Assert.False(resultRollbackStep3);            
         }
     }
 }

@@ -5,6 +5,7 @@
 //=====================================================================================
 
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Operations
 {
@@ -19,6 +20,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations
 
         #region [ Methods ]
         public abstract void Execute(IPipelineMessage input);
+        public virtual void Rollback(IPipelineMessage input) { }
         #endregion
     }
 }
