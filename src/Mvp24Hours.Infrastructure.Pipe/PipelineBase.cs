@@ -27,6 +27,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         #region [ Fields / Properties ]
         protected bool IsBreakOnFail { get; set; }
+        public bool AllowPropagateException { get; set; }
         public bool ForceRollbackOnFalure { get; set; }
         protected IPipelineMessage Message { get; set; }        
         #endregion
