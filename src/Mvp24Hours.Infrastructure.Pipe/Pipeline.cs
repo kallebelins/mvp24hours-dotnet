@@ -302,6 +302,8 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
             input ??= new PipelineMessage();
 
+            var currentException = default(Exception);
+
             if (!onlyOperationDefault)
             {
                 RunEventInterceptors(input, PipelineInterceptorType.FirstOperation);
@@ -377,6 +379,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                       TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-pipeline-execute-failure", ex);
                       current.Messages.Add(new MessageResult((ex.InnerException ?? ex).Message, MessageType.Error));
                       input.AddContent(ex);
+                      currentException = ex;
                   }
                   return current;
               });
@@ -390,6 +393,11 @@ namespace Mvp24Hours.Infrastructure.Pipe
             if (!onlyOperationDefault && input.IsFaulty && ForceRollbackOnFalure)
             {
                 RunRollbackOperations(input);
+            }
+
+            if (!onlyOperationDefault && input.IsFaulty && AllowPropagateException && currentException != null)
+            {
+                throw currentException;
             }
 
             return input;

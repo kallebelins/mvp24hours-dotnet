@@ -9,6 +9,7 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
@@ -644,6 +645,60 @@ namespace Mvp24Hours.Application.Pipe.Test
             Assert.False(resultRollbackStep1);
             Assert.False(resultRollbackStep2);
             Assert.False(resultRollbackStep3);
+        }
+
+        [Fact, Priority(15)]
+        public void PipelineWithWithAllowPropagateException()
+        {
+            // arrange
+            var pipeline = new Pipeline() { AllowPropagateException = true };
+            var exception = default(Exception);
+
+            // act
+            pipeline.Add<RollbackOperationTestStep1>();
+            pipeline.Add<RollbackOperationTestStep2>();
+            pipeline.Add<RollbackOperationTestStep3>();
+
+            try
+            {
+                // operations
+                pipeline.Execute();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            // assert
+            Assert.NotNull(exception);
+            Assert.Equal("My Exception 123", exception.Message);
+            Assert.Equal(typeof(InvalidOperationException), exception.GetType());
+        }
+
+        [Fact, Priority(16)]
+        public void PipelineWithWithoutAllowPropagateException()
+        {
+            // arrange
+            var pipeline = new Pipeline(); //AllowPropagateException = false
+            var exception = default(Exception);
+
+            // act
+            pipeline.Add<RollbackOperationTestStep1>();
+            pipeline.Add<RollbackOperationTestStep2>();
+            pipeline.Add<RollbackOperationTestStep3>();
+
+            try
+            {
+                // operations
+                pipeline.Execute();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            // assert
+            Assert.Null(exception);
         }
     }
 }

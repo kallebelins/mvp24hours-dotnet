@@ -9,7 +9,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Rollbacks
         public override async Task ExecuteAsync(IPipelineMessage input)
         {
             input.AddContent("key-test-step3", 3);
-            throw new System.Exception();
+            throw new System.InvalidOperationException("My Exception 123");
         }
 
         public override async Task RollbackAsync(IPipelineMessage input)

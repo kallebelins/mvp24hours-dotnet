@@ -8,7 +8,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Rollbacks
         public override void Execute(IPipelineMessage input)
         {
             input.AddContent("key-test-step3", 3);
-            throw new System.Exception();
+            throw new System.InvalidOperationException("My Exception 123");
         }
 
         public override void Rollback(IPipelineMessage input)

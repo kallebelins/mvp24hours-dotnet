@@ -8,6 +8,7 @@ using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
@@ -621,6 +622,60 @@ namespace Mvp24Hours.Application.Pipe.Test
             Assert.False(resultRollbackStep1);
             Assert.False(resultRollbackStep2);
             Assert.False(resultRollbackStep3);            
+        }
+
+        [Fact, Priority(14)]
+        public async Task PipelineWithWithAllowPropagateException()
+        {
+            // arrange
+            var pipeline = new PipelineAsync() { AllowPropagateException = true };
+            var exception = default(Exception);
+
+            // act
+            pipeline.Add<RollbackOperationTestAsyncStep1>();
+            pipeline.Add<RollbackOperationTestAsyncStep2>();
+            pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+            try
+            {
+                // operations
+                await pipeline.ExecuteAsync();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            // assert
+            Assert.NotNull(exception);
+            Assert.Equal("My Exception 123", exception.Message);
+            Assert.Equal(typeof(InvalidOperationException), exception.GetType());
+        }
+
+        [Fact, Priority(15)]
+        public async Task PipelineWithWithoutAllowPropagateException()
+        {
+            // arrange
+            var pipeline = new PipelineAsync(); //AllowPropagateException = false
+            var exception = default(Exception);
+
+            // act
+            pipeline.Add<RollbackOperationTestAsyncStep1>();
+            pipeline.Add<RollbackOperationTestAsyncStep2>();
+            pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+            try
+            {
+                // operations
+                await pipeline.ExecuteAsync();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            // assert
+            Assert.Null(exception);
         }
     }
 }
