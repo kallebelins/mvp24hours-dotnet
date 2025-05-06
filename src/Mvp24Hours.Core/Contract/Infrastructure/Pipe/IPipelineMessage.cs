@@ -25,7 +25,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
         /// <summary>
         /// Allow access to a content by a dynamic object
         /// </summary>
-        dynamic NonNullableContents { get; }
+        dynamic DynamicContents { get; }
         /// <summary>
         /// List of feedback messages
         /// </summary>

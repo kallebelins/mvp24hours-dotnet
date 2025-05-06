@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         {
             this._contents = [];
             this.Token = token;
-            this.NonNullableContents = new CustomDynamicObject(this);
+            this.DynamicContents = new CustomDynamicObject(this);
 
             if (args?.Length > 0)
             {
@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         public string Token { get; private set; }
         public bool IsLocked { get; private set; }
-        public dynamic NonNullableContents { get; private set; }
+        public dynamic DynamicContents { get; private set; }
         #endregion
 
         #region [ Methods ]
