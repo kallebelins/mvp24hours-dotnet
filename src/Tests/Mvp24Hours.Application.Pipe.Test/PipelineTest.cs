@@ -5,6 +5,7 @@
 //=====================================================================================
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
@@ -14,6 +15,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Mvp24Hours.Application.Pipe.Test
 {
@@ -699,6 +701,90 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.Null(exception);
+        }
+
+        [Fact, Priority(17)]
+        public void PipelineMessageUsingNonNullableContents()
+        {
+            // arrange
+            IPipelineMessage input = new PipelineMessage();
+
+            // operations
+            input.DynamicContents.Person = new Person { Name = "John Smith", CC = new CC { Number = "4532849103927456", CVV = "435", ExpirationDate = "11/32" } };
+            input.AddContent("person_name", input.DynamicContents.Person.Name);
+            input.AddContent("person_CC_Number", input.DynamicContents.Person.CC.Number);
+            input.AddContent("person_CC_CVV", input.DynamicContents.Person.CC.CVV);
+            input.AddContent("person_CC_ExpirationDate", input.DynamicContents.Person.CC.ExpirationDate);
+            input.AddContent("person_CC_ExpirationDate", input.DynamicContents.Person.CC.ExpirationDate);
+
+            // assert
+            Assert.Equal(input.DynamicContents.Person.Name, "John Smith");
+            Assert.Equal(input.DynamicContents.Person.CC.Number, "4532849103927456");
+            Assert.Equal(input.DynamicContents.Person.CC.CVV, "435");
+            Assert.Equal(input.DynamicContents.Person.CC.ExpirationDate, "11/32");
+
+            Assert.Equal(input.DynamicContents.Person.Name, input.GetContent<string>("person_name"));
+            Assert.Equal(input.DynamicContents.Person.CC.Number, input.GetContent<string>("person_CC_Number"));
+            Assert.Equal(input.DynamicContents.Person.CC.CVV, input.GetContent<string>("person_CC_CVV"));
+            Assert.Equal(input.DynamicContents.Person.CC.ExpirationDate, input.GetContent<string>("person_CC_ExpirationDate"));
+
+            Assert.Equal(input.DynamicContents.person_name, input.GetContent<string>("person_name"));
+            Assert.Equal(input.DynamicContents.person_CC_Number, input.GetContent<string>("person_CC_Number"));
+            Assert.Equal(input.DynamicContents.person_CC_CVV, input.GetContent<string>("person_CC_CVV"));
+            Assert.Equal(input.DynamicContents.person_CC_ExpirationDate, input.GetContent<string>("person_CC_ExpirationDate"));
+
+            var personExpected = input.GetContent<Person>("Person");
+            var personActual = input.DynamicContents.Person;
+
+            Assert.Equal(personExpected.Name, personActual.Name);
+            Assert.Equal(personExpected.CC.Number, personActual.CC.Number);
+            Assert.Equal(personExpected.CC.CVV, personActual.CC.CVV);
+            Assert.Equal(personExpected.CC.ExpirationDate, personActual.CC.ExpirationDate);
+        }
+
+        [Fact, Priority(18)]
+        public void PipelineMessageUsingNonNullableContentsWithNullValues()
+        {
+            // arrange
+            IPipelineMessage input = new PipelineMessage();
+            ArgumentNullException setExceptionNull = default;
+            ArgumentOutOfRangeException getExceptionOutOfRange = default;
+
+            // operations
+            try
+            {
+                input.DynamicContents.Person = default(Person);
+            }
+            catch (ArgumentNullException ex)
+            {
+                setExceptionNull = ex;
+            }
+
+            try
+            {
+                var person = input.DynamicContents.PersonNotExist;
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                getExceptionOutOfRange = ex;
+            }
+
+            // assert
+            Assert.NotNull(setExceptionNull);
+            Assert.NotNull(getExceptionOutOfRange);
+        }
+
+        class Person
+        {
+            public string Name { get; set; }
+            public CC CC { get; set; }
+        }
+
+        class CC
+        {
+            public string Number { get; set; }
+            public string CVV { get; set; }
+            public string ExpirationDate { get; set; }
         }
     }
 }
