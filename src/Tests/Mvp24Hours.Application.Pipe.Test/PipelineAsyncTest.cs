@@ -5,6 +5,7 @@
 //=====================================================================================
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
@@ -676,6 +677,6 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.Null(exception);
-        }
+        }        
     }
 }
