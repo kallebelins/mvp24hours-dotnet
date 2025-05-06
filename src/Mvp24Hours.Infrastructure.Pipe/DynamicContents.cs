@@ -4,11 +4,11 @@ using System.Dynamic;
 
 namespace Mvp24Hours.Infrastructure.Pipe
 {
-    public class CustomDynamicObject : DynamicObject
+    public class DynamicContents : DynamicObject
     {
         private readonly IPipelineMessage _pipelineMessage;
 
-        public CustomDynamicObject(IPipelineMessage pipelineMessage)
+        public DynamicContents(IPipelineMessage pipelineMessage)
         {
             _pipelineMessage = pipelineMessage;
         }

@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         {
             this._contents = [];
             this.Token = token;
-            this.DynamicContents = new CustomDynamicObject(this);
+            this.DynamicContents = new DynamicContents(this);
 
             if (args?.Length > 0)
             {
