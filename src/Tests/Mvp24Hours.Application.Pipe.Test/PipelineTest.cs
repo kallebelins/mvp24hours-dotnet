@@ -710,7 +710,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             IPipelineMessage input = new PipelineMessage();
 
             // operations
-            input.DynamicContents.Person = new Person { Name = "John Smith", CC = new CC { Number = "4532849103927456", CVV = "435", ExpirationDate = "11/32" } }; ;
+            input.DynamicContents.Person = new Person { Name = "John Smith", CC = new CC { Number = "4532849103927456", CVV = "435", ExpirationDate = "11/32" } };
             input.AddContent("person_name", input.DynamicContents.Person.Name);
             input.AddContent("person_CC_Number", input.DynamicContents.Person.CC.Number);
             input.AddContent("person_CC_CVV", input.DynamicContents.Person.CC.CVV);
