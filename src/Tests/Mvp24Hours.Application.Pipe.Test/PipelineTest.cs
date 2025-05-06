@@ -771,7 +771,7 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.NotNull(setExceptionNull);
-            Assert.NotNull(setExceptionNull);
+            Assert.NotNull(getExceptionOutOfRange);
         }
 
         class Person
