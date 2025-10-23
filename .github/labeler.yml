@@ -1,0 +1,69 @@
+# Labeler configuration for automatic PR labeling
+
+# Core
+'area: core':
+  - 'src/Mvp24Hours.Core/**/*'
+
+# Application
+'area: application':
+  - 'src/Mvp24Hours.Application/**/*'
+
+# Infrastructure
+'area: infrastructure':
+  - 'src/Mvp24Hours.Infrastructure/**/*'
+  - 'src/Mvp24Hours.Infrastructure.*/**/*'
+
+# Data - EF Core
+'area: efcore':
+  - 'src/Mvp24Hours.Infrastructure.Data.EFCore/**/*'
+
+# Data - MongoDB
+'area: mongodb':
+  - 'src/Mvp24Hours.Infrastructure.Data.MongoDb/**/*'
+
+# Caching
+'area: cache':
+  - 'src/Mvp24Hours.Infrastructure.Caching/**/*'
+  - 'src/Mvp24Hours.Infrastructure.Caching.Redis/**/*'
+
+# RabbitMQ
+'area: rabbitmq':
+  - 'src/Mvp24Hours.Infrastructure.RabbitMQ/**/*'
+
+# Pipeline
+'area: pipeline':
+  - 'src/Mvp24Hours.Infrastructure.Pipe/**/*'
+
+# CronJob
+'area: cronjob':
+  - 'src/Mvp24Hours.Infrastructure.CronJob/**/*'
+
+# WebAPI
+'area: webapi':
+  - 'src/Mvp24Hours.WebAPI/**/*'
+
+# Tests
+'area: tests':
+  - 'src/Tests/**/*'
+  - '**/*.Test/**/*'
+
+# Documentation
+'area: documentation':
+  - 'docs/**/*'
+  - '**/*.md'
+  - 'README.md'
+  - 'CHANGELOG.md'
+  - 'CONTRIBUTING.md'
+
+# CI/CD
+'area: ci-cd':
+  - '.github/**/*'
+  - '*.yml'
+  - '*.yaml'
+
+# Dependencies
+'dependencies':
+  - '**/packages.lock.json'
+  - '**/*.csproj'
+  - 'src/**/*.csproj'
+

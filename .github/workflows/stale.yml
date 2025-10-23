@@ -1,0 +1,57 @@
+name: "Close Stale Issues and PRs"
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Diariamente à meia-noite
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧹 Mark/Close stale issues and PRs
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Issues
+          stale-issue-message: |
+            Esta issue foi automaticamente marcada como stale porque não teve atividade recente.
+            Ela será fechada em 7 dias se nenhuma atividade adicional ocorrer.
+            
+            Se você acredita que esta issue ainda é relevante, por favor adicione um comentário.
+            Obrigado por suas contribuições! 🙏
+          
+          close-issue-message: |
+            Esta issue foi automaticamente fechada devido à inatividade.
+            
+            Se você acredita que esta issue ainda é relevante, sinta-se à vontade para reabri-la.
+            Obrigado! 🙏
+          
+          days-before-issue-stale: 60
+          days-before-issue-close: 7
+          stale-issue-label: 'stale'
+          exempt-issue-labels: 'pinned,security,enhancement,bug'
+          
+          # Pull Requests
+          stale-pr-message: |
+            Este Pull Request foi automaticamente marcado como stale porque não teve atividade recente.
+            Ele será fechado em 14 dias se nenhuma atividade adicional ocorrer.
+            
+            Se você ainda está trabalhando nisto, por favor adicione um comentário.
+            Obrigado por sua contribuição! 🎉
+          
+          close-pr-message: |
+            Este Pull Request foi automaticamente fechado devido à inatividade.
+            
+            Se você ainda deseja contribuir com estas mudanças, sinta-se à vontade para reabrir o PR.
+            Obrigado! 🙏
+          
+          days-before-pr-stale: 30
+          days-before-pr-close: 14
+          stale-pr-label: 'stale'
+          exempt-pr-labels: 'pinned,security,work-in-progress'
+

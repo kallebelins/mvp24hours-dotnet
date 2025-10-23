@@ -353,3 +353,8 @@ MigrationBackup/
 .sonar/
 .scannerwork/
 .sonarqube/
+
+
+# Local Ofuscated Files
+docs/tasks.md
+docs/prompts.md
