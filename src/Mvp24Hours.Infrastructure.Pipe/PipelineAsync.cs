@@ -9,6 +9,7 @@ using Mvp24Hours.Core.Contract.Application.Pipe.Async;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
+using Mvp24Hours.Core.Events;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
@@ -60,9 +61,9 @@ namespace Mvp24Hours.Infrastructure.Pipe
         private readonly List<KeyValuePair<Func<IPipelineMessage, bool>, IOperationAsync>> postCustomInterceptors;
         private readonly Dictionary<PipelineInterceptorType, List<IOperationAsync>> dictionaryInterceptors;
 
-        private readonly Dictionary<PipelineInterceptorType, List<EventHandler<IPipelineMessage, EventArgs>>> dictionaryEventInterceptors;
-        private readonly List<KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>> preEventCustomInterceptors;
-        private readonly List<KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>> postEventCustomInterceptors;
+        private readonly Dictionary<PipelineInterceptorType, List<Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> dictionaryEventInterceptors;
+        private readonly List<KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> preEventCustomInterceptors;
+        private readonly List<KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> postEventCustomInterceptors;
         #endregion
 
         #region [ Methods ]
@@ -72,9 +73,9 @@ namespace Mvp24Hours.Infrastructure.Pipe
         public Dictionary<PipelineInterceptorType, List<IOperationAsync>> GetInterceptors() => dictionaryInterceptors;
         public List<KeyValuePair<Func<IPipelineMessage, bool>, IOperationAsync>> GetPreInterceptors() => preCustomInterceptors;
         public List<KeyValuePair<Func<IPipelineMessage, bool>, IOperationAsync>> GetPostInterceptors() => postCustomInterceptors;
-        public Dictionary<PipelineInterceptorType, List<EventHandler<IPipelineMessage, EventArgs>>> GetEvents() => dictionaryEventInterceptors;
-        public List<KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>> GetPreEvents() => preEventCustomInterceptors;
-        public List<KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>> GetPostEvents() => postEventCustomInterceptors;
+        public Dictionary<PipelineInterceptorType, List<Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> GetEvents() => dictionaryEventInterceptors;
+        public List<KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> GetPreEvents() => preEventCustomInterceptors;
+        public List<KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>> GetPostEvents() => postEventCustomInterceptors;
         #endregion
 
         public IPipelineAsync Add<T>() where T : class, IOperationAsync
@@ -240,14 +241,14 @@ namespace Mvp24Hours.Infrastructure.Pipe
             }
             return this;
         }
-        public IPipelineAsync AddInterceptors(EventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation)
+        public IPipelineAsync AddInterceptors(Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation)
         {
             if (handler == null)
             {
                 throw new ArgumentNullException(nameof(handler), "Handler has not been defined or is null.");
             }
 
-            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<EventHandler<IPipelineMessage, EventArgs>> value))
+            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>> value))
             {
                 value = [];
                 this.dictionaryEventInterceptors.Add(pipelineInterceptor, value);
@@ -256,7 +257,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             value.Add(handler);
             return this;
         }
-        public IPipelineAsync AddInterceptors(EventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true)
+        public IPipelineAsync AddInterceptors(Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true)
         {
             if (handler == null)
             {
@@ -268,11 +269,11 @@ namespace Mvp24Hours.Infrastructure.Pipe
             }
             if (postOperation)
             {
-                this.postEventCustomInterceptors.Add(new KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>(condition, handler));
+                this.postEventCustomInterceptors.Add(new KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>(condition, handler));
             }
             else
             {
-                this.preEventCustomInterceptors.Add(new KeyValuePair<Func<IPipelineMessage, bool>, EventHandler<IPipelineMessage, EventArgs>>(condition, handler));
+                this.preEventCustomInterceptors.Add(new KeyValuePair<Func<IPipelineMessage, bool>, Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>>(condition, handler));
             }
             return this;
         }
@@ -423,7 +424,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         protected virtual async Task RunEventInterceptorsAsync(IPipelineMessage input, PipelineInterceptorType interceptorType, bool canClearList = false)
         {
-            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<EventHandler<IPipelineMessage, EventArgs>> value))
+            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>> value))
             {
                 await RunEventsAsync(value, input);
                 if (canClearList)
@@ -455,7 +456,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                 }
             }
         }
-        protected virtual async Task RunEventsAsync(List<EventHandler<IPipelineMessage, EventArgs>> _handlers, IPipelineMessage input)
+        protected virtual async Task RunEventsAsync(List<Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs>> _handlers, IPipelineMessage input)
         {
             if (_handlers.AnySafe())
             {

@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Core.Enums.Infrastructure;
+using Mvp24Hours.Core.Events;
 using System;
 
 namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
@@ -65,11 +66,11 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
         /// <summary>
         /// Records event operations interceptors
         /// </summary>
-        IPipeline AddInterceptors(EventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
+        IPipeline AddInterceptors(Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
         /// <summary>
         /// Records event operations interceptors
         /// </summary>
-        IPipeline AddInterceptors(EventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true);
+        IPipeline AddInterceptors(Mvp24Hours.Core.Events.EventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true);
         /// <summary>
         /// Performs operations 
         /// </summary>
