@@ -5,7 +5,7 @@ using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore;
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
