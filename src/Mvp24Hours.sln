@@ -46,6 +46,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mvp24Hours.Infrastructure.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mvp24Hours.Application.CronJob.Test", "Mvp24Hours.Application.CronJob.Test\Mvp24Hours.Application.CronJob.Test.csproj", "{AD87C44C-A74B-4A8B-A5ED-5B4D7EF38E3F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mvp24Hours.Infrastructure.Cqrs", "Mvp24Hours.Infrastructure.Cqrs\Mvp24Hours.Infrastructure.Cqrs.csproj", "{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -136,6 +138,10 @@ Global
 		{AD87C44C-A74B-4A8B-A5ED-5B4D7EF38E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD87C44C-A74B-4A8B-A5ED-5B4D7EF38E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD87C44C-A74B-4A8B-A5ED-5B4D7EF38E3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
