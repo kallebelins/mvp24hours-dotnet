@@ -10,3 +10,5 @@ global using System.Linq;
 global using System.Threading;
 global using System.Threading.Tasks;
 
+global using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+
