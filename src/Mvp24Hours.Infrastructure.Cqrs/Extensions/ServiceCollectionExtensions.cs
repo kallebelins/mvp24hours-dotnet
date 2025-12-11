@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
+using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
 
@@ -156,6 +157,31 @@ public static class ServiceCollectionExtensions
         if (options.RegisterTransactionBehavior)
         {
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+        }
+
+        // Multi-tenancy behaviors
+        if (options.RegisterTenantBehavior)
+        {
+            services.TryAddScoped<ITenantContextAccessor, TenantContextAccessor>();
+            services.TryAddScoped<ITenantFilter, TenantFilter>();
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TenantBehavior<,>));
+        }
+
+        if (options.RegisterCurrentUserBehavior)
+        {
+            services.TryAddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CurrentUserBehavior<,>));
+        }
+
+        // Resilience behaviors
+        if (options.RegisterTimeoutBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TimeoutBehavior<,>));
+        }
+
+        if (options.RegisterCircuitBreakerBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CircuitBreakerBehavior<,>));
         }
 
         return services;
@@ -362,6 +388,36 @@ public sealed class MediatorOptions
     /// </summary>
     public bool AuditAllCommands { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether to register the TenantBehavior automatically.
+    /// This behavior resolves and injects tenant context for multi-tenant applications.
+    /// Requires ITenantResolver to be registered for tenant resolution.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterTenantBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the CurrentUserBehavior automatically.
+    /// This behavior resolves and injects the current user context.
+    /// Requires ICurrentUserFactory to be registered.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterCurrentUserBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the TimeoutBehavior automatically.
+    /// This behavior enforces a timeout on request execution.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterTimeoutBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the CircuitBreakerBehavior automatically.
+    /// This behavior provides circuit breaker protection for requests.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterCircuitBreakerBehavior { get; set; }
+
     #endregion
 
     #region [ Pipeline Configuration (Compatible with PipelineOptions) ]
@@ -398,6 +454,14 @@ public sealed class MediatorOptions
     /// Default is 500ms.
     /// </summary>
     public int PerformanceThresholdMilliseconds { get; set; } = 500;
+
+    /// <summary>
+    /// Gets or sets the default timeout in milliseconds for the TimeoutBehavior.
+    /// Set to 0 to disable default timeout.
+    /// Requests implementing IHasTimeout can override this value.
+    /// Default is 0 (no timeout).
+    /// </summary>
+    public int DefaultTimeoutMilliseconds { get; set; }
 
     #endregion
 
@@ -593,6 +657,32 @@ public sealed class MediatorOptions
     }
 
     /// <summary>
+    /// Enables advanced resiliency behaviors (Timeout, Circuit Breaker, Retry, Idempotency).
+    /// </summary>
+    /// <param name="defaultTimeoutMs">Default timeout in milliseconds (0 = no timeout).</param>
+    /// <returns>The options for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// This enables:
+    /// <list type="bullet">
+    /// <item>TimeoutBehavior - Request timeout protection</item>
+    /// <item>CircuitBreakerBehavior - Circuit breaker for cascading failures</item>
+    /// <item>RetryBehavior - Retry with exponential backoff</item>
+    /// <item>IdempotencyBehavior - Duplicate request prevention</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    public MediatorOptions WithAdvancedResiliency(int defaultTimeoutMs = 30000)
+    {
+        RegisterTimeoutBehavior = true;
+        RegisterCircuitBreakerBehavior = true;
+        RegisterRetryBehavior = true;
+        RegisterIdempotencyBehavior = true;
+        DefaultTimeoutMilliseconds = defaultTimeoutMs;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the mediator to behave like the traditional Pipeline with break-on-fail enabled.
     /// </summary>
     /// <returns>The options for chaining.</returns>
@@ -605,6 +695,47 @@ public sealed class MediatorOptions
         IsBreakOnFail = true;
         ForceRollbackOnFailure = true;
         RegisterTransactionBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables multi-tenancy behaviors (Tenant context resolution, CurrentUser).
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// This enables:
+    /// <list type="bullet">
+    /// <item>TenantBehavior - Tenant resolution and context injection</item>
+    /// <item>CurrentUserBehavior - Current user context injection</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Required registrations:</strong>
+    /// <list type="bullet">
+    /// <item>ITenantResolver - Custom tenant resolution strategy</item>
+    /// <item>ICurrentUserFactory - Custom user context factory</item>
+    /// <item>ITenantStore (optional) - For tenant lookup by ID</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddMvpMediator(options =>
+    /// {
+    ///     options.RegisterHandlersFromAssemblyContaining&lt;Program&gt;();
+    ///     options.WithMultiTenancy();
+    /// });
+    /// 
+    /// // Register your custom resolvers
+    /// services.AddScoped&lt;ITenantResolver, HeaderTenantResolver&gt;();
+    /// services.AddScoped&lt;ICurrentUserFactory, JwtCurrentUserFactory&gt;();
+    /// </code>
+    /// </example>
+    public MediatorOptions WithMultiTenancy()
+    {
+        RegisterTenantBehavior = true;
+        RegisterCurrentUserBehavior = true;
         return this;
     }
 
