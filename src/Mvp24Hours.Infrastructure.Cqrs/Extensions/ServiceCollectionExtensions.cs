@@ -15,6 +15,9 @@ using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
 
+// Extensibility types for decorator registration
+using IExceptionHandlerBase = System.Type;
+
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
 /// <summary>
@@ -182,6 +185,22 @@ public static class ServiceCollectionExtensions
         if (options.RegisterCircuitBreakerBehavior)
         {
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CircuitBreakerBehavior<,>));
+        }
+
+        // Extensibility behaviors
+        if (options.RegisterPipelineHookBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PipelineHookBehavior<,>));
+        }
+
+        if (options.RegisterPrePostProcessorBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PrePostProcessorBehavior<,>));
+        }
+
+        if (options.RegisterExceptionHandlerBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ExceptionHandlerBehavior<,>));
         }
 
         return services;
@@ -417,6 +436,27 @@ public sealed class MediatorOptions
     /// Default is false.
     /// </summary>
     public bool RegisterCircuitBreakerBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the PrePostProcessorBehavior automatically.
+    /// This behavior executes pre-processors before and post-processors after handlers.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterPrePostProcessorBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the ExceptionHandlerBehavior automatically.
+    /// This behavior enables fine-grained exception handling via IExceptionHandler.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterExceptionHandlerBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the PipelineHookBehavior automatically.
+    /// This behavior executes pipeline lifecycle hooks.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterPipelineHookBehavior { get; set; }
 
     #endregion
 
@@ -739,6 +779,248 @@ public sealed class MediatorOptions
         return this;
     }
 
+    /// <summary>
+    /// Enables extensibility behaviors (pre-processors, post-processors, exception handlers, hooks).
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// This enables:
+    /// <list type="bullet">
+    /// <item>PrePostProcessorBehavior - Pre/post processing hooks</item>
+    /// <item>ExceptionHandlerBehavior - Fine-grained exception handling</item>
+    /// <item>PipelineHookBehavior - Lifecycle hooks</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddMvpMediator(options =>
+    /// {
+    ///     options.RegisterHandlersFromAssemblyContaining&lt;Program&gt;();
+    ///     options.WithExtensibility();
+    /// });
+    /// 
+    /// // Register custom processors
+    /// services.AddTransient&lt;IPreProcessor&lt;CreateOrderCommand&gt;, EnrichOrderPreProcessor&gt;();
+    /// services.AddTransient&lt;IPostProcessor&lt;CreateOrderCommand, Order&gt;, NotifyOrderPostProcessor&gt;();
+    /// services.AddTransient&lt;IPipelineHook, MetricsPipelineHook&gt;();
+    /// </code>
+    /// </example>
+    public MediatorOptions WithExtensibility()
+    {
+        RegisterPrePostProcessorBehavior = true;
+        RegisterExceptionHandlerBehavior = true;
+        RegisterPipelineHookBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables pre-processor and post-processor support.
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    public MediatorOptions WithPrePostProcessors()
+    {
+        RegisterPrePostProcessorBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables fine-grained exception handler support.
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    public MediatorOptions WithExceptionHandlers()
+    {
+        RegisterExceptionHandlerBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables pipeline lifecycle hooks.
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    public MediatorOptions WithPipelineHooks()
+    {
+        RegisterPipelineHookBehavior = true;
+        return this;
+    }
+
     #endregion
+}
+
+/// <summary>
+/// Extension methods for registering extensibility components.
+/// </summary>
+public static class MediatorExtensibilityExtensions
+{
+    /// <summary>
+    /// Registers a mediator decorator that wraps all mediator operations.
+    /// </summary>
+    /// <typeparam name="TDecorator">The decorator type implementing <see cref="IMediatorDecorator"/>.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// Decorators wrap the entire mediator, allowing interception of all operations.
+    /// Multiple decorators are applied in the order they are registered (last registered wraps first).
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddMvpMediator(typeof(Program).Assembly);
+    /// services.AddMediatorDecorator&lt;MetricsMediatorDecorator&gt;();
+    /// services.AddMediatorDecorator&lt;LoggingMediatorDecorator&gt;();
+    /// // LoggingMediatorDecorator wraps MetricsMediatorDecorator wraps Mediator
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddMediatorDecorator<TDecorator>(this IServiceCollection services)
+        where TDecorator : class, IMediatorDecorator
+    {
+        services.Decorate<IMediator, TDecorator>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a global pre-processor that runs for all requests.
+    /// </summary>
+    /// <typeparam name="TProcessor">The pre-processor type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddGlobalPreProcessor<TProcessor>(this IServiceCollection services)
+        where TProcessor : class, IPreProcessorGlobal
+    {
+        services.AddTransient<IPreProcessorGlobal, TProcessor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a pre-processor for a specific request type.
+    /// </summary>
+    /// <typeparam name="TRequest">The request type to process.</typeparam>
+    /// <typeparam name="TProcessor">The pre-processor type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddPreProcessor<TRequest, TProcessor>(this IServiceCollection services)
+        where TProcessor : class, IPreProcessor<TRequest>
+    {
+        services.AddTransient<IPreProcessor<TRequest>, TProcessor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a global post-processor that runs for all requests.
+    /// </summary>
+    /// <typeparam name="TProcessor">The post-processor type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddGlobalPostProcessor<TProcessor>(this IServiceCollection services)
+        where TProcessor : class, IPostProcessorGlobal
+    {
+        services.AddTransient<IPostProcessorGlobal, TProcessor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a post-processor for a specific request/response type.
+    /// </summary>
+    /// <typeparam name="TRequest">The request type.</typeparam>
+    /// <typeparam name="TResponse">The response type.</typeparam>
+    /// <typeparam name="TProcessor">The post-processor type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddPostProcessor<TRequest, TResponse, TProcessor>(this IServiceCollection services)
+        where TProcessor : class, IPostProcessor<TRequest, TResponse>
+    {
+        services.AddTransient<IPostProcessor<TRequest, TResponse>, TProcessor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers an exception handler for a specific request, response, and exception type.
+    /// </summary>
+    /// <typeparam name="TRequest">The request type.</typeparam>
+    /// <typeparam name="TResponse">The response type.</typeparam>
+    /// <typeparam name="TException">The exception type to handle.</typeparam>
+    /// <typeparam name="THandler">The exception handler type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddExceptionHandler<TRequest, TResponse, TException, THandler>(this IServiceCollection services)
+        where TException : Exception
+        where THandler : class, IExceptionHandler<TRequest, TResponse, TException>
+    {
+        services.AddTransient<IExceptionHandler<TRequest, TResponse, TException>, THandler>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a global exception handler for a specific exception type.
+    /// </summary>
+    /// <typeparam name="TException">The exception type to handle.</typeparam>
+    /// <typeparam name="THandler">The exception handler type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddGlobalExceptionHandler<TException, THandler>(this IServiceCollection services)
+        where TException : Exception
+        where THandler : class, IExceptionHandlerGlobal<TException>
+    {
+        services.AddTransient<IExceptionHandlerGlobal<TException>, THandler>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a global pipeline hook.
+    /// </summary>
+    /// <typeparam name="THook">The hook type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddPipelineHook<THook>(this IServiceCollection services)
+        where THook : class, IPipelineHook
+    {
+        services.AddTransient<IPipelineHook, THook>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a typed pipeline hook for a specific request type.
+    /// </summary>
+    /// <typeparam name="TRequest">The request type.</typeparam>
+    /// <typeparam name="THook">The hook type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddPipelineHook<TRequest, THook>(this IServiceCollection services)
+        where THook : class, IPipelineHook<TRequest>
+    {
+        services.AddTransient<IPipelineHook<TRequest>, THook>();
+        return services;
+    }
+
+    /// <summary>
+    /// Helper method to decorate an existing service registration.
+    /// </summary>
+    private static void Decorate<TInterface, TDecorator>(this IServiceCollection services)
+        where TInterface : class
+        where TDecorator : class, TInterface
+    {
+        var wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
+        if (wrappedDescriptor == null)
+        {
+            throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
+        }
+
+        var objectFactory = ActivatorUtilities.CreateFactory(
+            typeof(TDecorator),
+            new[] { typeof(TInterface) });
+
+        services.Replace(ServiceDescriptor.Describe(
+            typeof(TInterface),
+            sp =>
+            {
+                var inner = wrappedDescriptor.ImplementationInstance
+                    ?? (wrappedDescriptor.ImplementationFactory?.Invoke(sp)
+                        ?? ActivatorUtilities.GetServiceOrCreateInstance(sp, wrappedDescriptor.ImplementationType!));
+                return (TInterface)objectFactory(sp, new[] { inner });
+            },
+            wrappedDescriptor.Lifetime));
+    }
 }
 

@@ -23,6 +23,7 @@
 * * [Migração do MediatR](pt-br/cqrs/migration-mediatr.md)
 * * [Boas Práticas](pt-br/cqrs/best-practices.md)
 * * [Referência de API](pt-br/cqrs/api-reference.md)
+* * [Extensibilidade](pt-br/cqrs/extensibility.md)
 * * Resiliência
 * * * [Idempotência](pt-br/cqrs/resilience/idempotency.md)
 * * * [Inbox/Outbox](pt-br/cqrs/resilience/inbox-outbox.md)
