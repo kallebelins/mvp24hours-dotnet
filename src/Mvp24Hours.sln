@@ -48,6 +48,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mvp24Hours.Application.Cron
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mvp24Hours.Infrastructure.Cqrs", "Mvp24Hours.Infrastructure.Cqrs\Mvp24Hours.Infrastructure.Cqrs.csproj", "{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mvp24Hours.Infrastructure.Cqrs.Test", "Tests\Mvp24Hours.Infrastructure.Cqrs.Test\Mvp24Hours.Infrastructure.Cqrs.Test.csproj", "{444EBD7A-886D-1E2E-62D9-01B643C4E0C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -142,6 +144,10 @@ Global
 		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8D2A5E3-7C1B-4A9E-B6F0-8C3D2E4F5A6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{444EBD7A-886D-1E2E-62D9-01B643C4E0C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{444EBD7A-886D-1E2E-62D9-01B643C4E0C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{444EBD7A-886D-1E2E-62D9-01B643C4E0C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{444EBD7A-886D-1E2E-62D9-01B643C4E0C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +163,7 @@ Global
 		{E581E2B0-4DD2-43D4-AEFE-B190CFAA2193} = {B19FC8A6-B1BB-4E0B-8150-E4CC0C55D05C}
 		{5CE4DA63-7E5C-4D61-BD34-C57E33AB8DC1} = {B19FC8A6-B1BB-4E0B-8150-E4CC0C55D05C}
 		{AD87C44C-A74B-4A8B-A5ED-5B4D7EF38E3F} = {B19FC8A6-B1BB-4E0B-8150-E4CC0C55D05C}
+		{444EBD7A-886D-1E2E-62D9-01B643C4E0C2} = {B19FC8A6-B1BB-4E0B-8150-E4CC0C55D05C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1CAAF17E-39C7-40C6-A4BE-09BC5EE90B95}
