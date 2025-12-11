@@ -285,6 +285,158 @@ public class EfCoreIntegrationEventOutbox : IIntegrationEventOutbox
 }
 ```
 
+## Registro no DI
+
+O Mvp24Hours fornece extensões para registro simplificado:
+
+```csharp
+// Registra apenas Inbox
+services.AddMvpInbox(options =>
+{
+    options.InboxRetentionDays = 7;
+    options.EnableAutomaticCleanup = true;
+});
+
+// Registra apenas Outbox
+services.AddMvpOutbox(options =>
+{
+    options.OutboxPollingInterval = TimeSpan.FromSeconds(5);
+    options.MaxRetries = 5;
+    options.BatchSize = 100;
+    options.EnableDeadLetterQueue = true;
+});
+
+// Registra ambos
+services.AddMvpInboxOutbox(options =>
+{
+    options.OutboxPollingInterval = TimeSpan.FromSeconds(5);
+    options.MaxRetries = 5;
+    options.InboxRetentionDays = 7;
+    options.EnableDeadLetterQueue = true;
+});
+```
+
+## Processador de Inbox
+
+O `IInboxProcessor` fornece deduplicação automática:
+
+```csharp
+public class OrderCreatedEventConsumer
+{
+    private readonly IInboxProcessor _processor;
+
+    public async Task HandleAsync(OrderCreatedIntegrationEvent @event)
+    {
+        // Processa com deduplicação automática
+        var processed = await _processor.ProcessAsync(@event, async (e, ct) =>
+        {
+            // Lógica de processamento
+            await _inventoryService.ReserveItemsAsync(e.Items);
+        });
+
+        if (!processed)
+        {
+            // Mensagem duplicada, ignorada
+        }
+    }
+}
+```
+
+## Dead Letter Queue (DLQ)
+
+Mensagens que falham após o limite máximo de tentativas são movidas para a DLQ:
+
+```csharp
+// Interface IDeadLetterStore
+public interface IDeadLetterStore
+{
+    Task AddAsync(DeadLetterMessage message, CancellationToken ct);
+    Task<IReadOnlyList<DeadLetterMessage>> GetAllAsync(int limit = 100, CancellationToken ct);
+    Task<bool> RequeueAsync(Guid id, CancellationToken ct);
+    Task MarkAsResolvedAsync(Guid id, string resolution, CancellationToken ct);
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct);
+}
+
+// Gerenciando mensagens na DLQ
+var dlqMessages = await _deadLetterStore.GetAllAsync();
+foreach (var msg in dlqMessages)
+{
+    Console.WriteLine($"Falhou: {msg.EventType} - {msg.Error}");
+    
+    // Reprocessar após correção
+    await _deadLetterStore.RequeueAsync(msg.Id);
+    
+    // Ou marcar como resolvido manualmente
+    await _deadLetterStore.MarkAsResolvedAsync(msg.Id, "Processado manualmente");
+}
+```
+
+## Exponential Backoff
+
+O processador de outbox implementa retry com backoff exponencial:
+
+```
+Tentativa 1: delay = 1s
+Tentativa 2: delay = 2s
+Tentativa 3: delay = 4s
+Tentativa 4: delay = 8s
+Tentativa 5: delay = 16s (máximo configurável)
+```
+
+Configuração:
+
+```csharp
+services.AddMvpOutbox(options =>
+{
+    options.RetryBaseDelayMilliseconds = 1000;  // 1 segundo
+    options.RetryMaxDelayMilliseconds = 60000;  // 1 minuto máximo
+    options.MaxRetries = 5;
+});
+```
+
+## Opções de Configuração
+
+```csharp
+public class InboxOutboxOptions
+{
+    // Outbox
+    public TimeSpan OutboxPollingInterval { get; set; } = TimeSpan.FromSeconds(5);
+    public int BatchSize { get; set; } = 100;
+    public int MaxRetries { get; set; } = 5;
+    public int RetryBaseDelayMilliseconds { get; set; } = 1000;
+    public int RetryMaxDelayMilliseconds { get; set; } = 60000;
+    public int OutboxRetentionDays { get; set; } = 7;
+
+    // Inbox
+    public int InboxRetentionDays { get; set; } = 7;
+
+    // Cleanup
+    public TimeSpan CleanupInterval { get; set; } = TimeSpan.FromHours(1);
+    public bool EnableAutomaticCleanup { get; set; } = true;
+
+    // Dead Letter Queue
+    public bool EnableDeadLetterQueue { get; set; } = true;
+    public int DeadLetterRetentionDays { get; set; } = 30;
+
+    // Performance
+    public bool EnableParallelProcessing { get; set; } = false;
+    public int MaxDegreeOfParallelism { get; set; } = 4;
+}
+```
+
+## Implementações Customizadas
+
+Para produção, implemente stores persistentes:
+
+```csharp
+// Usar implementação customizada
+services.AddMvpInboxOutbox()
+        .UseInboxStore<EfCoreInboxStore>()
+        .UseOutboxStore<EfCoreOutboxStore>()
+        .UseDeadLetterStore<EfCoreDeadLetterStore>()
+        .UseIntegrationEventPublisher<RabbitMqIntegrationEventPublisher>();
+```
+
 ## Boas Práticas
 
 1. **Transação Atômica**: Outbox na mesma transação dos dados
@@ -293,4 +445,6 @@ public class EfCoreIntegrationEventOutbox : IIntegrationEventOutbox
 4. **Retry Limit**: Limite de tentativas antes de DLQ
 5. **Cleanup**: Limpe mensagens antigas periodicamente
 6. **Monitoring**: Monitore filas de outbox/inbox
+7. **DLQ**: Sempre habilite Dead Letter Queue em produção
+8. **Backoff**: Use exponential backoff para evitar sobrecarga
 
