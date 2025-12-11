@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
+using Mvp24Hours.Infrastructure.Cqrs.Observability;
 using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
@@ -74,19 +75,40 @@ public static class ServiceCollectionExtensions
 
         // Register behaviors in the recommended order (outer to inner):
         // 1. UnhandledException - Catches all errors first
-        // 2. Logging - Logs all operations
-        // 3. Performance - Monitors timing
-        // 4. Authorization - Security check before processing
-        // 5. Validation - Validate request data
-        // 6. Idempotency - Check for duplicate requests
-        // 7. Caching - Return cached response if available
-        // 8. Retry - Retry on transient failures
-        // 9. Transaction - Wrap in transaction
+        // 2. RequestContext - Establishes tracing context
+        // 3. Tracing - OpenTelemetry integration
+        // 4. Telemetry - Mvp24Hours telemetry integration
+        // 5. Logging - Logs all operations
+        // 6. Performance - Monitors timing
+        // 7. Audit - Creates audit trail entries
+        // 8. Authorization - Security check before processing
+        // 9. Validation - Validate request data
+        // 10. Idempotency - Check for duplicate requests
+        // 11. Caching - Return cached response if available
+        // 12. Retry - Retry on transient failures
+        // 13. Transaction - Wrap in transaction
         // [Handler executes here]
         
         if (options.RegisterUnhandledExceptionBehavior)
         {
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
+        }
+
+        if (options.RegisterRequestContextBehavior)
+        {
+            services.TryAddScoped<IRequestContextAccessor, RequestContextAccessor>();
+            services.TryAddSingleton<IRequestContextFactory, RequestContextFactory>();
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestContextBehavior<,>));
+        }
+
+        if (options.RegisterTracingBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TracingBehavior<,>));
+        }
+
+        if (options.RegisterTelemetryBehavior)
+        {
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TelemetryBehavior<,>));
         }
 
         if (options.RegisterLoggingBehavior)
@@ -97,6 +119,12 @@ public static class ServiceCollectionExtensions
         if (options.RegisterPerformanceBehavior)
         {
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        }
+
+        if (options.RegisterAuditBehavior)
+        {
+            services.TryAddScoped<IAuditStore, InMemoryAuditStore>();
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
         }
 
         if (options.RegisterAuthorizationBehavior)
@@ -298,6 +326,42 @@ public sealed class MediatorOptions
     /// </summary>
     public bool RegisterIdempotencyBehavior { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether to register the RequestContextBehavior automatically.
+    /// This behavior establishes CorrelationId, CausationId, and RequestId for tracing.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterRequestContextBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the TracingBehavior automatically.
+    /// This behavior creates OpenTelemetry-compatible traces using the Activity API.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterTracingBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the TelemetryBehavior automatically.
+    /// This behavior integrates with TelemetryHelper for Mvp24Hours telemetry.
+    /// Default is false.
+    /// </summary>
+    public bool RegisterTelemetryBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to register the AuditBehavior automatically.
+    /// This behavior creates audit trail entries for requests implementing IAuditable.
+    /// Requires IAuditStore to be registered (InMemoryAuditStore is registered by default).
+    /// Default is false.
+    /// </summary>
+    public bool RegisterAuditBehavior { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to audit all commands regardless of IAuditable.
+    /// Only applies when AuditBehavior is registered.
+    /// Default is false.
+    /// </summary>
+    public bool AuditAllCommands { get; set; }
+
     #endregion
 
     #region [ Pipeline Configuration (Compatible with PipelineOptions) ]
@@ -442,7 +506,7 @@ public sealed class MediatorOptions
     }
 
     /// <summary>
-    /// Enables all behaviors including advanced ones (Validation, Caching, Transaction, Authorization, Retry, Idempotency).
+    /// Enables all behaviors including advanced ones (Validation, Caching, Transaction, Authorization, Retry, Idempotency, Observability).
     /// </summary>
     /// <returns>The options for chaining.</returns>
     /// <remarks>
@@ -454,18 +518,55 @@ public sealed class MediatorOptions
     /// <item>TransactionBehavior - Requires IUnitOfWorkAsync</item>
     /// <item>AuthorizationBehavior - Requires IUserContext</item>
     /// <item>IdempotencyBehavior - Requires IDistributedCache</item>
+    /// <item>AuditBehavior - Requires IAuditStore (InMemoryAuditStore is registered by default)</item>
     /// </list>
     /// </para>
     /// </remarks>
     public MediatorOptions WithAllBehaviors()
     {
         WithDefaultBehaviors();
+        WithObservabilityBehaviors();
         RegisterValidationBehavior = true;
         RegisterCachingBehavior = true;
         RegisterTransactionBehavior = true;
         RegisterAuthorizationBehavior = true;
         RegisterRetryBehavior = true;
         RegisterIdempotencyBehavior = true;
+        RegisterAuditBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables observability behaviors (RequestContext, Tracing, Telemetry).
+    /// </summary>
+    /// <returns>The options for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// This enables:
+    /// <list type="bullet">
+    /// <item>RequestContextBehavior - CorrelationId, CausationId, RequestId propagation</item>
+    /// <item>TracingBehavior - OpenTelemetry Activity API integration</item>
+    /// <item>TelemetryBehavior - Mvp24Hours TelemetryHelper integration</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    public MediatorOptions WithObservabilityBehaviors()
+    {
+        RegisterRequestContextBehavior = true;
+        RegisterTracingBehavior = true;
+        RegisterTelemetryBehavior = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Enables audit trail behavior for tracking operations.
+    /// </summary>
+    /// <param name="auditAllCommands">Whether to audit all commands regardless of IAuditable.</param>
+    /// <returns>The options for chaining.</returns>
+    public MediatorOptions WithAuditBehavior(bool auditAllCommands = false)
+    {
+        RegisterAuditBehavior = true;
+        AuditAllCommands = auditAllCommands;
         return this;
     }
 
