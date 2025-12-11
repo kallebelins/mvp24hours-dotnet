@@ -24,6 +24,9 @@
 * * [Best Practices](en-us/cqrs/best-practices.md)
 * * [API Reference](en-us/cqrs/api-reference.md)
 * * [Extensibility](en-us/cqrs/extensibility.md)
+* * [Multi-tenancy](en-us/cqrs/multi-tenancy.md)
+* * [Scheduled Commands](en-us/cqrs/scheduled-commands.md)
+* * [Specifications](en-us/cqrs/specifications.md)
 * * Resilience
 * * * [Idempotency](en-us/cqrs/resilience/idempotency.md)
 * * * [Inbox/Outbox](en-us/cqrs/resilience/inbox-outbox.md)
