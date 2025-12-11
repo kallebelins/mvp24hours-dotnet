@@ -28,7 +28,9 @@ public static class EventSourcingExtensions
     public static IServiceCollection AddEventSourcingInMemory(this IServiceCollection services)
     {
         services.TryAddSingleton<IEventSerializer, JsonEventSerializer>();
-        services.TryAddSingleton<IEventStore, InMemoryEventStore>();
+        services.TryAddSingleton<InMemoryEventStore>();
+        services.TryAddSingleton<IEventStore>(sp => sp.GetRequiredService<InMemoryEventStore>());
+        services.TryAddSingleton<IEventStoreWithSubscription>(sp => sp.GetRequiredService<InMemoryEventStore>());
         services.TryAddSingleton<ISnapshotStore, InMemorySnapshotStore>();
         services.TryAddSingleton<ISnapshotStrategy, EventCountSnapshotStrategy>();
         services.TryAddSingleton<IEventTypeResolver, DefaultEventTypeResolver>();
