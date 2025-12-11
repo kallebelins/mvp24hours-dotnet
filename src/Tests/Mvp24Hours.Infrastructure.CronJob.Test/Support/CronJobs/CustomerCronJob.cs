@@ -1,14 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Mvp24Hours.Application.CronJob.Test.Support.Services;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Services;
+using Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Mvp24Hours.Application.CronJob.Test.Support.ConJobs
+namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs
 {
+    /// <summary>
+    /// Sample CronJob implementation for testing purposes.
+    /// </summary>
     public class CustomerCronJob : CronJobService<CustomerCronJob>
     {
         public CustomerCronJob(
@@ -19,10 +22,11 @@ namespace Mvp24Hours.Application.CronJob.Test.Support.ConJobs
 
         public override Task DoWork(CancellationToken cancellationToken)
         {
-            Console.WriteLine("Cronjob começou a contar");
+            Console.WriteLine("CronJob started counting");
             var timerService = _serviceProvider.GetService<TimerService>();
-            timerService.CountTime();
+            timerService?.CountTime();
             return Task.CompletedTask;
         }
     }
 }
+

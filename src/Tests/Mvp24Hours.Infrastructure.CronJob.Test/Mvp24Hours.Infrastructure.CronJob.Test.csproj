@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -23,9 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
-    <ProjectReference Include="..\Mvp24Hours.Infrastructure.CronJob\Mvp24Hours.Infrastructure.CronJob.csproj" />
-    <ProjectReference Include="..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
+    <ProjectReference Include="..\..\Mvp24Hours.Infrastructure.CronJob\Mvp24Hours.Infrastructure.CronJob.csproj" />
+    <ProjectReference Include="..\..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
+
