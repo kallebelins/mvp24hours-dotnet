@@ -18,10 +18,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
     public class Product
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public bool IsActive { get; set; }
-        public string Category { get; set; }
+        public string Category { get; set; } = string.Empty;
         public int Stock { get; set; }
     }
 
@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
     public class GetProductsQuery : PaginatedQuery<Product, IEnumerable<Product>>
     {
-        public string CategoryFilter { get; set; }
+        public string? CategoryFilter { get; set; }
         public decimal? MinPrice { get; set; }
 
         public GetProductsQuery(int page, int pageSize) : base(page, pageSize)
@@ -144,7 +144,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var spec = new ActiveProductSpec();
 
             // Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type - testing null behavior
             var result = spec.IsSatisfiedBy(null);
+#pragma warning restore CS8625
 
             // Assert
             Assert.False(result);
@@ -565,7 +567,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             query.AddSort("Category", SortDirection.Ascending);
 
             // Assert
-            Assert.Equal(3, query.SortCriteria.Count); // 2 from constructor + 1 added
+            // SortCriteria contains string-based sorts (added via AddSort(string))
+            Assert.Single(query.SortCriteria); // 1 from AddSort("Category")
+            // SortExpressions contains expression-based sorts (added via SortByAsc/SortByDesc with expressions)
+            Assert.Equal(2, query.SortExpressions.Count); // 2 from constructor
         }
 
         [Fact]
@@ -603,14 +608,15 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         {
             // Arrange
             var query = new GetActiveProductsQuery();
-            var initialCount = query.SortCriteria.Count;
+            var initialExprCount = query.SortExpressions.Count;
 
             // Act
             query.ClearSort();
 
             // Assert
-            Assert.Equal(0, query.SortCriteria.Count);
-            Assert.True(initialCount > 0); // Verify there were sorts before
+            Assert.Empty(query.SortCriteria);
+            Assert.Empty(query.SortExpressions);
+            Assert.True(initialExprCount > 0); // Verify there were sorts before
         }
 
         [Fact]
@@ -689,4 +695,3 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         #endregion
     }
 }
-

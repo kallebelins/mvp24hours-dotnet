@@ -26,7 +26,7 @@ namespace Mvp24Hours.Patterns.Test
             // arrange
             var serviceProvider = Startup.InitializeHttp();
             var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient(typeof(HttpClientTest).Name);
+            var client = factory.CreateClient("HttpClientTest");
             var result = await client.HttpGetAsync("users");
             // assert
             Assert.NotNull(result);
