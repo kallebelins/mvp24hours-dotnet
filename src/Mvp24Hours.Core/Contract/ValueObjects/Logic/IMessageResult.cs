@@ -15,7 +15,7 @@ namespace Mvp24Hours.Core.Contract.ValueObjects.Logic
         /// <summary>
         /// Reference key
         /// </summary>
-        string Key { get; }
+        string? Key { get; }
         /// <summary>
         /// Message to user
         /// </summary>

@@ -164,14 +164,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(PhoneNumber other)
+        public bool Equals(PhoneNumber? other)
         {
             if (other is null) return false;
             return FullNumber == other.FullNumber;
         }
 
         /// <inheritdoc />
-        public int CompareTo(PhoneNumber other)
+        public int CompareTo(PhoneNumber? other)
         {
             if (other is null) return 1;
             return string.Compare(FullNumber, other.FullNumber, StringComparison.Ordinal);

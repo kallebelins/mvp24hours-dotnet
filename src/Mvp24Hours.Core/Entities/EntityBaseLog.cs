@@ -23,7 +23,7 @@ namespace Mvp24Hours.Core.Entities
         /// <summary>
         /// Application or database user who created this record
         /// </summary>
-        public TForeignKey CreatedBy { get; set; }
+        public TForeignKey CreatedBy { get; set; } = default!;
         /// <summary>
         /// Modified date
         /// </summary>
@@ -31,7 +31,7 @@ namespace Mvp24Hours.Core.Entities
         /// <summary>
         /// Application or database user who modified this record
         /// </summary>
-        public TForeignKey ModifiedBy { get; set; }
+        public TForeignKey? ModifiedBy { get; set; }
         /// <summary>
         /// Logical exclusion date
         /// </summary>
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Core.Entities
         /// <summary>
         /// Application or database user who logically deleted this record
         /// </summary>
-        public TForeignKey RemovedBy { get; set; }
+        public TForeignKey? RemovedBy { get; set; }
         #endregion
     }
 }

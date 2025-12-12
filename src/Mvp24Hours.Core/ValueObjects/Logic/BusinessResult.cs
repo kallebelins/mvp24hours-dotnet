@@ -42,9 +42,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     /// </example>
     [DataContract, Serializable]
     public class BusinessResult<T>(
-        T data = default,
-        IReadOnlyCollection<IMessageResult> messages = null,
-        string token = null
+        T? data = default,
+        IReadOnlyCollection<IMessageResult>? messages = null,
+        string? token = null
         ) : BaseVO, IBusinessResult<T>
     {
         #region [ Properties ]
@@ -53,13 +53,13 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IBusinessResult{T}.Data"/>
         /// </summary>
         [DataMember]
-        public T Data { get; } = data;
+        public T? Data { get; } = data;
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IBusinessResult{T}.Messages"/>
         /// </summary>
         [DataMember]
-        public IReadOnlyCollection<IMessageResult> Messages { get; } = messages;
+        public IReadOnlyCollection<IMessageResult>? Messages { get; } = messages;
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IBusinessResult{T}.HasErrors"/>
@@ -77,13 +77,13 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IBusinessResult{T}.Token"/>
         /// </summary>
         [DataMember]
-        public string Token { get; private set; } = token;
+        public string? Token { get; private set; } = token;
 
         #endregion
 
         #region [ Methods ]
 
-        public void SetToken(string token)
+        public void SetToken(string? token)
         {
             if (string.IsNullOrEmpty(this.Token)
                 && !string.IsNullOrEmpty(token))
@@ -94,9 +94,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
 
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            yield return Token;
-            yield return Data;
-            yield return Messages;
+            yield return Token ?? string.Empty;
+            yield return Data!;
+            yield return Messages!;
         }
 
         #endregion
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <strong>Warning:</strong> This will return default(T) if result is null or has errors.
         /// Use <see cref="Data"/> property directly for explicit access.
         /// </remarks>
-        public static implicit operator T(BusinessResult<T> result)
+        public static implicit operator T?(BusinessResult<T>? result)
         {
             return result != null ? result.Data : default;
         }

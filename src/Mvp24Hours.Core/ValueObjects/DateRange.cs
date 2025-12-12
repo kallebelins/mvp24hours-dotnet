@@ -164,7 +164,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// </summary>
         /// <param name="other">The other DateRange.</param>
         /// <returns>The intersection, or null if no overlap.</returns>
-        public DateRange GetIntersection(DateRange other)
+        public DateRange? GetIntersection(DateRange other)
         {
             Guard.Against.Null(other, nameof(other));
 
@@ -222,14 +222,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(DateRange other)
+        public bool Equals(DateRange? other)
         {
             if (other is null) return false;
             return Start == other.Start && End == other.End;
         }
 
         /// <inheritdoc />
-        public int CompareTo(DateRange other)
+        public int CompareTo(DateRange? other)
         {
             if (other is null) return 1;
 

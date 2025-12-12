@@ -23,13 +23,13 @@ namespace Mvp24Hours.Core.Entities
         /// </summary>
         [JsonIgnore]
         [IgnoreDataMember]
-        public virtual object EntityKey => this.Id;
+        public virtual object? EntityKey => this.Id;
         /// <summary>
         /// Entity identifier
         /// </summary>
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [DataMember]
-        public virtual TKey Id { get; set; }
+        public virtual TKey Id { get; set; } = default!;
 
         #endregion
     }

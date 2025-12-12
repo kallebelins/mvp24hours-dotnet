@@ -259,7 +259,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// </summary>
         /// <param name="culture">The culture for formatting.</param>
         /// <returns>A formatted string representation.</returns>
-        public string ToFormattedString(CultureInfo culture = null)
+        public string ToFormattedString(CultureInfo? culture = null)
         {
             culture ??= CultureInfo.CurrentCulture;
             return Amount.ToString("C", culture);
@@ -290,18 +290,30 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Money other)
+        public bool Equals(Money? other)
         {
             if (other is null) return false;
             return Amount == other.Amount && Currency == other.Currency;
         }
 
         /// <inheritdoc />
-        public int CompareTo(Money other)
+        public int CompareTo(Money? other)
         {
             if (other is null) return 1;
             EnsureSameCurrency(this, other);
             return Amount.CompareTo(other.Amount);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj) => Equals(obj as Money);
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Amount.GetHashCode() * 397) ^ Currency.GetHashCode();
+            }
         }
 
         /// <inheritdoc />

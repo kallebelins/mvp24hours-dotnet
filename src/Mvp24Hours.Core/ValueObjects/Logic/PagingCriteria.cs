@@ -17,8 +17,8 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     public class PagingCriteria(
         int limit,
         int offset,
-        IReadOnlyCollection<string> orderBy = null,
-        IReadOnlyCollection<string> navigation = null) : BaseVO, IPagingCriteria
+        IReadOnlyCollection<string>? orderBy = null,
+        IReadOnlyCollection<string>? navigation = null) : BaseVO, IPagingCriteria
     {
         #region [ Properties ]
         /// <summary>
@@ -37,13 +37,13 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.OrderBy"/>
         /// </summary>
         [DataMember]
-        public IReadOnlyCollection<string> OrderBy { get; } = orderBy;
+        public IReadOnlyCollection<string>? OrderBy { get; } = orderBy;
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.Navigation"/>
         /// </summary>
         [DataMember]
-        public IReadOnlyCollection<string> Navigation { get; } = navigation;
+        public IReadOnlyCollection<string>? Navigation { get; } = navigation;
         #endregion
 
         #region [ Methods ]
@@ -51,8 +51,8 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         {
             yield return Limit;
             yield return Offset;
-            yield return OrderBy;
-            yield return Navigation;
+            yield return OrderBy!;
+            yield return Navigation!;
         }
         #endregion
     }

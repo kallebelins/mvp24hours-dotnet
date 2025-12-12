@@ -161,14 +161,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Cpf other)
+        public bool Equals(Cpf? other)
         {
             if (other is null) return false;
             return Value == other.Value;
         }
 
         /// <inheritdoc />
-        public int CompareTo(Cpf other)
+        public int CompareTo(Cpf? other)
         {
             if (other is null) return 1;
             return string.Compare(Value, other.Value, StringComparison.Ordinal);

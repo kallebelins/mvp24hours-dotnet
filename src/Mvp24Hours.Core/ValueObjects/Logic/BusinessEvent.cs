@@ -19,7 +19,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     {
         #region [ Ctor ]
 
-        public BusinessEvent(object data, string token = null)
+        public BusinessEvent(object data, string? token = null)
         {
             if (data == null)
             {
@@ -36,7 +36,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
             }
             else
             {
-                Data = Convert.ToString(data);
+                Data = Convert.ToString(data) ?? string.Empty;
             }
         }
 

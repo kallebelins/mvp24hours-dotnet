@@ -29,11 +29,11 @@ namespace Mvp24Hours.Core.DTOs.Models
         /// Clause for sorting by field
         /// </summary>
         [DataMember]
-        public List<string> OrderBy { get; set; }
+        public List<string>? OrderBy { get; set; }
         /// <summary>
         /// Related objects that will be loaded together
         /// </summary>
         [DataMember]
-        public List<string> Navigation { get; set; }
+        public List<string>? Navigation { get; set; }
     }
 }

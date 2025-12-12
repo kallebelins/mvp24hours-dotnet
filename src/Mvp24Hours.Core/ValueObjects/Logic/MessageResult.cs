@@ -17,7 +17,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     /// </summary>
     [DataContract, Serializable]
     [method: JsonConstructor]
-    public class MessageResult(string key, string message, MessageType type) : BaseVO, IMessageResult
+    public class MessageResult(string? key, string message, MessageType type) : BaseVO, IMessageResult
     {
         #region [ Ctor ]
         public MessageResult(string message, MessageType type)
@@ -30,15 +30,15 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         {
         }
 
-        public MessageResult(string message, MessageType type, string customType)
+        public MessageResult(string message, MessageType type, string? customType)
             : this(null, message, type, customType)
         {
         }
 
-        public MessageResult(string key, string message, MessageType type, string customType)
+        public MessageResult(string? key, string message, MessageType type, string? customType)
             : this(key, message, type)
         {
-            CustomType = customType;
+            CustomType = customType ?? string.Empty;
         }
         #endregion
 
@@ -47,7 +47,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult.Key"/>
         /// </summary>
         [DataMember]
-        public string Key { get; } = key;
+        public string? Key { get; } = key;
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult.Message"/>
         /// </summary>
@@ -64,13 +64,13 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult.CustomType"/>
         /// </summary>
         [DataMember]
-        public string CustomType { get; }
+        public string CustomType { get; } = string.Empty;
         #endregion
 
         #region [ Methods ]
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            yield return Key;
+            yield return Key ?? string.Empty;
             yield return Message;
             yield return Type;
             yield return CustomType;

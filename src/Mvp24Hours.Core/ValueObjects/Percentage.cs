@@ -241,14 +241,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Percentage other)
+        public bool Equals(Percentage? other)
         {
             if (other is null) return false;
             return Value == other.Value;
         }
 
         /// <inheritdoc />
-        public int CompareTo(Percentage other)
+        public int CompareTo(Percentage? other)
         {
             if (other is null) return 1;
             return Value.CompareTo(other.Value);

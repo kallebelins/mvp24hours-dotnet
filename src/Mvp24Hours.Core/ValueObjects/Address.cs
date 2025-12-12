@@ -110,13 +110,13 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <exception cref="ArgumentException">Thrown when required parameters are invalid.</exception>
         public static Address Create(
             string street,
-            string number,
+            string? number,
             string city,
-            string state,
-            string postalCode,
+            string? state,
+            string? postalCode,
             string country,
-            string complement = null,
-            string neighborhood = null)
+            string? complement = null,
+            string? neighborhood = null)
         {
             Guard.Against.NullOrWhiteSpace(street, nameof(street));
             Guard.Against.NullOrWhiteSpace(city, nameof(city));
@@ -138,21 +138,21 @@ namespace Mvp24Hours.Core.ValueObjects
         /// </summary>
         public static Address CreateMinimal(string street, string city, string country)
         {
-            return Create(street, null, city, null, null, country);
+            return Create(street, string.Empty, city, string.Empty, string.Empty, country);
         }
 
         /// <summary>
         /// Returns a new Address with the specified changes.
         /// </summary>
         public Address With(
-            string street = null,
-            string number = null,
-            string complement = null,
-            string neighborhood = null,
-            string city = null,
-            string state = null,
-            string postalCode = null,
-            string country = null)
+            string? street = null,
+            string? number = null,
+            string? complement = null,
+            string? neighborhood = null,
+            string? city = null,
+            string? state = null,
+            string? postalCode = null,
+            string? country = null)
         {
             return new Address(
                 street ?? Street,
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Address other)
+        public bool Equals(Address? other)
         {
             if (other is null) return false;
             return Street == other.Street

@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
 		<Authors>Kallebe Lins</Authors>
 		<Description>Series architectures for fast product construction.</Description>
 		<Copyright></Copyright>

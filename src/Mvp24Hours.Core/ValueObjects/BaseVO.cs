@@ -66,7 +66,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// </summary>
         /// <param name="other">The Value Object to compare with the current Value Object.</param>
         /// <returns>true if the specified Value Object is equal to the current Value Object; otherwise, false.</returns>
-        public bool Equals(BaseVO other)
+        public bool Equals(BaseVO? other)
         {
             if (other is null)
             {
@@ -95,7 +95,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// </summary>
         /// <param name="obj">The object to compare with the current Value Object.</param>
         /// <returns>true if the specified object is equal to the current Value Object; otherwise, false.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as BaseVO);
         }

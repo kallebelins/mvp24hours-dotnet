@@ -15,11 +15,11 @@ namespace Mvp24Hours.Core.Contract.ValueObjects.Logic
         /// <summary>
         /// Encapsulated model data list
         /// </summary>
-        T Data { get; }
+        T? Data { get; }
         /// <summary>
         /// Business messages for user feedback
         /// </summary>
-        IReadOnlyCollection<IMessageResult> Messages { get; }
+        IReadOnlyCollection<IMessageResult>? Messages { get; }
         /// <summary>
         /// Indicates if you have an error message
         /// </summary>
@@ -27,10 +27,10 @@ namespace Mvp24Hours.Core.Contract.ValueObjects.Logic
         /// <summary>
         /// Transaction reference token
         /// </summary>
-        string Token { get; }
+        string? Token { get; }
         /// <summary>
         /// Defines token only if token is empty or null
         /// </summary>
-        void SetToken(string token);
+        void SetToken(string? token);
     }
 }

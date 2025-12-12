@@ -23,10 +23,10 @@ namespace Mvp24Hours.Core.Contract.ValueObjects.Logic
         /// <summary>
         /// Clause for sorting by field
         /// </summary>
-        IReadOnlyCollection<string> OrderBy { get; }
+        IReadOnlyCollection<string>? OrderBy { get; }
         /// <summary>
         /// Related objects that will be loaded together
         /// </summary>
-        IReadOnlyCollection<string> Navigation { get; }
+        IReadOnlyCollection<string>? Navigation { get; }
     }
 }

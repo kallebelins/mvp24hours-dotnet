@@ -14,6 +14,6 @@ namespace Mvp24Hours.Core.Contract.Domain.Entity
         /// <summary>
         /// Represents the entity's unique identifier
         /// </summary>
-        object EntityKey { get; }
+        object? EntityKey { get; }
     }
 }

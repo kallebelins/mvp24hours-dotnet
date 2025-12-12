@@ -163,14 +163,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Cnpj other)
+        public bool Equals(Cnpj? other)
         {
             if (other is null) return false;
             return Value == other.Value;
         }
 
         /// <inheritdoc />
-        public int CompareTo(Cnpj other)
+        public int CompareTo(Cnpj? other)
         {
             if (other is null) return 1;
             return string.Compare(Value, other.Value, StringComparison.Ordinal);

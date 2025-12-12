@@ -129,14 +129,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(Email other)
+        public bool Equals(Email? other)
         {
             if (other is null) return false;
             return Value == other.Value;
         }
 
         /// <inheritdoc />
-        public int CompareTo(Email other)
+        public int CompareTo(Email? other)
         {
             if (other is null) return 1;
             return string.Compare(Value, other.Value, StringComparison.OrdinalIgnoreCase);

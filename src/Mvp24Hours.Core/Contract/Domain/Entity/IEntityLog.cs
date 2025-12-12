@@ -18,10 +18,10 @@ namespace Mvp24Hours.Core.Contract.Domain.Entity
         /// <summary>
         /// Registration of who requested the modification of this entity
         /// </summary>
-        TForeignKey ModifiedBy { get; set; }
+        TForeignKey? ModifiedBy { get; set; }
         /// <summary>
         /// Record of who requested the logical exclusion of that entity
         /// </summary>
-        TForeignKey RemovedBy { get; set; }
+        TForeignKey? RemovedBy { get; set; }
     }
 }

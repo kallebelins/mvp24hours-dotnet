@@ -59,14 +59,14 @@ namespace Mvp24Hours.Core.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(TSelf other)
+        public bool Equals(TSelf? other)
         {
             if (other is null) return false;
             return Value.Equals(other.Value);
         }
 
         /// <inheritdoc />
-        public int CompareTo(TSelf other)
+        public int CompareTo(TSelf? other)
         {
             if (other is null) return 1;
             return Value.CompareTo(other.Value);
@@ -78,7 +78,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <summary>
         /// Implicit conversion to the underlying value type.
         /// </summary>
-        public static implicit operator TValue(EntityId<TSelf, TValue> id) => id != null ? id.Value : default!;
+        public static implicit operator TValue(EntityId<TSelf, TValue>? id) => id != null ? id.Value : default!;
     }
 
     /// <summary>
