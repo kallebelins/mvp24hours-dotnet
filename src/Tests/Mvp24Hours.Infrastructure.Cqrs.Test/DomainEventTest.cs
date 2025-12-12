@@ -5,6 +5,7 @@
 //=====================================================================================
 
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -108,7 +109,7 @@ public class DomainEventTest
         UserRegisteredEventHandler.HandledEvents.Clear();
         WelcomeEmailHandler.HandledEvents.Clear();
 
-        var entities = new List<IHasDomainEvents>
+        var entities = new List<CoreHasDomainEvents>
         {
             CreateAggregateWithRegistration(1, "user1@example.com"),
             CreateAggregateWithRegistration(2, "user2@example.com"),
@@ -128,14 +129,14 @@ public class DomainEventTest
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            _dispatcher.DispatchEventsAsync((IHasDomainEvents)null!));
+            _dispatcher.DispatchEventsAsync((CoreHasDomainEvents)null!));
     }
 
     [Fact, Priority(8)]
     public async Task DispatchEventsAsync_WithEmptyEnumerable_ShouldNotThrow()
     {
         // Arrange
-        var entities = new List<IHasDomainEvents>();
+        var entities = new List<CoreHasDomainEvents>();
 
         // Act & Assert - Should not throw
         await _dispatcher.DispatchEventsAsync(entities);

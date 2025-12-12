@@ -3,13 +3,17 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
+using CoreVersionedAggregate = Mvp24Hours.Core.Contract.Domain.Entity.IVersionedAggregate;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
 /// <summary>
 /// Interface for event-sourced aggregates.
 /// An aggregate is a cluster of domain objects that can be treated as a single unit
-/// for data changes.
+/// for data changes. Extends the Core <see cref="CoreVersionedAggregate"/> with event sourcing capabilities.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -26,6 +30,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// <item>Events are applied in order to reconstruct state</item>
 /// </list>
 /// </para>
+/// <para>
+/// <strong>Core vs CQRS Aggregates:</strong>
+/// <list type="bullet">
+/// <item><c>Core.IAggregateRoot</c> - Basic DDD aggregate root marker</item>
+/// <item><c>Core.IVersionedAggregate</c> - Aggregate with version for concurrency</item>
+/// <item><c>IEventSourcedAggregate</c> - Full event sourcing support</item>
+/// </list>
+/// </para>
 /// </remarks>
 /// <example>
 /// <code>
@@ -33,7 +45,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// {
 ///     public OrderStatus Status { get; private set; }
 ///     
-///     protected override void Apply(IDomainEvent @event)
+///     protected override void Apply(CoreDomainEvent @event)
 ///     {
 ///         switch (@event)
 ///         {
@@ -46,23 +58,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// }
 /// </code>
 /// </example>
-public interface IAggregate
+public interface IEventSourcedAggregate : CoreVersionedAggregate, CoreHasDomainEvents
 {
-    /// <summary>
-    /// Gets the unique identifier of the aggregate.
-    /// </summary>
-    Guid Id { get; }
-
-    /// <summary>
-    /// Gets the current version of the aggregate.
-    /// The version is incremented each time an event is applied.
-    /// </summary>
-    long Version { get; }
-
     /// <summary>
     /// Gets the uncommitted events that have been raised but not yet persisted.
     /// </summary>
-    IReadOnlyCollection<IDomainEvent> UncommittedEvents { get; }
+    IReadOnlyCollection<CoreDomainEvent> UncommittedEvents { get; }
 
     /// <summary>
     /// Clears the uncommitted events after they have been persisted.
@@ -73,19 +74,35 @@ public interface IAggregate
     /// Loads the aggregate from historical events.
     /// </summary>
     /// <param name="events">The historical events to replay.</param>
-    void LoadFromHistory(IEnumerable<IDomainEvent> events);
+    void LoadFromHistory(IEnumerable<CoreDomainEvent> events);
+}
+
+/// <summary>
+/// Alias for backward compatibility. Use <see cref="IEventSourcedAggregate"/> for new code.
+/// </summary>
+[Obsolete("Use IEventSourcedAggregate instead. This alias will be removed in a future version.")]
+public interface IAggregate : IEventSourcedAggregate
+{
+    /// <summary>
+    /// Gets the unique identifier of the aggregate.
+    /// </summary>
+    new Guid Id { get; }
 }
 
 /// <summary>
 /// Generic interface for event-sourced aggregates with typed identifier.
 /// </summary>
 /// <typeparam name="TId">The type of the aggregate identifier.</typeparam>
-public interface IAggregate<TId> : IAggregate
+public interface IEventSourcedAggregate<TId> : IEventSourcedAggregate, IAggregateRoot<TId>
 {
-    /// <summary>
-    /// Gets or sets the typed identifier of the aggregate.
-    /// </summary>
-    new TId Id { get; }
+}
+
+/// <summary>
+/// Alias for backward compatibility. Use <see cref="IEventSourcedAggregate{TId}"/> for new code.
+/// </summary>
+[Obsolete("Use IEventSourcedAggregate<TId> instead. This alias will be removed in a future version.")]
+public interface IAggregate<TId> : IEventSourcedAggregate<TId>
+{
 }
 
 /// <summary>
@@ -94,7 +111,7 @@ public interface IAggregate<TId> : IAggregate
 /// the aggregate state at a specific version.
 /// </summary>
 /// <typeparam name="TSnapshot">The type of the snapshot.</typeparam>
-public interface ISnapshotAggregate<TSnapshot> : IAggregate
+public interface ISnapshotAggregate<TSnapshot> : IEventSourcedAggregate
     where TSnapshot : class
 {
     /// <summary>

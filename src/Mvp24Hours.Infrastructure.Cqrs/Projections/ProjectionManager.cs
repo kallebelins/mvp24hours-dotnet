@@ -6,8 +6,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
 
@@ -356,7 +356,7 @@ public class ProjectionManager : IProjectionManager
     private async Task ProcessEventForProjectionAsync(
         ProjectionRegistration registration,
         StoredEvent storedEvent,
-        IDomainEvent @event,
+        CoreDomainEvent @event,
         bool isRebuild,
         CancellationToken cancellationToken)
     {
@@ -400,7 +400,7 @@ public class ProjectionManager : IProjectionManager
 
     private static async Task InvokeHandlerAsync(
         object handler,
-        IDomainEvent @event,
+        CoreDomainEvent @event,
         ProjectionContext context,
         CancellationToken cancellationToken)
     {

@@ -6,6 +6,7 @@
 
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -102,7 +103,7 @@ public class EventSourcingTest
         // Arrange
         var orderId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var events = new List<Mvp24Hours.Infrastructure.Cqrs.Abstractions.IDomainEvent>
+        var events = new List<CoreDomainEvent>
         {
             new OrderCreatedEvent
             {
@@ -176,7 +177,7 @@ public class EventSourcingTest
     {
         // Arrange
         var orderId = Guid.NewGuid();
-        var events = new Mvp24Hours.Infrastructure.Cqrs.Abstractions.IDomainEvent[]
+        var events = new CoreDomainEvent[]
         {
             new OrderCreatedEvent { OrderId = orderId },
             new OrderItemAddedEvent { OrderId = orderId },

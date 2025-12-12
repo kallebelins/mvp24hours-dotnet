@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -79,7 +80,7 @@ public interface IEventStore
     /// </example>
     Task AppendEventsAsync(
         Guid aggregateId,
-        IEnumerable<IDomainEvent> events,
+        IEnumerable<CoreDomainEvent> events,
         long expectedVersion,
         CancellationToken cancellationToken = default);
 
@@ -105,7 +106,7 @@ public interface IEventStore
     /// var eventsAfterSnapshot = await eventStore.GetEventsAsync(orderId, fromVersion: 5);
     /// </code>
     /// </example>
-    Task<IReadOnlyList<IDomainEvent>> GetEventsAsync(
+    Task<IReadOnlyList<CoreDomainEvent>> GetEventsAsync(
         Guid aggregateId,
         long fromVersion = 0,
         CancellationToken cancellationToken = default);

@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
+using CoreIEntityBase = Mvp24Hours.Core.Contract.Domain.Entity.IEntityBase;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -14,7 +17,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// <para>
 /// <strong>Usage Pattern:</strong>
 /// <list type="number">
-/// <item>Define events as records implementing <see cref="IDomainEvent"/></item>
+/// <item>Define events as records implementing <see cref="CoreDomainEvent"/></item>
 /// <item>Override <see cref="Apply"/> to handle each event type</item>
 /// <item>Use <see cref="Raise"/> to emit new events</item>
 /// <item>Use <see cref="LoadFromHistory"/> to reconstruct from persisted events</item>
@@ -63,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 ///         });
 ///     }
 ///     
-///     protected override void Apply(IDomainEvent @event)
+///     protected override void Apply(CoreDomainEvent @event)
 ///     {
 ///         switch (@event)
 ///         {
@@ -79,15 +82,15 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// }
 /// </code>
 /// </example>
-public abstract class AggregateRoot : IAggregate
+public abstract class AggregateRoot : IEventSourcedAggregate
 {
-    private readonly List<IDomainEvent> _uncommittedEvents = new();
+    private readonly List<CoreDomainEvent> _uncommittedEvents = new();
     private long _version;
 
     /// <summary>
     /// Gets the unique identifier of the aggregate.
     /// </summary>
-    public Guid Id { get; protected set; }
+    object CoreIEntityBase.EntityKey => Guid.Empty;
 
     /// <summary>
     /// Gets the current version of the aggregate.
@@ -98,7 +101,12 @@ public abstract class AggregateRoot : IAggregate
     /// <summary>
     /// Gets the uncommitted events that have been raised but not yet persisted.
     /// </summary>
-    public IReadOnlyCollection<IDomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+    public IReadOnlyCollection<CoreDomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+
+    /// <summary>
+    /// Gets the domain events for IHasDomainEvents compatibility.
+    /// </summary>
+    IReadOnlyCollection<CoreDomainEvent> CoreHasDomainEvents.DomainEvents => _uncommittedEvents.AsReadOnly();
 
     /// <summary>
     /// Gets whether the aggregate has uncommitted events.
@@ -119,12 +127,17 @@ public abstract class AggregateRoot : IAggregate
     }
 
     /// <summary>
+    /// Clears domain events (IHasDomainEvents implementation).
+    /// </summary>
+    void CoreHasDomainEvents.ClearDomainEvents() => ClearUncommittedEvents();
+
+    /// <summary>
     /// Loads the aggregate from historical events.
     /// This method is used to reconstruct the aggregate state from persisted events.
     /// </summary>
     /// <param name="events">The historical events to replay.</param>
     /// <exception cref="ArgumentNullException">Thrown when events is null.</exception>
-    public void LoadFromHistory(IEnumerable<IDomainEvent> events)
+    public void LoadFromHistory(IEnumerable<CoreDomainEvent> events)
     {
         ArgumentNullException.ThrowIfNull(events);
 
@@ -141,7 +154,7 @@ public abstract class AggregateRoot : IAggregate
     /// </summary>
     /// <param name="event">The event to raise.</param>
     /// <exception cref="ArgumentNullException">Thrown when event is null.</exception>
-    protected void Raise(IDomainEvent @event)
+    protected void Raise(CoreDomainEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);
 
@@ -167,7 +180,7 @@ public abstract class AggregateRoot : IAggregate
     /// </list>
     /// </para>
     /// </remarks>
-    protected abstract void Apply(IDomainEvent @event);
+    protected abstract void Apply(CoreDomainEvent @event);
 }
 
 /// <summary>
@@ -180,7 +193,7 @@ public abstract class AggregateRoot : IAggregate
 /// {
 ///     public string Name { get; private set; } = string.Empty;
 ///     
-///     protected override void Apply(IDomainEvent @event)
+///     protected override void Apply(CoreDomainEvent @event)
 ///     {
 ///         switch (@event)
 ///         {
@@ -193,9 +206,9 @@ public abstract class AggregateRoot : IAggregate
 /// }
 /// </code>
 /// </example>
-public abstract class AggregateRoot<TId> : IAggregate<TId>
+public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
 {
-    private readonly List<IDomainEvent> _uncommittedEvents = new();
+    private readonly List<CoreDomainEvent> _uncommittedEvents = new();
     private long _version;
 
     /// <summary>
@@ -204,9 +217,9 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
     public TId Id { get; protected set; } = default!;
 
     /// <summary>
-    /// Gets the identifier as Guid (for IAggregate compatibility).
+    /// Gets the entity key (for IEntityBase compatibility).
     /// </summary>
-    Guid IAggregate.Id => ConvertToGuid(Id);
+    object CoreIEntityBase.EntityKey => Id!;
 
     /// <summary>
     /// Gets the current version of the aggregate.
@@ -216,7 +229,12 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
     /// <summary>
     /// Gets the uncommitted events.
     /// </summary>
-    public IReadOnlyCollection<IDomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+    public IReadOnlyCollection<CoreDomainEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+
+    /// <summary>
+    /// Gets the domain events for IHasDomainEvents compatibility.
+    /// </summary>
+    IReadOnlyCollection<CoreDomainEvent> CoreHasDomainEvents.DomainEvents => _uncommittedEvents.AsReadOnly();
 
     /// <summary>
     /// Gets whether the aggregate has uncommitted events.
@@ -232,10 +250,15 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
     }
 
     /// <summary>
+    /// Clears domain events (IHasDomainEvents implementation).
+    /// </summary>
+    void CoreHasDomainEvents.ClearDomainEvents() => ClearUncommittedEvents();
+
+    /// <summary>
     /// Loads the aggregate from historical events.
     /// </summary>
     /// <param name="events">The historical events to replay.</param>
-    public void LoadFromHistory(IEnumerable<IDomainEvent> events)
+    public void LoadFromHistory(IEnumerable<CoreDomainEvent> events)
     {
         ArgumentNullException.ThrowIfNull(events);
 
@@ -250,7 +273,7 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
     /// Raises a new domain event.
     /// </summary>
     /// <param name="event">The event to raise.</param>
-    protected void Raise(IDomainEvent @event)
+    protected void Raise(CoreDomainEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);
 
@@ -263,22 +286,7 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
     /// Applies an event to update aggregate state.
     /// </summary>
     /// <param name="event">The event to apply.</param>
-    protected abstract void Apply(IDomainEvent @event);
-
-    /// <summary>
-    /// Converts the typed ID to Guid for IAggregate compatibility.
-    /// </summary>
-    private static Guid ConvertToGuid(TId id)
-    {
-        return id switch
-        {
-            Guid g => g,
-            string s => Guid.TryParse(s, out var result) ? result : Guid.Empty,
-            int i => new Guid(i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            long l => new Guid((int)(l >> 32), (short)(l >> 16), (short)l, 0, 0, 0, 0, 0, 0, 0, 0),
-            _ => Guid.Empty
-        };
-    }
+    protected abstract void Apply(CoreDomainEvent @event);
 }
 
 /// <summary>
@@ -315,7 +323,7 @@ public abstract class AggregateRoot<TId> : IAggregate<TId>
 ///         SetVersion(version);
 ///     }
 ///     
-///     protected override void Apply(IDomainEvent @event) { ... }
+///     protected override void Apply(CoreDomainEvent @event) { ... }
 /// }
 /// </code>
 /// </example>

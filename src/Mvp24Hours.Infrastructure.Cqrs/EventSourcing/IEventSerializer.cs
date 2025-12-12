@@ -6,6 +6,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -27,7 +28,7 @@ public interface IEventSerializer
     /// <param name="eventType">The type name of the event.</param>
     /// <param name="data">The serialized event data.</param>
     /// <returns>The deserialized event.</returns>
-    IDomainEvent Deserialize(string eventType, string data);
+    CoreDomainEvent Deserialize(string eventType, string data);
 
     /// <summary>
     /// Deserializes data to a specific type.
@@ -67,7 +68,7 @@ public class JsonEventSerializer : IEventSerializer
     }
 
     /// <inheritdoc />
-    public IDomainEvent Deserialize(string eventType, string data)
+    public CoreDomainEvent Deserialize(string eventType, string data)
     {
         if (string.IsNullOrWhiteSpace(eventType))
             throw new ArgumentException("Event type cannot be null or empty.", nameof(eventType));
@@ -87,7 +88,7 @@ public class JsonEventSerializer : IEventSerializer
             throw new InvalidOperationException($"Failed to deserialize event of type: {eventType}");
         }
 
-        return (IDomainEvent)result;
+        return (CoreDomainEvent)result;
     }
 
     /// <inheritdoc />
@@ -166,7 +167,7 @@ public class RegistryEventTypeResolver : IEventTypeResolver
     /// </summary>
     /// <typeparam name="TEvent">The event type.</typeparam>
     /// <param name="name">The name to use for serialization.</param>
-    public void Register<TEvent>(string name) where TEvent : IDomainEvent
+    public void Register<TEvent>(string name) where TEvent : CoreDomainEvent
     {
         Register(typeof(TEvent), name);
     }

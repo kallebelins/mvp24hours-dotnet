@@ -7,6 +7,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
@@ -40,7 +42,7 @@ public static class DomainToIntegrationEventExtensions
         IServiceProvider serviceProvider,
         IIntegrationEventOutbox outbox,
         CancellationToken cancellationToken = default)
-        where TEntity : IHasDomainEvents
+        where TEntity : CoreHasDomainEvents
     {
         if (entity == null || !entity.DomainEvents.Any())
         {
@@ -72,7 +74,7 @@ public static class DomainToIntegrationEventExtensions
     /// <param name="serviceProvider">Service provider for resolving converters.</param>
     /// <returns>The integration event, or null if no converter is registered.</returns>
     public static IIntegrationEvent? ConvertDomainEventToIntegrationEvent(
-        IDomainEvent domainEvent,
+        CoreDomainEvent domainEvent,
         IServiceProvider serviceProvider)
     {
         var domainEventType = domainEvent.GetType();

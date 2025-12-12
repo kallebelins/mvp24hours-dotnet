@@ -6,6 +6,7 @@
 
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -66,9 +67,14 @@ public class OrderItem
     public decimal UnitPrice { get; set; }
 }
 
-public class TestOrder : AggregateRoot
+#pragma warning disable CS0618 // Type or member is obsolete - using IAggregate for backward compatibility with tests
+public class TestOrder : AggregateRoot<Guid>, IAggregate
+#pragma warning restore CS0618
 {
     private readonly List<OrderItem> _items = new();
+
+    // Explicit implementation of IAggregate.Id (which uses new keyword)
+    Guid IAggregate.Id => Id;
 
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
@@ -146,7 +152,7 @@ public class TestOrder : AggregateRoot
         });
     }
 
-    protected override void Apply(IDomainEvent @event)
+    protected override void Apply(CoreDomainEvent @event)
     {
         switch (@event)
         {
@@ -200,6 +206,8 @@ public class TestOrderWithSnapshot : SnapshotAggregateRoot<OrderSnapshot>
 {
     private readonly List<OrderItem> _items = new();
 
+    // Local Id property since SnapshotAggregateRoot inherits from non-generic AggregateRoot
+    public Guid Id { get; private set; }
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }
@@ -231,7 +239,7 @@ public class TestOrderWithSnapshot : SnapshotAggregateRoot<OrderSnapshot>
         });
     }
 
-    protected override void Apply(IDomainEvent @event)
+    protected override void Apply(CoreDomainEvent @event)
     {
         switch (@event)
         {

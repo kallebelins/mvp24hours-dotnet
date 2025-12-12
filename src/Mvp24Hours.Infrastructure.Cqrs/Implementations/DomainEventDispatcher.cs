@@ -6,6 +6,8 @@
 
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -46,7 +48,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
     }
 
     /// <inheritdoc />
-    public async Task DispatchEventsAsync(IHasDomainEvents entity, CancellationToken cancellationToken = default)
+    public async Task DispatchEventsAsync(CoreHasDomainEvents entity, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
@@ -76,7 +78,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
     }
 
     /// <inheritdoc />
-    public async Task DispatchEventsAsync(IEnumerable<IHasDomainEvents> entities, CancellationToken cancellationToken = default)
+    public async Task DispatchEventsAsync(IEnumerable<CoreHasDomainEvents> entities, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entities);
 
@@ -102,7 +104,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
         }
     }
 
-    private async Task DispatchEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
+    private async Task DispatchEventAsync(CoreDomainEvent domainEvent, CancellationToken cancellationToken)
     {
         var eventType = domainEvent.GetType();
 

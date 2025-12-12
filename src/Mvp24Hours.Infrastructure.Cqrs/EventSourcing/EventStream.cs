@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -23,7 +24,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// </remarks>
 public class EventStream
 {
-    private readonly List<IDomainEvent> _events = new();
+    private readonly List<CoreDomainEvent> _events = new();
 
     /// <summary>
     /// Gets the aggregate identifier for this stream.
@@ -44,7 +45,7 @@ public class EventStream
     /// <summary>
     /// Gets all events in this stream.
     /// </summary>
-    public IReadOnlyList<IDomainEvent> Events => _events.AsReadOnly();
+    public IReadOnlyList<CoreDomainEvent> Events => _events.AsReadOnly();
 
     /// <summary>
     /// Gets whether the stream has any events.
@@ -81,7 +82,7 @@ public class EventStream
     /// <param name="aggregateType">The aggregate type name.</param>
     /// <param name="events">The existing events.</param>
     /// <param name="version">The current version.</param>
-    public EventStream(Guid aggregateId, string aggregateType, IEnumerable<IDomainEvent> events, long version)
+    public EventStream(Guid aggregateId, string aggregateType, IEnumerable<CoreDomainEvent> events, long version)
         : this(aggregateId, aggregateType)
     {
         _events.AddRange(events);
@@ -93,7 +94,7 @@ public class EventStream
     /// </summary>
     /// <param name="events">The events to append.</param>
     /// <exception cref="ArgumentNullException">Thrown when events is null.</exception>
-    internal void Append(IEnumerable<IDomainEvent> events)
+    internal void Append(IEnumerable<CoreDomainEvent> events)
     {
         ArgumentNullException.ThrowIfNull(events);
 
@@ -109,13 +110,13 @@ public class EventStream
     /// </summary>
     /// <param name="afterVersion">The version after which to get events.</param>
     /// <returns>Events with version greater than the specified version.</returns>
-    public IReadOnlyList<IDomainEvent> GetEventsAfterVersion(long afterVersion)
+    public IReadOnlyList<CoreDomainEvent> GetEventsAfterVersion(long afterVersion)
     {
         if (afterVersion < 0)
             throw new ArgumentOutOfRangeException(nameof(afterVersion), "Version cannot be negative.");
 
         if (afterVersion >= Version)
-            return Array.Empty<IDomainEvent>();
+            return Array.Empty<CoreDomainEvent>();
 
         return _events.Skip((int)afterVersion).ToList().AsReadOnly();
     }

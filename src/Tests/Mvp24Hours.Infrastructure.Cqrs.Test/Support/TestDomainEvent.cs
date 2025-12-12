@@ -5,6 +5,8 @@
 //=====================================================================================
 
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -67,14 +69,14 @@ public class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
 /// <summary>
 /// Test entity that has domain events.
 /// </summary>
-public class TestAggregate : IHasDomainEvents
+public class TestAggregate : CoreHasDomainEvents
 {
-    private readonly List<IDomainEvent> _domainEvents = new();
+    private readonly List<CoreDomainEvent> _domainEvents = new();
 
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public IReadOnlyCollection<CoreDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     public void ClearDomainEvents() => _domainEvents.Clear();
 

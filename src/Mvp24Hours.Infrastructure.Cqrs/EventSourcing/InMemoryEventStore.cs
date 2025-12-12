@@ -5,6 +5,7 @@
 //=====================================================================================
 
 using System.Collections.Concurrent;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -59,7 +60,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
     /// <inheritdoc />
     public Task AppendEventsAsync(
         Guid aggregateId,
-        IEnumerable<IDomainEvent> events,
+        IEnumerable<CoreDomainEvent> events,
         long expectedVersion,
         CancellationToken cancellationToken = default)
     {
@@ -110,7 +111,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<IDomainEvent>> GetEventsAsync(
+    public Task<IReadOnlyList<CoreDomainEvent>> GetEventsAsync(
         Guid aggregateId,
         long fromVersion = 0,
         CancellationToken cancellationToken = default)
@@ -119,7 +120,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         {
             if (!_eventStreams.TryGetValue(aggregateId, out var stream))
             {
-                return Task.FromResult<IReadOnlyList<IDomainEvent>>(Array.Empty<IDomainEvent>());
+                return Task.FromResult<IReadOnlyList<CoreDomainEvent>>(Array.Empty<CoreDomainEvent>());
             }
 
             var events = stream
@@ -128,7 +129,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
                 .Select(e => _serializer.Deserialize(e.EventType, e.EventData))
                 .ToList();
 
-            return Task.FromResult<IReadOnlyList<IDomainEvent>>(events);
+            return Task.FromResult<IReadOnlyList<CoreDomainEvent>>(events);
         }
     }
 

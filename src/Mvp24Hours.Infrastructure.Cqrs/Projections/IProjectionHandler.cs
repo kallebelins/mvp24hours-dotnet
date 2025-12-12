@@ -4,8 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
+using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
 
@@ -63,7 +63,7 @@ public interface IProjectionHandler
 /// </code>
 /// </example>
 public interface IProjectionHandler<in TEvent> : IProjectionHandler
-    where TEvent : IDomainEvent
+    where TEvent : CoreDomainEvent
 {
     /// <summary>
     /// Handles the projection of an event.
@@ -88,7 +88,7 @@ public interface IMultiEventProjectionHandler : IProjectionHandler
     /// <param name="event">The event to project.</param>
     /// <param name="context">The projection context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task HandleAsync(IDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
+    Task HandleAsync(CoreDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determines if this handler can process the given event type.
@@ -175,7 +175,7 @@ public class ProjectionContext
 /// </summary>
 /// <typeparam name="TEvent">The event type to project.</typeparam>
 public abstract class ProjectionHandlerBase<TEvent> : IProjectionHandler<TEvent>
-    where TEvent : IDomainEvent
+    where TEvent : CoreDomainEvent
 {
     /// <inheritdoc />
     public abstract Task HandleAsync(TEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
@@ -187,7 +187,7 @@ public abstract class ProjectionHandlerBase<TEvent> : IProjectionHandler<TEvent>
 /// <typeparam name="TEvent">The event type.</typeparam>
 /// <typeparam name="TReadModel">The read model type.</typeparam>
 public abstract class ReadModelProjectionHandler<TEvent, TReadModel> : ProjectionHandlerBase<TEvent>
-    where TEvent : IDomainEvent
+    where TEvent : CoreDomainEvent
     where TReadModel : class
 {
     /// <summary>
@@ -236,7 +236,7 @@ public abstract class AggregatingProjectionHandler<TReadModel> : IMultiEventProj
     /// Registers an event type that this handler can process.
     /// </summary>
     /// <typeparam name="TEvent">The event type.</typeparam>
-    protected void Handles<TEvent>() where TEvent : IDomainEvent
+    protected void Handles<TEvent>() where TEvent : CoreDomainEvent
     {
         _handledTypes.Add(typeof(TEvent));
     }
@@ -248,7 +248,7 @@ public abstract class AggregatingProjectionHandler<TReadModel> : IMultiEventProj
     }
 
     /// <inheritdoc />
-    public abstract Task HandleAsync(IDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
+    public abstract Task HandleAsync(CoreDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
 }
 
 

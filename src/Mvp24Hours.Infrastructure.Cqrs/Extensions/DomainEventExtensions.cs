@@ -6,6 +6,7 @@
 
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
@@ -50,7 +51,7 @@ public static class DomainEventExtensions
     public static async Task<int> SaveChangesWithEventsAsync(
         this IUnitOfWorkAsync unitOfWork,
         IDomainEventDispatcher dispatcher,
-        IEnumerable<IHasDomainEvents> entities,
+        IEnumerable<CoreHasDomainEvents> entities,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
@@ -76,7 +77,7 @@ public static class DomainEventExtensions
     public static Task<int> SaveChangesWithEventsAsync(
         this IUnitOfWorkAsync unitOfWork,
         IDomainEventDispatcher dispatcher,
-        IHasDomainEvents entity,
+        CoreHasDomainEvents entity,
         CancellationToken cancellationToken = default)
     {
         return unitOfWork.SaveChangesWithEventsAsync(
@@ -96,7 +97,7 @@ public static class DomainEventExtensions
     public static int SaveChangesWithEvents(
         this IUnitOfWork unitOfWork,
         IDomainEventDispatcher dispatcher,
-        IEnumerable<IHasDomainEvents> entities,
+        IEnumerable<CoreHasDomainEvents> entities,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
@@ -124,7 +125,7 @@ public static class DomainEventExtensions
     public static int SaveChangesWithEvents(
         this IUnitOfWork unitOfWork,
         IDomainEventDispatcher dispatcher,
-        IHasDomainEvents entity,
+        CoreHasDomainEvents entity,
         CancellationToken cancellationToken = default)
     {
         return unitOfWork.SaveChangesWithEvents(
@@ -139,11 +140,11 @@ public static class DomainEventExtensions
     /// <typeparam name="T">The type of entities.</typeparam>
     /// <param name="entities">The collection of entities.</param>
     /// <returns>Entities that implement IHasDomainEvents and have pending events.</returns>
-    public static IEnumerable<IHasDomainEvents> WithDomainEvents<T>(this IEnumerable<T> entities)
+    public static IEnumerable<CoreHasDomainEvents> WithDomainEvents<T>(this IEnumerable<T> entities)
         where T : class
     {
         return entities
-            .OfType<IHasDomainEvents>()
+            .OfType<CoreHasDomainEvents>()
             .Where(e => e.DomainEvents.Count > 0);
     }
 }
