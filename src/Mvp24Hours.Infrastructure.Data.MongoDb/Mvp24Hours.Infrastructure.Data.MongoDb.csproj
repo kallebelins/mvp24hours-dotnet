@@ -19,12 +19,13 @@
 	<ItemGroup>
 		<PackageReference Include="MongoDB.Driver" Version="2.23.1" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
 		<ProjectReference Include="..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
+		<ProjectReference Include="..\Mvp24Hours.Infrastructure.Cqrs\Mvp24Hours.Infrastructure.Cqrs.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
