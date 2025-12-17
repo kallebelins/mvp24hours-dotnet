@@ -5,6 +5,7 @@
 //=====================================================================================
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
+using Mvp24Hours.Patterns.Test.Setup;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
@@ -17,11 +18,13 @@ namespace Mvp24Hours.Patterns.Test
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
     public class WebRequestTest
     {
+        private static string GetBaseUrl() => Startup.GetMockServer().Url;
+
         [Fact, Priority(1)]
         public async Task GetPostsAsync()
         {
             // arrange
-            var result = await WebRequestHelper.GetAsync("https://jsonplaceholder.typicode.com/posts");
+            var result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts");
             // assert
             Assert.NotNull(result);
         }
@@ -30,7 +33,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task GetIdPostsAsync()
         {
             // arrange
-            var result = await WebRequestHelper.GetAsync("https://jsonplaceholder.typicode.com/posts/1");
+            var result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts/1");
             // assert
             Assert.NotNull(result);
         }
@@ -45,7 +48,7 @@ namespace Mvp24Hours.Patterns.Test
                 body = "bar",
                 userId = 1,
             };
-            var result = await WebRequestHelper.PostAsync("https://jsonplaceholder.typicode.com/posts", dto.ToSerialize());
+            var result = await WebRequestHelper.PostAsync($"{GetBaseUrl()}/posts", dto.ToSerialize());
             // assert
             Assert.NotNull(result);
         }
@@ -61,7 +64,7 @@ namespace Mvp24Hours.Patterns.Test
                 body = "bar1",
                 userId = 1,
             };
-            var result = await WebRequestHelper.PutAsync("https://jsonplaceholder.typicode.com/posts/1", dto.ToSerialize());
+            var result = await WebRequestHelper.PutAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
             // assert
             Assert.NotNull(result);
         }
@@ -71,7 +74,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task DeletePostsAsync()
         {
             // arrange
-            var result = await WebRequestHelper.DeleteAsync("https://jsonplaceholder.typicode.com/posts/1");
+            var result = await WebRequestHelper.DeleteAsync($"{GetBaseUrl()}/posts/1");
             // assert
             Assert.Equal("{}", result);
         }
@@ -84,7 +87,7 @@ namespace Mvp24Hours.Patterns.Test
             {
                 title = "foo1"
             };
-            var result = await WebRequestHelper.PatchAsync("https://jsonplaceholder.typicode.com/posts/1", dto.ToSerialize());
+            var result = await WebRequestHelper.PatchAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
             // assert
             Assert.NotNull(result);
         }

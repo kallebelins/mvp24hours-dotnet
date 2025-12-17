@@ -7,6 +7,7 @@
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -218,7 +219,7 @@ public sealed class TransactionWithEventsBehavior<TRequest, TResponse> : IPipeli
                 affectedRows);
 
             // Dispatch domain events from the response if applicable
-            if (_eventDispatcher != null && response is IHasDomainEvents entityWithEvents)
+            if (_eventDispatcher != null && response is CoreHasDomainEvents entityWithEvents)
             {
                 await _eventDispatcher.DispatchEventsAsync(entityWithEvents, cancellationToken);
             }

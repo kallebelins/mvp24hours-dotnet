@@ -9,6 +9,7 @@ using System;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
+using WireMock.Settings;
 
 namespace Mvp24Hours.Patterns.Test.Setup
 {
@@ -23,7 +24,11 @@ namespace Mvp24Hours.Patterns.Test.Setup
             {
                 if (_server == null || !_server.IsStarted)
                 {
-                    _server = WireMockServer.Start();
+                    _server = WireMockServer.Start(new WireMockServerSettings
+                    {
+                        UseSSL = false,
+                        StartAdminInterface = false
+                    });
                     ConfigureMockEndpoints(_server);
                 }
                 return _server;
@@ -40,6 +45,16 @@ namespace Mvp24Hours.Patterns.Test.Setup
                     .WithBody(@"[
                         {""id"": 1, ""name"": ""Leanne Graham"", ""username"": ""Bret"", ""email"": ""Sincere@april.biz""},
                         {""id"": 2, ""name"": ""Ervin Howell"", ""username"": ""Antonette"", ""email"": ""Shanna@melissa.tv""}
+                    ]"));
+
+            // GET /posts
+            server.Given(Request.Create().WithPath("/posts").UsingGet())
+                .RespondWith(Response.Create()
+                    .WithStatusCode(200)
+                    .WithHeader("Content-Type", "application/json")
+                    .WithBody(@"[
+                        {""id"": 1, ""title"": ""test title"", ""body"": ""test body"", ""userId"": 1},
+                        {""id"": 2, ""title"": ""test title 2"", ""body"": ""test body 2"", ""userId"": 1}
                     ]"));
 
             // GET /posts/1
