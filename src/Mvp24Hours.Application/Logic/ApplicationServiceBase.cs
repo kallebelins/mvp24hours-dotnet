@@ -6,13 +6,16 @@
 using FluentValidation;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Mvp24Hours.Application.Logic
@@ -317,6 +320,160 @@ namespace Mvp24Hours.Application.Logic
         }
 
         #endregion
+
+        #region [ Specification Pattern Implementation ]
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<bool> AnyBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebase-anybyspecification");
+
+            if (specification == null)
+            {
+                return false.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.AnyBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return _repository.GetByAny(specification.IsSatisfiedByExpression).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<int> CountBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebase-countbyspecification");
+
+            if (specification == null)
+            {
+                return 0.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.CountBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return _repository.GetByCount(specification.IsSatisfiedByExpression).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<IList<TEntity>> GetBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebase-getbyspecification");
+
+            if (specification == null)
+            {
+                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly with paging if available
+            IPagingCriteria? pagingCriteria = null;
+            if (specification is ISpecificationQueryEnhanced<TEntity> enhancedSpec)
+            {
+                pagingCriteria = CreatePagingCriteriaFromSpecification(enhancedSpec);
+            }
+
+            return _repository.GetBy(specification.IsSatisfiedByExpression, pagingCriteria).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<TEntity?> GetSingleBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebase-getsinglebyspecification");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetSingleBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: get by expression and take single
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var entity = result?.SingleOrDefault();
+            return entity.ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<TEntity?> GetFirstBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebase-getfirstbyspecification");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetFirstBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: get by expression and take first
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var entity = result?.FirstOrDefault();
+            return entity.ToBusiness();
+        }
+
+        /// <summary>
+        /// Creates paging criteria from an enhanced specification.
+        /// </summary>
+        /// <param name="specification">The enhanced specification with paging info.</param>
+        /// <returns>A paging criteria object, or null if no paging is configured.</returns>
+        protected virtual IPagingCriteria? CreatePagingCriteriaFromSpecification(ISpecificationQueryEnhanced<TEntity> specification)
+        {
+            if (!specification.IsPagingEnabled && (specification.OrderBy == null || specification.OrderBy.Count == 0))
+            {
+                return null;
+            }
+
+            // Create a simple paging criteria from the specification
+            // Note: This is a simplified implementation. Full include/ordering support
+            // requires repository-level Specification support.
+            return new SpecificationPagingCriteria(specification.Skip, specification.Take);
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Simple paging criteria implementation for specification-based queries.
+    /// </summary>
+    internal class SpecificationPagingCriteria : IPagingCriteria
+    {
+        public SpecificationPagingCriteria(int? skip, int? take)
+        {
+            Offset = skip ?? 0;
+            Limit = take ?? 0;
+        }
+
+        public int Offset { get; }
+        public int Limit { get; }
+        public IReadOnlyCollection<string>? OrderBy { get; }
+        public IReadOnlyCollection<string>? Navigation { get; }
     }
 }
 

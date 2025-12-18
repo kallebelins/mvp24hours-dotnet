@@ -3,7 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.Domain.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -129,6 +131,113 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with the entity, or null if not found.</returns>
         Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+
+        #region [ Specification Pattern Methods ]
+
+        /// <summary>
+        /// Asynchronously checks whether any records matching the specification exist.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task containing a business result indicating whether any matching records exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method uses the Specification pattern to encapsulate query logic,
+        /// making it reusable and composable.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var spec = new ActiveCustomerSpecification();
+        /// var result = await service.AnyBySpecificationAsync(spec);
+        /// if (result.Data)
+        /// {
+        ///     // At least one active customer exists
+        /// }
+        /// </code>
+        /// </example>
+        Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Asynchronously gets the count of records matching the specification.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task containing a business result with the count of matching records.</returns>
+        /// <example>
+        /// <code>
+        /// var spec = new PremiumCustomerSpecification();
+        /// var result = await service.CountBySpecificationAsync(spec);
+        /// Console.WriteLine($"Premium customers: {result.Data}");
+        /// </code>
+        /// </example>
+        Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Asynchronously retrieves entities matching the specification.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task containing a business result with entities matching the specification.</returns>
+        /// <remarks>
+        /// <para>
+        /// The specification can include:
+        /// <list type="bullet">
+        /// <item>Filtering criteria via the expression</item>
+        /// <item>Navigation properties to include (if enhanced specification)</item>
+        /// <item>Ordering (if enhanced specification)</item>
+        /// <item>Pagination (if enhanced specification)</item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var spec = new ActiveCustomersWithOrdersSpecification();
+        /// var result = await service.GetBySpecificationAsync(spec);
+        /// </code>
+        /// </example>
+        Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Asynchronously retrieves a single entity matching the specification, or null if not found.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task containing a business result with the entity, or null if not found.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when more than one entity matches the specification.</exception>
+        /// <example>
+        /// <code>
+        /// var spec = new CustomerByEmailSpecification("john@example.com");
+        /// var result = await service.GetSingleBySpecificationAsync(spec);
+        /// </code>
+        /// </example>
+        Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Asynchronously retrieves the first entity matching the specification, or null if not found.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A task containing a business result with the first entity, or null if not found.</returns>
+        /// <example>
+        /// <code>
+        /// var spec = new NewestCustomerSpecification();
+        /// var result = await service.GetFirstBySpecificationAsync(spec);
+        /// </code>
+        /// </example>
+        Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        #endregion
     }
 }
 

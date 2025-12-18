@@ -49,7 +49,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
                 options.DatabaseName = "queryservicetest";
                 options.ConnectionString = _mongoDbContainer.GetConnectionString();
             });
-            services.AddMvp24HoursRepository();
+            services.AddMvp24HoursRepository(repositoryOptions: null);
             services.AddScoped<CustomerService, CustomerService>();
             serviceProvider = services.BuildServiceProvider();
 

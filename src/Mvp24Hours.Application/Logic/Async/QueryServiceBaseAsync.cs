@@ -5,6 +5,7 @@
 //=====================================================================================
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums.Infrastructure;
@@ -12,6 +13,7 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -161,6 +163,119 @@ namespace Mvp24Hours.Application.Logic
         {
             TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyidasync");
             return _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
+        }
+
+        #endregion
+
+        #region [ Specification Pattern Implementation ]
+
+        /// <inheritdoc/>
+        public virtual async Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-anybyspecificationasync");
+
+            if (specification == null)
+            {
+                return false.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+            {
+                return (await readOnlyRepo.AnyBySpecificationAsync(specification, cancellationToken)).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return await _repository.GetByAnyAsync(specification.IsSatisfiedByExpression, cancellationToken: cancellationToken).ToBusinessAsync();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-countbyspecificationasync");
+
+            if (specification == null)
+            {
+                return 0.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+            {
+                return (await readOnlyRepo.CountBySpecificationAsync(specification, cancellationToken)).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return await _repository.GetByCountAsync(specification.IsSatisfiedByExpression, cancellationToken: cancellationToken).ToBusinessAsync();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyspecificationasync");
+
+            if (specification == null)
+            {
+                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+            {
+                return (await readOnlyRepo.GetBySpecificationAsync(specification, cancellationToken)).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken).ToBusinessAsync();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getsinglebyspecificationasync");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+            {
+                return (await readOnlyRepo.GetSingleBySpecificationAsync(specification, cancellationToken)).ToBusiness();
+            }
+
+            // Fallback: get by expression and take single
+            var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+            var entity = result?.SingleOrDefault();
+            return entity.ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getfirstbyspecificationasync");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+            {
+                return (await readOnlyRepo.GetFirstBySpecificationAsync(specification, cancellationToken)).ToBusiness();
+            }
+
+            // Fallback: get by expression and take first
+            var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+            var entity = result?.FirstOrDefault();
+            return entity.ToBusiness();
         }
 
         #endregion

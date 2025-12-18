@@ -16,13 +16,44 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Specifications
     /// </summary>
     /// <typeparam name="T">The entity type</typeparam>
     /// <remarks>
+    /// <para>
     /// This evaluator supports:
-    /// - Criteria filtering via Where clause
-    /// - Include statements for eager loading
-    /// - OrderBy/OrderByDescending for sorting
-    /// - Skip/Take for pagination
+    /// <list type="bullet">
+    /// <item>Criteria filtering via Where clause</item>
+    /// <item>Include statements for eager loading (expression and string-based)</item>
+    /// <item>OrderBy/OrderByDescending for sorting</item>
+    /// <item>Skip/Take for pagination</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// This class implements <see cref="ISpecificationEvaluator{T}"/> to enable dependency injection
+    /// and allow swapping evaluator implementations in different contexts.
+    /// </para>
     /// </remarks>
-    public class SpecificationEvaluator<T>
+    /// <example>
+    /// <code>
+    /// // Register in DI
+    /// services.AddScoped(typeof(ISpecificationEvaluator&lt;&gt;), typeof(SpecificationEvaluator&lt;&gt;));
+    /// 
+    /// // Use in service
+    /// public class CustomerService
+    /// {
+    ///     private readonly ISpecificationEvaluator&lt;Customer&gt; _evaluator;
+    ///     
+    ///     public CustomerService(ISpecificationEvaluator&lt;Customer&gt; evaluator)
+    ///     {
+    ///         _evaluator = evaluator;
+    ///     }
+    ///     
+    ///     public IList&lt;Customer&gt; GetActiveCustomers(DbSet&lt;Customer&gt; customers)
+    ///     {
+    ///         var spec = new ActiveCustomerSpecification();
+    ///         return _evaluator.GetQuery(customers, spec).ToList();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public class SpecificationEvaluator<T> : ISpecificationEvaluator<T>
         where T : class, IEntityBase
     {
         /// <summary>

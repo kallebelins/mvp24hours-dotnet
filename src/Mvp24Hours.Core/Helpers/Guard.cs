@@ -341,6 +341,60 @@ namespace Mvp24Hours.Core.Helpers
             return value;
         }
 
+        /// <summary>
+        /// Throws <see cref="ArgumentOutOfRangeException"/> if the value is less than the specified minimum.
+        /// </summary>
+        /// <param name="guardClause">The guard clause.</param>
+        /// <param name="value">The value to check.</param>
+        /// <param name="minimum">The minimum allowed value.</param>
+        /// <param name="parameterName">The name of the parameter.</param>
+        /// <param name="message">Optional custom error message.</param>
+        /// <returns>The original value if not less than minimum.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when value is less than minimum.</exception>
+        public static int LessThan(
+            this IGuardClause guardClause,
+            int value,
+            int minimum,
+            string parameterName,
+            string? message = null)
+        {
+            if (value < minimum)
+            {
+                throw new ArgumentOutOfRangeException(
+                    parameterName,
+                    value,
+                    message ?? $"Parameter '{parameterName}' must be at least {minimum}. Actual value: {value}.");
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Throws <see cref="ArgumentOutOfRangeException"/> if the value is greater than the specified maximum.
+        /// </summary>
+        /// <param name="guardClause">The guard clause.</param>
+        /// <param name="value">The value to check.</param>
+        /// <param name="maximum">The maximum allowed value.</param>
+        /// <param name="parameterName">The name of the parameter.</param>
+        /// <param name="message">Optional custom error message.</param>
+        /// <returns>The original value if not greater than maximum.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when value is greater than maximum.</exception>
+        public static int GreaterThan(
+            this IGuardClause guardClause,
+            int value,
+            int maximum,
+            string parameterName,
+            string? message = null)
+        {
+            if (value > maximum)
+            {
+                throw new ArgumentOutOfRangeException(
+                    parameterName,
+                    value,
+                    message ?? $"Parameter '{parameterName}' must be at most {maximum}. Actual value: {value}.");
+            }
+            return value;
+        }
+
         #endregion
 
         #region Format Validations

@@ -3,7 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.Domain.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -116,6 +118,108 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing the entity, or null if not found.</returns>
         IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria);
+
+        #region [ Specification Pattern Methods ]
+
+        /// <summary>
+        /// Checks whether any records matching the specification exist.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <returns>A business result indicating whether any matching records exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method uses the Specification pattern to encapsulate query logic,
+        /// making it reusable and composable.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var spec = new ActiveCustomerSpecification();
+        /// var result = service.AnyBySpecification(spec);
+        /// if (result.Data)
+        /// {
+        ///     // At least one active customer exists
+        /// }
+        /// </code>
+        /// </example>
+        IBusinessResult<bool> AnyBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Gets the count of records matching the specification.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <returns>A business result containing the count of matching records.</returns>
+        /// <example>
+        /// <code>
+        /// var spec = new PremiumCustomerSpecification();
+        /// var result = service.CountBySpecification(spec);
+        /// Console.WriteLine($"Premium customers: {result.Data}");
+        /// </code>
+        /// </example>
+        IBusinessResult<int> CountBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Retrieves entities matching the specification.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <returns>A business result containing entities matching the specification.</returns>
+        /// <remarks>
+        /// <para>
+        /// The specification can include:
+        /// <list type="bullet">
+        /// <item>Filtering criteria via the expression</item>
+        /// <item>Navigation properties to include (if enhanced specification)</item>
+        /// <item>Ordering (if enhanced specification)</item>
+        /// <item>Pagination (if enhanced specification)</item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var spec = new ActiveCustomersWithOrdersSpecification();
+        /// var result = service.GetBySpecification(spec);
+        /// </code>
+        /// </example>
+        IBusinessResult<IList<TEntity>> GetBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Retrieves a single entity matching the specification, or null if not found.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <returns>A business result containing the entity, or null if not found.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when more than one entity matches the specification.</exception>
+        /// <example>
+        /// <code>
+        /// var spec = new CustomerByEmailSpecification("john@example.com");
+        /// var result = service.GetSingleBySpecification(spec);
+        /// </code>
+        /// </example>
+        IBusinessResult<TEntity?> GetSingleBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        /// <summary>
+        /// Retrieves the first entity matching the specification, or null if not found.
+        /// </summary>
+        /// <typeparam name="TSpec">The specification type that implements <see cref="ISpecificationQuery{TEntity}"/>.</typeparam>
+        /// <param name="specification">The specification to apply.</param>
+        /// <returns>A business result containing the first entity, or null if not found.</returns>
+        /// <example>
+        /// <code>
+        /// var spec = new NewestCustomerSpecification();
+        /// var result = service.GetFirstBySpecification(spec);
+        /// </code>
+        /// </example>
+        IBusinessResult<TEntity?> GetFirstBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>;
+
+        #endregion
     }
 }
 

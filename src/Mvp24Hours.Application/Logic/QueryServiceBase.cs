@@ -5,6 +5,7 @@
 //=====================================================================================
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums.Infrastructure;
@@ -12,6 +13,7 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Mvp24Hours.Application.Logic
@@ -159,6 +161,119 @@ namespace Mvp24Hours.Application.Logic
         {
             TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbyid");
             return _repository.GetById(id, criteria).ToBusiness();
+        }
+
+        #endregion
+
+        #region [ Specification Pattern Implementation ]
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<bool> AnyBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-anybyspecification");
+
+            if (specification == null)
+            {
+                return false.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.AnyBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return _repository.GetByAny(specification.IsSatisfiedByExpression).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<int> CountBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-countbyspecification");
+
+            if (specification == null)
+            {
+                return 0.ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.CountBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return _repository.GetByCount(specification.IsSatisfiedByExpression).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<IList<TEntity>> GetBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbyspecification");
+
+            if (specification == null)
+            {
+                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: use the specification's expression directly
+            return _repository.GetBy(specification.IsSatisfiedByExpression, null).ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<TEntity?> GetSingleBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getsinglebyspecification");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetSingleBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: get by expression and take single
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var entity = result?.SingleOrDefault();
+            return entity.ToBusiness();
+        }
+
+        /// <inheritdoc/>
+        public virtual IBusinessResult<TEntity?> GetFirstBySpecification<TSpec>(TSpec specification)
+            where TSpec : ISpecificationQuery<TEntity>
+        {
+            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getfirstbyspecification");
+
+            if (specification == null)
+            {
+                return ((TEntity?)null).ToBusiness();
+            }
+
+            // Try to use repository's specification method if available
+            if (_repository is IReadOnlyRepository<TEntity> readOnlyRepo)
+            {
+                return readOnlyRepo.GetFirstBySpecification(specification).ToBusiness();
+            }
+
+            // Fallback: get by expression and take first
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var entity = result?.FirstOrDefault();
+            return entity.ToBusiness();
         }
 
         #endregion
