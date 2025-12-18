@@ -450,6 +450,34 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             where TSerializer : class, IHttpClientSerializer
         {
             services.AddSingleton<IHttpClientSerializer, TSerializer>();
+            services.AddSingleton<IHttpContentSerializer, TSerializer>();
+            return services;
+        }
+
+        /// <summary>
+        /// Adds XML HTTP client serializer to the service collection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <returns>The service collection.</returns>
+        public static IServiceCollection AddMvpXmlHttpClientSerializer(this IServiceCollection services)
+        {
+            services.TryAddSingleton<IHttpClientSerializer, XmlHttpClientSerializer>();
+            services.TryAddSingleton<IHttpContentSerializer, XmlHttpClientSerializer>();
+            return services;
+        }
+
+        /// <summary>
+        /// Adds MessagePack HTTP client serializer to the service collection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <returns>The service collection.</returns>
+        /// <remarks>
+        /// Requires MessagePack NuGet package to be installed.
+        /// </remarks>
+        public static IServiceCollection AddMvpMessagePackHttpClientSerializer(this IServiceCollection services)
+        {
+            services.TryAddSingleton<IHttpClientSerializer, MessagePackHttpClientSerializer>();
+            services.TryAddSingleton<IHttpContentSerializer, MessagePackHttpClientSerializer>();
             return services;
         }
 

@@ -15,7 +15,7 @@ namespace Mvp24Hours.Infrastructure.Http.Serializers
     /// <summary>
     /// JSON serializer for HTTP content using System.Text.Json.
     /// </summary>
-    public class JsonHttpClientSerializer : IHttpClientSerializer
+    public class JsonHttpClientSerializer : IHttpContentSerializer
     {
         private readonly JsonSerializerOptions _options;
 

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -59,6 +60,15 @@ namespace Mvp24Hours.Infrastructure.Http.Contract
         /// Sends a GET request and returns the response as byte array.
         /// </summary>
         Task<byte[]?> GetBytesAsync(string url, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a GET request and returns the response as an async enumerable of bytes for streaming large responses.
+        /// </summary>
+        /// <param name="url">The request URL.</param>
+        /// <param name="bufferSize">The buffer size for reading. Default is 8192 bytes.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An async enumerable of byte arrays.</returns>
+        IAsyncEnumerable<byte[]> GetStreamAsync(string url, int bufferSize = 8192, CancellationToken cancellationToken = default);
 
         #endregion
 

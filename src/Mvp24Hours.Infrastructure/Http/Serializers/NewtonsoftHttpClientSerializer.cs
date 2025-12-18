@@ -15,7 +15,7 @@ namespace Mvp24Hours.Infrastructure.Http.Serializers
     /// <summary>
     /// JSON serializer for HTTP content using Newtonsoft.Json.
     /// </summary>
-    public class NewtonsoftHttpClientSerializer : IHttpClientSerializer
+    public class NewtonsoftHttpClientSerializer : IHttpContentSerializer
     {
         private readonly JsonSerializerSettings _settings;
 
