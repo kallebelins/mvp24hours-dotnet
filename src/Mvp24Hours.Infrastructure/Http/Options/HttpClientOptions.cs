@@ -3,6 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Infrastructure.Http.DelegatingHandlers;
+using Polly.CircuitBreaker;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -139,6 +141,21 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// Gets or sets the proxy settings.
         /// </summary>
         public ProxyOptions? Proxy { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authentication options.
+        /// </summary>
+        public DelegatingHandlers.AuthenticationOptions? Authentication { get; set; }
+
+        /// <summary>
+        /// Gets or sets the request compression options.
+        /// </summary>
+        public DelegatingHandlers.CompressionHandlerOptions? Compression { get; set; }
+
+        /// <summary>
+        /// Gets or sets the telemetry handler options.
+        /// </summary>
+        public DelegatingHandlers.TelemetryHandlerOptions? TelemetryOptions { get; set; }
     }
 
     /// <summary>
@@ -268,6 +285,52 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// Gets or sets the failure ratio threshold (0.0 to 1.0). Default is 0.5.
         /// </summary>
         public double FailureRatio { get; set; } = 0.5;
+
+        /// <summary>
+        /// Callback invoked when the circuit breaker opens.
+        /// </summary>
+        public Action<CircuitBreakerStateChangeInfo>? OnBreak { get; set; }
+
+        /// <summary>
+        /// Callback invoked when the circuit breaker closes (resets).
+        /// </summary>
+        public Action<CircuitBreakerStateChangeInfo>? OnReset { get; set; }
+
+        /// <summary>
+        /// Callback invoked when the circuit breaker enters half-open state.
+        /// </summary>
+        public Action<CircuitBreakerStateChangeInfo>? OnHalfOpen { get; set; }
+    }
+
+    /// <summary>
+    /// Information about a circuit breaker state change.
+    /// </summary>
+    public class CircuitBreakerStateChangeInfo
+    {
+        /// <summary>
+        /// Gets or sets the service name.
+        /// </summary>
+        public string ServiceName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the new circuit state.
+        /// </summary>
+        public Polly.CircuitBreaker.CircuitState NewState { get; set; }
+
+        /// <summary>
+        /// Gets or sets the break duration (only applicable when opening).
+        /// </summary>
+        public TimeSpan? BreakDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason for the state change.
+        /// </summary>
+        public string? Reason { get; set; }
+
+        /// <summary>
+        /// Gets or sets the timestamp of the state change.
+        /// </summary>
+        public DateTime Timestamp { get; set; }
     }
 
     /// <summary>

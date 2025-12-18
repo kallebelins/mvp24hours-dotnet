@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Http.Extensions
 {
@@ -270,11 +271,24 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         /// </summary>
         private static void AddDelegatingHandlers(IHttpClientBuilder clientBuilder, HttpClientOptions options, IServiceCollection services)
         {
+            // Add telemetry handler (first to capture full request lifecycle)
+            if (options.EnableTelemetry)
+            {
+                clientBuilder.AddHttpMessageHandler(sp =>
+                {
+                    var logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
+                    return new TelemetryDelegatingHandler(logger, options.TelemetryOptions ?? new TelemetryHandlerOptions());
+                });
+            }
+
             // Add logging handler
             if (options.EnableLogging)
             {
-                clientBuilder.AddHttpMessageHandler<LoggingDelegatingHandler>();
-                services.TryAddTransient<LoggingDelegatingHandler>();
+                clientBuilder.AddHttpMessageHandler(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
+                    return new LoggingDelegatingHandler(logger, options.LoggingOptions ?? new HttpLoggingOptions());
+                });
             }
 
             // Add correlation ID propagation
@@ -291,12 +305,32 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
                 services.TryAddTransient<PropagationAuthorizationDelegatingHandler>();
             }
 
+            // Add authentication handler
+            if (options.Authentication != null && options.Authentication.Scheme != AuthenticationScheme.None)
+            {
+                clientBuilder.AddHttpMessageHandler(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                    return new AuthenticationDelegatingHandler(logger, options.Authentication);
+                });
+            }
+
             // Add custom header propagation
             if (options.PropagateHeaders.Count > 0)
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
                     return new PropagationHeaderDelegatingHandler(sp, options.PropagateHeaders.ToArray());
+                });
+            }
+
+            // Add compression handler
+            if (options.Compression?.Enabled == true)
+            {
+                clientBuilder.AddHttpMessageHandler(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
+                    return new CompressionDelegatingHandler(logger, options.Compression);
                 });
             }
         }
@@ -418,6 +452,345 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             services.AddSingleton<IHttpClientSerializer, TSerializer>();
             return services;
         }
+
+        #region Handler Extension Methods
+
+        /// <summary>
+        /// Adds the logging delegating handler with custom options.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="configure">The configuration action.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpLoggingHandler(
+            this IHttpClientBuilder builder,
+            Action<HttpLoggingOptions>? configure = null)
+        {
+            var options = new HttpLoggingOptions();
+            configure?.Invoke(options);
+
+            builder.Services.TryAddTransient<LoggingDelegatingHandler>();
+
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
+                return new LoggingDelegatingHandler(logger, options);
+            });
+        }
+
+        /// <summary>
+        /// Adds the authentication delegating handler with Bearer token authentication.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="tokenProvider">Function that provides the authentication token.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpBearerAuthentication(
+            this IHttpClientBuilder builder,
+            Func<Task<string?>> tokenProvider)
+        {
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                return new AuthenticationDelegatingHandler(
+                    logger,
+                    AuthenticationScheme.Bearer,
+                    tokenProvider: tokenProvider);
+            });
+        }
+
+        /// <summary>
+        /// Adds the authentication delegating handler with a static Bearer token.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="token">The static Bearer token.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpBearerAuthentication(
+            this IHttpClientBuilder builder,
+            string token)
+        {
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                return new AuthenticationDelegatingHandler(
+                    logger,
+                    new AuthenticationOptions
+                    {
+                        Scheme = AuthenticationScheme.Bearer,
+                        StaticToken = token
+                    });
+            });
+        }
+
+        /// <summary>
+        /// Adds the authentication delegating handler with API Key authentication.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="apiKey">The API key.</param>
+        /// <param name="headerName">The header name. Default is "X-API-Key".</param>
+        /// <param name="location">Where to place the API key. Default is Header.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpApiKeyAuthentication(
+            this IHttpClientBuilder builder,
+            string apiKey,
+            string headerName = "X-API-Key",
+            ApiKeyLocation location = ApiKeyLocation.Header)
+        {
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                return new AuthenticationDelegatingHandler(
+                    logger,
+                    new AuthenticationOptions
+                    {
+                        Scheme = AuthenticationScheme.ApiKey,
+                        ApiKey = apiKey,
+                        ApiKeyHeaderName = headerName,
+                        ApiKeyLocation = location
+                    });
+            });
+        }
+
+        /// <summary>
+        /// Adds the authentication delegating handler with Basic authentication.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpBasicAuthentication(
+            this IHttpClientBuilder builder,
+            string username,
+            string password)
+        {
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                return new AuthenticationDelegatingHandler(
+                    logger,
+                    AuthenticationScheme.Basic,
+                    username: username,
+                    password: password);
+            });
+        }
+
+        /// <summary>
+        /// Adds the telemetry delegating handler for OpenTelemetry tracing.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="configure">The configuration action.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpTelemetryHandler(
+            this IHttpClientBuilder builder,
+            Action<TelemetryHandlerOptions>? configure = null)
+        {
+            var options = new TelemetryHandlerOptions();
+            configure?.Invoke(options);
+
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
+                return new TelemetryDelegatingHandler(logger, options);
+            });
+        }
+
+        /// <summary>
+        /// Adds the retry delegating handler with custom options.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="configure">The configuration action.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpRetryHandler(
+            this IHttpClientBuilder builder,
+            Action<RetryPolicyOptions>? configure = null)
+        {
+            var options = new RetryPolicyOptions();
+            configure?.Invoke(options);
+
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<RetryDelegatingHandler>>();
+                return new RetryDelegatingHandler(logger, options);
+            });
+        }
+
+        /// <summary>
+        /// Adds the circuit breaker delegating handler with custom options.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="serviceName">The service name for logging.</param>
+        /// <param name="configure">The configuration action.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpCircuitBreakerHandler(
+            this IHttpClientBuilder builder,
+            string? serviceName = null,
+            Action<CircuitBreakerPolicyOptions>? configure = null)
+        {
+            var options = new CircuitBreakerPolicyOptions();
+            configure?.Invoke(options);
+
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<CircuitBreakerDelegatingHandler>>();
+                return new CircuitBreakerDelegatingHandler(logger, options, serviceName ?? "HttpClient");
+            });
+        }
+
+        /// <summary>
+        /// Adds the timeout delegating handler.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="timeout">The default timeout for requests.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpTimeoutHandler(
+            this IHttpClientBuilder builder,
+            TimeSpan timeout)
+        {
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<TimeoutDelegatingHandler>>();
+                return new TimeoutDelegatingHandler(logger, timeout);
+            });
+        }
+
+        /// <summary>
+        /// Adds the compression delegating handler for request body compression.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="configure">The configuration action.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpCompressionHandler(
+            this IHttpClientBuilder builder,
+            Action<CompressionHandlerOptions>? configure = null)
+        {
+            var options = new CompressionHandlerOptions();
+            configure?.Invoke(options);
+
+            return builder.AddHttpMessageHandler(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
+                return new CompressionDelegatingHandler(logger, options);
+            });
+        }
+
+        /// <summary>
+        /// Adds all recommended handlers in the correct order:
+        /// Telemetry -> Logging -> CorrelationId -> Authentication -> Compression.
+        /// </summary>
+        /// <param name="builder">The HTTP client builder.</param>
+        /// <param name="configure">The configuration action for all handlers.</param>
+        /// <returns>The HTTP client builder for chaining.</returns>
+        public static IHttpClientBuilder AddMvpStandardHandlers(
+            this IHttpClientBuilder builder,
+            Action<StandardHandlersOptions>? configure = null)
+        {
+            var options = new StandardHandlersOptions();
+            configure?.Invoke(options);
+
+            // Add handlers in correct order (outer to inner)
+            if (options.EnableTelemetry)
+            {
+                builder.AddMvpTelemetryHandler(opt =>
+                {
+                    opt.RecordFullUrl = options.TelemetryRecordFullUrl;
+                    opt.RecordEvents = options.TelemetryRecordEvents;
+                });
+            }
+
+            if (options.EnableLogging)
+            {
+                builder.AddMvpLoggingHandler(opt =>
+                {
+                    opt.LogRequestHeaders = options.LogRequestHeaders;
+                    opt.LogRequestBody = options.LogRequestBody;
+                    opt.LogResponseHeaders = options.LogResponseHeaders;
+                    opt.LogResponseBody = options.LogResponseBody;
+                });
+            }
+
+            if (options.PropagateCorrelationId)
+            {
+                builder.Services.TryAddTransient<PropagationCorrelationIdDelegatingHandler>();
+                builder.AddHttpMessageHandler<PropagationCorrelationIdDelegatingHandler>();
+            }
+
+            if (options.EnableCompression)
+            {
+                builder.AddMvpCompressionHandler(opt =>
+                {
+                    opt.Algorithm = options.CompressionAlgorithm;
+                    opt.MinimumSizeBytes = options.CompressionMinimumSizeBytes;
+                });
+            }
+
+            return builder;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Options for configuring standard handlers.
+    /// </summary>
+    public class StandardHandlersOptions
+    {
+        /// <summary>
+        /// Gets or sets whether to enable telemetry. Default is true.
+        /// </summary>
+        public bool EnableTelemetry { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to record full URLs in telemetry. Default is false.
+        /// </summary>
+        public bool TelemetryRecordFullUrl { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to record events in telemetry. Default is true.
+        /// </summary>
+        public bool TelemetryRecordEvents { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to enable logging. Default is true.
+        /// </summary>
+        public bool EnableLogging { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to log request headers. Default is false.
+        /// </summary>
+        public bool LogRequestHeaders { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to log request body. Default is false.
+        /// </summary>
+        public bool LogRequestBody { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to log response headers. Default is false.
+        /// </summary>
+        public bool LogResponseHeaders { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to log response body. Default is false.
+        /// </summary>
+        public bool LogResponseBody { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to propagate correlation ID. Default is true.
+        /// </summary>
+        public bool PropagateCorrelationId { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to enable request compression. Default is false.
+        /// </summary>
+        public bool EnableCompression { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the compression algorithm. Default is Gzip.
+        /// </summary>
+        public CompressionAlgorithm CompressionAlgorithm { get; set; } = CompressionAlgorithm.Gzip;
+
+        /// <summary>
+        /// Gets or sets the minimum size in bytes to trigger compression. Default is 1024.
+        /// </summary>
+        public int CompressionMinimumSizeBytes { get; set; } = 1024;
     }
 }
 
