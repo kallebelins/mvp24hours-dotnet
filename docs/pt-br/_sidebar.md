@@ -62,6 +62,9 @@
 * [Mapeamento](pt-br/mapping.md)
 * [Logging](pt-br/logging.md)
 * [Telemetry](pt-br/telemetry.md)
+* Observabilidade
+* * [OpenTelemetry Tracing](pt-br/observability/tracing.md)
+* * [Migração do TelemetryHelper](pt-br/observability/migration.md)
 * [CronJob](pt-br/cronjob.md)
 * Padrões
 * * [Entidade](pt-br/database/use-entity.md)
