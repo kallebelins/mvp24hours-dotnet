@@ -64,6 +64,7 @@
 * [Telemetry](pt-br/telemetry.md)
 * Observabilidade
 * * [OpenTelemetry Tracing](pt-br/observability/tracing.md)
+* * [OpenTelemetry Metrics](pt-br/observability/metrics.md)
 * * [Migração do TelemetryHelper](pt-br/observability/migration.md)
 * [CronJob](pt-br/cronjob.md)
 * Padrões
