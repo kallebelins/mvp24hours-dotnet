@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -65,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandLogger"/> class.
         /// </summary>
-        /// <param name="logger">Optional ILogger for structured logging. If null, uses TelemetryHelper.</param>
+        /// <param name="logger">The logger instance for structured logging.</param>
         /// <param name="slowOperationThreshold">Threshold for slow operation warnings. Default is 500ms.</param>
         /// <param name="logAllOperations">If true, logs all operations. If false, only logs slow operations and errors.</param>
         /// <param name="logEntityDetails">If true, logs entity key and type details. Default is true in debug, false in release.</param>
@@ -174,14 +172,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             var message = sb.ToString();
 
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, $"mongodb-command-{operation.ToLower()}-start", message);
-            }
+            _logger?.LogDebug(message);
         }
 
         private void LogOperationEnd<T>(string operation, T entity, TimeSpan duration) where T : class, IEntityBase
@@ -209,24 +200,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             var message = sb.ToString();
 
-            if (_logger != null)
+            if (isSlowOperation)
             {
-                if (isSlowOperation)
-                {
-                    _logger.LogWarning(message);
-                }
-                else
-                {
-                    _logger.LogDebug(message);
-                }
+                _logger?.LogWarning(message);
             }
             else
             {
-                var level = isSlowOperation
-                    ? TelemetryLevels.Warning
-                    : TelemetryLevels.Verbose;
-
-                TelemetryHelper.Execute(level, $"mongodb-command-{operation.ToLower()}-end", message);
+                _logger?.LogDebug(message);
             }
         }
 
@@ -255,14 +235,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             var message = sb.ToString();
 
-            if (_logger != null)
-            {
-                _logger.LogError(exception, message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, $"mongodb-command-{operation.ToLower()}-failed", message);
-            }
+            _logger?.LogError(exception, message);
         }
     }
 }

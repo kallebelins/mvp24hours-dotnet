@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -110,9 +108,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
             _currentSession = await _client.StartSessionAsync(cancellationToken: cancellationToken);
             _currentSession.StartTransaction(options);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-transaction-started",
-                new { SessionId = _currentSession.ServerSession.Id });
-
             _logger?.LogDebug("MongoDB transaction started. Session ID: {SessionId}", _currentSession.ServerSession.Id);
 
             return _currentSession;
@@ -134,9 +129,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
                 try
                 {
                     await _currentSession.CommitTransactionAsync(cancellationToken);
-
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-transaction-committed",
-                        new { SessionId = _currentSession.ServerSession.Id });
 
                     _logger?.LogDebug("MongoDB transaction committed successfully. Session ID: {SessionId}",
                         _currentSession.ServerSession.Id);
@@ -164,9 +156,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
             }
 
             await _currentSession.AbortTransactionAsync(cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-transaction-aborted",
-                new { SessionId = _currentSession.ServerSession.Id });
 
             _logger?.LogDebug("MongoDB transaction aborted. Session ID: {SessionId}",
                 _currentSession.ServerSession.Id);
@@ -321,9 +310,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
                 try
                 {
                     await session.CommitTransactionAsync(cancellationToken);
-
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-transaction-committed",
-                        new { SessionId = session.ServerSession.Id });
 
                     break;
                 }

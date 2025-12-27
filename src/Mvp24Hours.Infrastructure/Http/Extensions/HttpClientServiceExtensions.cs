@@ -320,7 +320,8 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    return new PropagationHeaderDelegatingHandler(sp, options.PropagateHeaders.ToArray());
+                    var logger = sp.GetRequiredService<ILogger<PropagationHeaderDelegatingHandler>>();
+                    return new PropagationHeaderDelegatingHandler(sp, logger, options.PropagateHeaders.ToArray());
                 });
             }
 

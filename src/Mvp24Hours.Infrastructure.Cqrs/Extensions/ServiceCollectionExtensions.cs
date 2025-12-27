@@ -387,7 +387,7 @@ public sealed class MediatorOptions
 
     /// <summary>
     /// Gets or sets whether to register the TelemetryBehavior automatically.
-    /// This behavior integrates with TelemetryHelper for Mvp24Hours telemetry.
+    /// This behavior integrates with ILogger for structured logging and OpenTelemetry for telemetry.
     /// Default is false.
     /// </summary>
     public bool RegisterTelemetryBehavior { get; set; }
@@ -650,7 +650,7 @@ public sealed class MediatorOptions
     /// <list type="bullet">
     /// <item>RequestContextBehavior - CorrelationId, CausationId, RequestId propagation</item>
     /// <item>TracingBehavior - OpenTelemetry Activity API integration</item>
-    /// <item>TelemetryBehavior - Mvp24Hours TelemetryHelper integration</item>
+    /// <item>TelemetryBehavior - ILogger and OpenTelemetry integration</item>
     /// </list>
     /// </para>
     /// </remarks>

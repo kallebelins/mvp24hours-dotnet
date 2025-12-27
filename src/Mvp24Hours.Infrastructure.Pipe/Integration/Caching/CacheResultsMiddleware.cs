@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -64,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cache-middleware-check", $"Key: {cacheKey}");
+            _logger?.LogDebug("CacheMiddleware: Checking cache. Key: {CacheKey}", cacheKey);
 
             // Try to get from cache
             try
@@ -72,8 +70,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
                 if (cachedData != null)
                 {
-                    _logger?.LogDebug("Cache hit for key {CacheKey}", cacheKey);
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cache-middleware-hit", $"Key: {cacheKey}");
+                    _logger?.LogDebug("CacheMiddleware: Cache hit. Key: {CacheKey}", cacheKey);
                     
                     var restored = RestoreMessageState(cachedData, message);
                     if (restored)
@@ -87,8 +84,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 _logger?.LogWarning(ex, "Error reading from cache for key {CacheKey}", cacheKey);
             }
 
-            _logger?.LogDebug("Cache miss for key {CacheKey}", cacheKey);
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cache-middleware-miss", $"Key: {cacheKey}");
+            _logger?.LogDebug("CacheMiddleware: Cache miss. Key: {CacheKey}", cacheKey);
 
             // Execute pipeline
             await next();
@@ -107,8 +103,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
 
                     await _cache.SetStringAsync(cacheKey, serialized, cacheOptions, cancellationToken);
                     
-                    _logger?.LogDebug("Cached result for key {CacheKey}", cacheKey);
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cache-middleware-stored", $"Key: {cacheKey}");
+                    _logger?.LogDebug("CacheMiddleware: Cached result. Key: {CacheKey}", cacheKey);
                 }
                 catch (Exception ex)
                 {

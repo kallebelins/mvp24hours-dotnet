@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,17 +40,22 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     public class MongoDbInterceptorPipeline : IMongoDbInterceptorPipeline
     {
         private readonly IReadOnlyList<IMongoDbInterceptor> _interceptors;
+        private readonly ILogger<MongoDbInterceptorPipeline> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbInterceptorPipeline"/> class.
         /// </summary>
         /// <param name="interceptors">The collection of interceptors to execute.</param>
-        public MongoDbInterceptorPipeline(IEnumerable<IMongoDbInterceptor> interceptors)
+        /// <param name="logger">The logger instance.</param>
+        public MongoDbInterceptorPipeline(
+            IEnumerable<IMongoDbInterceptor> interceptors,
+            ILogger<MongoDbInterceptorPipeline> logger = null)
         {
             _interceptors = (interceptors ?? Enumerable.Empty<IMongoDbInterceptor>())
                 .OrderBy(i => i.Order)
                 .ToList()
                 .AsReadOnly();
+            _logger = logger;
         }
 
         /// <summary>
@@ -93,9 +97,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error,
-                    $"mongodb-interceptor-pipeline-insert-failed-{typeof(T).Name}",
-                    ex.Message);
+                _logger?.LogError(ex,
+                    "MongoDB interceptor pipeline insert failed for entity type {EntityType}",
+                    typeof(T).Name);
                 throw;
             }
         }
@@ -129,9 +133,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error,
-                    $"mongodb-interceptor-pipeline-update-failed-{typeof(T).Name}",
-                    ex.Message);
+                _logger?.LogError(ex,
+                    "MongoDB interceptor pipeline update failed for entity type {EntityType}",
+                    typeof(T).Name);
                 throw;
             }
         }
@@ -196,9 +200,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error,
-                    $"mongodb-interceptor-pipeline-delete-failed-{typeof(T).Name}",
-                    ex.Message);
+                _logger?.LogError(ex,
+                    "MongoDB interceptor pipeline delete failed for entity type {EntityType}",
+                    typeof(T).Name);
                 throw;
             }
         }

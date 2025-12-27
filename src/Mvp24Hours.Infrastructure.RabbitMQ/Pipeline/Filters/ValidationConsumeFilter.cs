@@ -7,8 +7,6 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Collections.Generic;
@@ -107,46 +105,25 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
         {
             if (_options.LogMissingValidators)
             {
-                var message = $"No validator found for message: Type={messageType}, MessageId={messageId}";
-                
-                if (_logger != null)
-                {
-                    _logger.LogDebug(message);
-                }
-                else
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-validation-no-validator", message);
-                }
+                _logger?.LogDebug(
+                    "No validator found for message. Type={MessageType}, MessageId={MessageId}",
+                    messageType, messageId);
             }
         }
 
         private void LogValidationPassed(string messageType, string messageId)
         {
-            var message = $"Message validation passed: Type={messageType}, MessageId={messageId}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-validation-passed", message);
-            }
+            _logger?.LogDebug(
+                "Message validation passed. Type={MessageType}, MessageId={MessageId}",
+                messageType, messageId);
         }
 
         private void LogValidationFailed(string messageType, string messageId, List<ValidationError> errors)
         {
             var errorSummary = FormatValidationErrors(errors);
-            var message = $"Message validation failed: Type={messageType}, MessageId={messageId}, Errors={errorSummary}";
-            
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-filter-validation-failed", message);
-            }
+            _logger?.LogWarning(
+                "Message validation failed. Type={MessageType}, MessageId={MessageId}, Errors={ErrorSummary}",
+                messageType, messageId, errorSummary);
         }
 
         private static string FormatValidationErrors(List<ValidationError> errors)
@@ -235,16 +212,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
         private void LogPublishValidationFailed(string messageType, string messageId, List<ValidationError> errors)
         {
             var errorSummary = FormatValidationErrors(errors);
-            var message = $"Message publish validation failed: Type={messageType}, MessageId={messageId}, Errors={errorSummary}";
-            
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-filter-validation-publish-failed", message);
-            }
+            _logger?.LogWarning(
+                "Message publish validation failed. Type={MessageType}, MessageId={MessageId}, Errors={ErrorSummary}",
+                messageType, messageId, errorSummary);
         }
 
         private static string FormatValidationErrors(List<ValidationError> errors)

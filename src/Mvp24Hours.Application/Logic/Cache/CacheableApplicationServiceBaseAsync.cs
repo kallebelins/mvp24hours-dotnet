@@ -11,9 +11,7 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -156,7 +154,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-listanyasync");
+                _logger.LogDebug( "cacheable-appservice-listanyasync");
                 return await _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -173,7 +171,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-listcountasync");
+                _logger.LogDebug( "cacheable-appservice-listcountasync");
                 return await _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -196,7 +194,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-listasync");
+                _logger.LogDebug( "cacheable-appservice-listasync");
                 return await _repository.ListAsync(criteria, cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -213,7 +211,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getbyanyasync");
+                _logger.LogDebug( "cacheable-appservice-getbyanyasync");
                 return await _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -230,7 +228,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getbycountasync");
+                _logger.LogDebug( "cacheable-appservice-getbycountasync");
                 return await _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -253,7 +251,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getbyasync");
+                _logger.LogDebug( "cacheable-appservice-getbyasync");
                 return await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -276,7 +274,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             if (!CacheEnabled)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getbyidasync");
+                _logger.LogDebug( "cacheable-appservice-getbyidasync");
                 return await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
             }
 
@@ -296,7 +294,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         public virtual async Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-anybyspecificationasync");
+            _logger.LogDebug( "cacheable-appservice-anybyspecificationasync");
 
             if (specification == null)
             {
@@ -320,7 +318,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         public virtual async Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-countbyspecificationasync");
+            _logger.LogDebug( "cacheable-appservice-countbyspecificationasync");
 
             if (specification == null)
             {
@@ -344,7 +342,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         public virtual async Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getbyspecificationasync");
+            _logger.LogDebug( "cacheable-appservice-getbyspecificationasync");
 
             if (specification == null)
             {
@@ -368,7 +366,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         public virtual async Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getsinglebyspecificationasync");
+            _logger.LogDebug( "cacheable-appservice-getsinglebyspecificationasync");
 
             if (specification == null)
             {
@@ -397,7 +395,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         public virtual async Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-getfirstbyspecificationasync");
+            _logger.LogDebug( "cacheable-appservice-getfirstbyspecificationasync");
 
             if (specification == null)
             {
@@ -429,7 +427,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-addasync");
+            _logger.LogDebug( "cacheable-appservice-addasync");
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -451,7 +449,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-addlistasync");
+            _logger.LogDebug( "cacheable-appservice-addlistasync");
 
             if (!entities.AnySafe())
             {
@@ -482,7 +480,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-modifyasync");
+            _logger.LogDebug( "cacheable-appservice-modifyasync");
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -504,7 +502,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-modifylistasync");
+            _logger.LogDebug( "cacheable-appservice-modifylistasync");
 
             if (!entities.AnySafe())
             {
@@ -535,7 +533,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-removeasync");
+            _logger.LogDebug( "cacheable-appservice-removeasync");
 
             await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
             var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
@@ -552,7 +550,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-removelistasync");
+            _logger.LogDebug( "cacheable-appservice-removelistasync");
 
             if (!entities.AnySafe())
             {
@@ -574,7 +572,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-removebyidasync");
+            _logger.LogDebug( "cacheable-appservice-removebyidasync");
 
             await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
             var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
@@ -592,7 +590,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-appservice-removebyidlistasync");
+            _logger.LogDebug( "cacheable-appservice-removebyidlistasync");
 
             if (!ids.AnySafe())
             {

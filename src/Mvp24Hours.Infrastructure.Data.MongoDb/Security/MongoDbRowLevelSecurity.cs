@@ -3,12 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +43,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
     /// <example>
     /// <code>
     /// // Create RLS helper:
-    /// var rls = new MongoDbRowLevelSecurity(tenantProvider, currentUserProvider);
+    /// var rls = new MongoDbRowLevelSecurity(tenantProvider, currentUserProvider, logger);
     /// 
     /// // Get filtered collection:
     /// var filter = rls.CreateSecurityFilter&lt;Invoice&gt;();
@@ -61,20 +60,24 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         private readonly ITenantProvider _tenantProvider;
         private readonly ICurrentUserProvider _currentUserProvider;
         private readonly IRowLevelSecurityPolicy _defaultPolicy;
+        private readonly ILogger<MongoDbRowLevelSecurity> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbRowLevelSecurity"/> class.
         /// </summary>
         /// <param name="tenantProvider">The tenant provider for multi-tenancy filtering.</param>
         /// <param name="currentUserProvider">The current user provider for ownership filtering.</param>
+        /// <param name="logger">Optional logger for structured logging.</param>
         /// <param name="defaultPolicy">Optional default security policy.</param>
         public MongoDbRowLevelSecurity(
             ITenantProvider tenantProvider = null,
             ICurrentUserProvider currentUserProvider = null,
+            ILogger<MongoDbRowLevelSecurity> logger = null,
             IRowLevelSecurityPolicy defaultPolicy = null)
         {
             _tenantProvider = tenantProvider;
             _currentUserProvider = currentUserProvider;
+            _logger = logger;
             _defaultPolicy = defaultPolicy;
         }
 
@@ -95,9 +98,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                     _tenantProvider.TenantId);
                 filters.Add(tenantFilter);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    $"mongodb-rls-tenant-filter-{typeof(T).Name}",
-                    new { TenantId = _tenantProvider.TenantId });
+                _logger?.LogDebug("Applied tenant filter for entity {EntityType} with TenantId {TenantId}",
+                    typeof(T).Name, _tenantProvider.TenantId);
             }
 
             // Soft delete filter

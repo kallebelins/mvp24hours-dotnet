@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -72,7 +70,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
             HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "dbcontexthealthcheck-checkhealthasync-start");
+            _logger.LogDebug("DbContext health check starting for {ContextType}", typeof(TContext).Name);
 
             var data = new Dictionary<string, object>
             {
@@ -155,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                         data: data);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "dbcontexthealthcheck-checkhealthasync-healthy");
+                _logger.LogDebug("DbContext health check completed successfully in {ResponseTimeMs}ms for {ContextType}", stopwatch.ElapsedMilliseconds, typeof(TContext).Name);
 
                 return HealthCheckResult.Healthy(
                     description: $"Database connection is healthy (response time: {stopwatch.ElapsedMilliseconds}ms)",
@@ -168,8 +166,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 data["error"] = ex.Message;
 
                 _logger.LogError(ex, "Database health check failed for {DbContext}", typeof(TContext).Name);
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "dbcontexthealthcheck-checkhealthasync-error", ex.Message);
 
                 return HealthCheckResult.Unhealthy(
                     description: $"Database health check failed: {ex.Message}",

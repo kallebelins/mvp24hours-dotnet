@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -83,8 +81,6 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(tenantProvider));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-apply-query-filters-start");
-
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 // Check if entity implements ITenantEntity (string TenantId)
@@ -98,8 +94,6 @@ namespace Mvp24Hours.Extensions
                     ApplyGenericTenantFilter(modelBuilder, entityType.ClrType, tenantIdType, tenantProvider);
                 }
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-apply-query-filters-end");
 
             return modelBuilder;
         }
@@ -124,9 +118,6 @@ namespace Mvp24Hours.Extensions
             modelBuilder.Entity<TEntity>().HasQueryFilter(e => 
                 e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, 
-                $"tenant-modelbuilder-apply-filter-{typeof(TEntity).Name}");
-
             return modelBuilder;
         }
 
@@ -149,8 +140,6 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(tenantProvider));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-apply-combined-filters-start");
-
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 var clrType = entityType.ClrType;
@@ -171,8 +160,6 @@ namespace Mvp24Hours.Extensions
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-apply-combined-filters-end");
-
             return modelBuilder;
         }
 
@@ -190,8 +177,6 @@ namespace Mvp24Hours.Extensions
             bool isRequired = true,
             bool createIndex = true)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-configure-properties-start");
-
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
@@ -207,13 +192,8 @@ namespace Mvp24Hours.Extensions
                         entityBuilder.HasIndex(nameof(ITenantEntity.TenantId))
                             .HasDatabaseName($"IX_{entityType.ClrType.Name}_TenantId");
                     }
-
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, 
-                        $"tenant-modelbuilder-configured-{entityType.ClrType.Name}");
                 }
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "tenant-modelbuilder-configure-properties-end");
 
             return modelBuilder;
         }
@@ -245,9 +225,6 @@ namespace Mvp24Hours.Extensions
 
             var lambda = Expression.Lambda(combinedExpression, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, 
-                $"tenant-modelbuilder-filter-applied-{entityType.Name}");
         }
 
         private static void ApplyGenericTenantFilter(
@@ -321,9 +298,6 @@ namespace Mvp24Hours.Extensions
                 var lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, 
-                $"tenant-modelbuilder-generic-filter-applied-{entityType.Name}");
         }
 
         private static void ApplyCombinedFilter(
@@ -352,9 +326,6 @@ namespace Mvp24Hours.Extensions
 
             var lambda = Expression.Lambda(combinedFilter, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, 
-                $"tenant-modelbuilder-combined-filter-applied-{entityType.Name}");
         }
 
         private static void ApplySoftDeleteFilter(ModelBuilder modelBuilder, Type entityType)

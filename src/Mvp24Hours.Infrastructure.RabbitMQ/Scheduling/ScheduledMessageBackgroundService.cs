@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
@@ -52,7 +50,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             if (!_options.Enabled)
             {
                 _logger?.LogInformation("Message scheduler is disabled");
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-scheduler-disabled");
                 return;
             }
 
@@ -60,10 +57,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             _logger?.LogInformation(
                 "Starting scheduled message background service with polling interval {PollingInterval}",
                 _options.PollingInterval);
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-starting",
-                $"pollingInterval:{_options.PollingInterval}");
 
             await base.StartAsync(cancellationToken);
         }
@@ -87,10 +80,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                     if (processed > 0)
                     {
                         _logger?.LogDebug("Processed {Count} scheduled messages", processed);
-                        TelemetryHelper.Execute(
-                            TelemetryLevels.Verbose,
-                            "rabbitmq-scheduler-processed",
-                            $"count:{processed}");
                     }
 
                     // Cleanup old messages periodically
@@ -104,7 +93,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "Error processing scheduled messages");
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-scheduler-error", ex);
                 }
 
                 try
@@ -118,7 +106,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             }
 
             _logger?.LogInformation("Scheduled message background service stopped");
-            TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-scheduler-stopped");
         }
 
         /// <inheritdoc />
@@ -130,7 +117,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             }
 
             _logger?.LogInformation("Stopping scheduled message background service");
-            TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-scheduler-stopping");
 
             await base.StopAsync(cancellationToken);
         }
@@ -153,10 +139,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 if (removed > 0)
                 {
                     _logger?.LogInformation("Cleaned up {Count} old scheduled messages", removed);
-                    TelemetryHelper.Execute(
-                        TelemetryLevels.Information,
-                        "rabbitmq-scheduler-cleanup",
-                        $"removed:{removed}");
                 }
 
                 _lastCleanup = DateTime.UtcNow;

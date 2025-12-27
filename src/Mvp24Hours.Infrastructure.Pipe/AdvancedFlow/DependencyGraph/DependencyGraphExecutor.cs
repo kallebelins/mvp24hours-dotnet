@@ -3,8 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,16 +38,19 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
     {
         private readonly DependencyGraph<TContext> _graph;
         private readonly DependencyGraphOptions _options;
+        private readonly ILogger<DependencyGraphExecutor<TContext>>? _logger;
 
         /// <summary>
         /// Creates a new dependency graph executor.
         /// </summary>
         /// <param name="graph">The dependency graph to execute.</param>
         /// <param name="options">Execution options.</param>
-        public DependencyGraphExecutor(DependencyGraph<TContext> graph, DependencyGraphOptions? options = null)
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public DependencyGraphExecutor(DependencyGraph<TContext> graph, DependencyGraphOptions? options = null, ILogger<DependencyGraphExecutor<TContext>>? logger = null)
         {
             _graph = graph ?? throw new ArgumentNullException(nameof(graph));
             _options = options ?? new DependencyGraphOptions();
+            _logger = logger;
 
             if (_options.ValidateNoCycles && HasCycles())
             {
@@ -66,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
         public async Task<DependencyGraphResult<TContext>> ExecuteAsync(TContext context, CancellationToken cancellationToken = default)
         {
             var stopwatch = Stopwatch.StartNew();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-dependency-graph-execute-start", $"nodes:{_graph.NodeCount}");
+            _logger?.LogDebug("DependencyGraphExecutor: Execute started with {NodeCount} nodes", _graph.NodeCount);
 
             var nodeResults = new ConcurrentDictionary<string, object?>();
             var executionResults = new ConcurrentDictionary<string, NodeExecutionResult>();
@@ -143,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                             var nodeStopwatch = Stopwatch.StartNew();
                             var startedAt = DateTime.UtcNow;
 
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-dependency-graph-node-start", $"node:{node.Id}");
+                            _logger?.LogDebug("DependencyGraphExecutor: Node '{NodeId}' started", node.Id);
 
                             try
                             {
@@ -170,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                                         StartedAt = startedAt,
                                         CompletedAt = DateTime.UtcNow
                                     };
-                                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-dependency-graph-node-success", $"node:{node.Id},duration:{nodeStopwatch.ElapsedMilliseconds}ms");
+                                    _logger?.LogDebug("DependencyGraphExecutor: Node '{NodeId}' succeeded. Duration: {DurationMs}ms", node.Id, nodeStopwatch.ElapsedMilliseconds);
                                 }
                                 else
                                 {
@@ -184,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                                         StartedAt = startedAt,
                                         CompletedAt = DateTime.UtcNow
                                     };
-                                    TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-dependency-graph-node-failed", $"node:{node.Id},error:{result.ErrorMessage}");
+                                    _logger?.LogWarning("DependencyGraphExecutor: Node '{NodeId}' failed. Error: {ErrorMessage}", node.Id, result.ErrorMessage);
                                 }
                             }
                             catch (Exception ex)
@@ -200,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                                     StartedAt = startedAt,
                                     CompletedAt = DateTime.UtcNow
                                 };
-                                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-dependency-graph-node-error", ex);
+                                _logger?.LogError(ex, "DependencyGraphExecutor: Node '{NodeId}' threw an exception", node.Id);
                             }
 
                             pendingNodes.TryRemove(node.Id, out _);
@@ -232,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                 }
 
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-dependency-graph-execute-end", $"duration:{stopwatch.ElapsedMilliseconds}ms,completed:{completedNodes.Count},failed:{failedNodes.Count},skipped:{skippedNodes.Count}");
+                _logger?.LogDebug("DependencyGraphExecutor: Execute finished. Duration: {DurationMs}ms, Completed: {CompletedCount}, Failed: {FailedCount}, Skipped: {SkippedCount}", stopwatch.ElapsedMilliseconds, completedNodes.Count, failedNodes.Count, skippedNodes.Count);
 
                 return new DependencyGraphResult<TContext>
                 {
@@ -268,7 +270,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-dependency-graph-execute-error", ex);
+                _logger?.LogError(ex, "DependencyGraphExecutor: Execute encountered an unhandled exception");
                 return new DependencyGraphResult<TContext>
                 {
                     IsSuccess = false,

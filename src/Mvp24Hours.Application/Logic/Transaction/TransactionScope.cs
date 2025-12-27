@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Transaction;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -92,7 +90,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
                     $"Transaction {TransactionId} has already been completed with status '{Status}'.");
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-begin-start");
+            _logger?.LogDebug("application-transactionscope-begin-start");
 
             _logger?.LogDebug(
                 "[Transaction] Beginning transaction {TransactionId}",
@@ -103,7 +101,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             // Register with ambient context
             AmbientTransactionContext.SetCurrent(this);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-begin-end");
+            _logger?.LogDebug("application-transactionscope-begin-end");
 
             return Task.CompletedTask;
         }
@@ -114,7 +112,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             ThrowIfDisposed();
             ThrowIfNotActive();
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-commit-start");
+            _logger?.LogDebug("application-transactionscope-commit-start");
 
             try
             {
@@ -151,7 +149,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             finally
             {
                 AmbientTransactionContext.Clear();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-commit-end");
+                _logger?.LogDebug("application-transactionscope-commit-end");
             }
         }
 
@@ -177,7 +175,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-rollback-start");
+            _logger?.LogDebug("application-transactionscope-rollback-start");
 
             try
             {
@@ -204,7 +202,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             finally
             {
                 AmbientTransactionContext.Clear();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-rollback-end");
+                _logger?.LogDebug("application-transactionscope-rollback-end");
             }
         }
 
@@ -223,7 +221,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
                 throw new ArgumentNullException(nameof(savepointName));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-savepoint-create");
+            _logger?.LogDebug("application-transactionscope-savepoint-create");
 
             _savepoints.Push(savepointName);
 
@@ -247,7 +245,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
                 throw new ArgumentNullException(nameof(savepointName));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-savepoint-rollback");
+            _logger?.LogDebug("application-transactionscope-savepoint-rollback");
 
             // Pop all savepoints until we reach the target
             while (_savepoints.Count > 0)
@@ -281,7 +279,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
                 throw new ArgumentNullException(nameof(savepointName));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-transactionscope-savepoint-release");
+            _logger?.LogDebug("application-transactionscope-savepoint-release");
 
             _logger?.LogDebug(
                 "[Transaction] Released savepoint '{SavepointName}' in transaction {TransactionId}",

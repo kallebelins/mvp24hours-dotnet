@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Collections.Generic;
@@ -311,11 +309,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return;
             }
 
-            var message = $"Retry attempt {attempt}/{_options.MaxRetryCount} after {delay.TotalSeconds:F2}s delay. " +
-                         $"Exception: {exception.GetType().Name} - {exception.Message}";
-
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "mvp-execution-strategy-retry", message);
-
             _logger?.LogWarning(
                 exception,
                 "Database operation retry {Attempt}/{MaxRetries} after {DelaySeconds:F2}s delay",
@@ -331,11 +324,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return;
             }
 
-            var message = $"All {_options.MaxRetryCount} retry attempts exhausted. " +
-                         $"Final exception: {exception.GetType().Name} - {exception.Message}";
-
-            TelemetryHelper.Execute(TelemetryLevels.Error, "mvp-execution-strategy-exhausted", message);
-
             _logger?.LogError(
                 exception,
                 "Database operation failed after {MaxRetries} retry attempts",
@@ -348,9 +336,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
             {
                 return;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mvp-execution-strategy-transient",
-                $"Transient exception detected ({reason}): {exception.GetType().Name}");
 
             _logger?.LogDebug(
                 "Transient database exception detected ({Reason}): {ExceptionType}",

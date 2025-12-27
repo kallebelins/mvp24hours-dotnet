@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -111,9 +109,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
 
             var id = await _bucket.UploadFromStreamAsync(filename, stream, options, cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-uploaded",
-                new { FileId = id.ToString(), Filename = filename });
-
             _logger?.LogDebug("File '{Filename}' uploaded to GridFS with ID: {FileId}", filename, id);
 
             return id;
@@ -132,9 +127,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
             }
 
             var id = await _bucket.UploadFromBytesAsync(filename, bytes, options, cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-uploaded",
-                new { FileId = id.ToString(), Filename = filename, Size = bytes.Length });
 
             _logger?.LogDebug("File '{Filename}' ({Size} bytes) uploaded to GridFS with ID: {FileId}",
                 filename, bytes.Length, id);
@@ -167,9 +159,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         {
             await _bucket.DownloadToStreamAsync(id, destination, options, cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-downloaded",
-                new { FileId = id.ToString() });
-
             _logger?.LogDebug("File with ID '{FileId}' downloaded from GridFS.", id);
         }
 
@@ -182,9 +171,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         {
             await _bucket.DownloadToStreamByNameAsync(filename, destination, options, cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-downloaded",
-                new { Filename = filename });
-
             _logger?.LogDebug("File '{Filename}' downloaded from GridFS.", filename);
         }
 
@@ -195,9 +181,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
             CancellationToken cancellationToken = default)
         {
             var bytes = await _bucket.DownloadAsBytesAsync(id, options, cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-downloaded",
-                new { FileId = id.ToString(), Size = bytes.Length });
 
             return bytes;
         }
@@ -282,9 +265,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         {
             await _bucket.DeleteAsync(id, cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-deleted",
-                new { FileId = id.ToString() });
-
             _logger?.LogDebug("File with ID '{FileId}' deleted from GridFS.", id);
         }
 
@@ -292,9 +272,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         public async Task RenameAsync(ObjectId id, string newFilename, CancellationToken cancellationToken = default)
         {
             await _bucket.RenameAsync(id, newFilename, cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-gridfs-renamed",
-                new { FileId = id.ToString(), NewFilename = newFilename });
 
             _logger?.LogDebug("File with ID '{FileId}' renamed to '{NewFilename}'.", id, newFilename);
         }
@@ -317,8 +294,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         public async Task DropBucketAsync(CancellationToken cancellationToken = default)
         {
             await _bucket.DropAsync(cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-gridfs-bucket-dropped", null);
 
             _logger?.LogWarning("GridFS bucket dropped.");
         }

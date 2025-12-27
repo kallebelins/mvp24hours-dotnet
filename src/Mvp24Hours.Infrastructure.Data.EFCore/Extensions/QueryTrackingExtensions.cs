@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 
@@ -53,7 +51,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> AsNoTracking<T>(this IQueryable<T> query)
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-querytracking-asnotracking");
             return EntityFrameworkQueryableExtensions.AsNoTracking(query);
         }
 
@@ -87,7 +84,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> AsNoTrackingWithIdentityResolution<T>(this IQueryable<T> query)
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-querytracking-asnotrackingwithidentityresolution");
             return EntityFrameworkQueryableExtensions.AsNoTrackingWithIdentityResolution(query);
         }
 
@@ -117,7 +113,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> AsTracking<T>(this IQueryable<T> query)
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-querytracking-astracking");
             return EntityFrameworkQueryableExtensions.AsTracking(query);
         }
 
@@ -137,8 +132,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> WithTracking<T>(this IQueryable<T> query, QueryTrackingBehavior trackingBehavior)
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-querytracking-withtracking-{trackingBehavior}");
-
             return trackingBehavior switch
             {
                 QueryTrackingBehavior.NoTracking => EntityFrameworkQueryableExtensions.AsNoTracking(query),
@@ -202,8 +195,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> OptimizeForReading<T>(this IQueryable<T> query, bool hasIncludes = false)
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-querytracking-optimizeforreading-hasincludes:{hasIncludes}");
-
             // Use identity resolution when includes might create multiple references to same entity
             return hasIncludes
                 ? EntityFrameworkQueryableExtensions.AsNoTrackingWithIdentityResolution(query)

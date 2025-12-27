@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -88,9 +86,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
             await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-schema-validation-created",
-                new { Collection = collectionName });
-
             _logger?.LogInformation("Collection '{CollectionName}' created with schema validation.", collectionName);
         }
 
@@ -123,9 +118,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
             await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-schema-validation-updated",
-                new { Collection = collectionName });
-
             _logger?.LogInformation("Schema validation updated for collection '{CollectionName}'.", collectionName);
         }
 
@@ -147,9 +139,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
             };
 
             await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-schema-validation-removed",
-                new { Collection = collectionName });
 
             _logger?.LogInformation("Schema validation removed from collection '{CollectionName}'.", collectionName);
         }

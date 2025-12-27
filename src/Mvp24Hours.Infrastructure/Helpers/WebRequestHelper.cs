@@ -3,7 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Newtonsoft.Json;
 using System.Collections;
@@ -18,12 +18,26 @@ using System.Web;
 namespace Mvp24Hours.Helpers
 {
     /// <summary>
-    /// Contains functions for web requests
+    /// Contains functions for web requests using HttpWebRequest.
     /// </summary>
+    /// <remarks>
+    /// This helper uses the legacy HttpWebRequest API. For new code, consider using HttpClient instead.
+    /// </remarks>
     public static class WebRequestHelper
     {
+        private static ILogger _logger;
+
         /// <summary>
-        /// 
+        /// Sets the logger instance for logging web request operations.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Gets or sets the encoding used for requests.
         /// </summary>
         public static Encoding EncodingRequest { get; set; } = Encoding.UTF8;
 
@@ -171,7 +185,7 @@ namespace Mvp24Hours.Helpers
 
         private static async Task<string> SendAsync(string url, IDictionary<string, string> headers, ICredentials credentials, string method, string data)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-webrequesthelper-start");
+            _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
@@ -213,14 +227,16 @@ namespace Mvp24Hours.Helpers
 
                 try
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-webrequesthelper-sendasync", $"url:{url}|method:{method}");
+                    _logger?.LogDebug("Executing {Method} request to {Url}", method, url);
 
                     if (bytes == null)
                     {
                         using var response = client.GetResponse();
                         using var content = response.GetResponseStream();
                         using var reader = new StreamReader(content, EncodingRequest);
-                        return await reader.ReadToEndAsync();
+                        var result = await reader.ReadToEndAsync();
+                        _logger?.LogDebug("Successfully received response from {Url}", url);
+                        return result;
                     }
                     else
                     {
@@ -228,12 +244,14 @@ namespace Mvp24Hours.Helpers
                         reqstream.Write(bytes, 0, bytes.Length);
                         var httpResponse = (HttpWebResponse)client.GetResponse();
                         using var streamReader = new StreamReader(httpResponse.GetResponseStream(), EncodingRequest);
-                        return await streamReader.ReadToEndAsync();
+                        var result = await streamReader.ReadToEndAsync();
+                        _logger?.LogDebug("Successfully received response from {Url}", url);
+                        return result;
                     }
                 }
                 catch (WebException we)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "infra-webrequesthelper-failure", we);
+                    _logger?.LogError(we, "Error executing {Method} request to {Url}: {ErrorMessage}", method, url, we.Message);
                     if (we.Response != null)
                     {
                         using var stream = we.Response.GetResponseStream();
@@ -243,9 +261,10 @@ namespace Mvp24Hours.Helpers
                     throw;
                 }
             }
-            finally
+            catch (System.Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-webrequesthelper-end");
+                _logger?.LogError(ex, "Unexpected error in {Method} request to {Url}: {ErrorMessage}", method, url, ex.Message);
+                throw;
             }
         }
     }

@@ -4,12 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -28,11 +27,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     {
         #region [ Ctor ]
 
-        protected RepositoryBase(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options)
+        protected RepositoryBase(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
         {
             this.dbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.dbEntities = _dbContext.Set<T>();
             this.Options = options?.Value ?? new EFCoreRepositoryOptions();
+            this.Logger = logger;
         }
 
         #endregion
@@ -55,6 +55,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// Repository configuration options
         /// </summary>
         protected EFCoreRepositoryOptions Options { get; private set; }
+        /// <summary>
+        /// Logger instance for telemetry and debugging
+        /// </summary>
+        protected ILogger<RepositoryBase<T>>? Logger { get; }
 
         #endregion
 
@@ -74,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
         protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria criteria, bool onlyNavigation = false)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repositorybase-querycriteria-object", criteria);
+            Logger?.LogDebug("EFCore RepositoryBase query criteria. EntityType: {EntityType}, Criteria: {Criteria}", typeof(T).Name, criteria);
 
             var ordered = false;
 
@@ -199,7 +203,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (isAggregate || Options.TransactionIsolationLevel != null)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repositorybase-transactionscope", $"isolation:{Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted}|timeout:{TransactionManager.MaximumTimeout}|asyncflow:enabled");
+                Logger?.LogDebug("EFCore RepositoryBase creating transaction scope. EntityType: {EntityType}, IsolationLevel: {IsolationLevel}, Timeout: {Timeout}, AsyncFlow: Enabled", 
+                    typeof(T).Name, 
+                    Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted, 
+                    TransactionManager.MaximumTimeout);
                 return new TransactionScope(TransactionScopeOption.Required, new TransactionOptions
                 {
                     IsolationLevel = Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
@@ -229,7 +236,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 {
                     throw new InvalidOperationException("Key property not found.");
                 }
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repositorybase-getkeyinfo", $"key:{_keyInfo.Name}");
+                Logger?.LogDebug("EFCore RepositoryBase key info resolved. EntityType: {EntityType}, KeyProperty: {KeyProperty}", typeof(T).Name, _keyInfo.Name);
             }
 
             return _keyInfo;

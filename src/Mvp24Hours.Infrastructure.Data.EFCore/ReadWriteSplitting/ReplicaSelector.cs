@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -59,8 +57,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public Task<string?> SelectReplicaAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "replicaselector-selectreplica-start");
-
             var healthyReplicas = GetHealthyReplicas();
 
             if (healthyReplicas.Count == 0)

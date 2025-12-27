@@ -8,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks;
 using System;
 using System.Collections.Generic;
@@ -66,8 +64,6 @@ namespace Mvp24Hours.Extensions
             TimeSpan? timeout = null)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "healthcheckextensions-addmvp24hoursdbcontextcheck-start");
-
             var options = new DbContextHealthCheckOptions();
             configureOptions?.Invoke(options);
 
@@ -182,8 +178,6 @@ namespace Mvp24Hours.Extensions
             IEnumerable<string>? tags = null,
             TimeSpan? timeout = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "healthcheckextensions-addmvp24hourssqlservercheck-start");
-
             var options = new SqlServerHealthCheckOptions();
             configureOptions?.Invoke(options);
 
@@ -280,8 +274,6 @@ namespace Mvp24Hours.Extensions
             TimeSpan? timeout = null)
             where TConnection : DbConnection
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "healthcheckextensions-addmvp24hourspostgresqlcheck-start");
-
             var options = new PostgreSqlHealthCheckOptions();
             configureOptions?.Invoke(options);
 
@@ -374,8 +366,6 @@ namespace Mvp24Hours.Extensions
             TimeSpan? timeout = null)
             where TConnection : DbConnection
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "healthcheckextensions-addmvp24hoursmysqlcheck-start");
-
             var options = new MySqlHealthCheckOptions();
             configureOptions?.Invoke(options);
 
@@ -453,8 +443,6 @@ namespace Mvp24Hours.Extensions
             this IHealthChecksBuilder builder)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "healthcheckextensions-addmvp24hoursdbcontextallchecks-start");
-
             return builder
                 .AddMvp24HoursDbContextLivenessCheck<TContext>()
                 .AddMvp24HoursDbContextReadinessCheck<TContext>();

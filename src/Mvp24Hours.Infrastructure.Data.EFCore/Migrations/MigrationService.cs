@@ -9,8 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -60,7 +58,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<IReadOnlyList<string>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-getpendingmigrations-start");
+            _logger.LogDebug("MigrationService getting pending migrations for {DbContext}", typeof(TContext).Name);
             var pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
             return pending.ToList();
         }
@@ -68,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<IReadOnlyList<string>> GetAppliedMigrationsAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-getappliedmigrations-start");
+            _logger.LogDebug("MigrationService getting applied migrations for {DbContext}", typeof(TContext).Name);
             var applied = await _dbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
             return applied.ToList();
         }
@@ -76,7 +74,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public Task<IReadOnlyList<string>> GetAllMigrationsAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-getallmigrations-start");
+            _logger.LogDebug("MigrationService getting all migrations for {DbContext}", typeof(TContext).Name);
             var migrations = _dbContext.Database.GetMigrations().ToList();
             return Task.FromResult<IReadOnlyList<string>>(migrations);
         }
@@ -84,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<MigrationResult> MigrateAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-migrate-start");
+            _logger.LogDebug("MigrationService starting migration for {DbContext}", typeof(TContext).Name);
             
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
@@ -120,8 +118,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                     typeof(TContext).Name,
                     stopwatch.ElapsedMilliseconds);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-migrate-success");
-
                 return MigrationResult.Succeeded(pendingMigrations, stopwatch.Elapsed, startedAt);
             }
             catch (Exception ex)
@@ -129,7 +125,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                 stopwatch.Stop();
 
                 _logger.LogError(ex, "Migration failed for {DbContext}", typeof(TContext).Name);
-                TelemetryHelper.Execute(TelemetryLevels.Error, "migrationservice-migrate-error", ex.Message);
 
                 return MigrationResult.Failed(ex.Message, ex, stopwatch.Elapsed, startedAt);
             }
@@ -141,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
             if (string.IsNullOrWhiteSpace(targetMigration))
                 throw new ArgumentNullException(nameof(targetMigration));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-migrateto-start");
+            _logger.LogDebug("MigrationService migrating to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
             
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
@@ -190,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
             if (string.IsNullOrWhiteSpace(targetMigration))
                 throw new ArgumentNullException(nameof(targetMigration));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-rollbackto-start");
+            _logger.LogDebug("MigrationService rolling back to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
             
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
@@ -243,7 +238,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<MigrationResult> RollbackLastAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-rollbacklast-start");
+            _logger.LogDebug("MigrationService rolling back last migration for {DbContext}", typeof(TContext).Name);
 
             var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
             
@@ -264,7 +259,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<bool> EnsureDatabaseCreatedAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-ensuredatabasecreated-start");
+            _logger.LogDebug("MigrationService ensuring database created for {DbContext}", typeof(TContext).Name);
             
             var canConnect = await _dbContext.Database.CanConnectAsync(cancellationToken);
             
@@ -287,9 +282,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<bool> DeleteDatabaseAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-deletedatabase-start");
-            
-            _logger.LogWarning("Deleting database for {DbContext}", typeof(TContext).Name);
+            _logger.LogWarning("MigrationService deleting database for {DbContext}", typeof(TContext).Name);
             var deleted = await _dbContext.Database.EnsureDeletedAsync(cancellationToken);
             
             if (deleted)
@@ -310,7 +303,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public Task<SchemaValidationResult> ValidateSchemaAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-validateschema-start");
+            _logger.LogDebug("MigrationService validating schema for {DbContext}", typeof(TContext).Name);
 
             // Note: Full schema validation requires comparing the EF Core model with the actual database schema.
             // This is a simplified implementation. For production, consider using a tool like EFCore.Tools.
@@ -375,7 +368,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public Task<string> GetMigrationScriptAsync(string? fromMigration, string? toMigration, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationservice-getmigrationscript-start");
+            _logger.LogDebug("MigrationService generating migration script from '{From}' to '{To}' for {DbContext}", 
+                fromMigration ?? "(beginning)", 
+                toMigration ?? "(latest)", 
+                typeof(TContext).Name);
 
             var migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
             var script = migrator.GenerateScript(fromMigration, toMigration);

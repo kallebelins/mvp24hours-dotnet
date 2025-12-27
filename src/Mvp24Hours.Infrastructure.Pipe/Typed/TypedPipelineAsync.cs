@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +27,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         private readonly List<Func<object?, CancellationToken, Task<IOperationResult<object>>>> _operations = [];
         private readonly List<Func<object?, CancellationToken, Task>> _rollbacks = [];
         private readonly List<object?> _executedInputs = [];
+        private readonly ILogger? _logger;
+
+        /// <summary>
+        /// Creates a new instance of TypedPipelineAsync.
+        /// </summary>
+        /// <param name="logger">Optional logger instance.</param>
+        public TypedPipelineAsync(ILogger<TypedPipelineAsync<TInput, TOutput>>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <inheritdoc/>
         public bool IsBreakOnFail { get; set; }
@@ -119,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         /// <inheritdoc/>
         public async Task<IOperationResult<TOutput>> ExecuteAsync(TInput input, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-execute-start");
+            _logger?.LogDebug("TypedPipelineAsync: ExecuteAsync started");
             _executedInputs.Clear();
 
             try
@@ -133,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
                     _executedInputs.Add(currentValue);
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-operation-start");
+                    _logger?.LogDebug("TypedPipelineAsync: Operation started");
                     IOperationResult<object> result;
 
                     try
@@ -146,11 +156,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                     }
                     catch (Exception ex)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "typed-pipeline-async-operation-error", ex);
+                        _logger?.LogError(ex, "TypedPipelineAsync: Operation error");
                         result = OperationResult<object>.Failure(ex);
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-operation-end");
+                    _logger?.LogDebug("TypedPipelineAsync: Operation completed");
 
                     allMessages.AddRange(result.Messages);
 
@@ -195,13 +205,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-execute-end");
+                _logger?.LogDebug("TypedPipelineAsync: ExecuteAsync completed");
             }
         }
 
         private async Task ExecuteRollbackAsync(CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-rollback-start");
+            _logger?.LogDebug("TypedPipelineAsync: Rollback started");
 
             for (int i = _executedInputs.Count - 1; i >= 0; i--)
             {
@@ -211,11 +221,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "typed-pipeline-async-rollback-error", ex);
+                    _logger?.LogError(ex, "TypedPipelineAsync: Rollback error");
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-async-rollback-end");
+            _logger?.LogDebug("TypedPipelineAsync: Rollback completed");
         }
     }
 }

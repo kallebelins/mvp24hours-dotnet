@@ -3,10 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,11 +25,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
         /// <param name="message">The pipeline message.</param>
         /// <param name="coreAction">The core action to execute.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="logger">Optional logger instance.</param>
         public static async Task ExecuteAsync(
             IEnumerable<IPipelineMiddleware> middlewares,
             IPipelineMessage message,
             Func<Task> coreAction,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            ILogger? logger = null)
         {
             if (middlewares == null || !middlewares.Any())
             {
@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             {
                 var middleware = orderedMiddlewares[i];
                 var currentNext = next;
-                next = () => ExecuteMiddlewareAsync(middleware, message, currentNext, cancellationToken);
+                next = () => ExecuteMiddlewareAsync(middleware, message, currentNext, cancellationToken, logger);
             }
 
             await next();
@@ -58,16 +58,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             IPipelineMiddleware middleware,
             IPipelineMessage message,
             Func<Task> next,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            ILogger? logger = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-middleware-start", $"middleware:{middleware.GetType().Name}");
+            logger?.LogDebug("PipelineMiddleware: Executing {MiddlewareName}", middleware.GetType().Name);
             try
             {
                 await middleware.ExecuteAsync(message, next, cancellationToken);
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-middleware-end", $"middleware:{middleware.GetType().Name}");
+                logger?.LogDebug("PipelineMiddleware: Completed {MiddlewareName}", middleware.GetType().Name);
             }
         }
 
@@ -77,10 +78,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
         /// <param name="middlewares">Ordered list of middlewares to execute.</param>
         /// <param name="message">The pipeline message.</param>
         /// <param name="coreAction">The core action to execute.</param>
+        /// <param name="logger">Optional logger instance.</param>
         public static void Execute(
             IEnumerable<IPipelineMiddlewareSync> middlewares,
             IPipelineMessage message,
-            Action coreAction)
+            Action coreAction,
+            ILogger? logger = null)
         {
             if (middlewares == null || !middlewares.Any())
             {
@@ -97,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             {
                 var middleware = orderedMiddlewares[i];
                 var currentNext = next;
-                next = () => ExecuteMiddleware(middleware, message, currentNext);
+                next = () => ExecuteMiddleware(middleware, message, currentNext, logger);
             }
 
             next();
@@ -106,16 +109,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
         private static void ExecuteMiddleware(
             IPipelineMiddlewareSync middleware,
             IPipelineMessage message,
-            Action next)
+            Action next,
+            ILogger? logger = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-middleware-sync-start", $"middleware:{middleware.GetType().Name}");
+            logger?.LogDebug("PipelineMiddlewareSync: Executing {MiddlewareName}", middleware.GetType().Name);
             try
             {
                 middleware.Execute(message, next);
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-middleware-sync-end", $"middleware:{middleware.GetType().Name}");
+                logger?.LogDebug("PipelineMiddlewareSync: Completed {MiddlewareName}", middleware.GetType().Name);
             }
         }
     }

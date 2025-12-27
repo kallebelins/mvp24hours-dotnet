@@ -4,12 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
@@ -23,14 +23,15 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     /// <summary>
     ///  <see cref="Mvp24Hours.Core.Contract.Data.IRepository"/>
     /// </summary>
-    public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options) : RepositoryBase<T>(dbContext, options), IRepository<T>
+    public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<Repository<T>>? logger = null) : RepositoryBase<T>(dbContext, options), IRepository<T>
         where T : class, IEntityBase
     {
+        private readonly ILogger<Repository<T>>? _logger = logger;
         #region [ IQuery ]
 
         public bool ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listany-start");
+            _logger?.LogDebug("Repository: ListAny started");
             try
             {
                 using var scope = CreateTransactionScope(true);
@@ -38,16 +39,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listany-transactionscope-complete");
+                    _logger?.LogDebug("Repository: ListAny transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listany-end"); }
+            finally { _logger?.LogDebug("Repository: ListAny finished"); }
         }
 
         public int ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listcount-start");
+            _logger?.LogDebug("Repository: ListCount started");
             try
             {
                 using var scope = CreateTransactionScope(true);
@@ -55,11 +56,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listcount-transactionscope-complete");
+                    _logger?.LogDebug("Repository: ListCount transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-listcount-end"); }
+            finally { _logger?.LogDebug("Repository: ListCount finished"); }
         }
 
         public IList<T> List()
@@ -69,7 +70,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public IList<T> List(IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-list-start");
+            _logger?.LogDebug("Repository: List started");
             try
             {
                 using var scope = CreateTransactionScope();
@@ -77,16 +78,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-list-transactionscope-complete");
+                    _logger?.LogDebug("Repository: List transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-list-end"); }
+            finally { _logger?.LogDebug("Repository: List finished"); }
         }
 
         public bool GetByAny(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyany-start");
+            _logger?.LogDebug("Repository: GetByAny started");
             try
             {
                 using var scope = CreateTransactionScope(true);
@@ -99,16 +100,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyany-transactionscope-complete");
+                    _logger?.LogDebug("Repository: GetByAny transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyany-end"); }
+            finally { _logger?.LogDebug("Repository: GetByAny finished"); }
         }
 
         public int GetByCount(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbycount-start");
+            _logger?.LogDebug("Repository: GetByCount started");
             try
             {
                 using var scope = CreateTransactionScope(true);
@@ -121,11 +122,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbycount-transactionscope-complete");
+                    _logger?.LogDebug("Repository: GetByCount transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbycount-end"); }
+            finally { _logger?.LogDebug("Repository: GetByCount finished"); }
         }
 
         public IList<T> GetBy(Expression<Func<T, bool>> clause)
@@ -135,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getby-start");
+            _logger?.LogDebug("Repository: GetBy started");
             try
             {
                 using var scope = CreateTransactionScope();
@@ -148,11 +149,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getby-transactionscope-complete");
+                    _logger?.LogDebug("Repository: GetBy transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getby-end"); }
+            finally { _logger?.LogDebug("Repository: GetBy finished"); }
         }
 
         public T GetById(object id)
@@ -162,7 +163,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public T GetById(object id, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyid-start");
+            _logger?.LogDebug("Repository: GetById started");
             try
             {
                 using var scope = CreateTransactionScope();
@@ -170,11 +171,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (scope != null)
                 {
                     scope.Complete();
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyid-transactionscope-complete");
+                    _logger?.LogDebug("Repository: GetById transaction scope complete");
                 }
                 return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-getbyid-end"); }
+            finally { _logger?.LogDebug("Repository: GetById finished"); }
         }
 
         #endregion
@@ -184,12 +185,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelation<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelation-start");
+            _logger?.LogDebug("Repository: LoadRelation started");
             try
             {
                 this.dbContext.Entry(entity).Reference(propertyExpression).Load();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelation-end"); }
+            finally { _logger?.LogDebug("Repository: LoadRelation finished"); }
         }
 
         public void LoadRelation<TProperty>(T entity,
@@ -197,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int limit = 0)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelation-start");
+            _logger?.LogDebug("Repository: LoadRelation (collection) started");
             try
             {
                 var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
@@ -214,12 +215,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 _ = query.ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelation-end"); }
+            finally { _logger?.LogDebug("Repository: LoadRelation (collection) finished"); }
         }
 
         public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelationsortbyascending-start");
+            _logger?.LogDebug("Repository: LoadRelationSortByAscending started");
             try
             {
                 var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
@@ -241,12 +242,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 _ = query.ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelationsortbyascending-end"); }
+            finally { _logger?.LogDebug("Repository: LoadRelationSortByAscending finished"); }
         }
 
         public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelationsortbydescending-start");
+            _logger?.LogDebug("Repository: LoadRelationSortByDescending started");
             try
             {
                 var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
@@ -268,7 +269,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 _ = query.ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-loadrelationsortbydescending-end"); }
+            finally { _logger?.LogDebug("Repository: LoadRelationSortByDescending finished"); }
         }
 
         #endregion
@@ -277,7 +278,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public void Add(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-add-start");
+            _logger?.LogDebug("Repository: Add started");
             try
             {
                 if (entity == null)
@@ -295,12 +296,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     this.dbEntities.Add(entity);
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-add-end"); }
+            finally { _logger?.LogDebug("Repository: Add finished"); }
         }
 
         public void Add(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-addlist-start");
+            _logger?.LogDebug("Repository: Add (list) started");
             try
             {
                 if (entities.AnySafe())
@@ -311,12 +312,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-addlist-end"); }
+            finally { _logger?.LogDebug("Repository: Add (list) finished"); }
         }
 
         public void Modify(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-modify-start");
+            _logger?.LogDebug("Repository: Modify started");
             try
             {
                 if (entity == null)
@@ -331,7 +332,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 if (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>)) || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)))
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-modify-log");
+                    _logger?.LogDebug("Repository: Modify with entity log");
                     var entityLog = (dynamic)entity;
                     var entityDbLog = (dynamic)entityDb;
                     entityLog.Created = entityDbLog.Created;
@@ -342,12 +343,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 this.dbContext.Entry(entityDb).CurrentValues.SetValues(entity);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-modify-end"); }
+            finally { _logger?.LogDebug("Repository: Modify finished"); }
         }
 
         public void Modify(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-modifylist-start");
+            _logger?.LogDebug("Repository: Modify (list) started");
             try
             {
                 if (entities.AnySafe())
@@ -358,12 +359,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-modifylist-end"); }
+            finally { _logger?.LogDebug("Repository: Modify (list) finished"); }
         }
 
         public void Remove(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-remove-start");
+            _logger?.LogDebug("Repository: Remove started");
             try
             {
                 if (entity == null)
@@ -378,7 +379,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 if (hasUserLog || hasUserLogDate)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-remove-log");
+                    _logger?.LogDebug("Repository: Remove with entity log");
                     var entityLog = (dynamic)entity;
                     entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
                     if (hasUserLog)
@@ -392,12 +393,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     this.ForceRemove(entity);
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-remove-end"); }
+            finally { _logger?.LogDebug("Repository: Remove finished"); }
         }
 
         public void Remove(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removelist-start");
+            _logger?.LogDebug("Repository: Remove (list) started");
             try
             {
                 if (entities.AnySafe())
@@ -408,12 +409,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removelist-end"); }
+            finally { _logger?.LogDebug("Repository: Remove (list) finished"); }
         }
 
         public void RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removebyid-start");
+            _logger?.LogDebug("Repository: RemoveById started");
             try
             {
                 var entity = this.GetById(id);
@@ -424,12 +425,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 this.Remove(entity);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removebyid-end"); }
+            finally { _logger?.LogDebug("Repository: RemoveById finished"); }
         }
 
         public void RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removebyidlist-start");
+            _logger?.LogDebug("Repository: RemoveById (list) started");
             try
             {
                 if (ids.AnySafe())
@@ -440,7 +441,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-removebyidlist-end"); }
+            finally { _logger?.LogDebug("Repository: RemoveById (list) finished"); }
         }
 
         /// <summary>
@@ -448,7 +449,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// </summary>
         private void ForceRemove(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-forceremove-start");
+            _logger?.LogDebug("Repository: ForceRemove started");
             try
             {
                 if (entity == null)
@@ -467,7 +468,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     this.dbEntities.Remove(entity);
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-repository-forceremove-end"); }
+            finally { _logger?.LogDebug("Repository: ForceRemove finished"); }
         }
 
         #endregion

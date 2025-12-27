@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +25,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         private readonly List<Func<object?, IOperationResult<object>>> _operations = [];
         private readonly List<Action<object?>> _rollbacks = [];
         private readonly List<object?> _executedInputs = [];
+        private readonly ILogger? _logger;
+
+        /// <summary>
+        /// Creates a new instance of TypedPipeline.
+        /// </summary>
+        /// <param name="logger">Optional logger instance.</param>
+        public TypedPipeline(ILogger<TypedPipeline<TInput, TOutput>>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <inheritdoc/>
         public bool IsBreakOnFail { get; set; }
@@ -117,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         /// <inheritdoc/>
         public IOperationResult<TOutput> Execute(TInput input)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-execute-start");
+            _logger?.LogDebug("TypedPipeline: Execute started");
             _executedInputs.Clear();
 
             try
@@ -129,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 {
                     _executedInputs.Add(currentValue);
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-operation-start");
+                    _logger?.LogDebug("TypedPipeline: Operation started");
                     IOperationResult<object> result;
 
                     try
@@ -138,11 +148,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                     }
                     catch (Exception ex)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "typed-pipeline-operation-error", ex);
+                        _logger?.LogError(ex, "TypedPipeline: Operation error");
                         result = OperationResult<object>.Failure(ex);
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-operation-end");
+                    _logger?.LogDebug("TypedPipeline: Operation completed");
 
                     allMessages.AddRange(result.Messages);
 
@@ -187,13 +197,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-execute-end");
+                _logger?.LogDebug("TypedPipeline: Execute completed");
             }
         }
 
         private void ExecuteRollback()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-rollback-start");
+            _logger?.LogDebug("TypedPipeline: Rollback started");
 
             for (int i = _executedInputs.Count - 1; i >= 0; i--)
             {
@@ -203,11 +213,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "typed-pipeline-rollback-error", ex);
+                    _logger?.LogError(ex, "TypedPipeline: Rollback error");
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "typed-pipeline-rollback-end");
+            _logger?.LogDebug("TypedPipeline: Rollback completed");
         }
     }
 }

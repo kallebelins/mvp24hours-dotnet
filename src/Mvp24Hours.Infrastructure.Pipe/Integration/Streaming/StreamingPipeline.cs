@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Collections.Generic;
@@ -91,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             IAsyncEnumerable<TInput> inputs,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "streaming-pipeline-start");
+            _logger?.LogDebug("StreamingPipeline: Started");
 
             if (MaxDegreeOfParallelism <= 1)
             {
@@ -130,7 +128,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
                 await processingTask;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "streaming-pipeline-end");
+            _logger?.LogDebug("StreamingPipeline: Completed");
         }
 
         /// <inheritdoc/>

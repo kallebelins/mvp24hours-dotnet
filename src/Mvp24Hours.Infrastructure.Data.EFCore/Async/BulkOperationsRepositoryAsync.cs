@@ -4,12 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 using System;
@@ -59,10 +58,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     /// }
     /// </code>
     /// </example>
-    public class BulkOperationsRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options) 
+    public class BulkOperationsRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<BulkOperationsRepositoryAsync<T>> logger) 
         : RepositoryAsync<T>(_dbContext, options), IBulkOperationsRepositoryAsync<T>
         where T : class, IEntityBase
     {
+        private readonly ILogger<BulkOperationsRepositoryAsync<T>> _logger = logger;
         #region IBulkOperationsAsync - Bulk Insert
 
         /// <inheritdoc />
@@ -86,8 +86,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkinsertasync-start",
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
+            _logger.LogDebug("Bulk insert started. Count: {Count}, BatchSize: {BatchSize}", entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -122,8 +121,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkinsertasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Bulk insert completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
@@ -131,8 +129,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-bulkinsertasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Bulk insert failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -163,8 +160,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkupdateasync-start",
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
+            _logger.LogDebug("Bulk update started. Count: {Count}, BatchSize: {BatchSize}", entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -204,8 +200,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkupdateasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Bulk update completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
@@ -213,8 +208,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-bulkupdateasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Bulk update failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -245,8 +239,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkdeleteasync-start",
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
+            _logger.LogDebug("Bulk delete started. Count: {Count}, BatchSize: {BatchSize}", entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -286,8 +279,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-bulkdeleteasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Bulk delete completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
@@ -295,8 +287,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-bulkdeleteasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Bulk delete failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -316,7 +307,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executeupdateasync-start");
+            _logger.LogDebug("Execute update started");
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -333,8 +324,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executeupdateasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Execute update completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return rowsAffected;
             }
@@ -342,8 +332,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-executeupdateasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Execute update failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 throw;
             }
@@ -358,7 +347,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (setPropertyCalls == null) throw new ArgumentNullException(nameof(setPropertyCalls));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executeupdateasync-multi-start");
+            _logger.LogDebug("Execute update (multi-property) started");
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -382,8 +371,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executeupdateasync-multi-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Execute update (multi-property) completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return rowsAffected;
             }
@@ -391,8 +379,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-executeupdateasync-multi-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Execute update (multi-property) failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 throw;
             }
@@ -470,7 +457,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executedeleteasync-start");
+            _logger.LogDebug("Execute delete started");
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -482,8 +469,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkrepo-executedeleteasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug("Execute delete completed. Rows affected: {RowsAffected}, Elapsed: {ElapsedMs}ms", rowsAffected, stopwatch.ElapsedMilliseconds);
 
                 return rowsAffected;
             }
@@ -491,8 +477,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkrepo-executedeleteasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "Execute delete failed. Elapsed: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
 
                 throw;
             }

@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
@@ -26,16 +25,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private readonly IRoutingKeyConvention _routingKeyConvention;
         private readonly ITopologyBuilder _topologyBuilder;
         private readonly AutoBindingOptions _options;
+        private readonly ILogger<AutoBindingHelper>? _logger;
 
         /// <summary>
         /// Creates a new instance of <see cref="AutoBindingHelper"/> with default settings.
         /// </summary>
-        public AutoBindingHelper()
+        /// <param name="logger">Optional logger instance.</param>
+        public AutoBindingHelper(ILogger<AutoBindingHelper>? logger = null)
             : this(
                 EndpointNameFormatter.Instance,
                 RoutingKeyConvention.Instance,
                 new TopologyBuilder(),
-                new AutoBindingOptions())
+                new AutoBindingOptions(),
+                logger)
         {
         }
 
@@ -46,16 +48,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <param name="routingKeyConvention">The routing key convention to use.</param>
         /// <param name="topologyBuilder">The topology builder to use.</param>
         /// <param name="options">The auto-binding options.</param>
+        /// <param name="logger">Optional logger instance.</param>
         public AutoBindingHelper(
             IEndpointNameFormatter nameFormatter,
             IRoutingKeyConvention routingKeyConvention,
             ITopologyBuilder topologyBuilder,
-            AutoBindingOptions options)
+            AutoBindingOptions options,
+            ILogger<AutoBindingHelper>? logger = null)
         {
             _nameFormatter = nameFormatter ?? throw new ArgumentNullException(nameof(nameFormatter));
             _routingKeyConvention = routingKeyConvention ?? throw new ArgumentNullException(nameof(routingKeyConvention));
             _topologyBuilder = topologyBuilder ?? throw new ArgumentNullException(nameof(topologyBuilder));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger;
         }
 
         /// <summary>
@@ -83,8 +88,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(consumerType);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "auto-binding-consumer",
-                $"consumer:{consumerType.FullName}");
+            _logger?.LogDebug(
+                "Auto-binding consumer. ConsumerType={ConsumerType}",
+                consumerType.FullName);
 
             // Get message type from consumer
             var messageType = GetMessageTypeFromConsumer(consumerType);
@@ -128,8 +134,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 exchangeName,
                 routingKey);
 
-            TelemetryHelper.Execute(TelemetryLevels.Information, "auto-binding-complete",
-                $"queue:{queueName}|exchange:{exchangeName}|routingKey:{routingKey}");
+            _logger?.LogInformation(
+                "Auto-binding complete. Queue={QueueName}, Exchange={ExchangeName}, RoutingKey={RoutingKey}",
+                queueName, exchangeName, routingKey);
 
             return new ConsumerBindingInfo
             {
@@ -169,8 +176,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning, "auto-binding-consumer-failed",
-                        $"consumer:{consumerType.FullName}|error:{ex.Message}");
+                    _logger?.LogWarning(ex,
+                        "Auto-binding consumer failed. ConsumerType={ConsumerType}",
+                        consumerType.FullName);
 
                     if (!_options.ContinueOnError)
                         throw;
@@ -205,8 +213,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(messageType);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "auto-binding-message",
-                $"message:{messageType.FullName}");
+            _logger?.LogDebug(
+                "Auto-binding message. MessageType={MessageType}",
+                messageType.FullName);
 
             // Get or generate names
             var exchangeName = GetExchangeName(messageType);

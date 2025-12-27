@@ -10,9 +10,7 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Specifications;
@@ -69,23 +67,23 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public bool ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-listany-start");
+            _logger?.LogDebug("MongoDB read-only repository ListAny operation started.");
             try
             {
                 return GetQuery(null, true).Any();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-listany-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository ListAny operation completed."); }
         }
 
         /// <inheritdoc />
         public int ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-listcount-start");
+            _logger?.LogDebug("MongoDB read-only repository ListCount operation started.");
             try
             {
                 return GetQuery(null, true).Count();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-listcount-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository ListCount operation completed."); }
         }
 
         /// <inheritdoc />
@@ -97,18 +95,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public IList<T> List(IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-list-start");
+            _logger?.LogDebug("MongoDB read-only repository List operation started.");
             try
             {
                 return GetQuery(criteria).ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-list-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository List operation completed."); }
         }
 
         /// <inheritdoc />
         public bool GetByAny(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyany-start");
+            _logger?.LogDebug("MongoDB read-only repository GetByAny operation started.");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -118,13 +116,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, null, true).Any();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyany-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetByAny operation completed."); }
         }
 
         /// <inheritdoc />
         public int GetByCount(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbycount-start");
+            _logger?.LogDebug("MongoDB read-only repository GetByCount operation started.");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -134,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, null, true).Count();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbycount-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetByCount operation completed."); }
         }
 
         /// <inheritdoc />
@@ -146,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getby-start");
+            _logger?.LogDebug("MongoDB read-only repository GetBy operation started.");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -156,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, criteria).ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getby-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetBy operation completed."); }
         }
 
         /// <inheritdoc />
@@ -168,13 +166,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public T GetById(object id, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyid-start");
+            _logger?.LogDebug("MongoDB read-only repository GetById operation started.");
             try
             {
                 return GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
                     .SingleOrDefault()!;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyid-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetById operation completed."); }
         }
 
         #endregion
@@ -228,61 +226,61 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public bool AnyBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-anybyspecification-start");
+            _logger?.LogDebug("MongoDB read-only repository AnyBySpecification operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.Any();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-anybyspecification-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository AnyBySpecification operation completed."); }
         }
 
         /// <inheritdoc />
         public int CountBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-countbyspecification-start");
+            _logger?.LogDebug("MongoDB read-only repository CountBySpecification operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.Count();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-countbyspecification-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository CountBySpecification operation completed."); }
         }
 
         /// <inheritdoc />
         public IList<T> GetBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyspecification-start");
+            _logger?.LogDebug("MongoDB read-only repository GetBySpecification operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbyspecification-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetBySpecification operation completed."); }
         }
 
         /// <inheritdoc />
         public T? GetSingleBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getsinglebyspecification-start");
+            _logger?.LogDebug("MongoDB read-only repository GetSingleBySpecification operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.SingleOrDefault();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getsinglebyspecification-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetSingleBySpecification operation completed."); }
         }
 
         /// <inheritdoc />
         public T? GetFirstBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getfirstbyspecification-start");
+            _logger?.LogDebug("MongoDB read-only repository GetFirstBySpecification operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.FirstOrDefault();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getfirstbyspecification-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetFirstBySpecification operation completed."); }
         }
 
         #endregion
@@ -297,7 +295,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             int pageSize,
             bool ascending = true) where TKey : struct
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-start");
+            _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination operation started.");
             try
             {
                 IQueryable<T> query = dbEntities.AsQueryable();
@@ -334,7 +332,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination operation completed."); }
         }
 
         /// <inheritdoc />
@@ -347,7 +345,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-spec-start");
+            _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination with specification operation started.");
             try
             {
                 IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
@@ -378,7 +376,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-spec-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination with specification operation completed."); }
         }
 
         /// <inheritdoc />
@@ -389,7 +387,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             int pageSize,
             bool ascending = true)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-string-start");
+            _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination (string key) operation started.");
             try
             {
                 IQueryable<T> query = dbEntities.AsQueryable();
@@ -426,7 +424,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepository-getbykeysetpagination-string-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository GetByKeysetPagination (string key) operation completed."); }
         }
 
         #endregion

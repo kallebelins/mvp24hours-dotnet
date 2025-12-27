@@ -3,15 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
@@ -21,29 +20,29 @@ using System.Linq.Expressions;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb
 {
-    public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options) : RepositoryBase<T>(dbContext, options), IRepository<T>
+    public class Repository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null) : RepositoryBase<T>(dbContext, options, logger), IRepository<T>
         where T : class, IEntityBase
     {
         #region [ IQuery ]
 
         public bool ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-listany-start");
+            _logger?.LogDebug("MongoDB repository ListAny started");
             try
             {
                 return GetQuery(null, true).Any();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-listany-end"); }
+            finally { _logger?.LogDebug("MongoDB repository ListAny completed"); }
         }
 
         public int ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-listcount-start");
+            _logger?.LogDebug("MongoDB repository ListCount started");
             try
             {
                 return GetQuery(null, true).Count();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-listcount-end"); }
+            finally { _logger?.LogDebug("MongoDB repository ListCount completed"); }
         }
 
         public IList<T> List()
@@ -53,17 +52,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         public IList<T> List(IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-list-start");
+            _logger?.LogDebug("MongoDB repository List started");
             try
             {
                 return GetQuery(criteria).ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-list-end"); }
+            finally { _logger?.LogDebug("MongoDB repository List completed"); }
         }
 
         public bool GetByAny(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbyany-start");
+            _logger?.LogDebug("MongoDB repository GetByAny started");
             try
             {
                 var query = this.dbEntities.AsQueryable();
@@ -73,12 +72,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, null, true).Any();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbyany-end"); }
+            finally { _logger?.LogDebug("MongoDB repository GetByAny completed"); }
         }
 
         public int GetByCount(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbycount-start");
+            _logger?.LogDebug("MongoDB repository GetByCount started");
             try
             {
                 var query = this.dbEntities.AsQueryable();
@@ -88,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, null, true).Count();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbycount-end"); }
+            finally { _logger?.LogDebug("MongoDB repository GetByCount completed"); }
         }
 
         public IList<T> GetBy(Expression<Func<T, bool>> clause)
@@ -98,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getby-start");
+            _logger?.LogDebug("MongoDB repository GetBy started");
             try
             {
                 var query = this.dbEntities.AsQueryable();
@@ -108,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return GetQuery(query, criteria).ToList();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getby-end"); }
+            finally { _logger?.LogDebug("MongoDB repository GetBy completed"); }
         }
 
         public T GetById(object id)
@@ -118,12 +117,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         public T GetById(object id, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbyid-start");
+            _logger?.LogDebug("MongoDB repository GetById started: Id={Id}", id);
             try
             {
                 return GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefault();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-getbyid-end"); }
+            finally { _logger?.LogDebug("MongoDB repository GetById completed: Id={Id}", id); }
         }
 
         #endregion
@@ -151,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         public void Add(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-add-start");
+            _logger?.LogDebug("MongoDB repository Add started");
             try
             {
                 if (entity == null)
@@ -160,12 +159,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 dbEntities.InsertOne(entity);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-add-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Add completed"); }
         }
 
         public void Add(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-addlist-start");
+            _logger?.LogDebug("MongoDB repository Add list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -176,12 +175,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-addlist-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Add list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         public void Modify(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-modify-start");
+            _logger?.LogDebug("MongoDB repository Modify started");
             try
             {
                 if (entity == null)
@@ -196,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 if (entity.GetType() == typeof(IEntityLog<>))
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-modify-log");
+                    _logger?.LogDebug("MongoDB repository Modify: preserving log fields");
                     var entityLog = entity as IEntityLog<object>;
                     var entityDbLog = entityDb as IEntityLog<object>;
                     entityLog.Created = entityDbLog.Created;
@@ -207,12 +206,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 this.dbEntities.ReplaceOne(GetKeyFilter(entity), entity);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-modify-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Modify completed"); }
         }
 
         public void Modify(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-modifylist-start");
+            _logger?.LogDebug("MongoDB repository Modify list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -223,12 +222,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-modifylist-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Modify list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         public void Remove(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-remove-start");
+            _logger?.LogDebug("MongoDB repository Remove started");
             try
             {
                 if (entity == null)
@@ -238,7 +237,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 if (entity.GetType() == typeof(IEntityLog<>))
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-remove-log");
+                    _logger?.LogDebug("MongoDB repository Remove: performing soft delete");
                     var entityLog = entity as IEntityLog<object>;
                     entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
                     entityLog.RemovedBy = EntityLogBy;
@@ -249,12 +248,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     this.ForceRemove(entity);
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-remove-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Remove completed"); }
         }
 
         public void Remove(IList<T> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removelist-start");
+            _logger?.LogDebug("MongoDB repository Remove list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -265,12 +264,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removelist-end"); }
+            finally { _logger?.LogDebug("MongoDB repository Remove list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         public void RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removebyid-start");
+            _logger?.LogDebug("MongoDB repository RemoveById started: Id={Id}", id);
             try
             {
                 var entity = this.GetById(id);
@@ -280,12 +279,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 this.Remove(entity);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removebyid-end"); }
+            finally { _logger?.LogDebug("MongoDB repository RemoveById completed: Id={Id}", id); }
         }
 
         public void RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removebyidlist-start");
+            _logger?.LogDebug("MongoDB repository RemoveById list started: Count={Count}", ids?.Count ?? 0);
             try
             {
                 if (ids.AnySafe())
@@ -296,7 +295,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-removebyidlist-end"); }
+            finally { _logger?.LogDebug("MongoDB repository RemoveById list completed: Count={Count}", ids?.Count ?? 0); }
         }
 
         /// <summary>
@@ -304,7 +303,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         private void ForceRemove(T entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-forceremove-start");
+            _logger?.LogDebug("MongoDB repository ForceRemove started");
             try
             {
                 if (entity == null)
@@ -313,7 +312,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 this.dbEntities.DeleteOne(GetKeyFilter(entity));
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repository-forceremove-end"); }
+            finally { _logger?.LogDebug("MongoDB repository ForceRemove completed"); }
         }
 
         #endregion

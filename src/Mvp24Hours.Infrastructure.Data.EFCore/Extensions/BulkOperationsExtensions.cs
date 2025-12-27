@@ -6,9 +6,7 @@
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -79,9 +77,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkinsertasync-start", 
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -117,17 +112,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkinsertasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-bulkinsertasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -178,9 +167,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkupdateasync-start",
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -221,17 +207,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkupdateasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-bulkupdateasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -282,9 +262,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                 return BulkOperationResult.Success(0, TimeSpan.Zero);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkdeleteasync-start",
-                $"count:{entities.Count}|batchSize:{options.BatchSize}");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -325,17 +302,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-bulkdeleteasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-bulkdeleteasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -368,8 +339,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executeupdateasync-start");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -385,17 +354,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executeupdateasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return rowsAffected;
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-executeupdateasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 throw;
             }
@@ -421,8 +384,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (setPropertyCalls == null) throw new ArgumentNullException(nameof(setPropertyCalls));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executeupdateasync-multi-start");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -433,17 +394,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executeupdateasync-multi-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return rowsAffected;
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-executeupdateasync-multi-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 throw;
             }
@@ -470,8 +425,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executedeleteasync-start");
-
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -482,17 +435,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-bulkoperations-executedeleteasync-end",
-                    $"rows:{rowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
-
                 return rowsAffected;
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-
-                TelemetryHelper.Execute(TelemetryLevels.Error, "efcore-bulkoperations-executedeleteasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 throw;
             }

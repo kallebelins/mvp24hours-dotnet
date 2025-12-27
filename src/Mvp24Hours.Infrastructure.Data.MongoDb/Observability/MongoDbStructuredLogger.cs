@@ -8,8 +8,6 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -224,18 +222,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 {
                     _logger.Log(level, "[{Category}] {Message}", log.Category, message);
                 }
-            }
-            else
-            {
-                var level = log.Level switch
-                {
-                    "Error" => TelemetryLevels.Error,
-                    "Warning" => TelemetryLevels.Warning,
-                    "Information" => TelemetryLevels.Information,
-                    _ => TelemetryLevels.Verbose
-                };
-
-                TelemetryHelper.Execute(level, $"mongodb-{log.EventName.ToLower()}", log.Properties);
             }
         }
 

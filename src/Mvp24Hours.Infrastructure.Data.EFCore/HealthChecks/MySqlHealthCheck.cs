@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -76,7 +74,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
             HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mysqlhealthcheck-checkhealthasync-start");
+            _logger.LogDebug("MySQL health check starting");
 
             var data = new Dictionary<string, object>();
             var stopwatch = Stopwatch.StartNew();
@@ -194,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                         data: data);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mysqlhealthcheck-checkhealthasync-healthy");
+                _logger.LogDebug("MySQL health check completed successfully in {ResponseTimeMs}ms", stopwatch.ElapsedMilliseconds);
 
                 return HealthCheckResult.Healthy(
                     description: $"MySQL is healthy (response time: {stopwatch.ElapsedMilliseconds}ms)",

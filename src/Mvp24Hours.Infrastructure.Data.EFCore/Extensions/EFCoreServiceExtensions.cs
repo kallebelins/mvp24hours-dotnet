@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
@@ -26,8 +24,6 @@ namespace Mvp24Hours.Extensions
             Func<IServiceProvider, TDbContext> dbFactory = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped) where TDbContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursdbcontext-execute");
-
             if (dbFactory != null)
             {
                 services.Add(new ServiceDescriptor(typeof(DbContext), dbFactory, lifetime));
@@ -49,8 +45,6 @@ namespace Mvp24Hours.Extensions
             Type unitOfWork = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursrepository-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -90,8 +84,6 @@ namespace Mvp24Hours.Extensions
             Type unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursrepositoryasync-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -147,8 +139,6 @@ namespace Mvp24Hours.Extensions
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
             where TTenantProvider : class, ITenantProvider
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hourstenantprovider-execute");
-
             services.Add(new ServiceDescriptor(typeof(ITenantProvider), typeof(TTenantProvider), lifetime));
             return services;
         }
@@ -174,8 +164,6 @@ namespace Mvp24Hours.Extensions
             Func<IServiceProvider, ITenantProvider> factory,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hourstenantprovider-factory-execute");
-
             services.Add(new ServiceDescriptor(typeof(ITenantProvider), factory, lifetime));
             return services;
         }
@@ -209,8 +197,6 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             Action<TenantInterceptorOptions> configureOptions = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hourstenantinterceptor-execute");
-
             var options = new TenantInterceptorOptions();
             configureOptions?.Invoke(options);
 
@@ -249,8 +235,6 @@ namespace Mvp24Hours.Extensions
             Action<TenantInterceptorOptions> configureInterceptor = null)
             where TTenantProvider : class, ITenantProvider
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursmultitenancy-execute");
-
             services.AddMvp24HoursTenantProvider<TTenantProvider>();
             services.AddMvp24HoursTenantInterceptor(configureInterceptor);
 
@@ -278,8 +262,6 @@ namespace Mvp24Hours.Extensions
             ServiceLifetime lifetime = ServiceLifetime.Singleton)
             where TEncryptionProvider : class, IEncryptionProvider
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursencryptionprovider-execute");
-
             services.Add(new ServiceDescriptor(typeof(IEncryptionProvider), typeof(TEncryptionProvider), lifetime));
             return services;
         }
@@ -306,8 +288,6 @@ namespace Mvp24Hours.Extensions
             Func<IServiceProvider, IEncryptionProvider> factory,
             ServiceLifetime lifetime = ServiceLifetime.Singleton)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursencryptionprovider-factory-execute");
-
             services.Add(new ServiceDescriptor(typeof(IEncryptionProvider), factory, lifetime));
             return services;
         }
@@ -361,8 +341,6 @@ namespace Mvp24Hours.Extensions
             Type unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursstreamingrepositorysync-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -471,8 +449,6 @@ namespace Mvp24Hours.Extensions
             Type unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursbulkoperationsrepositoryasync-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -573,8 +549,6 @@ namespace Mvp24Hours.Extensions
             Type readOnlyRepository = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursreadonlyrepository-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -644,8 +618,6 @@ namespace Mvp24Hours.Extensions
             Type readOnlyRepositoryAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursreadonlyrepositoryasync-execute");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -712,8 +684,6 @@ namespace Mvp24Hours.Extensions
             Action<EFCoreRepositoryOptions> options = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hourscqrsrepositories-execute");
-
             // Register read-only repository for queries
             services.AddMvp24HoursReadOnlyRepositoryAsync(options, lifetime: lifetime);
 
@@ -757,8 +727,6 @@ namespace Mvp24Hours.Extensions
             Action<EFCoreRepositoryOptions> additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursreadoptimizedrepository-execute");
-
             return services.AddMvp24HoursRepositoryAsync(options =>
             {
                 // Optimized defaults for read performance
@@ -802,8 +770,6 @@ namespace Mvp24Hours.Extensions
             Action<EFCoreRepositoryOptions> additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hourswriteoptimizedrepository-execute");
-
             return services.AddMvp24HoursRepositoryAsync(options =>
             {
                 // Optimized defaults for write performance
@@ -854,8 +820,6 @@ namespace Mvp24Hours.Extensions
             Action<EFCoreRepositoryOptions> additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcoreserviceextensions-addmvp24hoursdevrepository-execute");
-
             return services.AddMvp24HoursRepositoryAsync(options =>
             {
                 // Development-friendly defaults

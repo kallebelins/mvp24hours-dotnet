@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation;
 using System;
 
@@ -55,8 +53,6 @@ namespace Mvp24Hours.Extensions
             Action<SchemaValidationOptions>? configureOptions = null)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "schemavalidationextensions-addmvp24hoursschemavalidator-start");
-
             var options = new SchemaValidationOptions();
             configureOptions?.Invoke(options);
 
@@ -118,8 +114,6 @@ namespace Mvp24Hours.Extensions
             Action<SchemaValidationOptions>? configureOptions = null)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "schemavalidationextensions-addmvp24hoursschemavalidationonstartup-start");
-
             // Ensure ValidateOnStartup is true
             services.AddMvp24HoursSchemaValidator<TContext>(options =>
             {

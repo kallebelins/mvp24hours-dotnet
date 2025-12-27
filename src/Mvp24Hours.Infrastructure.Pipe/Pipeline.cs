@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Application.Pipe;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
@@ -11,7 +12,6 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Configuration;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using System;
@@ -30,8 +30,9 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public Pipeline(IServiceProvider _provider = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipeline-ctor");
             this.provider = _provider;
+            this._logger = _provider?.GetService<ILogger<Pipeline>>();
+            _logger?.LogDebug("Pipeline: Constructor");
 
             var options = _provider?.GetService<IOptions<PipelineOptions>>()?.Value;
             if (options != null)
@@ -55,6 +56,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         #region [ Fields / Properties ]
         private readonly IServiceProvider provider;
+        private readonly ILogger<Pipeline> _logger;
         private readonly List<IOperation> operations;
         private readonly List<IOperation> executedOperations;
 
@@ -283,13 +285,13 @@ namespace Mvp24Hours.Infrastructure.Pipe
         public void Execute(IPipelineMessage input = null)
         {
             executedOperations.Clear();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-start");
+            _logger?.LogDebug("Pipeline: Execute started");
             try
             {
                 Message = input ?? Message;
                 Message = RunOperations(this.operations, Message);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-end"); }
+            finally { _logger?.LogDebug("Pipeline: Execute completed"); }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
@@ -337,12 +339,12 @@ namespace Mvp24Hours.Infrastructure.Pipe
                       }
 
                       // operation
-                      TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-operation-start", $"operation:{operation.GetType().Name}");
+                      _logger?.LogDebug("Pipeline: Executing operation {OperationName}", operation.GetType().Name);
                       try
                       {
                           operation.Execute(current);
                       }
-                      finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-operation-end", $"operation:{operation.GetType().Name}"); }
+                      finally { _logger?.LogDebug("Pipeline: Operation {OperationName} completed", operation.GetType().Name); }
 
                       // post-operation
                       if (!onlyOperationDefault)
@@ -376,7 +378,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                   }
                   catch (Exception ex)
                   {
-                      TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-pipeline-execute-failure", ex);
+                      _logger?.LogError(ex, "Pipeline: Execute operation failure");
                       current.Messages.Add(new MessageResult((ex.InnerException ?? ex).Message, MessageType.Error));
                       input.AddContent(ex);
                       currentException = ex;
@@ -481,12 +483,12 @@ namespace Mvp24Hours.Infrastructure.Pipe
                     {
                         continue;
                     }
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-event-start", $"operation:{handler.GetType().Name}");
+                    _logger?.LogDebug("Pipeline: Executing event handler {HandlerName}", handler.GetType().Name);
                     try
                     {
                         Task.Factory.StartNew(() => handler(input, EventArgs.Empty));
                     }
-                    finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-execute-event-end", $"operation:{handler.GetType().Name}"); }
+                    finally { _logger?.LogDebug("Pipeline: Event handler {HandlerName} completed", handler.GetType().Name); }
                 }
             }
         }
@@ -501,13 +503,13 @@ namespace Mvp24Hours.Infrastructure.Pipe
                         continue;
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-rollback-operation-start", "operation:" + executedOperation.GetType().Name);
+                    _logger?.LogDebug("Pipeline: Rolling back operation {OperationName}", executedOperation.GetType().Name);
                     try
                     {
                         executedOperation.Rollback(input);
                     }
-                    catch (Exception ex) { TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-pipeline-rollback-failure", ex); }
-                    finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-pipeline-rollback-operation-end", "operation:" + executedOperation.GetType().Name); }
+                    catch (Exception ex) { _logger?.LogError(ex, "Pipeline: Rollback operation failure"); }
+                    finally { _logger?.LogDebug("Pipeline: Rollback operation {OperationName} completed", executedOperation.GetType().Name); }
                 }
             }
         }

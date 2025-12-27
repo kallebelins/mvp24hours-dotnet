@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,8 +66,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-getbyid-compile");
-
             var keyProperty = GetPropertyName(keySelector);
 
             return EF.CompileQuery((TContext ctx, TKey id) =>
@@ -94,8 +90,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-getall-compile");
-
             return EF.CompileQuery((TContext ctx) => ctx.Set<T>());
         }
 
@@ -121,8 +115,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-any-compile");
-
             return EF.CompileQuery((TContext ctx, TParam param) =>
                 ctx.Set<T>().Any(e => predicate.Compile()(e, param)));
         }
@@ -140,8 +132,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-count-compile");
-
             return EF.CompileQuery((TContext ctx, TParam param) =>
                 ctx.Set<T>().Count(e => predicate.Compile()(e, param)));
         }
@@ -171,8 +161,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-getbyidasync-compile");
-
             var keyProperty = GetPropertyName(keySelector);
 
             return EF.CompileAsyncQuery((TContext ctx, TKey id) =>
@@ -200,8 +188,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-getallasync-compile");
-
             return EF.CompileAsyncQuery((TContext ctx) => ctx.Set<T>());
         }
 
@@ -230,8 +216,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-whereasync-compile");
-
             return EF.CompileAsyncQuery((TContext ctx, TParam param) =>
                 ctx.Set<T>().Where(e => predicate.Compile()(e, param)));
         }
@@ -249,8 +233,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-firstordefaultasync-compile");
-
             return EF.CompileAsyncQuery((TContext ctx, TParam param) =>
                 ctx.Set<T>().FirstOrDefault(e => predicate.Compile()(e, param)));
         }
@@ -276,8 +258,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TContext : DbContext
             where T : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-compiledquery-pagedasync-compile");
-
             return EF.CompileAsyncQuery((TContext ctx, int skip, int take) =>
                 ctx.Set<T>().Skip(skip).Take(take));
         }

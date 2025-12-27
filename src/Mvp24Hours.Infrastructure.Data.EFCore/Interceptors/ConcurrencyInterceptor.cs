@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Threading;
@@ -110,9 +109,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 // Increment version on modification
                 entity.Version++;
             }
-
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"concurrency-interceptor-version-{entry.Entity.GetType().Name}-v{entity.Version}");
         }
     }
 

@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Threading;
@@ -188,10 +186,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     reason,
                     deadLetter.Id);
 
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Verbose,
-                    "pipe-dead-letter-stored",
-                    $"operation:{operationName}, reason:{reason}, id:{deadLetter.Id}");
+                _logger?.LogDebug(
+                    "DeadLetterMiddleware: Stored. Operation: {OperationName}, Reason: {Reason}, ID: {DeadLetterId}",
+                    operationName,
+                    reason,
+                    deadLetter.Id);
 
                 // Notify callback
                 _options.OnDeadLettered?.Invoke(deadLetter);
@@ -201,11 +200,6 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 _logger?.LogError(
                     storeEx,
                     "Failed to store operation in dead letter queue");
-
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Error,
-                    "pipe-dead-letter-store-failed",
-                    $"error:{storeEx.Message}");
 
                 // Don't lose the original exception
                 if (exception != null)

@@ -4,13 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Security;
 using System;
@@ -92,6 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         protected MongoDbOptions Options { get; private set; }
 
+        private readonly ILogger<Mvp24HoursContext> _logger;
         private bool _isTransactionAsync;
         #endregion
 
@@ -102,11 +102,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="options">The MongoDB options.</param>
         /// <param name="tenantProvider">Optional tenant provider for multi-tenancy.</param>
         /// <param name="currentUserProvider">Optional current user provider for RLS.</param>
+        /// <param name="logger">The logger instance.</param>
         [ActivatorUtilitiesConstructor]
         public Mvp24HoursContext(
             IOptions<MongoDbOptions> options,
             ITenantProvider tenantProvider = null,
-            ICurrentUserProvider currentUserProvider = null)
+            ICurrentUserProvider currentUserProvider = null,
+            ILogger<Mvp24HoursContext> logger = null)
         {
             if (options == null)
             {
@@ -120,6 +122,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             EnableTransaction = Options.EnableTransaction;
             EnableMultiTenancy = Options.EnableMultiTenancy;
             TenantProvider = tenantProvider;
+            _logger = logger;
 
             // Initialize Row-Level Security
             RowLevelSecurity = new MongoDbRowLevelSecurity(tenantProvider, currentUserProvider);
@@ -134,7 +137,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="connectionString">The connection string.</param>
         /// <param name="enableTls">Whether to enable TLS.</param>
         /// <param name="enableTransaction">Whether to enable transactions.</param>
-        public Mvp24HoursContext(string databaseName, string connectionString, bool enableTls = false, bool enableTransaction = false)
+        /// <param name="logger">The logger instance.</param>
+        public Mvp24HoursContext(string databaseName, string connectionString, bool enableTls = false, bool enableTransaction = false, ILogger<Mvp24HoursContext> logger = null)
         {
             if (!databaseName.HasValue())
             {
@@ -150,6 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             ConnectionString = connectionString;
             EnableTls = enableTls;
             EnableTransaction = enableTransaction;
+            _logger = logger;
 
             Options = new MongoDbOptions
             {
@@ -194,9 +199,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             if (options.Authentication != null)
             {
                 options.Authentication.ApplyTo(settings);
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-context-auth-configured",
-                    new { Mechanism = options.Authentication.Mechanism });
+                _logger?.LogDebug("MongoDB authentication configured: Mechanism={Mechanism}", options.Authentication.Mechanism);
             }
             else if (EnableTls)
             {
@@ -227,15 +230,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             MongoClient = new MongoClient(settings);
             Database = MongoClient.GetDatabase(DatabaseName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-context-configured",
-                new
-                {
-                    Database = DatabaseName,
-                    TLS = settings.UseTls,
-                    MultiTenancy = EnableMultiTenancy,
-                    Transactions = EnableTransaction
-                });
+            _logger?.LogDebug(
+                "MongoDB context configured: Database={Database}, TLS={TLS}, MultiTenancy={MultiTenancy}, Transactions={Transactions}",
+                DatabaseName,
+                settings.UseTls,
+                EnableMultiTenancy,
+                EnableTransaction);
         }
 
         private static void ConfigureReadWriteSettings(MongoClientSettings settings, MongoDbOptions options)
@@ -307,29 +307,34 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
         }
 
-        private static void ConfigureCommandLogging(MongoClientSettings settings)
+        private void ConfigureCommandLogging(MongoClientSettings settings)
         {
+            var logger = _logger; // Capture logger for closure
             settings.ClusterConfigurator = builder =>
             {
                 builder.Subscribe<CommandStartedEvent>(e =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                        $"mongodb-command-started-{e.CommandName}",
-                        new { CommandName = e.CommandName, DatabaseName = e.DatabaseNamespace?.DatabaseName });
+                    logger?.LogDebug(
+                        "MongoDB command started: CommandName={CommandName}, DatabaseName={DatabaseName}",
+                        e.CommandName,
+                        e.DatabaseNamespace?.DatabaseName);
                 });
 
                 builder.Subscribe<CommandSucceededEvent>(e =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                        $"mongodb-command-succeeded-{e.CommandName}",
-                        new { CommandName = e.CommandName, Duration = e.Duration });
+                    logger?.LogDebug(
+                        "MongoDB command succeeded: CommandName={CommandName}, Duration={Duration}ms",
+                        e.CommandName,
+                        e.Duration.TotalMilliseconds);
                 });
 
                 builder.Subscribe<CommandFailedEvent>(e =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning,
-                        $"mongodb-command-failed-{e.CommandName}",
-                        new { CommandName = e.CommandName, Duration = e.Duration, Error = e.Failure?.Message });
+                    logger?.LogWarning(
+                        "MongoDB command failed: CommandName={CommandName}, Duration={Duration}ms, Error={Error}",
+                        e.CommandName,
+                        e.Duration.TotalMilliseconds,
+                        e.Failure?.Message);
                 });
             };
         }

@@ -5,14 +5,14 @@
 //=====================================================================================
 using AutoMapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,6 +89,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IValidator<TEntity>? _entityValidator;
         private readonly IValidator<TCreateDto>? _createDtoValidator;
         private readonly IValidator<TUpdateDto>? _updateDtoValidator;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -169,6 +170,7 @@ namespace Mvp24Hours.Application.Logic
             _entityValidator = entityValidator;
             _createDtoValidator = createDtoValidator;
             _updateDtoValidator = updateDtoValidator;
+            _logger = NullLogger.Instance;
         }
 
         #endregion
@@ -178,14 +180,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-listanyasync");
+            _logger.LogDebug("application-separatedtos-listanyasync");
             return _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-listcountasync");
+            _logger.LogDebug("application-separatedtos-listcountasync");
             return _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -198,7 +200,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-listasync");
+            _logger.LogDebug("application-separatedtos-listasync");
             var entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -207,14 +209,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbyanyasync");
+            _logger.LogDebug("application-separatedtos-getbyanyasync");
             return _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbycountasync");
+            _logger.LogDebug("application-separatedtos-getbycountasync");
             return _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -227,7 +229,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbyasync");
+            _logger.LogDebug("application-separatedtos-getbyasync");
             var entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -242,7 +244,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbyidasync");
+            _logger.LogDebug("application-separatedtos-getbyidasync");
             var entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
             var dto = MapToDto(entity);
             return dto.ToBusiness();
@@ -255,7 +257,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<TDto>> AddAsync(TCreateDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-addasync");
+            _logger.LogDebug("application-separatedtos-addasync");
 
             // Validate create DTO if validator is available
             var dtoErrors = dto.TryValidate(_createDtoValidator);
@@ -285,7 +287,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(IList<TCreateDto> dtos, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-addlistasync");
+            _logger.LogDebug("application-separatedtos-addlistasync");
 
             if (!dtos.AnySafe())
             {
@@ -327,7 +329,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<TDto>> ModifyAsync(object id, TUpdateDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-modifyasync");
+            _logger.LogDebug("application-separatedtos-modifyasync");
 
             // Validate update DTO if validator is available
             var dtoErrors = dto.TryValidate(_updateDtoValidator);
@@ -364,7 +366,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<TDto>> PatchAsync(object id, TUpdateDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-patchasync");
+            _logger.LogDebug("application-separatedtos-patchasync");
 
             // Get existing entity
             var existingEntity = await _repository.GetByIdAsync(id, cancellationToken: cancellationToken);
@@ -398,7 +400,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-removebyidasync");
+            _logger.LogDebug("application-separatedtos-removebyidasync");
             await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
             return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
@@ -406,7 +408,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-removebyidlistasync");
+            _logger.LogDebug("application-separatedtos-removebyidlistasync");
 
             if (!ids.AnySafe())
             {

@@ -8,8 +8,6 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
     ///   <item>Rate limiting to prevent log flooding</item>
     ///   <item>Optional explain output for slow queries</item>
     ///   <item>Sensitive data masking</item>
-    ///   <item>Integration with ILogger and TelemetryHelper</item>
+    ///   <item>Integration with ILogger for structured logging</item>
     /// </list>
     /// </para>
     /// </remarks>
@@ -217,13 +215,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                     _logger.LogWarning("Slow query filter: {Filter}", details.Filter);
                 }
             }
-            else
-            {
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Warning,
-                    "mongodb-slow-query",
-                    details);
-            }
         }
 
         private void LogCommandFailure(CommandInfo info, TimeSpan duration, Exception exception)
@@ -239,24 +230,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 Timestamp = DateTimeOffset.UtcNow
             };
 
-            if (_logger != null)
-            {
-                _logger.LogError(
-                    exception,
-                    "❌ MONGODB COMMAND FAILED - Command: {CommandName}, Collection: {Collection}, " +
-                    "Duration: {DurationMs:F2}ms, Error: {ErrorMessage}",
-                    details.CommandName,
-                    details.CollectionName ?? "N/A",
-                    details.DurationMs,
-                    details.ErrorMessage);
-            }
-            else
-            {
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Error,
-                    "mongodb-command-failed",
-                    details);
-            }
+            _logger?.LogError(
+                exception,
+                "❌ MONGODB COMMAND FAILED - Command: {CommandName}, Collection: {Collection}, " +
+                "Duration: {DurationMs:F2}ms, Error: {ErrorMessage}",
+                details.CommandName,
+                details.CollectionName ?? "N/A",
+                details.DurationMs,
+                details.ErrorMessage);
         }
 
         private bool ShouldLogSlowQuery()

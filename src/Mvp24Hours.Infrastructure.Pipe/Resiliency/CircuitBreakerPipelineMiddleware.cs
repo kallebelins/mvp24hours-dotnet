@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -254,10 +252,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     key,
                     retryAfter);
 
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Verbose,
-                    "pipe-circuit-breaker-rejected",
-                    $"key:{key}, retryAfter:{retryAfter:O}");
+                _logger?.LogDebug(
+                    "CircuitBreaker: Rejected. Key: {Key}, RetryAfter: {RetryAfter:O}",
+                    key,
+                    retryAfter);
 
                 options.OnRejected?.Invoke();
 
@@ -310,10 +308,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                         key,
                         circuitState.State);
 
-                    TelemetryHelper.Execute(
-                        TelemetryLevels.Verbose,
-                        "pipe-circuit-breaker-failure",
-                        $"key:{key}, state:{circuitState.State}, error:{ex.Message}");
+                    _logger?.LogDebug(
+                        "CircuitBreaker: Failure recorded. Key: {Key}, State: {State}, Error: {ErrorMessage}",
+                        key,
+                        circuitState.State,
+                        ex.Message);
                 }
 
                 throw;

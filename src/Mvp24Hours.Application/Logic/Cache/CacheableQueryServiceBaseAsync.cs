@@ -10,9 +10,7 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -126,7 +124,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-listasync-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-listasync-cache-miss", cacheKey);
                     var result = await base.ListAsync(cancellationToken);
                     return result;
                 },
@@ -148,7 +146,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-listasync-paged-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-listasync-paged-cache-miss", cacheKey);
                     var result = await base.ListAsync(criteria, cancellationToken);
                     return result;
                 },
@@ -170,7 +168,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-listanyasync-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-listanyasync-cache-miss", cacheKey);
                     var result = await base.ListAnyAsync(cancellationToken);
                     return result;
                 },
@@ -192,7 +190,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-listcountasync-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-listcountasync-cache-miss", cacheKey);
                     var result = await base.ListCountAsync(cancellationToken);
                     return result;
                 },
@@ -214,7 +212,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-getbyidasync-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-getbyidasync-cache-miss", cacheKey);
                     var result = await base.GetByIdAsync(id, cancellationToken);
                     return result;
                 },
@@ -236,7 +234,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "cacheable-queryservice-getbyidasync-paged-cache-miss", cacheKey);
+                    _logger.LogDebug( "cacheable-queryservice-getbyidasync-paged-cache-miss", cacheKey);
                     var result = await base.GetByIdAsync(id, criteria, cancellationToken);
                     return result;
                 },

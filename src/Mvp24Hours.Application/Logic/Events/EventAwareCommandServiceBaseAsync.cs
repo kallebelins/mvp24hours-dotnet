@@ -10,9 +10,7 @@ using Mvp24Hours.Application.Contract.Events;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -138,7 +136,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-addasync");
+        _logger?.LogDebug("application-eventaware-commandservice-addasync");
 
         var errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
@@ -165,7 +163,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-addlistasync");
+        _logger?.LogDebug("application-eventaware-commandservice-addlistasync");
 
         if (!entities.AnySafe())
         {
@@ -204,7 +202,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-modifyasync");
+        _logger?.LogDebug("application-eventaware-commandservice-modifyasync");
 
         var errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
@@ -231,7 +229,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-modifylistasync");
+        _logger?.LogDebug("application-eventaware-commandservice-modifylistasync");
 
         if (!entities.AnySafe())
         {
@@ -270,7 +268,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-removeasync");
+        _logger?.LogDebug("application-eventaware-commandservice-removeasync");
 
         await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
         var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
@@ -291,7 +289,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-removelistasync");
+        _logger?.LogDebug("application-eventaware-commandservice-removelistasync");
 
         if (!entities.AnySafe())
         {
@@ -318,7 +316,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <returns>A business result with the number of affected rows.</returns>
     public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-eventaware-commandservice-removebyidasync");
+        _logger?.LogDebug("application-eventaware-commandservice-removebyidasync");
 
         await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
         var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);

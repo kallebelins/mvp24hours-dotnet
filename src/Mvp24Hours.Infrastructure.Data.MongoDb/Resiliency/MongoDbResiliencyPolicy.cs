@@ -3,8 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,16 +49,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         private readonly MongoDbResiliencyOptions _options;
         private readonly MongoDbCircuitBreaker _circuitBreaker;
         private readonly MongoDbRetryPolicy _retryPolicy;
+        private readonly ILogger<MongoDbResiliencyPolicy> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbResiliencyPolicy"/> class.
         /// </summary>
         /// <param name="options">The resiliency options.</param>
-        public MongoDbResiliencyPolicy(MongoDbResiliencyOptions options)
+        /// <param name="logger">The logger instance.</param>
+        public MongoDbResiliencyPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbResiliencyPolicy> logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger;
             _circuitBreaker = new MongoDbCircuitBreaker(options);
-            _retryPolicy = new MongoDbRetryPolicy(options);
+            _retryPolicy = new MongoDbRetryPolicy(options, logger);
         }
 
         /// <inheritdoc />
@@ -240,9 +242,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         {
             _circuitBreaker.ResetState();
 
-            TelemetryHelper.Execute(TelemetryLevels.Information,
-                "mongodb-circuit-breaker-reset",
-                new { ManualReset = true });
+            _logger?.LogInformation("MongoDB circuit breaker manually reset");
         }
 
         /// <inheritdoc />
@@ -250,9 +250,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         {
             _circuitBreaker.Trip();
 
-            TelemetryHelper.Execute(TelemetryLevels.Warning,
-                "mongodb-circuit-breaker-tripped",
-                new { ManualTrip = true });
+            _logger?.LogWarning("MongoDB circuit breaker manually tripped");
         }
 
         private async Task<TResult> ExecuteWithTimeoutInternalAsync<TResult>(
@@ -273,13 +271,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             {
                 if (_options.LogTimeoutEvents)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning,
-                        "mongodb-operation-timeout",
-                        new
-                        {
-                            Timeout = timeout.TotalMilliseconds,
-                            OperationType = "read"
-                        });
+                    _logger?.LogWarning(
+                        "MongoDB operation timeout: Timeout={Timeout}ms, OperationType={OperationType}",
+                        timeout.TotalMilliseconds,
+                        "read");
                 }
 
                 throw new MongoDbOperationTimeoutException(timeout, "database");
@@ -288,14 +283,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
         private void LogFallback(Exception ex, string reason)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information,
-                "mongodb-fallback-used",
-                new
-                {
-                    Reason = reason,
-                    ExceptionType = ex.GetType().Name,
-                    Message = ex.Message
-                });
+            _logger?.LogInformation(
+                "MongoDB fallback used: Reason={Reason}, ExceptionType={ExceptionType}, Message={Message}",
+                reason,
+                ex.GetType().Name,
+                ex.Message);
         }
     }
 }

@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Diagnostics;
@@ -71,58 +69,30 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogMessagePublishing(string messageType, string messageId, string? correlationId, string exchange, string routingKey)
         {
-            var message = $"Publishing message: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Exchange={exchange}, RoutingKey={routingKey}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-logging-publishing", message);
-            }
+            _logger?.LogDebug(
+                "Publishing message. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Exchange={Exchange}, RoutingKey={RoutingKey}",
+                messageType, messageId, correlationId, exchange, routingKey);
         }
 
         private void LogMessagePublished(string messageType, string messageId, string? correlationId, long elapsedMs)
         {
-            var message = $"Message published successfully: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Duration={elapsedMs}ms";
-            
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-filter-logging-published", message);
-            }
+            _logger?.LogInformation(
+                "Message published successfully. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+                messageType, messageId, correlationId, elapsedMs);
         }
 
         private void LogMessageCancelled(string messageType, string messageId, string? correlationId, string? reason)
         {
-            var message = $"Message publish cancelled: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Reason={reason}";
-            
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-filter-logging-cancelled", message);
-            }
+            _logger?.LogWarning(
+                "Message publish cancelled. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Reason={Reason}",
+                messageType, messageId, correlationId, reason);
         }
 
         private void LogMessagePublishFailed(string messageType, string messageId, string? correlationId, long elapsedMs, Exception ex)
         {
-            var message = $"Message publish failed: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Duration={elapsedMs}ms, Error={ex.Message}";
-            
-            if (_logger != null)
-            {
-                _logger.LogError(ex, message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-filter-logging-publish-failed", ex);
-            }
+            _logger?.LogError(ex,
+                "Message publish failed. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+                messageType, messageId, correlationId, elapsedMs);
         }
     }
 }

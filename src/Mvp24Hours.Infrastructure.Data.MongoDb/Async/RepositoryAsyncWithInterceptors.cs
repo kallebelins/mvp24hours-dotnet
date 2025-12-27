@@ -3,15 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
@@ -59,11 +58,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="dbContext">The MongoDB context.</param>
         /// <param name="options">Repository options.</param>
         /// <param name="interceptorPipeline">The interceptor pipeline (optional, defaults to no-op).</param>
+        /// <param name="logger">The logger instance.</param>
         public RepositoryAsyncWithInterceptors(
             Mvp24HoursContext dbContext,
             IOptions<MongoDbRepositoryOptions> options,
-            IMongoDbInterceptorPipeline interceptorPipeline = null)
-            : base(dbContext, options)
+            IMongoDbInterceptorPipeline interceptorPipeline = null,
+            ILogger<RepositoryBase<T>> logger = null)
+            : base(dbContext, options, logger)
         {
             _interceptorPipeline = interceptorPipeline ?? NoOpInterceptorPipeline.Instance;
         }
@@ -73,25 +74,25 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listanyasync-start");
+            _logger?.LogDebug("MongoDB repository async ListAnyAsync started");
             try
             {
                 return await GetQuery(null, true)
                     .AnyAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listanyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async ListAnyAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task<int> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listcountasync-start");
+            _logger?.LogDebug("MongoDB repository async ListCountAsync started");
             try
             {
                 return await GetQuery(null, true)
                     .CountAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listcountasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async ListCountAsync completed"); }
         }
 
         /// <inheritdoc />
@@ -103,19 +104,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<IList<T>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listasync-start");
+            _logger?.LogDebug("MongoDB repository async ListAsync started");
             try
             {
                 return await GetQuery(criteria)
                     .ToListAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-listasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async ListAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task<bool> GetByAnyAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyanyasync-start");
+            _logger?.LogDebug("MongoDB repository async GetByAnyAsync started");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -126,13 +127,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 return await GetQuery(query, null, true)
                     .AnyAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyanyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async GetByAnyAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task<int> GetByCountAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbycountasync-start");
+            _logger?.LogDebug("MongoDB repository async GetByCountAsync started");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -143,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 return await GetQuery(query, null, true)
                     .CountAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbycountasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async GetByCountAsync completed"); }
         }
 
         /// <inheritdoc />
@@ -155,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyasync-start");
+            _logger?.LogDebug("MongoDB repository async GetByAsync started");
             try
             {
                 var query = dbEntities.AsQueryable();
@@ -166,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 return await GetQuery(query, criteria)
                     .ToListAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async GetByAsync completed"); }
         }
 
         /// <inheritdoc />
@@ -178,13 +179,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<T> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyidasync-start");
+            _logger?.LogDebug("MongoDB repository async GetByIdAsync started: Id={Id}", id);
             try
             {
                 return await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
                     .SingleOrDefaultAsync(cancellationToken: cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-getbyidasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async GetByIdAsync completed: Id={Id}", id); }
         }
 
         #endregion
@@ -226,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-addasync-start");
+            _logger?.LogDebug("MongoDB repository async AddAsync started");
             try
             {
                 if (entity == null) return;
@@ -236,13 +237,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     await dbEntities.InsertOneAsync(entity, cancellationToken: cancellationToken);
                 }, cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-addasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async AddAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task AddAsync(IList<T> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-addlistasync-start");
+            _logger?.LogDebug("MongoDB repository async AddAsync list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -253,13 +254,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-addlistasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async AddAsync list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         /// <inheritdoc />
         public async Task ModifyAsync(T entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-modifyasync-start");
+            _logger?.LogDebug("MongoDB repository async ModifyAsync started");
             try
             {
                 if (entity == null) return;
@@ -276,13 +277,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     await dbEntities.ReplaceOneAsync(GetKeyFilter(entity), entity, cancellationToken: cancellationToken);
                 }, cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-modifyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async ModifyAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task ModifyAsync(IList<T> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-modifylistasync-start");
+            _logger?.LogDebug("MongoDB repository async ModifyAsync list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -293,13 +294,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-modifylistasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async ModifyAsync list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         /// <inheritdoc />
         public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removeasync-start");
+            _logger?.LogDebug("MongoDB repository async RemoveAsync started");
             try
             {
                 if (entity == null) return;
@@ -317,16 +318,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     },
                     cancellationToken);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    wasSoftDeleted ? "mongodb-repositoryasync-softdeleteasync" : "mongodb-repositoryasync-harddeleteasync");
+                _logger?.LogDebug(
+                    "MongoDB repository async RemoveAsync: {DeleteType}",
+                    wasSoftDeleted ? "SoftDelete" : "HardDelete");
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removeasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async RemoveAsync completed"); }
         }
 
         /// <inheritdoc />
         public async Task RemoveAsync(IList<T> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removelistasync-start");
+            _logger?.LogDebug("MongoDB repository async RemoveAsync list started: Count={Count}", entities?.Count ?? 0);
             try
             {
                 if (entities.AnySafe())
@@ -337,13 +339,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removelistasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async RemoveAsync list completed: Count={Count}", entities?.Count ?? 0); }
         }
 
         /// <inheritdoc />
         public async Task RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removebyidasync-start");
+            _logger?.LogDebug("MongoDB repository async RemoveByIdAsync started: Id={Id}", id);
             try
             {
                 var entity = await GetByIdAsync(id, cancellationToken: cancellationToken);
@@ -352,13 +354,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     await RemoveAsync(entity, cancellationToken: cancellationToken);
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removebyidasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async RemoveByIdAsync completed: Id={Id}", id); }
         }
 
         /// <inheritdoc />
         public async Task RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removebyidlistasync-start");
+            _logger?.LogDebug("MongoDB repository async RemoveByIdAsync list started: Count={Count}", ids?.Count ?? 0);
             try
             {
                 if (ids.AnySafe())
@@ -369,7 +371,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositoryasync-removebyidlistasync-end"); }
+            finally { _logger?.LogDebug("MongoDB repository async RemoveByIdAsync list completed: Count={Count}", ids?.Count ?? 0); }
         }
 
         #endregion

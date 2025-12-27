@@ -5,14 +5,14 @@
 //=====================================================================================
 using AutoMapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -85,6 +85,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IValidator<TEntity>? _entityValidator;
         private readonly IValidator<TCreateDto>? _createDtoValidator;
         private readonly IValidator<TUpdateDto>? _updateDtoValidator;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -165,6 +166,7 @@ namespace Mvp24Hours.Application.Logic
             _entityValidator = entityValidator;
             _createDtoValidator = createDtoValidator;
             _updateDtoValidator = updateDtoValidator;
+            _logger = NullLogger.Instance;
         }
 
         #endregion
@@ -174,14 +176,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-listany");
+            _logger.LogDebug("application-separatedtos-listany");
             return _repository.ListAny().ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-listcount");
+            _logger.LogDebug("application-separatedtos-listcount");
             return _repository.ListCount().ToBusiness();
         }
 
@@ -194,7 +196,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-list");
+            _logger.LogDebug("application-separatedtos-list");
             var entities = _repository.List(criteria);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -203,14 +205,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbyany");
+            _logger.LogDebug("application-separatedtos-getbyany");
             return _repository.GetByAny(clause).ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbycount");
+            _logger.LogDebug("application-separatedtos-getbycount");
             return _repository.GetByCount(clause).ToBusiness();
         }
 
@@ -223,7 +225,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getby");
+            _logger.LogDebug("application-separatedtos-getby");
             var entities = _repository.GetBy(clause, criteria);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -238,7 +240,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-getbyid");
+            _logger.LogDebug("application-separatedtos-getbyid");
             var entity = _repository.GetById(id, criteria);
             var dto = MapToDto(entity);
             return dto.ToBusiness();
@@ -251,7 +253,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TDto> Add(TCreateDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-add");
+            _logger.LogDebug("application-separatedtos-add");
 
             // Validate create DTO if validator is available
             var dtoErrors = dto.TryValidate(_createDtoValidator);
@@ -281,7 +283,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Add(IList<TCreateDto> dtos)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-addlist");
+            _logger.LogDebug("application-separatedtos-addlist");
 
             if (!dtos.AnySafe())
             {
@@ -327,7 +329,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TDto> Modify(object id, TUpdateDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-modify");
+            _logger.LogDebug("application-separatedtos-modify");
 
             // Validate update DTO if validator is available
             var dtoErrors = dto.TryValidate(_updateDtoValidator);
@@ -364,7 +366,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TDto> Patch(object id, TUpdateDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-patch");
+            _logger.LogDebug("application-separatedtos-patch");
 
             // Get existing entity
             var existingEntity = _repository.GetById(id);
@@ -398,7 +400,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-removebyid");
+            _logger.LogDebug("application-separatedtos-removebyid");
             _repository.RemoveById(id);
             return _unitOfWork.SaveChanges().ToBusiness();
         }
@@ -406,7 +408,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-separatedtos-removebyidlist");
+            _logger.LogDebug("application-separatedtos-removebyidlist");
 
             if (!ids.AnySafe())
             {

@@ -3,8 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
@@ -24,12 +23,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private readonly IEndpointNameFormatter _nameFormatter;
         private readonly IRoutingKeyConvention _routingKeyConvention;
         private readonly TopologyBuilderOptions _options;
+        private readonly ILogger<TopologyBuilder>? _logger;
 
         /// <summary>
         /// Creates a new instance of <see cref="TopologyBuilder"/> with default settings.
         /// </summary>
-        public TopologyBuilder()
-            : this(EndpointNameFormatter.Instance, RoutingKeyConvention.Instance, new TopologyBuilderOptions())
+        /// <param name="logger">Optional logger instance.</param>
+        public TopologyBuilder(ILogger<TopologyBuilder>? logger = null)
+            : this(EndpointNameFormatter.Instance, RoutingKeyConvention.Instance, new TopologyBuilderOptions(), logger)
         {
         }
 
@@ -39,14 +40,17 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <param name="nameFormatter">The name formatter to use.</param>
         /// <param name="routingKeyConvention">The routing key convention to use.</param>
         /// <param name="options">The topology builder options.</param>
+        /// <param name="logger">Optional logger instance.</param>
         public TopologyBuilder(
             IEndpointNameFormatter nameFormatter,
             IRoutingKeyConvention routingKeyConvention,
-            TopologyBuilderOptions options)
+            TopologyBuilderOptions options,
+            ILogger<TopologyBuilder>? logger = null)
         {
             _nameFormatter = nameFormatter ?? throw new ArgumentNullException(nameof(nameFormatter));
             _routingKeyConvention = routingKeyConvention ?? throw new ArgumentNullException(nameof(routingKeyConvention));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -62,8 +66,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(exchangeName);
             ArgumentNullException.ThrowIfNull(exchangeType);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-declare-exchange",
-                $"exchange:{exchangeName}|type:{exchangeType}|durable:{durable}|autoDelete:{autoDelete}");
+            _logger?.LogDebug(
+                "Declaring exchange. Exchange={ExchangeName}, Type={ExchangeType}, Durable={Durable}, AutoDelete={AutoDelete}",
+                exchangeName, exchangeType, durable, autoDelete);
 
             channel.ExchangeDeclare(
                 exchange: exchangeName,
@@ -85,8 +90,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(queueName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-declare-queue",
-                $"queue:{queueName}|durable:{durable}|exclusive:{exclusive}|autoDelete:{autoDelete}");
+            _logger?.LogDebug(
+                "Declaring queue. Queue={QueueName}, Durable={Durable}, Exclusive={Exclusive}, AutoDelete={AutoDelete}",
+                queueName, durable, exclusive, autoDelete);
 
             channel.QueueDeclare(
                 queue: queueName,
@@ -108,8 +114,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(queueName);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-bind-queue",
-                $"queue:{queueName}|exchange:{exchangeName}|routingKey:{routingKey}");
+            _logger?.LogDebug(
+                "Binding queue. Queue={QueueName}, Exchange={ExchangeName}, RoutingKey={RoutingKey}",
+                queueName, exchangeName, routingKey);
 
             channel.QueueBind(
                 queue: queueName,
@@ -130,8 +137,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(destinationExchange);
             ArgumentNullException.ThrowIfNull(sourceExchange);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-bind-exchange",
-                $"destination:{destinationExchange}|source:{sourceExchange}|routingKey:{routingKey}");
+            _logger?.LogDebug(
+                "Binding exchange. Destination={DestinationExchange}, Source={SourceExchange}, RoutingKey={RoutingKey}",
+                destinationExchange, sourceExchange, routingKey);
 
             channel.ExchangeBind(
                 destination: destinationExchange,
@@ -152,8 +160,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(queueName);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-unbind-queue",
-                $"queue:{queueName}|exchange:{exchangeName}|routingKey:{routingKey}");
+            _logger?.LogDebug(
+                "Unbinding queue. Queue={QueueName}, Exchange={ExchangeName}, RoutingKey={RoutingKey}",
+                queueName, exchangeName, routingKey);
 
             channel.QueueUnbind(
                 queue: queueName,
@@ -174,8 +183,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(destinationExchange);
             ArgumentNullException.ThrowIfNull(sourceExchange);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-unbind-exchange",
-                $"destination:{destinationExchange}|source:{sourceExchange}|routingKey:{routingKey}");
+            _logger?.LogDebug(
+                "Unbinding exchange. Destination={DestinationExchange}, Source={SourceExchange}, RoutingKey={RoutingKey}",
+                destinationExchange, sourceExchange, routingKey);
 
             channel.ExchangeUnbind(
                 destination: destinationExchange,
@@ -190,8 +200,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-delete-exchange",
-                $"exchange:{exchangeName}|ifUnused:{ifUnused}");
+            _logger?.LogDebug(
+                "Deleting exchange. Exchange={ExchangeName}, IfUnused={IfUnused}",
+                exchangeName, ifUnused);
 
             channel.ExchangeDelete(exchangeName, ifUnused);
         }
@@ -202,8 +213,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(queueName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-delete-queue",
-                $"queue:{queueName}|ifUnused:{ifUnused}|ifEmpty:{ifEmpty}");
+            _logger?.LogDebug(
+                "Deleting queue. Queue={QueueName}, IfUnused={IfUnused}, IfEmpty={IfEmpty}",
+                queueName, ifUnused, ifEmpty);
 
             return channel.QueueDelete(queueName, ifUnused, ifEmpty);
         }
@@ -214,8 +226,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(queueName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-purge-queue",
-                $"queue:{queueName}");
+            _logger?.LogDebug(
+                "Purging queue. Queue={QueueName}",
+                queueName);
 
             return channel.QueuePurge(queueName);
         }
@@ -226,8 +239,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(messageType);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-configure-message",
-                $"messageType:{messageType.FullName}");
+            _logger?.LogDebug(
+                "Configuring topology for message. MessageType={MessageType}",
+                messageType.FullName);
 
             // Get topology configuration (registered or default)
             var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
@@ -260,15 +274,17 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(consumerType);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topology-builder-configure-consumer",
-                $"consumerType:{consumerType.FullName}");
+            _logger?.LogDebug(
+                "Configuring topology for consumer. ConsumerType={ConsumerType}",
+                consumerType.FullName);
 
             // Get message type from consumer
             var messageType = GetMessageTypeFromConsumer(consumerType);
             if (messageType == null)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "topology-builder-no-message-type",
-                    $"Could not determine message type for consumer: {consumerType.FullName}");
+                _logger?.LogWarning(
+                    "Could not determine message type for consumer. ConsumerType={ConsumerType}",
+                    consumerType.FullName);
                 return;
             }
 

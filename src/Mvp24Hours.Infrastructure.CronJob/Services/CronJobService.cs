@@ -1,8 +1,7 @@
 ﻿using Cronos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using System;
 using System.Threading;
@@ -22,6 +21,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private readonly TimeZoneInfo _timeZoneInfo;
         private readonly IHostApplicationLifetime _hostApplication;
         private readonly IServiceProvider _rootServiceProvider;
+        private readonly ILogger<CronJobService<T>> _logger;
         private IServiceScope _currentScope;
 
         /// <summary>
@@ -32,7 +32,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         protected CronJobService(
             IScheduleConfig<T> config,
             IHostApplicationLifetime hostApplication,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ILogger<CronJobService<T>> logger)
         {
             if (!string.IsNullOrEmpty(config.CronExpression))
             {
@@ -42,11 +43,12 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             _hostApplication = hostApplication;
             _rootServiceProvider = serviceProvider;
             _serviceProvider = serviceProvider;
+            _logger = logger;
         }
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-starting", $"name: {typeof(CronJobService<T>)}, scheduler: {_expression}");
+            _logger.LogDebug("CronJob starting. Name: {CronJobName}, Scheduler: {CronExpression}", typeof(CronJobService<T>), _expression);
             if (_expression != null)
             {
                 await ScheduleJob(cancellationToken);
@@ -60,18 +62,18 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         {
             try
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-before", $"name:{typeof(T)}");
+                _logger.LogDebug("CronJob execute once before. Name: {CronJobName}", typeof(T));
                 await DoWork(cancellationToken);
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-after", $"name:{typeof(T)}");
+                _logger.LogDebug("CronJob execute once after. Name: {CronJobName}", typeof(T));
 
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "cronjob-execute-once-failure", $"name:{typeof(T)}", ex);
+                _logger.LogError(ex, "CronJob execute once failure. Name: {CronJobName}", typeof(T));
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-once-ending", $"name:{typeof(T)}");
+                _logger.LogDebug("CronJob execute once ending. Name: {CronJobName}", typeof(T));
                 _hostApplication.StopApplication();
             }
         }
@@ -97,14 +99,14 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-before", $"name:{typeof(T)}");
+                            _logger.LogDebug("CronJob execute before. Name: {CronJobName}", typeof(T));
                             await DoWork(cancellationToken);
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-execute-after", $"name:{typeof(T)}");
+                            _logger.LogDebug("CronJob execute after. Name: {CronJobName}", typeof(T));
                         }
                     }
                     catch (Exception ex)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "cronjob-execute-failure", $"name:{typeof(T)}", ex);
+                        _logger.LogError(ex, "CronJob execute failure. Name: {CronJobName}", typeof(T));
                     }
                     finally
                     {
@@ -114,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         }
                     }
                 };
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-next-execution", $"name:{typeof(T)}, time: {next}, ms: {_timer.Interval}");
+                _logger.LogDebug("CronJob next execution. Name: {CronJobName}, Time: {NextExecutionTime}, IntervalMs: {IntervalMs}", typeof(T), next, _timer.Interval);
                 _timer.Start();
             }
             await Task.CompletedTask;
@@ -125,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
             _timer?.Stop();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "cronjob-stoped", $"name:{typeof(T)}");
+            _logger.LogDebug("CronJob stopped. Name: {CronJobName}", typeof(T));
             await Task.CompletedTask;
         }
 

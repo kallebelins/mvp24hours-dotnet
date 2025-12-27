@@ -9,8 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes;
 using System;
@@ -112,10 +110,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
                 "Starting MongoDB index verification for {AssemblyCount} assemblies...",
                 assemblies.Length);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-index-verification-start",
-                new { AssemblyCount = assemblies.Length });
-
             foreach (var assembly in assemblies)
             {
                 try
@@ -151,19 +145,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             var anyFailed = verificationResults.Any(r => !r.Success);
 
             _logger?.LogInformation(
-                "MongoDB index verification completed. Expected: {Expected}, Existing: {Existing}, Created: {Created}, Missing: {Missing}",
-                totalExpected, totalExisting, totalCreated, totalMissing);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-index-verification-completed",
-                new
-                {
-                    TotalExpected = totalExpected,
-                    TotalExisting = totalExisting,
-                    TotalCreated = totalCreated,
-                    TotalMissing = totalMissing,
-                    Success = !anyFailed
-                });
+                "MongoDB index verification completed. Expected: {Expected}, Existing: {Existing}, Created: {Created}, Missing: {Missing}, Success: {Success}",
+                totalExpected, totalExisting, totalCreated, totalMissing, !anyFailed);
 
             // Handle missing indexes based on configuration
             if (totalMissing > 0 && !_options.CreateMissingIndexes)

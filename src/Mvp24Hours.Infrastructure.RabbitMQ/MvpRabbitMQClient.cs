@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
@@ -34,6 +33,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         private readonly IRabbitMQMetrics? _metrics;
         private readonly IRabbitMQStructuredLogger? _structuredLogger;
         private readonly IMessageDeduplicationStore? _deduplicationStore;
+        private readonly ILogger<MvpRabbitMQClient>? _logger;
 
         protected virtual RabbitMQClientOptions Options => _options;
         protected virtual IMvpRabbitMQConnection Connection => _connection;
@@ -43,7 +43,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         #region [ Ctors ]
         public MvpRabbitMQClient(IServiceProvider _provider)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-ctor");
             this._provider = _provider;
             this._options = _provider.GetService<IOptions<RabbitMQClientOptions>>()?.Value
                 ?? _provider.GetService<RabbitMQClientOptions>()
@@ -52,6 +51,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 ?? throw new ArgumentNullException(nameof(_provider));
             this._channels = [];
             this._consumers = [];
+            this._logger = _provider.GetService<ILogger<MvpRabbitMQClient>>();
             
             // Optional services
             if (_options.EnableMetrics)
@@ -102,8 +102,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
             try
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-batch-start");
-
                 if (!Connection.IsConnected)
                 {
                     Connection.TryConnect();
@@ -152,13 +150,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 }
 
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-client-publish-batch-success", $"count:{results.Count}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation(
+                    "Publish batch success. Count={Count}, Elapsed={ElapsedMs}ms",
+                    results.Count, stopwatch.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
                 _metrics?.IncrementError(ex.GetType().Name);
                 _structuredLogger?.LogError("PublishBatch", ex);
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-client-publish-batch-failure", ex);
+                _logger?.LogError(ex, "Publish batch failure");
                 throw;
             }
 
@@ -182,7 +182,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             
             try
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-start", $"token:{tokenDefault}");
+                _logger?.LogDebug(
+                    "Publish start. Token={Token}",
+                    tokenDefault);
 
                 if (!routingKey.HasValue() && !Options.RoutingKey.HasValue())
                 {
@@ -203,10 +205,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     .Or<SocketException>()
                     .WaitAndRetry(Connection.Options.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-client-publish-tryconnect-waitandretry", $"Could not publish: {tokenDefault} after {time.TotalSeconds:n1}s ({ex.Message})");
+                        _logger?.LogWarning(ex,
+                            "Could not publish. Token={Token}, Elapsed={ElapsedSeconds}s",
+                            tokenDefault, time.TotalSeconds);
                     });
-
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-channel-creating", $"token:{tokenDefault}");
 
                 using (var channel = Connection.CreateModel())
                 {
@@ -214,8 +216,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     ExchangeDeclare(channel, Options);
 
                     var bsEvent = message.ToBusinessEvent(tokenDefault: tokenDefault);
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-client-publish-token", tokenDefault);
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-body-created", $"token:{tokenDefault}");
                     var body = Encoding.UTF8.GetBytes(bsEvent.ToSerialize(JsonHelper.JsonBusinessEventSettings()));
 
                     policy.Execute(() =>
@@ -261,8 +261,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                             }
                         }
 
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-sending", $"token:{tokenDefault}");
-
                         if (Options.PublisherConfirm.Enabled)
                         {
                             channel.ConfirmSelect();
@@ -299,8 +297,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         priority,
                         stopwatch.Elapsed);
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-success", $"token:{tokenDefault}");
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-client-publish-success", $"token:{tokenDefault}");
+                    _logger?.LogDebug("Publish success. Token={Token}", tokenDefault);
                 }
 
                 return tokenDefault;
@@ -309,12 +306,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             {
                 _metrics?.IncrementError(ex.GetType().Name);
                 _structuredLogger?.LogError("Publish", ex, tokenDefault);
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-client-publish-failure", ex);
+                _logger?.LogError(ex, "Publish failure. Token={Token}", tokenDefault);
                 throw;
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-publish-end", $"token:{tokenDefault}");
+                _logger?.LogDebug("Publish end. Token={Token}", tokenDefault);
             }
         }
 
@@ -323,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             try
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-start");
+                _logger?.LogDebug("Consumer start");
 
                 if (!_consumers.AnySafe())
                 {
@@ -359,7 +356,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         QueueBind(channel, Options.DeadLetter, consumer.RoutingKey, $"dead-letter-{consumer.QueueName}");
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-event", $"channel-number:{channel.ChannelNumber}");
+                    _logger?.LogDebug("Consumer event. ChannelNumber={ChannelNumber}", channel.ChannelNumber);
                     IBasicConsumer _event;
 
                     if (Connection.Options.DispatchConsumersAsync)
@@ -367,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         var _eventAsync = new AsyncEventingBasicConsumer(channel);
                         _eventAsync.Received += async (sender, e) =>
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received");
+                            _logger?.LogDebug("Consumer received message");
                             await HandleConsumeAsync(e, channel, (IMvpRabbitMQConsumerAsync)consumer);
                         };
                         _event = _eventAsync;
@@ -377,20 +374,24 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         var _eventSync = new EventingBasicConsumer(channel);
                         _eventSync.Received += (sender, e) =>
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received");
+                            _logger?.LogDebug("Consumer received message");
                             HandleConsume(e, channel, (IMvpRabbitMQConsumerSync)consumer);
                         };
                         _event = _eventSync;
                     }
 
                     // Apply QoS settings
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-basic-qos", $"prefetchSize:{Options.ConsumerPrefetch.PrefetchSize}|prefetchCount:{Options.ConsumerPrefetch.PrefetchCount}|global:{Options.ConsumerPrefetch.Global}");
+                    _logger?.LogDebug(
+                        "Consumer BasicQos. PrefetchSize={PrefetchSize}, PrefetchCount={PrefetchCount}, Global={Global}",
+                        Options.ConsumerPrefetch.PrefetchSize, Options.ConsumerPrefetch.PrefetchCount, Options.ConsumerPrefetch.Global);
                     channel.BasicQos(
                         prefetchSize: Options.ConsumerPrefetch.PrefetchSize, 
                         prefetchCount: Options.ConsumerPrefetch.PrefetchCount, 
                         global: Options.ConsumerPrefetch.Global);
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-basic", $"queue:{consumer.QueueName ?? Options.QueueName ?? string.Empty}|autoAck: false");
+                    _logger?.LogDebug(
+                        "Consumer BasicConsume. Queue={Queue}, AutoAck=false",
+                        consumer.QueueName ?? Options.QueueName ?? string.Empty);
                     channel.BasicConsume(queue: consumer.QueueName ?? Options.QueueName ?? string.Empty,
                          autoAck: false,
                          consumer: _event);
@@ -400,12 +401,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             {
                 _metrics?.IncrementError(ex.GetType().Name);
                 _structuredLogger?.LogError("Consume", ex);
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-consumer-failure", ex);
+                _logger?.LogError(ex, "Consumer failure");
                 throw;
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-end");
+                _logger?.LogDebug("Consumer end");
             }
         }
 
@@ -426,7 +427,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     Connection.TryConnect();
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-channel-creating");
                 channel = Connection.CreateModel();
                 _metrics?.IncrementChannelCreations();
                 _structuredLogger?.LogChannelEvent("Created", channel.ChannelNumber);
@@ -434,14 +434,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 ExchangeDeclare(channel, Options);
                 QueueDeclare(channel, Options, queueKeyName);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-channel-created", $"channel-number:{channel.ChannelNumber}");
+                _logger?.LogDebug("Channel created. ChannelNumber={ChannelNumber}", channel.ChannelNumber);
 
                 channel.CallbackException += (sender, ea) =>
                 {
                     if (!channel.IsOpen)
                         channel.Dispose();
                     channel = CreateConsumerChannel(action, routingKey, queueName);
-                    TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-channel-recreating", $"channel-number:{channel.ChannelNumber}");
+                    _logger?.LogWarning("Channel recreating. ChannelNumber={ChannelNumber}", channel.ChannelNumber);
                 };
 
                 action?.Invoke(channel, Options, routingKey, queueName);
@@ -455,7 +455,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             if (channelCtx == null || optionsCtx == null) return;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-channel-exchange-declaring", $"exchange:{optionsCtx.Exchange}|type:{optionsCtx.ExchangeType}|durable:{optionsCtx.Durable}|autoDelete:{optionsCtx.AutoDelete}");
+            _logger?.LogDebug(
+                "Exchange declaring. Exchange={Exchange}, Type={ExchangeType}, Durable={Durable}, AutoDelete={AutoDelete}",
+                optionsCtx.Exchange, optionsCtx.ExchangeType, optionsCtx.Durable, optionsCtx.AutoDelete);
             channelCtx.ExchangeDeclare(
                 exchange: optionsCtx.Exchange,
                 type: optionsCtx.ExchangeType.ToString(),
@@ -506,7 +508,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-channel-queue-setting", $"queue:{queueName ?? optionsCtx.QueueName ?? string.Empty}|durable:{optionsCtx.Durable}|exclusive:{optionsCtx.Exclusive}|autoDelete:{optionsCtx.AutoDelete}");
+            _logger?.LogDebug(
+                "Queue setting. Queue={Queue}, Durable={Durable}, Exclusive={Exclusive}, AutoDelete={AutoDelete}",
+                queueName ?? optionsCtx.QueueName ?? string.Empty, optionsCtx.Durable, optionsCtx.Exclusive, optionsCtx.AutoDelete);
             var result = channelCtx.QueueDeclare(
                 queue: queueName ?? optionsCtx.QueueName ?? string.Empty,
                 durable: optionsCtx.Durable,
@@ -549,7 +553,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 };
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-queue-bind", $"queue:{queueName ?? optionsCtx.QueueName ?? string.Empty}|exchange:{optionsCtx.Exchange}|routingKey:{routingKey ?? optionsCtx.RoutingKey}");
+            _logger?.LogDebug(
+                "Queue bind. Queue={Queue}, Exchange={Exchange}, RoutingKey={RoutingKey}",
+                queueName ?? optionsCtx.QueueName ?? string.Empty, optionsCtx.Exchange, routingKey ?? optionsCtx.RoutingKey);
             channelCtx.QueueBind(
                 queue: queueName ?? optionsCtx.QueueName ?? string.Empty,
                 exchange: optionsCtx.Exchange,
@@ -560,7 +566,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         private void HandleConsume(BasicDeliverEventArgs e, IModel channel, IMvpRabbitMQConsumerSync consumerSync)
         {
             var stopwatch = Stopwatch.StartNew();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-start");
             string? token = null;
             object? data = null;
             int redeliveredCount = 0;
@@ -579,7 +584,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     {
                         _metrics?.IncrementDuplicateMessagesSkipped();
                         _structuredLogger?.LogDuplicateMessageSkipped(messageId);
-                        TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-duplicate-skipped", $"messageId:{messageId}");
+                        _logger?.LogInformation("Duplicate message skipped. MessageId={MessageId}", messageId);
                         BasicAck(e, channel);
                         return;
                     }
@@ -604,18 +609,21 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _structuredLogger?.LogMessageRedelivered(messageId, redeliveredCount, Options.MaxRedeliveredCount);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-received-token", token);
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-received-redelivered", $"count:{redeliveredCount}|token:{token}");
+                if (redeliveredCount > 1)
+                {
+                    _logger?.LogInformation(
+                        "Consumer received redelivered message. Count={RedeliveredCount}, Token={Token}",
+                        redeliveredCount, token);
+                }
 
                 data = bsEvent.GetDataObject();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-dispatching-start", $"token:{token}");
                 try
                 {
                     consumerSync.Received(data, token);
                 }
                 finally
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-dispatching-end", $"token:{token}");
+                    _logger?.LogDebug("Consumer dispatching end. Token={Token}", token);
                 }
 
                 // Mark as processed for deduplication
@@ -635,21 +643,21 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 {
                     _metrics?.IncrementError(ex.GetType().Name);
                     _structuredLogger?.LogError("HandleConsume", ex, token);
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-consumer-received-failure", ex);
+                    _logger?.LogError(ex, "Consumer received failure. Token={Token}", token);
 
                     if (consumerSync is IMvpRabbitMQConsumerRecoverySync recoverySync)
                         recoverySync.Failure(ex, token);
 
                     if (redeliveredCount < Options.MaxRedeliveredCount)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-redelivered", $"count:{redeliveredCount}");
+                        _logger?.LogDebug("Consumer redelivering. Count={RedeliveredCount}", redeliveredCount);
                         SetRedeliveredCount(properties!, redeliveredCount);
                         channel.BasicPublish(e.Exchange, e.RoutingKey, properties, e.Body);
                         BasicAck(e, channel);
                     }
                     else
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-consumer-received-reject", $"redelivered-count:{redeliveredCount}");
+                        _logger?.LogError("Consumer rejecting message. RedeliveredCount={RedeliveredCount}", redeliveredCount);
                         if (consumerSync is IMvpRabbitMQConsumerRecoverySync rejectedSync)
                             rejectedSync.Rejected(data, token);
                         BasicNack(e, channel, token ?? "unknown");
@@ -662,14 +670,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-end");
+                _logger?.LogDebug("Consumer received end");
             }
         }
 
         private async Task HandleConsumeAsync(BasicDeliverEventArgs e, IModel channel, IMvpRabbitMQConsumerAsync consumerAsync)
         {
             var stopwatch = Stopwatch.StartNew();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-start");
             string? token = null;
             object? data = null;
             int redeliveredCount = 0;
@@ -688,7 +695,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     {
                         _metrics?.IncrementDuplicateMessagesSkipped();
                         _structuredLogger?.LogDuplicateMessageSkipped(messageId);
-                        TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-duplicate-skipped", $"messageId:{messageId}");
+                        _logger?.LogInformation("Duplicate message skipped. MessageId={MessageId}", messageId);
                         BasicAck(e, channel);
                         return;
                     }
@@ -713,19 +720,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _structuredLogger?.LogMessageRedelivered(messageId, redeliveredCount, Options.MaxRedeliveredCount);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-received-token", token);
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-consumer-received-redelivered", $"count:{redeliveredCount}|token:{token}");
+                if (redeliveredCount > 1)
+                {
+                    _logger?.LogInformation(
+                        "Consumer received redelivered message. Count={RedeliveredCount}, Token={Token}",
+                        redeliveredCount, token);
+                }
 
                 data = bsEvent.GetDataObject();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-dispatching-start", $"token:{token}");
                 try
                 {
                     await consumerAsync.ReceivedAsync(data, token);
                 }
                 finally
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-dispatching-end", $"token:{token}");
+                    _logger?.LogDebug("Consumer dispatching end. Token={Token}", token);
                 }
 
                 // Mark as processed for deduplication
@@ -744,7 +754,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 {
                     _metrics?.IncrementError(ex.GetType().Name);
                     _structuredLogger?.LogError("HandleConsumeAsync", ex, token);
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-consumer-received-failure", ex);
+                    _logger?.LogError(ex, "Consumer received failure. Token={Token}", token);
                     
                     if (consumerAsync is IMvpRabbitMQConsumerRecoveryAsync recoveryAsync)
                         await recoveryAsync.FailureAsync(ex, token);
@@ -752,14 +762,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     if (redeliveredCount < Options.MaxRedeliveredCount)
                     {
                         // requeue
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-redelivered", $"count:{redeliveredCount}");
+                        _logger?.LogDebug("Consumer redelivering. Count={RedeliveredCount}", redeliveredCount);
                         SetRedeliveredCount(properties!, redeliveredCount);
                         channel.BasicPublish(e.Exchange, e.RoutingKey, properties, e.Body);
                         BasicAck(e, channel);
                     }
                     else
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-consumer-received-reject", $"redelivered-count:{redeliveredCount}");
+                        _logger?.LogError("Consumer rejecting message. RedeliveredCount={RedeliveredCount}", redeliveredCount);
                         if (consumerAsync is IMvpRabbitMQConsumerRecoveryAsync rejectedAsync)
                             await rejectedAsync.RejectedAsync(data, token);
                         BasicNack(e, channel, token ?? "unknown");
@@ -772,7 +782,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-end");
+                _logger?.LogDebug("Consumer received end");
             }
         }
 
@@ -784,14 +794,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         private static void SetRedeliveredCount(IBasicProperties properties, int count)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-retryaccount");
             properties.Headers ??= new Dictionary<string, object>();
             properties.Headers["x-redelivered-count"] = count;
         }
 
         private void BasicAck(BasicDeliverEventArgs e, IModel channel, string? messageId = null, TimeSpan? processingTime = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-basicack");
             channel.BasicAck(e.DeliveryTag, false);
             _metrics?.IncrementMessagesAcked();
             
@@ -803,7 +811,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         private void BasicNack(BasicDeliverEventArgs e, IModel channel, string messageId)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-basicnack");
             channel.BasicNack(e.DeliveryTag, false, false);
             _metrics?.IncrementMessagesNacked();
             _structuredLogger?.LogMessageNacked(messageId, e.DeliveryTag, false, "Max redelivery count exceeded");
@@ -811,7 +818,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         private static IBusinessEvent ExtractBodyToBusinessEvent(BasicDeliverEventArgs e)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-body-extract-start");
             try
             {
                 var body = e.Body.ToArray();
@@ -821,7 +827,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-consumer-received-body-extract-end");
+                // Body extraction completed
             }
         }
 
@@ -850,23 +856,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         }
         public void Register<T>() where T : class, IMvpRabbitMQConsumer
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-consumer-register-generic");
             Register(typeof(T));
         }
         public void Register(Type consumerType)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-consumer-register");
             ArgumentNullException.ThrowIfNull(consumerType);
             _consumers.Add(consumerType);
         }
         public void Unregister<T>() where T : class, IMvpRabbitMQConsumer
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-consumer-unregister-generic");
             Unregister(typeof(T));
         }
         public void Unregister(Type consumerType)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-client-consumer-unregister");
             ArgumentNullException.ThrowIfNull(consumerType);
             _consumers
                 .FindAll(x => x.InheritsOrImplements(consumerType))

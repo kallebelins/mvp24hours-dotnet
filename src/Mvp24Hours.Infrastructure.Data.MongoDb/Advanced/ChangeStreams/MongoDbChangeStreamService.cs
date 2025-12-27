@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,9 +78,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
             }
 
             options ??= CreateDefaultOptions();
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-changestream-started",
-                new { Collection = _collection.CollectionNamespace.CollectionName });
 
             _logger?.LogInformation("Started watching collection '{CollectionName}' for changes.",
                 _collection.CollectionNamespace.CollectionName);
@@ -260,22 +255,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
                 {
                     try
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-changestream-event",
-                            new
-                            {
-                                Operation = change.OperationType.ToString(),
-                                Collection = _collection.CollectionNamespace.CollectionName
-                            });
-
                         await handler(change);
                     }
                     catch (Exception ex)
                     {
                         _logger?.LogError(ex, "Error processing change stream event. Operation: {OperationType}",
                             change.OperationType);
-
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-changestream-error",
-                            new { Operation = change.OperationType.ToString(), Error = ex.Message });
                     }
                 }
             }

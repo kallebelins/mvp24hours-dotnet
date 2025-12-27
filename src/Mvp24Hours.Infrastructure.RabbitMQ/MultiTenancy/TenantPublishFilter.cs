@@ -6,8 +6,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
@@ -145,15 +143,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void LogTenantHeadersPropagated(string tenantId, string? tenantName, string messageId)
         {
-            var message = $"Tenant headers propagated: TenantId={tenantId}, TenantName={tenantName}, MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-tenant-headers-propagated", message);
-            }
+            _logger?.LogDebug(
+                "Tenant headers propagated. TenantId={TenantId}, TenantName={TenantName}, MessageId={MessageId}",
+                tenantId, tenantName, messageId);
         }
     }
 
@@ -270,15 +262,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void LogTenantHeadersPropagated(string tenantId, string? tenantName, string messageId)
         {
-            var message = $"Tenant headers propagated (send): TenantId={tenantId}, TenantName={tenantName}, MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-tenant-headers-propagated-send", message);
-            }
+            _logger?.LogDebug(
+                "Tenant headers propagated (send). TenantId={TenantId}, TenantName={TenantName}, MessageId={MessageId}",
+                tenantId, tenantName, messageId);
         }
     }
 }

@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -69,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
             HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "sqlserverhealthcheck-checkhealthasync-start");
+            _logger.LogDebug("SQL Server health check starting");
 
             var data = new Dictionary<string, object>();
             var stopwatch = Stopwatch.StartNew();
@@ -152,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                         data: data);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "sqlserverhealthcheck-checkhealthasync-healthy");
+                _logger.LogDebug("SQL Server health check completed successfully in {ResponseTimeMs}ms", stopwatch.ElapsedMilliseconds);
 
                 return HealthCheckResult.Healthy(
                     description: $"SQL Server is healthy (response time: {stopwatch.ElapsedMilliseconds}ms)",

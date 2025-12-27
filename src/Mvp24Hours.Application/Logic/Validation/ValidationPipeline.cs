@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,7 +53,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public ValidationServiceResult Execute(T instance, ValidationOptions options)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationpipeline-execute");
+            _logger?.LogDebug("application-validationpipeline-execute");
 
             if (instance == null)
             {
@@ -125,7 +123,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public async Task<ValidationServiceResult> ExecuteAsync(T instance, ValidationOptions options, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationpipeline-executeasync");
+            _logger?.LogDebug("application-validationpipeline-executeasync");
 
             if (instance == null)
             {

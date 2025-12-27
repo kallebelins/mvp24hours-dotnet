@@ -3,14 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,6 +67,7 @@ namespace Mvp24Hours.Application.Logic
 
         private readonly IRepositoryAsync<TEntity> _repository;
         private readonly TUoW _unitOfWork;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Gets the unit of work instance.
@@ -79,6 +79,11 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         protected virtual IRepositoryAsync<TEntity> Repository => _repository;
 
+        /// <summary>
+        /// Gets the logger instance for logging operations.
+        /// </summary>
+        protected virtual ILogger? Logger => _logger;
+
         #endregion
 
         #region [ Constructors ]
@@ -89,9 +94,21 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="unitOfWork">The unit of work for data access.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected QueryServiceBaseAsync(TUoW unitOfWork)
+            : this(unitOfWork, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueryServiceBaseAsync{TEntity, TUoW}"/> class.
+        /// </summary>
+        /// <param name="unitOfWork">The unit of work for data access.</param>
+        /// <param name="logger">The logger for logging operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
+        protected QueryServiceBaseAsync(TUoW unitOfWork, ILogger? logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = unitOfWork.GetRepository<TEntity>();
+            _logger = logger;
         }
 
         #endregion
@@ -101,14 +118,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-listanyasync");
+            _logger?.LogDebug("[{ServiceName}] Executing ListAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-listcountasync");
+            _logger?.LogDebug("[{ServiceName}] Executing ListCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -121,21 +138,21 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-listasync");
+            _logger?.LogDebug("[{ServiceName}] Executing ListAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
             return _repository.ListAsync(criteria, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyanyasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByAnyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbycountasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByCountAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -148,7 +165,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByAsync for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
             return _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -161,7 +178,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyidasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             return _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -173,7 +190,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<bool>> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-anybyspecificationasync");
+            _logger?.LogDebug("[{ServiceName}] Executing AnyBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -194,7 +211,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<int>> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-countbyspecificationasync");
+            _logger?.LogDebug("[{ServiceName}] Executing CountBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -215,7 +232,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<IList<TEntity>>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getbyspecificationasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -236,7 +253,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<TEntity?>> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getsinglebyspecificationasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetSingleBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -259,7 +276,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<TEntity?>> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebaseasync-getfirstbyspecificationasync");
+            _logger?.LogDebug("[{ServiceName}] Executing GetFirstBySpecificationAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -281,4 +298,3 @@ namespace Mvp24Hours.Application.Logic
         #endregion
     }
 }
-

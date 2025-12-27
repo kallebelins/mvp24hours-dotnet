@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,8 +42,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public async Task<string> GetReadConnectionStringAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "connectionresolver-getreadconnectionstring-start");
-
             // Check if we should read from primary
             if (IsReadForcedToPrimary)
             {
@@ -78,7 +74,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public string GetWriteConnectionString()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "connectionresolver-getwriteconnectionstring");
             return _replicaSelector.GetPrimaryConnectionString();
         }
 

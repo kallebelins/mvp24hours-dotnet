@@ -8,10 +8,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
@@ -63,8 +61,6 @@ public static class TestingExtensions
         Action<DbContextOptionsBuilder>? configureOptions = null)
         where TContext : DbContext
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursinmemorydbcontext-execute");
-
         var effectiveName = databaseName ?? $"InMemoryTestDb_{StringHelper.GenerateKey(10)}";
 
         services.AddDbContext<TContext>(options =>
@@ -133,8 +129,6 @@ public static class TestingExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursFakeRepository(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursfakerepository-execute");
-
         services.AddSingleton<UnitOfWorkFake>();
         services.AddSingleton<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWorkFake>());
         services.AddSingleton(typeof(IRepository<>), typeof(RepositoryFake<>));
@@ -165,8 +159,6 @@ public static class TestingExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursFakeRepositoryAsync(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursfakerepositoryasync-execute");
-
         services.AddSingleton<UnitOfWorkFakeAsync>();
         services.AddSingleton<IUnitOfWorkAsync>(sp => sp.GetRequiredService<UnitOfWorkFakeAsync>());
         services.AddSingleton(typeof(IRepositoryAsync<>), typeof(RepositoryFakeAsync<>));
@@ -197,8 +189,6 @@ public static class TestingExtensions
         Action<RepositoryFake<TEntity>> seedAction)
         where TEntity : class, IEntityBase
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursfakerepositorywithdata-execute");
-
         var repository = new RepositoryFake<TEntity>();
         seedAction?.Invoke(repository);
 
@@ -220,8 +210,6 @@ public static class TestingExtensions
         Action<RepositoryFakeAsync<TEntity>> seedAction)
         where TEntity : class, IEntityBase
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursfakerepositoryasyncwithdata-execute");
-
         var repository = new RepositoryFakeAsync<TEntity>();
         seedAction?.Invoke(repository);
 
@@ -266,8 +254,6 @@ public static class TestingExtensions
         Action<TestDbContextFactoryOptions>? configureOptions = null)
         where TContext : DbContext
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hourstestdbcontextfactory-execute");
-
         var options = new TestDbContextFactoryOptions();
         configureOptions?.Invoke(options);
 
@@ -289,8 +275,6 @@ public static class TestingExtensions
         Action<InMemoryDbContextOptions>? configureOptions = null)
         where TContext : DbContext
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hoursinmemorydbcontextfactory-execute");
-
         var options = new InMemoryDbContextOptions();
         configureOptions?.Invoke(options);
 
@@ -335,8 +319,6 @@ public static class TestingExtensions
         string? databaseName = null)
         where TContext : DbContext
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hourstestinfrastructure-execute");
-
         services.AddMvp24HoursInMemoryDbContext<TContext>(databaseName);
         services.AddMvp24HoursDbContext<TContext>();
         services.AddMvp24HoursRepositoryAsync();
@@ -361,8 +343,6 @@ public static class TestingExtensions
         where TContext : DbContext
         where TSeeder : class, IDataSeeder<TContext>, new()
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testingextensions-addmvp24hourstestinfrastructurewithseeder-execute");
-
         services.AddMvp24HoursTestInfrastructure<TContext>();
         services.AddSingleton<IDataSeeder<TContext>, TSeeder>();
 

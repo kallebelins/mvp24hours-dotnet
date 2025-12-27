@@ -6,8 +6,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 
@@ -110,27 +108,18 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     /// </remarks>
     public TContext CreateContext()
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "inmemorydbcontextfactory-createcontext-start");
+        var dbOptions = BuildDbContextOptions();
+        var context = CreateContextInstance(dbOptions);
         
-        try
+        _createdContexts.Add(context);
+        
+        if (_options.ValidateModel)
         {
-            var dbOptions = BuildDbContextOptions();
-            var context = CreateContextInstance(dbOptions);
-            
-            _createdContexts.Add(context);
-            
-            if (_options.ValidateModel)
-            {
-                // Force model validation by accessing the model
-                _ = context.Model;
-            }
-            
-            return context;
+            // Force model validation by accessing the model
+            _ = context.Model;
         }
-        finally
-        {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "inmemorydbcontextfactory-createcontext-end");
-        }
+        
+        return context;
     }
 
     /// <summary>

@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -127,8 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                     entity.CreatedBy = currentUser;
                     entity.ModifiedAt = null;
                     entity.ModifiedBy = null;
-                    TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                        $"audit-interceptor-created-{entry.Entity.GetType().Name}");
+                    // Audit information applied - no verbose logging needed in interceptor
                     break;
 
                 case EntityState.Modified:
@@ -137,8 +135,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                     // Prevent modification of creation audit fields
                     entry.Property(nameof(IAuditableEntity.CreatedAt)).IsModified = false;
                     entry.Property(nameof(IAuditableEntity.CreatedBy)).IsModified = false;
-                    TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                        $"audit-interceptor-modified-{entry.Entity.GetType().Name}");
+                    // Audit information applied - no verbose logging needed in interceptor
                     break;
             }
         }

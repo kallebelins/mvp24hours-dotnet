@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,8 +26,18 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
     {
         private readonly Dictionary<string, List<IOperation>> _branches = new();
         private readonly List<BranchCase> _cases = new();
+        private readonly ILogger<ConditionalBranchOperation>? _logger;
         private List<IOperation>? _defaultBranch;
         private List<IOperation>? _executedBranch;
+
+        /// <summary>
+        /// Creates a new conditional branch operation.
+        /// </summary>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public ConditionalBranchOperation(ILogger<ConditionalBranchOperation>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Adds a case branch with a condition.
@@ -88,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         /// <inheritdoc />
         public void Execute(IPipelineMessage input)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-execute-start", $"branches:{_branches.Count}");
+            _logger?.LogDebug("ConditionalBranchOperation: Execute started with {BranchCount} branches", _branches.Count);
 
             var branchKey = EvaluateBranch(input);
             
@@ -96,16 +105,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
             if (branchKey != null && _branches.TryGetValue(branchKey, out var branch))
             {
                 branchToExecute = branch;
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-matched", $"branch:{branchKey}");
+                _logger?.LogDebug("ConditionalBranchOperation: Branch '{BranchKey}' matched", branchKey);
             }
             else if (_defaultBranch != null)
             {
                 branchToExecute = _defaultBranch;
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-default");
+                _logger?.LogDebug("ConditionalBranchOperation: Using default branch");
             }
             else
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-no-match");
+                _logger?.LogDebug("ConditionalBranchOperation: No branch matched");
                 return;
             }
 
@@ -116,18 +125,18 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
                 if (input.IsLocked && !operation.IsRequired)
                     continue;
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-operation-start", $"operation:{operation.GetType().Name}");
+                _logger?.LogDebug("ConditionalBranchOperation: Operation '{OperationName}' started", operation.GetType().Name);
                 try
                 {
                     operation.Execute(input);
                 }
                 finally
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-operation-end", $"operation:{operation.GetType().Name}");
+                    _logger?.LogDebug("ConditionalBranchOperation: Operation '{OperationName}' finished", operation.GetType().Name);
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-execute-end");
+            _logger?.LogDebug("ConditionalBranchOperation: Execute finished");
         }
 
         /// <inheritdoc />
@@ -143,7 +152,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-branch-rollback-failure", ex);
+                    _logger?.LogError(ex, "ConditionalBranchOperation: Rollback failed");
                 }
             }
         }
@@ -156,8 +165,18 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
     {
         private readonly Dictionary<string, List<IOperationAsync>> _branches = new();
         private readonly List<BranchCase> _cases = new();
+        private readonly ILogger<ConditionalBranchOperationAsync>? _logger;
         private List<IOperationAsync>? _defaultBranch;
         private List<IOperationAsync>? _executedBranch;
+
+        /// <summary>
+        /// Creates a new async conditional branch operation.
+        /// </summary>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public ConditionalBranchOperationAsync(ILogger<ConditionalBranchOperationAsync>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Adds a case branch with a condition.
@@ -219,7 +238,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         /// </summary>
         public async Task ExecuteAsync(IPipelineMessage input, CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-execute-start", $"branches:{_branches.Count}");
+            _logger?.LogDebug("ConditionalBranchOperationAsync: ExecuteAsync started with {BranchCount} branches", _branches.Count);
 
             var branchKey = await EvaluateBranchAsync(input, cancellationToken);
 
@@ -227,16 +246,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
             if (branchKey != null && _branches.TryGetValue(branchKey, out var branch))
             {
                 branchToExecute = branch;
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-matched", $"branch:{branchKey}");
+                _logger?.LogDebug("ConditionalBranchOperationAsync: Branch '{BranchKey}' matched", branchKey);
             }
             else if (_defaultBranch != null)
             {
                 branchToExecute = _defaultBranch;
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-default");
+                _logger?.LogDebug("ConditionalBranchOperationAsync: Using default branch");
             }
             else
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-no-match");
+                _logger?.LogDebug("ConditionalBranchOperationAsync: No branch matched");
                 return;
             }
 
@@ -249,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
                 if (input.IsLocked && !operation.IsRequired)
                     continue;
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-operation-start", $"operation:{operation.GetType().Name}");
+                _logger?.LogDebug("ConditionalBranchOperationAsync: Operation '{OperationName}' started", operation.GetType().Name);
                 try
                 {
                     if (operation is IOperationAsyncWithCancellation operationWithCancellation)
@@ -263,11 +282,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
                 }
                 finally
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-operation-end", $"operation:{operation.GetType().Name}");
+                    _logger?.LogDebug("ConditionalBranchOperationAsync: Operation '{OperationName}' finished", operation.GetType().Name);
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-execute-end");
+            _logger?.LogDebug("ConditionalBranchOperationAsync: ExecuteAsync finished");
         }
 
         /// <inheritdoc />
@@ -283,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-branch-async-rollback-failure", ex);
+                    _logger?.LogError(ex, "ConditionalBranchOperationAsync: RollbackAsync failed");
                 }
             }
         }

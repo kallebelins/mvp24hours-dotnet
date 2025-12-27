@@ -4,10 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Caching.Base;
 
 namespace Mvp24Hours.Infrastructure.Caching
@@ -15,57 +14,86 @@ namespace Mvp24Hours.Infrastructure.Caching
     /// <summary>
     ///  <see cref="IRepositoryCache{T}"/>
     /// </summary>
-    public class RepositoryCache<T>(IDistributedCache cache) : RepositoryCacheBase(cache), IRepositoryCache<T>
+    public class RepositoryCache<T>(IDistributedCache cache, ILogger<RepositoryCache<T>> logger = null) : RepositoryCacheBase(cache), IRepositoryCache<T>
         where T : class
     {
+        private readonly ILogger<RepositoryCache<T>> _logger = logger;
+
         public virtual T Get(string key)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-get-start");
+            _logger?.LogDebug("Getting cached object with key: {CacheKey}", key);
             try
             {
-                return Cache.GetObject<T>(key);
+                var result = Cache.GetObject<T>(key);
+                _logger?.LogDebug("Cache {(CacheHit)} for key: {CacheKey}", result != null ? "HIT" : "MISS", key);
+                return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-get-end"); }
+            catch (System.Exception ex)
+            {
+                _logger?.LogError(ex, "Error getting cached object with key: {CacheKey}", key);
+                throw;
+            }
         }
 
         public virtual string GetString(string key)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-getstring-start");
+            _logger?.LogDebug("Getting cached string with key: {CacheKey}", key);
             try
             {
-                return Cache.GetString(key);
+                var result = Cache.GetString(key);
+                _logger?.LogDebug("Cache {(CacheHit)} for key: {CacheKey}", result != null ? "HIT" : "MISS", key);
+                return result;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-getstring-end"); }
+            catch (System.Exception ex)
+            {
+                _logger?.LogError(ex, "Error getting cached string with key: {CacheKey}", key);
+                throw;
+            }
         }
 
         public virtual void Set(string key, T model)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-set-start");
+            _logger?.LogDebug("Setting cached object with key: {CacheKey}", key);
             try
             {
                 Cache.SetObject(key, model);
+                _logger?.LogDebug("Object cached successfully with key: {CacheKey}", key);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-set-end"); }
+            catch (System.Exception ex)
+            {
+                _logger?.LogError(ex, "Error setting cached object with key: {CacheKey}", key);
+                throw;
+            }
         }
 
         public virtual void SetString(string key, string value)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-setstring-start");
+            _logger?.LogDebug("Setting cached string with key: {CacheKey}", key);
             try
             {
                 Cache.SetString(key, value);
+                _logger?.LogDebug("String cached successfully with key: {CacheKey}", key);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-setstring-end"); }
+            catch (System.Exception ex)
+            {
+                _logger?.LogError(ex, "Error setting cached string with key: {CacheKey}", key);
+                throw;
+            }
         }
 
         public virtual void Remove(string key)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-remove-start");
+            _logger?.LogDebug("Removing cached item with key: {CacheKey}", key);
             try
             {
                 Cache.Remove(key);
+                _logger?.LogDebug("Cache item removed successfully with key: {CacheKey}", key);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-repositorycache-remove-end"); }
+            catch (System.Exception ex)
+            {
+                _logger?.LogError(ex, "Error removing cached item with key: {CacheKey}", key);
+                throw;
+            }
         }
     }
 }

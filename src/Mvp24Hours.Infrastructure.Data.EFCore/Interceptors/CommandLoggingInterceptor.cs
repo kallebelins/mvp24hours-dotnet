@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+#nullable enable
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Helpers;
 using System;
 using System.Data.Common;
 using System.Diagnostics;
@@ -78,17 +78,17 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandLoggingInterceptor"/> class.
         /// </summary>
-        /// <param name="logger">Optional ILogger for structured logging. If null, uses TelemetryHelper.</param>
+        /// <param name="logger">Optional ILogger for structured logging. If null, no logging is performed.</param>
         /// <param name="slowQueryThreshold">Threshold for slow query warnings. Default is 1 second.</param>
         /// <param name="logAllQueries">If true, logs all queries. If false, only logs slow queries and errors.</param>
         /// <param name="logParameters">If true, logs SQL parameter values. Default is true in debug, false in release.</param>
         /// <param name="sensitiveParameters">Parameter names to mask in logs (e.g., "password", "token").</param>
         public CommandLoggingInterceptor(
-            ILogger logger = null,
+            ILogger? logger = null,
             TimeSpan? slowQueryThreshold = null,
             bool logAllQueries = true,
             bool? logParameters = null,
-            string[] sensitiveParameters = null)
+            string[]? sensitiveParameters = null)
         {
             _logger = logger;
             _slowQueryThreshold = slowQueryThreshold ?? TimeSpan.FromSeconds(1);
@@ -290,24 +290,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
             var message = sb.ToString();
 
-            if (_logger != null)
+            if (isSlowQuery)
             {
-                if (isSlowQuery)
-                {
-                    _logger.LogWarning(message);
-                }
-                else
-                {
-                    _logger.LogDebug(message);
-                }
+                _logger?.LogWarning(message);
             }
             else
             {
-                var level = isSlowQuery
-                    ? Core.Enums.Infrastructure.TelemetryLevels.Warning
-                    : Core.Enums.Infrastructure.TelemetryLevels.Verbose;
-
-                TelemetryHelper.Execute(level, $"efcore-command-{(isSlowQuery ? "slow" : "executed")}", message);
+                _logger?.LogDebug(message);
             }
         }
 
@@ -331,14 +320,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
             var message = sb.ToString();
 
-            if (_logger != null)
-            {
-                _logger.LogError(exception, message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Error, "efcore-command-failed", message);
-            }
+            _logger?.LogError(exception, message);
         }
 
         private bool IsSensitiveParameter(string parameterName)

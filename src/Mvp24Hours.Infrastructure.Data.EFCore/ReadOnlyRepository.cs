@@ -10,10 +10,8 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Specifications;
 using System;
@@ -50,29 +48,19 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public bool ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-listany-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var result = GetQuery(null, true).Any();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-listany-end"); }
+            using var scope = CreateTransactionScope(true);
+            var result = GetQuery(null, true).Any();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public int ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-listcount-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var result = GetQuery(null, true).Count();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-listcount-end"); }
+            using var scope = CreateTransactionScope(true);
+            var result = GetQuery(null, true).Count();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -84,53 +72,38 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public IList<T> List(IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-list-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var result = GetQuery(criteria).AsNoTracking().ToList();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-list-end"); }
+            using var scope = CreateTransactionScope();
+            var result = GetQuery(criteria).AsNoTracking().ToList();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public bool GetByAny(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyany-start");
-            try
+            using var scope = CreateTransactionScope(true);
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope(true);
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = GetQuery(query, null, true).Any();
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyany-end"); }
+            var result = GetQuery(query, null, true).Any();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public int GetByCount(Expression<Func<T, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbycount-start");
-            try
+            using var scope = CreateTransactionScope(true);
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope(true);
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = GetQuery(query, null, true).Count();
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbycount-end"); }
+            var result = GetQuery(query, null, true).Count();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -142,20 +115,15 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getby-start");
-            try
+            using var scope = CreateTransactionScope();
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = GetQuery(query, criteria).AsNoTracking().ToList();
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getby-end"); }
+            var result = GetQuery(query, criteria).AsNoTracking().ToList();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -167,15 +135,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public T? GetById(object id, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyid-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefault();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyid-end"); }
+            using var scope = CreateTransactionScope();
+            var result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefault();
+            scope?.Complete();
+            return result;
         }
 
         #endregion
@@ -186,94 +149,74 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelation<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelation-start");
-            try
-            {
-                dbContext.Entry(entity).Reference(propertyExpression).Load();
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelation-end"); }
+            dbContext.Entry(entity).Reference(propertyExpression).Load();
         }
 
         /// <inheritdoc />
         public void LoadRelation<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelation-collection-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                query.Load();
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelation-collection-end"); }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            query.Load();
         }
 
         /// <inheritdoc />
         public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelationsortbyascending-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (orderKey != null)
-                {
-                    query = query.OrderBy(orderKey);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                query.Load();
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelationsortbyascending-end"); }
+
+            if (orderKey != null)
+            {
+                query = query.OrderBy(orderKey);
+            }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            query.Load();
         }
 
         /// <inheritdoc />
         public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelationsortbydescending-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (orderKey != null)
-                {
-                    query = query.OrderByDescending(orderKey);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                query.Load();
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-loadrelationsortbydescending-end"); }
+
+            if (orderKey != null)
+            {
+                query = query.OrderByDescending(orderKey);
+            }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            query.Load();
         }
 
         #endregion
@@ -283,76 +226,51 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public bool AnyBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-anybyspecification-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = query.Any();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-anybyspecification-end"); }
+            using var scope = CreateTransactionScope(true);
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = query.Any();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public int CountBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-countbyspecification-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = query.Count();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-countbyspecification-end"); }
+            using var scope = CreateTransactionScope(true);
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = query.Count();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public IList<T> GetBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyspecification-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = query.AsNoTracking().ToList();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbyspecification-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = query.AsNoTracking().ToList();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public T? GetSingleBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getsinglebyspecification-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = query.AsNoTracking().SingleOrDefault();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getsinglebyspecification-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = query.AsNoTracking().SingleOrDefault();
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public T? GetFirstBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getfirstbyspecification-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = query.AsNoTracking().FirstOrDefault();
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getfirstbyspecification-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = query.AsNoTracking().FirstOrDefault();
+            scope?.Complete();
+            return result;
         }
 
         #endregion
@@ -367,48 +285,43 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int pageSize,
             bool ascending = true) where TKey : struct
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = dbEntities.AsQueryable();
+
+            // Apply filter clause
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = dbEntities.AsQueryable();
-
-                // Apply filter clause
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                // Apply keyset condition
-                if (lastKey.HasValue)
-                {
-                    query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
-                }
-
-                // Apply ordering
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = query.AsNoTracking().Take(pageSize + 1).ToList();
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                TKey? lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-end"); }
+
+            // Apply keyset condition
+            if (lastKey.HasValue)
+            {
+                query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
+            }
+
+            // Apply ordering
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = query.AsNoTracking().Take(pageSize + 1).ToList();
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            TKey? lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
         }
 
         /// <inheritdoc />
@@ -421,42 +334,37 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-spec-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+
+            // Apply keyset condition
+            if (lastKey.HasValue)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-
-                // Apply keyset condition
-                if (lastKey.HasValue)
-                {
-                    query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
-                }
-
-                // Apply ordering (override specification ordering for keyset)
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = query.AsNoTracking().Take(pageSize + 1).ToList();
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                TKey? lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
+                query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-spec-end"); }
+
+            // Apply ordering (override specification ordering for keyset)
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = query.AsNoTracking().Take(pageSize + 1).ToList();
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            TKey? lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
         }
 
         /// <inheritdoc />
@@ -467,48 +375,43 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int pageSize,
             bool ascending = true)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-string-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = dbEntities.AsQueryable();
+
+            // Apply filter clause
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = dbEntities.AsQueryable();
-
-                // Apply filter clause
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                // Apply keyset condition
-                if (!string.IsNullOrEmpty(lastKey))
-                {
-                    query = ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
-                }
-
-                // Apply ordering
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = query.AsNoTracking().Take(pageSize + 1).ToList();
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                var lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepository-getbykeysetpagination-string-end"); }
+
+            // Apply keyset condition
+            if (!string.IsNullOrEmpty(lastKey))
+            {
+                query = ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
+            }
+
+            // Apply ordering
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = query.AsNoTracking().Take(pageSize + 1).ToList();
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            var lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
         }
 
         #endregion

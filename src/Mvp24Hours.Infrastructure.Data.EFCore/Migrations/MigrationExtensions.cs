@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Migrations;
 using System;
 
@@ -53,8 +51,6 @@ namespace Mvp24Hours.Extensions
             Action<MigrationOptions>? configureOptions = null)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationextensions-addmvp24hoursmigrationservice-start");
-
             var options = new MigrationOptions();
             configureOptions?.Invoke(options);
 
@@ -124,8 +120,6 @@ namespace Mvp24Hours.Extensions
             Action<MigrationOptions>? configureOptions = null)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationextensions-addmvp24hoursautomigration-start");
-
             services.AddMvp24HoursMigrationService<TContext>(configureOptions);
             services.AddHostedService<MigrationHostedService<TContext>>();
 
@@ -200,7 +194,6 @@ namespace Mvp24Hours.Extensions
         public static IServiceCollection AddMvp24HoursDataSeeder<TSeeder>(this IServiceCollection services)
             where TSeeder : class, IDataSeeder
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationextensions-addmvp24hoursdataseeder-start");
             services.AddScoped<IDataSeeder, TSeeder>();
             return services;
         }
@@ -215,7 +208,6 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             Func<IServiceProvider, IDataSeeder> factory)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationextensions-addmvp24hoursdataseeder-factory-start");
             services.AddScoped(factory);
             return services;
         }

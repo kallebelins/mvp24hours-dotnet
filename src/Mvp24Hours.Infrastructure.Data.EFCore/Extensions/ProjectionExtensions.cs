@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,7 +67,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             Expression<Func<TSource, TResult>> selector)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projectto");
             return query.Select(selector);
         }
 
@@ -88,15 +85,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttolistasync-start");
-            try
-            {
-                return await query.Select(selector).ToListAsync(cancellationToken);
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttolistasync-end");
-            }
+            return await query.Select(selector).ToListAsync(cancellationToken);
         }
 
         /// <summary>
@@ -114,15 +103,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttosingleasync-start");
-            try
-            {
-                return await query.Select(selector).SingleOrDefaultAsync(cancellationToken);
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttosingleasync-end");
-            }
+            return await query.Select(selector).SingleOrDefaultAsync(cancellationToken);
         }
 
         #endregion
@@ -151,8 +132,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             params Expression<Func<TSource, object>>[] columnSelectors)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-selectcolumns");
-
             // Build dynamic select expression
             var parameter = Expression.Parameter(typeof(TSource), "e");
             var bindings = new List<MemberBinding>();
@@ -210,8 +189,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             params Expression<Func<TSource, object>>[] includes)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttowithincludes");
-
             // Apply includes before projection
             foreach (var include in includes)
             {
@@ -243,16 +220,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-maptolistasync-start");
-            try
-            {
-                var entities = await query.ToListAsync(cancellationToken);
-                return entities.Select(mapper).ToList();
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-maptolistasync-end");
-            }
+            var entities = await query.ToListAsync(cancellationToken);
+            return entities.Select(mapper).ToList();
         }
 
         #endregion
@@ -271,7 +240,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttocountasync");
             return query.CountAsync(cancellationToken);
         }
 
@@ -287,7 +255,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttoexistsasync");
             return query.AnyAsync(cancellationToken);
         }
 
@@ -309,7 +276,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttosumasync");
             return query.SumAsync(selector, cancellationToken);
         }
 
@@ -327,7 +293,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttoaverageasync");
             return query.AverageAsync(selector, cancellationToken);
         }
 
@@ -346,7 +311,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttomaxasync");
             return query.MaxAsync(selector, cancellationToken);
         }
 
@@ -365,7 +329,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttominasync");
             return query.MinAsync(selector, cancellationToken);
         }
 
@@ -404,17 +367,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttogroupedasync-start");
-            try
-            {
-                return await query
-                    .GroupBy(keySelector, resultSelector)
-                    .ToListAsync(cancellationToken);
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-projection-projecttogroupedasync-end");
-            }
+            return await query
+                .GroupBy(keySelector, resultSelector)
+                .ToListAsync(cancellationToken);
         }
 
         #endregion

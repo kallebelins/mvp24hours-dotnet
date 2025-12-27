@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,9 +81,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
 
             await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-sharding-enabled",
-                new { Database = databaseName });
-
             _logger?.LogInformation("Sharding enabled for database '{DatabaseName}'.", databaseName);
         }
 
@@ -137,9 +132,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             }
 
             await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-collection-sharded",
-                new { Database = databaseName, Collection = collectionName });
 
             _logger?.LogInformation("Collection '{DatabaseName}.{CollectionName}' sharded with key: {ShardKey}.",
                 databaseName, collectionName, shardKey);

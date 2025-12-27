@@ -5,13 +5,13 @@
 //=====================================================================================
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -28,19 +28,25 @@ namespace Mvp24Hours.Application.Logic
         where TEntity : class, IEntityBase
         where TUoW : class, IUnitOfWorkAsync
     {
+        #region [ Fields ]
+        private readonly ILogger<RepositoryPagingServiceAsync<TEntity, TUoW>> _pagingLogger;
+        #endregion
+
         #region [ Ctor ]
         public RepositoryPagingServiceAsync(TUoW _unitOfWork)
             : base(_unitOfWork)
         {
+            _pagingLogger = NullLogger<RepositoryPagingServiceAsync<TEntity, TUoW>>.Instance;
         }
 
         /// <summary>
         /// 
         /// </summary>
         [ActivatorUtilitiesConstructor]
-        public RepositoryPagingServiceAsync(TUoW _unitOfWork, IValidator<TEntity> validator)
+        public RepositoryPagingServiceAsync(TUoW _unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryPagingServiceAsync<TEntity, TUoW>> logger = null)
             : base(_unitOfWork, validator)
         {
+            _pagingLogger = logger ?? NullLogger<RepositoryPagingServiceAsync<TEntity, TUoW>>.Instance;
         }
         #endregion
 
@@ -48,14 +54,14 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositorypagingserviceasync-getbywithpaginationasync");
+            _pagingLogger.LogDebug("application-repositorypagingserviceasync-getbywithpaginationasync");
             var repo = UnitOfWork.GetRepository<TEntity>();
             return await repo.ToBusinessPagingAsync(clause, criteria);
         }
 
         public virtual async Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria criteria = null, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositorypagingserviceasync-listwithpaginationasync");
+            _pagingLogger.LogDebug("application-repositorypagingserviceasync-listwithpaginationasync");
             var repo = UnitOfWork.GetRepository<TEntity>();
             return await repo.ToBusinessPagingAsync(criteria);
         }

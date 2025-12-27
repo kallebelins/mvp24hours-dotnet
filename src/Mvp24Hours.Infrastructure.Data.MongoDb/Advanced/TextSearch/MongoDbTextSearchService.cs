@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,9 +86,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
 
             var indexName = await _collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-text-index-created",
-                new { IndexName = indexName, Fields = string.Join(", ", fields) });
-
             _logger?.LogInformation("Text index '{IndexName}' created on fields: {Fields}", indexName, string.Join(", ", fields));
 
             return indexName;
@@ -125,9 +120,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
 
             var indexName = await _collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-text-index-created",
-                new { IndexName = indexName, Fields = string.Join(", ", fieldWeights.Keys) });
-
             _logger?.LogInformation("Weighted text index '{IndexName}' created.", indexName);
 
             return indexName;
@@ -145,9 +137,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
                 options ?? new CreateIndexOptions());
 
             var indexName = await _collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-text-index-created",
-                new { IndexName = indexName, Type = "wildcard" });
 
             _logger?.LogInformation("Wildcard text index '{IndexName}' created.", indexName);
 
@@ -219,9 +208,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
                 }
 
                 var results = await pipeline.ToListAsync(cancellationToken);
-
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-text-search",
-                    new { SearchText = searchText, ResultCount = results.Count });
 
                 return results.Select(r => new TextSearchResult<TDocument>
                 {
@@ -356,8 +342,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
                 _logger?.LogInformation("Text index '{IndexName}' dropped.", indexName);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-text-indexes-dropped",
-                new { Count = textIndexes.Count });
         }
 
         private FilterDefinition<TDocument> CreateTextSearchFilter(string searchText, MongoDbTextSearchOptions options)

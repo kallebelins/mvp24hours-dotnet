@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Mvp24Hours.Infrastructure.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,6 +41,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     ///     new AuditInterceptor(
     ///         sp.GetService&lt;ICurrentUserProvider&gt;(),
     ///         sp.GetService&lt;IClock&gt;(),
+    ///         sp.GetService&lt;ILogger&lt;AuditInterceptor&gt;&gt;(),
     ///         "SystemUser"));
     /// </code>
     /// </example>
@@ -48,6 +49,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     {
         private readonly ICurrentUserProvider _currentUserProvider;
         private readonly IClock _clock;
+        private readonly ILogger<AuditInterceptor> _logger;
         private readonly string _defaultUser;
 
         /// <summary>
@@ -55,14 +57,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// </summary>
         /// <param name="currentUserProvider">Optional provider for the current user. If null, default user is used.</param>
         /// <param name="clock">Optional clock for getting current time. If null, UTC now is used.</param>
+        /// <param name="logger">Optional logger for structured logging.</param>
         /// <param name="defaultUser">Default user identifier when no user is available. Defaults to "System".</param>
         public AuditInterceptor(
             ICurrentUserProvider currentUserProvider = null,
             IClock clock = null,
+            ILogger<AuditInterceptor> logger = null,
             string defaultUser = "System")
         {
             _currentUserProvider = currentUserProvider;
             _clock = clock;
+            _logger = logger;
             _defaultUser = defaultUser ?? "System";
         }
 
@@ -77,9 +82,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             ApplyCreateAudit(entity, now, currentUser);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                $"mongodb-audit-interceptor-insert-{typeof(T).Name}",
-                new { EntityType = typeof(T).Name, User = currentUser, Timestamp = now });
+            _logger?.LogDebug("Applying create audit fields for entity {EntityType} (Id: {EntityId}) by user {User} at {Timestamp}",
+                typeof(T).Name, entity.EntityKey, currentUser, now);
 
             return Task.CompletedTask;
         }
@@ -92,9 +96,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             ApplyUpdateAudit(entity, now, currentUser);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                $"mongodb-audit-interceptor-update-{typeof(T).Name}",
-                new { EntityType = typeof(T).Name, User = currentUser, Timestamp = now });
+            _logger?.LogDebug("Applying update audit fields for entity {EntityType} (Id: {EntityId}) by user {User} at {Timestamp}",
+                typeof(T).Name, entity.EntityKey, currentUser, now);
 
             return Task.CompletedTask;
         }

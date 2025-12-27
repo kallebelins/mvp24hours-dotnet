@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,6 +56,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         private readonly bool _validateOnUpdate;
         private readonly bool _validateOnDelete;
         private readonly bool _throwOnMissingTenant;
+        private readonly ILogger<TenantInterceptor> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TenantInterceptor"/> class.
@@ -65,17 +65,20 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <param name="validateOnUpdate">If true, validates tenant ownership on updates. Default is true.</param>
         /// <param name="validateOnDelete">If true, validates tenant ownership on deletes. Default is true.</param>
         /// <param name="throwOnMissingTenant">If true, throws an exception when no tenant is set. Default is true.</param>
+        /// <param name="logger">The logger instance.</param>
         /// <exception cref="ArgumentNullException">Thrown when tenantProvider is null.</exception>
         public TenantInterceptor(
             ITenantProvider tenantProvider,
             bool validateOnUpdate = true,
             bool validateOnDelete = true,
-            bool throwOnMissingTenant = true)
+            bool throwOnMissingTenant = true,
+            ILogger<TenantInterceptor> logger = null)
         {
             _tenantProvider = tenantProvider ?? throw new ArgumentNullException(nameof(tenantProvider));
             _validateOnUpdate = validateOnUpdate;
             _validateOnDelete = validateOnDelete;
             _throwOnMissingTenant = throwOnMissingTenant;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -101,9 +104,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 // Set the tenant ID
                 tenantEntity.TenantId = currentTenantId;
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    $"mongodb-tenant-interceptor-insert-{typeof(T).Name}",
-                    new { EntityType = typeof(T).Name, TenantId = currentTenantId });
+                _logger?.LogDebug(
+                    "MongoDB tenant interceptor insert: EntityType={EntityType}, TenantId={TenantId}",
+                    typeof(T).Name,
+                    currentTenantId);
             }
 
             // Handle generic ITenantEntity<T>
@@ -153,9 +157,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             // Entity's TenantId must match the current tenant
             if (!string.IsNullOrEmpty(entity.TenantId) && entity.TenantId != currentTenantId)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Warning,
-                    "mongodb-tenant-interceptor-access-denied",
-                    new { EntityType = entityTypeName, EntityTenant = entity.TenantId, CurrentTenant = currentTenantId });
+                _logger?.LogWarning(
+                    "MongoDB tenant interceptor access denied: EntityType={EntityType}, EntityTenant={EntityTenant}, CurrentTenant={CurrentTenant}",
+                    entityTypeName,
+                    entity.TenantId,
+                    currentTenantId);
 
                 throw new UnauthorizedAccessException(
                     $"Access denied. Entity belongs to tenant '{entity.TenantId}' but current tenant is '{currentTenantId}'.");
@@ -214,15 +220,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
                             property.SetValue(entity, convertedValue);
 
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                                $"mongodb-tenant-interceptor-generic-insert-{typeof(T).Name}",
-                                new { EntityType = typeof(T).Name, TenantId = currentTenantId, TenantIdType = tenantIdType.Name });
+                            _logger?.LogDebug(
+                                "MongoDB tenant interceptor generic insert: EntityType={EntityType}, TenantId={TenantId}, TenantIdType={TenantIdType}",
+                                typeof(T).Name,
+                                currentTenantId,
+                                tenantIdType.Name);
                         }
                         catch (Exception ex)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Warning,
-                                "mongodb-tenant-interceptor-conversion-error",
-                                new { EntityType = typeof(T).Name, TenantId = currentTenantId, TargetType = tenantIdType.Name, Error = ex.Message });
+                            _logger?.LogWarning(ex,
+                                "MongoDB tenant interceptor conversion error: EntityType={EntityType}, TenantId={TenantId}, TargetType={TargetType}",
+                                typeof(T).Name,
+                                currentTenantId,
+                                tenantIdType.Name);
                         }
                     }
                     break;

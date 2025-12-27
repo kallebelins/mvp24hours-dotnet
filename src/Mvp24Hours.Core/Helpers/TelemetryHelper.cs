@@ -13,8 +13,40 @@ using System.Linq;
 namespace Mvp24Hours.Helpers
 {
     /// <summary>
-    /// 
+    /// Helper class for telemetry operations.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>⚠️ DEPRECATED:</b> This class is deprecated and will be removed in a future major version.
+    /// </para>
+    /// <para>
+    /// <b>Migration Guide:</b>
+    /// </para>
+    /// <para>
+    /// Use <c>ILogger&lt;T&gt;</c> (Microsoft.Extensions.Logging) instead for structured logging:
+    /// </para>
+    /// <code>
+    /// // Before (deprecated):
+    /// TelemetryHelper.Execute(TelemetryLevels.Information, "MyEvent", arg1, arg2);
+    /// 
+    /// // After (recommended):
+    /// _logger.LogInformation("MyEvent: {Arg1}, {Arg2}", arg1, arg2);
+    /// </code>
+    /// <para>
+    /// For distributed tracing, use OpenTelemetry with <c>System.Diagnostics.Activity</c>:
+    /// </para>
+    /// <code>
+    /// using var activity = ActivitySource.StartActivity("MyOperation");
+    /// activity?.SetTag("key", "value");
+    /// </code>
+    /// <para>
+    /// See documentation at docs/pt-br/observability/migration.md (PT-BR) or
+    /// docs/en-us/observability/migration.md (EN-US) for complete migration instructions.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Deprecated: Use ILogger<T> (Microsoft.Extensions.Logging) and OpenTelemetry instead. " +
+              "This class will be removed in the next major version. " +
+              "See docs/observability/migration.md for migration guide.")]
     public static class TelemetryHelper
     {
         #region [ Properties / Fields ]
@@ -55,6 +87,13 @@ namespace Mvp24Hours.Helpers
         #endregion
 
         #region [ Add Services ]
+        /// <summary>
+        /// Adds telemetry actions for the specified level.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Configure ILogger providers instead via AddLogging() in DI.
+        /// </remarks>
+        [Obsolete("Configure ILogger providers instead. Will be removed in next major version.")]
         public static void Add(TelemetryLevels level, params Action<string>[] actions)
         {
             if (!actions.AnySafe())
@@ -71,6 +110,13 @@ namespace Mvp24Hours.Helpers
             servicesAction1Started = true;
         }
 
+        /// <summary>
+        /// Adds telemetry actions with arguments for the specified level.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Configure ILogger providers instead via AddLogging() in DI.
+        /// </remarks>
+        [Obsolete("Configure ILogger providers instead. Will be removed in next major version.")]
         public static void Add(TelemetryLevels level, params Action<string, object[]>[] actions)
         {
             if (!actions.AnySafe())
@@ -87,6 +133,13 @@ namespace Mvp24Hours.Helpers
             servicesAction2Started = true;
         }
 
+        /// <summary>
+        /// Adds telemetry services for the specified level.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use ILogger providers instead.
+        /// </remarks>
+        [Obsolete("Use ILogger providers instead. Will be removed in next major version.")]
         public static void Add(TelemetryLevels level, params ITelemetryService[] telemetryServices)
         {
             if (!telemetryServices.AnySafe())
@@ -103,6 +156,13 @@ namespace Mvp24Hours.Helpers
             servicesStarted = true;
         }
 
+        /// <summary>
+        /// Adds filtered telemetry actions for a specific service.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use ILogger with log categories/scopes instead.
+        /// </remarks>
+        [Obsolete("Use ILogger with log categories and scopes instead. Will be removed in next major version.")]
         public static void AddFilter(string serviceName, params Action<string>[] actions)
         {
             if (!serviceName.HasValue())
@@ -123,6 +183,13 @@ namespace Mvp24Hours.Helpers
             serviceActionFilters1Started = true;
         }
 
+        /// <summary>
+        /// Adds filtered telemetry actions with arguments for a specific service.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use ILogger with log categories/scopes instead.
+        /// </remarks>
+        [Obsolete("Use ILogger with log categories and scopes instead. Will be removed in next major version.")]
         public static void AddFilter(string serviceName, params Action<string, object[]>[] actions)
         {
             if (!serviceName.HasValue())
@@ -143,6 +210,13 @@ namespace Mvp24Hours.Helpers
             serviceActionFilters2Started = true;
         }
 
+        /// <summary>
+        /// Adds filtered telemetry services for a specific service.
+        /// </summary>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use ILogger with log categories/scopes instead.
+        /// </remarks>
+        [Obsolete("Use ILogger with log categories and scopes instead. Will be removed in next major version.")]
         public static void AddFilter(string serviceName, params ITelemetryService[] telemetryServices)
         {
             if (!serviceName.HasValue())
@@ -223,11 +297,38 @@ namespace Mvp24Hours.Helpers
         #endregion
 
         #region [ Execute Services ]
+        /// <summary>
+        /// Executes telemetry services for the specified level.
+        /// </summary>
+        /// <param name="level">The telemetry level.</param>
+        /// <param name="args">Arguments to pass to telemetry services.</param>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use <c>ILogger&lt;T&gt;</c> instead:
+        /// <code>
+        /// // Before: TelemetryHelper.Execute(TelemetryLevels.Information, arg1, arg2);
+        /// // After:  _logger.LogInformation("Event: {Arg1}, {Arg2}", arg1, arg2);
+        /// </code>
+        /// </remarks>
+        [Obsolete("Use ILogger<T>.LogInformation/LogWarning/LogError instead. Will be removed in next major version.")]
         public static void Execute(TelemetryLevels level, params object[] args)
         {
             Execute(level, "unknown", args);
         }
 
+        /// <summary>
+        /// Executes telemetry services for the specified level and event name.
+        /// </summary>
+        /// <param name="level">The telemetry level.</param>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="args">Arguments to pass to telemetry services.</param>
+        /// <remarks>
+        /// <b>⚠️ DEPRECATED:</b> Use <c>ILogger&lt;T&gt;</c> instead:
+        /// <code>
+        /// // Before: TelemetryHelper.Execute(TelemetryLevels.Information, "MyEvent", arg1, arg2);
+        /// // After:  _logger.LogInformation("MyEvent: {Arg1}, {Arg2}", arg1, arg2);
+        /// </code>
+        /// </remarks>
+        [Obsolete("Use ILogger<T>.LogInformation/LogWarning/LogError instead. Will be removed in next major version.")]
         public static void Execute(TelemetryLevels level, string eventName, params object[] args)
         {
             if (ignoreNames.AnySafe(x => x == eventName)) return;

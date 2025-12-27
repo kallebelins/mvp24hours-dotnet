@@ -6,8 +6,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -165,21 +163,12 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <inheritdoc />
     public TContext CreateContext()
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "testdbcontextfactory-createcontext-start");
+        var dbOptions = BuildDbContextOptions();
+        var context = CreateContextInstance(dbOptions);
         
-        try
-        {
-            var dbOptions = BuildDbContextOptions();
-            var context = CreateContextInstance(dbOptions);
-            
-            _createdContexts.Add(context);
-            
-            return context;
-        }
-        finally
-        {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "testdbcontextfactory-createcontext-end");
-        }
+        _createdContexts.Add(context);
+        
+        return context;
     }
 
     /// <inheritdoc />

@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Threading;
@@ -148,8 +147,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                     if (string.IsNullOrEmpty(entity.TenantId))
                     {
                         entity.TenantId = currentTenantId;
-                        TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                            $"tenant-interceptor-set-tenant-{entry.Entity.GetType().Name}-{currentTenantId}");
                     }
                     else if (_options.ValidateTenantOnAdd && entity.TenantId != currentTenantId)
                     {

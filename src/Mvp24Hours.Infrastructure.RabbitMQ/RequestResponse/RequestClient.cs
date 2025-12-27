@@ -4,10 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Exceptions;
@@ -34,6 +33,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
         private readonly IMvpRabbitMQConnection _connection;
         private readonly IMessageSerializer _serializer;
         private readonly RequestClientOptions _options;
+        private readonly ILogger<RequestClient<TRequest, TResponse>>? _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TResponse>> _pendingRequests;
         private IModel? _channel;
         private string? _replyQueueName;
@@ -45,11 +45,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
         public RequestClient(
             IMvpRabbitMQConnection connection,
             IMessageSerializer serializer,
-            IOptions<RequestClientOptions>? options = null)
+            IOptions<RequestClientOptions>? options = null,
+            ILogger<RequestClient<TRequest, TResponse>>? logger = null)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _options = options?.Value ?? new RequestClientOptions();
+            _logger = logger;
             _pendingRequests = new ConcurrentDictionary<string, TaskCompletionSource<TResponse>>();
         }
 
@@ -90,7 +92,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
                     basicProperties: properties,
                     body: body);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-request-sent", $"correlationId:{correlationId}");
+                _logger?.LogDebug(
+                    "Request sent. CorrelationId={CorrelationId}",
+                    correlationId);
 
                 // Wait for response
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -101,7 +105,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
                     var response = await tcs.Task.WaitAsync(cts.Token);
                     stopwatch.Stop();
 
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-request-response-received", $"correlationId:{correlationId}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                    _logger?.LogInformation(
+                        "Request response received. CorrelationId={CorrelationId}, Elapsed={ElapsedMs}ms",
+                        correlationId, stopwatch.ElapsedMilliseconds);
 
                     return Response<TResponse>.Success(response, correlationId, stopwatch.Elapsed);
                 }
@@ -109,7 +115,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
                 {
                     // Timeout
                     stopwatch.Stop();
-                    TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-request-timeout", $"correlationId:{correlationId}|timeout:{timeout.TotalMilliseconds}ms");
+                    _logger?.LogWarning(
+                        "Request timeout. CorrelationId={CorrelationId}, Timeout={TimeoutMs}ms",
+                        correlationId, timeout.TotalMilliseconds);
                     return Response<TResponse>.Timeout(correlationId, stopwatch.Elapsed);
                 }
                 catch (OperationCanceledException)
@@ -122,7 +130,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-request-error", ex);
+                _logger?.LogError(ex,
+                    "Request error. CorrelationId={CorrelationId}",
+                    correlationId);
                 return Response<TResponse>.Failure(ex.Message, ex, correlationId, stopwatch.Elapsed);
             }
             finally
@@ -160,7 +170,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
                 autoAck: true,
                 consumer: consumer);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-request-client-initialized", $"replyQueue:{_replyQueueName}");
+            _logger?.LogDebug(
+                "Request client initialized. ReplyQueue={ReplyQueue}",
+                _replyQueueName);
         }
 
         private void OnResponseReceived(object? sender, BasicDeliverEventArgs e)

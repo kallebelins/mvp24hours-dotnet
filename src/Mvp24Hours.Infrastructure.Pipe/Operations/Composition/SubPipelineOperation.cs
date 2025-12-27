@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,14 +21,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
     {
         private readonly List<IOperation> _operations = new();
         private readonly List<IOperation> _executedOperations = new();
+        private readonly ILogger<SubPipelineOperation>? _logger;
 
         /// <summary>
         /// Creates a new sub-pipeline operation.
         /// </summary>
         /// <param name="name">Optional name for this scope.</param>
-        public SubPipelineOperation(string? name = null)
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public SubPipelineOperation(string? name = null, ILogger<SubPipelineOperation>? logger = null)
         {
             Name = name;
+            _logger = logger;
         }
 
         /// <summary>
@@ -63,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
         public void Execute(IPipelineMessage input)
         {
             var scopeName = Name ?? "anonymous";
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-execute-start", $"scope:{scopeName},operations:{_operations.Count}");
+            _logger?.LogDebug("SubPipelineOperation: Execute started. Scope: {ScopeName}, Operations: {OperationCount}", scopeName, _operations.Count);
             _executedOperations.Clear();
 
             try
@@ -73,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                     if (input.IsLocked && !operation.IsRequired)
                         continue;
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-operation-start", $"scope:{scopeName},operation:{operation.GetType().Name}");
+                    _logger?.LogDebug("SubPipelineOperation: Operation '{OperationName}' started. Scope: {ScopeName}", operation.GetType().Name, scopeName);
                     try
                     {
                         operation.Execute(input);
@@ -81,7 +83,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                     }
                     finally
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-operation-end", $"scope:{scopeName},operation:{operation.GetType().Name}");
+                        _logger?.LogDebug("SubPipelineOperation: Operation '{OperationName}' finished. Scope: {ScopeName}", operation.GetType().Name, scopeName);
                     }
 
                     if (input.IsFaulty)
@@ -90,7 +92,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-execute-end", $"scope:{scopeName}");
+                _logger?.LogDebug("SubPipelineOperation: Execute finished. Scope: {ScopeName}", scopeName);
             }
         }
 
@@ -105,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-subpipeline-rollback-failure", ex);
+                    _logger?.LogError(ex, "SubPipelineOperation: Rollback failed");
                 }
             }
         }
@@ -118,14 +120,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
     {
         private readonly List<IOperationAsync> _operations = new();
         private readonly List<IOperationAsync> _executedOperations = new();
+        private readonly ILogger<SubPipelineOperationAsync>? _logger;
 
         /// <summary>
         /// Creates a new async sub-pipeline operation.
         /// </summary>
         /// <param name="name">Optional name for this scope.</param>
-        public SubPipelineOperationAsync(string? name = null)
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public SubPipelineOperationAsync(string? name = null, ILogger<SubPipelineOperationAsync>? logger = null)
         {
             Name = name;
+            _logger = logger;
         }
 
         /// <summary>
@@ -167,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
         public async Task ExecuteAsync(IPipelineMessage input, CancellationToken cancellationToken)
         {
             var scopeName = Name ?? "anonymous";
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-async-execute-start", $"scope:{scopeName},operations:{_operations.Count}");
+            _logger?.LogDebug("SubPipelineOperationAsync: ExecuteAsync started. Scope: {ScopeName}, Operations: {OperationCount}", scopeName, _operations.Count);
             _executedOperations.Clear();
 
             try
@@ -179,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                     if (input.IsLocked && !operation.IsRequired)
                         continue;
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-async-operation-start", $"scope:{scopeName},operation:{operation.GetType().Name}");
+                    _logger?.LogDebug("SubPipelineOperationAsync: Operation '{OperationName}' started. Scope: {ScopeName}", operation.GetType().Name, scopeName);
                     try
                     {
                         if (operation is IOperationAsyncWithCancellation operationWithCancellation)
@@ -194,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                     }
                     finally
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-async-operation-end", $"scope:{scopeName},operation:{operation.GetType().Name}");
+                        _logger?.LogDebug("SubPipelineOperationAsync: Operation '{OperationName}' finished. Scope: {ScopeName}", operation.GetType().Name, scopeName);
                     }
 
                     if (input.IsFaulty)
@@ -203,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-subpipeline-async-execute-end", $"scope:{scopeName}");
+                _logger?.LogDebug("SubPipelineOperationAsync: ExecuteAsync finished. Scope: {ScopeName}", scopeName);
             }
         }
 
@@ -218,7 +223,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-subpipeline-async-rollback-failure", ex);
+                    _logger?.LogError(ex, "SubPipelineOperationAsync: RollbackAsync failed");
                 }
             }
         }

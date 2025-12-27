@@ -8,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
@@ -65,8 +63,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             this IServiceCollection services,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addunitofworkwithevents");
-
             services.Add(new ServiceDescriptor(
                 typeof(IUnitOfWorkWithEventsAsync),
                 typeof(UnitOfWorkWithEventsAsync),
@@ -94,8 +90,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             Type? repositoryAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addrepositorywithevents");
-
             if (options != null)
             {
                 services.Configure(options);
@@ -145,8 +139,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             this IServiceCollection services,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addnoopeventdispatcher");
-
             services.Add(new ServiceDescriptor(
                 typeof(IDomainEventDispatcherEFCore),
                 typeof(NoOpDomainEventDispatcher),
@@ -180,8 +172,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             Func<System.Collections.Generic.IEnumerable<IDomainEvent>, System.Threading.CancellationToken, System.Threading.Tasks.Task> dispatchFunc,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addeventdispatcher-delegate");
-
             services.Add(new ServiceDescriptor(
                 typeof(IDomainEventDispatcherEFCore),
                 sp => new DomainEventDispatcherAdapter(dispatchFunc),
@@ -213,8 +203,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             this DbContextOptionsBuilder optionsBuilder,
             IDomainEventDispatcherEFCore? eventDispatcher = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-adddomaineventinterceptor");
-
             optionsBuilder.AddInterceptors(new DomainEventSaveChangesInterceptor(eventDispatcher));
             return optionsBuilder;
         }
@@ -259,8 +247,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TReadContext : DbContext, IReadDbContext
             where TWriteContext : DbContext, IWriteDbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addcqrsdbcontexts");
-
             // Register read context
             if (readOptions != null)
             {
@@ -318,8 +304,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TReadContext : DbContext, IReadDbContext
             where TWriteContext : DbContext, IWriteDbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addcqrsdbcontexts-sp");
-
             // Register read context
             services.AddDbContext<TReadContext>(readOptions, lifetime);
 
@@ -384,8 +368,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
             where TDbContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-cqrs-addefcorecqrs");
-
             var options = new EFCoreCqrsOptions();
             cqrsOptions?.Invoke(options);
 

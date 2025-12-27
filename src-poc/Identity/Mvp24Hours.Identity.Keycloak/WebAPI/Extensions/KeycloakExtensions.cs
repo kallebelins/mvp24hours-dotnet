@@ -6,10 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Identity.Keycloak.Application.Logic;
 using Mvp24Hours.Identity.Keycloak.Core.Contract.Logic;
 using Mvp24Hours.Identity.Keycloak.Core.ValueObjects.Authentication;
@@ -28,6 +27,17 @@ namespace Mvp24Hours.Identity.Keycloak.WebAPI.Extensions
 {
     public static class KeycloakExtensions
     {
+        private static ILogger? _logger;
+
+        /// <summary>
+        /// Sets the logger instance for Keycloak extension methods.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         public static IServiceCollection AddKeycloakAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtOptions = configuration.GetSection("JwtBearer").Get<JwtBearerOptions>();
@@ -55,18 +65,18 @@ namespace Mvp24Hours.Identity.Keycloak.WebAPI.Extensions
                     {
                         OnMessageReceived = (context) =>
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-onmessagereceived", $"token:{context.Token}");
+                            _logger?.LogDebug("JWT Bearer: Message received");
                             return Task.CompletedTask;
                         },
                         OnChallenge = (context) =>
                         {
                             if (context.AuthenticateFailure != null)
-                                TelemetryHelper.Execute(TelemetryLevels.Error, "jwt-onchallenge-failure", context.AuthenticateFailure);
+                                _logger?.LogWarning(context.AuthenticateFailure, "JWT Bearer: Challenge failed");
                             return Task.CompletedTask;
                         },
                         OnAuthenticationFailed = (context) =>
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Error, "jwt-onauthenticationfailed-failure", context.Exception);
+                            _logger?.LogError(context.Exception, "JWT Bearer: Authentication failed");
                             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                             {
                                 context.Response.Headers.Add("Token-Expired", "true");
@@ -78,24 +88,23 @@ namespace Mvp24Hours.Identity.Keycloak.WebAPI.Extensions
                             var localUserSvc = context.HttpContext.RequestServices.GetService<IUserKeycloakService>();
                             if (localUserSvc != null)
                             {
-                                TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated-get-integration-start");
+                                _logger?.LogDebug("JWT Bearer: Starting user integration");
                                 var user = context.HttpContext.RequestServices.GetUserToken();
                                 var anyUserBo = await localUserSvc.GetAnyLocalUserById((Guid)user.Id);
                                 if (!anyUserBo.GetDataValue() || anyUserBo.HasErrors)
                                 {
-                                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated-get-integration-create-user-start");
+                                    _logger?.LogDebug("JWT Bearer: Creating/updating local user");
                                     var localUserBo = await localUserSvc.CreateOrUpdateLocalUser(user);
                                     if (localUserBo.HasErrors)
                                     {
-                                        TelemetryHelper.Execute(TelemetryLevels.Error, "jwt-ontokenvalidated-get-integration-create-user-failure", localUserBo.Messages.FirstOrDefault());
+                                        _logger?.LogError("JWT Bearer: Failed to create/update local user: {Error}", localUserBo.Messages.FirstOrDefault()?.Message);
                                     }
                                     else
                                     {
-                                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated-get-integration-user", $"data: {localUserBo.GetDataValue()}");
+                                        _logger?.LogDebug("JWT Bearer: Local user created/updated successfully");
                                     }
-                                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated-get-integration-create-user-end");
                                 }
-                                TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated-get-integration-end");
+                                _logger?.LogDebug("JWT Bearer: User integration completed");
                             }
 
                             var sbClaims = new StringBuilder();
@@ -104,7 +113,7 @@ namespace Mvp24Hours.Identity.Keycloak.WebAPI.Extensions
                                 if (!string.IsNullOrEmpty(c.Value))
                                     sbClaims.Append($"{c.Type}; ");
                             }
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-ontokenvalidated", $"claims:{sbClaims}");
+                            _logger?.LogDebug("JWT Bearer: Token validated with claims: {Claims}", sbClaims.ToString());
                         }
                     };
                 });

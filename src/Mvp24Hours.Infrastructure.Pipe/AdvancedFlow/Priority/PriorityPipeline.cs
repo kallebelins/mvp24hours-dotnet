@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +44,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
     {
         private readonly List<PrioritizedOperation<IOperation>> _operations = [];
         private readonly List<PrioritizedOperation<IOperationAsync>> _asyncOperations = [];
+        private readonly ILogger<PriorityPipeline>? _logger;
         private bool _needsSorting = true;
+
+        /// <summary>
+        /// Creates a new priority pipeline.
+        /// </summary>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        public PriorityPipeline(ILogger<PriorityPipeline>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Gets or sets whether to break on fail.
@@ -146,30 +155,27 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
         {
             EnsureSorted();
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-execute-start", $"operations:{_operations.Count}");
+            _logger?.LogDebug("PriorityPipeline: Execute started with {OperationCount} operations", _operations.Count);
 
             foreach (var prioritized in _operations)
             {
                 try
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-operation-start",
-                        $"operation:{prioritized.Operation.GetType().Name},priority:{prioritized.Priority}");
+                    _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' (Priority: {Priority}) started", prioritized.Operation.GetType().Name, prioritized.Priority);
 
                     prioritized.Operation.Execute(input);
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-operation-end",
-                        $"operation:{prioritized.Operation.GetType().Name}");
+                    _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' finished", prioritized.Operation.GetType().Name);
 
                     if (IsBreakOnFail && input.IsFaulty)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-priority-break-on-fail",
-                            $"operation:{prioritized.Operation.GetType().Name}");
+                        _logger?.LogWarning("PriorityPipeline: Breaking on fail after operation '{OperationName}'", prioritized.Operation.GetType().Name);
                         break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-priority-operation-error", ex);
+                    _logger?.LogError(ex, "PriorityPipeline: Operation failed");
                     input.SetFailure();
 
                     if (AllowPropagateException)
@@ -184,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-execute-end");
+            _logger?.LogDebug("PriorityPipeline: Execute finished");
             return input;
         }
 
@@ -198,8 +204,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
         {
             EnsureSorted();
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-async-execute-start",
-                $"syncOps:{_operations.Count},asyncOps:{_asyncOperations.Count}");
+            _logger?.LogDebug("PriorityPipeline: ExecuteAsync started with {SyncOperationCount} sync and {AsyncOperationCount} async operations", _operations.Count, _asyncOperations.Count);
 
             // Combine sync and async operations, sorted by priority
             var allOperations = _operations
@@ -216,8 +221,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
                 try
                 {
                     var opName = op.SyncOp?.GetType().Name ?? op.AsyncOp?.GetType().Name ?? "unknown";
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-async-operation-start",
-                        $"operation:{opName},priority:{op.Priority}");
+                    _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' (Priority: {Priority}) started", opName, op.Priority);
 
                     if (op.AsyncOp != null)
                     {
@@ -228,19 +232,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
                         op.SyncOp.Execute(input);
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-async-operation-end",
-                        $"operation:{opName}");
+                    _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' finished", opName);
 
                     if (IsBreakOnFail && input.IsFaulty)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-priority-async-break-on-fail",
-                            $"operation:{opName}");
+                        _logger?.LogWarning("PriorityPipeline: Breaking on fail after async operation '{OperationName}'", opName);
                         break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-priority-async-operation-error", ex);
+                    _logger?.LogError(ex, "PriorityPipeline: Async operation failed");
                     input.SetFailure();
 
                     if (AllowPropagateException)
@@ -255,7 +257,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-priority-async-execute-end");
+            _logger?.LogDebug("PriorityPipeline: ExecuteAsync finished");
             return input;
         }
 

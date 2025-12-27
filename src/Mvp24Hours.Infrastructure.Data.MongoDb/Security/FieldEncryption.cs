@@ -6,8 +6,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -117,8 +115,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 
             _key = new byte[key.Length];
             Array.Copy(key, _key, key.Length);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-field-encryptor-initialized");
         }
 
         /// <summary>

@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -124,9 +122,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
 
             _collection = _database.GetCollection<TDocument>(collectionName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-created",
-                new { Collection = collectionName, TimeField = options.TimeField });
-
             _logger?.LogInformation("Time series collection '{CollectionName}' created with time field '{TimeField}'.",
                 collectionName, options.TimeField);
         }
@@ -137,8 +132,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             CancellationToken cancellationToken = default)
         {
             await _collection.InsertOneAsync(document, cancellationToken: cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-insert", null);
         }
 
         /// <inheritdoc/>
@@ -147,8 +140,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             CancellationToken cancellationToken = default)
         {
             await _collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-insert-many", null);
         }
 
         /// <inheritdoc/>
@@ -179,9 +170,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
                 .Find(combinedFilter)
                 .Sort(new BsonDocumentSortDefinition<TDocument>(new BsonDocument(_timeField, 1)))
                 .ToListAsync(cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-query",
-                new { Start = start, End = end, Count = result.Count });
 
             return result;
         }
@@ -253,9 +241,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
                 });
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-aggregate",
-                new { WindowCount = aggregations.Count, AggregationType = aggregationType.ToString() });
-
             return aggregations;
         }
 
@@ -296,9 +281,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
         {
             var filter = Builders<TDocument>.Filter.Lt(_timeField, olderThan);
             var result = await _collection.DeleteManyAsync(filter, cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-timeseries-delete",
-                new { DeletedCount = result.DeletedCount, OlderThan = olderThan });
 
             _logger?.LogInformation("Deleted {Count} measurements older than {OlderThan}.",
                 result.DeletedCount, olderThan);

@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -35,7 +34,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
     /// </remarks>
     /// <example>
     /// <code>
-    /// var streamer = new MongoDbAsyncStreaming&lt;Order&gt;(collection);
+    /// var streamer = new MongoDbAsyncStreaming&lt;Order&gt;(collection, logger);
     /// 
     /// // Stream all orders
     /// await foreach (var order in streamer.StreamAllAsync())
@@ -59,14 +58,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
     public class MongoDbAsyncStreaming<T>
     {
         private readonly IMongoCollection<T> _collection;
+        private readonly ILogger<MongoDbAsyncStreaming<T>> _logger;
 
         /// <summary>
         /// Initializes a new async streaming provider for the specified collection.
         /// </summary>
         /// <param name="collection">The MongoDB collection.</param>
-        public MongoDbAsyncStreaming(IMongoCollection<T> collection)
+        /// <param name="logger">Optional logger for structured logging.</param>
+        public MongoDbAsyncStreaming(IMongoCollection<T> collection, ILogger<MongoDbAsyncStreaming<T>> logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+            _logger = logger;
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             ProjectionDefinition<T> projection = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-start");
+            _logger?.LogDebug("Starting streaming for collection {CollectionName}", typeof(T).Name);
 
             var options = new FindOptions<T>
             {
@@ -126,7 +128,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-end");
+            _logger?.LogDebug("Streaming completed for collection {CollectionName}", typeof(T).Name);
         }
 
         /// <summary>
@@ -174,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             ProjectionDefinition<T> projection = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-batches-start", new { BatchSize = batchSize });
+            _logger?.LogDebug("Starting batch streaming for collection {CollectionName} with batch size {BatchSize}", typeof(T).Name, batchSize);
 
             var options = new FindOptions<T>
             {
@@ -206,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 yield return batch.AsReadOnly();
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-batches-end");
+            _logger?.LogDebug("Batch streaming completed for collection {CollectionName}", typeof(T).Name);
         }
 
         /// <summary>
@@ -224,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             SortDefinition<T> sort = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-projected-start");
+            _logger?.LogDebug("Starting projected streaming for collection {CollectionName}", typeof(T).Name);
 
             var options = new FindOptions<T, TProjection>
             {
@@ -243,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-projected-end");
+            _logger?.LogDebug("Projected streaming completed for collection {CollectionName}", typeof(T).Name);
         }
 
         /// <summary>
@@ -257,7 +259,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             PipelineDefinition<T, TResult> pipeline,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-aggregation-start");
+            _logger?.LogDebug("Starting aggregation streaming for collection {CollectionName}", typeof(T).Name);
 
             var options = new AggregateOptions
             {
@@ -274,7 +276,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-aggregation-end");
+            _logger?.LogDebug("Aggregation streaming completed for collection {CollectionName}", typeof(T).Name);
         }
 
         /// <summary>
@@ -291,8 +293,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             int maxDegreeOfParallelism = 4,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-parallel-start",
-                new { MaxDegreeOfParallelism = maxDegreeOfParallelism });
+            _logger?.LogDebug("Starting parallel processing for collection {CollectionName} with max parallelism {MaxDegreeOfParallelism}",
+                typeof(T).Name, maxDegreeOfParallelism);
 
             var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
@@ -318,8 +320,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
 
             await Task.WhenAll(tasks);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-streaming-parallel-end",
-                new { ProcessedCount = tasks.Count });
+            _logger?.LogDebug("Parallel processing completed for collection {CollectionName}: {ProcessedCount} documents processed",
+                typeof(T).Name, tasks.Count);
         }
 
         /// <summary>

@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Threading;
@@ -247,13 +245,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 
             var oldState = _state;
             _state = newState;
-
-            var message = $"Circuit breaker state changed: {oldState} -> {newState}. Reason: {reason}";
-
-            TelemetryHelper.Execute(
-                newState == CircuitState.Open ? TelemetryLevels.Warning : TelemetryLevels.Information,
-                "circuit-breaker-state-change",
-                message);
 
             _logger?.Log(
                 newState == CircuitState.Open ? LogLevel.Warning : LogLevel.Information,

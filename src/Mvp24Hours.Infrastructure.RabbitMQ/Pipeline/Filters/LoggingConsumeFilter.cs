@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Diagnostics;
@@ -62,44 +60,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogMessageReceived(string messageType, string messageId, string? correlationId, string queueName, int redeliveryCount)
         {
-            var message = $"Consuming message: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Queue={queueName}, RedeliveryCount={redeliveryCount}";
-            
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-filter-logging-received", message);
-            }
+            _logger?.LogInformation(
+                "Consuming message. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Queue={QueueName}, RedeliveryCount={RedeliveryCount}",
+                messageType, messageId, correlationId, queueName, redeliveryCount);
         }
 
         private void LogMessageProcessed(string messageType, string messageId, string? correlationId, long elapsedMs)
         {
-            var message = $"Message processed successfully: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Duration={elapsedMs}ms";
-            
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-filter-logging-processed", message);
-            }
+            _logger?.LogInformation(
+                "Message processed successfully. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+                messageType, messageId, correlationId, elapsedMs);
         }
 
         private void LogMessageFailed(string messageType, string messageId, string? correlationId, long elapsedMs, Exception ex)
         {
-            var message = $"Message processing failed: Type={messageType}, MessageId={messageId}, CorrelationId={correlationId}, Duration={elapsedMs}ms, Error={ex.Message}";
-            
-            if (_logger != null)
-            {
-                _logger.LogError(ex, message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-filter-logging-failed", ex);
-            }
+            _logger?.LogError(ex,
+                "Message processing failed. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+                messageType, messageId, correlationId, elapsedMs);
         }
     }
 }

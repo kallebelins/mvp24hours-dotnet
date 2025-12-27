@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 using System.Threading;
@@ -342,20 +340,14 @@ public static class MongoDbTestcontainersHelper
                     new MongoDB.Bson.BsonDocument("ping", 1),
                     cancellationToken: cancellationToken);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-testcontainers-ready");
                 return true;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-testcontainers-waiting",
-                    new { Error = ex.Message });
-
                 await Task.Delay(retryDelay, cancellationToken);
             }
         }
 
-        TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-testcontainers-timeout");
         return false;
     }
 
@@ -382,10 +374,6 @@ public static class MongoDbTestcontainersHelper
 
             await database.DropCollectionAsync(collectionName, cancellationToken);
         }
-
-        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-            "mongodb-testcontainers-cleaned",
-            new { DatabaseName = context.DatabaseName, CollectionsDropped = collectionNames.Count });
     }
 }
 

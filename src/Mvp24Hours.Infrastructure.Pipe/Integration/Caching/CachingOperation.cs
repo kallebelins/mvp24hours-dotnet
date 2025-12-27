@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Text.Json;
@@ -75,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
         {
             var cacheKey = GenerateCacheKey(input);
             
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-operation-check", $"Key: {cacheKey}");
+            _logger?.LogDebug("CachingOperation: Checking cache. Key: {CacheKey}", cacheKey);
 
             // Try to get from cache
             try
@@ -83,8 +81,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
                 if (cachedData != null)
                 {
-                    _logger?.LogDebug("Cache hit for key {CacheKey}", cacheKey);
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-operation-hit", $"Key: {cacheKey}");
+                    _logger?.LogDebug("CachingOperation: Cache hit. Key: {CacheKey}", cacheKey);
                     
                     var cachedResult = DeserializeResult(cachedData);
                     if (cachedResult != null)
@@ -98,8 +95,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 _logger?.LogWarning(ex, "Error reading from cache for key {CacheKey}", cacheKey);
             }
 
-            _logger?.LogDebug("Cache miss for key {CacheKey}", cacheKey);
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-operation-miss", $"Key: {cacheKey}");
+            _logger?.LogDebug("CachingOperation: Cache miss. Key: {CacheKey}", cacheKey);
 
             // Execute inner operation
             var result = await _innerOperation.ExecuteAsync(input, cancellationToken);
@@ -118,8 +114,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
 
                     await _cache.SetStringAsync(cacheKey, serialized, cacheOptions, cancellationToken);
                     
-                    _logger?.LogDebug("Cached result for key {CacheKey}", cacheKey);
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "caching-operation-stored", $"Key: {cacheKey}");
+                    _logger?.LogDebug("CachingOperation: Cached result. Key: {CacheKey}", cacheKey);
                 }
                 catch (Exception ex)
                 {

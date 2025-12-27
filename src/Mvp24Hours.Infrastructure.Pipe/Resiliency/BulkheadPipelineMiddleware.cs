@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -243,10 +241,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     key,
                     reason);
 
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Verbose,
-                    "pipe-bulkhead-rejected",
-                    $"key:{key}, reason:{reason}");
+                _logger?.LogDebug(
+                    "Bulkhead: Rejected. Key: {Key}, Reason: {Reason}",
+                    key,
+                    reason);
 
                 throw new PipelineBulkheadRejectedException(key, reason);
             }
@@ -258,10 +256,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     key,
                     bulkheadState.CurrentConcurrency);
 
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Verbose,
-                    "pipe-bulkhead-executing",
-                    $"key:{key}, current:{bulkheadState.CurrentConcurrency}");
+                _logger?.LogDebug(
+                    "Bulkhead: Executing. Key: {Key}, Current: {CurrentConcurrency}",
+                    key,
+                    bulkheadState.CurrentConcurrency);
 
                 await next();
             }

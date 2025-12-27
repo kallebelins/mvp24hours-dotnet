@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Resilience;
 using System;
@@ -85,8 +83,6 @@ namespace Mvp24Hours.Extensions
             Action<DbContextOptionsBuilder>? configureDbContext = null)
             where TDbContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-addwithresilience-execute");
-
             var resilienceOptions = new EFCoreResilienceOptions();
             configureResilience?.Invoke(resilienceOptions);
 
@@ -160,8 +156,6 @@ namespace Mvp24Hours.Extensions
             Action<DbContextOptionsBuilder>? configureDbContext = null)
             where TDbContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-addazuresql-execute");
-
             var azureOptions = EFCoreResilienceOptions.AzureSql();
             return services.AddMvp24HoursDbContextWithResilience<TDbContext>(
                 connectionString,
@@ -210,8 +204,6 @@ namespace Mvp24Hours.Extensions
             Action<DbContextOptionsBuilder>? configureDbContext = null)
             where TDbContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-adddev-execute");
-
             var devOptions = EFCoreResilienceOptions.Development();
             return services.AddMvp24HoursDbContextWithResilience<TDbContext>(
                 connectionString,
@@ -261,8 +253,6 @@ namespace Mvp24Hours.Extensions
             EFCoreResilienceOptions resilienceOptions,
             IServiceProvider? serviceProvider = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-usesqlserverwithresilience-execute");
-
             ConfigureSqlServerWithResilience(options, connectionString, resilienceOptions, serviceProvider);
             return options;
         }
@@ -282,8 +272,6 @@ namespace Mvp24Hours.Extensions
             this DbContextOptionsBuilder options,
             int timeoutSeconds)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-withcommandtimeout-execute");
-
             // Command timeout is set at the database level
             // This requires the options to already be configured with a provider
             var extension = options.Options.FindExtension<RelationalOptionsExtension>();
@@ -323,8 +311,6 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static DbContext WithTimeout(this DbContext context, int timeoutSeconds)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-withtimeout-execute");
-
             context.Database.SetCommandTimeout(TimeSpan.FromSeconds(timeoutSeconds));
             return context;
         }
@@ -379,8 +365,6 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             Action<EFCoreResilienceOptions>? configureResilience = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-addcircuitbreaker-execute");
-
             var resilienceOptions = new EFCoreResilienceOptions();
             configureResilience?.Invoke(resilienceOptions);
 
@@ -431,8 +415,6 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             Action<EFCoreResilienceOptions>? configureResilience = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-addpoolmonitor-execute");
-
             var resilienceOptions = new EFCoreResilienceOptions();
             configureResilience?.Invoke(resilienceOptions);
 
@@ -466,8 +448,6 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             Action<EFCoreResilienceOptions>? configureResilience = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "resilience-dbcontext-addresilienceinfrastructure-execute");
-
             services.AddMvp24HoursDbContextCircuitBreaker(configureResilience);
             services.AddMvp24HoursDbContextPoolMonitor(configureResilience);
 

@@ -4,10 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -21,6 +20,53 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     /// </summary>
     public class UnitOfWorkAsync : IUnitOfWorkAsync
     {
+        private readonly ILogger<UnitOfWorkAsync> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
+        /// </summary>
+        /// <param name="dbContext">MongoDB context.</param>
+        /// <param name="repositories">Dictionary of repositories.</param>
+        /// <param name="logger">Optional logger instance.</param>
+        public UnitOfWorkAsync(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWorkAsync> logger = null)
+        {
+            this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            this.repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
+            _logger = logger;
+
+            DbContext.StartSessionAsync().Wait();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
+        /// </summary>
+        /// <param name="dbContext">MongoDB context.</param>
+        /// <param name="serviceProvider">Service provider for resolving repositories.</param>
+        /// <param name="logger">Optional logger instance.</param>
+        [ActivatorUtilitiesConstructor]
+        public UnitOfWorkAsync(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWorkAsync> logger = null)
+        {
+            this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
+            this.serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
+            repositories = [];
+            _logger = logger;
+
+            DbContext.StartSessionAsync().Wait();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
+        /// </summary>
+        /// <param name="dbContext">MongoDB context.</param>
+        /// <param name="logger">Optional logger instance.</param>
+        public UnitOfWorkAsync(Mvp24HoursContext dbContext, ILogger<UnitOfWorkAsync> logger = null)
+        {
+            this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            repositories = [];
+            _logger = logger;
+
+            DbContext.StartSessionAsync().Wait();
+        }
         #region [ Ctor ]
 
         public UnitOfWorkAsync(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories)
@@ -110,20 +156,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-savechangesasync-start");
+            _logger?.LogDebug("Saving changes to MongoDB");
             try
             {
                 await DbContext.SaveChangesAsync(cancellationToken);
+                _logger?.LogDebug("Successfully saved changes to MongoDB");
                 return 1;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger?.LogError(ex, "Error saving changes to MongoDB, rolling back");
                 await RollbackAsync();
                 return 0;
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-savechangesasync-end");
             }
         }
 
@@ -132,12 +176,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         public async Task RollbackAsync()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-rollbackasync-start");
+            _logger?.LogDebug("Rolling back MongoDB transaction");
             try
             {
                 await DbContext.RollbackAsync();
+                _logger?.LogDebug("Successfully rolled back MongoDB transaction");
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-rollbackasync-end"); }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error rolling back MongoDB transaction");
+                throw;
+            }
         }
 
         #endregion

@@ -3,8 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
@@ -17,8 +16,21 @@ using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Helpers
 {
+    /// <summary>
+    /// Helper class for creating HTTP resilience policies using Polly.
+    /// </summary>
     public static class HttpPolicyHelper
     {
+        private static ILogger _logger;
+
+        /// <summary>
+        /// Sets the logger instance for logging policy operations.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
         /// <summary>
         /// Allows configuring automatic retries.
         /// </summary>
@@ -43,10 +55,11 @@ namespace Mvp24Hours.Infrastructure.Helpers
                     sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(sleepDuration, retryAttempt)),
                     onRetry: (exception, retryCount, context) =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-retry-unauthorized-policy-onretry", $"correlation-id: {context.CorrelationId}|messsage: Retry {retryCount} of {context.PolicyKey} at {context.OperationKey}, due to {exception}.");
+                        _logger?.LogWarning("Retry {RetryCount} of {PolicyKey} at {OperationKey} due to {ExceptionType}. CorrelationId: {CorrelationId}",
+                            retryCount, context.PolicyKey, context.OperationKey, exception?.GetType().Name, context.CorrelationId);
                         if (action != null)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-retry-unauthorized-policy-action", $"correlation-id: {context.CorrelationId}|messsage: Retry {retryCount} of {context.PolicyKey} at {context.OperationKey}, due to {exception}.");
+                            _logger?.LogDebug("Executing retry action for CorrelationId: {CorrelationId}", context.CorrelationId);
                             action(context.CorrelationId);
                         }
                     });
@@ -65,15 +78,16 @@ namespace Mvp24Hours.Infrastructure.Helpers
                     durationOfBreak: TimeSpan.FromSeconds(durationOfBreakInSeconds),
                     onBreak: (exception, sleepDuration) => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "polly-get-circuit-breaker-policy-onbreak-failure", exception, $"messsage: Circuit cut, request will not flow in {sleepDuration}.");
+                        _logger?.LogError(exception, "Circuit breaker opened. Requests will not flow for {Duration}. Policy: {PolicyKey}",
+                            sleepDuration, exception?.GetType().Name);
                     }),
                     onReset: () => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onreset", $"messsage: Circuit closed, request flow normally.");
+                        _logger?.LogInformation("Circuit breaker closed. Requests will flow normally.");
                     }),
                     onHalfOpen: () => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onhalfopen", $"messsage: Circuit in test mode, one request will be allowed.");
+                        _logger?.LogInformation("Circuit breaker half-open. One test request will be allowed.");
                     })
                 );
         }
@@ -91,28 +105,29 @@ namespace Mvp24Hours.Infrastructure.Helpers
                     durationOfBreak: TimeSpan.FromSeconds(durationOfBreakInSeconds),
                     onBreak: (exception, sleepDuration) => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "polly-get-circuit-breaker-policy-onbreak-failure", exception, $"messsage: Circuit cut, request will not flow in {sleepDuration}.");
+                        _logger?.LogError(exception, "Circuit breaker opened. Requests will not flow for {Duration}",
+                            sleepDuration);
                         if (action != null)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onbreak-action");
+                            _logger?.LogDebug("Executing onBreak action");
                             action("onBreak");
                         }
                     }),
                     onReset: () => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onreset", $"messsage: Circuit closed, request flow normally.");
+                        _logger?.LogInformation("Circuit breaker closed. Requests will flow normally.");
                         if (action != null)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onreset-action");
+                            _logger?.LogDebug("Executing onReset action");
                             action("onReset");
                         }
                     }),
                     onHalfOpen: () => Task.Run(() =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onhalfopen", $"messsage: Circuit in test mode, one request will be allowed.");
+                        _logger?.LogInformation("Circuit breaker half-open. One test request will be allowed.");
                         if (action != null)
                         {
-                            TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-circuit-breaker-policy-onhalfopen-action");
+                            _logger?.LogDebug("Executing onHalfOpen action");
                             action("onHalfOpen");
                         }
                     })
@@ -238,10 +253,11 @@ namespace Mvp24Hours.Infrastructure.Helpers
                 timeoutStrategy: TimeoutStrategy.Optimistic,
                 onTimeoutAsync: (context, sleepDuration, task, exception) => Task.Run(() =>
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "polly-get-timeout-policy-failure", exception);
+                    _logger?.LogError(exception, "Request timeout after {Timeout} seconds. CorrelationId: {CorrelationId}",
+                        sleepDuration.TotalSeconds, context.CorrelationId);
                     if (action != null)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "polly-get-timeout-policy-action", $"correlation-id:{context.CorrelationId}|exception:{exception}");
+                        _logger?.LogDebug("Executing timeout action for CorrelationId: {CorrelationId}", context.CorrelationId);
                         action(context.CorrelationId);
                     }
                 })

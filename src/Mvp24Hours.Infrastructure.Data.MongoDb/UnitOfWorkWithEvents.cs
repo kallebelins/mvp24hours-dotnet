@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 using System;
 using System.Collections.Concurrent;
@@ -161,7 +159,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public int SaveChanges(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechanges-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events SaveChanges operation started.");
             try
             {
                 DbContext.SaveChanges(cancellationToken);
@@ -174,14 +172,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechanges-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events SaveChanges operation completed.");
             }
         }
 
         /// <inheritdoc />
         public void Rollback()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-rollback-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events Rollback operation started.");
             try
             {
                 DbContext.Rollback();
@@ -189,7 +187,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-rollback-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events Rollback operation completed.");
             }
         }
 
@@ -200,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public int SaveChangesWithEvents(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangeswithevents-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesWithEvents operation started.");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -261,7 +259,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangeswithevents-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesWithEvents operation completed.");
             }
         }
 

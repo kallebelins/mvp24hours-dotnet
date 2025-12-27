@@ -10,9 +10,7 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Specifications;
@@ -69,23 +67,23 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listanyasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async ListAnyAsync operation started.");
             try
             {
                 return await ((IMongoQueryable<T>)GetQuery(null, true)).AnyAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listanyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async ListAnyAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<int> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listcountasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async ListCountAsync operation started.");
             try
             {
                 return await ((IMongoQueryable<T>)GetQuery(null, true)).CountAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listcountasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async ListCountAsync operation completed."); }
         }
 
         /// <inheritdoc />
@@ -97,18 +95,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async ListAsync operation started.");
             try
             {
                 return await ((IMongoQueryable<T>)GetQuery(criteria)).ToListAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-listasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async ListAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<bool> GetByAnyAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyanyasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByAnyAsync operation started.");
             try
             {
                 IMongoQueryable<T> query = dbEntities.AsQueryable();
@@ -118,13 +116,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return await ((IMongoQueryable<T>)GetQuery(query, null, true)).AnyAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyanyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByAnyAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<int> GetByCountAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbycountasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByCountAsync operation started.");
             try
             {
                 IMongoQueryable<T> query = dbEntities.AsQueryable();
@@ -134,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return await ((IMongoQueryable<T>)GetQuery(query, null, true)).CountAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbycountasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByCountAsync operation completed."); }
         }
 
         /// <inheritdoc />
@@ -146,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByAsync operation started.");
             try
             {
                 IMongoQueryable<T> query = dbEntities.AsQueryable();
@@ -156,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 }
                 return await ((IMongoQueryable<T>)GetQuery(query, criteria)).ToListAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByAsync operation completed."); }
         }
 
         /// <inheritdoc />
@@ -168,13 +166,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<T> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyidasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByIdAsync operation started.");
             try
             {
                 return await ((IMongoQueryable<T>)GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id))
                     .SingleOrDefaultAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyidasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByIdAsync operation completed."); }
         }
 
         #endregion
@@ -229,65 +227,65 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         public async Task<bool> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-anybyspecificationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async AnyBySpecificationAsync operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IMongoQueryable<T>)query).AnyAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-anybyspecificationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async AnyBySpecificationAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<int> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-countbyspecificationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async CountBySpecificationAsync operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IMongoQueryable<T>)query).CountAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-countbyspecificationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async CountBySpecificationAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<IList<T>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyspecificationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetBySpecificationAsync operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IMongoQueryable<T>)query).ToListAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbyspecificationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetBySpecificationAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<T?> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getsinglebyspecificationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetSingleBySpecificationAsync operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IMongoQueryable<T>)query).SingleOrDefaultAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getsinglebyspecificationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetSingleBySpecificationAsync operation completed."); }
         }
 
         /// <inheritdoc />
         public async Task<T?> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getfirstbyspecificationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetFirstBySpecificationAsync operation started.");
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IMongoQueryable<T>)query).FirstOrDefaultAsync(cancellationToken);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getfirstbyspecificationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetFirstBySpecificationAsync operation completed."); }
         }
 
         #endregion
@@ -303,7 +301,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             bool ascending = true,
             CancellationToken cancellationToken = default) where TKey : struct
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync operation started.");
             try
             {
                 IMongoQueryable<T> query = dbEntities.AsQueryable();
@@ -340,7 +338,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync operation completed."); }
         }
 
         /// <inheritdoc />
@@ -354,7 +352,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-spec-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync with specification operation started.");
             try
             {
                 var baseQuery = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
@@ -386,7 +384,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-spec-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync with specification operation completed."); }
         }
 
         /// <inheritdoc />
@@ -398,7 +396,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             bool ascending = true,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-string-start");
+            _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync (string key) operation started.");
             try
             {
                 IMongoQueryable<T> query = dbEntities.AsQueryable();
@@ -435,7 +433,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-readonlyrepositoryasync-getbykeysetpaginationasync-string-end"); }
+            finally { _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync (string key) operation completed."); }
         }
 
         #endregion

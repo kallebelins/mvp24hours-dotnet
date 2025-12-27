@@ -5,9 +5,8 @@
 //=====================================================================================
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -21,10 +20,20 @@ using System.Web;
 namespace Mvp24Hours.Extensions
 {
     /// <summary>
-    /// Contains functions for web requests
+    /// Extension methods for HttpClient to simplify HTTP requests.
     /// </summary>
     public static class HttpClientExtensions
     {
+        private static ILogger _logger;
+
+        /// <summary>
+        /// Sets the logger instance for logging HTTP client operations.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
         const string METHOD_GET = "GET";
         const string METHOD_POST = "POST";
         const string METHOD_PATCH = "PATCH";
@@ -143,7 +152,7 @@ namespace Mvp24Hours.Extensions
 
         public static async Task<string> HttpSendAsync(this HttpClient client, string url, Dictionary<string, string> headers, string method, string data)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-httpclient-start");
+            _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
@@ -159,7 +168,7 @@ namespace Mvp24Hours.Extensions
 
                 MediaTypeBuilder(headers, method, data, request);
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-httpclient-sendasync", $"url:{url}|method:{method}");
+                _logger?.LogDebug("Executing {Method} request to {Url}", method, urlRequest);
 
                 var response = await client.SendAsync(request);
 
@@ -172,21 +181,21 @@ namespace Mvp24Hours.Extensions
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    _logger?.LogWarning("HTTP request failed with status {StatusCode} {ReasonPhrase} for {Method} {Url}",
+                        response.StatusCode, response.ReasonPhrase, method, urlRequest);
                     throw new HttpStatusCodeException(response.ReasonPhrase, response.StatusCode, request.Method, request.RequestUri, responseContent);
                 }
 
                 response.EnsureSuccessStatusCode();
 
+                _logger?.LogDebug("Successfully received response from {Url} with status {StatusCode}", urlRequest, response.StatusCode);
+
                 return responseContent;
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "infra-httpclient-failure", ex);
+                _logger?.LogError(ex, "Error executing {Method} request to {Url}: {ErrorMessage}", method, url, ex.Message);
                 throw;
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "infra-httpclient-end");
             }
         }
 

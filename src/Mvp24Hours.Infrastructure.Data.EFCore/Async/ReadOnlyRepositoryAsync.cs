@@ -10,10 +10,8 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Specifications;
 using System;
@@ -53,29 +51,19 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listanyasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var result = await GetQuery(null, true).AnyAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listanyasync-end"); }
+            using var scope = CreateTransactionScope(true);
+            var result = await GetQuery(null, true).AnyAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<int> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listcountasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var result = await GetQuery(null, true).CountAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listcountasync-end"); }
+            using var scope = CreateTransactionScope(true);
+            var result = await GetQuery(null, true).CountAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -87,53 +75,38 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var result = await GetQuery(criteria).AsNoTracking().ToListAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-listasync-end"); }
+            using var scope = CreateTransactionScope();
+            var result = await GetQuery(criteria).AsNoTracking().ToListAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<bool> GetByAnyAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyanyasync-start");
-            try
+            using var scope = CreateTransactionScope(true);
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope(true);
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = await GetQuery(query, null, true).AnyAsync(cancellationToken);
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyanyasync-end"); }
+            var result = await GetQuery(query, null, true).AnyAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<int> GetByCountAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbycountasync-start");
-            try
+            using var scope = CreateTransactionScope(true);
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope(true);
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = await GetQuery(query, null, true).CountAsync(cancellationToken);
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbycountasync-end"); }
+            var result = await GetQuery(query, null, true).CountAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -145,20 +118,15 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyasync-start");
-            try
+            using var scope = CreateTransactionScope();
+            var query = dbEntities.AsQueryable();
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-                var query = dbEntities.AsQueryable();
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-                var result = await GetQuery(query, criteria).AsNoTracking().ToListAsync(cancellationToken);
-                scope?.Complete();
-                return result;
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyasync-end"); }
+            var result = await GetQuery(query, criteria).AsNoTracking().ToListAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
@@ -170,15 +138,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyidasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyidasync-end"); }
+            using var scope = CreateTransactionScope();
+            var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         #endregion
@@ -189,94 +152,74 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationasync-start");
-            try
-            {
-                return dbContext.Entry(entity).Reference(propertyExpression).LoadAsync(cancellationToken);
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationasync-end"); }
+            return dbContext.Entry(entity).Reference(propertyExpression).LoadAsync(cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationasync-collection-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                await query.ToListAsync(cancellationToken);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationasync-collection-end"); }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            await query.ToListAsync(cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationsortbyascendingasync-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (orderKey != null)
-                {
-                    query = query.OrderBy(orderKey);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                await query.ToListAsync(cancellationToken);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationsortbyascendingasync-end"); }
+
+            if (orderKey != null)
+            {
+                query = query.OrderBy(orderKey);
+            }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            await query.ToListAsync(cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationsortbydescendingasync-start");
-            try
+            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+
+            if (clause != null)
             {
-                var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
-
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                if (orderKey != null)
-                {
-                    query = query.OrderByDescending(orderKey);
-                }
-
-                if (limit > 0)
-                {
-                    query = query.Take(limit);
-                }
-
-                await query.ToListAsync(cancellationToken);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-loadrelationsortbydescendingasync-end"); }
+
+            if (orderKey != null)
+            {
+                query = query.OrderByDescending(orderKey);
+            }
+
+            if (limit > 0)
+            {
+                query = query.Take(limit);
+            }
+
+            await query.ToListAsync(cancellationToken);
         }
 
         #endregion
@@ -287,80 +230,55 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<bool> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-anybyspecificationasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = await query.AnyAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-anybyspecificationasync-end"); }
+            using var scope = CreateTransactionScope(true);
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = await query.AnyAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<int> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-countbyspecificationasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope(true);
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = await query.CountAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-countbyspecificationasync-end"); }
+            using var scope = CreateTransactionScope(true);
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = await query.CountAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<IList<T>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyspecificationasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = await query.AsNoTracking().ToListAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbyspecificationasync-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = await query.AsNoTracking().ToListAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<T?> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getsinglebyspecificationasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = await query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getsinglebyspecificationasync-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = await query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         /// <inheritdoc />
         public async Task<T?> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getfirstbyspecificationasync-start");
-            try
-            {
-                using var scope = CreateTransactionScope();
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                var result = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
-                scope?.Complete();
-                return result;
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getfirstbyspecificationasync-end"); }
+            using var scope = CreateTransactionScope();
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            var result = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+            scope?.Complete();
+            return result;
         }
 
         #endregion
@@ -376,48 +294,43 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             bool ascending = true,
             CancellationToken cancellationToken = default) where TKey : struct
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = dbEntities.AsQueryable();
+
+            // Apply filter clause
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = dbEntities.AsQueryable();
-
-                // Apply filter clause
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                // Apply keyset condition
-                if (lastKey.HasValue)
-                {
-                    query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
-                }
-
-                // Apply ordering
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                TKey? lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-end"); }
+
+            // Apply keyset condition
+            if (lastKey.HasValue)
+            {
+                query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
+            }
+
+            // Apply ordering
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            TKey? lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
         }
 
         /// <inheritdoc />
@@ -431,42 +344,37 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-spec-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+
+            // Apply keyset condition
+            if (lastKey.HasValue)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-
-                // Apply keyset condition
-                if (lastKey.HasValue)
-                {
-                    query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
-                }
-
-                // Apply ordering (override specification ordering for keyset)
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                TKey? lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
+                query = ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-spec-end"); }
+
+            // Apply ordering (override specification ordering for keyset)
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            TKey? lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResult<T, TKey>(items, lastKeyValue, hasMore, pageSize);
         }
 
         /// <inheritdoc />
@@ -478,48 +386,43 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             bool ascending = true,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-string-start");
-            try
+            using var scope = CreateTransactionScope();
+
+            var query = dbEntities.AsQueryable();
+
+            // Apply filter clause
+            if (clause != null)
             {
-                using var scope = CreateTransactionScope();
-
-                var query = dbEntities.AsQueryable();
-
-                // Apply filter clause
-                if (clause != null)
-                {
-                    query = query.Where(clause);
-                }
-
-                // Apply keyset condition
-                if (!string.IsNullOrEmpty(lastKey))
-                {
-                    query = ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
-                }
-
-                // Apply ordering
-                query = ascending
-                    ? query.OrderBy(keySelector)
-                    : query.OrderByDescending(keySelector);
-
-                // Fetch one extra item to determine if there are more pages
-                var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
-
-                var hasMore = items.Count > pageSize;
-                if (hasMore)
-                {
-                    items.RemoveAt(items.Count - 1);
-                }
-
-                var lastKeyValue = items.Count > 0
-                    ? keySelector.Compile()(items[^1])
-                    : lastKey;
-
-                scope?.Complete();
-
-                return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
+                query = query.Where(clause);
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-readonlyrepositoryasync-getbykeysetpaginationasync-string-end"); }
+
+            // Apply keyset condition
+            if (!string.IsNullOrEmpty(lastKey))
+            {
+                query = ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
+            }
+
+            // Apply ordering
+            query = ascending
+                ? query.OrderBy(keySelector)
+                : query.OrderByDescending(keySelector);
+
+            // Fetch one extra item to determine if there are more pages
+            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+
+            var hasMore = items.Count > pageSize;
+            if (hasMore)
+            {
+                items.RemoveAt(items.Count - 1);
+            }
+
+            var lastKeyValue = items.Count > 0
+                ? keySelector.Compile()(items[^1])
+                : lastKey;
+
+            scope?.Complete();
+
+            return new KeysetPageResultString<T>(items, lastKeyValue, hasMore, pageSize);
         }
 
         #endregion

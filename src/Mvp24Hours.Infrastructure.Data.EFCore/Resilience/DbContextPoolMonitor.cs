@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Threading;
@@ -65,8 +63,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Information, "pool-monitor-started",
-                $"DbContext pool monitoring started. Interval: {_options.PoolStatisticsLogIntervalSeconds}s");
+            _logger?.LogInformation(
+                "DbContext pool monitoring started. Interval: {IntervalSeconds}s",
+                _options.PoolStatisticsLogIntervalSeconds);
 
             var interval = TimeSpan.FromSeconds(_options.PoolStatisticsLogIntervalSeconds);
 
@@ -84,15 +83,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pool-monitor-error",
-                        $"Error logging pool statistics: {ex.Message}");
-
                     _logger?.LogError(ex, "Error in DbContext pool monitor");
                 }
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Information, "pool-monitor-stopped",
-                "DbContext pool monitoring stopped");
+            _logger?.LogInformation("DbContext pool monitoring stopped");
         }
 
         /// <summary>
@@ -126,15 +121,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 ? (double)stats.PoolHits / stats.TotalRequests * 100
                 : 0;
 
-            var message = $"DbContext Pool Stats - " +
-                         $"Active: {stats.ActiveContexts}, " +
-                         $"Hits: {stats.PoolHits}, " +
-                         $"Misses: {stats.PoolMisses}, " +
-                         $"Hit Ratio: {hitRatio:F1}%, " +
-                         $"Avg Checkout: {stats.AverageCheckoutTimeMs:F2}ms";
-
-            TelemetryHelper.Execute(TelemetryLevels.Information, "pool-monitor-stats", message);
-
             _logger?.LogInformation(
                 "DbContext Pool Stats - Active: {ActiveContexts}, Hits: {PoolHits}, Misses: {PoolMisses}, " +
                 "Hit Ratio: {HitRatio:F1}%, Avg Checkout: {AvgCheckoutMs:F2}ms",
@@ -147,9 +133,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
             // Warn if hit ratio is low
             if (stats.TotalRequests > 100 && hitRatio < 50)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "pool-monitor-low-hit-ratio",
-                    $"Low pool hit ratio ({hitRatio:F1}%). Consider increasing pool size.");
-
                 _logger?.LogWarning(
                     "Low DbContext pool hit ratio ({HitRatio:F1}%). Consider increasing pool size from {CurrentSize}.",
                     hitRatio,

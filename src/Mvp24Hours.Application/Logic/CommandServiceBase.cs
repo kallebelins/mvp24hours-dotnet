@@ -4,13 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 
@@ -66,6 +65,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IRepository<TEntity> _repository;
         private readonly TUoW _unitOfWork;
         private readonly IValidator<TEntity>? _validator;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -82,6 +82,11 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         protected virtual IValidator<TEntity>? Validator => _validator;
 
+        /// <summary>
+        /// Gets the logger instance for logging operations.
+        /// </summary>
+        protected virtual ILogger? Logger => _logger;
+
         #endregion
 
         #region [ Constructors ]
@@ -92,7 +97,7 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="unitOfWork">The unit of work for transaction management.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected CommandServiceBase(TUoW unitOfWork)
-            : this(unitOfWork, null)
+            : this(unitOfWork, null, null)
         {
         }
 
@@ -103,10 +108,23 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="validator">The validator for entity validation.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected CommandServiceBase(TUoW unitOfWork, IValidator<TEntity>? validator)
+            : this(unitOfWork, validator, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandServiceBase{TEntity, TUoW}"/> class.
+        /// </summary>
+        /// <param name="unitOfWork">The unit of work for transaction management.</param>
+        /// <param name="validator">The validator for entity validation.</param>
+        /// <param name="logger">The logger for logging operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
+        protected CommandServiceBase(TUoW unitOfWork, IValidator<TEntity>? validator, ILogger? logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = unitOfWork.GetRepository<TEntity>();
             _validator = validator;
+            _logger = logger;
         }
 
         #endregion
@@ -116,7 +134,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Add(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-add");
+            _logger?.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -130,7 +148,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Add(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-addlist");
+            _logger?.LogDebug("[{ServiceName}] Executing Add for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -157,7 +175,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Modify(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-modify");
+            _logger?.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -171,7 +189,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-modifylist");
+            _logger?.LogDebug("[{ServiceName}] Executing Modify for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -198,7 +216,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Remove(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-remove");
+            _logger?.LogDebug("[{ServiceName}] Executing Remove for {EntityType}", GetType().Name, typeof(TEntity).Name);
             _repository.Remove(entity);
             return _unitOfWork.SaveChanges().ToBusiness();
         }
@@ -206,7 +224,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-removelist");
+            _logger?.LogDebug("[{ServiceName}] Executing Remove for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -224,7 +242,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-removebyid");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             _repository.RemoveById(id);
             return _unitOfWork.SaveChanges().ToBusiness();
         }
@@ -232,7 +250,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebase-removebyidlist");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveById for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
 
             if (!ids.AnySafe())
             {
@@ -250,4 +268,3 @@ namespace Mvp24Hours.Application.Logic
         #endregion
     }
 }
-

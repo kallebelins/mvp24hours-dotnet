@@ -5,9 +5,7 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
@@ -99,11 +97,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             await _store.AddAsync(scheduledMessage, cancellationToken);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-message-scheduled",
-                $"id:{scheduledMessage.Id}|scheduledTime:{scheduledTime:O}|type:{typeof(T).Name}");
-
             _logger?.LogInformation(
                 "Scheduled message {MessageId} of type {MessageType} for {ScheduledTime}",
                 scheduledMessage.Id, typeof(T).Name, scheduledTime);
@@ -171,11 +164,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             await _store.AddAsync(scheduledMessage, cancellationToken);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-recurring-message-scheduled",
-                $"id:{scheduledMessage.Id}|interval:{interval}|type:{typeof(T).Name}");
-
             _logger?.LogInformation(
                 "Scheduled recurring message {MessageId} of type {MessageType} with interval {Interval}",
                 scheduledMessage.Id, typeof(T).Name, interval);
@@ -226,11 +214,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             await _store.AddAsync(scheduledMessage, cancellationToken);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-cron-message-scheduled",
-                $"id:{scheduledMessage.Id}|cron:{cronExpression}|type:{typeof(T).Name}");
-
             _logger?.LogInformation(
                 "Scheduled CRON message {MessageId} of type {MessageType} with expression {CronExpression}",
                 scheduledMessage.Id, typeof(T).Name, cronExpression);
@@ -260,11 +243,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             message.ProcessedAt = DateTimeOffset.UtcNow;
             await _store.UpdateAsync(message, cancellationToken);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-message-cancelled",
-                $"id:{scheduledMessageId}");
-
             _logger?.LogInformation("Cancelled scheduled message {MessageId}", scheduledMessageId);
 
             return true;
@@ -288,11 +266,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             message.Status = ScheduledMessageStatus.Paused;
             await _store.UpdateAsync(message, cancellationToken);
-
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-recurring-message-paused",
-                $"id:{recurringMessageId}");
 
             _logger?.LogInformation("Paused recurring message {MessageId}", recurringMessageId);
 
@@ -331,11 +304,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             message.Status = ScheduledMessageStatus.Active;
             await _store.UpdateAsync(message, cancellationToken);
-
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "rabbitmq-scheduler-recurring-message-resumed",
-                $"id:{recurringMessageId}|nextExecution:{message.NextExecutionTime:O}");
 
             _logger?.LogInformation(
                 "Resumed recurring message {MessageId}, next execution at {NextExecutionTime}",
@@ -411,11 +379,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                     {
                         await _store.MarkAsCompletedAsync(message.Id, cancellationToken);
                     }
-
-                    TelemetryHelper.Execute(
-                        TelemetryLevels.Information,
-                        "rabbitmq-scheduler-message-delivered",
-                        $"id:{message.Id}|type:{message.MessageType}");
 
                     _logger?.LogDebug("Delivered scheduled message {MessageId}", message.Id);
                 }
@@ -544,11 +507,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             message.RetryCount++;
             message.LastError = ex.Message;
-
-            TelemetryHelper.Execute(
-                TelemetryLevels.Warning,
-                "rabbitmq-scheduler-message-failed",
-                $"id:{message.Id}|retry:{message.RetryCount}|error:{ex.Message}");
 
             _logger?.LogWarning(ex,
                 "Failed to deliver scheduled message {MessageId}, attempt {RetryCount}/{MaxRetries}",

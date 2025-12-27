@@ -6,9 +6,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 
@@ -50,8 +48,6 @@ public static class MongoDbTestingExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursMongoFakeRepository(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addfakerepository-execute");
-
         services.AddSingleton<MongoUnitOfWorkFake>();
         services.AddSingleton<IUnitOfWork>(sp => sp.GetRequiredService<MongoUnitOfWorkFake>());
         services.AddSingleton(typeof(IRepository<>), typeof(MongoRepositoryFake<>));
@@ -82,8 +78,6 @@ public static class MongoDbTestingExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursMongoFakeRepositoryAsync(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addfakerepositoryasync-execute");
-
         services.AddSingleton<MongoUnitOfWorkFakeAsync>();
         services.AddSingleton<IUnitOfWorkAsync>(sp => sp.GetRequiredService<MongoUnitOfWorkFakeAsync>());
         services.AddSingleton(typeof(IRepositoryAsync<>), typeof(MongoRepositoryFakeAsync<>));
@@ -114,8 +108,6 @@ public static class MongoDbTestingExtensions
         Action<MongoRepositoryFake<TEntity>> seedAction)
         where TEntity : class, IEntityBase
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addfakerepositorywithdata-execute");
-
         var repository = new MongoRepositoryFake<TEntity>();
         seedAction?.Invoke(repository);
 
@@ -137,8 +129,6 @@ public static class MongoDbTestingExtensions
         Action<MongoRepositoryFakeAsync<TEntity>> seedAction)
         where TEntity : class, IEntityBase
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addfakerepositoryasyncwithdata-execute");
-
         var repository = new MongoRepositoryFakeAsync<TEntity>();
         seedAction?.Invoke(repository);
 
@@ -171,8 +161,6 @@ public static class MongoDbTestingExtensions
         this IServiceCollection services,
         Action<MongoDbInMemoryOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addinmemoryprovider-execute");
-
         var options = new MongoDbInMemoryOptions();
         configureOptions?.Invoke(options);
 
@@ -217,8 +205,6 @@ public static class MongoDbTestingExtensions
         string connectionString,
         Action<MongoDbInMemoryOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addcontextfactory-execute");
-
         var options = new MongoDbInMemoryOptions
         {
             ConnectionString = connectionString
@@ -243,8 +229,6 @@ public static class MongoDbTestingExtensions
         Func<MongoDbOptions, Mvp24HoursContext> contextFactory,
         Action<MongoDbInMemoryOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addcontextfactorywithcustom-execute");
-
         var options = new MongoDbInMemoryOptions();
         configureOptions?.Invoke(options);
 
@@ -293,8 +277,6 @@ public static class MongoDbTestingExtensions
         string connectionString,
         Action<MongoDbOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addtestinfrastructure-execute");
-
         var databaseName = $"TestDb_{Guid.NewGuid():N}";
 
         services.AddMvp24HoursDbContext(options =>
@@ -327,8 +309,6 @@ public static class MongoDbTestingExtensions
         string connectionString)
         where TSeeder : class, IMongoDataSeeder, new()
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addtestinfrastructurewithseeder-execute");
-
         services.AddMvp24HoursMongoTestInfrastructure(connectionString);
         services.AddSingleton<IMongoDataSeeder, TSeeder>();
 
@@ -361,8 +341,6 @@ public static class MongoDbTestingExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursMongoFakeTestInfrastructure(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbtestingextensions-addfaketestinfrastructure-execute");
-
         services.AddMvp24HoursMongoFakeRepository();
         services.AddMvp24HoursMongoFakeRepositoryAsync();
 

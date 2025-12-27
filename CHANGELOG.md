@@ -7,7 +7,24 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Não Lançado]
 
+### Descontinuado (Deprecated)
+- **⚠️ Sistema de Telemetria Legado**: Marcado para remoção na próxima major version
+  - `TelemetryHelper` - Use `ILogger<T>` (Microsoft.Extensions.Logging) em seu lugar
+  - `TelemetryLevels` enum - Use `Microsoft.Extensions.Logging.LogLevel` em seu lugar
+  - `ITelemetryService` interface - Use `ILogger<T>` ou implemente `ILoggerProvider` em seu lugar
+  - `AddMvp24HoursTelemetry()` extensions - Use `AddLogging()` em seu lugar
+  - `AddMvp24HoursTelemetryFiltered()` extensions - Use `AddLogging()` com `AddFilter()` em seu lugar
+  - `AddMvp24HoursTelemetryIgnore()` extensions - Use `AddLogging()` com filtros configurados em seu lugar
+  - **Guia de Migração**: Consulte `docs/pt-br/observability/migration.md` (PT-BR) ou `docs/en-us/observability/migration.md` (EN-US)
+  - **Motivação**: Adoção do padrão da indústria (`ILogger<T>`) e OpenTelemetry para observabilidade moderna
+
 ### Adicionado
+- **Documentação de Migração de Observabilidade**: Guias completos bilíngues para migração do TelemetryHelper
+  - `docs/pt-br/observability/migration.md` - Guia em português
+  - `docs/en-us/observability/migration.md` - Guia em inglês
+  - Exemplos de código antes/depois
+  - Checklist de migração
+  - Mapeamento de APIs antigas para novas
 - Hierarquia completa de exceções customizadas para melhor tratamento de erros
   - `Mvp24HoursException` - Exceção base com ErrorCode e Context
   - `DataException` - Erros de acesso a dados

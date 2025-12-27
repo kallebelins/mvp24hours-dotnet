@@ -3,12 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -71,8 +70,7 @@ namespace Mvp24Hours.Extensions
             // Bypass filter if no tenant is set
             if (string.IsNullOrEmpty(tenantProvider.TenantId))
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-tenant-filter-bypass-no-tenant");
+                _logger?.LogDebug("Bypassing tenant filter for entity {EntityType} - no tenant set", typeof(T).Name);
                 return query;
             }
 
@@ -85,9 +83,7 @@ namespace Mvp24Hours.Extensions
             var equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
             var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                $"mongodb-tenant-filter-applied-{typeof(T).Name}",
-                new { EntityType = typeof(T).Name, TenantId = tenantId });
+            _logger?.LogDebug("Applied tenant filter for entity {EntityType} with TenantId {TenantId}", typeof(T).Name, tenantId);
 
             return query.Where(lambda);
         }
@@ -237,9 +233,8 @@ namespace Mvp24Hours.Extensions
 
             var filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
             
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                $"mongodb-tenant-aggregate-match-{typeof(T).Name}",
-                new { TenantId = tenantProvider.TenantId });
+            _logger?.LogDebug("Applied tenant filter to aggregation pipeline for entity {EntityType} with TenantId {TenantId}",
+                typeof(T).Name, tenantProvider.TenantId);
 
             return aggregate.Match(filter);
         }

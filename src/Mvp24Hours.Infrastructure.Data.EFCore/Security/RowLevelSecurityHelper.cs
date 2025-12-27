@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,18 +62,22 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
     {
         private readonly ITenantProvider _tenantProvider;
         private readonly string _defaultSessionContextKey;
+        private readonly ILogger<RowLevelSecurityHelper>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RowLevelSecurityHelper"/> class.
         /// </summary>
         /// <param name="tenantProvider">Optional tenant provider for automatic context setting.</param>
         /// <param name="sessionContextKey">The session context key for tenant ID. Default is "TenantId".</param>
+        /// <param name="logger">Optional logger for telemetry.</param>
         public RowLevelSecurityHelper(
-            ITenantProvider tenantProvider = null,
-            string sessionContextKey = "TenantId")
+            ITenantProvider? tenantProvider = null,
+            string sessionContextKey = "TenantId",
+            ILogger<RowLevelSecurityHelper>? logger = null)
         {
             _tenantProvider = tenantProvider;
             _defaultSessionContextKey = sessionContextKey;
+            _logger = logger;
         }
 
         #region SQL Server RLS
@@ -184,8 +188,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
                 new System.Data.SqlClient.SqlParameter("@tenantId", 
                     tenantId ?? (object)DBNull.Value));
 
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"rls-sql-server-context-set-{tenantId}");
+            _logger?.LogDebug("SQL Server tenant context set. TenantId: {TenantId}", tenantId);
         }
 
         /// <summary>
@@ -207,8 +210,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
                     tenantId ?? (object)DBNull.Value) },
                 cancellationToken);
 
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"rls-sql-server-context-set-async-{tenantId}");
+            _logger?.LogDebug("SQL Server tenant context set (async). TenantId: {TenantId}", tenantId);
         }
 
         /// <summary>
@@ -317,8 +319,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
                 : "RESET app.current_tenant_id";
             context.Database.ExecuteSqlRaw(sql);
 
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"rls-postgresql-context-set-{tenantId}");
+            _logger?.LogDebug("PostgreSQL tenant context set. TenantId: {TenantId}", tenantId);
         }
 
         /// <summary>
@@ -339,8 +340,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
                 : "RESET app.current_tenant_id";
             await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
 
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"rls-postgresql-context-set-async-{tenantId}");
+            _logger?.LogDebug("PostgreSQL tenant context set (async). TenantId: {TenantId}", tenantId);
         }
 
         /// <summary>

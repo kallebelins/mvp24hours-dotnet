@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -34,14 +33,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         private readonly Random _random = new();
         private readonly HashSet<Type> _retryableExceptions;
         private readonly HashSet<Type> _nonRetryableExceptions;
+        private readonly ILogger<MongoDbRetryPolicy> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbRetryPolicy"/> class.
         /// </summary>
         /// <param name="options">The resiliency options.</param>
-        public MongoDbRetryPolicy(MongoDbResiliencyOptions options)
+        /// <param name="logger">The logger instance.</param>
+        public MongoDbRetryPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbRetryPolicy> logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger;
 
             // Build retryable exceptions set
             _retryableExceptions = new HashSet<Type>
@@ -102,14 +104,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
                     if (attempt > 0 && _options.LogRetryAttempts)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                            "mongodb-retry-attempt",
-                            new
-                            {
-                                Attempt = attempt,
-                                MaxAttempts = _options.RetryCount,
-                                LastException = lastException?.GetType().Name
-                            });
+                        _logger?.LogDebug(
+                            "MongoDB retry attempt: Attempt={Attempt}, MaxAttempts={MaxAttempts}, LastException={LastException}",
+                            attempt,
+                            _options.RetryCount,
+                            lastException?.GetType().Name);
                     }
 
                     return await operation(cancellationToken);
@@ -146,15 +145,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
             if (_options.LogRetryAttempts)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Warning,
-                    "mongodb-retry-exhausted",
-                    new
-                    {
-                        TotalAttempts = attempt,
-                        TotalDuration = totalDuration.TotalMilliseconds,
-                        LastException = lastException?.GetType().Name,
-                        LastExceptionMessage = lastException?.Message
-                    });
+                _logger?.LogWarning(
+                    "MongoDB retry exhausted: TotalAttempts={TotalAttempts}, TotalDuration={TotalDuration}ms, LastException={LastException}, LastExceptionMessage={LastExceptionMessage}",
+                    attempt,
+                    totalDuration.TotalMilliseconds,
+                    lastException?.GetType().Name,
+                    lastException?.Message);
             }
 
             throw new MongoDbRetryExhaustedException(attempt, totalDuration, lastException);

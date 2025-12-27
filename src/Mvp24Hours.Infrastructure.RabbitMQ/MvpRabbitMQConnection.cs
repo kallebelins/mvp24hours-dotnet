@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Polly;
@@ -20,18 +19,20 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1859:Use concrete types when possible for improved performance", Justification = "Allows you to implement specialized rules.")]
         private readonly IConnectionFactory _connectionFactory;
         private readonly RabbitMQConnectionOptions _options;
+        private readonly ILogger<MvpRabbitMQConnection>? _logger;
         private IConnection _connection;
         private bool _disposed;
         private readonly object sync_root = new();
 
-        public MvpRabbitMQConnection(IOptions<RabbitMQConnectionOptions> _options)
-            : this(_options?.Value ?? throw new ArgumentNullException(nameof(_options)))
+        public MvpRabbitMQConnection(IOptions<RabbitMQConnectionOptions> _options, ILogger<MvpRabbitMQConnection>? logger = null)
+            : this(_options?.Value ?? throw new ArgumentNullException(nameof(_options)), logger)
         {
         }
 
-        public MvpRabbitMQConnection(RabbitMQConnectionOptions _options)
+        public MvpRabbitMQConnection(RabbitMQConnectionOptions _options, ILogger<MvpRabbitMQConnection>? logger = null)
         {
             ArgumentNullException.ThrowIfNull(_options);
+            _logger = logger;
 
             if (_options.ConnectionString.HasValue())
             {
@@ -83,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         public bool TryConnect()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-connection-tryconnect", "RabbitMQ Client is trying to connect");
+            _logger?.LogInformation("RabbitMQ Client is trying to connect");
 
             lock (sync_root)
             {
@@ -91,7 +92,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     .Or<BrokerUnreachableException>()
                     .WaitAndRetry(_options.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-connection-tryconnect-waitandretry", $"RabbitMQ Client could not connect after {time.TotalSeconds:n1}s ({ex.Message})");
+                        _logger?.LogWarning(ex,
+                            "RabbitMQ Client could not connect after {ElapsedSeconds}s",
+                            time.TotalSeconds);
                     }
                 );
 
@@ -104,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     }
                     catch (Exception ex)
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-connection-tryconnect-failure", $"RabbitMQ Client could not connect. ({ex.Message}).");
+                        _logger?.LogError(ex, "RabbitMQ Client could not connect");
                     }
                 });
 
@@ -114,12 +117,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _connection.CallbackException += OnCallbackException;
                     _connection.ConnectionBlocked += OnConnectionBlocked;
 
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-connection-subscribe", $"RabbitMQ Client acquired a persistent connection to '{_connection.Endpoint.HostName}' and is subscribed to failure events");
+                    _logger?.LogInformation(
+                        "RabbitMQ Client acquired a persistent connection to '{HostName}' and is subscribed to failure events",
+                        _connection.Endpoint.HostName);
                     return true;
                 }
                 else
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Critical, "rabbitmq-connection-tryconnect-error", "FATAL ERROR: RabbitMQ connections could not be created and opened");
+                    _logger?.LogCritical("FATAL ERROR: RabbitMQ connections could not be created and opened");
                     return false;
                 }
             }
@@ -131,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             if (_disposed) return;
 
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-connection-tryconnect-subscribe-blocked", "A RabbitMQ connection is shutdown. Trying to re-connect...");
+            _logger?.LogWarning("A RabbitMQ connection is blocked. Trying to re-connect...");
 
             TryConnect();
         }
@@ -140,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             if (_disposed) return;
 
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-connection-tryconnect-subscribe-callback", "A RabbitMQ connection throw exception. Trying to re-connect...");
+            _logger?.LogWarning(e.Exception, "A RabbitMQ connection threw exception. Trying to re-connect...");
 
             TryConnect();
         }
@@ -149,7 +154,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             if (_disposed) return;
 
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-connection-tryconnect-subscribe-shutdown", "A RabbitMQ connection is on shutdown. Trying to re-connect...");
+            _logger?.LogWarning(
+                "A RabbitMQ connection is on shutdown. Reason={Reason}, ReplyCode={ReplyCode}, ReplyText={ReplyText}. Trying to re-connect...",
+                reason.ReplyText, reason.ReplyCode, reason.ReplyText);
 
             TryConnect();
         }
@@ -178,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 }
                 catch (IOException ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Critical, "rabbitmq-connection-dispose-failure", ex);
+                    _logger?.LogCritical(ex, "Error disposing RabbitMQ connection");
                 }
             }
         }

@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 using System.Collections.Concurrent;
@@ -58,6 +57,7 @@ public class MongoDbContextFactory : IDisposable
     private readonly Func<MongoDbOptions, Mvp24HoursContext>? _contextFactory;
     private readonly ITenantProvider? _tenantProvider;
     private readonly ICurrentUserProvider? _currentUserProvider;
+    private readonly ILogger<MongoDbContextFactory>? _logger;
     private bool _disposed;
 
     /// <summary>
@@ -81,13 +81,11 @@ public class MongoDbContextFactory : IDisposable
     /// Initializes a new instance with the specified options.
     /// </summary>
     /// <param name="options">The configuration options.</param>
-    public MongoDbContextFactory(MongoDbInMemoryOptions options)
+    /// <param name="logger">The logger instance.</param>
+    public MongoDbContextFactory(MongoDbInMemoryOptions options, ILogger<MongoDbContextFactory>? logger = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-
-        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-            "mongodbcontextfactory-created",
-            new { DatabasePrefix = options.DatabaseNamePrefix });
+        _logger = logger;
     }
 
     /// <summary>
@@ -95,6 +93,7 @@ public class MongoDbContextFactory : IDisposable
     /// </summary>
     /// <param name="options">The configuration options.</param>
     /// <param name="contextFactory">Factory function to create the context.</param>
+    /// <param name="logger">The logger instance.</param>
     /// <remarks>
     /// Use this constructor when your context requires additional dependencies
     /// beyond just MongoDbOptions.
@@ -109,8 +108,9 @@ public class MongoDbContextFactory : IDisposable
     /// </example>
     public MongoDbContextFactory(
         MongoDbInMemoryOptions options,
-        Func<MongoDbOptions, Mvp24HoursContext> contextFactory)
-        : this(options)
+        Func<MongoDbOptions, Mvp24HoursContext> contextFactory,
+        ILogger<MongoDbContextFactory>? logger = null)
+        : this(options, logger)
     {
         _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
     }
@@ -121,11 +121,13 @@ public class MongoDbContextFactory : IDisposable
     /// <param name="options">The configuration options.</param>
     /// <param name="tenantProvider">The tenant provider.</param>
     /// <param name="currentUserProvider">The current user provider.</param>
+    /// <param name="logger">The logger instance.</param>
     public MongoDbContextFactory(
         MongoDbInMemoryOptions options,
         ITenantProvider? tenantProvider,
-        ICurrentUserProvider? currentUserProvider = null)
-        : this(options)
+        ICurrentUserProvider? currentUserProvider = null,
+        ILogger<MongoDbContextFactory>? logger = null)
+        : this(options, logger)
     {
         _tenantProvider = tenantProvider;
         _currentUserProvider = currentUserProvider;
@@ -141,21 +143,16 @@ public class MongoDbContextFactory : IDisposable
     /// </remarks>
     public Mvp24HoursContext CreateContext()
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbcontextfactory-createcontext-start");
+        _logger?.LogDebug("MongoDB context factory: Creating context");
 
-        try
-        {
-            var mongoOptions = BuildMongoDbOptions();
-            var context = CreateContextInstance(mongoOptions);
+        var mongoOptions = BuildMongoDbOptions();
+        var context = CreateContextInstance(mongoOptions);
 
-            _createdContexts.Add(context);
+        _createdContexts.Add(context);
 
-            return context;
-        }
-        finally
-        {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodbcontextfactory-createcontext-end");
-        }
+        _logger?.LogDebug("MongoDB context factory: Context created successfully");
+
+        return context;
     }
 
     /// <summary>
@@ -314,9 +311,7 @@ public class MongoDbContextFactory : IDisposable
 
         context.MongoClient.DropDatabase(context.DatabaseName);
 
-        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-            "mongodbcontextfactory-droppeddatabase",
-            new { DatabaseName = context.DatabaseName });
+        _logger?.LogDebug("MongoDB context factory: Dropped database {DatabaseName}", context.DatabaseName);
     }
 
     /// <summary>
@@ -330,9 +325,7 @@ public class MongoDbContextFactory : IDisposable
 
         await context.MongoClient.DropDatabaseAsync(context.DatabaseName, cancellationToken);
 
-        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-            "mongodbcontextfactory-droppeddatabaseasync",
-            new { DatabaseName = context.DatabaseName });
+        _logger?.LogDebug("MongoDB context factory: Dropped database async {DatabaseName}", context.DatabaseName);
     }
 
     /// <inheritdoc />

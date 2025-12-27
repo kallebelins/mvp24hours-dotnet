@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,10 +104,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 exception,
                 "Executing fallback for failed operation");
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Verbose,
-                "pipe-fallback-middleware-start",
-                $"exception:{exception?.GetType().Name ?? "null"}");
+            _logger?.LogDebug(
+                "FallbackMiddleware: Starting fallback. Exception: {ExceptionType}",
+                exception?.GetType().Name ?? "null");
 
             // Notify fallback starting
             fallbackOperation?.OnFallbackStarting(exception);
@@ -147,10 +144,6 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 _defaultOptions.OnFallbackCompleted?.Invoke();
 
                 _logger?.LogInformation("Fallback executed successfully");
-
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Verbose,
-                    "pipe-fallback-middleware-success");
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -162,11 +155,6 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 _logger?.LogError(
                     fallbackEx,
                     "Fallback execution failed");
-
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Error,
-                    "pipe-fallback-middleware-failure",
-                    $"fallbackError:{fallbackEx.Message}");
 
                 // Notify fallback failed
                 fallbackOperation?.OnFallbackFailed(fallbackEx);

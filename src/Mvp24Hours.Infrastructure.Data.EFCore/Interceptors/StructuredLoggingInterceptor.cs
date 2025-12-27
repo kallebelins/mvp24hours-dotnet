@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 using System;
 using System.Collections.Generic;
@@ -237,11 +235,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
     {
         if (_logger == null)
         {
-            TelemetryHelper.Execute(
-                TelemetryLevels.Verbose,
-                "efcore-command-executed",
-                $"[{operation}] Duration: {duration.TotalMilliseconds:F2}ms, Type: {commandType}, SQL: {TruncateSql(command.CommandText)}");
-            return;
+            return; // No logger available, skip logging
         }
 
         using (_logger.BeginScope(new Dictionary<string, object?>
@@ -302,14 +296,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         });
 
-        if (_logger != null)
-        {
-            _logger.Log(_commandLogLevel, json);
-        }
-        else
-        {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-command-json", json);
-        }
+        _logger?.Log(_commandLogLevel, json);
     }
 
     private void LogError(DbCommand command, Exception exception, TimeSpan duration)
@@ -319,24 +306,14 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
         // Record error metrics
         _metrics?.RecordQueryError(exception.GetType().Name, command.Connection?.Database);
 
-        if (_logger != null)
-        {
-            _logger.Log(
-                _errorLogLevel,
-                exception,
-                "SQL {Operation} FAILED after {DurationMs:F2}ms - Error: {ErrorMessage} - SQL: {Sql}",
-                operation,
-                duration.TotalMilliseconds,
-                exception.Message,
-                TruncateSql(command.CommandText));
-        }
-        else
-        {
-            TelemetryHelper.Execute(
-                TelemetryLevels.Error,
-                "efcore-command-error",
-                $"SQL {operation} FAILED after {duration.TotalMilliseconds:F2}ms - Error: {exception.Message}");
-        }
+        _logger?.Log(
+            _errorLogLevel,
+            exception,
+            "SQL {Operation} FAILED after {DurationMs:F2}ms - Error: {ErrorMessage} - SQL: {Sql}",
+            operation,
+            duration.TotalMilliseconds,
+            exception.Message,
+            TruncateSql(command.CommandText));
     }
 
     private string FormatParameters(DbParameterCollection parameters)

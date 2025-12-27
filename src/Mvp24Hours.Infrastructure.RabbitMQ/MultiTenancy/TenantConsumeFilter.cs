@@ -6,8 +6,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
@@ -247,54 +245,30 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void LogTenantContextSet(string? tenantId, string? tenantName, string messageId)
         {
-            var message = $"Tenant context set: TenantId={tenantId}, TenantName={tenantName}, MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-tenant-context-set", message);
-            }
+            _logger?.LogDebug(
+                "Tenant context set. TenantId={TenantId}, TenantName={TenantName}, MessageId={MessageId}",
+                tenantId, tenantName, messageId);
         }
 
         private void LogTenantContextCleared(string? tenantId, string messageId)
         {
-            var message = $"Tenant context cleared: TenantId={tenantId}, MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-tenant-context-cleared", message);
-            }
+            _logger?.LogDebug(
+                "Tenant context cleared. TenantId={TenantId}, MessageId={MessageId}",
+                tenantId, messageId);
         }
 
         private void LogTenantMissing(string messageId)
         {
-            var message = $"Message rejected: missing tenant header. MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-missing", message);
-            }
+            _logger?.LogWarning(
+                "Message rejected: missing tenant header. MessageId={MessageId}",
+                messageId);
         }
 
         private void LogTenantInvalid(string tenantId, string messageId)
         {
-            var message = $"Message rejected: invalid tenant. TenantId={tenantId}, MessageId={messageId}";
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-invalid", message);
-            }
+            _logger?.LogWarning(
+                "Message rejected: invalid tenant. TenantId={TenantId}, MessageId={MessageId}",
+                tenantId, messageId);
         }
 
         #endregion

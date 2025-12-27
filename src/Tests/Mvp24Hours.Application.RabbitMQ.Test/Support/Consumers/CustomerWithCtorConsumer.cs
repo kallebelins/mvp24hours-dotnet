@@ -1,7 +1,6 @@
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using System.Threading.Tasks;
@@ -10,9 +9,12 @@ namespace Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers
 {
     public class CustomerWithCtorConsumer : IMvpRabbitMQConsumerAsync
     {
-        public CustomerWithCtorConsumer(CustomerEvent _event)
+        private readonly ILogger<CustomerWithCtorConsumer>? _logger;
+
+        public CustomerWithCtorConsumer(CustomerEvent _event, ILogger<CustomerWithCtorConsumer>? logger = null)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "customer-consumer-ctor", $"dto:{_event?.ToSerialize()}");
+            _logger = logger;
+            _logger?.LogDebug("CustomerWithCtorConsumer initialized with event: {Event}", _event?.ToSerialize());
             if (_event == null || _event.Name != "event")
             {
                 throw new ArgumentException("Error event.");
@@ -25,7 +27,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers
 
         public async Task ReceivedAsync(object message, string token)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "customer-consumer-received", $"dto:{message?.ToSerialize()}|token:{token}");
+            _logger?.LogDebug("CustomerWithCtorConsumer received message: {Message}, Token: {Token}", message?.ToSerialize(), token);
             await Task.CompletedTask;
         }
     }

@@ -4,13 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace Mvp24Hours.Application.Logic
     /// <remarks>
     /// 
     /// </remarks>
-    public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator) : IQueryServiceAsync<TEntity>, ICommandServiceAsync<TEntity>
+    public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryServiceAsync<TEntity, TUoW>> logger = null) : IQueryServiceAsync<TEntity>, ICommandServiceAsync<TEntity>
         where TEntity : class, IEntityBase
         where TUoW : class, IUnitOfWorkAsync
     {
@@ -36,6 +36,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IRepositoryAsync<TEntity> repository = unitOfWork.GetRepository<TEntity>();
         private readonly TUoW unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IValidator<TEntity> validator = validator;
+        private readonly ILogger<RepositoryServiceAsync<TEntity, TUoW>> _logger = logger ?? NullLogger<RepositoryServiceAsync<TEntity, TUoW>>.Instance;
 
         /// <summary>
         /// Gets unit of work instance
@@ -61,7 +62,7 @@ namespace Mvp24Hours.Application.Logic
         /// 
         /// </summary>
         public RepositoryServiceAsync(TUoW unitOfWork)
-            : this(unitOfWork, null)
+            : this(unitOfWork, null, null)
         {
         }
         #endregion
@@ -70,7 +71,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-listanyasync");
+            _logger.LogDebug("application-repositoryserviceasync-listanyasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .ListAnyAsync(cancellationToken: cancellationToken)
@@ -79,7 +80,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-listcountasync");
+            _logger.LogDebug("application-repositoryserviceasync-listcountasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .ListCountAsync(cancellationToken: cancellationToken)
@@ -93,7 +94,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-listasync");
+            _logger.LogDebug("application-repositoryserviceasync-listasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .ListAsync(criteria, cancellationToken: cancellationToken)
@@ -102,7 +103,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-getbyanyasync");
+            _logger.LogDebug("application-repositoryserviceasync-getbyanyasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByAnyAsync(clause, cancellationToken: cancellationToken)
@@ -111,7 +112,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-getbycountasync");
+            _logger.LogDebug("application-repositoryserviceasync-getbycountasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByCountAsync(clause, cancellationToken: cancellationToken)
@@ -125,7 +126,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-getbyasync");
+            _logger.LogDebug("application-repositoryserviceasync-getbyasync");
             return UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByAsync(clause, criteria, cancellationToken: cancellationToken)
@@ -139,7 +140,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-getbyidasync");
+            _logger.LogDebug("application-repositoryserviceasync-getbyidasync");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByIdAsync(id, criteria, cancellationToken: cancellationToken)
@@ -152,7 +153,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-addasync");
+            _logger.LogDebug("application-repositoryserviceasync-addasync");
             var errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
@@ -167,7 +168,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-addlistasync");
+            _logger.LogDebug("application-repositoryserviceasync-addlistasync");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -189,7 +190,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-modifyasync");
+            _logger.LogDebug("application-repositoryserviceasync-modifyasync");
             var errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
@@ -204,7 +205,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-modifylistasync");
+            _logger.LogDebug("application-repositoryserviceasync-modifylistasync");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -226,7 +227,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-removeasync");
+            _logger.LogDebug("application-repositoryserviceasync-removeasync");
             await this.UnitOfWork.GetRepository<TEntity>().RemoveAsync(entity, cancellationToken: cancellationToken);
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                     .ToBusinessAsync();
@@ -234,7 +235,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-removelistasync");
+            _logger.LogDebug("application-repositoryserviceasync-removelistasync");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -248,7 +249,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-removebyidasync");
+            _logger.LogDebug("application-repositoryserviceasync-removebyidasync");
             await this.UnitOfWork.GetRepository<TEntity>().RemoveByIdAsync(id, cancellationToken: cancellationToken);
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                     .ToBusinessAsync();
@@ -256,7 +257,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryserviceasync-removebyidlistasync");
+            _logger.LogDebug("application-repositoryserviceasync-removebyidlistasync");
             if (!ids.AnySafe())
             {
                 return 0.ToBusiness();

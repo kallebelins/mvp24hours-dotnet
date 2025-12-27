@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -101,9 +99,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
 
             _collection = _database.GetCollection<TDocument>(collectionName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-capped-created",
-                new { Collection = collectionName, MaxSize = options.MaxSizeBytes, MaxDocs = options.MaxDocuments });
-
             _logger?.LogInformation(
                 "Capped collection '{CollectionName}' created with max size {MaxSize} bytes and max {MaxDocs} documents.",
                 collectionName, options.MaxSizeBytes, options.MaxDocuments);
@@ -134,9 +129,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
             await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             _collection = _database.GetCollection<TDocument>(collectionName);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-capped-converted",
-                new { Collection = collectionName, MaxSize = options.MaxSizeBytes });
 
             _logger?.LogInformation("Collection '{CollectionName}' converted to capped.", collectionName);
         }
@@ -203,9 +195,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
                 NoCursorTimeout = true
             };
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-capped-tail-started",
-                new { Collection = _collectionName });
-
             _logger?.LogInformation("Started tailing capped collection '{CollectionName}'.", _collectionName);
 
             using var cursor = await _collection.FindAsync(
@@ -224,8 +213,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
                     catch (Exception ex)
                     {
                         _logger?.LogError(ex, "Error processing document from tailable cursor.");
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-capped-tail-error",
-                            new { Error = ex.Message });
                     }
                 }
             }

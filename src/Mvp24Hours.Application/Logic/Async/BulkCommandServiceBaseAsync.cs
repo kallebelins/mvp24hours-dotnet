@@ -5,13 +5,13 @@
 //=====================================================================================
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 using System;
 using System.Collections.Generic;
@@ -86,6 +86,7 @@ namespace Mvp24Hours.Application.Logic
 
         private readonly TUoW _dbContext;
         private readonly IValidator<TEntity>? _validator;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the DbContext for bulk operations.
@@ -117,6 +118,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _validator = validator;
+            _logger = NullLogger.Instance;
         }
 
         #endregion
@@ -137,7 +139,7 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkaddasync-start",
+            _logger.LogDebug( "application-bulkcommandserviceasync-bulkaddasync-start",
                 $"count:{entities?.Count ?? 0}|batchSize:{options.BatchSize}");
 
             var stopwatch = Stopwatch.StartNew();
@@ -159,7 +161,7 @@ namespace Mvp24Hours.Application.Logic
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkaddasync-end",
+                _logger.LogDebug( "application-bulkcommandserviceasync-bulkaddasync-end",
                     $"rows:{result.RowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms|success:{result.IsSuccess}");
 
                 return result.ToBusiness();
@@ -168,7 +170,7 @@ namespace Mvp24Hours.Application.Logic
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "application-bulkcommandserviceasync-bulkaddasync-error",
+                _logger.LogError( "application-bulkcommandserviceasync-bulkaddasync-error",
                     $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -193,7 +195,7 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkmodifyasync-start",
+            _logger.LogDebug( "application-bulkcommandserviceasync-bulkmodifyasync-start",
                 $"count:{entities?.Count ?? 0}|batchSize:{options.BatchSize}");
 
             var stopwatch = Stopwatch.StartNew();
@@ -215,7 +217,7 @@ namespace Mvp24Hours.Application.Logic
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkmodifyasync-end",
+                _logger.LogDebug( "application-bulkcommandserviceasync-bulkmodifyasync-end",
                     $"rows:{result.RowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms|success:{result.IsSuccess}");
 
                 return result.ToBusiness();
@@ -224,7 +226,7 @@ namespace Mvp24Hours.Application.Logic
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "application-bulkcommandserviceasync-bulkmodifyasync-error",
+                _logger.LogError( "application-bulkcommandserviceasync-bulkmodifyasync-error",
                     $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -249,7 +251,7 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkremoveasync-start",
+            _logger.LogDebug( "application-bulkcommandserviceasync-bulkremoveasync-start",
                 $"count:{entities?.Count ?? 0}|batchSize:{options.BatchSize}");
 
             var stopwatch = Stopwatch.StartNew();
@@ -261,7 +263,7 @@ namespace Mvp24Hours.Application.Logic
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-bulkremoveasync-end",
+                _logger.LogDebug( "application-bulkcommandserviceasync-bulkremoveasync-end",
                     $"rows:{result.RowsAffected}|elapsed:{stopwatch.ElapsedMilliseconds}ms|success:{result.IsSuccess}");
 
                 return result.ToBusiness();
@@ -270,7 +272,7 @@ namespace Mvp24Hours.Application.Logic
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "application-bulkcommandserviceasync-bulkremoveasync-error",
+                _logger.LogError( "application-bulkcommandserviceasync-bulkremoveasync-error",
                     $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
@@ -298,7 +300,7 @@ namespace Mvp24Hours.Application.Logic
                 var errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-bulkcommandserviceasync-validateentities-failed",
+                    _logger.LogDebug( "application-bulkcommandserviceasync-validateentities-failed",
                         $"entityType:{typeof(TEntity).Name}|errorCount:{errors.Count}");
                     return errors.ToBusiness<bool>();
                 }

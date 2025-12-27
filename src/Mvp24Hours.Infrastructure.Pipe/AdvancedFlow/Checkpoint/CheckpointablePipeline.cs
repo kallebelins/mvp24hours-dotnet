@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Collections.Generic;
@@ -45,6 +44,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         private readonly ICheckpointStore _checkpointStore;
         private readonly CheckpointOptions _options;
         private readonly IStateSerializer _serializer;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Creates a new checkpointable pipeline.
@@ -55,12 +55,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         public CheckpointablePipeline(
             string pipelineName,
             ICheckpointStore checkpointStore,
-            CheckpointOptions? options = null)
+            CheckpointOptions? options = null,
+            ILogger<CheckpointablePipeline<TState>>? logger = null)
         {
             _pipelineName = pipelineName ?? throw new ArgumentNullException(nameof(pipelineName));
             _checkpointStore = checkpointStore ?? throw new ArgumentNullException(nameof(checkpointStore));
             _options = options ?? new CheckpointOptions();
             _serializer = _options.StateSerializer ?? new JsonStateSerializer();
+            _logger = logger;
         }
 
         /// <summary>
@@ -114,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <returns>The execution result.</returns>
         public async Task<CheckpointableResult<TState>> ResumeAsync(string pipelineExecutionId, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-checkpoint-resume-start", $"executionId:{pipelineExecutionId}");
+            _logger?.LogDebug("CheckpointablePipeline: Resume started. ExecutionId: {ExecutionId}", pipelineExecutionId);
 
             var checkpoint = await _checkpointStore.GetLatestCheckpointAsync(pipelineExecutionId, cancellationToken);
 
@@ -206,8 +208,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
             var currentState = state;
             string? correlationId = null;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-checkpoint-execute-start",
-                $"executionId:{executionId},startIndex:{startIndex},totalSteps:{_steps.Count}");
+            _logger?.LogDebug("CheckpointablePipeline: Execute started. ExecutionId: {ExecutionId}, StartIndex: {StartIndex}, TotalSteps: {TotalSteps}",
+                executionId, startIndex, _steps.Count);
 
             try
             {
@@ -239,8 +241,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
                         }, cancellationToken);
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-checkpoint-step-start",
-                        $"executionId:{executionId},step:{step.StepId}");
+                    _logger?.LogDebug("CheckpointablePipeline: Step started. ExecutionId: {ExecutionId}, Step: {StepId}",
+                        executionId, step.StepId);
 
                     IOperationResult<TState> result;
                     try
@@ -279,16 +281,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
                     if (result.IsSuccess)
                     {
                         currentState = result.Value ?? currentState;
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-checkpoint-step-success",
-                            $"executionId:{executionId},step:{step.StepId}");
+                        _logger?.LogDebug("CheckpointablePipeline: Step succeeded. ExecutionId: {ExecutionId}, Step: {StepId}",
+                            executionId, step.StepId);
                     }
                     else
                     {
                         failedStepId = step.StepId;
                         errorMessage = result.ErrorMessage;
 
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-checkpoint-step-failed",
-                            $"executionId:{executionId},step:{step.StepId},error:{errorMessage}");
+                        _logger?.LogWarning("CheckpointablePipeline: Step failed. ExecutionId: {ExecutionId}, Step: {StepId}, Error: {ErrorMessage}",
+                            executionId, step.StepId, errorMessage);
 
                         // Save error checkpoint
                         if (_options.Enabled && _options.CheckpointOnError)
@@ -344,8 +346,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
                     }, cancellationToken);
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-checkpoint-execute-end",
-                    $"executionId:{executionId},success:{isSuccess},duration:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogDebug("CheckpointablePipeline: Execute completed. ExecutionId: {ExecutionId}, Success: {IsSuccess}, Duration: {Duration}ms",
+                    executionId, isSuccess, stopwatch.ElapsedMilliseconds);
 
                 return new CheckpointableResult<TState>
                 {

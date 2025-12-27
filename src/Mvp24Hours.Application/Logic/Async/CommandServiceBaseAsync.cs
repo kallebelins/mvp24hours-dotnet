@@ -4,13 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,6 +69,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IRepositoryAsync<TEntity> _repository;
         private readonly TUoW _unitOfWork;
         private readonly IValidator<TEntity>? _validator;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -86,6 +86,11 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         protected virtual IValidator<TEntity>? Validator => _validator;
 
+        /// <summary>
+        /// Gets the logger instance for logging operations.
+        /// </summary>
+        protected virtual ILogger? Logger => _logger;
+
         #endregion
 
         #region [ Constructors ]
@@ -96,7 +101,7 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="unitOfWork">The unit of work for transaction management.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected CommandServiceBaseAsync(TUoW unitOfWork)
-            : this(unitOfWork, null)
+            : this(unitOfWork, null, null)
         {
         }
 
@@ -107,10 +112,23 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="validator">The validator for entity validation.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected CommandServiceBaseAsync(TUoW unitOfWork, IValidator<TEntity>? validator)
+            : this(unitOfWork, validator, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandServiceBaseAsync{TEntity, TUoW}"/> class.
+        /// </summary>
+        /// <param name="unitOfWork">The unit of work for transaction management.</param>
+        /// <param name="validator">The validator for entity validation.</param>
+        /// <param name="logger">The logger for logging operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
+        protected CommandServiceBaseAsync(TUoW unitOfWork, IValidator<TEntity>? validator, ILogger? logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = unitOfWork.GetRepository<TEntity>();
             _validator = validator;
+            _logger = logger;
         }
 
         #endregion
@@ -120,7 +138,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-addasync");
+            _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -134,7 +152,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-addlistasync");
+            _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -157,7 +175,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-modifyasync");
+            _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             var errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
@@ -171,7 +189,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-modifylistasync");
+            _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -194,7 +212,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-removeasync");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
             await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
             return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
@@ -202,7 +220,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-removelistasync");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveAsync for {Count} {EntityType} entities", GetType().Name, entities?.Count ?? 0, typeof(TEntity).Name);
 
             if (!entities.AnySafe())
             {
@@ -216,7 +234,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-removebyidasync");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
             return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
@@ -224,7 +242,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-commandservicebaseasync-removebyidlistasync");
+            _logger?.LogDebug("[{ServiceName}] Executing RemoveByIdAsync for {Count} {EntityType} entities", GetType().Name, ids?.Count ?? 0, typeof(TEntity).Name);
 
             if (!ids.AnySafe())
             {
@@ -238,4 +256,3 @@ namespace Mvp24Hours.Application.Logic
         #endregion
     }
 }
-

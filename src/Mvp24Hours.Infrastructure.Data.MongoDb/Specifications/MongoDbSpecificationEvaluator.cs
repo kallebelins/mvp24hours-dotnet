@@ -102,10 +102,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Specifications
             {
                 // Includes are not supported in MongoDB IQueryable
                 // Consider using aggregation pipeline with $lookup instead
-                Mvp24Hours.Helpers.TelemetryHelper.Execute(
-                    Mvp24Hours.Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                    "mongodb-specificationevaluator-includes-not-supported",
-                    "Include specifications are not supported in MongoDB IQueryable. Use embedded documents or aggregation pipeline with $lookup.");
+                // Note: Logging removed - this is a design limitation, not an error
             }
 
             // Apply ordering

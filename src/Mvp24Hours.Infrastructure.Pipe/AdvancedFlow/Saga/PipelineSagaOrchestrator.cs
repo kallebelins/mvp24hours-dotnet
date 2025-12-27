@@ -3,8 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,6 +38,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
         private readonly List<IPipelineSagaStep<TContext>> _steps = [];
         private readonly PipelineSagaOptions _options;
         private readonly IPipelineSagaStateStore<TContext>? _stateStore;
+        private readonly ILogger? _logger;
         private string _sagaId;
 
         /// <summary>
@@ -46,10 +46,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
         /// </summary>
         /// <param name="options">Saga execution options.</param>
         /// <param name="stateStore">Optional state store for persistence.</param>
-        public PipelineSagaOrchestrator(PipelineSagaOptions? options = null, IPipelineSagaStateStore<TContext>? stateStore = null)
+        public PipelineSagaOrchestrator(
+            PipelineSagaOptions? options = null,
+            IPipelineSagaStateStore<TContext>? stateStore = null,
+            ILogger<PipelineSagaOrchestrator<TContext>>? logger = null)
         {
             _options = options ?? new PipelineSagaOptions();
             _stateStore = stateStore;
+            _logger = logger;
             _sagaId = Guid.NewGuid().ToString("N");
         }
 
@@ -111,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
             string? errorMessage = null;
             var state = SagaState.Running;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-execute-start", $"sagaId:{_sagaId},steps:{_steps.Count}");
+            _logger?.LogDebug("PipelineSagaOrchestrator: Saga '{SagaId}' started with {StepCount} steps", _sagaId, _steps.Count);
 
             using var sagaCts = _options.SagaTimeout.HasValue
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
@@ -146,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                     var stepStartedAt = DateTime.UtcNow;
                     var stepStopwatch = Stopwatch.StartNew();
 
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-step-start", $"sagaId:{_sagaId},step:{step.StepId}");
+                    _logger?.LogDebug("PipelineSagaOrchestrator: Step '{StepId}' started for saga '{SagaId}'", step.StepId, _sagaId);
 
                     var result = await ExecuteStepWithRetryAsync(step, context, effectiveToken);
 
@@ -172,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                             completedSteps.Push(step);
                         }
 
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-step-success", $"sagaId:{_sagaId},step:{step.StepId}");
+                        _logger?.LogDebug("PipelineSagaOrchestrator: Step '{StepId}' succeeded for saga '{SagaId}'", step.StepId, _sagaId);
 
                         // Apply step delay if configured
                         if (_options.StepDelay.HasValue && i < _steps.Count - 1)
@@ -186,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                         errorMessage = result.ErrorMessage;
                         state = SagaState.Failed;
 
-                        TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-saga-step-failed", $"sagaId:{_sagaId},step:{step.StepId},error:{result.ErrorMessage}");
+                        _logger?.LogWarning("PipelineSagaOrchestrator: Step '{StepId}' failed for saga '{SagaId}'. Error: {ErrorMessage}", step.StepId, _sagaId, result.ErrorMessage);
                         break;
                     }
 
@@ -218,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                 if (state == SagaState.Failed && _options.AutoCompensateOnFailure && completedSteps.Count > 0)
                 {
                     state = SagaState.Compensating;
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-compensation-start", $"sagaId:{_sagaId},stepsToCompensate:{completedSteps.Count}");
+                    _logger?.LogDebug("PipelineSagaOrchestrator: Compensation started for saga '{SagaId}'. Steps to compensate: {StepsToCompensate}", _sagaId, completedSteps.Count);
 
                     var compensationSuccess = true;
 
@@ -256,8 +260,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                             if (!compResult.IsSuccess)
                             {
                                 compensationSuccess = false;
-                                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-saga-compensation-step-failed",
-                                    $"sagaId:{_sagaId},step:{stepToCompensate.StepId},error:{compResult.ErrorMessage}");
+                                _logger?.LogError("PipelineSagaOrchestrator: Compensation step '{StepId}' failed for saga '{SagaId}'. Error: {ErrorMessage}", stepToCompensate.StepId, _sagaId, compResult.ErrorMessage);
 
                                 if (!_options.ContinueCompensationOnError)
                                 {
@@ -266,8 +269,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                             }
                             else
                             {
-                                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-compensation-step-success",
-                                    $"sagaId:{_sagaId},step:{stepToCompensate.StepId}");
+                                _logger?.LogDebug("PipelineSagaOrchestrator: Compensation step '{StepId}' succeeded for saga '{SagaId}'", stepToCompensate.StepId, _sagaId);
                             }
                         }
                         catch (Exception ex)
@@ -288,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                                 IsCompensation = true
                             });
 
-                            TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-saga-compensation-step-error", ex);
+                            _logger?.LogError(ex, "PipelineSagaOrchestrator: Compensation step '{StepId}' threw an exception for saga '{SagaId}'", stepToCompensate.StepId, _sagaId);
 
                             if (!_options.ContinueCompensationOnError)
                             {
@@ -298,8 +300,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                     }
 
                     state = compensationSuccess ? SagaState.CompensationCompleted : SagaState.CompensationFailed;
-                    TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-compensation-end",
-                        $"sagaId:{_sagaId},success:{compensationSuccess}");
+                    _logger?.LogDebug("PipelineSagaOrchestrator: Compensation finished for saga '{SagaId}'. Success: {CompensationSuccess}", _sagaId, compensationSuccess);
                 }
 
                 // Mark as completed if all steps succeeded
@@ -309,8 +310,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                 }
 
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-saga-execute-end",
-                    $"sagaId:{_sagaId},state:{state},duration:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogDebug("PipelineSagaOrchestrator: Saga '{SagaId}' finished. State: {SagaState}, Duration: {DurationMs}ms", _sagaId, state, stopwatch.ElapsedMilliseconds);
 
                 // Clean up persisted state on completion
                 if (_options.EnableStatePersistence && _stateStore != null && state == SagaState.Completed)
@@ -333,7 +333,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
             catch (OperationCanceledException)
             {
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-saga-cancelled", $"sagaId:{_sagaId}");
+                _logger?.LogWarning("PipelineSagaOrchestrator: Saga '{SagaId}' was cancelled", _sagaId);
 
                 return new PipelineSagaResult<TContext>
                 {
@@ -350,7 +350,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-saga-error", ex);
+                _logger?.LogError(ex, "PipelineSagaOrchestrator: Saga '{SagaId}' encountered an unhandled exception", _sagaId);
 
                 return new PipelineSagaResult<TContext>
                 {
@@ -399,8 +399,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                         return SagaStepResult.Failure(ex);
                     }
 
-                    TelemetryHelper.Execute(TelemetryLevels.Warning, "pipe-saga-step-retry",
-                        $"step:{step.StepId},attempt:{retryCount},maxRetries:{maxRetries}");
+                    _logger?.LogWarning("PipelineSagaOrchestrator: Retrying step '{StepId}' for saga '{SagaId}'. Attempt: {AttemptCount}/{MaxRetries}", step.StepId, _sagaId, retryCount, maxRetries);
 
                     await Task.Delay(retryDelay, cancellationToken);
                 }

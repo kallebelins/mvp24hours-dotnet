@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -77,8 +75,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             Func<Task<T>> action)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-withtimeoutasync-execute");
-
             var originalTimeout = context.Database.GetCommandTimeout();
             try
             {
@@ -110,8 +106,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             Func<Task> action)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-withtimeoutasync-void-execute");
-
             var originalTimeout = context.Database.GetCommandTimeout();
             try
             {
@@ -178,8 +172,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-tolistwithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.ToListAsync(cancellationToken);
@@ -201,8 +193,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-firstordefaultwithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.FirstOrDefaultAsync(cancellationToken);
@@ -224,8 +214,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-countwithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.CountAsync(cancellationToken);
@@ -247,8 +235,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-anywithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.AnyAsync(cancellationToken);
@@ -276,8 +262,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-savechangeswithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await context.SaveChangesAsync(cancellationToken);
@@ -328,8 +312,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-executeupdatewithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.ExecuteUpdateAsync(setPropertyCalls, cancellationToken);
@@ -358,8 +340,6 @@ namespace Mvp24Hours.Extensions
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "query-timeout-executedeletewithtimeoutasync-execute");
-
             return await context.WithTimeoutAsync(timeoutSeconds, async () =>
             {
                 return await query.ExecuteDeleteAsync(cancellationToken);

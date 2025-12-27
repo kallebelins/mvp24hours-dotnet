@@ -3,14 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +65,7 @@ namespace Mvp24Hours.Application.Logic
 
         private readonly IRepository<TEntity> _repository;
         private readonly TUoW _unitOfWork;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Gets the unit of work instance.
@@ -77,6 +77,11 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         protected virtual IRepository<TEntity> Repository => _repository;
 
+        /// <summary>
+        /// Gets the logger instance for logging operations.
+        /// </summary>
+        protected virtual ILogger? Logger => _logger;
+
         #endregion
 
         #region [ Constructors ]
@@ -87,9 +92,21 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="unitOfWork">The unit of work for data access.</param>
         /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
         protected QueryServiceBase(TUoW unitOfWork)
+            : this(unitOfWork, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueryServiceBase{TEntity, TUoW}"/> class.
+        /// </summary>
+        /// <param name="unitOfWork">The unit of work for data access.</param>
+        /// <param name="logger">The logger for logging operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown when unitOfWork is null.</exception>
+        protected QueryServiceBase(TUoW unitOfWork, ILogger? logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _repository = unitOfWork.GetRepository<TEntity>();
+            _logger = logger;
         }
 
         #endregion
@@ -99,14 +116,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-listany");
+            _logger?.LogDebug("[{ServiceName}] Executing ListAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.ListAny().ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-listcount");
+            _logger?.LogDebug("[{ServiceName}] Executing ListCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.ListCount().ToBusiness();
         }
 
@@ -119,21 +136,21 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-list");
+            _logger?.LogDebug("[{ServiceName}] Executing List for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
             return _repository.List(criteria).ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbyany");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByAny for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.GetByAny(clause).ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbycount");
+            _logger?.LogDebug("[{ServiceName}] Executing GetByCount for {EntityType}", GetType().Name, typeof(TEntity).Name);
             return _repository.GetByCount(clause).ToBusiness();
         }
 
@@ -146,7 +163,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getby");
+            _logger?.LogDebug("[{ServiceName}] Executing GetBy for {EntityType} with criteria", GetType().Name, typeof(TEntity).Name);
             return _repository.GetBy(clause, criteria).ToBusiness();
         }
 
@@ -159,7 +176,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbyid");
+            _logger?.LogDebug("[{ServiceName}] Executing GetById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             return _repository.GetById(id, criteria).ToBusiness();
         }
 
@@ -171,7 +188,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<bool> AnyBySpecification<TSpec>(TSpec specification)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-anybyspecification");
+            _logger?.LogDebug("[{ServiceName}] Executing AnyBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -192,7 +209,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<int> CountBySpecification<TSpec>(TSpec specification)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-countbyspecification");
+            _logger?.LogDebug("[{ServiceName}] Executing CountBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -213,7 +230,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<IList<TEntity>> GetBySpecification<TSpec>(TSpec specification)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getbyspecification");
+            _logger?.LogDebug("[{ServiceName}] Executing GetBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -234,7 +251,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<TEntity?> GetSingleBySpecification<TSpec>(TSpec specification)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getsinglebyspecification");
+            _logger?.LogDebug("[{ServiceName}] Executing GetSingleBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -257,7 +274,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<TEntity?> GetFirstBySpecification<TSpec>(TSpec specification)
             where TSpec : ISpecificationQuery<TEntity>
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-queryservicebase-getfirstbyspecification");
+            _logger?.LogDebug("[{ServiceName}] Executing GetFirstBySpecification for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
             if (specification == null)
             {
@@ -279,4 +296,3 @@ namespace Mvp24Hours.Application.Logic
         #endregion
     }
 }
-

@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
@@ -35,9 +33,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "fanout-exchange-declare",
-                $"exchange:{exchangeName}|durable:{durable}|autoDelete:{autoDelete}");
-
             channel.ExchangeDeclare(
                 exchange: exchangeName,
                 type: ExchangeType.Fanout,
@@ -61,9 +56,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(queueName);
             ArgumentNullException.ThrowIfNull(exchangeName);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "fanout-exchange-bind-queue",
-                $"queue:{queueName}|exchange:{exchangeName}");
 
             // Routing key is ignored for fanout exchanges, but we still need to pass it
             channel.QueueBind(
@@ -123,9 +115,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(queueName);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "fanout-exchange-unbind-queue",
-                $"queue:{queueName}|exchange:{exchangeName}");
-
             channel.QueueUnbind(
                 queue: queueName,
                 exchange: exchangeName,
@@ -148,9 +137,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         {
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(exchangeName);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "fanout-exchange-publish",
-                $"exchange:{exchangeName}|bodySize:{body.Length}");
 
             // Routing key is ignored for fanout exchanges
             channel.BasicPublish(

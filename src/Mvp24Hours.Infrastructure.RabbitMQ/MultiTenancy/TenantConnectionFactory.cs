@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
@@ -371,95 +369,51 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void LogConnectionCreated(string tenantId, string virtualHost)
         {
-            var message = $"Created RabbitMQ connection for tenant '{tenantId}' on virtual host '{virtualHost}'";
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-tenant-connection-created", message);
-            }
+            _logger?.LogInformation(
+                "Created RabbitMQ connection for tenant. TenantId={TenantId}, VirtualHost={VirtualHost}",
+                tenantId, virtualHost);
         }
 
         private void LogConnectionClosed(string tenantId)
         {
-            var message = $"Closed RabbitMQ connection for tenant '{tenantId}'";
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-tenant-connection-closed", message);
-            }
+            _logger?.LogInformation(
+                "Closed RabbitMQ connection for tenant. TenantId={TenantId}",
+                tenantId);
         }
 
         private void LogConnectionCloseError(string tenantId, Exception ex)
         {
-            if (_logger != null)
-            {
-                _logger.LogWarning(ex, "Error closing RabbitMQ connection for tenant '{TenantId}'", tenantId);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-connection-close-error", 
-                    $"Error closing connection for tenant '{tenantId}': {ex.Message}");
-            }
+            _logger?.LogWarning(ex,
+                "Error closing RabbitMQ connection for tenant. TenantId={TenantId}",
+                tenantId);
         }
 
         private void LogConnectionShutdown(string tenantId, string reason)
         {
-            var message = $"RabbitMQ connection shutdown for tenant '{tenantId}': {reason}";
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-connection-shutdown", message);
-            }
+            _logger?.LogWarning(
+                "RabbitMQ connection shutdown for tenant. TenantId={TenantId}, Reason={Reason}",
+                tenantId, reason);
         }
 
         private void LogCallbackException(string tenantId, Exception ex)
         {
-            if (_logger != null)
-            {
-                _logger.LogError(ex, "Callback exception for tenant '{TenantId}'", tenantId);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-tenant-callback-exception", 
-                    $"Callback exception for tenant '{tenantId}': {ex.Message}");
-            }
+            _logger?.LogError(ex,
+                "Callback exception for tenant. TenantId={TenantId}",
+                tenantId);
         }
 
         private void LogConnectionRetry(string tenantId, int retryCount, TimeSpan delay, Exception ex)
         {
-            if (_logger != null)
-            {
-                _logger.LogWarning(ex, 
-                    "RabbitMQ connection retry {RetryCount} for tenant '{TenantId}' after {Delay}s",
-                    retryCount, tenantId, delay.TotalSeconds);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-connection-retry",
-                    $"Retry {retryCount} for tenant '{tenantId}' after {delay.TotalSeconds}s: {ex.Message}");
-            }
+            _logger?.LogWarning(ex,
+                "RabbitMQ connection retry for tenant. RetryCount={RetryCount}, TenantId={TenantId}, Delay={Delay}s",
+                retryCount, tenantId, delay.TotalSeconds);
         }
 
         private void LogConnectionEvicted(string tenantId)
         {
-            var message = $"Evicted RabbitMQ connection for tenant '{tenantId}' due to pool limit";
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-tenant-connection-evicted", message);
-            }
+            _logger?.LogInformation(
+                "Evicted RabbitMQ connection for tenant due to pool limit. TenantId={TenantId}",
+                tenantId);
         }
 
         #endregion

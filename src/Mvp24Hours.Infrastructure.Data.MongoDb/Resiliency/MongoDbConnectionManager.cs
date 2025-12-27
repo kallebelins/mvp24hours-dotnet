@@ -5,8 +5,6 @@
 //=====================================================================================
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -169,20 +167,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                     {
                         throw;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        if (_options.LogConnectionEvents)
-                        {
-                            TelemetryHelper.Execute(TelemetryLevels.Warning,
-                                "mongodb-reconnect-attempt-failed",
-                                new
-                                {
-                                    Attempt = attempt,
-                                    MaxAttempts = _options.MaxReconnectAttempts,
-                                    ExceptionType = ex.GetType().Name,
-                                    Message = ex.Message
-                                });
-                        }
                     }
 
                     if (attempt < _options.MaxReconnectAttempts)
@@ -190,19 +176,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                         var delay = CalculateReconnectDelay(attempt);
                         await Task.Delay(delay, cancellationToken);
                     }
-                }
-
-                var totalDuration = DateTimeOffset.UtcNow - startTime;
-
-                if (_options.LogConnectionEvents)
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Error,
-                        "mongodb-reconnect-failed",
-                        new
-                        {
-                            TotalAttempts = _options.MaxReconnectAttempts,
-                            TotalDuration = totalDuration.TotalMilliseconds
-                        });
                 }
 
                 return false;
@@ -229,13 +202,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                     isConnected: true,
                     previousState: wasConnected,
                     timestamp: DateTimeOffset.UtcNow));
-
-                if (_options.LogConnectionEvents)
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information,
-                        "mongodb-connection-established",
-                        new { Timestamp = DateTimeOffset.UtcNow });
-                }
             }
         }
 
@@ -256,17 +222,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                     previousState: wasConnected,
                     timestamp: DateTimeOffset.UtcNow,
                     reason: reason));
-
-                if (_options.LogConnectionEvents)
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning,
-                        "mongodb-connection-lost",
-                        new
-                        {
-                            Reason = reason ?? "Unknown",
-                            Timestamp = DateTimeOffset.UtcNow
-                        });
-                }
             }
         }
 
@@ -307,47 +262,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
         private void OnConnectionOpened(ConnectionOpenedEvent e)
         {
-            if (_options.LogConnectionEvents)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-connection-opened",
-                    new
-                    {
-                        ConnectionId = e.ConnectionId?.ToString(),
-                        Duration = e.Duration.TotalMilliseconds
-                    });
-            }
         }
 
         private void OnConnectionClosed(ConnectionClosedEvent e)
         {
-            if (_options.LogConnectionEvents)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-connection-closed",
-                    new
-                    {
-                        ConnectionId = e.ConnectionId?.ToString(),
-                        Duration = e.Duration.TotalMilliseconds
-                    });
-            }
         }
 
         private void OnConnectionFailed(ConnectionFailedEvent e)
         {
             OnConnectionLost(e.Exception?.Message ?? "Connection failed");
-
-            if (_options.LogConnectionEvents)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning,
-                    "mongodb-connection-failed",
-                    new
-                    {
-                        ConnectionId = e.ConnectionId?.ToString(),
-                        ExceptionType = e.Exception?.GetType().Name,
-                        Message = e.Exception?.Message
-                    });
-            }
         }
 
         private void OnServerHeartbeatSucceeded(ServerHeartbeatSucceededEvent e)
@@ -361,16 +284,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
         private void OnServerHeartbeatFailed(ServerHeartbeatFailedEvent e)
         {
-            if (_options.LogConnectionEvents)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning,
-                    "mongodb-heartbeat-failed",
-                    new
-                    {
-                        Duration = e.Duration.TotalMilliseconds,
-                        ExceptionType = e.Exception?.GetType().Name
-                    });
-            }
         }
 
         private void OnServerDescriptionChanged(ServerDescriptionChangedEvent e)
@@ -382,33 +295,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             if (oldDesc?.Type == MongoDB.Driver.Core.Servers.ServerType.ReplicaSetPrimary &&
                 newDesc?.Type != MongoDB.Driver.Core.Servers.ServerType.ReplicaSetPrimary)
             {
-                if (_options.LogConnectionEvents)
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning,
-                        "mongodb-primary-changed",
-                        new
-                        {
-                            OldPrimary = oldDesc?.EndPoint?.ToString(),
-                            NewState = newDesc?.Type.ToString()
-                        });
-                }
             }
 
             // Log server state changes
             if (oldDesc?.State != newDesc?.State)
             {
-                if (_options.LogConnectionEvents)
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information,
-                        "mongodb-server-state-changed",
-                        new
-                        {
-                            Server = newDesc?.EndPoint?.ToString(),
-                            OldState = oldDesc?.State.ToString(),
-                            NewState = newDesc?.State.ToString(),
-                            Type = newDesc?.Type.ToString()
-                        });
-                }
             }
         }
 

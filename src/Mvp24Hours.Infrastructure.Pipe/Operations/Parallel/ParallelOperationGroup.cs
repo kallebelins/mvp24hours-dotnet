@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +21,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
     public class ParallelOperationGroup : IParallelOperationGroup, IOperation
     {
         private readonly List<IOperation> _operations;
+        private readonly ILogger<ParallelOperationGroup>? _logger;
 
         /// <summary>
         /// Creates a new parallel operation group.
@@ -29,14 +29,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         /// <param name="operations">Operations to execute in parallel.</param>
         /// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
         /// <param name="requireAllSuccess">Whether all operations must succeed.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
         public ParallelOperationGroup(
             IEnumerable<IOperation> operations,
             int? maxDegreeOfParallelism = null,
-            bool requireAllSuccess = true)
+            bool requireAllSuccess = true,
+            ILogger<ParallelOperationGroup>? logger = null)
         {
             _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
             MaxDegreeOfParallelism = maxDegreeOfParallelism;
             RequireAllSuccess = requireAllSuccess;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -54,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         /// <inheritdoc />
         public void Execute(IPipelineMessage input)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-execute-start", $"operations:{_operations.Count}");
+            _logger?.LogDebug("ParallelOperationGroup: Execute started with {OperationCount} operations", _operations.Count);
 
             var exceptions = new List<Exception>();
             var parallelOptions = MaxDegreeOfParallelism.HasValue
@@ -67,9 +70,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 {
                     try
                     {
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-operation-start", $"operation:{operation.GetType().Name}");
+                        _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' started", operation.GetType().Name);
                         operation.Execute(input);
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-operation-end", $"operation:{operation.GetType().Name}");
+                        _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' finished", operation.GetType().Name);
                     }
                     catch (Exception ex)
                     {
@@ -77,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                         {
                             exceptions.Add(ex);
                         }
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-parallel-operation-failure", ex);
+                        _logger?.LogError(ex, "ParallelOperationGroup: Operation '{OperationName}' failed", operation.GetType().Name);
                         
                         if (RequireAllSuccess)
                         {
@@ -101,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 input.AddContent("ParallelOperationExceptions", exceptions);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-execute-end", $"operations:{_operations.Count}");
+            _logger?.LogDebug("ParallelOperationGroup: Execute finished with {OperationCount} operations", _operations.Count);
         }
 
         /// <inheritdoc />
@@ -116,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-parallel-rollback-failure", ex);
+                    _logger?.LogError(ex, "ParallelOperationGroup: Rollback failed");
                 }
             }
         }
@@ -128,6 +131,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
     public class ParallelOperationGroupAsync : IParallelOperationGroupAsync, IOperationAsync
     {
         private readonly List<IOperationAsync> _operations;
+        private readonly ILogger<ParallelOperationGroupAsync>? _logger;
 
         /// <summary>
         /// Creates a new async parallel operation group.
@@ -135,14 +139,17 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         /// <param name="operations">Operations to execute in parallel.</param>
         /// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
         /// <param name="requireAllSuccess">Whether all operations must succeed.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
         public ParallelOperationGroupAsync(
             IEnumerable<IOperationAsync> operations,
             int? maxDegreeOfParallelism = null,
-            bool requireAllSuccess = true)
+            bool requireAllSuccess = true,
+            ILogger<ParallelOperationGroupAsync>? logger = null)
         {
             _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
             MaxDegreeOfParallelism = maxDegreeOfParallelism;
             RequireAllSuccess = requireAllSuccess;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -160,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         /// <inheritdoc />
         public async Task ExecuteAsync(IPipelineMessage message, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-async-execute-start", $"operations:{_operations.Count}");
+            _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync started with {OperationCount} operations", _operations.Count);
 
             var exceptions = new List<Exception>();
 
@@ -199,7 +206,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 message.AddContent("ParallelOperationExceptions", exceptions);
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-async-execute-end", $"operations:{_operations.Count}");
+            _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync finished with {OperationCount} operations", _operations.Count);
         }
 
         private async Task ExecuteOperationAsync(
@@ -210,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         {
             try
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-async-operation-start", $"operation:{operation.GetType().Name}");
+                _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' started", operation.GetType().Name);
                 
                 if (operation is IOperationAsyncWithCancellation operationWithCancellation)
                 {
@@ -221,7 +228,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                     await operation.ExecuteAsync(message);
                 }
                 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-parallel-async-operation-end", $"operation:{operation.GetType().Name}");
+                _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' finished", operation.GetType().Name);
             }
             catch (Exception ex)
             {
@@ -229,7 +236,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 {
                     exceptions.Add(ex);
                 }
-                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-parallel-async-operation-failure", ex);
+                _logger?.LogError(ex, "ParallelOperationGroupAsync: Operation '{OperationName}' failed", operation.GetType().Name);
                 
                 if (RequireAllSuccess)
                 {
@@ -252,7 +259,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-parallel-async-rollback-failure", ex);
+                    _logger?.LogError(ex, "ParallelOperationGroupAsync: RollbackAsync failed");
                 }
             }
         }

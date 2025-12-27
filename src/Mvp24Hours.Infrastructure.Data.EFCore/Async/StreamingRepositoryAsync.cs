@@ -4,12 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Collections.Generic;
@@ -60,17 +59,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     /// }
     /// </code>
     /// </example>
-    public class StreamingRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options)
+    public class StreamingRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<StreamingRepositoryAsync<T>> logger)
         : RepositoryAsync<T>(_dbContext, options), IStreamingRepositoryAsync<T>
         where T : class, IEntityBase
     {
+        private readonly ILogger<StreamingRepositoryAsync<T>> _logger = logger;
         #region IStreamingQueryAsync Implementation
 
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamAllAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamallasync-start");
-
             var query = GetQuery(null, true);
 
             // Apply default tracking behavior from options
@@ -93,15 +91,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return entity;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamallasync-end");
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamAllAsync(IPagingCriteria criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamallasync-criteria-start");
-
             var query = GetQuery(criteria);
 
             // Apply default tracking behavior from options
@@ -124,15 +118,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return entity;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamallasync-criteria-end");
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambyasync-start");
-
             var query = dbEntities.AsQueryable();
 
             if (clause != null)
@@ -162,15 +152,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return entity;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambyasync-end");
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambyasync-criteria-start");
-
             var query = dbEntities.AsQueryable();
 
             if (clause != null)
@@ -200,15 +186,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return entity;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambyasync-criteria-end");
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<IList<T>> StreamBatchesAsync(int batchSize, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-streamingrepo-streambatchesasync-start-batchsize:{batchSize}");
-
             var batch = new List<T>(batchSize);
 
             await foreach (var entity in StreamAllAsync(cancellationToken))
@@ -227,15 +209,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return batch;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambatchesasync-end");
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<IList<T>> StreamBatchesAsync(Expression<Func<T, bool>> clause, int batchSize, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-streamingrepo-streambatchesasync-clause-start-batchsize:{batchSize}");
-
             var batch = new List<T>(batchSize);
 
             await foreach (var entity in StreamByAsync(clause, cancellationToken))
@@ -254,8 +232,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return batch;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streambatchesasync-clause-end");
         }
 
         #endregion
@@ -288,8 +264,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             Expression<Func<T, TResult>> selector,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamprojectedasync-start");
-
             var query = dbEntities.AsNoTracking();
 
             if (Options.EnableQueryTags)
@@ -301,8 +275,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return item;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamprojectedasync-end");
         }
 
         /// <summary>
@@ -318,8 +290,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             Expression<Func<T, TResult>> selector,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamprojectedbyasync-start");
-
             var query = dbEntities.AsNoTracking();
 
             if (clause != null)
@@ -336,8 +306,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 yield return item;
             }
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamprojectedbyasync-end");
         }
 
         /// <summary>
@@ -365,7 +333,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int maxDegreeOfParallelism = 4,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-streamingrepo-streamandprocessasync-start-parallelism:{maxDegreeOfParallelism}");
+            _logger.LogDebug("Stream and process started. MaxDegreeOfParallelism: {MaxDegreeOfParallelism}", maxDegreeOfParallelism);
 
             using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
@@ -391,7 +359,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
             await Task.WhenAll(tasks);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamandprocessasync-end");
+            _logger.LogDebug("Stream and process completed");
         }
 
         /// <summary>
@@ -408,7 +376,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int maxDegreeOfParallelism = 4,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-streamingrepo-streamandprocessasync-clause-start-parallelism:{maxDegreeOfParallelism}");
+            _logger.LogDebug("Stream and process (with clause) started. MaxDegreeOfParallelism: {MaxDegreeOfParallelism}", maxDegreeOfParallelism);
 
             using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
@@ -434,7 +402,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
             await Task.WhenAll(tasks);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-streamingrepo-streamandprocessasync-clause-end");
+            _logger.LogDebug("Stream and process (with clause) completed");
         }
 
         #endregion

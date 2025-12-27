@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using RabbitMQ.Client;
@@ -211,41 +209,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void LogDeadLetterInfrastructureCreated(string tenantId, string exchangeName, string queueName)
         {
-            var message = $"Created dead letter infrastructure for tenant '{tenantId}': Exchange={exchangeName}, Queue={queueName}";
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-tenant-dlq-created", message);
-            }
+            _logger?.LogInformation(
+                "Created dead letter infrastructure for tenant. TenantId={TenantId}, Exchange={ExchangeName}, Queue={QueueName}",
+                tenantId, exchangeName, queueName);
         }
 
         private void LogDeadLetterInfrastructureError(string tenantId, Exception ex)
         {
-            if (_logger != null)
-            {
-                _logger.LogError(ex, "Error creating dead letter infrastructure for tenant '{TenantId}'", tenantId);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-tenant-dlq-error",
-                    $"Error creating DLQ infrastructure for tenant '{tenantId}': {ex.Message}");
-            }
+            _logger?.LogError(ex,
+                "Error creating dead letter infrastructure for tenant. TenantId={TenantId}",
+                tenantId);
         }
 
         private void LogMessageSentToDeadLetterQueue(string tenantId, string queueName, string reason)
         {
-            var message = $"Message sent to dead letter queue for tenant '{tenantId}': Queue={queueName}, Reason={reason}";
-            if (_logger != null)
-            {
-                _logger.LogWarning(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-tenant-dlq-message-sent", message);
-            }
+            _logger?.LogWarning(
+                "Message sent to dead letter queue for tenant. TenantId={TenantId}, Queue={QueueName}, Reason={Reason}",
+                tenantId, queueName, reason);
         }
 
         #endregion

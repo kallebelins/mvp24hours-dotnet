@@ -4,10 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,20 +21,22 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     {
         #region [ Ctor ]
 
-        public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories)
+        public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork> logger = null)
         {
             this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             this.repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
+            _logger = logger;
 
             DbContext.StartSession();
         }
 
         [ActivatorUtilitiesConstructor]
-        public UnitOfWork(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider)
+        public UnitOfWork(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork> logger = null)
         {
             this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
             this.repositories = [];
+            _logger = logger;
 
             DbContext.StartSession();
         }
@@ -48,6 +49,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         protected Mvp24HoursContext DbContext { get; private set; }
         private readonly IServiceProvider serviceProvider;
+        private readonly ILogger<UnitOfWork> _logger;
 
         /// <summary>
         ///  <see cref="Mvp24Hours.Core.Contract.Data.IUnitOfWork"/>
@@ -97,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         public int SaveChanges(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-savechanges-start");
+            _logger?.LogDebug("MongoDB UnitOfWork SaveChanges started");
             try
             {
                 DbContext.SaveChanges(cancellationToken);
@@ -110,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-savechanges-end");
+                _logger?.LogDebug("MongoDB UnitOfWork SaveChanges completed");
             }
         }
 
@@ -119,12 +121,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         public void Rollback()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-rollback-start");
+            _logger?.LogDebug("MongoDB UnitOfWork Rollback started");
             try
             {
                 DbContext.Rollback();
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-rollback-end"); }
+            finally { _logger?.LogDebug("MongoDB UnitOfWork Rollback completed"); }
         }
 
         #endregion

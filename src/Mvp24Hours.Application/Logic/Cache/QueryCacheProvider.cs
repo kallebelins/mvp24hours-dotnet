@@ -8,8 +8,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Contract.Cache;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -71,7 +69,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-get-start", key);
+            _logger.LogDebug( "application-cache-get-start", key);
 
             try
             {
@@ -111,7 +109,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-get-end", key);
+                _logger.LogDebug( "application-cache-get-end", key);
             }
         }
 
@@ -123,7 +121,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-set-start", key);
+            _logger.LogDebug( "application-cache-set-start", key);
 
             try
             {
@@ -167,7 +165,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-set-end", key);
+                _logger.LogDebug( "application-cache-set-end", key);
             }
         }
 
@@ -253,7 +251,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-remove-start", key);
+            _logger.LogDebug( "application-cache-remove-start", key);
 
             try
             {
@@ -273,7 +271,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-remove-end", key);
+                _logger.LogDebug( "application-cache-remove-end", key);
             }
         }
 
@@ -285,7 +283,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-invalidateregion-start", region);
+            _logger.LogDebug( "application-cache-invalidateregion-start", region);
 
             try
             {
@@ -306,7 +304,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-invalidateregion-end", region);
+                _logger.LogDebug( "application-cache-invalidateregion-end", region);
             }
         }
 
@@ -318,7 +316,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-invalidatepattern-start", pattern);
+            _logger.LogDebug( "application-cache-invalidatepattern-start", pattern);
 
             try
             {
@@ -342,7 +340,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-cache-invalidatepattern-end", pattern);
+                _logger.LogDebug( "application-cache-invalidatepattern-end", pattern);
             }
         }
 

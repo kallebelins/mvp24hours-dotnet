@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 using System;
 using System.Data.Common;
@@ -218,26 +216,14 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         var durationMs = duration.TotalMilliseconds;
         var thresholdMs = threshold.TotalMilliseconds;
 
-        if (_logger != null)
-        {
-            _logger.LogWarning(
-                "⚠️ SLOW QUERY DETECTED - Operation: {Operation}, Duration: {DurationMs:F2}ms (Threshold: {ThresholdMs}ms), " +
-                "Database: {Database}, SQL: {Sql}",
-                operation,
-                durationMs,
-                thresholdMs,
-                dbName ?? "unknown",
-                TruncateSql(commandText));
-        }
-        else
-        {
-            var message = $"⚠️ SLOW QUERY DETECTED - Operation: {operation}, " +
-                          $"Duration: {durationMs:F2}ms (Threshold: {thresholdMs}ms), " +
-                          $"Database: {dbName ?? "unknown"}, " +
-                          $"SQL: {TruncateSql(commandText)}";
-
-            TelemetryHelper.Execute(TelemetryLevels.Warning, "efcore-slow-query", message);
-        }
+        _logger?.LogWarning(
+            "⚠️ SLOW QUERY DETECTED - Operation: {Operation}, Duration: {DurationMs:F2}ms (Threshold: {ThresholdMs}ms), " +
+            "Database: {Database}, SQL: {Sql}",
+            operation,
+            durationMs,
+            thresholdMs,
+            dbName ?? "unknown",
+            TruncateSql(commandText));
     }
 
     private static string DetectOperation(string commandText)

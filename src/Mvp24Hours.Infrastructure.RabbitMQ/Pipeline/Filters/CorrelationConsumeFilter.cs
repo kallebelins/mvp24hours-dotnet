@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Threading;
@@ -80,30 +78,16 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogCorrelationStarted(string correlationId, string? causationId, string messageId)
         {
-            var message = $"Correlation context started: CorrelationId={correlationId}, CausationId={causationId}, MessageId={messageId}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-correlation-started", message);
-            }
+            _logger?.LogDebug(
+                "Correlation context started. CorrelationId={CorrelationId}, CausationId={CausationId}, MessageId={MessageId}",
+                correlationId, causationId, messageId);
         }
 
         private void LogCorrelationEnded(string correlationId)
         {
-            var message = $"Correlation context ended: CorrelationId={correlationId}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-correlation-ended", message);
-            }
+            _logger?.LogDebug(
+                "Correlation context ended. CorrelationId={CorrelationId}",
+                correlationId);
         }
     }
 
@@ -153,16 +137,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogCorrelationPropagated(string correlationId, string? causationId, string messageId)
         {
-            var message = $"Correlation propagated to publish: CorrelationId={correlationId}, CausationId={causationId}, MessageId={messageId}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-correlation-propagated", message);
-            }
+            _logger?.LogDebug(
+                "Correlation propagated to publish. CorrelationId={CorrelationId}, CausationId={CausationId}, MessageId={MessageId}",
+                correlationId, causationId, messageId);
         }
     }
 
@@ -212,16 +189,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogCorrelationPropagated(string correlationId, string? causationId, string messageId)
         {
-            var message = $"Correlation propagated to send: CorrelationId={correlationId}, CausationId={causationId}, MessageId={messageId}";
-            
-            if (_logger != null)
-            {
-                _logger.LogDebug(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-correlation-propagated-send", message);
-            }
+            _logger?.LogDebug(
+                "Correlation propagated to send. CorrelationId={CorrelationId}, CausationId={CausationId}, MessageId={MessageId}",
+                correlationId, causationId, messageId);
         }
     }
 

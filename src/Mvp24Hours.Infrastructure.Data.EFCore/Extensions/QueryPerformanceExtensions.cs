@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -62,7 +60,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> AsSplitQueryIf<T>(this IQueryable<T> query, bool condition)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-assplitqueryif-condition:{condition}");
             return condition ? query.AsSplitQuery() : query;
         }
 
@@ -76,7 +73,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> AsSingleQueryIf<T>(this IQueryable<T> query, bool condition)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-assinglequeryif-condition:{condition}");
             return condition ? query.AsSingleQuery() : query;
         }
 
@@ -109,7 +105,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             int threshold = 2)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-optimizesplitquery-collections:{collectionCount}-threshold:{threshold}");
             return collectionCount >= threshold ? query.AsSplitQuery() : query;
         }
 
@@ -161,7 +156,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             var fileName = System.IO.Path.GetFileName(callerFilePath);
             var tag = $"{prefix}: {callerMemberName} ({fileName}:{callerLineNumber})";
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-tagwithcallerinfo:{tag}");
             return query.TagWith(tag);
         }
 
@@ -200,7 +194,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> TagWithIf<T>(this IQueryable<T> query, bool condition, string tag)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-tagwithif-condition:{condition}");
             return condition ? query.TagWith(tag) : query;
         }
 
@@ -243,7 +236,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                 tag += $" | User: {userId}";
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-tagwithoperationcontext:{tag}");
             return query.TagWith(tag);
         }
 
@@ -274,7 +266,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> IgnoreQueryFiltersIf<T>(this IQueryable<T> query, bool condition)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-ignorequeryfiltersif-condition:{condition}");
             return condition ? query.IgnoreQueryFilters() : query;
         }
 
@@ -288,7 +279,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> IgnoreAutoIncludesIf<T>(this IQueryable<T> query, bool condition)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-ignoreautoincludesif-condition:{condition}");
             return condition ? query.IgnoreAutoIncludes() : query;
         }
 
@@ -331,8 +321,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             string operationTag = null)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-optimizeforreadperformance-collections:{hasCollectionIncludes}");
-
             // Apply no tracking with appropriate mode
             query = hasCollectionIncludes
                 ? query.AsNoTrackingWithIdentityResolution()
@@ -377,8 +365,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             string operationTag = null)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-optimizeforpaging-skip:{skip}-take:{take}");
-
             query = query.AsNoTracking();
 
             if (!string.IsNullOrEmpty(operationTag))
@@ -409,8 +395,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             string operationTag = null)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-performance-optimizeforcount");
-
             query = query.AsNoTracking();
 
             if (!string.IsNullOrEmpty(operationTag))
@@ -442,8 +426,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             string operationTag = null)
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, $"efcore-performance-optimizeforsinglelookup-forupdate:{forUpdate}");
-
             if (!forUpdate)
             {
                 query = query.AsNoTracking();

@@ -6,8 +6,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using System;
 using System.Threading;
@@ -43,7 +41,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             {
                 throw new ArgumentNullException(nameof(options), "Options is required.");
             }
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq");
             this.callback = options.Callback;
             this.state = options.State;
             this.dueTime = options.DueTime;

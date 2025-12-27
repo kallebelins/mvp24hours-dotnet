@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,10 +120,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                         GetMaxAttempts(options, retryableOperation),
                         delay.TotalMilliseconds);
 
-                    TelemetryHelper.Execute(
-                        TelemetryLevels.Verbose,
-                        "pipe-retry-middleware-retry",
-                        $"attempt:{attemptNumber}, delay:{delay.TotalMilliseconds}ms, error:{ex.Message}");
+                    _logger?.LogDebug(
+                        "RetryMiddleware: Retrying. Attempt: {AttemptNumber}, Delay: {DelayMs}ms, Error: {ErrorMessage}",
+                        attemptNumber,
+                        delay.TotalMilliseconds,
+                        ex.Message);
 
                     // Notify callback
                     retryableOperation?.OnRetry(ex, attemptNumber, delay);

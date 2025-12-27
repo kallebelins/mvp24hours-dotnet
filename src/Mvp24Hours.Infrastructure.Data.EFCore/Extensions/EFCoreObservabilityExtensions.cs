@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
@@ -71,8 +69,6 @@ public static class EFCoreObservabilityExtensions
         this IServiceCollection services,
         Action<SlowQueryInterceptorOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-slowquery-interceptor");
-
         var options = new SlowQueryInterceptorOptions();
         configureOptions?.Invoke(options);
 
@@ -137,8 +133,6 @@ public static class EFCoreObservabilityExtensions
         this IServiceCollection services,
         Action<StructuredLoggingOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-structured-logging-interceptor");
-
         var options = new StructuredLoggingOptions();
         configureOptions?.Invoke(options);
 
@@ -201,8 +195,6 @@ public static class EFCoreObservabilityExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursEFCoreMetrics(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-metrics");
-
         services.TryAddSingleton<EFCoreMetrics>();
         return services;
     }
@@ -241,8 +233,6 @@ public static class EFCoreObservabilityExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursEFCoreDiagnosticsListener(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-diagnostics-listener");
-
         services.AddSingleton(sp =>
         {
             var logger = sp.GetService<ILogger<EFCoreDiagnosticsListener>>();
@@ -299,8 +289,6 @@ public static class EFCoreObservabilityExtensions
         this IServiceCollection services,
         Action<EFCoreObservabilityOptions>? configureOptions = null)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-observability");
-
         var options = new EFCoreObservabilityOptions();
         configureOptions?.Invoke(options);
 
@@ -368,8 +356,6 @@ public static class EFCoreObservabilityExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursEFCoreDevObservability(this IServiceCollection services)
     {
-        TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-add-dev-observability");
-
         services.AddMvp24HoursEFCoreObservability(options =>
         {
             options.SlowQueryThresholdMs = 200;

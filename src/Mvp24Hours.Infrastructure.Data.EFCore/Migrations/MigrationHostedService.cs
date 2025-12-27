@@ -8,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,8 +56,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationhostedservice-startasync-start");
-
             _logger.LogInformation("Migration service starting for {DbContext}", typeof(TContext).Name);
 
             try
@@ -99,13 +95,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                         $"Apply migrations or enable AutoMigrateOnStartup. " +
                         $"Pending: {string.Join(", ", pendingMigrations)}");
                 }
-
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationhostedservice-startasync-complete");
             }
             catch (Exception ex) when (_options.ThrowOnPendingMigrations || _options.AutoMigrateOnStartup)
             {
                 _logger.LogCritical(ex, "Migration failed for {DbContext}", typeof(TContext).Name);
-                TelemetryHelper.Execute(TelemetryLevels.Error, "migrationhostedservice-startasync-error", ex.Message);
                 throw;
             }
             catch (Exception ex)
@@ -199,8 +192,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
         private async Task RunDataSeedersAsync(CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "migrationhostedservice-rundataseeders-start");
-
             using var scope = _serviceProvider.CreateScope();
 
             // Try to resolve IDataSeeder instances

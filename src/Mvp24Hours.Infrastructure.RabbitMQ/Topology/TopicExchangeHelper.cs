@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
@@ -48,9 +46,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(exchangeName);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topic-exchange-declare",
-                $"exchange:{exchangeName}|durable:{durable}|autoDelete:{autoDelete}");
-
             channel.ExchangeDeclare(
                 exchange: exchangeName,
                 type: ExchangeType.Topic,
@@ -76,9 +71,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(queueName);
             ArgumentNullException.ThrowIfNull(exchangeName);
             ArgumentNullException.ThrowIfNull(routingKeyPattern);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "topic-exchange-bind-queue",
-                $"queue:{queueName}|exchange:{exchangeName}|pattern:{routingKeyPattern}");
 
             channel.QueueBind(
                 queue: queueName,

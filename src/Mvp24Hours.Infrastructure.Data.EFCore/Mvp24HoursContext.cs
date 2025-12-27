@@ -6,9 +6,7 @@
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,39 +51,24 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// </summary>
         public override int SaveChanges()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechanges-start");
-            try
-            {
-                this.ApplyLogRules();
-                return base.SaveChanges();
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechanges-end"); }
+            this.ApplyLogRules();
+            return base.SaveChanges();
         }
         /// <summary>
         /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(CancellationToken)"/>
         /// </summary>
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechangesasync-start");
-            try
-            {
-                ApplyLogRules();
-                return base.SaveChangesAsync(cancellationToken);
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechangesasync-end"); }
+            ApplyLogRules();
+            return base.SaveChangesAsync(cancellationToken);
         }
         /// <summary>
         /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(bool, CancellationToken)"/>
         /// </summary>
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechangesasync-acceptallchangesonsuccess-start");
-            try
-            {
-                ApplyLogRules();
-                return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-dbcontext-savechangesasync-acceptallchangesonsuccess-end"); }
+            ApplyLogRules();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
         /// <summary>
         /// Apply log rules

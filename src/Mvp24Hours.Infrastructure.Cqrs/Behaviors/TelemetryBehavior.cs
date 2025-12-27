@@ -5,58 +5,51 @@
 //=====================================================================================
 
 using System.Diagnostics;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
 /// <summary>
-/// Pipeline behavior that integrates with the Mvp24Hours telemetry system.
+/// Pipeline behavior that integrates with ILogger for telemetry and observability.
 /// </summary>
 /// <typeparam name="TRequest">The type of request.</typeparam>
 /// <typeparam name="TResponse">The type of response.</typeparam>
 /// <remarks>
 /// <para>
-/// This behavior uses <see cref="TelemetryHelper"/> to emit telemetry events for CQRS operations:
+/// This behavior uses <see cref="ILogger{T}"/> to emit structured logging for CQRS operations:
 /// <list type="bullet">
-/// <item>Request start events</item>
-/// <item>Request success events with timing</item>
-/// <item>Request failure events with exception details</item>
+/// <item>Request start events (Debug level)</item>
+/// <item>Request success events with timing (Information level)</item>
+/// <item>Request failure events with exception details (Error level)</item>
 /// </list>
 /// </para>
 /// <para>
-/// <strong>Telemetry Events Emitted:</strong>
-/// <list type="bullet">
-/// <item>mediator-request-start</item>
-/// <item>mediator-request-success</item>
-/// <item>mediator-request-failure</item>
-/// </list>
+/// All logs include structured properties for correlation, causation, user context, and timing.
 /// </para>
 /// </remarks>
 /// <example>
 /// <code>
-/// // Configure telemetry handlers
-/// services.AddMvp24HoursTelemetry(TelemetryLevels.Information, (eventName, args) =>
-/// {
-///     Console.WriteLine($"[{eventName}] {string.Join(", ", args)}");
-/// });
-/// 
-/// // Register the behavior
-/// services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(TelemetryBehavior&lt;,&gt;));
+/// // Register the behavior (automatically registered via AddMvpMediator)
+/// services.AddMvpMediator(typeof(MyAssembly));
 /// </code>
 /// </example>
 public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
     private readonly IRequestContextAccessor? _contextAccessor;
+    private readonly ILogger<TelemetryBehavior<TRequest, TResponse>> _logger;
 
     /// <summary>
     /// Creates a new instance of the TelemetryBehavior.
     /// </summary>
+    /// <param name="logger">Logger instance for telemetry.</param>
     /// <param name="contextAccessor">Optional request context accessor for including context in telemetry.</param>
-    public TelemetryBehavior(IRequestContextAccessor? contextAccessor = null)
+    public TelemetryBehavior(
+        ILogger<TelemetryBehavior<TRequest, TResponse>> logger,
+        IRequestContextAccessor? contextAccessor = null)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _contextAccessor = contextAccessor;
     }
 
@@ -68,20 +61,15 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
         var context = _contextAccessor?.Context;
 
         // Emit start event
-        TelemetryHelper.Execute(
-            TelemetryLevels.Verbose,
-            TelemetryEventNames.MediatorRequestStart,
-            new MediatorTelemetryData
-            {
-                RequestName = requestName,
-                RequestType = requestType,
-                CorrelationId = context?.CorrelationId,
-                CausationId = context?.CausationId,
-                RequestId = context?.RequestId,
-                UserId = context?.UserId,
-                TenantId = context?.TenantId,
-                Timestamp = DateTimeOffset.UtcNow
-            });
+        _logger.LogDebug(
+            "Mediator request started. RequestName: {RequestName}, RequestType: {RequestType}, CorrelationId: {CorrelationId}, CausationId: {CausationId}, RequestId: {RequestId}, UserId: {UserId}, TenantId: {TenantId}",
+            requestName,
+            requestType,
+            context?.CorrelationId,
+            context?.CausationId,
+            context?.RequestId,
+            context?.UserId,
+            context?.TenantId);
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -91,22 +79,16 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
             stopwatch.Stop();
 
             // Emit success event
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                TelemetryEventNames.MediatorRequestSuccess,
-                new MediatorTelemetryData
-                {
-                    RequestName = requestName,
-                    RequestType = requestType,
-                    CorrelationId = context?.CorrelationId,
-                    CausationId = context?.CausationId,
-                    RequestId = context?.RequestId,
-                    UserId = context?.UserId,
-                    TenantId = context?.TenantId,
-                    ElapsedMilliseconds = stopwatch.ElapsedMilliseconds,
-                    Timestamp = DateTimeOffset.UtcNow,
-                    IsSuccess = true
-                });
+            _logger.LogInformation(
+                "Mediator request succeeded. RequestName: {RequestName}, RequestType: {RequestType}, CorrelationId: {CorrelationId}, CausationId: {CausationId}, RequestId: {RequestId}, UserId: {UserId}, TenantId: {TenantId}, ElapsedMilliseconds: {ElapsedMilliseconds}",
+                requestName,
+                requestType,
+                context?.CorrelationId,
+                context?.CausationId,
+                context?.RequestId,
+                context?.UserId,
+                context?.TenantId,
+                stopwatch.ElapsedMilliseconds);
 
             return response;
         }
@@ -115,24 +97,18 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
             stopwatch.Stop();
 
             // Emit failure event
-            TelemetryHelper.Execute(
-                TelemetryLevels.Error,
-                TelemetryEventNames.MediatorRequestFailure,
-                new MediatorTelemetryData
-                {
-                    RequestName = requestName,
-                    RequestType = requestType,
-                    CorrelationId = context?.CorrelationId,
-                    CausationId = context?.CausationId,
-                    RequestId = context?.RequestId,
-                    UserId = context?.UserId,
-                    TenantId = context?.TenantId,
-                    ElapsedMilliseconds = stopwatch.ElapsedMilliseconds,
-                    Timestamp = DateTimeOffset.UtcNow,
-                    IsSuccess = false,
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = ex.Message
-                });
+            _logger.LogError(
+                ex,
+                "Mediator request failed. RequestName: {RequestName}, RequestType: {RequestType}, CorrelationId: {CorrelationId}, CausationId: {CausationId}, RequestId: {RequestId}, UserId: {UserId}, TenantId: {TenantId}, ElapsedMilliseconds: {ElapsedMilliseconds}, ExceptionType: {ExceptionType}",
+                requestName,
+                requestType,
+                context?.CorrelationId,
+                context?.CausationId,
+                context?.RequestId,
+                context?.UserId,
+                context?.TenantId,
+                stopwatch.ElapsedMilliseconds,
+                ex.GetType().Name);
 
             throw;
         }

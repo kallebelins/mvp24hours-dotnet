@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -20,8 +18,6 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static void ApplyGlobalFilters<TInterface>(this ModelBuilder modelBuilder, Expression<Func<TInterface, bool>> expression)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "modelbuilderextensions-applyglobalfilters-execute");
-
             var entities = modelBuilder.Model
                 .GetEntityTypes()
                 .Where(e => e.ClrType.GetInterface(typeof(TInterface).Name) != null)

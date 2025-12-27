@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
@@ -11,9 +12,7 @@ using MongoDB.Driver.Linq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 using System.Linq;
@@ -30,11 +29,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
     {
         #region [ Ctor ]
 
-        protected RepositoryBase(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options)
+        protected RepositoryBase(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
         {
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             dbEntities = dbContext.Set<T>();
             this.Options = options?.Value ?? new MongoDbRepositoryOptions();
+            _logger = logger;
         }
 
         #endregion
@@ -57,6 +57,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         /// Repository configuration options
         /// </summary>
         protected MongoDbRepositoryOptions Options { get; private set; }
+        /// <summary>
+        /// Logger instance
+        /// </summary>
+        protected readonly ILogger<RepositoryBase<T>>? _logger;
 
         #endregion
 
@@ -76,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
         protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria criteria, bool onlyNavigation = false)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-repositorybase-querycriteria-object", criteria);
+            _logger?.LogDebug("Building query with criteria. Type: {CriteriaType}", criteria?.GetType().Name);
             var ordered = false;
 
             if (!onlyNavigation)

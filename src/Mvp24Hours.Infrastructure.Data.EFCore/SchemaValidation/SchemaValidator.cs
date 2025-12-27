@@ -6,8 +6,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,8 +44,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         /// <inheritdoc/>
         public async Task<SchemaValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "schemavalidator-validate-start");
-
             // Check cache
             if (_options.CacheValidationResults && 
                 _cachedResult != null && 
@@ -144,8 +140,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                         typeof(TContext).Name,
                         stopwatch.ElapsedMilliseconds);
                 }
-
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "schemavalidator-validate-complete");
 
                 return result;
             }

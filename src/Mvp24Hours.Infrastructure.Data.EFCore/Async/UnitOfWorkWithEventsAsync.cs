@@ -8,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using System;
 using System.Collections.Generic;
@@ -146,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-savechangesasync-start");
+            _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync SaveChangesAsync started");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -155,23 +153,28 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     return 0;
                 }
 
-                return await _dbContext.SaveChangesAsync(cancellationToken);
+                var result = await _dbContext.SaveChangesAsync(cancellationToken);
+                _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync SaveChangesAsync completed. Rows affected: {RowCount}", result);
+                return result;
             }
-            finally
+            catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-savechangesasync-end");
+                _logger?.LogError(ex, "EFCore UnitOfWorkWithEventsAsync SaveChangesAsync failed");
+                throw;
             }
         }
 
         /// <inheritdoc />
         public async Task RollbackAsync()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-rollbackasync-start");
+            _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync RollbackAsync started");
             try
             {
                 var changedEntries = _dbContext.ChangeTracker.Entries()
                     .Where(x => x.State != EntityState.Unchanged)
                     .ToList();
+
+                _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync rolling back {EntryCount} changed entries", changedEntries.Count);
 
                 foreach (var entry in changedEntries)
                 {
@@ -190,11 +193,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
 
+                _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync RollbackAsync completed");
                 await Task.CompletedTask;
             }
-            finally
+            catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-rollbackasync-end");
+                _logger?.LogError(ex, "EFCore UnitOfWorkWithEventsAsync RollbackAsync failed");
+                throw;
             }
         }
 
@@ -205,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<int> SaveChangesWithEventsAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-savechangeswitheventsasync-start");
+            _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync SaveChangesWithEventsAsync started");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -221,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     .ToList();
 
                 _logger?.LogDebug(
-                    "[UnitOfWork] Saving changes with {EventCount} domain events from {EntityCount} entities",
+                    "EFCore UnitOfWorkWithEventsAsync saving changes with {EventCount} domain events from {EntityCount} entities",
                     allEvents.Count,
                     entitiesWithEvents.Count);
 
@@ -229,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 var result = await _dbContext.SaveChangesAsync(cancellationToken);
 
                 _logger?.LogDebug(
-                    "[UnitOfWork] Saved {RowCount} rows, dispatching domain events",
+                    "EFCore UnitOfWorkWithEventsAsync saved {RowCount} rows, dispatching domain events",
                     result);
 
                 // Dispatch domain events after successful save
@@ -240,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 else if (_eventDispatcher == null && allEvents.Count > 0)
                 {
                     _logger?.LogWarning(
-                        "[UnitOfWork] {EventCount} domain events were not dispatched because no IDomainEventDispatcherEFCore is registered",
+                        "EFCore UnitOfWorkWithEventsAsync {EventCount} domain events were not dispatched because no IDomainEventDispatcherEFCore is registered",
                         allEvents.Count);
 
                     // Clear events even without dispatcher to prevent memory leaks
@@ -250,19 +255,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
 
+                _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync SaveChangesWithEventsAsync completed successfully");
                 return result;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(
                     ex,
-                    "[UnitOfWork] Error during SaveChangesWithEventsAsync: {Message}",
+                    "EFCore UnitOfWorkWithEventsAsync SaveChangesWithEventsAsync failed: {Message}",
                     ex.Message);
                 throw;
-            }
-            finally
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-events-savechangeswitheventsasync-end");
             }
         }
 

@@ -3,11 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes;
 using System;
 using System.Collections.Concurrent;
@@ -54,6 +53,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
     {
         private static readonly ConcurrentDictionary<Type, bool> _indexesCreated = new();
         private readonly object _lock = new();
+        private readonly ILogger<MongoDbIndexManager> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MongoDbIndexManager"/> class.
+        /// </summary>
+        /// <param name="logger">Optional logger for structured logging.</param>
+        public MongoDbIndexManager(ILogger<MongoDbIndexManager> logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <inheritdoc/>
         public async Task EnsureIndexesAsync<T>(
@@ -75,9 +84,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
                     return;
                 }
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-index-manager-ensure-start",
-                    new { Type = type.Name });
+                _logger?.LogDebug("Ensuring indexes for type {TypeName}", type.Name);
 
                 try
                 {
@@ -89,18 +96,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
                         var task = collection.Indexes.CreateManyAsync(indexes, cancellationToken);
                         task.Wait(cancellationToken);
 
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                            "mongodb-index-manager-created",
-                            new { Type = type.Name, Count = indexes.Count });
+                        _logger?.LogInformation("Created {IndexCount} indexes for type {TypeName}", indexes.Count, type.Name);
                     }
 
                     _indexesCreated.TryAdd(type, true);
                 }
                 catch (Exception ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Warning,
-                        "mongodb-index-manager-error",
-                        new { Type = type.Name, Error = ex.Message });
+                    _logger?.LogWarning(ex, "Error creating indexes for type {TypeName}: {ErrorMessage}", type.Name, ex.Message);
                     throw;
                 }
             }
@@ -117,9 +120,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
                 .Where(t => HasIndexAttributes(t))
                 .ToList();
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-index-manager-scan-assembly",
-                new { Assembly = assembly.GetName().Name, TypesFound = entityTypes.Count });
+            _logger?.LogDebug("Scanning assembly {AssemblyName} for index attributes: found {TypeCount} types",
+                assembly.GetName().Name, entityTypes.Count);
 
             foreach (var type in entityTypes)
             {
@@ -226,9 +228,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
         {
             await collection.Indexes.DropOneAsync(indexName, cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-index-manager-dropped",
-                new { Type = typeof(T).Name, IndexName = indexName });
+            _logger?.LogInformation("Dropped index {IndexName} for type {TypeName}", indexName, typeof(T).Name);
         }
 
         /// <inheritdoc/>
@@ -236,8 +236,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
         {
             _indexesCreated.Clear();
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-index-manager-cache-reset");
+            _logger?.LogDebug("Index cache reset");
         }
 
         #region Private Methods

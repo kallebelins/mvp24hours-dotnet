@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -14,22 +13,43 @@ using System.Threading.Tasks;
 namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 {
     /// <summary>
-    /// 
+    /// Delegating handler that propagates the Authorization header from the current HTTP context
+    /// to outgoing HTTP requests.
     /// </summary>
-    public class PropagationAuthorizationDelegatingHandler(IServiceProvider serviceProvider) : DelegatingHandler
+    public class PropagationAuthorizationDelegatingHandler : DelegatingHandler
     {
-        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<PropagationAuthorizationDelegatingHandler> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropagationAuthorizationDelegatingHandler"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">The service provider to resolve services from.</param>
+        /// <param name="logger">The logger instance.</param>
+        public PropagationAuthorizationDelegatingHandler(
+            IServiceProvider serviceProvider,
+            ILogger<PropagationAuthorizationDelegatingHandler> logger)
+        {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <inheritdoc/>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "authorization-delegating-handler", $"Add authorization to {request.RequestUri}");
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            _logger.LogDebug("Adding authorization header to request: {RequestUri}", request.RequestUri);
             try
             {
                 request.PropagateHeaderKey(_serviceProvider, "Authorization");
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "authorization-delegating-handler-failure", ex);
+                _logger.LogError(ex, "Failed to propagate authorization header to request: {RequestUri}", request.RequestUri);
             }
             return await base.SendAsync(request, cancellationToken);
         }

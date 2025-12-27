@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using RabbitMQ.Client;
 using System;
@@ -40,9 +38,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(destinationExchange);
             ArgumentNullException.ThrowIfNull(sourceExchange);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-binding-create",
-                $"destination:{destinationExchange}|source:{sourceExchange}|routingKey:{routingKey}");
-
             channel.ExchangeBind(
                 destination: destinationExchange,
                 source: sourceExchange,
@@ -68,9 +63,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(destinationExchange);
             ArgumentNullException.ThrowIfNull(sourceExchange);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-binding-remove",
-                $"destination:{destinationExchange}|source:{sourceExchange}|routingKey:{routingKey}");
 
             channel.ExchangeUnbind(
                 destination: destinationExchange,
@@ -98,9 +90,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(parentExchange);
             ArgumentNullException.ThrowIfNull(childExchanges);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-hierarchy-create",
-                $"parent:{parentExchange}|type:{exchangeType}");
 
             // Declare parent exchange
             channel.ExchangeDeclare(
@@ -140,9 +129,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(sourceExchange);
             ArgumentNullException.ThrowIfNull(destinationExchanges);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-fanout-topology-create",
-                $"source:{sourceExchange}");
 
             // Declare source as fanout
             channel.ExchangeDeclare(
@@ -185,9 +171,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(sourceExchanges);
             ArgumentNullException.ThrowIfNull(destinationExchange);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-aggregation-topology-create",
-                $"destination:{destinationExchange}|type:{exchangeType}");
-
             // Declare destination exchange
             channel.ExchangeDeclare(
                 exchange: destinationExchange,
@@ -227,9 +210,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(sourceExchange);
             ArgumentNullException.ThrowIfNull(routingRules);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-cbr-topology-create",
-                $"source:{sourceExchange}|rules:{routingRules.Count}");
 
             // Declare source as topic exchange
             channel.ExchangeDeclare(
@@ -274,9 +254,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(mainExchange);
             ArgumentNullException.ThrowIfNull(deadLetterExchange);
             ArgumentNullException.ThrowIfNull(deadLetterQueue);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "exchange-dlx-setup",
-                $"main:{mainExchange}|dlx:{deadLetterExchange}|dlq:{deadLetterQueue}");
 
             // Declare DLX
             channel.ExchangeDeclare(

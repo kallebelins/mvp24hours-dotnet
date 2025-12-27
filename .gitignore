@@ -358,4 +358,7 @@ MigrationBackup/
 # Local Ofuscated Files
 tasks.md
 **/tasks.md
+tasks-*.md
+prompts.md
 **/prompts.md
+prompts-*.md

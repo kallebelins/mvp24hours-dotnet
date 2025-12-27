@@ -4,13 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -24,7 +24,7 @@ namespace Mvp24Hours.Application.Logic
     /// <remarks>
     /// 
     /// </remarks>
-    public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator) : IQueryService<TEntity>, ICommandService<TEntity>
+    public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryService<TEntity, TUoW>> logger = null) : IQueryService<TEntity>, ICommandService<TEntity>
         where TEntity : class, IEntityBase
         where TUoW : class, IUnitOfWork
     {
@@ -33,6 +33,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IRepository<TEntity> repository = unitOfWork.GetRepository<TEntity>();
         private readonly TUoW unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IValidator<TEntity> validator = validator;
+        private readonly ILogger<RepositoryService<TEntity, TUoW>> _logger = logger ?? NullLogger<RepositoryService<TEntity, TUoW>>.Instance;
 
         /// <summary>
         /// Gets unit of work instance
@@ -58,7 +59,7 @@ namespace Mvp24Hours.Application.Logic
         /// 
         /// </summary>
         public RepositoryService(TUoW unitOfWork)
-            : this(unitOfWork, null)
+            : this(unitOfWork, null, null)
         {
         }
         #endregion
@@ -70,7 +71,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<bool> ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-listany");
+            _logger.LogDebug("application-repositoryservice-listany");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .ListAny()
@@ -82,7 +83,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<int> ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-listcount");
+            _logger.LogDebug("application-repositoryservice-listcount");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .ListCount()
@@ -102,7 +103,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-list");
+            _logger.LogDebug("application-repositoryservice-list");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .List(criteria)
@@ -114,7 +115,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-getbyany");
+            _logger.LogDebug("application-repositoryservice-getbyany");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByAny(clause)
@@ -126,7 +127,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-getbycount");
+            _logger.LogDebug("application-repositoryservice-getbycount");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetByCount(clause)
@@ -146,7 +147,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-getby");
+            _logger.LogDebug("application-repositoryservice-getby");
             return UnitOfWork
                 .GetRepository<TEntity>()
                 .GetBy(clause, criteria)
@@ -166,7 +167,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-getbyid");
+            _logger.LogDebug("application-repositoryservice-getbyid");
             return this.UnitOfWork
                 .GetRepository<TEntity>()
                 .GetById(id, criteria)
@@ -179,7 +180,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Add(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-add");
+            _logger.LogDebug("application-repositoryservice-add");
             var errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
@@ -194,7 +195,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Add(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-addlist");
+            _logger.LogDebug("application-repositoryservice-addlist");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -220,7 +221,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Modify(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-modify");
+            _logger.LogDebug("application-repositoryservice-modify");
             var errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
@@ -235,7 +236,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Modify(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-modifylist");
+            _logger.LogDebug("application-repositoryservice-modifylist");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -252,7 +253,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Remove(TEntity entity)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-remove");
+            _logger.LogDebug("application-repositoryservice-remove");
             this.UnitOfWork.GetRepository<TEntity>().Remove(entity);
             return this.UnitOfWork.SaveChanges()
                 .ToBusiness();
@@ -260,7 +261,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> Remove(IList<TEntity> entities)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-removelist");
+            _logger.LogDebug("application-repositoryservice-removelist");
             if (!entities.AnySafe())
             {
                 return 0.ToBusiness();
@@ -277,7 +278,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-removebyid");
+            _logger.LogDebug("application-repositoryservice-removebyid");
             this.UnitOfWork.GetRepository<TEntity>().RemoveById(id);
             return this.UnitOfWork.SaveChanges()
                 .ToBusiness();
@@ -285,7 +286,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual IBusinessResult<int> RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-repositoryservice-removebyidlist");
+            _logger.LogDebug("application-repositoryservice-removebyidlist");
             if (!ids.AnySafe())
             {
                 return 0.ToBusiness();

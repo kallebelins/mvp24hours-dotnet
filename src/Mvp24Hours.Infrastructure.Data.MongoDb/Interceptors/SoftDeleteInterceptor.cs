@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Mvp24Hours.Infrastructure.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,6 +56,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     {
         private readonly ICurrentUserProvider _currentUserProvider;
         private readonly IClock _clock;
+        private readonly ILogger<SoftDeleteInterceptor> _logger;
         private readonly string _defaultUser;
 
         /// <summary>
@@ -63,14 +64,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// </summary>
         /// <param name="currentUserProvider">Optional provider for the current user. If null, default user is used.</param>
         /// <param name="clock">Optional clock for getting current time. If null, UTC now is used.</param>
+        /// <param name="logger">Optional logger for structured logging.</param>
         /// <param name="defaultUser">Default user identifier when no user is available. Defaults to "System".</param>
         public SoftDeleteInterceptor(
             ICurrentUserProvider currentUserProvider = null,
             IClock clock = null,
+            ILogger<SoftDeleteInterceptor> logger = null,
             string defaultUser = "System")
         {
             _currentUserProvider = currentUserProvider;
             _clock = clock;
+            _logger = logger;
             _defaultUser = defaultUser ?? "System";
         }
 
@@ -91,9 +95,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
             ApplySoftDelete(entity, now, currentUser);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                $"mongodb-softdelete-interceptor-{typeof(T).Name}",
-                new { EntityType = typeof(T).Name, User = currentUser, Timestamp = now });
+            _logger?.LogDebug("Soft deleting entity {EntityType} (Id: {EntityId}) by user {User} at {Timestamp}",
+                typeof(T).Name, entity.EntityKey, currentUser, now);
 
             return Task.FromResult(DeleteInterceptionResult.SoftDelete());
         }
@@ -103,9 +106,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         {
             if (wasSoftDeleted)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    $"mongodb-softdelete-completed-{typeof(T).Name}",
-                    new { EntityType = typeof(T).Name, EntityId = entity.EntityKey });
+                _logger?.LogDebug("Soft delete completed for entity {EntityType} (Id: {EntityId})",
+                    typeof(T).Name, entity.EntityKey);
             }
 
             return Task.CompletedTask;

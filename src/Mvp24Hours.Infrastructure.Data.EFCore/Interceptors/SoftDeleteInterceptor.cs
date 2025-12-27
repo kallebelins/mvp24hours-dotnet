@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Linq;
 using System.Threading;
@@ -125,9 +124,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             entity.IsDeleted = true;
             entity.DeletedAt = now;
             entity.DeletedBy = currentUser;
-
-            TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                $"softdelete-interceptor-deleted-{entry.Entity.GetType().Name}");
         }
 
         private void TryApplyGenericSoftDelete(EntityEntry entry, DateTime now, string currentUser)
@@ -146,9 +142,6 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                     SetPropertyValue(entry, "IsDeleted", true);
                     SetPropertyValue(entry, "DeletedAt", now);
                     SetPropertyValue(entry, "DeletedBy", currentUser);
-
-                    TelemetryHelper.Execute(Core.Enums.Infrastructure.TelemetryLevels.Verbose,
-                        $"softdelete-interceptor-deleted-{entry.Entity.GetType().Name}");
                     break;
                 }
             }

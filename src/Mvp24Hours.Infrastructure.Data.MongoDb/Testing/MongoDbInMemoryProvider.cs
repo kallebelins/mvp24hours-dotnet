@@ -3,12 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 using System.Collections.Concurrent;
@@ -72,13 +71,15 @@ public class MongoDbInMemoryProvider : IDisposable
     private readonly MongoDbInMemoryOptions _options;
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _databases;
     private readonly string _currentDatabaseName;
+    private readonly ILogger<MongoDbInMemoryProvider>? _logger;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance with default options.
     /// </summary>
-    public MongoDbInMemoryProvider()
-        : this(new MongoDbInMemoryOptions())
+    /// <param name="logger">The logger instance.</param>
+    public MongoDbInMemoryProvider(ILogger<MongoDbInMemoryProvider>? logger = null)
+        : this(new MongoDbInMemoryOptions(), logger)
     {
     }
 
@@ -86,15 +87,15 @@ public class MongoDbInMemoryProvider : IDisposable
     /// Initializes a new instance with the specified options.
     /// </summary>
     /// <param name="options">The configuration options.</param>
-    public MongoDbInMemoryProvider(MongoDbInMemoryOptions options)
+    /// <param name="logger">The logger instance.</param>
+    public MongoDbInMemoryProvider(MongoDbInMemoryOptions options, ILogger<MongoDbInMemoryProvider>? logger = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _databases = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
         _currentDatabaseName = options.GetEffectiveDatabaseName();
+        _logger = logger;
 
-        TelemetryHelper.Execute(TelemetryLevels.Verbose,
-            "mongodbinmemoryprovider-created",
-            new { DatabaseName = _currentDatabaseName });
+        _logger?.LogDebug("MongoDB in-memory provider created: DatabaseName={DatabaseName}", _currentDatabaseName);
     }
 
     /// <summary>
@@ -203,9 +204,7 @@ public class MongoDbInMemoryProvider : IDisposable
         if (disposing)
         {
             _databases.Clear();
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodbinmemoryprovider-disposed",
-                new { DatabaseName = _currentDatabaseName });
+            _logger?.LogDebug("MongoDB in-memory provider disposed: DatabaseName={DatabaseName}", _currentDatabaseName);
         }
 
         _disposed = true;

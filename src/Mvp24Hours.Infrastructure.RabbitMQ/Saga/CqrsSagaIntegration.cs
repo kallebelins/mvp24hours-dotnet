@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Cqrs.Saga;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
@@ -75,11 +73,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
 
             var data = dataFactory(context.Message);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "cqrs-saga-start-from-rabbitmq",
-                $"saga:{typeof(TSaga).Name}|message:{typeof(TMessage).Name}");
-
             _logger?.LogInformation(
                 "Starting CQRS saga {SagaType} from RabbitMQ message {MessageType}",
                 typeof(TSaga).Name, typeof(TMessage).Name);
@@ -125,11 +118,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                 _logger?.LogWarning("Saga state not found for {SagaId}", sagaId);
                 return null;
             }
-
-            TelemetryHelper.Execute(
-                TelemetryLevels.Information,
-                "cqrs-saga-resume-from-rabbitmq",
-                $"sagaId:{sagaId}|type:{typeof(TSaga).Name}");
 
             _logger?.LogInformation(
                 "Resuming CQRS saga {SagaId} of type {SagaType} from RabbitMQ event",

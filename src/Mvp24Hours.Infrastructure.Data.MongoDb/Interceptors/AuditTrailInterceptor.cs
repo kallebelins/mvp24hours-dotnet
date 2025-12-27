@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -27,7 +25,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     /// The audit trail can be stored to:
     /// <list type="bullet">
     ///   <item>Logger (ILogger) - for standard logging infrastructure</item>
-    ///   <item>TelemetryHelper - for the Mvp24Hours telemetry system</item>
     ///   <item>Custom IAuditStore - for persistent audit storage (when available)</item>
     /// </list>
     /// </para>
@@ -119,26 +116,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 EntityData = _logEntityData ? TrySerializeEntity(entity) : null
             };
 
-            if (_logger != null)
-            {
-                _logger.LogInformation(
-                    "MongoDB Audit Trail: {Operation} on {EntityType} (Id: {EntityId}) by {UserId} at {Timestamp}",
-                    auditEntry.Operation,
-                    auditEntry.EntityType,
-                    auditEntry.EntityId,
-                    auditEntry.UserId,
-                    auditEntry.Timestamp);
+            _logger?.LogInformation(
+                "MongoDB Audit Trail: {Operation} on {EntityType} (Id: {EntityId}) by {UserId} at {Timestamp}",
+                auditEntry.Operation,
+                auditEntry.EntityType,
+                auditEntry.EntityId,
+                auditEntry.UserId,
+                auditEntry.Timestamp);
 
-                if (_logEntityData && !string.IsNullOrEmpty(auditEntry.EntityData))
-                {
-                    _logger.LogDebug("Entity Data: {EntityData}", auditEntry.EntityData);
-                }
-            }
-            else
+            if (_logEntityData && !string.IsNullOrEmpty(auditEntry.EntityData))
             {
-                TelemetryHelper.Execute(TelemetryLevels.Information,
-                    "mongodb-audit-trail",
-                    auditEntry);
+                _logger?.LogDebug("Entity Data: {EntityData}", auditEntry.EntityData);
             }
         }
 
@@ -156,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
         private DateTime GetCurrentTime()
         {
-            return _clock?.UtcNow ?? TimeZoneHelper.GetTimeZoneNow();
+            return _clock?.UtcNow ?? DateTime.UtcNow;
         }
 
         private string GetCurrentUser()

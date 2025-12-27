@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting;
 using System;
 
@@ -57,8 +55,6 @@ namespace Mvp24Hours.Extensions
             Action<ReadWriteOptions> configureOptions)
             where TContext : DbContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "readwriteextensions-addmvp24hoursreadwritesplitting-start");
-
             var options = new ReadWriteOptions();
             configureOptions(options);
 

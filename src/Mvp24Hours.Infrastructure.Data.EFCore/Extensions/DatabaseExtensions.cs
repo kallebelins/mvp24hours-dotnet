@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.EFCore;
 using System;
 using System.Data.SqlClient;
@@ -19,7 +17,6 @@ namespace Mvp24Hours.Extensions
                                     Action<TContext, IServiceProvider> seeder,
                                     int? retry = 0) where TContext : Mvp24HoursContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-start", $"context:{typeof(TContext).Name}");
             int retryForAvailability = retry.Value;
             using (var scope = host.Services.CreateScope())
             {
@@ -28,21 +25,15 @@ namespace Mvp24Hours.Extensions
                 try
                 {
                     InvokeSeeder(seeder, context, services);
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-invokeseeder");
                 }
                 catch (SqlException ex)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "infa-database-migrate-failure", ex);
                     if (retryForAvailability < 50)
                     {
                         retryForAvailability++;
                         System.Threading.Thread.Sleep(2000);
                         host.MigrateDatabase(seeder, retryForAvailability);
                     }
-                }
-                finally
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-end", $"context:{typeof(TContext).Name}");
                 }
             }
             return host;
@@ -61,23 +52,17 @@ namespace Mvp24Hours.Extensions
                                         Action<TContext, IServiceProvider> seeder,
                                         string[] commandStrings) where TContext : Mvp24HoursContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-start", $"context:{typeof(TContext).Name}");
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetService<TContext>();
                 try
                 {
-                    int rowsAffected = InvokeSeederSQL(seeder, context, services, commandStrings);
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-invokeseeder", $"rows-affected:{rowsAffected}");
+                    InvokeSeederSQL(seeder, context, services, commandStrings);
                 }
-                catch (SqlException ex)
+                catch (SqlException)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "infa-database-migrate-sql-failure", ex);
-                }
-                finally
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-end", $"context:{typeof(TContext).Name}");
+                    // Log error via ILogger if needed (can be injected via host.Services)
                 }
             }
             return host;
@@ -117,7 +102,6 @@ namespace Mvp24Hours.Extensions
                             Action<TContext, IServiceProvider> seeder,
                             int? retry = 0) where TContext : Mvp24HoursContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-start", $"context:{typeof(TContext).Name}");
             int retryForAvailability = retry.Value;
             using (var scope = host.Services.CreateScope())
             {
@@ -126,21 +110,15 @@ namespace Mvp24Hours.Extensions
                 try
                 {
                     await InvokeSeederAsync(seeder, context, services);
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-invokeseeder", $"context:{typeof(TContext).Name}");
                 }
-                catch (SqlException ex)
+                catch (SqlException)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "infa-database-migrate-failure", ex, $"context:{typeof(TContext).Name}");
                     if (retryForAvailability < 50)
                     {
                         retryForAvailability++;
                         System.Threading.Thread.Sleep(2000);
                         host.MigrateDatabase(seeder, retryForAvailability);
                     }
-                }
-                finally
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-end", $"context:{typeof(TContext).Name}");
                 }
             }
             return host;
@@ -159,23 +137,17 @@ namespace Mvp24Hours.Extensions
                                         Action<TContext, IServiceProvider> seeder,
                                         string[] commandStrings) where TContext : Mvp24HoursContext
         {
-            TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-start", $"context:{typeof(TContext).Name}");
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetService<TContext>();
                 try
                 {
-                    int rowsAffected = await InvokeSeederSQLAsync(seeder, context, services, commandStrings);
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-invokeseeder", $"context:{typeof(TContext).Name}|rows-affected:{rowsAffected}");
+                    await InvokeSeederSQLAsync(seeder, context, services, commandStrings);
                 }
-                catch (SqlException ex)
+                catch (SqlException)
                 {
-                    TelemetryHelper.Execute(TelemetryLevels.Error, "infa-database-migrate-sql-failure", ex, $"context:{typeof(TContext).Name}");
-                }
-                finally
-                {
-                    TelemetryHelper.Execute(TelemetryLevels.Information, "infa-database-migrate-sql-end", $"context:{typeof(TContext).Name}");
+                    // Log error via ILogger if needed (can be injected via host.Services)
                 }
             }
             return host;

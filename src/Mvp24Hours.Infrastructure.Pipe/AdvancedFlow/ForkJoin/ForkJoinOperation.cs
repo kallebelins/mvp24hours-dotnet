@@ -3,9 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Collections.Concurrent;
@@ -44,6 +43,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
         private readonly Func<TBranchInput, CancellationToken, Task<IOperationResult<TBranchOutput>>>? _branchAsync;
         private readonly Func<IReadOnlyList<IOperationResult<TBranchOutput>>, IOperationResult<TOutput>> _join;
         private readonly ForkJoinOptions _options;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Creates a new fork-join operation with synchronous branch processing.
@@ -52,12 +52,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
             Func<TInput, IEnumerable<TBranchInput>> fork,
             Func<TBranchInput, IOperationResult<TBranchOutput>> branch,
             Func<IReadOnlyList<IOperationResult<TBranchOutput>>, IOperationResult<TOutput>> join,
-            ForkJoinOptions? options = null)
+            ForkJoinOptions? options = null,
+            ILogger? logger = null)
         {
             _fork = fork ?? throw new ArgumentNullException(nameof(fork));
             _branchSync = branch ?? throw new ArgumentNullException(nameof(branch));
             _join = join ?? throw new ArgumentNullException(nameof(join));
             _options = options ?? new ForkJoinOptions();
+            _logger = logger;
         }
 
         /// <summary>
@@ -67,25 +69,27 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
             Func<TInput, IEnumerable<TBranchInput>> fork,
             Func<TBranchInput, CancellationToken, Task<IOperationResult<TBranchOutput>>> branchAsync,
             Func<IReadOnlyList<IOperationResult<TBranchOutput>>, IOperationResult<TOutput>> join,
-            ForkJoinOptions? options = null)
+            ForkJoinOptions? options = null,
+            ILogger? logger = null)
         {
             _fork = fork ?? throw new ArgumentNullException(nameof(fork));
             _branchAsync = branchAsync ?? throw new ArgumentNullException(nameof(branchAsync));
             _branchSync = (input) => branchAsync(input, CancellationToken.None).GetAwaiter().GetResult();
             _join = join ?? throw new ArgumentNullException(nameof(join));
             _options = options ?? new ForkJoinOptions();
+            _logger = logger;
         }
 
         /// <inheritdoc/>
         public IOperationResult<TOutput> Execute(TInput input)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-join-execute-start");
+            _logger?.LogDebug("ForkJoinOperation: Execute started");
 
             try
             {
                 // Fork phase
                 var branchInputs = _fork(input).ToList();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-phase-complete", $"branches:{branchInputs.Count}");
+                _logger?.LogDebug("ForkJoinOperation: Fork phase complete. Branches: {BranchCount}", branchInputs.Count);
 
                 // Branch processing phase (parallel)
                 var branchResults = new ConcurrentBag<(int Index, IOperationResult<TBranchOutput> Result)>();
@@ -104,10 +108,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                         {
                             try
                             {
-                                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-start", $"branch:{item.index}");
+                                _logger?.LogDebug("ForkJoinOperation: Branch {BranchIndex} started", item.index);
                                 var result = _branchSync(item.input);
                                 branchResults.Add((item.index, result));
-                                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-end", $"branch:{item.index},success:{result.IsSuccess}");
+                                _logger?.LogDebug("ForkJoinOperation: Branch {BranchIndex} finished. Success: {IsSuccess}", item.index, result.IsSuccess);
 
                                 if (result.IsFailure && _options.RequireAllSuccess)
                                 {
@@ -118,7 +122,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                             {
                                 exceptions.Add(ex);
                                 branchResults.Add((item.index, OperationResult<TBranchOutput>.Failure(ex)));
-                                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-branch-error", ex);
+                                _logger?.LogError(ex, "ForkJoinOperation: Branch {BranchIndex} failed", item.index);
                             }
                         });
                 }
@@ -133,33 +137,33 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                     : branchResults.Select(r => r.Result).ToList();
 
                 // Join phase
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-join-phase-start");
+                _logger?.LogDebug("ForkJoinOperation: Join phase started");
                 var joinResult = _join(orderedResults);
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-join-phase-end", $"success:{joinResult.IsSuccess}");
+                _logger?.LogDebug("ForkJoinOperation: Join phase finished. Success: {IsSuccess}", joinResult.IsSuccess);
 
                 return joinResult;
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-fork-join-error", ex);
+                _logger?.LogError(ex, "ForkJoinOperation: Execute failed");
                 return OperationResult<TOutput>.Failure(ex);
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-join-execute-end");
+                _logger?.LogDebug("ForkJoinOperation: Execute finished");
             }
         }
 
         /// <inheritdoc/>
         public async Task<IOperationResult<TOutput>> ExecuteAsync(TInput input, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-join-async-execute-start");
+            _logger?.LogDebug("ForkJoinOperation: ExecuteAsync started");
 
             try
             {
                 // Fork phase
                 var branchInputs = _fork(input).ToList();
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-async-phase-complete", $"branches:{branchInputs.Count}");
+                _logger?.LogDebug("ForkJoinOperation: Fork async phase complete. Branches: {BranchCount}", branchInputs.Count);
 
                 // Create linked cancellation token for cancel-on-failure
                 using var linkedCts = _options.CancelOnFirstFailure
@@ -184,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                     {
                         effectiveToken.ThrowIfCancellationRequested();
 
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-start", $"branch:{index}");
+                        _logger?.LogDebug("ForkJoinOperation: Async branch {BranchIndex} started", index);
 
                         IOperationResult<TBranchOutput> result;
 
@@ -212,7 +216,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                         }
 
                         branchResults[index] = result;
-                        TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-branch-async-end", $"branch:{index},success:{result.IsSuccess}");
+                        _logger?.LogDebug("ForkJoinOperation: Async branch {BranchIndex} finished. Success: {IsSuccess}", index, result.IsSuccess);
 
                         if (result.IsFailure && _options.RequireAllSuccess && _options.CancelOnFirstFailure)
                         {
@@ -226,7 +230,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                     catch (Exception ex)
                     {
                         branchResults[index] = OperationResult<TBranchOutput>.Failure(ex);
-                        TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-branch-async-error", ex);
+                        _logger?.LogError(ex, "ForkJoinOperation: Async branch {BranchIndex} failed", index);
 
                         if (_options.RequireAllSuccess && _options.CancelOnFirstFailure)
                         {
@@ -249,20 +253,20 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                     : branchResults.Values.ToList();
 
                 // Join phase
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-join-async-phase-start");
+                _logger?.LogDebug("ForkJoinOperation: Join async phase started");
                 var joinResult = _join(orderedResults);
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-join-async-phase-end", $"success:{joinResult.IsSuccess}");
+                _logger?.LogDebug("ForkJoinOperation: Join async phase finished. Success: {IsSuccess}", joinResult.IsSuccess);
 
                 return joinResult;
             }
             catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "pipe-fork-join-async-error", ex);
+                _logger?.LogError(ex, "ForkJoinOperation: ExecuteAsync failed");
                 return OperationResult<TOutput>.Failure(ex);
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "pipe-fork-join-async-execute-end");
+                _logger?.LogDebug("ForkJoinOperation: ExecuteAsync finished");
             }
         }
     }

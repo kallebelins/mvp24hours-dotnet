@@ -5,13 +5,13 @@
 //=====================================================================================
 using AutoMapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -73,6 +73,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IMapper _mapper;
         private readonly IValidator<TEntity>? _entityValidator;
         private readonly IValidator<TDto>? _dtoValidator;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -145,6 +146,7 @@ namespace Mvp24Hours.Application.Logic
             _repository = unitOfWork.GetRepository<TEntity>();
             _entityValidator = entityValidator;
             _dtoValidator = dtoValidator;
+            _logger = NullLogger.Instance;
         }
 
         #endregion
@@ -154,14 +156,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> ListAny()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-listany");
+            _logger.LogDebug("application-applicationservicebasewithdto-listany");
             return _repository.ListAny().ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> ListCount()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-listcount");
+            _logger.LogDebug("application-applicationservicebasewithdto-listcount");
             return _repository.ListCount().ToBusiness();
         }
 
@@ -174,7 +176,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-list");
+            _logger.LogDebug("application-applicationservicebasewithdto-list");
             var entities = _repository.List(criteria);
             var dtos = _mapper.Map<IList<TDto>>(entities);
             return dtos.ToBusiness();
@@ -183,14 +185,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-getbyany");
+            _logger.LogDebug("application-applicationservicebasewithdto-getbyany");
             return _repository.GetByAny(clause).ToBusiness();
         }
 
         /// <inheritdoc/>
         public virtual IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-getbycount");
+            _logger.LogDebug("application-applicationservicebasewithdto-getbycount");
             return _repository.GetByCount(clause).ToBusiness();
         }
 
@@ -203,7 +205,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-getby");
+            _logger.LogDebug("application-applicationservicebasewithdto-getby");
             var entities = _repository.GetBy(clause, criteria);
             var dtos = _mapper.Map<IList<TDto>>(entities);
             return dtos.ToBusiness();
@@ -218,7 +220,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-getbyid");
+            _logger.LogDebug("application-applicationservicebasewithdto-getbyid");
             var entity = _repository.GetById(id, criteria);
             var dto = _mapper.Map<TDto>(entity);
             return dto.ToBusiness();
@@ -231,7 +233,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Add(TDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-add");
+            _logger.LogDebug("application-applicationservicebasewithdto-add");
 
             // Validate DTO if validator is available
             var dtoErrors = dto.TryValidate(_dtoValidator);
@@ -257,7 +259,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Add(IList<TDto> dtos)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-addlist");
+            _logger.LogDebug("application-applicationservicebasewithdto-addlist");
 
             if (!dtos.AnySafe())
             {
@@ -299,7 +301,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Modify(TDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-modify");
+            _logger.LogDebug("application-applicationservicebasewithdto-modify");
 
             // Validate DTO if validator is available
             var dtoErrors = dto.TryValidate(_dtoValidator);
@@ -325,7 +327,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Modify(IList<TDto> dtos)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-modifylist");
+            _logger.LogDebug("application-applicationservicebasewithdto-modifylist");
 
             if (!dtos.AnySafe())
             {
@@ -367,7 +369,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Remove(TDto dto)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-remove");
+            _logger.LogDebug("application-applicationservicebasewithdto-remove");
 
             // Map DTO to Entity
             var entity = _mapper.Map<TEntity>(dto);
@@ -379,7 +381,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> Remove(IList<TDto> dtos)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-removelist");
+            _logger.LogDebug("application-applicationservicebasewithdto-removelist");
 
             if (!dtos.AnySafe())
             {
@@ -398,7 +400,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(object id)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-removebyid");
+            _logger.LogDebug("application-applicationservicebasewithdto-removebyid");
             _repository.RemoveById(id);
             return _unitOfWork.SaveChanges().ToBusiness();
         }
@@ -406,7 +408,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<int> RemoveById(IList<object> ids)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdto-removebyidlist");
+            _logger.LogDebug("application-applicationservicebasewithdto-removebyidlist");
 
             if (!ids.AnySafe())
             {

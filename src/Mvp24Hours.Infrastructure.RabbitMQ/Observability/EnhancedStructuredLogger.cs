@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,8 +14,7 @@ using System.Text.Json;
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 
 /// <summary>
-/// Enhanced structured logger for RabbitMQ that includes message envelope details
-/// and integrates with ITelemetryService from Mvp24Hours.
+/// Enhanced structured logger for RabbitMQ that includes message envelope details.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -27,7 +24,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 /// <item>Trace context propagation (TraceId, SpanId)</item>
 /// <item>Tenant and user information</item>
 /// <item>Timing and performance data</item>
-/// <item>Integration with ITelemetryService for telemetry aggregation</item>
 /// </list>
 /// </para>
 /// </remarks>
@@ -107,17 +103,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
                 envelope.Expiration,
                 elapsed.TotalMilliseconds);
         }
-
-        // Integration with ITelemetryService
-        TelemetryHelper.Execute(
-            TelemetryLevels.Information,
-            "rabbitmq-message-published",
-            envelope.MessageId,
-            envelope.Exchange,
-            envelope.RoutingKey,
-            envelope.MessageType,
-            envelope.PayloadSize,
-            elapsed.TotalMilliseconds);
     }
 
     /// <summary>
@@ -165,16 +150,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
                     processingTime.TotalMilliseconds);
             }
         }
-
-        // Integration with ITelemetryService
-        TelemetryHelper.Execute(
-            success ? TelemetryLevels.Information : TelemetryLevels.Warning,
-            success ? "rabbitmq-message-consumed" : "rabbitmq-message-consume-failed",
-            envelope.MessageId,
-            envelope.QueueName,
-            envelope.MessageType,
-            processingTime.TotalMilliseconds,
-            envelope.Redelivered);
     }
 
     /// <summary>
@@ -227,15 +202,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             failedCount,
             totalTime.TotalMilliseconds,
             batchSize > 0 ? totalTime.TotalMilliseconds / batchSize : 0);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Information,
-            "rabbitmq-batch-processed",
-            queueName,
-            batchSize,
-            successCount,
-            failedCount,
-            totalTime.TotalMilliseconds);
     }
 
     /// <summary>
@@ -264,15 +230,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
                 duration.TotalMilliseconds,
                 errorMessage);
         }
-
-        TelemetryHelper.Execute(
-            success ? TelemetryLevels.Information : TelemetryLevels.Warning,
-            "rabbitmq-saga-step",
-            sagaType,
-            correlationId,
-            stepName,
-            success,
-            duration.TotalMilliseconds);
     }
 
     #endregion
@@ -321,14 +278,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             consumerTag,
             redelivered,
             bodySize);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Verbose,
-            "rabbitmq-message-received",
-            messageId,
-            exchange,
-            routingKey,
-            redelivered);
     }
 
     /// <inheritdoc />
@@ -338,12 +287,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             "Message acknowledged. MessageId={MessageId}, DeliveryTag={DeliveryTag}, ProcessingTimeMs={ProcessingTimeMs}",
             messageId,
             deliveryTag,
-            processingTime.TotalMilliseconds);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Verbose,
-            "rabbitmq-message-acked",
-            messageId,
             processingTime.TotalMilliseconds);
     }
 
@@ -357,13 +300,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             deliveryTag,
             requeue,
             reason);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Warning,
-            "rabbitmq-message-nacked",
-            messageId,
-            requeue,
-            reason);
     }
 
     /// <inheritdoc />
@@ -373,12 +309,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             "Message rejected. MessageId={MessageId}, DeliveryTag={DeliveryTag}, Reason={Reason}",
             messageId,
             deliveryTag,
-            reason);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Warning,
-            "rabbitmq-message-rejected",
-            messageId,
             reason);
     }
 
@@ -390,13 +320,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             messageId,
             redeliveryCount,
             maxRedeliveries);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Warning,
-            "rabbitmq-message-redelivered",
-            messageId,
-            redeliveryCount,
-            maxRedeliveries);
     }
 
     /// <inheritdoc />
@@ -404,11 +327,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     {
         _logger.LogInformation(
             "Duplicate message skipped. MessageId={MessageId}",
-            messageId);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Information,
-            "rabbitmq-duplicate-skipped",
             messageId);
     }
 
@@ -419,11 +337,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             "Publisher confirm received. MessageId={MessageId}, DeliveryTag={DeliveryTag}",
             messageId,
             deliveryTag);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Verbose,
-            "rabbitmq-publisher-confirm",
-            messageId);
     }
 
     /// <inheritdoc />
@@ -433,11 +346,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             "Publisher nack received. MessageId={MessageId}, DeliveryTag={DeliveryTag}",
             messageId,
             deliveryTag);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Warning,
-            "rabbitmq-publisher-nack",
-            messageId);
     }
 
     /// <inheritdoc />
@@ -459,14 +367,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
             hostName,
             port,
             reason);
-
-        TelemetryHelper.Execute(
-            logLevel == LogLevel.Warning ? TelemetryLevels.Warning : TelemetryLevels.Information,
-            "rabbitmq-connection-event",
-            eventType,
-            hostName,
-            port,
-            reason);
     }
 
     /// <inheritdoc />
@@ -474,13 +374,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     {
         _logger.LogDebug(
             "RabbitMQ channel event. Event={EventType}, Channel={ChannelNumber}, Reason={Reason}",
-            eventType,
-            channelNumber,
-            reason);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Verbose,
-            "rabbitmq-channel-event",
             eventType,
             channelNumber,
             reason);
@@ -492,14 +385,6 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
         _logger.LogError(exception,
             "RabbitMQ operation failed. Operation={Operation}, MessageId={MessageId}, " +
             "ErrorType={ErrorType}, ErrorMessage={ErrorMessage}",
-            operation,
-            messageId,
-            exception.GetType().Name,
-            exception.Message);
-
-        TelemetryHelper.Execute(
-            TelemetryLevels.Error,
-            "rabbitmq-error",
             operation,
             messageId,
             exception.GetType().Name,

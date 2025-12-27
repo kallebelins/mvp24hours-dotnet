@@ -5,13 +5,13 @@
 //=====================================================================================
 using AutoMapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,6 +77,7 @@ namespace Mvp24Hours.Application.Logic
         private readonly IMapper _mapper;
         private readonly IValidator<TEntity>? _entityValidator;
         private readonly IValidator<TDto>? _dtoValidator;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets the unit of work instance for managing transactions.
@@ -149,6 +150,7 @@ namespace Mvp24Hours.Application.Logic
             _repository = unitOfWork.GetRepository<TEntity>();
             _entityValidator = entityValidator;
             _dtoValidator = dtoValidator;
+            _logger = NullLogger.Instance;
         }
 
         #endregion
@@ -158,14 +160,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-listanyasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-listanyasync");
             return _repository.ListAnyAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-listcountasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-listcountasync");
             return _repository.ListCountAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -178,7 +180,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-listasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-listasync");
             var entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -187,14 +189,14 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<bool>> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-getbyanyasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyanyasync");
             return _repository.GetByAnyAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
         /// <inheritdoc/>
         public virtual Task<IBusinessResult<int>> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-getbycountasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-getbycountasync");
             return _repository.GetByCountAsync(clause, cancellationToken: cancellationToken).ToBusinessAsync();
         }
 
@@ -207,7 +209,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-getbyasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyasync");
             var entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
             var dtos = MapToDtos(entities);
             return dtos.ToBusiness();
@@ -222,7 +224,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-getbyidasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyidasync");
             var entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
             var dto = MapToDto(entity);
             return dto.ToBusiness();
@@ -235,7 +237,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(TDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-addasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-addasync");
 
             // Validate DTO if validator is available
             var dtoErrors = dto.TryValidate(_dtoValidator);
@@ -261,7 +263,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> AddAsync(IList<TDto> dtos, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-addlistasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-addlistasync");
 
             if (!dtos.AnySafe())
             {
@@ -299,7 +301,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(TDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-modifyasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-modifyasync");
 
             // Validate DTO if validator is available
             var dtoErrors = dto.TryValidate(_dtoValidator);
@@ -325,7 +327,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> ModifyAsync(IList<TDto> dtos, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-modifylistasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-modifylistasync");
 
             if (!dtos.AnySafe())
             {
@@ -363,7 +365,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(TDto dto, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-removeasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-removeasync");
 
             // Map DTO to Entity
             var entity = MapToEntity(dto);
@@ -375,7 +377,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveAsync(IList<TDto> dtos, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-removelistasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-removelistasync");
 
             if (!dtos.AnySafe())
             {
@@ -394,7 +396,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-removebyidasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-removebyidasync");
             await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
             return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
         }
@@ -402,7 +404,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual async Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-applicationservicebasewithdtoasync-removebyidlistasync");
+            _logger.LogDebug("application-applicationservicebasewithdtoasync-removebyidlistasync");
 
             if (!ids.AnySafe())
             {

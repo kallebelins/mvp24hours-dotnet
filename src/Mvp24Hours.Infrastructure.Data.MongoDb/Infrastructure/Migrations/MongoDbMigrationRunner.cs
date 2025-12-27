@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -147,10 +145,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
                 "Starting migration from version {StartVersion} to {TargetVersion}",
                 startVersion, targetVersion);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-migration-start",
-                new { StartVersion = startVersion, TargetVersion = targetVersion });
-
             var migrationsToApply = _migrations
                 .Where(m => m.Version > startVersion && m.Version <= targetVersion)
                 .OrderBy(m => m.Version)
@@ -185,16 +179,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
             _logger?.LogInformation(
                 "Migration completed. Applied {Count} migrations in {Duration}ms. Version: {StartVersion} -> {EndVersion}",
                 result.MigrationsApplied, result.TotalDurationMs, startVersion, result.EndVersion);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                "mongodb-migration-completed",
-                new
-                {
-                    MigrationsApplied = result.MigrationsApplied,
-                    DurationMs = result.TotalDurationMs,
-                    StartVersion = startVersion,
-                    EndVersion = result.EndVersion
-                });
 
             return result;
         }

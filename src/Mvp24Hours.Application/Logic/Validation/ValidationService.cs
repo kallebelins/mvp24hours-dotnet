@@ -7,9 +7,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -60,7 +58,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public ValidationServiceResult Validate(T instance, ValidationOptions options)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationservice-validate");
+            _logger?.LogDebug("application-validationservice-validate");
 
             if (instance == null)
             {
@@ -119,7 +117,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public async Task<ValidationServiceResult> ValidateAsync(T instance, ValidationOptions options, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationservice-validateasync");
+            _logger?.LogDebug("application-validationservice-validateasync");
 
             if (instance == null)
             {
@@ -172,7 +170,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public ValidationServiceResult ValidateMany(IEnumerable<T> instances)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationservice-validatemany");
+            _logger?.LogDebug("application-validationservice-validatemany");
 
             if (instances == null)
             {
@@ -206,7 +204,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public async Task<ValidationServiceResult> ValidateManyAsync(IEnumerable<T> instances, CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "application-validationservice-validatemanyasync");
+            _logger?.LogDebug("application-validationservice-validatemanyasync");
 
             if (instances == null)
             {

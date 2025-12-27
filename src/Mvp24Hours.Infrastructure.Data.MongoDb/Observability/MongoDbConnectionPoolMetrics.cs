@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -384,26 +382,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void LogDebug(string message, params object[] args)
         {
-            if (_logger != null)
-            {
-                _logger.LogDebug(message, args);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-pool-metrics", string.Format(message.Replace("{", "{{").Replace("}", "}}"), args));
-            }
+            _logger?.LogDebug(message, args);
         }
 
         private void LogWarning(string message, params object[] args)
         {
-            if (_logger != null)
-            {
-                _logger.LogWarning(message, args);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-pool-metrics", string.Format(message.Replace("{", "{{").Replace("}", "}}"), args));
-            }
+            _logger?.LogWarning(message, args);
         }
 
         #endregion

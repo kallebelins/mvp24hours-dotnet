@@ -3,11 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
@@ -55,6 +54,17 @@ namespace Mvp24Hours.Extensions
     /// </example>
     public static class MongoDbBulkOperationsExtensions
     {
+        private static ILogger _logger;
+
+        /// <summary>
+        /// Sets the logger instance for bulk operations extension methods.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         #region [ Bulk Insert ]
 
         /// <summary>
@@ -98,8 +108,8 @@ namespace Mvp24Hours.Extensions
 
             options ??= MongoDbBulkOperationOptions.Default;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkinsertasync-start",
-                $"count:{entities.Count}|ordered:{options.IsOrdered}");
+            _logger?.LogDebug("Starting bulk insert: {Count} entities, Ordered: {IsOrdered}",
+                entities.Count, options.IsOrdered);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -145,8 +155,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkinsertasync-end",
-                    $"rows:{insertedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("Bulk insert completed: {InsertedCount} entities inserted in {ElapsedMs}ms",
+                    insertedCount, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success(insertedCount, stopwatch.Elapsed);
             }
@@ -156,8 +166,8 @@ namespace Mvp24Hours.Extensions
 
                 var insertedCount = ex.Result?.InsertedCount ?? 0;
 
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-ext-bulkinsertasync-partial",
-                    $"inserted:{insertedCount}|errors:{ex.WriteErrors?.Count ?? 0}");
+                _logger?.LogWarning(ex, "Bulk insert partially failed: {InsertedCount} inserted, {ErrorCount} errors",
+                    insertedCount, ex.WriteErrors?.Count ?? 0);
 
                 if (!options.IsOrdered)
                 {
@@ -170,8 +180,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-bulkinsertasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "Bulk insert failed: {ErrorMessage}", ex.Message);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -227,8 +236,8 @@ namespace Mvp24Hours.Extensions
 
             options ??= MongoDbBulkOperationOptions.Default;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkupdateasync-start",
-                $"count:{entities.Count}|ordered:{options.IsOrdered}");
+            _logger?.LogDebug("Starting bulk update: {Count} entities, Ordered: {IsOrdered}",
+                entities.Count, options.IsOrdered);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -285,8 +294,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkupdateasync-end",
-                    $"modified:{modifiedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("Bulk update completed: {ModifiedCount} entities modified in {ElapsedMs}ms",
+                    modifiedCount, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success((int)modifiedCount, stopwatch.Elapsed);
             }
@@ -296,8 +305,8 @@ namespace Mvp24Hours.Extensions
 
                 var modifiedCount = ex.Result?.ModifiedCount ?? 0;
 
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-ext-bulkupdateasync-partial",
-                    $"modified:{modifiedCount}|errors:{ex.WriteErrors?.Count ?? 0}");
+                _logger?.LogWarning(ex, "Bulk update partially failed: {ModifiedCount} modified, {ErrorCount} errors",
+                    modifiedCount, ex.WriteErrors?.Count ?? 0);
 
                 if (!options.IsOrdered)
                 {
@@ -310,8 +319,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-bulkupdateasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "Bulk update failed: {ErrorMessage}", ex.Message);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -367,8 +375,8 @@ namespace Mvp24Hours.Extensions
 
             options ??= MongoDbBulkOperationOptions.Default;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkdeleteasync-start",
-                $"count:{entities.Count}|ordered:{options.IsOrdered}");
+            _logger?.LogDebug("Starting bulk delete: {Count} entities, Ordered: {IsOrdered}",
+                entities.Count, options.IsOrdered);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -425,8 +433,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkdeleteasync-end",
-                    $"deleted:{deletedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("Bulk delete completed: {DeletedCount} entities deleted in {ElapsedMs}ms",
+                    deletedCount, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Success((int)deletedCount, stopwatch.Elapsed);
             }
@@ -436,8 +444,8 @@ namespace Mvp24Hours.Extensions
 
                 var deletedCount = ex.Result?.DeletedCount ?? 0;
 
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-ext-bulkdeleteasync-partial",
-                    $"deleted:{deletedCount}|errors:{ex.WriteErrors?.Count ?? 0}");
+                _logger?.LogWarning(ex, "Bulk delete partially failed: {DeletedCount} deleted, {ErrorCount} errors",
+                    deletedCount, ex.WriteErrors?.Count ?? 0);
 
                 if (!options.IsOrdered)
                 {
@@ -450,8 +458,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-bulkdeleteasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "Bulk delete failed: {ErrorMessage}", ex.Message);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }
@@ -489,7 +496,7 @@ namespace Mvp24Hours.Extensions
             if (filter == null) throw new ArgumentNullException(nameof(filter));
             if (update == null) throw new ArgumentNullException(nameof(update));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-updatemanyasync-start");
+            _logger?.LogDebug("Starting UpdateManyAsync for entity {EntityType}", typeof(TEntity).Name);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -517,8 +524,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-updatemanyasync-end",
-                    $"matched:{result.MatchedCount}|modified:{result.ModifiedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("UpdateManyAsync completed: Matched={MatchedCount}, Modified={ModifiedCount} in {ElapsedMs}ms",
+                    result.MatchedCount, result.ModifiedCount, stopwatch.ElapsedMilliseconds);
 
                 return result.ModifiedCount;
             }
@@ -526,8 +533,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-updatemanyasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "UpdateManyAsync failed: {ErrorMessage}", ex.Message);
 
                 throw;
             }
@@ -561,7 +567,7 @@ namespace Mvp24Hours.Extensions
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (filter == null) throw new ArgumentNullException(nameof(filter));
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-deletemanyasync-start");
+            _logger?.LogDebug("Starting DeleteManyAsync for entity {EntityType}", typeof(TEntity).Name);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -587,8 +593,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-deletemanyasync-end",
-                    $"deleted:{result.DeletedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("DeleteManyAsync completed: {DeletedCount} entities deleted in {ElapsedMs}ms",
+                    result.DeletedCount, stopwatch.ElapsedMilliseconds);
 
                 return result.DeletedCount;
             }
@@ -596,8 +602,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-deletemanyasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "DeleteManyAsync failed: {ErrorMessage}", ex.Message);
 
                 throw;
             }
@@ -634,8 +639,8 @@ namespace Mvp24Hours.Extensions
 
             options ??= MongoDbBulkOperationOptions.Default;
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkwriteasync-start",
-                $"count:{requestList.Count}|ordered:{options.IsOrdered}");
+            _logger?.LogDebug("Starting BulkWriteAsync: {Count} write models, Ordered: {IsOrdered}",
+                requestList.Count, options.IsOrdered);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -668,8 +673,8 @@ namespace Mvp24Hours.Extensions
 
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-ext-bulkwriteasync-end",
-                    $"inserted:{result.InsertedCount}|modified:{result.ModifiedCount}|deleted:{result.DeletedCount}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger?.LogInformation("BulkWriteAsync completed: Inserted={InsertedCount}, Modified={ModifiedCount}, Deleted={DeletedCount} in {ElapsedMs}ms",
+                    result.InsertedCount, result.ModifiedCount, result.DeletedCount, stopwatch.ElapsedMilliseconds);
 
                 return MongoDbBulkOperationResult.Success(
                     result.InsertedCount,
@@ -682,8 +687,8 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "mongodb-ext-bulkwriteasync-partial",
-                    $"errors:{ex.WriteErrors?.Count ?? 0}");
+                _logger?.LogWarning(ex, "BulkWriteAsync partially failed: {ErrorCount} errors",
+                    ex.WriteErrors?.Count ?? 0);
 
                 var result = ex.Result;
                 if (!options.IsOrdered && result != null)
@@ -705,8 +710,7 @@ namespace Mvp24Hours.Extensions
             {
                 stopwatch.Stop();
 
-                TelemetryHelper.Execute(TelemetryLevels.Error, "mongodb-ext-bulkwriteasync-error",
-                    $"error:{ex.Message}");
+                _logger?.LogError(ex, "BulkWriteAsync failed: {ErrorMessage}", ex.Message);
 
                 return MongoDbBulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
             }

@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 using System;
 using System.Collections.Concurrent;
@@ -183,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangesasync-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesAsync operation started.");
             try
             {
                 await DbContext.SaveChangesAsync(cancellationToken);
@@ -196,14 +194,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangesasync-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesAsync operation completed.");
             }
         }
 
         /// <inheritdoc />
         public async Task RollbackAsync()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-rollbackasync-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events RollbackAsync operation started.");
             try
             {
                 await DbContext.RollbackAsync();
@@ -211,7 +209,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-rollbackasync-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events RollbackAsync operation completed.");
             }
         }
 
@@ -222,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <inheritdoc />
         public async Task<int> SaveChangesWithEventsAsync(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangeswitheventsasync-start");
+            _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesWithEventsAsync operation started.");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -283,7 +281,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-unitofwork-events-savechangeswitheventsasync-end");
+                _logger?.LogDebug("MongoDB UnitOfWork with events SaveChangesWithEventsAsync operation completed.");
             }
         }
 

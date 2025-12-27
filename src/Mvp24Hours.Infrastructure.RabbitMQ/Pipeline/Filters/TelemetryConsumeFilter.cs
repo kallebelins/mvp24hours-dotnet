@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Diagnostics;
@@ -85,8 +83,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 context.Items["TraceId"] = activity.TraceId.ToString();
                 context.Items["SpanId"] = activity.SpanId.ToString();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-telemetry-started", 
-                    $"TraceId={activity.TraceId}, SpanId={activity.SpanId}");
+                _logger?.LogDebug(
+                    "Telemetry filter started. TraceId={TraceId}, SpanId={SpanId}",
+                    activity.TraceId, activity.SpanId);
             }
 
             try
@@ -194,8 +193,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 context.Items["TraceId"] = activity.TraceId.ToString();
                 context.Items["SpanId"] = activity.SpanId.ToString();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-telemetry-publish-started", 
-                    $"TraceId={activity.TraceId}, SpanId={activity.SpanId}");
+                _logger?.LogDebug(
+                    "Telemetry publish filter started. TraceId={TraceId}, SpanId={SpanId}",
+                    activity.TraceId, activity.SpanId);
             }
 
             try
@@ -280,8 +280,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 context.Items["TraceId"] = activity.TraceId.ToString();
                 context.Items["SpanId"] = activity.SpanId.ToString();
 
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "rabbitmq-filter-telemetry-send-started", 
-                    $"TraceId={activity.TraceId}, SpanId={activity.SpanId}");
+                _logger?.LogDebug(
+                    "Telemetry send filter started. TraceId={TraceId}, SpanId={SpanId}",
+                    activity.TraceId, activity.SpanId);
             }
 
             try

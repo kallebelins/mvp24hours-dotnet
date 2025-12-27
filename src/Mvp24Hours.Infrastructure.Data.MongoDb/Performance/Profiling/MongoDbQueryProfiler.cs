@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -34,7 +33,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
     /// </remarks>
     /// <example>
     /// <code>
-    /// var profiler = new MongoDbQueryProfiler&lt;Order&gt;(collection);
+    /// var profiler = new MongoDbQueryProfiler&lt;Order&gt;(collection, logger);
     /// 
     /// // Get explain output
     /// var explain = await profiler.ExplainAsync(
@@ -49,14 +48,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
     public class MongoDbQueryProfiler<T>
     {
         private readonly IMongoCollection<T> _collection;
+        private readonly ILogger<MongoDbQueryProfiler<T>> _logger;
 
         /// <summary>
         /// Initializes a new query profiler for the specified collection.
         /// </summary>
         /// <param name="collection">The MongoDB collection.</param>
-        public MongoDbQueryProfiler(IMongoCollection<T> collection)
+        /// <param name="logger">Optional logger for structured logging.</param>
+        public MongoDbQueryProfiler(IMongoCollection<T> collection, ILogger<MongoDbQueryProfiler<T>> logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+            _logger = logger;
         }
 
         /// <summary>
@@ -89,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             ExplainVerbosity verbosity = ExplainVerbosity.ExecutionStats,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-explain-start");
+            _logger?.LogDebug("Starting query explain for collection {CollectionName}", typeof(T).Name);
 
             try
             {
@@ -118,11 +120,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 }
 
                 var result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-                return ParseExplainResult(result);
+                var explainResult = ParseExplainResult(result);
+                _logger?.LogDebug("Query explain completed for collection {CollectionName}: Index={IndexName}, ExecutionTime={ExecutionTimeMs}ms",
+                    typeof(T).Name, explainResult.IndexName, explainResult.ExecutionTimeMs);
+                return explainResult;
             }
-            finally
+            catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-explain-end");
+                _logger?.LogError(ex, "Error during query explain for collection {CollectionName}", typeof(T).Name);
+                throw;
             }
         }
 
@@ -138,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             ExplainVerbosity verbosity = ExplainVerbosity.ExecutionStats,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-explain-aggregation-start");
+            _logger?.LogDebug("Starting aggregation explain for collection {CollectionName}", typeof(T).Name);
 
             try
             {
@@ -159,11 +165,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 };
 
                 var result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-                return ParseExplainResult(result);
+                var explainResult = ParseExplainResult(result);
+                _logger?.LogDebug("Aggregation explain completed for collection {CollectionName}: ExecutionTime={ExecutionTimeMs}ms",
+                    typeof(T).Name, explainResult.ExecutionTimeMs);
+                return explainResult;
             }
-            finally
+            catch (Exception ex)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-explain-aggregation-end");
+                _logger?.LogError(ex, "Error during aggregation explain for collection {CollectionName}", typeof(T).Name);
+                throw;
             }
         }
 
@@ -179,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             string indexName,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-find-with-hint", new { IndexName = indexName });
+            _logger?.LogDebug("Executing query with index hint {IndexName} for collection {CollectionName}", indexName, typeof(T).Name);
 
             var options = new FindOptions<T>
             {
@@ -202,7 +212,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             BsonDocument indexKeys,
             CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-profiler-find-with-hint-keys", new { IndexKeys = indexKeys.ToJson() });
+            _logger?.LogDebug("Executing query with index hint keys for collection {CollectionName}", typeof(T).Name);
 
             var options = new FindOptions<T>
             {

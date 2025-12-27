@@ -5,10 +5,9 @@
 //=====================================================================================
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,18 +22,20 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     public class UnitOfWork : IUnitOfWork
     {
         #region [ Ctor ]
-        public UnitOfWork(DbContext _dbContext, Dictionary<Type, object> _repositories)
+        public UnitOfWork(DbContext _dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork>? logger = null)
         {
             this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
+            this._logger = logger;
         }
 
         [ActivatorUtilitiesConstructor]
-        public UnitOfWork(DbContext _dbContext, IServiceProvider _serviceProvider)
+        public UnitOfWork(DbContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork>? logger = null)
         {
             this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
             this.repositories = [];
+            this._logger = logger;
         }
 
         #endregion
@@ -43,6 +44,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         protected DbContext DbContext { get; private set; }
         private readonly IServiceProvider serviceProvider;
+        private readonly ILogger<UnitOfWork>? _logger;
 
         readonly Dictionary<Type, object> repositories;
 
@@ -89,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// </summary>
         public int SaveChanges(CancellationToken cancellationToken = default)
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-savechanges-start");
+            _logger?.LogDebug("UnitOfWork: SaveChanges started");
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -99,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 Rollback();
                 return default;
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-savechanges-end"); }
+            finally { _logger?.LogDebug("UnitOfWork: SaveChanges finished"); }
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// </summary>
         public void Rollback()
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-rollback-start");
+            _logger?.LogDebug("UnitOfWork: Rollback started");
             try
             {
                 var changedEntries = this.DbContext.ChangeTracker.Entries()
@@ -130,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                 }
             }
-            finally { TelemetryHelper.Execute(TelemetryLevels.Verbose, "efcore-unitofwork-rollback-end"); }
+            finally { _logger?.LogDebug("UnitOfWork: Rollback finished"); }
         }
 
         #endregion

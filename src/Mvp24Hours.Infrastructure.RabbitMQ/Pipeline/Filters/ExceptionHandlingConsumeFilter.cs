@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Threading;
@@ -150,44 +148,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
         private void LogException(string messageType, string messageId, int redeliveryCount, Exception ex)
         {
-            var message = $"Exception during message processing: Type={messageType}, MessageId={messageId}, RedeliveryCount={redeliveryCount}, Error={ex.Message}";
-            
-            if (_logger != null)
-            {
-                _logger.LogWarning(ex, message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Warning, "rabbitmq-filter-exception-handling", message);
-            }
+            _logger?.LogWarning(ex,
+                "Exception during message processing. Type={MessageType}, MessageId={MessageId}, RedeliveryCount={RedeliveryCount}",
+                messageType, messageId, redeliveryCount);
         }
 
         private void LogRetry(string messageType, string messageId, int retryNumber, int maxRetries, TimeSpan delay)
         {
-            var message = $"Scheduling retry: Type={messageType}, MessageId={messageId}, Retry={retryNumber}/{maxRetries}, Delay={delay.TotalMilliseconds}ms";
-            
-            if (_logger != null)
-            {
-                _logger.LogInformation(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information, "rabbitmq-filter-exception-retry", message);
-            }
+            _logger?.LogInformation(
+                "Scheduling retry. Type={MessageType}, MessageId={MessageId}, Retry={RetryNumber}/{MaxRetries}, Delay={Delay}ms",
+                messageType, messageId, retryNumber, maxRetries, delay.TotalMilliseconds);
         }
 
         private void LogDeadLetter(string messageType, string messageId, string reason)
         {
-            var message = $"Sending to dead letter queue: Type={messageType}, MessageId={messageId}, Reason={reason}";
-            
-            if (_logger != null)
-            {
-                _logger.LogError(message);
-            }
-            else
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Error, "rabbitmq-filter-exception-dlq", message);
-            }
+            _logger?.LogError(
+                "Sending to dead letter queue. Type={MessageType}, MessageId={MessageId}, Reason={Reason}",
+                messageType, messageId, reason);
         }
     }
 

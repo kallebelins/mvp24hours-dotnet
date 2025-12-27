@@ -5,8 +5,6 @@
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using System;
@@ -57,11 +55,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             // Extract correlation ID from message
             var correlationId = consumer.GetCorrelationId(context.Message);
 
-            TelemetryHelper.Execute(
-                TelemetryLevels.Verbose,
-                "saga-consumer-process",
-                $"type:{typeof(TMessage).Name}|correlationId:{correlationId}|consumer:{typeof(TConsumer).Name}");
-
             _logger?.LogDebug(
                 "Processing message {MessageType} with correlation ID {CorrelationId}",
                 typeof(TMessage).Name, correlationId);
@@ -84,11 +77,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                     _logger?.LogInformation(
                         "Created new saga instance {SagaId} from message {MessageType}",
                         correlationId, typeof(TMessage).Name);
-
-                    TelemetryHelper.Execute(
-                        TelemetryLevels.Information,
-                        "saga-instance-created",
-                        $"sagaId:{correlationId}|type:{typeof(TData).Name}");
                 }
                 else
                 {
@@ -137,11 +125,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                 _logger?.LogDebug(
                     "Saga {SagaId} processed message {MessageType}, new state: {State}",
                     correlationId, typeof(TMessage).Name, instance.CurrentState);
-
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Information,
-                    "saga-message-processed",
-                    $"sagaId:{correlationId}|message:{typeof(TMessage).Name}|state:{instance.CurrentState}");
             }
             catch (Exception ex)
             {
@@ -151,11 +134,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
 
                 instance.Fault(ex.Message);
                 await repository.SaveAsync(instance, cancellationToken);
-
-                TelemetryHelper.Execute(
-                    TelemetryLevels.Error,
-                    "saga-message-failed",
-                    $"sagaId:{correlationId}|message:{typeof(TMessage).Name}|error:{ex.Message}");
 
                 throw;
             }

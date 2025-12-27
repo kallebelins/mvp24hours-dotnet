@@ -6,8 +6,6 @@
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -85,9 +83,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 new CreateIndexModel<TDocument>(indexKeys),
                 cancellationToken: cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-index-created",
-                new { IndexName = indexName, Field = locationField });
-
             _logger?.LogInformation("2dsphere index '{IndexName}' created on field '{Field}'.",
                 indexName, locationField);
 
@@ -160,9 +155,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
 
             var result = await findFluent.ToListAsync(cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-near",
-                new { Count = result.Count, MaxDistance = maxDistanceMeters });
-
             return result;
         }
 
@@ -208,9 +200,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 });
             }
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-near-distance",
-                new { Count = geoNearResults.Count, MaxDistance = maxDistanceMeters });
-
             return geoNearResults;
         }
 
@@ -230,9 +219,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                     new BsonDocument("$geometry", polygon.ToBsonDocument()))));
 
             var result = await _collection.Find(filter).ToListAsync(cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-within-polygon",
-                new { Count = result.Count });
 
             return result;
         }
@@ -258,9 +244,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
 
             var result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-within-circle",
-                new { Count = result.Count, RadiusMeters = radiusMeters });
-
             return result;
         }
 
@@ -283,9 +266,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
 
             var result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-within-box",
-                new { Count = result.Count });
-
             return result;
         }
 
@@ -305,9 +285,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                     new BsonDocument("$geometry", polygon.ToBsonDocument()))));
 
             var result = await _collection.Find(filter).ToListAsync(cancellationToken);
-
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "mongodb-geo-intersects",
-                new { Count = result.Count });
 
             return result;
         }

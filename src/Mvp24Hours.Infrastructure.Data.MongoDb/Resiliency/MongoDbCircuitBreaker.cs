@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -223,18 +221,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                     }
                 }
             }
-
-            if (_options.LogRetryAttempts)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose,
-                    "mongodb-circuit-breaker-failure-recorded",
-                    new
-                    {
-                        ExceptionType = exception?.GetType().Name,
-                        RecentFailures = _recentFailures.Count,
-                        State = _state.ToString()
-                    });
-            }
         }
 
         /// <summary>
@@ -311,20 +297,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             else if (newState == CircuitBreakerState.Closed)
             {
                 _openedAt = null;
-            }
-
-            if (_options.LogCircuitBreakerStateChanges)
-            {
-                TelemetryHelper.Execute(TelemetryLevels.Information,
-                    "mongodb-circuit-breaker-state-changed",
-                    new
-                    {
-                        PreviousState = previousState.ToString(),
-                        NewState = newState.ToString(),
-                        TotalSuccesses = TotalSuccessCount,
-                        TotalFailures = TotalFailureCount,
-                        TripCount = CircuitTripCount
-                    });
             }
         }
 
