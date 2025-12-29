@@ -837,21 +837,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         #region [ Registrars ]
         private IMvpRabbitMQConsumer GetService(Type consumerType)
         {
+            // Use ActivatorUtilities.CreateInstance as fallback instead of Activator.CreateInstance
+            // to support constructors with optional parameters or dependencies that can be resolved from DI
             if (consumerType.InheritsOrImplements(typeof(IMvpRabbitMQConsumerSync)))
             {
-                return (IMvpRabbitMQConsumerSync)(_provider.GetService(consumerType) ?? Activator.CreateInstance(consumerType)!);
+                return (IMvpRabbitMQConsumerSync)(_provider.GetService(consumerType) ?? ActivatorUtilities.CreateInstance(_provider, consumerType));
             }
             else if (consumerType.InheritsOrImplements(typeof(IMvpRabbitMQConsumerAsync)))
             {
-                return (IMvpRabbitMQConsumerAsync)(_provider.GetService(consumerType) ?? Activator.CreateInstance(consumerType)!);
+                return (IMvpRabbitMQConsumerAsync)(_provider.GetService(consumerType) ?? ActivatorUtilities.CreateInstance(_provider, consumerType));
             }
             else if (consumerType.InheritsOrImplements(typeof(IMvpRabbitMQConsumerRecoverySync)))
             {
-                return (IMvpRabbitMQConsumerRecoverySync)(_provider.GetService(consumerType) ?? Activator.CreateInstance(consumerType)!);
+                return (IMvpRabbitMQConsumerRecoverySync)(_provider.GetService(consumerType) ?? ActivatorUtilities.CreateInstance(_provider, consumerType));
             }
             else if (consumerType.InheritsOrImplements(typeof(IMvpRabbitMQConsumerRecoveryAsync)))
             {
-                return (IMvpRabbitMQConsumerRecoveryAsync)(_provider.GetService(consumerType) ?? Activator.CreateInstance(consumerType)!);
+                return (IMvpRabbitMQConsumerRecoveryAsync)(_provider.GetService(consumerType) ?? ActivatorUtilities.CreateInstance(_provider, consumerType));
             }
             throw new ArgumentException("Invalid type for consumers.");
         }

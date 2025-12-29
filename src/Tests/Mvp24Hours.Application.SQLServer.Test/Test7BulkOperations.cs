@@ -31,6 +31,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             var services = new ServiceCollection();
             
+            // Add logging (required by BulkOperationsRepositoryAsync)
+            services.AddLogging();
+            
             // Configure in-memory database for testing
             services.AddDbContext<DataContext>(options =>
             {
