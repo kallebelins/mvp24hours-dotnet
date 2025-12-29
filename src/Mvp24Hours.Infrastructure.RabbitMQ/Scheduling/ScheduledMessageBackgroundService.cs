@@ -17,6 +17,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
     /// <summary>
     /// Background service that periodically processes scheduled messages.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+    /// Task.Delay for modern async/await patterns with proper cancellation support.
+    /// </para>
+    /// </remarks>
     public class ScheduledMessageBackgroundService : BackgroundService
     {
         private readonly MessageScheduler _scheduler;
@@ -71,41 +77,45 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             _logger?.LogDebug("Scheduled message background service started");
 
-            while (!stoppingToken.IsCancellationRequested)
+            // Use PeriodicTimer for modern async/await patterns with proper cancellation
+            using var timer = new PeriodicTimer(_options.PollingInterval);
+            
+            try
             {
-                try
+                // Process immediately on startup, then periodically
+                await ProcessAsync(stoppingToken);
+                
+                while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    var processed = await _scheduler.ProcessDueMessagesAsync(stoppingToken);
-
-                    if (processed > 0)
+                    try
                     {
-                        _logger?.LogDebug("Processed {Count} scheduled messages", processed);
+                        await ProcessAsync(stoppingToken);
                     }
-
-                    // Cleanup old messages periodically
-                    await CleanupOldMessagesAsync(stoppingToken);
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "Error processing scheduled messages");
+                    }
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    // Graceful shutdown
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "Error processing scheduled messages");
-                }
-
-                try
-                {
-                    await Task.Delay(_options.PollingInterval, stoppingToken);
-                }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger?.LogDebug("Scheduled message background service stopping gracefully");
             }
 
             _logger?.LogInformation("Scheduled message background service stopped");
+        }
+
+        private async Task ProcessAsync(CancellationToken stoppingToken)
+        {
+            var processed = await _scheduler.ProcessDueMessagesAsync(stoppingToken);
+
+            if (processed > 0)
+            {
+                _logger?.LogDebug("Processed {Count} scheduled messages", processed);
+            }
+
+            // Cleanup old messages periodically
+            await CleanupOldMessagesAsync(stoppingToken);
         }
 
         /// <inheritdoc />

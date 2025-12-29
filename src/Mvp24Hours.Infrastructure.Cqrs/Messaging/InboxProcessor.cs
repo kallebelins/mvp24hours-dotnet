@@ -155,6 +155,12 @@ public sealed class InboxProcessor : IInboxProcessor
 /// <summary>
 /// Background service for cleaning up old inbox messages.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+/// Task.Delay for modern async/await patterns with proper cancellation support.
+/// </para>
+/// </remarks>
 public sealed class InboxCleanupService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -177,33 +183,41 @@ public sealed class InboxCleanupService : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        // Use PeriodicTimer for modern async/await patterns
+        using var timer = new PeriodicTimer(_options.CleanupInterval);
+        
+        try
         {
-            try
+            while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                using var scope = _serviceProvider.CreateScope();
-                var inboxStore = scope.ServiceProvider.GetService<IInboxStore>();
-
-                if (inboxStore != null)
+                try
                 {
-                    var cutoffDate = DateTime.UtcNow.AddDays(-_options.InboxRetentionDays);
-                    var deletedCount = await inboxStore.CleanupAsync(cutoffDate, stoppingToken);
+                    using var scope = _serviceProvider.CreateScope();
+                    var inboxStore = scope.ServiceProvider.GetService<IInboxStore>();
 
-                    if (deletedCount > 0)
+                    if (inboxStore != null)
                     {
-                        _logger?.LogInformation(
-                            "[Inbox] Cleaned up {Count} messages older than {CutoffDate}",
-                            deletedCount,
-                            cutoffDate);
+                        var cutoffDate = DateTime.UtcNow.AddDays(-_options.InboxRetentionDays);
+                        var deletedCount = await inboxStore.CleanupAsync(cutoffDate, stoppingToken);
+
+                        if (deletedCount > 0)
+                        {
+                            _logger?.LogInformation(
+                                "[Inbox] Cleaned up {Count} messages older than {CutoffDate}",
+                                deletedCount,
+                                cutoffDate);
+                        }
                     }
                 }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger?.LogError(ex, "[Inbox] Error during inbox cleanup");
+                }
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger?.LogError(ex, "[Inbox] Error during inbox cleanup");
-            }
-
-            await Task.Delay(_options.CleanupInterval, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            _logger?.LogDebug("[Inbox] InboxCleanupService stopping gracefully");
         }
     }
 }

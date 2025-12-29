@@ -21,6 +21,10 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
     /// This service runs in the background and periodically processes pending writes from
     /// Write-Behind caches. It can be configured with different flush intervals and batch sizes.
     /// </para>
+    /// <para>
+    /// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+    /// Task.Delay for modern async/await patterns with proper cancellation support.
+    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
@@ -63,18 +67,26 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             _logger.LogInformation("Write-Behind Background Service started. Flush interval: {Interval}, Batch size: {BatchSize}",
                 _options.FlushInterval, _options.BatchSize);
 
-            while (!stoppingToken.IsCancellationRequested)
+            // Use PeriodicTimer for modern async/await patterns with proper cancellation
+            using var timer = new PeriodicTimer(_options.FlushInterval);
+            
+            try
             {
-                try
+                while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    await ProcessWriteBehindCachesAsync(stoppingToken);
+                    try
+                    {
+                        await ProcessWriteBehindCachesAsync(stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing Write-Behind caches");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing Write-Behind caches");
-                }
-
-                await Task.Delay(_options.FlushInterval, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogDebug("Write-Behind Background Service stopping gracefully");
             }
 
             _logger.LogInformation("Write-Behind Background Service stopped");

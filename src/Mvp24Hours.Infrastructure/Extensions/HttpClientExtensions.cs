@@ -23,6 +23,27 @@ namespace Mvp24Hours.Extensions
     /// <summary>
     /// Extension methods for HttpClient to simplify HTTP requests.
     /// </summary>
+    /// <remarks>
+    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+    /// <para>Use <c>ITypedHttpClient&lt;TApi&gt;</c> from <c>Mvp24Hours.Infrastructure.Http</c> instead.</para>
+    /// <para>For resilience, use <c>AddStandardResilienceHandler()</c> from Microsoft.Extensions.Http.Resilience.</para>
+    /// <para>
+    /// Migration example:
+    /// <code>
+    /// // Old approach (deprecated):
+    /// var result = await httpClient.HttpGetAsync&lt;MyDto&gt;("/api/data");
+    /// 
+    /// // New approach:
+    /// services.AddMvpTypedHttpClient&lt;IMyApi&gt;(options => {
+    ///     options.BaseAddress = new Uri("https://api.example.com");
+    /// }).AddStandardResilienceHandler();
+    /// 
+    /// // Then inject and use ITypedHttpClient&lt;IMyApi&gt;
+    /// var result = await typedClient.GetAsync&lt;MyDto&gt;("/api/data");
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Obsolete("Deprecated: Use ITypedHttpClient<TApi> from Mvp24Hours.Infrastructure.Http with AddStandardResilienceHandler() from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
     public static class HttpClientExtensions
     {
         private static ILogger _logger;

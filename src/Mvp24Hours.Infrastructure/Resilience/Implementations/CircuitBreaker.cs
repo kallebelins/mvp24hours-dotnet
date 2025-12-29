@@ -24,6 +24,9 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
     /// It tracks failures and opens the circuit when the failure threshold is exceeded.
     /// </para>
     /// </remarks>
+    [Obsolete("Deprecated: Use NativeResiliencePipeline with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class CircuitBreaker<TResult> : ICircuitBreaker<TResult>
     {
         private readonly CircuitBreakerOptions _options;

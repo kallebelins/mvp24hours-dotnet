@@ -27,6 +27,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging;
 /// <item>Cleanup of old processed messages</item>
 /// </list>
 /// </para>
+/// <para>
+/// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+/// Task.Delay for modern async/await patterns with proper cancellation support.
+/// </para>
 /// </remarks>
 /// <example>
 /// <code>
@@ -66,18 +70,29 @@ public sealed class OutboxProcessor : BackgroundService
             "[Outbox] Starting OutboxProcessor with polling interval of {Interval}",
             _options.OutboxPollingInterval);
 
-        while (!stoppingToken.IsCancellationRequested)
+        // Use PeriodicTimer for modern async/await patterns with proper cancellation
+        using var timer = new PeriodicTimer(_options.OutboxPollingInterval);
+        
+        try
         {
-            try
+            // Process immediately on startup, then periodically
+            await ProcessPendingMessagesAsync(stoppingToken);
+            
+            while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                await ProcessPendingMessagesAsync(stoppingToken);
+                try
+                {
+                    await ProcessPendingMessagesAsync(stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger?.LogError(ex, "[Outbox] Error processing outbox messages");
+                }
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger?.LogError(ex, "[Outbox] Error processing outbox messages");
-            }
-
-            await Task.Delay(_options.OutboxPollingInterval, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            _logger?.LogInformation("[Outbox] OutboxProcessor stopping gracefully");
         }
     }
 
@@ -226,6 +241,12 @@ public sealed class OutboxProcessor : BackgroundService
 /// <summary>
 /// Background service for cleaning up old outbox messages.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+/// Task.Delay for modern async/await patterns with proper cancellation support.
+/// </para>
+/// </remarks>
 public sealed class OutboxCleanupService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -248,33 +269,41 @@ public sealed class OutboxCleanupService : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        // Use PeriodicTimer for modern async/await patterns
+        using var timer = new PeriodicTimer(_options.CleanupInterval);
+        
+        try
         {
-            try
+            while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                using var scope = _serviceProvider.CreateScope();
-                var outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
-
-                if (outbox != null)
+                try
                 {
-                    var cutoffDate = DateTime.UtcNow.AddDays(-_options.OutboxRetentionDays);
-                    var deletedCount = await outbox.CleanupAsync(cutoffDate, stoppingToken);
+                    using var scope = _serviceProvider.CreateScope();
+                    var outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
 
-                    if (deletedCount > 0)
+                    if (outbox != null)
                     {
-                        _logger?.LogInformation(
-                            "[Outbox] Cleaned up {Count} processed messages older than {CutoffDate}",
-                            deletedCount,
-                            cutoffDate);
+                        var cutoffDate = DateTime.UtcNow.AddDays(-_options.OutboxRetentionDays);
+                        var deletedCount = await outbox.CleanupAsync(cutoffDate, stoppingToken);
+
+                        if (deletedCount > 0)
+                        {
+                            _logger?.LogInformation(
+                                "[Outbox] Cleaned up {Count} processed messages older than {CutoffDate}",
+                                deletedCount,
+                                cutoffDate);
+                        }
                     }
                 }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger?.LogError(ex, "[Outbox] Error during outbox cleanup");
+                }
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger?.LogError(ex, "[Outbox] Error during outbox cleanup");
-            }
-
-            await Task.Delay(_options.CleanupInterval, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            _logger?.LogDebug("[Outbox] OutboxCleanupService stopping gracefully");
         }
     }
 }

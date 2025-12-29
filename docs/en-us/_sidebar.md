@@ -80,5 +80,11 @@
 * ASP.NET Web API
 * * [Basics](en-us/webapi.md)
 * * [Advanced Features](en-us/webapi-advanced.md)
+* Modernization (.NET 9)
+* * [HTTP Resilience](en-us/modernization/http-resilience.md)
+* * [Generic Resilience](en-us/modernization/generic-resilience.md)
+* * [Rate Limiting](en-us/modernization/rate-limiting.md)
+* * [TimeProvider](en-us/modernization/time-provider.md)
+* * [PeriodicTimer](en-us/modernization/periodic-timer.md)
 * [Release](en-us/release.md)
 * [Migration](en-us/migration.md)

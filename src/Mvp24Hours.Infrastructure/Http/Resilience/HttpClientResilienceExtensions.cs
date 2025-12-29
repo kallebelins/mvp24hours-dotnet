@@ -18,6 +18,15 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
     /// <summary>
     /// Extension methods for configuring HTTP clients with Polly resilience policies.
     /// </summary>
+    /// <remarks>
+    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+    /// <para>Use <c>AddStandardResilienceHandler()</c> or <c>AddResilienceHandler()</c> from 
+    /// <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
+    /// <para>
+    /// See <see cref="NativeHttpResilienceExtensions"/> for the modern API.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Deprecated: Use AddStandardResilienceHandler() from Microsoft.Extensions.Http.Resilience. See NativeHttpResilienceExtensions for the modern API.")]
     public static class HttpClientResilienceExtensions
     {
         /// <summary>
@@ -138,6 +147,11 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
     /// <summary>
     /// Builder for configuring HTTP resilience policies.
     /// </summary>
+    /// <remarks>
+    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+    /// <para>Use <c>ResiliencePipelineBuilder</c> from <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
+    /// </remarks>
+    [Obsolete("Deprecated: Use ResiliencePipelineBuilder from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
     public class HttpResiliencePolicyBuilder
     {
         private readonly string _clientName;

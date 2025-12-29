@@ -41,6 +41,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
     /// });
     /// </code>
     /// </example>
+    [Obsolete("Deprecated: Use NativeDbResilienceExtensions with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class MvpExecutionStrategy : ExecutionStrategy
     {
         private readonly EFCoreResilienceOptions _options;

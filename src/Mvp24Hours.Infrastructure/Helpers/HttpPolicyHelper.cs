@@ -19,6 +19,32 @@ namespace Mvp24Hours.Infrastructure.Helpers
     /// <summary>
     /// Helper class for creating HTTP resilience policies using Polly.
     /// </summary>
+    /// <remarks>
+    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+    /// <para>Use <c>AddStandardResilienceHandler()</c> or <c>AddResilienceHandler()</c> from 
+    /// <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
+    /// <para>
+    /// Migration example:
+    /// <code>
+    /// // Old approach (deprecated):
+    /// services.AddHttpClient("MyApi")
+    ///     .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(HttpStatusCode.TooManyRequests))
+    ///     .AddPolicyHandler(HttpPolicyHelper.GetCircuitBreakerPolicy(HttpStatusCode.ServiceUnavailable));
+    /// 
+    /// // New approach (recommended):
+    /// services.AddHttpClient("MyApi")
+    ///     .AddStandardResilienceHandler();
+    /// 
+    /// // Or with custom configuration:
+    /// services.AddHttpClient("MyApi")
+    ///     .AddResilienceHandler("custom", builder => {
+    ///         builder.AddRetry(new HttpRetryStrategyOptions { MaxRetryAttempts = 3 });
+    ///         builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions());
+    ///     });
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Obsolete("Deprecated: Use AddStandardResilienceHandler() or AddResilienceHandler() from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
     public static class HttpPolicyHelper
     {
         private static ILogger _logger;

@@ -23,6 +23,9 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
     /// instance that can be configured once and used multiple times.
     /// </para>
     /// </remarks>
+    [Obsolete("Deprecated: Use NativeResiliencePipeline with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class RetryPolicy<TResult> : IRetryPolicy<TResult>
     {
         private readonly RetryOptions _options;
@@ -86,6 +89,9 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
     /// <summary>
     /// Generic implementation of retry policy for operations without return values.
     /// </summary>
+    [Obsolete("Deprecated: Use NativeResiliencePipeline with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class RetryPolicy : IRetryPolicy
     {
         private readonly RetryPolicy<object?> _inner;

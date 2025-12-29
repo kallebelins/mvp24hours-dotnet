@@ -17,13 +17,27 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 {
     /// <summary>
     /// Background service that processes scheduled commands.
+    /// Uses .NET 8+ TimeProvider abstraction for testable time operations.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This service uses TimeProvider for all time-related operations, enabling:
+    /// - Deterministic testing with FakeTimeProvider
+    /// - Time manipulation in integration tests
+    /// - Consistent time across the application
+    /// </para>
+    /// <para>
+    /// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
+    /// Task.Delay for modern async/await patterns with proper cancellation support.
+    /// </para>
+    /// </remarks>
     public class ScheduledCommandHostedService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ScheduledCommandHostedService> _logger;
         private readonly ScheduledCommandOptions _options;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly TimeProvider _timeProvider;
 
         /// <summary>
         /// Creates a new instance of <see cref="ScheduledCommandHostedService"/>.
@@ -31,14 +45,20 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         /// <param name="scopeFactory">The service scope factory</param>
         /// <param name="logger">The logger</param>
         /// <param name="options">The scheduling options</param>
+        /// <param name="timeProvider">
+        /// Optional TimeProvider for time abstraction. Defaults to TimeProvider.System.
+        /// Inject FakeTimeProvider for testing.
+        /// </param>
         public ScheduledCommandHostedService(
             IServiceScopeFactory scopeFactory,
             ILogger<ScheduledCommandHostedService> logger,
-            ScheduledCommandOptions? options = null)
+            ScheduledCommandOptions? options = null,
+            TimeProvider? timeProvider = null)
         {
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? new ScheduledCommandOptions();
+            _timeProvider = timeProvider ?? TimeProvider.System;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -51,39 +71,44 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
             _logger.LogInformation("Scheduled command processor started with interval {Interval}ms",
                 _options.PollingInterval.TotalMilliseconds);
 
-            while (!stoppingToken.IsCancellationRequested)
+            // Use PeriodicTimer for modern async/await patterns with proper cancellation
+            using var timer = new PeriodicTimer(_options.PollingInterval);
+            
+            try
             {
-                try
+                // Process immediately on startup, then periodically
+                await ProcessAllAsync(stoppingToken);
+                
+                while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    await ProcessScheduledCommandsAsync(stoppingToken);
-                    await ProcessRetryCommandsAsync(stoppingToken);
-                    await MarkExpiredCommandsAsync(stoppingToken);
-
-                    if (_options.PurgeCompletedAfter.HasValue)
+                    try
                     {
-                        await PurgeOldCommandsAsync(stoppingToken);
+                        await ProcessAllAsync(stoppingToken);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogError(ex, "Error processing scheduled commands");
                     }
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing scheduled commands");
-                }
-
-                try
-                {
-                    await Task.Delay(_options.PollingInterval, stoppingToken);
-                }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Scheduled command processor stopping gracefully");
             }
 
             _logger.LogInformation("Scheduled command processor stopped");
+        }
+
+        private async Task ProcessAllAsync(CancellationToken stoppingToken)
+        {
+            await ProcessScheduledCommandsAsync(stoppingToken);
+            await ProcessRetryCommandsAsync(stoppingToken);
+            await MarkExpiredCommandsAsync(stoppingToken);
+
+            if (_options.PurgeCompletedAfter.HasValue)
+            {
+                await PurgeOldCommandsAsync(stoppingToken);
+            }
         }
 
         private async Task ProcessScheduledCommandsAsync(CancellationToken cancellationToken)
@@ -137,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
                 // Mark as processing
                 entry.Status = ScheduledCommandStatus.Processing;
-                entry.ProcessedAt = DateTime.UtcNow;
+                entry.ProcessedAt = _timeProvider.GetUtcNow().UtcDateTime;
                 await store.UpdateAsync(entry, cancellationToken);
 
                 _logger.LogDebug("Processing scheduled command {CommandId} of type {CommandType}",
@@ -161,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
                 // Mark as completed
                 entry.Status = ScheduledCommandStatus.Completed;
-                entry.CompletedAt = DateTime.UtcNow;
+                entry.CompletedAt = _timeProvider.GetUtcNow().UtcDateTime;
                 entry.ErrorMessage = null;
                 await store.UpdateAsync(entry, cancellationToken);
 
@@ -204,7 +229,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
                 delay = _options.RetryMaxDelay;
             }
 
-            return DateTime.UtcNow.Add(delay);
+            return _timeProvider.GetUtcNow().UtcDateTime.Add(delay);
         }
 
         private async Task MarkExpiredCommandsAsync(CancellationToken cancellationToken)
@@ -226,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
             using var scope = _scopeFactory.CreateScope();
             var store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
 
-            var olderThan = DateTime.UtcNow.Subtract(_options.PurgeCompletedAfter.Value);
+            var olderThan = _timeProvider.GetUtcNow().UtcDateTime.Subtract(_options.PurgeCompletedAfter.Value);
             var count = await store.PurgeCompletedAsync(olderThan, cancellationToken);
 
             if (count > 0)

@@ -44,6 +44,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
     /// }, cancellationToken);
     /// </code>
     /// </example>
+    [Obsolete("Deprecated: Use NativeMongoDbResilienceExtensions with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public sealed class MongoDbResiliencyPolicy : IMongoDbResiliencyPolicy
     {
         private readonly MongoDbResiliencyOptions _options;

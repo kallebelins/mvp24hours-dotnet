@@ -15,6 +15,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
     /// Middleware that implements retry logic for operations.
     /// Applies to operations implementing <see cref="IRetryableOperation"/> or uses default options.
     /// </summary>
+    [Obsolete("Deprecated: Use NativePipelineResilienceExtensions with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class RetryPipelineMiddleware : IPipelineMiddleware
     {
         private readonly ILogger<RetryPipelineMiddleware>? _logger;

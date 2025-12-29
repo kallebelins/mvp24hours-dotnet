@@ -165,6 +165,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
     /// Middleware that implements circuit breaker logic for operations.
     /// Applies to operations implementing <see cref="ICircuitBreakerOperation"/> or uses default options.
     /// </summary>
+    [Obsolete("Deprecated: Use NativePipelineResilienceExtensions with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class CircuitBreakerPipelineMiddleware : IPipelineMiddleware
     {
         private readonly ILogger<CircuitBreakerPipelineMiddleware>? _logger;
