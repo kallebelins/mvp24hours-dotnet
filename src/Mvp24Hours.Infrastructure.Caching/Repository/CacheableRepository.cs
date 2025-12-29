@@ -103,18 +103,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
 
         public bool ListAny()
         {
-            return ExecuteWithCache(
-                nameof(ListAny),
-                () => _repository.ListAny(),
-                null);
+            // Value types (bool) cannot be cached with current ICacheProvider constraints
+            return _repository.ListAny();
         }
 
         public int ListCount()
         {
-            return ExecuteWithCache(
-                nameof(ListCount),
-                () => _repository.ListCount(),
-                null);
+            // Value types (int) cannot be cached with current ICacheProvider constraints
+            return _repository.ListCount();
         }
 
         public IList<TEntity> List()
@@ -132,18 +128,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
 
         public bool GetByAny(Expression<Func<TEntity, bool>> clause)
         {
-            return ExecuteWithCache(
-                nameof(GetByAny),
-                () => _repository.GetByAny(clause),
-                clause);
+            // Value types (bool) cannot be cached with current ICacheProvider constraints
+            return _repository.GetByAny(clause);
         }
 
         public int GetByCount(Expression<Func<TEntity, bool>> clause)
         {
-            return ExecuteWithCache(
-                nameof(GetByCount),
-                () => _repository.GetByCount(clause),
-                clause);
+            // Value types (int) cannot be cached with current ICacheProvider constraints
+            return _repository.GetByCount(clause);
         }
 
         public IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause)
@@ -276,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
         private TResult ExecuteWithCache<TResult>(
             string methodName,
             Func<TResult> execute,
-            object? parameters)
+            object? parameters) where TResult : class
         {
             // Check if method has CacheableAttribute
             var methodInfo = GetMethodInfo(methodName);
@@ -328,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             }
         }
 
-        private async Task<TResult?> GetFromCache<TResult>(string cacheKey)
+        private async Task<TResult?> GetFromCache<TResult>(string cacheKey) where TResult : class
         {
             try
             {
@@ -346,7 +338,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             TResult value,
             CacheEntryOptions options,
             string? region = null,
-            string? tags = null)
+            string? tags = null) where TResult : class
         {
             try
             {

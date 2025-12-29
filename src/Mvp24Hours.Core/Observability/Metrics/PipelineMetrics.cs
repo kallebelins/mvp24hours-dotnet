@@ -251,7 +251,7 @@ public sealed class PipelineMetrics
     /// <summary>
     /// Represents a scope for tracking pipeline execution duration.
     /// </summary>
-    public readonly struct PipelineExecutionScope : IDisposable
+    public struct PipelineExecutionScope : IDisposable
     {
         private readonly PipelineMetrics _metrics;
         private readonly string _pipelineName;
@@ -309,7 +309,7 @@ public sealed class PipelineMetrics
     /// <summary>
     /// Represents a scope for tracking operation execution duration.
     /// </summary>
-    public readonly struct OperationExecutionScope : IDisposable
+    public struct OperationExecutionScope : IDisposable
     {
         private readonly PipelineMetrics _metrics;
         private readonly string _pipelineName;

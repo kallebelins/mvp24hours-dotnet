@@ -410,7 +410,7 @@ public sealed class InfrastructureMetrics
     /// <summary>
     /// Represents a scope for tracking HTTP client request duration.
     /// </summary>
-    public readonly struct HttpClientRequestScope : IDisposable
+    public struct HttpClientRequestScope : IDisposable
     {
         private readonly InfrastructureMetrics _metrics;
         private readonly string _method;
@@ -472,7 +472,7 @@ public sealed class InfrastructureMetrics
     /// <summary>
     /// Represents a scope for tracking background job duration.
     /// </summary>
-    public readonly struct BackgroundJobScope : IDisposable
+    public struct BackgroundJobScope : IDisposable
     {
         private readonly InfrastructureMetrics _metrics;
         private readonly string _jobType;

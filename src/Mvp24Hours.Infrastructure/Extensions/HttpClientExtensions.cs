@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Exceptions;
+using Mvp24Hours.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

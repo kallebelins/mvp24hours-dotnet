@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 

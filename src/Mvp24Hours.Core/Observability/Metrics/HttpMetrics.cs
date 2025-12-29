@@ -206,7 +206,7 @@ public sealed class HttpMetrics
     /// <summary>
     /// Represents a scope for tracking HTTP request duration.
     /// </summary>
-    public readonly struct HttpRequestScope : IDisposable
+    public struct HttpRequestScope : IDisposable
     {
         private readonly HttpMetrics _metrics;
         private readonly string _method;

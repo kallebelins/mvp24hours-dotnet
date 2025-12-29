@@ -251,15 +251,15 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             CancellationToken cancellationToken)
         {
             var tasks = instanceIndices.Select(index =>
-                ReleaseLockOnInstanceAsync(_redisConnections[index], key, lockValue, index, cancellationToken));
+                ReleaseLockOnInstanceFireAndForgetAsync(_redisConnections[index], key, lockValue, index, cancellationToken));
 
             await Task.WhenAll(tasks);
         }
 
         /// <summary>
-        /// Releases a lock on a specific Redis instance.
+        /// Releases a lock on a specific Redis instance (fire and forget, no result).
         /// </summary>
-        private async Task ReleaseLockOnInstanceAsync(
+        private async Task ReleaseLockOnInstanceFireAndForgetAsync(
             IConnectionMultiplexer connection,
             string key,
             string lockValue,
@@ -296,9 +296,9 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
 
             if (_useRedLock)
             {
-                // Release on all instances
+                // Release on all instances (fire-and-forget for parallel execution)
                 var tasks = _redisConnections.Select((connection, index) =>
-                    ReleaseLockOnInstanceAsync(connection, key, lockId, index, cancellationToken));
+                    ReleaseLockOnInstanceFireAndForgetAsync(connection, key, lockId, index, cancellationToken));
 
                 await Task.WhenAll(tasks);
                 return true; // RedLock: assume success if we attempt release on all instances

@@ -253,10 +253,11 @@ namespace Mvp24Hours.Infrastructure.Configuration
         private static void CopyRetryOptions(RetryOptions target, RetryOptions source)
         {
             target.MaxRetries = source.MaxRetries;
-            target.Delay = source.Delay;
+            target.InitialDelay = source.InitialDelay;
             target.MaxDelay = source.MaxDelay;
-            target.BackoffMultiplier = source.BackoffMultiplier;
-            target.UseJitter = source.UseJitter;
+            target.BackoffType = source.BackoffType;
+            target.JitterFactor = source.JitterFactor;
+            target.UseExponentialBackoff = source.UseExponentialBackoff;
         }
 
         /// <summary>
@@ -267,7 +268,8 @@ namespace Mvp24Hours.Infrastructure.Configuration
             target.FailureThreshold = source.FailureThreshold;
             target.SamplingDuration = source.SamplingDuration;
             target.MinimumThroughput = source.MinimumThroughput;
-            target.DurationOfBreak = source.DurationOfBreak;
+            target.BreakDuration = source.BreakDuration;
+            target.FailureRatio = source.FailureRatio;
         }
 
         /// <summary>
@@ -400,8 +402,8 @@ namespace Mvp24Hours.Infrastructure.Configuration
         private static void CopySmsOptions(SmsOptions target, SmsOptions source)
         {
             // Copy key properties - in practice, the options object is used directly
-            if (!string.IsNullOrWhiteSpace(source.DefaultSender))
-                target.DefaultSender = source.DefaultSender;
+            if (!string.IsNullOrWhiteSpace(source.DefaultFrom))
+                target.DefaultFrom = source.DefaultFrom;
             if (!string.IsNullOrWhiteSpace(source.DefaultCountryCode))
                 target.DefaultCountryCode = source.DefaultCountryCode;
         }

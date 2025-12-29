@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;
             _circuitBreaker = new MongoDbCircuitBreaker(options);
-            _retryPolicy = new MongoDbRetryPolicy(options, logger);
+            _retryPolicy = new MongoDbRetryPolicy(options, null);
         }
 
         /// <inheritdoc />

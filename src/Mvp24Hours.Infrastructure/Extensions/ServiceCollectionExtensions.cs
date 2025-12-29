@@ -27,13 +27,10 @@ namespace Mvp24Hours.Extensions
             }
 
             Assembly local = assemblyMap;
-            var mapperConfig = new MapperConfiguration(mc =>
+            services.AddAutoMapper(cfg =>
             {
-                mc.AddProfile(new MappingProfile(local));
-            });
-
-            IMapper mapper = mapperConfig.CreateMapper();
-            services.AddSingleton(mapper);
+                cfg.AddProfile(new MappingProfile(local));
+            }, local);
 
             return services;
         }

@@ -70,7 +70,6 @@ namespace Mvp24Hours.Extensions
             // Bypass filter if no tenant is set
             if (string.IsNullOrEmpty(tenantProvider.TenantId))
             {
-                _logger?.LogDebug("Bypassing tenant filter for entity {EntityType} - no tenant set", typeof(T).Name);
                 return query;
             }
 
@@ -82,8 +81,6 @@ namespace Mvp24Hours.Extensions
             var tenantIdConstant = Expression.Constant(tenantId, typeof(string));
             var equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
             var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
-
-            _logger?.LogDebug("Applied tenant filter for entity {EntityType} with TenantId {TenantId}", typeof(T).Name, tenantId);
 
             return query.Where(lambda);
         }
@@ -232,9 +229,6 @@ namespace Mvp24Hours.Extensions
             }
 
             var filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
-            
-            _logger?.LogDebug("Applied tenant filter to aggregation pipeline for entity {EntityType} with TenantId {TenantId}",
-                typeof(T).Name, tenantProvider.TenantId);
 
             return aggregate.Match(filter);
         }

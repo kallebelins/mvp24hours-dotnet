@@ -5,6 +5,7 @@
 //=====================================================================================
 #nullable enable
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
+using Mvp24Hours.Infrastructure.FileStorage.Providers;
 using Mvp24Hours.Infrastructure.FileStorage.Results;
 using System;
 using System.Collections.Generic;

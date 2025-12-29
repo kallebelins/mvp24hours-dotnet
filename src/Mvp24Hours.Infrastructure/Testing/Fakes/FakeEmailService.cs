@@ -114,6 +114,27 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
         }
 
         /// <inheritdoc />
+        public async Task<IList<EmailSendResult>> SendBatchAsync(
+            IEnumerable<EmailMessage> messages,
+            CancellationToken cancellationToken = default)
+        {
+            if (messages == null)
+            {
+                throw new ArgumentNullException(nameof(messages));
+            }
+
+            var results = new List<EmailSendResult>();
+            foreach (var message in messages)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = await SendAsync(message, cancellationToken);
+                results.Add(result);
+            }
+
+            return results;
+        }
+
+        /// <inheritdoc />
         public void ClearSentEmails()
         {
             lock (_lock)

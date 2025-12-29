@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
+using Mvp24Hours.Helpers;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;

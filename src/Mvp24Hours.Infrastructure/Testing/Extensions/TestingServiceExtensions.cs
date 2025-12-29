@@ -5,13 +5,17 @@
 //=====================================================================================
 #nullable enable
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Email.Contract;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using Mvp24Hours.Infrastructure.Sms.Contract;
 using Mvp24Hours.Infrastructure.Testing.Fakes;
 using Mvp24Hours.Infrastructure.Testing.Http;
+using Mvp24Hours.Infrastructure.Testing.Logging;
+using Mvp24Hours.Infrastructure.Testing.Observability;
 using System;
+using System.Linq;
 using System.Net.Http;
 
 namespace Mvp24Hours.Infrastructure.Testing.Extensions
@@ -166,6 +170,82 @@ namespace Mvp24Hours.Infrastructure.Testing.Extensions
             })
             .ConfigurePrimaryHttpMessageHandler(sp =>
                 sp.GetRequiredService<TestHttpMessageHandler>());
+        }
+
+        /// <summary>
+        /// Adds an InMemoryLoggerProvider for capturing logs in tests.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="configure">Optional configuration action.</param>
+        /// <returns>The service collection for chaining.</returns>
+        public static IServiceCollection AddInMemoryLoggerProvider(
+            this IServiceCollection services,
+            Action<InMemoryLoggerProvider>? configure = null)
+        {
+            var provider = new InMemoryLoggerProvider();
+            configure?.Invoke(provider);
+
+            services.AddSingleton(provider);
+            services.AddSingleton<ILoggerProvider>(provider);
+
+            // Configure logging to use the in-memory provider
+            services.AddLogging(builder =>
+            {
+                builder.ClearProviders();
+                builder.AddProvider(provider);
+                builder.SetMinimumLevel(LogLevel.Trace);
+            });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds a FakeActivityListener for capturing distributed tracing spans in tests.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="sourceFilter">Optional filter for activity source names. Supports wildcard (*) at the end.</param>
+        /// <returns>The service collection for chaining.</returns>
+        public static IServiceCollection AddFakeActivityListener(
+            this IServiceCollection services,
+            string? sourceFilter = null)
+        {
+            var listener = new FakeActivityListener(sourceFilter);
+            services.AddSingleton(listener);
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds a FakeMeterListener for capturing metrics in tests.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="meterFilter">Optional filter for meter names. Supports wildcard (*) at the end.</param>
+        /// <returns>The service collection for chaining.</returns>
+        public static IServiceCollection AddFakeMeterListener(
+            this IServiceCollection services,
+            string? meterFilter = null)
+        {
+            var listener = new FakeMeterListener(meterFilter);
+            services.AddSingleton(listener);
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds all observability testing infrastructure (logging, tracing, metrics).
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <param name="sourceFilter">Optional filter for source/meter names. Supports wildcard (*) at the end.</param>
+        /// <returns>The service collection for chaining.</returns>
+        public static IServiceCollection AddObservabilityTesting(
+            this IServiceCollection services,
+            string? sourceFilter = null)
+        {
+            services.AddInMemoryLoggerProvider();
+            services.AddFakeActivityListener(sourceFilter);
+            services.AddFakeMeterListener(sourceFilter);
+
+            return services;
         }
 
         /// <summary>

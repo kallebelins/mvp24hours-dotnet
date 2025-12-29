@@ -102,8 +102,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
                         "[Cache] Circuit breaker reset for cache operations.");
                 };
 
-                _circuitBreaker = new CircuitBreaker<object?>(cbOptions, "CacheOperation", _logger);
-                _circuitBreakerVoid = new CircuitBreaker(cbOptions, "CacheOperation", _logger);
+                _circuitBreaker = new CircuitBreaker<object?>(cbOptions, "CacheOperation", null);
+                _circuitBreakerVoid = new CircuitBreaker(cbOptions, "CacheOperation", null);
             }
         }
 

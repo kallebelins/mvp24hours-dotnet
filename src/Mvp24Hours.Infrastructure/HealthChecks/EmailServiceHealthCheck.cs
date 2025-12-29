@@ -106,13 +106,13 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
 
                     if (!sendResult.Success)
                     {
-                        data["error"] = sendResult.ErrorMessage ?? "Email send failed";
+                        data["error"] = sendResult.FirstError ?? "Email send failed";
                         data["errors"] = sendResult.Errors;
 
-                        _logger.LogError("Email service health check failed: Send failed. Error: {Error}", sendResult.ErrorMessage);
+                        _logger.LogError("Email service health check failed: Send failed. Error: {Error}", sendResult.FirstError);
 
                         return HealthCheckResult.Unhealthy(
-                            description: $"Email service send failed: {sendResult.ErrorMessage}",
+                            description: $"Email service send failed: {sendResult.FirstError}",
                             data: data);
                     }
 

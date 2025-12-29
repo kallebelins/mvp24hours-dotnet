@@ -6,6 +6,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
+using Mvp24Hours.Infrastructure.Caching.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Linq;

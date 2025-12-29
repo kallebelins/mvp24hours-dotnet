@@ -303,7 +303,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         /// </summary>
         /// <param name="address">The email address string (can include display name).</param>
         /// <returns>An Azure Communication Services email address object.</returns>
-        private object ParseEmailAddress(string address)
+        private EmailAddressInfo ParseEmailAddress(string address)
         {
             if (string.IsNullOrWhiteSpace(address))
             {
@@ -318,12 +318,21 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 var displayName = address.Substring(0, startIndex).Trim().Trim('"');
                 var emailAddress = address.Substring(startIndex + 1, endIndex - startIndex - 1).Trim();
 
-                return new { email = emailAddress, displayName = displayName };
+                return new EmailAddressInfo { email = emailAddress, displayName = displayName };
             }
 
             // Simple email address
             var defaultName = _azureOptions.DefaultFromName;
-            return new { email = address, displayName = defaultName };
+            return new EmailAddressInfo { email = address, displayName = defaultName };
+        }
+
+        /// <summary>
+        /// Internal class for email address serialization.
+        /// </summary>
+        private class EmailAddressInfo
+        {
+            public string email { get; set; } = string.Empty;
+            public string? displayName { get; set; }
         }
 
         /// <summary>

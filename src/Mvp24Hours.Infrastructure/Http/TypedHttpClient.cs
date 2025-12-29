@@ -132,37 +132,14 @@ namespace Mvp24Hours.Infrastructure.Http
             activity?.SetTag("http.url", BuildUrl(url));
             activity?.SetTag("buffer.size", bufferSize);
 
+            LogRequest("GetStreamAsync (Enumerable)", url);
+
+            HttpResponseMessage response;
             try
             {
-                LogRequest("GetStreamAsync (Enumerable)", url);
-
-                var response = await HttpClient.GetAsync(BuildUrl(url), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                response = await HttpClient.GetAsync(BuildUrl(url), HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 activity?.SetTag("http.status_code", (int)response.StatusCode);
-
                 await EnsureSuccessResponseAsync(response, url);
-
-                if (response.Content == null)
-                {
-                    yield break;
-                }
-
-                using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                var buffer = new byte[bufferSize];
-                int bytesRead;
-
-                while ((bytesRead = await stream.ReadAsync(buffer, 0, bufferSize, cancellationToken)) > 0)
-                {
-                    if (bytesRead < bufferSize)
-                    {
-                        var partialBuffer = new byte[bytesRead];
-                        Array.Copy(buffer, partialBuffer, bytesRead);
-                        yield return partialBuffer;
-                    }
-                    else
-                    {
-                        yield return buffer;
-                    }
-                }
             }
             catch (HttpStatusCodeException)
             {
@@ -173,6 +150,29 @@ namespace Mvp24Hours.Infrastructure.Http
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 LogError("GetStreamAsync (Enumerable)", url, ex);
                 throw;
+            }
+
+            if (response.Content == null)
+            {
+                yield break;
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var buffer = new byte[bufferSize];
+            int bytesRead;
+
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, bufferSize, cancellationToken)) > 0)
+            {
+                if (bytesRead < bufferSize)
+                {
+                    var partialBuffer = new byte[bytesRead];
+                    Array.Copy(buffer, partialBuffer, bytesRead);
+                    yield return partialBuffer;
+                }
+                else
+                {
+                    yield return buffer;
+                }
             }
         }
 

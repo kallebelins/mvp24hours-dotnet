@@ -136,7 +136,7 @@ public sealed class CronJobMetrics
     /// <summary>
     /// Represents a scope for tracking job execution duration.
     /// </summary>
-    public readonly struct JobExecutionScope : IDisposable
+    public struct JobExecutionScope : IDisposable
     {
         private readonly CronJobMetrics _metrics;
         private readonly string _jobType;

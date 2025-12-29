@@ -562,7 +562,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
         }
 
         /// <inheritdoc />
-        public Task<int> CancelChildrenAsync(
+        public async Task<int> CancelChildrenAsync(
             string parentJobId,
             CancellationToken cancellationToken = default)
         {
@@ -584,7 +584,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 }
             }
 
-            return Task.FromResult(cancelledCount);
+            return cancelledCount;
         }
 
         /// <inheritdoc />
@@ -664,11 +664,14 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                         throw new InvalidOperationException($"Failed to deserialize arguments for job {jobId}");
                     }
 
+                    var metadata = jobInfo.Options.Metadata != null 
+                        ? new Dictionary<string, string>(jobInfo.Options.Metadata) 
+                        : new Dictionary<string, string>();
                     var context = new JobContext(
                         jobId,
                         jobInfo.AttemptNumber,
                         cancellationToken,
-                        jobInfo.Options.Metadata,
+                        metadata,
                         jobInfo.StartedAt.Value,
                         jobInfo.JobType,
                         jobInfo.Options.Queue);
@@ -758,11 +761,14 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     using var scope = _serviceProvider.CreateScope();
                     var job = scope.ServiceProvider.GetRequiredService<TJob>();
 
+                    var metadata = jobInfo.Options.Metadata != null 
+                        ? new Dictionary<string, string>(jobInfo.Options.Metadata) 
+                        : new Dictionary<string, string>();
                     var context = new JobContext(
                         jobId,
                         jobInfo.AttemptNumber,
                         cancellationToken,
-                        jobInfo.Options.Metadata,
+                        metadata,
                         jobInfo.StartedAt.Value,
                         jobInfo.JobType,
                         jobInfo.Options.Queue);

@@ -76,10 +76,10 @@ namespace Mvp24Hours.Infrastructure.Helpers
                 .CircuitBreakerAsync(
                     handledEventsAllowedBeforeBreaking: eventsBeforeBreaking,
                     durationOfBreak: TimeSpan.FromSeconds(durationOfBreakInSeconds),
-                    onBreak: (exception, sleepDuration) => Task.Run(() =>
+                    onBreak: (outcome, sleepDuration) => Task.Run(() =>
                     {
-                        _logger?.LogError(exception, "Circuit breaker opened. Requests will not flow for {Duration}. Policy: {PolicyKey}",
-                            sleepDuration, exception?.GetType().Name);
+                        _logger?.LogError(outcome.Exception, "Circuit breaker opened. Requests will not flow for {Duration}. Reason: {Reason}",
+                            sleepDuration, outcome.Exception?.GetType().Name ?? outcome.Result?.StatusCode.ToString() ?? "Unknown");
                     }),
                     onReset: () => Task.Run(() =>
                     {
@@ -103,9 +103,9 @@ namespace Mvp24Hours.Infrastructure.Helpers
                 .CircuitBreakerAsync(
                     handledEventsAllowedBeforeBreaking: eventsBeforeBreaking,
                     durationOfBreak: TimeSpan.FromSeconds(durationOfBreakInSeconds),
-                    onBreak: (exception, sleepDuration) => Task.Run(() =>
+                    onBreak: (outcome, sleepDuration) => Task.Run(() =>
                     {
-                        _logger?.LogError(exception, "Circuit breaker opened. Requests will not flow for {Duration}",
+                        _logger?.LogError(outcome.Exception, "Circuit breaker opened. Requests will not flow for {Duration}",
                             sleepDuration);
                         if (action != null)
                         {

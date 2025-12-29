@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.DTOs;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
+using Mvp24Hours.Helpers;
 using Mvp24Hours.WebAPI.Configuration;
 using System;
 using System.Threading.Tasks;

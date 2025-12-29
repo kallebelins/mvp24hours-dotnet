@@ -54,6 +54,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Extensions
                 new AuditInterceptor(
                     sp.GetService<ICurrentUserProvider>(),
                     sp.GetService<IClock>(),
+                    sp.GetService<Microsoft.Extensions.Logging.ILogger<AuditInterceptor>>(),
                     defaultUser));
             return services;
         }
@@ -77,6 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Extensions
                 new SoftDeleteInterceptor(
                     sp.GetService<ICurrentUserProvider>(),
                     sp.GetService<IClock>(),
+                    sp.GetService<Microsoft.Extensions.Logging.ILogger<SoftDeleteInterceptor>>(),
                     defaultUser));
             return services;
         }

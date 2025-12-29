@@ -448,7 +448,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         /// <param name="services">The service collection.</param>
         /// <returns>The service collection.</returns>
         public static IServiceCollection AddMvpHttpClientSerializer<TSerializer>(this IServiceCollection services)
-            where TSerializer : class, IHttpClientSerializer
+            where TSerializer : class, IHttpContentSerializer
         {
             services.AddSingleton<IHttpClientSerializer, TSerializer>();
             services.AddSingleton<IHttpContentSerializer, TSerializer>();

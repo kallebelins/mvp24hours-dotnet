@@ -522,12 +522,13 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     yield break;
                 }
 
+                FileMetadata? metadata = null;
                 try
                 {
                     var relativePath = Path.GetRelativePath(_baseDirectory, file).Replace('\\', '/');
                     var fileInfo = new FileInfo(file);
 
-                    var metadata = new FileMetadata(
+                    metadata = new FileMetadata(
                         relativePath,
                         fileInfo.Name,
                         fileInfo.Length,
@@ -536,13 +537,16 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                         fileInfo.LastWriteTimeUtc,
                         fileInfo.LastWriteTimeUtc.Ticks.ToString(),
                         null);
-
-                    yield return metadata;
                 }
                 catch
                 {
                     // Skip files that can't be accessed
                     continue;
+                }
+
+                if (metadata != null)
+                {
+                    yield return metadata;
                 }
             }
         }

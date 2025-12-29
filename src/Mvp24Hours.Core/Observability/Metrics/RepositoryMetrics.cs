@@ -467,7 +467,7 @@ public sealed class RepositoryMetrics
     /// <summary>
     /// Represents a scope for tracking query execution duration.
     /// </summary>
-    public readonly struct QueryScope : IDisposable
+    public struct QueryScope : IDisposable
     {
         private readonly RepositoryMetrics _metrics;
         private readonly string _operationName;
@@ -511,7 +511,7 @@ public sealed class RepositoryMetrics
     /// <summary>
     /// Represents a scope for tracking command execution duration.
     /// </summary>
-    public readonly struct CommandScope : IDisposable
+    public struct CommandScope : IDisposable
     {
         private readonly RepositoryMetrics _metrics;
         private readonly string _operationName;
@@ -566,7 +566,7 @@ public sealed class RepositoryMetrics
     /// <summary>
     /// Represents a scope for tracking SaveChanges execution duration.
     /// </summary>
-    public readonly struct SaveChangesScope : IDisposable
+    public struct SaveChangesScope : IDisposable
     {
         private readonly RepositoryMetrics _metrics;
         private readonly string? _dbSystem;

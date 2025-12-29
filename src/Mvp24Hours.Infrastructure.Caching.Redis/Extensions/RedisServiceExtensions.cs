@@ -24,7 +24,7 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(configurationOptions), "Configuration options is required.");
             }
 
-            services.AddDistributedRedisCache(options =>
+            services.AddStackExchangeRedisCache(options =>
             {
                 options.ConfigurationOptions = configurationOptions;
                 options.InstanceName = $"{(instanceName ?? Assembly.GetEntryAssembly().GetName().Name.Replace(".", "_"))}".ToLower();
@@ -45,7 +45,7 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(connectionString), "Connection strings is required.");
             }
 
-            services.AddDistributedRedisCache(options =>
+            services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = connectionString;
                 options.InstanceName = $"{instanceName ?? Assembly.GetEntryAssembly().GetName().Name.Replace(".", "_")}_".ToLower();

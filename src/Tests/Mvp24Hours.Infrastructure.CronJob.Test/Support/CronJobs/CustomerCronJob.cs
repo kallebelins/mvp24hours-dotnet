@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
@@ -17,7 +18,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs
         public CustomerCronJob(
             IScheduleConfig<CustomerCronJob> config,
             IHostApplicationLifetime hostApplication,
-            IServiceProvider serviceProvider) : base(config, hostApplication, serviceProvider)
+            IServiceProvider serviceProvider,
+            ILogger<CronJobService<CustomerCronJob>> logger) : base(config, hostApplication, serviceProvider, logger)
         { }
 
         public override Task DoWork(CancellationToken cancellationToken)

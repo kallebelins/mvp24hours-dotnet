@@ -5,6 +5,7 @@
 //=====================================================================================
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Threading;

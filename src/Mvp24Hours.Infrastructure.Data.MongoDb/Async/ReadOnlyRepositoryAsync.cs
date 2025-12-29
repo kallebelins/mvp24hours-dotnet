@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -58,8 +59,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     ///     pageSize: 20);
     /// </code>
     /// </example>
-    public class ReadOnlyRepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options) 
-        : RepositoryBase<T>(dbContext, options), IReadOnlyRepositoryAsync<T>
+    public class ReadOnlyRepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null) 
+        : RepositoryBase<T>(dbContext, options, logger), IReadOnlyRepositoryAsync<T>
         where T : class, IEntityBase
     {
         #region [ IQueryAsync Methods ]

@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Mvp24Hours.Infrastructure.CronJob;
+using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
 using System;
@@ -34,7 +37,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test
                 CronExpression = "* * * * *"
             };
             var hostApplicationLifetimeMock = new Mock<IHostApplicationLifetime>();
-            var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider);
+            var logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
+            var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider, logger);
 
             var cts = new CancellationTokenSource();
             timerService.Start();

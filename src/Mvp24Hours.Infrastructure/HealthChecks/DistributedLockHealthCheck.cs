@@ -124,18 +124,18 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
 
                 data["responseTimeMs"] = stopwatch.ElapsedMilliseconds;
                 data["acquisitionTimeMs"] = acquisitionStopwatch.ElapsedMilliseconds;
-                data["acquired"] = acquisitionResult.Acquired;
+                data["acquired"] = acquisitionResult.IsAcquired;
 
-                if (!acquisitionResult.Acquired)
+                if (!acquisitionResult.IsAcquired)
                 {
-                    data["failureReason"] = acquisitionResult.FailureReason?.ToString() ?? "Unknown";
+                    data["failureReason"] = acquisitionResult.ErrorMessage ?? "Unknown";
 
                     _logger.LogWarning(
                         "Distributed lock health check failed: Could not acquire lock. Reason: {Reason}",
-                        acquisitionResult.FailureReason);
+                        acquisitionResult.ErrorMessage);
 
                     return HealthCheckResult.Unhealthy(
-                        description: $"Failed to acquire distributed lock: {acquisitionResult.FailureReason}",
+                        description: $"Failed to acquire distributed lock: {acquisitionResult.ErrorMessage}",
                         data: data);
                 }
 

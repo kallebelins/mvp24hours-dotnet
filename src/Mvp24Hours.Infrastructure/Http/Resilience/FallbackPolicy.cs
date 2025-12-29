@@ -5,8 +5,8 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Polly;
-using Polly.Extensions.Http;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -27,18 +27,18 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
         /// <summary>
         /// Gets or sets the fallback action that returns a default response when the primary action fails.
         /// </summary>
-        public Func<DelegateResult<HttpResponseMessage>, Context, CancellationToken, Task<HttpResponseMessage>>? FallbackAction { get; set; }
+        public Func<Exception?, HttpResponseMessage?, CancellationToken, Task<HttpResponseMessage>>? FallbackAction { get; set; }
 
         /// <summary>
         /// Gets or sets the callback invoked when fallback is executed.
         /// </summary>
-        public Action<DelegateResult<HttpResponseMessage>, Context>? OnFallback { get; set; }
+        public Action<Exception?, HttpResponseMessage?>? OnFallback { get; set; }
 
         /// <summary>
         /// Gets or sets the HTTP status codes that should trigger fallback.
         /// Default includes: 408, 429, 500, 502, 503, 504.
         /// </summary>
-        public System.Collections.Generic.List<int> FallbackStatusCodes { get; set; } = new() { 408, 429, 500, 502, 503, 504 };
+        public List<int> FallbackStatusCodes { get; set; } = new() { 408, 429, 500, 502, 503, 504 };
 
         /// <summary>
         /// Gets or sets whether to fallback on timeout exceptions. Default is true.
@@ -65,12 +65,15 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
     /// <item>Detailed logging of fallback events</item>
     /// </list>
     /// </para>
+    /// <para>
+    /// <strong>Note:</strong> This implementation uses Polly 8.x API with ResiliencePipeline.
+    /// </para>
     /// </remarks>
     public class FallbackPolicy : IHttpResiliencePolicy
     {
         private readonly ILogger<FallbackPolicy>? _logger;
         private readonly FallbackPolicyOptions _options;
-        private readonly AsyncFallbackPolicy<HttpResponseMessage> _policy;
+        private readonly ResiliencePipeline<HttpResponseMessage> _pipeline;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FallbackPolicy"/> class.
@@ -81,14 +84,14 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;
-            _policy = CreatePolicy();
+            _pipeline = CreatePipeline();
         }
 
         /// <inheritdoc/>
         public string PolicyName => "FallbackPolicy";
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> ExecuteAsync(
+        public async Task<HttpResponseMessage> ExecuteAsync(
             Func<HttpRequestMessage> requestFactory,
             Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> sendAsync,
             CancellationToken cancellationToken = default)
@@ -103,13 +106,13 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
                 throw new ArgumentNullException(nameof(sendAsync));
             }
 
-            if (!_options.Enabled || _options.FallbackAction == null)
+            if (!_options.Enabled)
             {
                 var request = requestFactory();
-                return sendAsync(request, cancellationToken);
+                return await sendAsync(request, cancellationToken);
             }
 
-            return _policy.ExecuteAsync(
+            return await _pipeline.ExecuteAsync(
                 async (ct) =>
                 {
                     var request = requestFactory();
@@ -119,66 +122,58 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
         }
 
         /// <inheritdoc/>
-        public IAsyncPolicy<HttpResponseMessage> GetPollyPolicy() => _policy;
-
-        private AsyncFallbackPolicy<HttpResponseMessage> CreatePolicy()
+        public IAsyncPolicy<HttpResponseMessage> GetPollyPolicy()
         {
-            var policyBuilder = HttpPolicyExtensions
-                .HandleTransientHttpError();
-
-            // Add custom status codes to fallback on
-            if (_options.FallbackStatusCodes.Count > 0)
-            {
-                foreach (var statusCode in _options.FallbackStatusCodes)
-                {
-                    policyBuilder = policyBuilder.OrResult(response => (int)response.StatusCode == statusCode);
-                }
-            }
-
-            if (_options.FallbackOnTimeout)
-            {
-                policyBuilder = policyBuilder.Or<TimeoutRejectedException>();
-            }
-
-            var fallbackAction = _options.FallbackAction ?? DefaultFallbackAction;
-            var onFallback = _options.OnFallback != null
-                ? (Func<DelegateResult<HttpResponseMessage>, Context, Task>)((outcome, context) =>
-                {
-                    _options.OnFallback(outcome, context);
-                    return Task.CompletedTask;
-                })
-                : null;
-
-            if (onFallback != null)
-            {
-                return policyBuilder.FallbackAsync(fallbackAction, onFallback);
-            }
-            else
-            {
-                return policyBuilder.FallbackAsync(fallbackAction);
-            }
+            // Note: Polly 8.x uses ResiliencePipeline, not IAsyncPolicy.
+            // This method is kept for interface compatibility but returns a no-op policy.
+            return Policy.NoOpAsync<HttpResponseMessage>();
         }
 
-        private Task<HttpResponseMessage> DefaultFallbackAction(
-            DelegateResult<HttpResponseMessage> outcome,
-            Context context,
-            CancellationToken cancellationToken)
+        private ResiliencePipeline<HttpResponseMessage> CreatePipeline()
         {
-            _logger?.LogWarning(
-                "Fallback action executed. " +
-                "Exception: {Exception}, " +
-                "StatusCode: {StatusCode}",
-                outcome.Exception?.Message,
-                (int?)outcome.Result?.StatusCode);
+            var builder = new ResiliencePipelineBuilder<HttpResponseMessage>();
 
-            // Return a default response indicating service unavailable
-            var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            builder.AddFallback(new Polly.Fallback.FallbackStrategyOptions<HttpResponseMessage>
             {
-                Content = new StringContent("Service temporarily unavailable. Fallback response.")
-            };
+                ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                    .Handle<HttpRequestException>()
+                    .Handle<TaskCanceledException>()
+                    .Handle<TimeoutException>()
+                    .HandleResult(response =>
+                    {
+                        if (response == null) return true;
+                        var statusCode = (int)response.StatusCode;
+                        return _options.FallbackStatusCodes.Contains(statusCode);
+                    }),
 
-            return Task.FromResult(response);
+                FallbackAction = async args =>
+                {
+                    _options.OnFallback?.Invoke(args.Outcome.Exception, args.Outcome.Result);
+
+                    _logger?.LogWarning(
+                        "Fallback action executed. Exception: {Exception}, StatusCode: {StatusCode}",
+                        args.Outcome.Exception?.Message,
+                        (int?)args.Outcome.Result?.StatusCode);
+
+                    if (_options.FallbackAction != null)
+                    {
+                        return Outcome.FromResult(await _options.FallbackAction(
+                            args.Outcome.Exception,
+                            args.Outcome.Result,
+                            args.Context.CancellationToken));
+                    }
+
+                    // Return a default response indicating service unavailable
+                    var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                    {
+                        Content = new StringContent("Service temporarily unavailable. Fallback response.")
+                    };
+
+                    return Outcome.FromResult(response);
+                }
+            });
+
+            return builder.Build();
         }
     }
 }
-

@@ -510,7 +510,7 @@ public sealed class CqrsMetrics
     /// <summary>
     /// Represents a scope for tracking request execution duration.
     /// </summary>
-    public readonly struct RequestScope : IDisposable
+    public struct RequestScope : IDisposable
     {
         private readonly CqrsMetrics _metrics;
         private readonly string _typeName;
@@ -565,7 +565,7 @@ public sealed class CqrsMetrics
     /// <summary>
     /// Represents a scope for tracking behavior execution duration.
     /// </summary>
-    public readonly struct BehaviorScope : IDisposable
+    public struct BehaviorScope : IDisposable
     {
         private readonly CqrsMetrics _metrics;
         private readonly string _behaviorName;

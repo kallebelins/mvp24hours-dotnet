@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -249,7 +250,7 @@ public sealed class CacheMetrics
     /// <summary>
     /// Represents a scope for tracking cache operation duration.
     /// </summary>
-    public readonly struct CacheOperationScope : IDisposable
+    public struct CacheOperationScope : IDisposable
     {
         private readonly CacheMetrics _metrics;
         private readonly string _cacheName;

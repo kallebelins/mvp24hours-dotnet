@@ -107,6 +107,27 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
         }
 
         /// <inheritdoc />
+        public async Task<IList<SmsSendResult>> SendBatchAsync(
+            IEnumerable<SmsMessage> messages,
+            CancellationToken cancellationToken = default)
+        {
+            if (messages == null)
+            {
+                throw new ArgumentNullException(nameof(messages));
+            }
+
+            var results = new List<SmsSendResult>();
+            foreach (var message in messages)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = await SendAsync(message, cancellationToken);
+                results.Add(result);
+            }
+
+            return results;
+        }
+
+        /// <inheritdoc />
         public async Task<SmsSendResult> SendMmsAsync(MmsMessage message, CancellationToken cancellationToken = default)
         {
             if (message == null)

@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
     /// <summary>
     /// Represents a cache invalidation event.
     /// </summary>
-    internal class CacheInvalidationEvent
+    public class CacheInvalidationEvent
     {
         public CacheInvalidationEventType Type { get; set; }
         public string? Key { get; set; }
@@ -128,7 +128,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
     /// <summary>
     /// Type of cache invalidation event.
     /// </summary>
-    internal enum CacheInvalidationEventType
+    public enum CacheInvalidationEventType
     {
         Key,
         Tag,

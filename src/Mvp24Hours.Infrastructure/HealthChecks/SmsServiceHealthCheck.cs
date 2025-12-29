@@ -105,18 +105,18 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
 
                     if (!sendResult.Success)
                     {
-                        data["error"] = sendResult.ErrorMessage ?? "SMS send failed";
-                        data["status"] = sendResult.Status?.ToString();
+                        data["error"] = sendResult.FirstError ?? "SMS send failed";
+                        data["status"] = sendResult.Status.ToString();
 
-                        _logger.LogError("SMS service health check failed: Send failed. Error: {Error}", sendResult.ErrorMessage);
+                        _logger.LogError("SMS service health check failed: Send failed. Error: {Error}", sendResult.FirstError);
 
                         return HealthCheckResult.Unhealthy(
-                            description: $"SMS service send failed: {sendResult.ErrorMessage}",
+                            description: $"SMS service send failed: {sendResult.FirstError}",
                             data: data);
                     }
 
                     data["messageId"] = sendResult.MessageId;
-                    data["status"] = sendResult.Status?.ToString();
+                    data["status"] = sendResult.Status.ToString();
 
                     // Check response time thresholds
                     if (stopwatch.ElapsedMilliseconds >= _options.FailureThresholdMs)

@@ -438,7 +438,7 @@ public sealed class MessagingMetrics
     /// <summary>
     /// Represents a scope for tracking publish operation duration.
     /// </summary>
-    public readonly struct PublishScope : IDisposable
+    public struct PublishScope : IDisposable
     {
         private readonly MessagingMetrics _metrics;
         private readonly string _messageType;
@@ -491,7 +491,7 @@ public sealed class MessagingMetrics
     /// <summary>
     /// Represents a scope for tracking consume operation duration.
     /// </summary>
-    public readonly struct ConsumeScope : IDisposable
+    public struct ConsumeScope : IDisposable
     {
         private readonly MessagingMetrics _metrics;
         private readonly string _messageType;
