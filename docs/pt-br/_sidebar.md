@@ -86,5 +86,6 @@
 * * [Rate Limiting](pt-br/modernization/rate-limiting.md)
 * * [TimeProvider](pt-br/modernization/time-provider.md)
 * * [PeriodicTimer](pt-br/modernization/periodic-timer.md)
+* * [Configuração de Options](pt-br/modernization/options-configuration.md)
 * [Release](pt-br/release.md)
 * [Migração](pt-br/migration.md)

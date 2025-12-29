@@ -276,13 +276,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         /// <summary>
         /// Initializes a new instance of <see cref="NativePipelineResilienceMiddleware"/>.
         /// </summary>
-        /// <param name="pipelineProvider">The resilience pipeline provider.</param>
+        /// <param name="options">The resilience options.</param>
         /// <param name="logger">Optional logger.</param>
         public NativePipelineResilienceMiddleware(
-            ResiliencePipelineProvider<string> pipelineProvider,
+            NativePipelineResilienceOptions options,
             ILogger<NativePipelineResilienceMiddleware>? logger = null)
         {
-            _pipeline = pipelineProvider.GetPipeline("pipeline");
+            _pipeline = BuildPipeline(options ?? new NativePipelineResilienceOptions());
             _logger = logger;
         }
 
@@ -295,10 +295,58 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             Func<Task> next,
             CancellationToken cancellationToken = default)
         {
+            _logger?.LogDebug("Executing pipeline operation with native resilience");
+            
             await _pipeline.ExecuteAsync(async ct =>
             {
                 await next();
             }, cancellationToken);
+        }
+
+        private static ResiliencePipeline BuildPipeline(NativePipelineResilienceOptions options)
+        {
+            var builder = new ResiliencePipelineBuilder();
+
+            // Add timeout strategy (outermost)
+            if (options.EnableTimeout)
+            {
+                builder.AddTimeout(new TimeoutStrategyOptions
+                {
+                    Timeout = options.TimeoutDuration
+                });
+            }
+
+            // Add circuit breaker
+            if (options.EnableCircuitBreaker)
+            {
+                builder.AddCircuitBreaker(new CircuitBreakerStrategyOptions
+                {
+                    FailureRatio = options.CircuitBreakerFailureRatio,
+                    MinimumThroughput = options.CircuitBreakerMinimumThroughput,
+                    SamplingDuration = options.CircuitBreakerSamplingDuration,
+                    BreakDuration = options.CircuitBreakerBreakDuration
+                });
+            }
+
+            // Add retry strategy (innermost)
+            if (options.EnableRetry)
+            {
+                builder.AddRetry(new RetryStrategyOptions
+                {
+                    MaxRetryAttempts = options.RetryMaxAttempts,
+                    Delay = options.RetryDelay,
+                    MaxDelay = options.RetryMaxDelay,
+                    BackoffType = options.RetryBackoffType switch
+                    {
+                        PipelineResilienceBackoffType.Constant => DelayBackoffType.Constant,
+                        PipelineResilienceBackoffType.Linear => DelayBackoffType.Linear,
+                        _ => DelayBackoffType.Exponential
+                    },
+                    UseJitter = options.RetryUseJitter
+                });
+            }
+
+            return builder.Build();
         }
     }
 

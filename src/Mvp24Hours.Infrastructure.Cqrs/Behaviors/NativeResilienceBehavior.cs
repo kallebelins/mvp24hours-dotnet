@@ -61,10 +61,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors
     /// </code>
     /// </example>
     public class NativeResilienceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull
+        where TRequest : IMediatorRequest<TResponse>
     {
         private readonly NativeCqrsResilienceOptions _defaultOptions;
-        private readonly ResiliencePipelineProvider<string>? _pipelineProvider;
         private readonly ILogger<NativeResilienceBehavior<TRequest, TResponse>>? _logger;
         private ResiliencePipeline<TResponse>? _pipeline;
 
@@ -72,15 +71,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors
         /// Initializes a new instance of <see cref="NativeResilienceBehavior{TRequest, TResponse}"/>.
         /// </summary>
         /// <param name="options">The default resilience options.</param>
-        /// <param name="pipelineProvider">Optional pipeline provider for keyed pipelines.</param>
         /// <param name="logger">Optional logger.</param>
         public NativeResilienceBehavior(
             NativeCqrsResilienceOptions options,
-            ResiliencePipelineProvider<string>? pipelineProvider = null,
             ILogger<NativeResilienceBehavior<TRequest, TResponse>>? logger = null)
         {
             _defaultOptions = options ?? new NativeCqrsResilienceOptions();
-            _pipelineProvider = pipelineProvider;
             _logger = logger;
         }
 
@@ -118,19 +114,6 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors
             NativeCqrsResilienceOptions options,
             string requestTypeName)
         {
-            // If we have a provider and a pipeline name, try to get it
-            if (_pipelineProvider != null && !string.IsNullOrEmpty(options.PipelineName))
-            {
-                try
-                {
-                    return _pipelineProvider.GetPipeline<TResponse>(options.PipelineName);
-                }
-                catch
-                {
-                    // Pipeline not found, build one
-                }
-            }
-
             // Build pipeline if not cached
             if (_pipeline == null)
             {

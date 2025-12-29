@@ -23,6 +23,7 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
 		<PackageReference Include="System.Threading.RateLimiting" Version="9.0.0" />
