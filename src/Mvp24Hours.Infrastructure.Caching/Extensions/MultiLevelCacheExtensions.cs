@@ -17,6 +17,29 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
     /// <summary>
     /// Extension methods for registering multi-level cache services.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>⚠️ DEPRECATED:</strong> These methods are deprecated in favor of .NET 9 HybridCache.
+    /// Use <c>services.AddMvpHybridCache()</c> from <see cref="HybridCache.HybridCacheServiceExtensions"/> instead.
+    /// </para>
+    /// <para>
+    /// <strong>Migration Example:</strong>
+    /// <code>
+    /// // Before:
+    /// services.AddMultiLevelCache();
+    /// 
+    /// // After (recommended):
+    /// services.AddMvpHybridCache(options =>
+    /// {
+    ///     options.UseRedisAsL2 = true;
+    ///     options.RedisConnectionString = "localhost:6379";
+    /// });
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Obsolete("Use HybridCacheServiceExtensions.AddMvpHybridCache() instead. " +
+              "HybridCache (.NET 9) provides native multi-level caching with better performance. " +
+              "See migration guide: docs/en-us/modernization/hybrid-cache.md")]
     public static class MultiLevelCacheExtensions
     {
         /// <summary>

@@ -18,6 +18,34 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
     /// </summary>
     /// <remarks>
     /// <para>
+    /// <strong>⚠️ DEPRECATED:</strong> This class is deprecated in favor of .NET 9 HybridCache.
+    /// Use <see cref="Mvp24Hours.Infrastructure.Caching.HybridCache.HybridCacheProvider"/> instead.
+    /// </para>
+    /// <para>
+    /// <strong>Migration Guide:</strong>
+    /// <code>
+    /// // Before (MultiLevelCache):
+    /// services.AddSingleton&lt;IMultiLevelCache, MultiLevelCache&gt;();
+    /// 
+    /// // After (HybridCache - recommended):
+    /// services.AddMvpHybridCache(options =>
+    /// {
+    ///     options.UseRedisAsL2 = true;
+    ///     options.RedisConnectionString = "localhost:6379";
+    /// });
+    /// </code>
+    /// </para>
+    /// <para>
+    /// <strong>Benefits of HybridCache over MultiLevelCache:</strong>
+    /// <list type="bullet">
+    /// <item>Native .NET 9 implementation with better performance</item>
+    /// <item>Built-in stampede protection without custom SemaphoreSlim</item>
+    /// <item>Automatic L1/L2 synchronization</item>
+    /// <item>Native tag-based invalidation via RemoveByTagAsync()</item>
+    /// <item>Less code and maintenance burden</item>
+    /// </list>
+    /// </para>
+    /// <para>
     /// This implementation provides a two-tier caching strategy:
     /// <list type="bullet">
     /// <item><strong>L1 (Memory Cache):</strong> Fast, local to each instance, limited by memory</item>
@@ -46,6 +74,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
     /// to notify other instances to invalidate their L1 cache, ensuring consistency.
     /// </para>
     /// </remarks>
+    [Obsolete("Use HybridCacheProvider from Mvp24Hours.Infrastructure.Caching.HybridCache namespace instead. " +
+              "HybridCache (.NET 9) provides native multi-level caching with built-in stampede protection. " +
+              "See migration guide in documentation: docs/en-us/modernization/hybrid-cache.md")]
     public class MultiLevelCache : IMultiLevelCache
     {
         private readonly ICacheProvider _l1Cache;

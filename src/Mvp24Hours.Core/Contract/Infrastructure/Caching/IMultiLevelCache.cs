@@ -14,6 +14,22 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Caching
     /// </summary>
     /// <remarks>
     /// <para>
+    /// <strong>⚠️ DEPRECATED:</strong> This interface is deprecated in favor of .NET 9 HybridCache.
+    /// Use <see cref="ICacheProvider"/> with HybridCacheProvider instead.
+    /// </para>
+    /// <para>
+    /// <strong>Migration Guide:</strong>
+    /// <code>
+    /// // Before (IMultiLevelCache):
+    /// services.AddMultiLevelCache();
+    /// var cache = sp.GetRequiredService&lt;IMultiLevelCache&gt;();
+    /// 
+    /// // After (HybridCache - recommended):
+    /// services.AddMvpHybridCache();
+    /// var cache = sp.GetRequiredService&lt;ICacheProvider&gt;();
+    /// </code>
+    /// </para>
+    /// <para>
     /// Multi-level caching improves performance by using a fast local cache (L1) for frequently accessed data
     /// and a distributed cache (L2) for shared data across instances. This pattern provides:
     /// <list type="bullet">
@@ -66,6 +82,9 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Caching
     /// }
     /// </code>
     /// </example>
+    [Obsolete("Use ICacheProvider with HybridCacheProvider from Mvp24Hours.Infrastructure.Caching.HybridCache namespace instead. " +
+              "HybridCache (.NET 9) provides native multi-level caching with built-in stampede protection. " +
+              "See migration guide in documentation: docs/en-us/modernization/hybrid-cache.md")]
     public interface IMultiLevelCache : ICacheProvider
     {
         /// <summary>

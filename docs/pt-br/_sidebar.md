@@ -88,5 +88,6 @@
 * * [PeriodicTimer](pt-br/modernization/periodic-timer.md)
 * * [Configuração de Options](pt-br/modernization/options-configuration.md)
 * * [Channels (Produtor/Consumidor)](pt-br/modernization/channels.md)
+* * [HybridCache](pt-br/modernization/hybrid-cache.md)
 * [Release](pt-br/release.md)
 * [Migração](pt-br/migration.md)
