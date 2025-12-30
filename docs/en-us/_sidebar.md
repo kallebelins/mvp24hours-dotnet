@@ -87,5 +87,6 @@
 * * [TimeProvider](en-us/modernization/time-provider.md)
 * * [PeriodicTimer](en-us/modernization/periodic-timer.md)
 * * [Options Configuration](en-us/modernization/options-configuration.md)
+* * [Channels (Producer/Consumer)](en-us/modernization/channels.md)
 * [Release](en-us/release.md)
 * [Migration](en-us/migration.md)
