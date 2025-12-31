@@ -68,7 +68,9 @@
 * * [OpenTelemetry Metrics](en-us/observability/metrics.md)
 * * [OpenTelemetry Exporters](en-us/observability/exporters.md)
 * * [Migration from TelemetryHelper](en-us/observability/migration.md)
-* [CronJob](en-us/cronjob.md)
+* CronJob
+* * [Overview](en-us/cronjob.md)
+* * [Resilience](en-us/cronjob-resilience.md)
 * Patterns
 * * [Entity](en-us/database/use-entity.md)
 * * [Database Context](en-us/database/use-context.md)

@@ -107,6 +107,49 @@ public static class CronJobActivitySource
 
         /// <summary>The execution count for the job.</summary>
         public const string ExecutionCount = "cronjob.execution_count";
+
+        #region Resilience Tags
+
+        /// <summary>Whether retry is enabled for this job.</summary>
+        public const string RetryEnabled = "cronjob.resilience.retry_enabled";
+
+        /// <summary>The current retry attempt number.</summary>
+        public const string RetryAttempt = "cronjob.resilience.retry_attempt";
+
+        /// <summary>The total number of retries that occurred.</summary>
+        public const string RetryCount = "cronjob.resilience.retry_count";
+
+        /// <summary>The maximum retry attempts configured.</summary>
+        public const string MaxRetryAttempts = "cronjob.resilience.max_retry_attempts";
+
+        /// <summary>Whether circuit breaker is enabled for this job.</summary>
+        public const string CircuitBreakerEnabled = "cronjob.resilience.circuit_breaker_enabled";
+
+        /// <summary>The current circuit breaker state.</summary>
+        public const string CircuitBreakerState = "cronjob.resilience.circuit_breaker_state";
+
+        /// <summary>Whether overlapping prevention is enabled.</summary>
+        public const string PreventOverlapping = "cronjob.resilience.prevent_overlapping";
+
+        /// <summary>Whether this execution was skipped.</summary>
+        public const string ExecutionSkipped = "cronjob.resilience.execution_skipped";
+
+        /// <summary>The reason why execution was skipped.</summary>
+        public const string SkipReason = "cronjob.resilience.skip_reason";
+
+        /// <summary>The number of skipped executions.</summary>
+        public const string SkippedCount = "cronjob.resilience.skipped_count";
+
+        /// <summary>Whether execution timed out.</summary>
+        public const string ExecutionTimedOut = "cronjob.resilience.timed_out";
+
+        /// <summary>The configured execution timeout in milliseconds.</summary>
+        public const string ExecutionTimeoutMs = "cronjob.resilience.timeout_ms";
+
+        /// <summary>The graceful shutdown timeout in milliseconds.</summary>
+        public const string GracefulShutdownTimeoutMs = "cronjob.resilience.graceful_shutdown_timeout_ms";
+
+        #endregion
     }
 
     #region Activity Factory Methods
@@ -215,6 +258,83 @@ public static class CronJobActivitySource
 
     #endregion
 
+    #region Resilience Activity Factory Methods
+
+    /// <summary>
+    /// Starts an activity for a retry attempt.
+    /// </summary>
+    /// <param name="jobName">The name of the job.</param>
+    /// <param name="attemptNumber">The current attempt number.</param>
+    /// <param name="maxAttempts">The maximum number of attempts.</param>
+    /// <param name="delayMs">The delay before this attempt in milliseconds.</param>
+    /// <returns>The started activity, or null if not sampled.</returns>
+    public static Activity? StartRetryActivity(
+        string jobName,
+        int attemptNumber,
+        int maxAttempts,
+        double delayMs)
+    {
+        var activity = Source.StartActivity($"{ActivityNames.Execute}.Retry", ActivityKind.Internal);
+
+        if (activity == null)
+            return null;
+
+        activity.SetTag(Tags.JobName, jobName);
+        activity.SetTag(Tags.RetryAttempt, attemptNumber);
+        activity.SetTag(Tags.MaxRetryAttempts, maxAttempts);
+        activity.SetTag("cronjob.resilience.retry_delay_ms", delayMs);
+
+        return activity;
+    }
+
+    /// <summary>
+    /// Starts an activity for a circuit breaker state change.
+    /// </summary>
+    /// <param name="jobName">The name of the job.</param>
+    /// <param name="previousState">The previous circuit breaker state.</param>
+    /// <param name="newState">The new circuit breaker state.</param>
+    /// <returns>The started activity, or null if not sampled.</returns>
+    public static Activity? StartCircuitBreakerStateChangeActivity(
+        string jobName,
+        string previousState,
+        string newState)
+    {
+        var activity = Source.StartActivity($"{ActivityNames.Execute}.CircuitBreakerStateChange", ActivityKind.Internal);
+
+        if (activity == null)
+            return null;
+
+        activity.SetTag(Tags.JobName, jobName);
+        activity.SetTag("cronjob.resilience.circuit_breaker_previous_state", previousState);
+        activity.SetTag(Tags.CircuitBreakerState, newState);
+
+        return activity;
+    }
+
+    /// <summary>
+    /// Starts an activity for a skipped execution.
+    /// </summary>
+    /// <param name="jobName">The name of the job.</param>
+    /// <param name="reason">The reason for skipping (e.g., "overlapping", "circuit_breaker_open").</param>
+    /// <returns>The started activity, or null if not sampled.</returns>
+    public static Activity? StartSkippedExecutionActivity(
+        string jobName,
+        string reason)
+    {
+        var activity = Source.StartActivity($"{ActivityNames.Execute}.Skipped", ActivityKind.Internal);
+
+        if (activity == null)
+            return null;
+
+        activity.SetTag(Tags.JobName, jobName);
+        activity.SetTag(Tags.ExecutionSkipped, true);
+        activity.SetTag(Tags.SkipReason, reason);
+
+        return activity;
+    }
+
+    #endregion
+
     #region Activity Extensions
 
     /// <summary>
@@ -249,6 +369,52 @@ public static class CronJobActivitySource
                 activity.SetTag(Tags.ErrorMessage, errorMessage);
             }
         }
+    }
+
+    /// <summary>
+    /// Sets resilience information on an activity.
+    /// </summary>
+    /// <param name="activity">The activity to update.</param>
+    /// <param name="retryEnabled">Whether retry is enabled.</param>
+    /// <param name="circuitBreakerEnabled">Whether circuit breaker is enabled.</param>
+    /// <param name="preventOverlapping">Whether overlapping prevention is enabled.</param>
+    public static void SetResilienceInfo(
+        this Activity? activity,
+        bool retryEnabled,
+        bool circuitBreakerEnabled,
+        bool preventOverlapping)
+    {
+        if (activity == null)
+            return;
+
+        activity.SetTag(Tags.RetryEnabled, retryEnabled);
+        activity.SetTag(Tags.CircuitBreakerEnabled, circuitBreakerEnabled);
+        activity.SetTag(Tags.PreventOverlapping, preventOverlapping);
+    }
+
+    /// <summary>
+    /// Records a retry attempt on an activity.
+    /// </summary>
+    /// <param name="activity">The activity to update.</param>
+    /// <param name="attemptNumber">The attempt number.</param>
+    /// <param name="exception">The exception that triggered the retry.</param>
+    /// <param name="delayMs">The delay before the next attempt.</param>
+    public static void RecordRetryAttempt(
+        this Activity? activity,
+        int attemptNumber,
+        Exception exception,
+        double delayMs)
+    {
+        if (activity == null)
+            return;
+
+        activity.AddEvent(new ActivityEvent("retry", default, new ActivityTagsCollection
+        {
+            { Tags.RetryAttempt, attemptNumber },
+            { "exception.type", exception.GetType().FullName ?? exception.GetType().Name },
+            { "exception.message", exception.Message },
+            { "retry_delay_ms", delayMs }
+        }));
     }
 
     /// <summary>

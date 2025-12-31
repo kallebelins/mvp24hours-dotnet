@@ -194,6 +194,7 @@ O `CronJobService` trata adequadamente cancelamento e encerramento gracioso:
 
 ## Veja Também
 
+- [Resiliência em CronJob](cronjob-resilience.md) - Retry, circuit breaker, prevenção de sobreposição
 - [Modernização PeriodicTimer](modernization/periodic-timer.md)
 - [Abstração TimeProvider](modernization/time-provider.md)
 - [Observabilidade](observability/home.md)

@@ -68,7 +68,9 @@
 * * [OpenTelemetry Metrics](pt-br/observability/metrics.md)
 * * [OpenTelemetry Exporters](pt-br/observability/exporters.md)
 * * [Migração do TelemetryHelper](pt-br/observability/migration.md)
-* [CronJob](pt-br/cronjob.md)
+* CronJob
+* * [Visão Geral](pt-br/cronjob.md)
+* * [Resiliência](pt-br/cronjob-resilience.md)
 * Padrões
 * * [Entidade](pt-br/database/use-entity.md)
 * * [Contexto de Banco](pt-br/database/use-context.md)
