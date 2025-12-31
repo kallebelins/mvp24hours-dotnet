@@ -234,6 +234,95 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
             return services.AddCronJob<T>(_ => { });
         }
 
+        #region Advanced CronJob Extensions
+
+        /// <summary>
+        /// Adds an advanced CronJob service with full feature support.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the CronJob service. Must inherit from <see cref="AdvancedCronJobService{T}"/>.
+        /// </typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
+        /// <param name="options">A delegate to configure the schedule and resilience options.</param>
+        /// <returns>The <see cref="IServiceCollection"/> for chaining.</returns>
+        /// <remarks>
+        /// <para>
+        /// Advanced CronJob services include all resilient features plus:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><b>Context:</b> Access to ICronJobContext during execution</item>
+        /// <item><b>Event Hooks:</b> OnJobStarting, OnJobCompleted, OnJobFailed</item>
+        /// <item><b>Dependencies:</b> Job dependency tracking</item>
+        /// <item><b>State Persistence:</b> Execution statistics and state</item>
+        /// <item><b>Pause/Resume:</b> Runtime control via ICronJobController</item>
+        /// <item><b>Distributed Locking:</b> Cluster-safe execution</item>
+        /// </list>
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// services.AddAdvancedCronJob&lt;MyJob&gt;(config =>
+        /// {
+        ///     config.CronExpression = "*/5 * * * *";
+        ///     config.Resilience.EnableRetry = true;
+        ///     config.Resilience.PreventOverlapping = true;
+        /// });
+        /// </code>
+        /// </example>
+        public static IServiceCollection AddAdvancedCronJob<T>(
+            this IServiceCollection services,
+            Action<IResilientScheduleConfig<T>> options)
+            where T : Services.AdvancedCronJobService<T>
+        {
+            Guard.Against.Null(services, nameof(services));
+            Guard.Against.Null(options, nameof(options), "Please provide Schedule and Resilience Configurations.");
+
+            // Create and configure the resilient schedule config
+            var config = new ResilientScheduleConfig<T>();
+            options.Invoke(config);
+
+            // Register the configuration as singleton
+            services.AddSingleton<IResilientScheduleConfig<T>>(config);
+
+            // Register resilience infrastructure
+            services.TryAddSingleton<ICronJobExecutionLock, InMemoryCronJobExecutionLock>();
+            services.TryAddSingleton<CronJobCircuitBreaker>();
+
+            // Register advanced infrastructure
+            services.AddCronJobAdvancedInfrastructure();
+
+            // Register the CronJob as hosted service
+            services.AddHostedService<T>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds an advanced CronJob service with full resilience and advanced features enabled.
+        /// </summary>
+        /// <typeparam name="T">The type of the CronJob service.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
+        /// <param name="cronExpression">The CRON expression defining the schedule.</param>
+        /// <param name="timeZoneInfo">The timezone for evaluating the CRON expression.</param>
+        /// <returns>The <see cref="IServiceCollection"/> for chaining.</returns>
+        public static IServiceCollection AddAdvancedCronJobWithFullFeatures<T>(
+            this IServiceCollection services,
+            string cronExpression,
+            TimeZoneInfo? timeZoneInfo = null)
+            where T : Services.AdvancedCronJobService<T>
+        {
+            Guard.Against.Null(services, nameof(services));
+            Guard.Against.NullOrWhiteSpace(cronExpression, nameof(cronExpression));
+
+            return services.AddAdvancedCronJob<T>(config =>
+            {
+                config.CronExpression = cronExpression;
+                config.TimeZoneInfo = timeZoneInfo ?? TimeZoneInfo.Local;
+                config.Resilience = CronJobResilienceConfig<T>.FullResilience();
+            });
+        }
+
+        #endregion
+
         #region Resilient CronJob Extensions
 
         /// <summary>
