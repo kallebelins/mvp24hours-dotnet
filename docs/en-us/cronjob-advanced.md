@@ -1,9 +1,13 @@
 # CronJob - Advanced Features
 
-This document describes the advanced features of the CronJob module, including execution context, 6-field CRON expressions, job dependencies, distributed locking, state persistence, pause/resume control, and event hooks.
+This document describes the advanced features of the CronJob module, including advanced configuration, execution context, 6-field CRON expressions, job dependencies, distributed locking, state persistence, pause/resume control, and event hooks.
 
 ## Features
 
+- **CronJobOptions<T>**: Comprehensive configuration via code or appsettings.json
+- **CronJobGlobalOptions**: Global defaults for all CronJobs
+- **Configuration Validation**: CRON expression validation on startup
+- **Multiple Instances**: Register same job type with different configurations
 - **ICronJobContext**: Execution context with metadata (JobId, StartTime, Attempt)
 - **6-field CRON Expressions**: Second-level precision scheduling
 - **Job Dependencies**: Execute jobs after others complete
@@ -11,6 +15,236 @@ This document describes the advanced features of the CronJob module, including e
 - **ICronJobStateStore**: Job state persistence
 - **Pause/Resume**: Runtime job control
 - **Event Hooks**: Lifecycle event callbacks
+
+## Advanced Configuration
+
+The CronJob module provides comprehensive configuration options through `CronJobOptions<T>` and `CronJobGlobalOptions`.
+
+### CronJobOptions<T> - Per-Job Configuration
+
+Configure each CronJob with full control over schedule, resilience, and observability:
+
+```csharp
+services.AddCronJobWithOptions<MyJob>(options =>
+{
+    // Schedule
+    options.CronExpression = "*/5 * * * *";   // Every 5 minutes
+    options.TimeZone = "UTC";                  // or "America/Sao_Paulo", etc.
+    options.Enabled = true;                    // Enable/disable job
+    options.Description = "Processes pending orders";
+    
+    // Resilience
+    options.EnableRetry = true;
+    options.MaxRetryAttempts = 3;
+    options.RetryDelay = TimeSpan.FromSeconds(5);
+    options.UseExponentialBackoff = true;
+    
+    // Circuit Breaker
+    options.EnableCircuitBreaker = true;
+    options.CircuitBreakerFailureThreshold = 5;
+    options.CircuitBreakerBreakDuration = TimeSpan.FromSeconds(30);
+    
+    // Overlapping and Shutdown
+    options.PreventOverlapping = true;
+    options.GracefulShutdownTimeout = TimeSpan.FromSeconds(30);
+    
+    // Distributed Locking
+    options.EnableDistributedLocking = true;
+    options.DistributedLockExpiry = TimeSpan.FromMinutes(5);
+    
+    // Observability
+    options.EnableObservability = true;
+    options.EnableHealthCheck = true;
+    
+    // Dependencies
+    options.DependsOn = new[] { "DataCollectionJob", "ValidationJob" };
+});
+```
+
+### CronJobGlobalOptions - Global Defaults
+
+Configure global defaults that apply to all CronJobs:
+
+```csharp
+services.AddCronJobGlobalOptions(options =>
+{
+    // Default timezone for all jobs
+    options.DefaultTimeZone = "UTC";
+    options.JobsEnabledByDefault = true;
+    
+    // Default resilience settings
+    options.EnableRetryByDefault = true;
+    options.DefaultMaxRetryAttempts = 3;
+    options.DefaultRetryDelay = TimeSpan.FromSeconds(1);
+    options.UseExponentialBackoffByDefault = true;
+    
+    // Default circuit breaker
+    options.EnableCircuitBreakerByDefault = false;
+    options.DefaultCircuitBreakerFailureThreshold = 5;
+    options.DefaultCircuitBreakerBreakDuration = TimeSpan.FromSeconds(30);
+    
+    // Overlapping and shutdown
+    options.PreventOverlappingByDefault = true;
+    options.DefaultGracefulShutdownTimeout = TimeSpan.FromSeconds(30);
+    
+    // Observability
+    options.EnableObservability = true;
+    options.EnableHealthChecks = true;
+    options.RegisterAggregateHealthCheck = true;
+    options.AggregateHealthCheckName = "cronjobs";
+    options.HealthCheckTags = new[] { "cronjob", "background" };
+    
+    // Validation
+    options.ValidateCronExpressionsOnStartup = true;
+    options.LogConfigurationWarnings = true;
+});
+```
+
+### Configuration via appsettings.json
+
+Configure CronJobs declaratively using `appsettings.json`:
+
+```json
+{
+  "CronJobs": {
+    "Global": {
+      "DefaultTimeZone": "UTC",
+      "EnableObservability": true,
+      "ValidateCronExpressionsOnStartup": true,
+      "EnableRetryByDefault": true,
+      "DefaultMaxRetryAttempts": 3
+    },
+    "OrderProcessingJob": {
+      "CronExpression": "*/5 * * * *",
+      "TimeZone": "UTC",
+      "Enabled": true,
+      "Description": "Processes pending orders every 5 minutes",
+      "EnableRetry": true,
+      "MaxRetryAttempts": 3,
+      "PreventOverlapping": true
+    },
+    "ReportGenerationJob": {
+      "CronExpression": "0 0 * * *",
+      "TimeZone": "America/New_York",
+      "Enabled": true,
+      "Description": "Generates daily reports at midnight",
+      "EnableCircuitBreaker": true,
+      "CircuitBreakerFailureThreshold": 3
+    }
+  }
+}
+```
+
+Register jobs from configuration:
+
+```csharp
+// Load global options from configuration
+services.AddCronJobGlobalOptionsFromConfiguration(configuration);
+
+// Register jobs from configuration
+services.AddCronJobFromConfiguration<OrderProcessingJob>(configuration);
+services.AddResilientCronJobFromConfiguration<ReportGenerationJob>(configuration);
+services.AddAdvancedCronJobFromConfiguration<DataSyncJob>(configuration);
+```
+
+### Startup Validation
+
+CRON expressions and configuration are validated at startup:
+
+```csharp
+// Invalid expression will fail application startup
+services.AddCronJobWithOptions<MyJob>(options =>
+{
+    options.CronExpression = "invalid expression"; // ❌ Will fail at startup
+});
+```
+
+Validation includes:
+- CRON expression syntax (5-field or 6-field)
+- Timezone identifier validity
+- Retry and circuit breaker parameter ranges
+- Timeout value validation
+- Instance name format (alphanumeric, hyphens, underscores)
+
+### Multiple Instances of Same Job Type
+
+Register multiple instances of the same job type with different configurations:
+
+```csharp
+// Via code
+services.AddCronJobInstances<DataSyncJob>(
+    new CronJobOptions<DataSyncJob>
+    {
+        InstanceName = "DataSync-US",
+        CronExpression = "0 0 * * *",
+        TimeZone = "America/New_York",
+        Description = "US data sync at midnight EST"
+    },
+    new CronJobOptions<DataSyncJob>
+    {
+        InstanceName = "DataSync-EU",
+        CronExpression = "0 0 * * *",
+        TimeZone = "Europe/London",
+        Description = "EU data sync at midnight GMT"
+    },
+    new CronJobOptions<DataSyncJob>
+    {
+        InstanceName = "DataSync-APAC",
+        CronExpression = "0 0 * * *",
+        TimeZone = "Asia/Tokyo",
+        Description = "APAC data sync at midnight JST"
+    }
+);
+```
+
+Via appsettings.json:
+
+```json
+{
+  "CronJobs": {
+    "DataSyncJob": {
+      "Instances": {
+        "DataSync-US": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "America/New_York"
+        },
+        "DataSync-EU": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "Europe/London"
+        },
+        "DataSync-APAC": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "Asia/Tokyo"
+        }
+      }
+    }
+  }
+}
+```
+
+```csharp
+services.AddCronJobInstancesFromConfiguration<DataSyncJob>(configuration);
+```
+
+### Disable Jobs Without Code Changes
+
+Disable a job via configuration without modifying code:
+
+```json
+{
+  "CronJobs": {
+    "MaintenanceJob": {
+      "Enabled": false
+    }
+  }
+}
+```
+
+Or via environment variables:
+
+```bash
+CronJobs__MaintenanceJob__Enabled=false
+```
 
 ## ICronJobContext - Execution Context
 

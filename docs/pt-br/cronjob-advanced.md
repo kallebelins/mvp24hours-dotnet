@@ -1,9 +1,13 @@
 # CronJob - Funcionalidades Avançadas
 
-Este documento descreve as funcionalidades avançadas do módulo CronJob, incluindo contexto de execução, expressões CRON de 6 campos, dependências entre jobs, distributed locking, persistência de estado, controle de pause/resume e hooks de eventos.
+Este documento descreve as funcionalidades avançadas do módulo CronJob, incluindo configuração avançada, contexto de execução, expressões CRON de 6 campos, dependências entre jobs, distributed locking, persistência de estado, controle de pause/resume e hooks de eventos.
 
 ## Funcionalidades
 
+- **CronJobOptions<T>**: Configuração abrangente via código ou appsettings.json
+- **CronJobGlobalOptions**: Padrões globais para todos os CronJobs
+- **Validação de Configuração**: Validação de expressões CRON no startup
+- **Múltiplas Instâncias**: Registrar mesmo tipo de job com configurações diferentes
 - **ICronJobContext**: Contexto de execução com metadados (JobId, StartTime, Attempt)
 - **Expressões CRON de 6 campos**: Suporte a segundos para agendamento mais preciso
 - **Job Dependencies**: Executar jobs após outros completarem
@@ -11,6 +15,236 @@ Este documento descreve as funcionalidades avançadas do módulo CronJob, inclui
 - **ICronJobStateStore**: Persistência de estado do job
 - **Pause/Resume**: Controle de jobs em runtime
 - **Event Hooks**: Callbacks para eventos do ciclo de vida do job
+
+## Configuração Avançada
+
+O módulo CronJob oferece opções de configuração abrangentes através de `CronJobOptions<T>` e `CronJobGlobalOptions`.
+
+### CronJobOptions<T> - Configuração Por Job
+
+Configure cada CronJob com controle total sobre agendamento, resiliência e observabilidade:
+
+```csharp
+services.AddCronJobWithOptions<MeuJob>(options =>
+{
+    // Agendamento
+    options.CronExpression = "*/5 * * * *";   // A cada 5 minutos
+    options.TimeZone = "UTC";                  // ou "America/Sao_Paulo", etc.
+    options.Enabled = true;                    // Habilitar/desabilitar job
+    options.Description = "Processa pedidos pendentes";
+    
+    // Resiliência
+    options.EnableRetry = true;
+    options.MaxRetryAttempts = 3;
+    options.RetryDelay = TimeSpan.FromSeconds(5);
+    options.UseExponentialBackoff = true;
+    
+    // Circuit Breaker
+    options.EnableCircuitBreaker = true;
+    options.CircuitBreakerFailureThreshold = 5;
+    options.CircuitBreakerBreakDuration = TimeSpan.FromSeconds(30);
+    
+    // Sobreposição e Shutdown
+    options.PreventOverlapping = true;
+    options.GracefulShutdownTimeout = TimeSpan.FromSeconds(30);
+    
+    // Distributed Locking
+    options.EnableDistributedLocking = true;
+    options.DistributedLockExpiry = TimeSpan.FromMinutes(5);
+    
+    // Observabilidade
+    options.EnableObservability = true;
+    options.EnableHealthCheck = true;
+    
+    // Dependências
+    options.DependsOn = new[] { "JobColetaDados", "JobValidacao" };
+});
+```
+
+### CronJobGlobalOptions - Padrões Globais
+
+Configure padrões globais que se aplicam a todos os CronJobs:
+
+```csharp
+services.AddCronJobGlobalOptions(options =>
+{
+    // Timezone padrão para todos os jobs
+    options.DefaultTimeZone = "UTC";
+    options.JobsEnabledByDefault = true;
+    
+    // Configurações padrão de resiliência
+    options.EnableRetryByDefault = true;
+    options.DefaultMaxRetryAttempts = 3;
+    options.DefaultRetryDelay = TimeSpan.FromSeconds(1);
+    options.UseExponentialBackoffByDefault = true;
+    
+    // Circuit breaker padrão
+    options.EnableCircuitBreakerByDefault = false;
+    options.DefaultCircuitBreakerFailureThreshold = 5;
+    options.DefaultCircuitBreakerBreakDuration = TimeSpan.FromSeconds(30);
+    
+    // Sobreposição e shutdown
+    options.PreventOverlappingByDefault = true;
+    options.DefaultGracefulShutdownTimeout = TimeSpan.FromSeconds(30);
+    
+    // Observabilidade
+    options.EnableObservability = true;
+    options.EnableHealthChecks = true;
+    options.RegisterAggregateHealthCheck = true;
+    options.AggregateHealthCheckName = "cronjobs";
+    options.HealthCheckTags = new[] { "cronjob", "background" };
+    
+    // Validação
+    options.ValidateCronExpressionsOnStartup = true;
+    options.LogConfigurationWarnings = true;
+});
+```
+
+### Configuração via appsettings.json
+
+Configure CronJobs declarativamente usando `appsettings.json`:
+
+```json
+{
+  "CronJobs": {
+    "Global": {
+      "DefaultTimeZone": "America/Sao_Paulo",
+      "EnableObservability": true,
+      "ValidateCronExpressionsOnStartup": true,
+      "EnableRetryByDefault": true,
+      "DefaultMaxRetryAttempts": 3
+    },
+    "JobProcessamentoPedidos": {
+      "CronExpression": "*/5 * * * *",
+      "TimeZone": "America/Sao_Paulo",
+      "Enabled": true,
+      "Description": "Processa pedidos pendentes a cada 5 minutos",
+      "EnableRetry": true,
+      "MaxRetryAttempts": 3,
+      "PreventOverlapping": true
+    },
+    "JobGeracaoRelatorios": {
+      "CronExpression": "0 0 * * *",
+      "TimeZone": "America/Sao_Paulo",
+      "Enabled": true,
+      "Description": "Gera relatórios diários à meia-noite",
+      "EnableCircuitBreaker": true,
+      "CircuitBreakerFailureThreshold": 3
+    }
+  }
+}
+```
+
+Registrar jobs a partir da configuração:
+
+```csharp
+// Carregar opções globais da configuração
+services.AddCronJobGlobalOptionsFromConfiguration(configuration);
+
+// Registrar jobs a partir da configuração
+services.AddCronJobFromConfiguration<JobProcessamentoPedidos>(configuration);
+services.AddResilientCronJobFromConfiguration<JobGeracaoRelatorios>(configuration);
+services.AddAdvancedCronJobFromConfiguration<JobSincronizacaoDados>(configuration);
+```
+
+### Validação no Startup
+
+Expressões CRON e configurações são validadas no startup:
+
+```csharp
+// Expressão inválida causará falha no startup da aplicação
+services.AddCronJobWithOptions<MeuJob>(options =>
+{
+    options.CronExpression = "expressao invalida"; // ❌ Falhará no startup
+});
+```
+
+A validação inclui:
+- Sintaxe de expressão CRON (5 campos ou 6 campos)
+- Validade do identificador de timezone
+- Intervalos de parâmetros de retry e circuit breaker
+- Validação de valores de timeout
+- Formato do nome da instância (alfanumérico, hífens, underscores)
+
+### Múltiplas Instâncias do Mesmo Tipo de Job
+
+Registre múltiplas instâncias do mesmo tipo de job com configurações diferentes:
+
+```csharp
+// Via código
+services.AddCronJobInstances<JobSincronizacaoDados>(
+    new CronJobOptions<JobSincronizacaoDados>
+    {
+        InstanceName = "SincDados-US",
+        CronExpression = "0 0 * * *",
+        TimeZone = "America/New_York",
+        Description = "Sincronização de dados US à meia-noite EST"
+    },
+    new CronJobOptions<JobSincronizacaoDados>
+    {
+        InstanceName = "SincDados-EU",
+        CronExpression = "0 0 * * *",
+        TimeZone = "Europe/London",
+        Description = "Sincronização de dados EU à meia-noite GMT"
+    },
+    new CronJobOptions<JobSincronizacaoDados>
+    {
+        InstanceName = "SincDados-BR",
+        CronExpression = "0 0 * * *",
+        TimeZone = "America/Sao_Paulo",
+        Description = "Sincronização de dados BR à meia-noite BRT"
+    }
+);
+```
+
+Via appsettings.json:
+
+```json
+{
+  "CronJobs": {
+    "JobSincronizacaoDados": {
+      "Instances": {
+        "SincDados-US": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "America/New_York"
+        },
+        "SincDados-EU": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "Europe/London"
+        },
+        "SincDados-BR": {
+          "CronExpression": "0 0 * * *",
+          "TimeZone": "America/Sao_Paulo"
+        }
+      }
+    }
+  }
+}
+```
+
+```csharp
+services.AddCronJobInstancesFromConfiguration<JobSincronizacaoDados>(configuration);
+```
+
+### Desabilitar Jobs Sem Alteração de Código
+
+Desabilite um job via configuração sem modificar o código:
+
+```json
+{
+  "CronJobs": {
+    "JobManutencao": {
+      "Enabled": false
+    }
+  }
+}
+```
+
+Ou via variáveis de ambiente:
+
+```bash
+CronJobs__JobManutencao__Enabled=false
+```
 
 ## ICronJobContext - Contexto de Execução
 
