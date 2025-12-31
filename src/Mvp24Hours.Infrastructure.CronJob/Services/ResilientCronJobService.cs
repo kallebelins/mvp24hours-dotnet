@@ -667,8 +667,16 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
             if (disposing)
             {
-                _shutdownCts?.Cancel();
+                try
+                {
+                    _shutdownCts?.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // CTS was already disposed, ignore
+                }
                 _shutdownCts?.Dispose();
+                _shutdownCts = null;
                 _currentScope?.Dispose();
                 _currentScope = null;
             }
@@ -690,10 +698,21 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// </summary>
         protected virtual ValueTask DisposeAsyncCore()
         {
-            _shutdownCts?.Cancel();
-            _shutdownCts?.Dispose();
-            _currentScope?.Dispose();
-            _currentScope = null;
+            if (!_disposed)
+            {
+                try
+                {
+                    _shutdownCts?.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // CTS was already disposed, ignore
+                }
+                _shutdownCts?.Dispose();
+                _shutdownCts = null;
+                _currentScope?.Dispose();
+                _currentScope = null;
+            }
 
             return ValueTask.CompletedTask;
         }

@@ -753,6 +753,166 @@ services
     .AddCronJobEventHandlers<NotificacaoJobHandler>();
 ```
 
+## Testes Unitários
+
+O módulo CronJob fornece uma infraestrutura de testes abrangente para facilitar os testes unitários dos seus CronJobs.
+
+### TestCronJobService&lt;T&gt; Helper
+
+A classe `TestCronJobService<T>` é um helper de testes que simplifica os testes de CronJob:
+
+```csharp
+using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
+using Microsoft.Extensions.TimeProvider.Testing;
+
+public class MeuCronJobTests
+{
+    [Fact]
+    public async Task Job_DeveExecutarComSucesso()
+    {
+        // Arrange
+        await using var testService = new TestCronJobService<MeuJob>();
+        
+        // Configure um FakeTimeProvider para manipulação controlada do tempo
+        var fakeTime = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        testService.UseTimeProvider(fakeTime);
+        
+        // Adicione serviços adicionais se necessário
+        testService.ConfigureServices(services =>
+        {
+            services.AddSingleton<IMinhaDependencia, MinhaDependencia>();
+        });
+        
+        testService.BuildServiceProvider();
+        
+        var config = CriarConfigTeste();
+        
+        // Act
+        var job = await testService.StartResilientJobAsync<MeuJob>(config);
+        
+        // Avançar o tempo para disparar execução
+        fakeTime.Advance(TimeSpan.FromMinutes(1));
+        await Task.Delay(100); // Permitir que o job execute
+        
+        // Assert
+        testService.Tracker.ExecutionCount.Should().BeGreaterThan(0);
+        testService.Tracker.HasFailures.Should().BeFalse();
+        
+        // Cleanup
+        await testService.StopJobAsync(job);
+    }
+}
+```
+
+### ExecutionTracker
+
+A classe `ExecutionTracker` ajuda a rastrear execuções do job para asserções:
+
+```csharp
+public class ExecutionTracker
+{
+    // Número de execuções
+    public int ExecutionCount { get; }
+    
+    // Todas as execuções registradas
+    public IReadOnlyList<ExecutionRecord> Executions { get; }
+    
+    // Se alguma execução falhou
+    public bool HasFailures { get; }
+    
+    // Registrar uma execução bem-sucedida
+    public void RecordExecution(TimeSpan? duration = null);
+    
+    // Registrar uma execução com falha
+    public void RecordFailure(Exception exception, TimeSpan? duration = null);
+    
+    // Limpar todas as execuções registradas
+    public void Clear();
+}
+```
+
+### Testando Resiliência
+
+Teste comportamento de retry e circuit breaker:
+
+```csharp
+[Fact]
+public async Task Job_DeveFazerRetryEmFalha()
+{
+    // Arrange
+    await using var testService = new TestCronJobService<FailingCronJob>();
+    var fakeTime = new FakeTimeProvider();
+    testService.UseTimeProvider(fakeTime);
+    testService.BuildServiceProvider();
+
+    var config = TestCronJobFactory.CreateConfig<FailingCronJob>(
+        cronExpression: "* * * * *",
+        resilience: new CronJobResilienceConfig<FailingCronJob>
+        {
+            EnableRetry = true,
+            MaxRetryAttempts = 3,
+            RetryDelay = TimeSpan.FromMilliseconds(10)
+        });
+
+    // Act
+    var job = await testService.StartResilientJobAsync<FailingCronJob>(config);
+    fakeTime.Advance(TimeSpan.FromMinutes(1));
+    await Task.Delay(200);
+
+    // Assert - Deve ter tentado 3 vezes (1 inicial + 2 retries)
+    job.DoWorkInvocationCount.Should().Be(3);
+    
+    await testService.StopJobAsync(job);
+}
+```
+
+### Testando Health Checks
+
+```csharp
+[Fact]
+public async Task HealthCheck_DeveRetornarHealthy_QuandoJobSucede()
+{
+    // Arrange
+    var metrics = new CronJobMetricsService();
+    metrics.RecordExecution("TestJob", TimeSpan.FromMilliseconds(100), true);
+    
+    var healthCheck = new CronJobHealthCheck(
+        metrics,
+        Options.Create(new CronJobHealthCheckOptions
+        {
+            HealthyThresholdPercentage = 80
+        }));
+    
+    // Act
+    var result = await healthCheck.CheckHealthAsync(
+        new HealthCheckContext(),
+        CancellationToken.None);
+    
+    // Assert
+    result.Status.Should().Be(HealthStatus.Healthy);
+}
+```
+
+### Cobertura de Testes
+
+O módulo CronJob inclui **91 testes unitários** cobrindo:
+
+| Categoria | Testes | Descrição |
+|-----------|--------|-----------|
+| Retry & Resiliência | 15 | Políticas de retry, backoff exponencial, jitter |
+| Circuit Breaker | 12 | Transições de estado, teste half-open, thresholds de falha |
+| Health Checks | 18 | Estados Healthy/Degraded/Unhealthy, health baseado em métricas |
+| Execução Sobreposta | 14 | Aquisição de lock, timeout, cancelamento |
+| Graceful Shutdown | 10 | Cleanup adequado, tratamento de timeout |
+| Métricas | 12 | Rastreamento de execuções, contagem de falhas |
+| Serviço Core | 10 | Execução básica de job, agendamento |
+
+Execute os testes com:
+
+```bash
+dotnet test src/Tests/Mvp24Hours.Infrastructure.CronJob.Test
+```
+
 ## Veja Também
 
 - [CronJob Básico](cronjob.md) - Documentação principal do módulo

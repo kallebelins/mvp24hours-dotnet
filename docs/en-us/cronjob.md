@@ -192,6 +192,147 @@ The `CronJobService` properly handles cancellation and graceful shutdown:
 | `JobName` | `string` | Name of the CronJob type |
 | `CronExpression` | `string` | Configured CRON expression |
 
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           CronJob Module Architecture                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │                         CronJobService<T>                                │ │
+│  │  ┌──────────────┐  ┌───────────────┐  ┌────────────────────────────┐   │ │
+│  │  │  DoWork()    │  │ PeriodicTimer │  │   TimeProvider             │   │ │
+│  │  │  (abstract)  │  │ (scheduling)  │  │   (testable time)          │   │ │
+│  │  └──────────────┘  └───────────────┘  └────────────────────────────┘   │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                    │                                          │
+│                        ┌───────────┴───────────┐                             │
+│                        ▼                       ▼                             │
+│  ┌─────────────────────────────┐  ┌─────────────────────────────────────┐   │
+│  │  ResilientCronJobService<T> │  │     AdvancedCronJobService<T>       │   │
+│  │  ┌─────────────────────────┐│  │  ┌─────────────────────────────────┐│   │
+│  │  │ • Retry Policy          ││  │  │ • ICronJobContext               ││   │
+│  │  │ • Circuit Breaker       ││  │  │ • ICronJobStateStore            ││   │
+│  │  │ • Overlapping Prevention││  │  │ • ICronJobDependency            ││   │
+│  │  │ • Graceful Shutdown     ││  │  │ • IDistributedCronJobLock       ││   │
+│  │  └─────────────────────────┘│  │  │ • Event Hooks (Starting,        ││   │
+│  └─────────────────────────────┘  │  │   Completed, Failed, etc.)      ││   │
+│                                    │  └─────────────────────────────────┘│   │
+│                                    └─────────────────────────────────────┘   │
+│                                                                               │
+│  ┌───────────────────────────────────────────────────────────────────────┐   │
+│  │                        Observability Layer                             │   │
+│  │  ┌───────────────┐  ┌────────────────┐  ┌────────────────────────┐   │   │
+│  │  │ HealthChecks  │  │ Metrics        │  │ OpenTelemetry Tracing  │   │   │
+│  │  │ (Healthy/     │  │ (executions,   │  │ (CronJobActivitySource)│   │   │
+│  │  │  Degraded/    │  │  failures,     │  │                        │   │   │
+│  │  │  Unhealthy)   │  │  duration)     │  │                        │   │   │
+│  │  └───────────────┘  └────────────────┘  └────────────────────────┘   │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                               │
+│  ┌───────────────────────────────────────────────────────────────────────┐   │
+│  │                        Configuration Layer                             │   │
+│  │  ┌───────────────────┐  ┌────────────────────┐  ┌─────────────────┐   │   │
+│  │  │ IScheduleConfig<T>│  │ CronJobOptions<T>  │  │ appsettings.json│   │   │
+│  │  │ (basic schedule)  │  │ (full options)     │  │ (declarative)   │   │   │
+│  │  └───────────────────┘  └────────────────────┘  └─────────────────┘   │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Component Descriptions
+
+| Component | Purpose |
+|-----------|---------|
+| `CronJobService<T>` | Base class for all CronJobs with CRON scheduling |
+| `ResilientCronJobService<T>` | Adds retry, circuit breaker, and overlapping prevention |
+| `AdvancedCronJobService<T>` | Full-featured with context, state, dependencies, and events |
+| `CronJobActivitySource` | OpenTelemetry tracing for distributed observability |
+| `CronJobMetricsService` | Tracks execution metrics (count, duration, failures) |
+| `CronJobHealthCheck` | Health checks based on job metrics and state |
+
+## Troubleshooting
+
+### Common Issues
+
+#### Job Not Executing
+
+1. **Check CRON expression**: Validate with [Crontab Guru](https://crontab.guru/)
+2. **Check timezone**: Ensure timezone is set correctly
+3. **Check if paused**: Use `ICronJobController.GetStatusAsync()` to verify state
+4. **Check logs**: Enable debug logging for `Mvp24Hours.Infrastructure.CronJob`
+
+```csharp
+// Enable debug logging
+builder.Logging.AddFilter("Mvp24Hours.Infrastructure.CronJob", LogLevel.Debug);
+```
+
+#### Job Executing Multiple Times
+
+1. **Overlapping prevention disabled**: Enable `PreventOverlapping = true`
+2. **Multiple instances**: Use distributed locking in cluster environments
+3. **Check CRON expression**: Ensure expression matches expected frequency
+
+```csharp
+services.AddResilientCronJob<MyJob>(config =>
+{
+    config.CronExpression = "*/5 * * * *";
+    config.Resilience.PreventOverlapping = true; // Enable overlapping prevention
+});
+```
+
+#### Circuit Breaker Open
+
+1. **Check failure threshold**: Default is 5 consecutive failures
+2. **Check break duration**: Default is 30 seconds
+3. **Fix underlying issue**: Address root cause of failures
+4. **Reset manually**: Use metrics to monitor circuit breaker state
+
+```csharp
+// Check circuit breaker state via metrics
+var metrics = serviceProvider.GetRequiredService<ICronJobMetrics>();
+var state = metrics.GetCircuitBreakerState("MyJob");
+```
+
+#### Memory Leaks
+
+1. **Dispose scopes properly**: Always use `using` with DI scopes
+2. **Don't store scoped services**: Avoid caching scoped services in fields
+3. **Check IAsyncDisposable**: Ensure proper async disposal
+
+```csharp
+public override async Task DoWork(CancellationToken cancellationToken)
+{
+    // CORRECT: Scope is disposed after use
+    using var scope = _serviceProvider!.CreateScope();
+    var service = scope.ServiceProvider.GetRequiredService<IMyService>();
+    await service.ProcessAsync(cancellationToken);
+}
+```
+
+### Diagnostic Commands
+
+```bash
+# Run tests to verify module functionality
+dotnet test src/Tests/Mvp24Hours.Infrastructure.CronJob.Test --verbosity normal
+
+# Check health endpoint (if configured)
+curl http://localhost:5000/health/cronjobs
+
+# View logs with structured output
+dotnet run | jq 'select(.Category | startswith("Mvp24Hours.Infrastructure.CronJob"))'
+```
+
+### Logging Categories
+
+| Category | Description |
+|----------|-------------|
+| `Mvp24Hours.Infrastructure.CronJob.Services.CronJobService` | Base job execution |
+| `Mvp24Hours.Infrastructure.CronJob.Services.ResilientCronJobService` | Resilience features |
+| `Mvp24Hours.Infrastructure.CronJob.Resiliency.CronJobCircuitBreaker` | Circuit breaker state |
+| `Mvp24Hours.Infrastructure.CronJob.Observability.CronJobMetricsService` | Metrics collection |
+
 ## See Also
 
 - [Advanced Features](cronjob-advanced.md) - Context, dependencies, distributed locking, event hooks

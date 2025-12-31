@@ -192,6 +192,147 @@ O `CronJobService` trata adequadamente cancelamento e encerramento gracioso:
 | `JobName` | `string` | Nome do tipo CronJob |
 | `CronExpression` | `string` | Expressão CRON configurada |
 
+## Arquitetura
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       Arquitetura do Módulo CronJob                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │                         CronJobService<T>                                │ │
+│  │  ┌──────────────┐  ┌───────────────┐  ┌────────────────────────────┐   │ │
+│  │  │  DoWork()    │  │ PeriodicTimer │  │   TimeProvider             │   │ │
+│  │  │  (abstract)  │  │ (agendamento) │  │   (tempo testável)         │   │ │
+│  │  └──────────────┘  └───────────────┘  └────────────────────────────┘   │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                    │                                          │
+│                        ┌───────────┴───────────┐                             │
+│                        ▼                       ▼                             │
+│  ┌─────────────────────────────┐  ┌─────────────────────────────────────┐   │
+│  │  ResilientCronJobService<T> │  │     AdvancedCronJobService<T>       │   │
+│  │  ┌─────────────────────────┐│  │  ┌─────────────────────────────────┐│   │
+│  │  │ • Política de Retry     ││  │  │ • ICronJobContext               ││   │
+│  │  │ • Circuit Breaker       ││  │  │ • ICronJobStateStore            ││   │
+│  │  │ • Prevenção Sobreposição││  │  │ • ICronJobDependency            ││   │
+│  │  │ • Shutdown Gracioso     ││  │  │ • IDistributedCronJobLock       ││   │
+│  │  └─────────────────────────┘│  │  │ • Event Hooks (Starting,        ││   │
+│  └─────────────────────────────┘  │  │   Completed, Failed, etc.)      ││   │
+│                                    │  └─────────────────────────────────┘│   │
+│                                    └─────────────────────────────────────┘   │
+│                                                                               │
+│  ┌───────────────────────────────────────────────────────────────────────┐   │
+│  │                       Camada de Observabilidade                        │   │
+│  │  ┌───────────────┐  ┌────────────────┐  ┌────────────────────────┐   │   │
+│  │  │ HealthChecks  │  │ Métricas       │  │ OpenTelemetry Tracing  │   │   │
+│  │  │ (Healthy/     │  │ (execuções,    │  │ (CronJobActivitySource)│   │   │
+│  │  │  Degraded/    │  │  falhas,       │  │                        │   │   │
+│  │  │  Unhealthy)   │  │  duração)      │  │                        │   │   │
+│  │  └───────────────┘  └────────────────┘  └────────────────────────┘   │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                               │
+│  ┌───────────────────────────────────────────────────────────────────────┐   │
+│  │                        Camada de Configuração                          │   │
+│  │  ┌───────────────────┐  ┌────────────────────┐  ┌─────────────────┐   │   │
+│  │  │ IScheduleConfig<T>│  │ CronJobOptions<T>  │  │ appsettings.json│   │   │
+│  │  │ (agenda básica)   │  │ (opções completas) │  │ (declarativo)   │   │   │
+│  │  └───────────────────┘  └────────────────────┘  └─────────────────┘   │   │
+│  └───────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Descrição dos Componentes
+
+| Componente | Propósito |
+|------------|-----------|
+| `CronJobService<T>` | Classe base para todos os CronJobs com agendamento CRON |
+| `ResilientCronJobService<T>` | Adiciona retry, circuit breaker e prevenção de sobreposição |
+| `AdvancedCronJobService<T>` | Completo com contexto, estado, dependências e eventos |
+| `CronJobActivitySource` | Tracing OpenTelemetry para observabilidade distribuída |
+| `CronJobMetricsService` | Rastreia métricas de execução (contagem, duração, falhas) |
+| `CronJobHealthCheck` | Health checks baseados em métricas e estado do job |
+
+## Troubleshooting
+
+### Problemas Comuns
+
+#### Job Não Está Executando
+
+1. **Verifique a expressão CRON**: Valide com [Crontab Guru](https://crontab.guru/)
+2. **Verifique o timezone**: Certifique-se de que o timezone está configurado corretamente
+3. **Verifique se está pausado**: Use `ICronJobController.GetStatusAsync()` para verificar o estado
+4. **Verifique os logs**: Habilite logging de debug para `Mvp24Hours.Infrastructure.CronJob`
+
+```csharp
+// Habilitar logging de debug
+builder.Logging.AddFilter("Mvp24Hours.Infrastructure.CronJob", LogLevel.Debug);
+```
+
+#### Job Executando Múltiplas Vezes
+
+1. **Prevenção de sobreposição desabilitada**: Habilite `PreventOverlapping = true`
+2. **Múltiplas instâncias**: Use distributed locking em ambientes de cluster
+3. **Verifique expressão CRON**: Certifique-se de que a expressão corresponde à frequência esperada
+
+```csharp
+services.AddResilientCronJob<MeuJob>(config =>
+{
+    config.CronExpression = "*/5 * * * *";
+    config.Resilience.PreventOverlapping = true; // Habilitar prevenção de sobreposição
+});
+```
+
+#### Circuit Breaker Aberto
+
+1. **Verifique threshold de falhas**: Padrão é 5 falhas consecutivas
+2. **Verifique duração do break**: Padrão é 30 segundos
+3. **Corrija o problema subjacente**: Resolva a causa raiz das falhas
+4. **Reset manual**: Use métricas para monitorar o estado do circuit breaker
+
+```csharp
+// Verificar estado do circuit breaker via métricas
+var metrics = serviceProvider.GetRequiredService<ICronJobMetrics>();
+var state = metrics.GetCircuitBreakerState("MeuJob");
+```
+
+#### Vazamentos de Memória
+
+1. **Descarte escopos corretamente**: Sempre use `using` com escopos de DI
+2. **Não armazene serviços com escopo**: Evite fazer cache de serviços scoped em campos
+3. **Verifique IAsyncDisposable**: Garanta disposal assíncrono apropriado
+
+```csharp
+public override async Task DoWork(CancellationToken cancellationToken)
+{
+    // CORRETO: Escopo é descartado após uso
+    using var scope = _serviceProvider!.CreateScope();
+    var service = scope.ServiceProvider.GetRequiredService<IMeuServico>();
+    await service.ProcessarAsync(cancellationToken);
+}
+```
+
+### Comandos de Diagnóstico
+
+```bash
+# Executar testes para verificar funcionalidade do módulo
+dotnet test src/Tests/Mvp24Hours.Infrastructure.CronJob.Test --verbosity normal
+
+# Verificar endpoint de health (se configurado)
+curl http://localhost:5000/health/cronjobs
+
+# Visualizar logs com saída estruturada
+dotnet run | jq 'select(.Category | startswith("Mvp24Hours.Infrastructure.CronJob"))'
+```
+
+### Categorias de Log
+
+| Categoria | Descrição |
+|-----------|-----------|
+| `Mvp24Hours.Infrastructure.CronJob.Services.CronJobService` | Execução base do job |
+| `Mvp24Hours.Infrastructure.CronJob.Services.ResilientCronJobService` | Recursos de resiliência |
+| `Mvp24Hours.Infrastructure.CronJob.Resiliency.CronJobCircuitBreaker` | Estado do circuit breaker |
+| `Mvp24Hours.Infrastructure.CronJob.Observability.CronJobMetricsService` | Coleta de métricas |
+
 ## Veja Também
 
 - [Funcionalidades Avançadas](cronjob-advanced.md) - Contexto, dependências, distributed locking, event hooks

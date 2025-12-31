@@ -91,7 +91,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                     if (ShouldTransitionToHalfOpen(circuit, duration))
                     {
                         TransitionToHalfOpen(circuit);
-                        return true; // Allow test execution
+                        // Acquire test execution lock and allow
+                        return circuit.TryAcquireTestExecution();
                     }
                     return false;
 
