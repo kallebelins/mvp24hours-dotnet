@@ -70,6 +70,7 @@
 * * [Migração do TelemetryHelper](pt-br/observability/migration.md)
 * CronJob
 * * [Visão Geral](pt-br/cronjob.md)
+* * [Funcionalidades Avançadas](pt-br/cronjob-advanced.md)
 * * [Resiliência](pt-br/cronjob-resilience.md)
 * * [Observabilidade](pt-br/cronjob-observability.md)
 * Padrões

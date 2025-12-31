@@ -194,6 +194,7 @@ The `CronJobService` properly handles cancellation and graceful shutdown:
 
 ## See Also
 
+- [Advanced Features](cronjob-advanced.md) - Context, dependencies, distributed locking, event hooks
 - [CronJob Resilience](cronjob-resilience.md) - Retry, circuit breaker, overlapping prevention
 - [CronJob Observability](cronjob-observability.md) - Health checks, metrics, structured logging
 - [PeriodicTimer Modernization](modernization/periodic-timer.md)

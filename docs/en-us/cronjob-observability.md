@@ -361,6 +361,7 @@ app.Build().Run();
 ## See Also
 
 - [CronJob Overview](cronjob.md)
+- [Advanced Features](cronjob-advanced.md) - Context, dependencies, distributed locking, event hooks
 - [CronJob Resilience](cronjob-resilience.md)
 - [OpenTelemetry Metrics](observability/metrics.md)
 - [OpenTelemetry Tracing](observability/tracing.md)
