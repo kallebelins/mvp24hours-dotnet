@@ -11,7 +11,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract
     /// Wrapper for request/response pattern responses.
     /// </summary>
     /// <typeparam name="T">The type of the response message.</typeparam>
-    public class Response<T> where T : class
+    public class Response<T>
     {
         /// <summary>
         /// Gets the response message.

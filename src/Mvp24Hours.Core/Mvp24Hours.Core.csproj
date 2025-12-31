@@ -18,6 +18,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- FrameworkReference for ASP.NET Core APIs including IMvcBuilder.AddJsonOptions -->
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="13.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
