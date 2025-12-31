@@ -92,5 +92,6 @@
 * * [Output Caching](pt-br/modernization/output-caching.md)
 * * [Keyed Services](pt-br/modernization/keyed-services.md)
 * * [ProblemDetails (RFC 7807)](pt-br/modernization/problem-details.md)
+* * [Minimal APIs com TypedResults](pt-br/modernization/minimal-apis.md)
 * [Release](pt-br/release.md)
 * [Migração](pt-br/migration.md)
