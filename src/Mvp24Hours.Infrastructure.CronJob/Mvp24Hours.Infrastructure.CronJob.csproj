@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Authors>Kallebe Lins</Authors>
-    <Description>Series architectures for fast product construction.</Description>
+    <Description>Scheduled background tasks using CRON expressions with OpenTelemetry tracing support.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
     <Company>Kallebe Lins</Company>
