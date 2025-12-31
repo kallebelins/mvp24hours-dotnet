@@ -385,21 +385,21 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// </summary>
         /// <remarks>
         /// <para>
+        /// <strong>DEPRECATED:</strong> Use <see cref="OutputCachingExtensions.UseMvp24HoursOutputCache"/> instead.
+        /// </para>
+        /// <para>
         /// <strong>Prerequisites:</strong>
-        /// Call <c>services.AddMvp24HoursOutputCaching()</c> to configure options.
-        /// Note: Output caching requires .NET 7+ and Microsoft.AspNetCore.OutputCaching package.
-        /// For .NET 6 and earlier, use ResponseCaching instead.
+        /// Call <c>services.AddMvp24HoursOutputCache()</c> to configure options.
         /// </para>
         /// </remarks>
         /// <param name="builder">The application builder.</param>
         /// <returns>The application builder for chaining.</returns>
+        [Obsolete("Use UseMvp24HoursOutputCache from OutputCachingExtensions instead. This method will be removed in a future version.")]
         public static IApplicationBuilder UseMvp24HoursOutputCaching(this IApplicationBuilder builder)
         {
             ArgumentNullException.ThrowIfNull(builder);
-            // Output caching is available in .NET 7+ via Microsoft.AspNetCore.OutputCaching
-            // The application should call builder.UseOutputCache() directly if they have the package.
-            // This method is provided for consistency but may not work without the package.
-            return builder;
+            // Delegate to the new implementation
+            return builder.UseMvp24HoursOutputCache();
         }
 
         /// <summary>

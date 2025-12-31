@@ -89,5 +89,8 @@
 * * [Options Configuration](en-us/modernization/options-configuration.md)
 * * [Channels (Producer/Consumer)](en-us/modernization/channels.md)
 * * [HybridCache](en-us/modernization/hybrid-cache.md)
+* * [Output Caching](en-us/modernization/output-caching.md)
+* * [Keyed Services](en-us/modernization/keyed-services.md)
+* * [ProblemDetails (RFC 7807)](en-us/modernization/problem-details.md)
 * [Release](en-us/release.md)
 * [Migration](en-us/migration.md)

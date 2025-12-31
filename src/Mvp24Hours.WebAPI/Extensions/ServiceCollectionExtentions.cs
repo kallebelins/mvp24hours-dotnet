@@ -1673,33 +1673,29 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This method configures output caching for .NET 7+ applications.
-        /// Note: Output caching requires .NET 7+ and Microsoft.AspNetCore.OutputCaching package.
-        /// For .NET 6 and earlier, use ResponseCaching instead.
+        /// <strong>DEPRECATED:</strong> Use <see cref="OutputCachingExtensions.AddMvp24HoursOutputCache"/> instead.
+        /// This method only configures options without actually enabling output caching.
+        /// </para>
+        /// <para>
+        /// For full output caching support including policies and Redis backend, use:
+        /// <code>
+        /// services.AddMvp24HoursOutputCache(options =>
+        /// {
+        ///     options.AddStandardPolicies();
+        /// });
+        /// </code>
         /// </para>
         /// </remarks>
         /// <param name="services">The service collection.</param>
         /// <param name="configureOptions">Optional action to configure output caching options.</param>
         /// <returns>The service collection for chaining.</returns>
+        [Obsolete("Use AddMvp24HoursOutputCache from OutputCachingExtensions instead. This method will be removed in a future version.")]
         public static IServiceCollection AddMvp24HoursOutputCaching(
             this IServiceCollection services,
             Action<OutputCachingOptions>? configureOptions = null)
         {
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
-            else
-            {
-                services.Configure<OutputCachingOptions>(_ => { });
-            }
-
-            // Output caching is available in .NET 7+ via Microsoft.AspNetCore.OutputCaching
-            // For now, we'll configure the options but the actual AddOutputCache() call
-            // should be done by the application if they have the package installed.
-            // This allows the options to be configured but doesn't force a dependency.
-
-            return services;
+            // Delegate to the new implementation
+            return services.AddMvp24HoursOutputCache(configureOptions);
         }
 
         /// <summary>
