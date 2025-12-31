@@ -71,6 +71,7 @@
 * CronJob
 * * [Visão Geral](pt-br/cronjob.md)
 * * [Resiliência](pt-br/cronjob-resilience.md)
+* * [Observabilidade](pt-br/cronjob-observability.md)
 * Padrões
 * * [Entidade](pt-br/database/use-entity.md)
 * * [Contexto de Banco](pt-br/database/use-context.md)

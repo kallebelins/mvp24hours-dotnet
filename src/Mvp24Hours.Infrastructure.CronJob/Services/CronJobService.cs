@@ -40,6 +40,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
     /// <b>.NET 6+ PeriodicTimer:</b> This implementation uses PeriodicTimer instead of
     /// System.Timers.Timer for modern async/await patterns with proper cancellation support.
     /// </para>
+    /// <para>
+    /// <b>Observability:</b> This class integrates with OpenTelemetry for tracing and metrics.
+    /// Register <see cref="ICronJobMetrics"/> for custom metrics collection.
+    /// </para>
     /// </remarks>
     public abstract class CronJobService<T> : BackgroundService, IAsyncDisposable
     {
@@ -49,6 +53,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private readonly IServiceProvider _rootServiceProvider;
         private readonly ILogger<CronJobService<T>> _logger;
         private readonly TimeProvider _timeProvider;
+        private readonly ICronJobMetrics? _metrics;
         private IServiceScope? _currentScope;
         private readonly string _jobName;
         private readonly string _cronExpressionString;
@@ -97,6 +102,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             _rootServiceProvider = rootServiceProvider ?? throw new ArgumentNullException(nameof(rootServiceProvider));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _timeProvider = timeProvider ?? TimeProvider.System;
+            _metrics = rootServiceProvider.GetService<ICronJobMetrics>();
 
             _cronExpressionString = config?.CronExpression ?? string.Empty;
             _timeZoneInfo = config?.TimeZoneInfo ?? TimeZoneInfo.Local;
@@ -114,10 +120,12 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         {
             using var activity = CronJobActivitySource.StartStartActivity(_jobName, _cronExpressionString);
             
-            _logger.LogDebug("CronJob starting. Name: {CronJobName}, Scheduler: {CronExpression}", 
-                _jobName, _cronExpressionString);
+            CronJobLoggerMessages.LogJobStarting(_logger, _jobName, _cronExpressionString, _timeZoneInfo?.Id);
+            _metrics?.RecordJobStarted(_jobName, _cronExpressionString);
             
             await base.StartAsync(cancellationToken);
+            
+            CronJobLoggerMessages.LogJobStarted(_logger, _jobName);
         }
 
         /// <inheritdoc />
@@ -144,34 +152,41 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
             
-            Interlocked.Increment(ref _executionCount);
-            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
+            var executionCount = Interlocked.Increment(ref _executionCount);
+            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, executionCount);
+            _metrics?.IncrementActiveJob(_jobName);
             
             try
             {
-                _logger.LogDebug("CronJob execute once before. Name: {CronJobName}", _jobName);
+                CronJobLoggerMessages.LogExecuteOnce(_logger, _jobName);
+                CronJobLoggerMessages.LogExecutionStarting(_logger, _jobName, executionCount);
+                
                 await DoWork(cancellationToken);
                 
                 stopwatch.Stop();
                 activity?.SetExecutionResult(success: true, durationMs: stopwatch.Elapsed.TotalMilliseconds);
-                _logger.LogDebug("CronJob execute once after. Name: {CronJobName}, Duration: {DurationMs}ms", 
-                    _jobName, stopwatch.Elapsed.TotalMilliseconds);
+                _metrics?.RecordExecution(_jobName, stopwatch.Elapsed.TotalMilliseconds, success: true, (int)executionCount);
+                _metrics?.RecordLastExecution(_jobName, _timeProvider.GetUtcNow());
+                
+                CronJobLoggerMessages.LogExecutionCompleted(_logger, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 stopwatch.Stop();
-                _logger.LogDebug("CronJob execute once cancelled. Name: {CronJobName}", _jobName);
+                CronJobLoggerMessages.LogExecutionCancelled(_logger, _jobName);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 activity?.RecordError(ex);
-                _logger.LogError(ex, "CronJob execute once failure. Name: {CronJobName}, Duration: {DurationMs}ms", 
-                    _jobName, stopwatch.Elapsed.TotalMilliseconds);
+                _metrics?.RecordFailure(_jobName, ex, stopwatch.Elapsed.TotalMilliseconds, (int)executionCount);
+                
+                CronJobLoggerMessages.LogExecutionFailed(_logger, ex, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
             }
             finally
             {
-                _logger.LogDebug("CronJob execute once ending. Name: {CronJobName}", _jobName);
+                _metrics?.DecrementActiveJob(_jobName);
+                CronJobLoggerMessages.LogExecuteOnceCompleted(_logger, _jobName);
                 _hostApplication.StopApplication();
             }
         }
@@ -183,8 +198,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// <param name="stoppingToken">Cancellation token.</param>
         protected virtual async Task ScheduleJobWithPeriodicTimerAsync(CancellationToken stoppingToken)
         {
-            _logger.LogDebug("CronJob scheduler started. Name: {CronJobName}, Expression: {CronExpression}", 
-                _jobName, _cronExpressionString);
+            CronJobLoggerMessages.LogSchedulerStarted(_logger, _jobName, _cronExpressionString);
 
             try
             {
@@ -194,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     
                     if (!nextOccurrence.HasValue)
                     {
-                        _logger.LogWarning("CronJob has no next occurrence. Name: {CronJobName}", _jobName);
+                        CronJobLoggerMessages.LogNoNextOccurrence(_logger, _jobName);
                         break;
                     }
 
@@ -212,8 +226,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         _cronExpressionString,
                         nextOccurrence.Value);
                     
-                    _logger.LogDebug("CronJob next execution. Name: {CronJobName}, Time: {NextExecutionTime}, DelayMs: {DelayMs}", 
-                        _jobName, nextOccurrence, delay.TotalMilliseconds);
+                    _metrics?.RecordNextScheduledExecution(_jobName, nextOccurrence.Value);
+                    CronJobLoggerMessages.LogNextExecution(_logger, _jobName, nextOccurrence.Value, delay.TotalMilliseconds);
 
                     // Wait for the next occurrence using PeriodicTimer-style waiting
                     var waited = await WaitUntilAsync(nextOccurrence.Value, stoppingToken);
@@ -230,10 +244,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                _logger.LogDebug("CronJob scheduler cancelled gracefully. Name: {CronJobName}", _jobName);
+                CronJobLoggerMessages.LogSchedulerCancelled(_logger, _jobName);
             }
 
-            _logger.LogDebug("CronJob scheduler stopped. Name: {CronJobName}", _jobName);
+            CronJobLoggerMessages.LogSchedulerStopped(_logger, _jobName);
         }
 
         /// <summary>
@@ -296,8 +310,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
             
-            Interlocked.Increment(ref _executionCount);
-            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
+            var executionCount = Interlocked.Increment(ref _executionCount);
+            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, executionCount);
+            _metrics?.IncrementActiveJob(_jobName);
             
             try
             {
@@ -305,28 +320,34 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogDebug("CronJob execute before. Name: {CronJobName}, ExecutionCount: {ExecutionCount}", 
-                        _jobName, _executionCount);
+                    CronJobLoggerMessages.LogExecutionStarting(_logger, _jobName, executionCount);
                     
                     await DoWork(cancellationToken);
                     
                     stopwatch.Stop();
                     activity?.SetExecutionResult(success: true, durationMs: stopwatch.Elapsed.TotalMilliseconds);
-                    _logger.LogDebug("CronJob execute after. Name: {CronJobName}, Duration: {DurationMs}ms, ExecutionCount: {ExecutionCount}", 
-                        _jobName, stopwatch.Elapsed.TotalMilliseconds, _executionCount);
+                    _metrics?.RecordExecution(_jobName, stopwatch.Elapsed.TotalMilliseconds, success: true, (int)executionCount);
+                    _metrics?.RecordLastExecution(_jobName, _timeProvider.GetUtcNow());
+                    
+                    CronJobLoggerMessages.LogExecutionCompleted(_logger, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 stopwatch.Stop();
-                _logger.LogDebug("CronJob execution cancelled. Name: {CronJobName}", _jobName);
+                CronJobLoggerMessages.LogExecutionCancelled(_logger, _jobName);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 activity?.RecordError(ex);
-                _logger.LogError(ex, "CronJob execute failure. Name: {CronJobName}, Duration: {DurationMs}ms, ExecutionCount: {ExecutionCount}", 
-                    _jobName, stopwatch.Elapsed.TotalMilliseconds, _executionCount);
+                _metrics?.RecordFailure(_jobName, ex, stopwatch.Elapsed.TotalMilliseconds, (int)executionCount);
+                
+                CronJobLoggerMessages.LogExecutionFailed(_logger, ex, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
+            }
+            finally
+            {
+                _metrics?.DecrementActiveJob(_jobName);
             }
         }
 
@@ -344,12 +365,12 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             using var activity = CronJobActivitySource.StartStopActivity(_jobName);
             
             activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
-            _logger.LogDebug("CronJob stopping. Name: {CronJobName}, TotalExecutions: {ExecutionCount}", 
-                _jobName, _executionCount);
+            CronJobLoggerMessages.LogJobStopping(_logger, _jobName, _executionCount);
             
             await base.StopAsync(cancellationToken);
             
-            _logger.LogDebug("CronJob stopped. Name: {CronJobName}", _jobName);
+            _metrics?.RecordJobStopped(_jobName, _executionCount);
+            CronJobLoggerMessages.LogJobStopped(_logger, _jobName);
         }
 
         /// <summary>

@@ -369,6 +369,7 @@ services.AddCronJobResilienceInfrastructure<RedisDistributedCronJobLock>();
 ## See Also
 
 - [CronJob Basics](cronjob.md)
+- [CronJob Observability](cronjob-observability.md) - Health checks, metrics, structured logging
 - [PeriodicTimer Modernization](modernization/periodic-timer.md)
 - [TimeProvider Abstraction](modernization/time-provider.md)
 - [Generic Resilience](modernization/generic-resilience.md)

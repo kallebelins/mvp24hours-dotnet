@@ -71,6 +71,7 @@
 * CronJob
 * * [Overview](en-us/cronjob.md)
 * * [Resilience](en-us/cronjob-resilience.md)
+* * [Observability](en-us/cronjob-observability.md)
 * Patterns
 * * [Entity](en-us/database/use-entity.md)
 * * [Database Context](en-us/database/use-context.md)

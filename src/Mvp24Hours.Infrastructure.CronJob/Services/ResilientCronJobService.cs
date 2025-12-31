@@ -73,6 +73,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private readonly ILogger<ResilientCronJobService<T>> _logger;
         private readonly TimeProvider _timeProvider;
         private readonly ICronJobResilienceConfig<T> _resilienceConfig;
+        private readonly ICronJobMetrics? _metrics;
         private readonly Random _random = new();
 
         private IServiceScope? _currentScope;
@@ -156,6 +157,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _timeProvider = timeProvider ?? TimeProvider.System;
             _resilienceConfig = config.Resilience;
+            _metrics = rootServiceProvider.GetService<ICronJobMetrics>();
 
             _cronExpressionString = config.CronExpression ?? string.Empty;
             _timeZoneInfo = config.TimeZoneInfo ?? TimeZoneInfo.Local;
@@ -182,14 +184,19 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             activity?.SetTag("resilience.circuit_breaker_enabled", _resilienceConfig.EnableCircuitBreaker);
             activity?.SetTag("resilience.prevent_overlapping", _resilienceConfig.PreventOverlapping);
 
-            _logger.LogDebug("Resilient CronJob starting. Name: {CronJobName}, Scheduler: {CronExpression}, " +
+            CronJobLoggerMessages.LogJobStarting(_logger, _jobName, _cronExpressionString, _timeZoneInfo?.Id);
+            _metrics?.RecordJobStarted(_jobName, _cronExpressionString);
+
+            _logger.LogDebug("Resilience settings. Name: {CronJobName}, " +
                 "RetryEnabled: {RetryEnabled}, CircuitBreakerEnabled: {CircuitBreakerEnabled}, PreventOverlapping: {PreventOverlapping}",
-                _jobName, _cronExpressionString,
+                _jobName,
                 _resilienceConfig.EnableRetry,
                 _resilienceConfig.EnableCircuitBreaker,
                 _resilienceConfig.PreventOverlapping);
 
             await base.StartAsync(cancellationToken);
+            
+            CronJobLoggerMessages.LogJobStarted(_logger, _jobName);
         }
 
         /// <inheritdoc />
@@ -212,9 +219,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             activity?.SetTag("resilience.retry_count", _retryCount);
             activity?.SetTag("resilience.skipped_count", _skippedCount);
 
-            _logger.LogDebug("Resilient CronJob stopping. Name: {CronJobName}, TotalExecutions: {ExecutionCount}, " +
-                "TotalRetries: {RetryCount}, SkippedExecutions: {SkippedCount}",
-                _jobName, _executionCount, _retryCount, _skippedCount);
+            CronJobLoggerMessages.LogJobStopping(_logger, _jobName, _executionCount);
+            _logger.LogDebug("Resilience stats. Name: {CronJobName}, TotalRetries: {RetryCount}, SkippedExecutions: {SkippedCount}",
+                _jobName, _retryCount, _skippedCount);
 
             if (_resilienceConfig.WaitForExecutionOnShutdown)
             {
@@ -231,8 +238,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.LogWarning("Resilient CronJob graceful shutdown timed out. Name: {CronJobName}, Timeout: {Timeout}",
-                        _jobName, _resilienceConfig.GracefulShutdownTimeout);
+                    CronJobLoggerMessages.LogGracefulShutdownTimeout(_logger, _jobName, _resilienceConfig.GracefulShutdownTimeout.TotalMilliseconds);
                 }
             }
             else
@@ -241,7 +247,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 await base.StopAsync(cancellationToken);
             }
 
-            _logger.LogDebug("Resilient CronJob stopped. Name: {CronJobName}", _jobName);
+            _metrics?.RecordJobStopped(_jobName, _executionCount);
+            CronJobLoggerMessages.LogJobStopped(_logger, _jobName);
         }
 
         #endregion
@@ -269,8 +276,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// </summary>
         private async Task ScheduleJobWithPeriodicTimerAsync(CancellationToken stoppingToken)
         {
-            _logger.LogDebug("Resilient CronJob scheduler started. Name: {CronJobName}, Expression: {CronExpression}",
-                _jobName, _cronExpressionString);
+            CronJobLoggerMessages.LogSchedulerStarted(_logger, _jobName, _cronExpressionString);
 
             try
             {
@@ -280,7 +286,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                     if (!nextOccurrence.HasValue)
                     {
-                        _logger.LogWarning("CronJob has no next occurrence. Name: {CronJobName}", _jobName);
+                        CronJobLoggerMessages.LogNoNextOccurrence(_logger, _jobName);
                         break;
                     }
 
@@ -297,8 +303,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         _cronExpressionString,
                         nextOccurrence.Value);
 
-                    _logger.LogDebug("CronJob next execution. Name: {CronJobName}, Time: {NextExecutionTime}, DelayMs: {DelayMs}",
-                        _jobName, nextOccurrence, delay.TotalMilliseconds);
+                    _metrics?.RecordNextScheduledExecution(_jobName, nextOccurrence.Value);
+                    CronJobLoggerMessages.LogNextExecution(_logger, _jobName, nextOccurrence.Value, delay.TotalMilliseconds);
 
                     var waited = await WaitUntilAsync(nextOccurrence.Value, stoppingToken);
 
@@ -312,10 +318,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                _logger.LogDebug("Resilient CronJob scheduler cancelled gracefully. Name: {CronJobName}", _jobName);
+                CronJobLoggerMessages.LogSchedulerCancelled(_logger, _jobName);
             }
 
-            _logger.LogDebug("Resilient CronJob scheduler stopped. Name: {CronJobName}", _jobName);
+            CronJobLoggerMessages.LogSchedulerStopped(_logger, _jobName);
         }
 
         /// <summary>
@@ -333,8 +339,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     _resilienceConfig.CircuitBreakerSamplingDuration))
                 {
                     Interlocked.Increment(ref _skippedCount);
-                    _logger.LogWarning("CronJob execution skipped - circuit breaker open. Name: {CronJobName}, State: {CircuitBreakerState}",
-                        _jobName, CircuitBreakerState);
+                    _metrics?.RecordSkippedExecution(_jobName, "circuit_breaker_open");
+                    CronJobLoggerMessages.LogSkippedCircuitBreakerOpen(_logger, _jobName, CircuitBreakerState.ToString());
                     return;
                 }
             }
@@ -351,11 +357,11 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 if (lockHandle == null)
                 {
                     Interlocked.Increment(ref _skippedCount);
+                    _metrics?.RecordSkippedExecution(_jobName, "overlapping");
 
                     if (_resilienceConfig.LogOverlappingSkipped)
                     {
-                        _logger.LogWarning("CronJob execution skipped - previous execution still running. Name: {CronJobName}",
-                            _jobName);
+                        CronJobLoggerMessages.LogSkippedOverlapping(_logger, _jobName);
                     }
 
                     _resilienceConfig.OnOverlappingSkipped?.Invoke();
@@ -386,9 +392,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
 
-            Interlocked.Increment(ref _executionCount);
-            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
+            var executionCount = Interlocked.Increment(ref _executionCount);
+            activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, executionCount);
             activity?.SetTag("resilience.retry_enabled", _resilienceConfig.EnableRetry);
+            _metrics?.IncrementActiveJob(_jobName);
 
             // Create execution timeout token if configured
             using var timeoutCts = _resilienceConfig.ExecutionTimeout.HasValue
@@ -409,8 +416,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                 if (!effectiveToken.IsCancellationRequested)
                 {
-                    _logger.LogDebug("CronJob execute before. Name: {CronJobName}, ExecutionCount: {ExecutionCount}",
-                        _jobName, _executionCount);
+                    CronJobLoggerMessages.LogExecutionStarting(_logger, _jobName, executionCount);
 
                     if (_resilienceConfig.EnableRetry)
                     {
@@ -423,18 +429,24 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                     stopwatch.Stop();
                     activity?.SetExecutionResult(success: true, durationMs: stopwatch.Elapsed.TotalMilliseconds);
+                    _metrics?.RecordExecution(_jobName, stopwatch.Elapsed.TotalMilliseconds, success: true, (int)executionCount);
+                    _metrics?.RecordLastExecution(_jobName, _timeProvider.GetUtcNow());
 
                     // Record success for circuit breaker
                     if (_resilienceConfig.EnableCircuitBreaker)
                     {
+                        var previousState = _circuitBreaker.GetState(_jobName);
                         _circuitBreaker.RecordSuccess(
                             _jobName,
                             _resilienceConfig.CircuitBreakerSuccessThreshold,
-                            _resilienceConfig.OnCircuitBreakerStateChange);
+                            (prevState, newState) =>
+                            {
+                                _metrics?.RecordCircuitBreakerStateChange(_jobName, prevState.ToString(), newState.ToString());
+                                _resilienceConfig.OnCircuitBreakerStateChange?.Invoke(prevState, newState);
+                            });
                     }
 
-                    _logger.LogDebug("CronJob execute after. Name: {CronJobName}, Duration: {DurationMs}ms, ExecutionCount: {ExecutionCount}",
-                        _jobName, stopwatch.Elapsed.TotalMilliseconds, _executionCount);
+                    CronJobLoggerMessages.LogExecutionCompleted(_logger, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
                 }
             }
             catch (OperationCanceledException) when (effectiveToken.IsCancellationRequested)
@@ -443,34 +455,43 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
                 if (timeoutCts?.IsCancellationRequested == true)
                 {
-                    _logger.LogWarning("CronJob execution timed out. Name: {CronJobName}, Timeout: {Timeout}",
-                        _jobName, _resilienceConfig.ExecutionTimeout);
+                    CronJobLoggerMessages.LogExecutionTimedOut(_logger, _jobName, _resilienceConfig.ExecutionTimeout?.TotalMilliseconds ?? 0);
                     activity?.SetExecutionResult(success: false, durationMs: stopwatch.Elapsed.TotalMilliseconds, errorMessage: "Execution timed out");
                 }
                 else
                 {
-                    _logger.LogDebug("CronJob execution cancelled. Name: {CronJobName}", _jobName);
+                    CronJobLoggerMessages.LogExecutionCancelled(_logger, _jobName);
                 }
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 activity?.RecordError(ex);
+                _metrics?.RecordFailure(_jobName, ex, stopwatch.Elapsed.TotalMilliseconds, (int)executionCount);
 
                 // Record failure for circuit breaker
                 if (_resilienceConfig.EnableCircuitBreaker)
                 {
+                    var previousState = _circuitBreaker.GetState(_jobName);
                     _circuitBreaker.RecordFailure(
                         _jobName,
                         _resilienceConfig.CircuitBreakerFailureThreshold,
                         _resilienceConfig.CircuitBreakerDuration,
-                        _resilienceConfig.OnCircuitBreakerStateChange);
+                        (prevState, newState) =>
+                        {
+                            _metrics?.RecordCircuitBreakerStateChange(_jobName, prevState.ToString(), newState.ToString());
+                            CronJobLoggerMessages.LogCircuitBreakerStateChanged(_logger, _jobName, prevState.ToString(), newState.ToString());
+                            _resilienceConfig.OnCircuitBreakerStateChange?.Invoke(prevState, newState);
+                        });
                 }
 
                 _resilienceConfig.OnJobFailed?.Invoke(ex);
 
-                _logger.LogError(ex, "CronJob execute failure. Name: {CronJobName}, Duration: {DurationMs}ms, ExecutionCount: {ExecutionCount}",
-                    _jobName, stopwatch.Elapsed.TotalMilliseconds, _executionCount);
+                CronJobLoggerMessages.LogExecutionFailed(_logger, ex, _jobName, stopwatch.Elapsed.TotalMilliseconds, executionCount);
+            }
+            finally
+            {
+                _metrics?.DecrementActiveJob(_jobName);
             }
         }
 
@@ -514,10 +535,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     var delay = CalculateRetryDelay(attempt);
 
                     Interlocked.Increment(ref _retryCount);
+                    _metrics?.RecordRetryAttempt(_jobName, attempt, _resilienceConfig.MaxRetryAttempts + 1, delay.TotalMilliseconds);
 
-                    _logger.LogWarning(ex, "CronJob execution failed, retrying. Name: {CronJobName}, Attempt: {Attempt}/{MaxAttempts}, " +
-                        "DelayMs: {DelayMs}",
-                        _jobName, attempt, _resilienceConfig.MaxRetryAttempts + 1, delay.TotalMilliseconds);
+                    CronJobLoggerMessages.LogRetryAttempt(_logger, ex, _jobName, attempt, _resilienceConfig.MaxRetryAttempts + 1, delay.TotalMilliseconds);
 
                     _resilienceConfig.OnRetry?.Invoke(ex, attempt, delay);
 
@@ -526,6 +546,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             }
 
             // All retries exhausted
+            if (lastException != null)
+            {
+                CronJobLoggerMessages.LogRetriesExhausted(_logger, lastException, _jobName, attempt);
+            }
             throw lastException ?? new InvalidOperationException("Retry loop completed without exception");
         }
 

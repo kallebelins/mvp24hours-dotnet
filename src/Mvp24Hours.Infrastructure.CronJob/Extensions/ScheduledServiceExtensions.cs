@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
+using Mvp24Hours.Infrastructure.CronJob.Observability;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using System;
@@ -461,6 +462,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
         /// Adds CronJob resilience infrastructure (execution lock and circuit breaker) without registering a specific job.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
+        /// <param name="enableObservability">Whether to enable observability (metrics and health check support). Default is true.</param>
         /// <returns>The <see cref="IServiceCollection"/> for chaining.</returns>
         /// <remarks>
         /// Call this method to register the resilience infrastructure before manually registering CronJob services.
@@ -471,12 +473,19 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
         /// services.AddCronJobResilienceInfrastructure();
         /// </code>
         /// </example>
-        public static IServiceCollection AddCronJobResilienceInfrastructure(this IServiceCollection services)
+        public static IServiceCollection AddCronJobResilienceInfrastructure(
+            this IServiceCollection services,
+            bool enableObservability = true)
         {
             Guard.Against.Null(services, nameof(services));
 
             services.TryAddSingleton<ICronJobExecutionLock, InMemoryCronJobExecutionLock>();
             services.TryAddSingleton<CronJobCircuitBreaker>();
+
+            if (enableObservability)
+            {
+                services.AddCronJobObservability();
+            }
 
             return services;
         }
