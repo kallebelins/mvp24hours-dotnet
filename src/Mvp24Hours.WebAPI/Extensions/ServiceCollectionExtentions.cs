@@ -157,6 +157,13 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// <summary>
         /// Add configuration for Swagger
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>DEPRECATED:</b> Use <c>AddMvp24HoursNativeOpenApi()</c> instead for .NET 9+ native OpenAPI support.
+        /// This method uses Swashbuckle which is still supported but the native OpenAPI is preferred.
+        /// </para>
+        /// </remarks>
+        [Obsolete("Use AddMvp24HoursNativeOpenApi() for .NET 9+ native OpenAPI support. Swashbuckle is still supported but native OpenAPI is preferred. Will be removed in a future major version.")]
         public static IServiceCollection AddMvp24HoursWebSwagger(this IServiceCollection services,
             string title, string version = "v1", string xmlCommentsFileName = null,
             bool enableExample = false, SwaggerAuthorizationScheme oAuthScheme = SwaggerAuthorizationScheme.None,
@@ -335,6 +342,13 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// <param name="services">The service collection.</param>
         /// <param name="configureOptions">Action to configure Swagger options.</param>
         /// <returns>The service collection for chaining.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>DEPRECATED:</b> Use <c>AddMvp24HoursNativeOpenApiWithVersions()</c> instead for .NET 9+ native OpenAPI support.
+        /// This method uses Swashbuckle which is still supported but the native OpenAPI is preferred.
+        /// </para>
+        /// </remarks>
+        [Obsolete("Use AddMvp24HoursNativeOpenApiWithVersions() for .NET 9+ native OpenAPI support. Swashbuckle is still supported but native OpenAPI is preferred. Will be removed in a future major version.")]
         public static IServiceCollection AddMvp24HoursSwaggerWithVersioning(
             this IServiceCollection services,
             Action<SwaggerOptions> configureOptions)

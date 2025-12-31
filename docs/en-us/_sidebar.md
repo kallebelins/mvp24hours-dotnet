@@ -94,5 +94,6 @@
 * * [ProblemDetails (RFC 7807)](en-us/modernization/problem-details.md)
 * * [Minimal APIs with TypedResults](en-us/modernization/minimal-apis.md)
 * * [Source Generators](en-us/modernization/source-generators.md)
+* * [Native OpenAPI (.NET 9)](en-us/modernization/native-openapi.md)
 * [Release](en-us/release.md)
 * [Migration](en-us/migration.md)

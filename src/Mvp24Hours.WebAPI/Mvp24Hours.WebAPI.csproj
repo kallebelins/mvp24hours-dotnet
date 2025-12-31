@@ -25,6 +25,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.ResponseCaching" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OutputCaching.StackExchangeRedis" Version="9.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
