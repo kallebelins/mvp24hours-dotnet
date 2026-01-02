@@ -28,7 +28,7 @@ public class MyDataContext : Mvp24HoursContext
     public override bool CanApplyEntityLog => true;
 }
 ```
-Sua entidade deverá implementar interface de log. [Veja Entidade](pt-br/database/use-entity.md)
+Sua entidade deverá implementar interface de log. [Veja Entidade](database/use-entity.md)
 
 Uma das implementações de log oferecem a possibilidade de preencher o ID do usuário que está criando, atualizando ou excluindo o registro (exclusão lógica). Para carregar os dados do usuário logado, sugiro:
 ```csharp
@@ -54,4 +54,44 @@ public class MyDataContext : Mvp24HoursContext
 
     public virtual DbSet<MyEntity> MyEntity { get; set; }
 }
+```
+
+## Abordagem Moderna com ICurrentUserProvider e IClock
+
+Para aplicações .NET 9+, use as interfaces `ICurrentUserProvider` e `IClock` (ou `TimeProvider`) para melhor testabilidade:
+
+```csharp
+public class MyDataContext : Mvp24HoursContext
+{
+    private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IClock _clock; // ou TimeProvider para .NET 9+
+
+    public MyDataContext(
+        DbContextOptions options, 
+        ICurrentUserProvider currentUserProvider,
+        IClock clock)
+        : base(options)
+    {
+        _currentUserProvider = currentUserProvider;
+        _clock = clock;
+    }
+
+    public override object EntityLogBy => _currentUserProvider.GetUserId();
+    
+    public override DateTime GetCurrentDateTime() => _clock.UtcNow.DateTime;
+
+    public override bool CanApplyEntityLog => true;
+
+    public virtual DbSet<MyEntity> MyEntity { get; set; }
+}
+```
+
+Registre os providers no seu `Program.cs`:
+
+```csharp
+// Program.cs
+builder.Services.AddScoped<ICurrentUserProvider, HttpContextUserProvider>();
+builder.Services.AddSingleton<IClock, SystemClock>();
+// Ou para .NET 9+:
+builder.Services.AddSingleton(TimeProvider.System);
 ```

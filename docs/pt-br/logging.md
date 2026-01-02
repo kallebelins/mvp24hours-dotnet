@@ -1,13 +1,224 @@
 # Logging
-> Em construção.
 
-## Serilog
-Serilog é uma biblioteca de log de diagnóstico para aplicativos .NET. Acesse e descubra:
-[Serilog](https://serilog.net/)
+Aplicações .NET modernas utilizam `ILogger<T>` do `Microsoft.Extensions.Logging` como abstração padrão de logging. O Mvp24Hours fornece extensões que integram com OpenTelemetry para correlação de rastreamento distribuído, logging estruturado e observabilidade.
 
-## NLog
-NLog é uma biblioteca fácil de configurar. Acesse e descubra:
-[NLog Asp.NET Core 3](https://github.com/NLog/NLog/wiki/Getting-started-with-ASP.NET-Core-3)
+## Logging Moderno com ILogger
+
+A abordagem recomendada para aplicações .NET 9+ é usar `ILogger<T>` com as extensões de observabilidade do Mvp24Hours.
+
+### Início Rápido
+
+```csharp
+/// Program.cs
+var builder = WebApplication.CreateBuilder(args);
+
+// Adiciona logging do Mvp24Hours com correlação de trace
+builder.Services.AddMvp24HoursLogging(options =>
+{
+    options.ServiceName = "MyService";
+    options.ServiceVersion = "1.0.0";
+    options.EnableTraceCorrelation = true;
+});
+
+// Aplica níveis de log padrão
+builder.Logging.AddMvp24HoursDefaults();
+```
+
+### Usando ILogger em Services
+
+```csharp
+public class OrderService
+{
+    private readonly ILogger<OrderService> _logger;
+    
+    public OrderService(ILogger<OrderService> logger)
+    {
+        _logger = logger;
+    }
+    
+    public async Task ProcessOrder(Order order)
+    {
+        _logger.LogInformation(
+            "Processing order {OrderId} for customer {CustomerId}",
+            order.Id,
+            order.CustomerId);
+        
+        // ... processa pedido
+        
+        _logger.LogInformation("Order {OrderId} processed successfully", order.Id);
+    }
+}
+```
+
+## Structured Logging (Message Templates)
+
+O logging estruturado permite capturar dados de log em formato consultável. Use **message templates** ao invés de interpolação de string:
+
+### Boas Práticas
+
+```csharp
+// ✅ Bom - logging estruturado com message templates
+_logger.LogInformation(
+    "Processing order {OrderId} for {CustomerId}",
+    order.Id,
+    order.CustomerId);
+
+// ❌ Ruim - interpolação de string (perde a estrutura)
+_logger.LogInformation(
+    $"Processing order {order.Id} for {order.CustomerId}");
+```
+
+### Guia de Níveis de Log
+
+| Nível | Usar Para |
+|-------|---------|
+| `Trace` | Informações diagnósticas detalhadas (somente dev) |
+| `Debug` | Informações de depuração para desenvolvedores |
+| `Information` | Fluxo normal da aplicação, eventos de negócio |
+| `Warning` | Situações incomuns mas recuperáveis |
+| `Error` | Erros que impedem a conclusão da operação |
+| `Critical` | Falhas de sistema que requerem atenção imediata |
+
+## Integração com OpenTelemetry
+
+O Mvp24Hours fornece integração profunda entre `ILogger` e OpenTelemetry, habilitando correlação automática entre logs e traces distribuídos.
+
+### Configurar OpenTelemetry Logging
+
+```csharp
+builder.Services.AddMvp24HoursOpenTelemetryLogging(options =>
+{
+    options.ServiceName = "MyService";
+    options.ServiceVersion = "1.0.0";
+    options.EnableOtlpExporter = true;
+    options.OtlpEndpoint = "http://localhost:4317";
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+});
+```
+
+### Observabilidade Completa
+
+Para observabilidade completa (logs, traces e métricas):
+
+```csharp
+services.AddMvp24HoursObservability(options =>
+{
+    options.ServiceName = "MyService";
+    options.ServiceVersion = "1.0.0";
+    
+    // Habilita todos os pilares
+    options.EnableLogging = true;
+    options.EnableTracing = true;
+    options.EnableMetrics = true;
+    
+    // Opções específicas de logging
+    options.Logging.EnableTraceCorrelation = true;
+});
+```
+
+> 📚 Para documentação completa sobre logging com OpenTelemetry, consulte [OpenTelemetry Logging](observability/logging.md).
+
+## Log Scopes
+
+Use scopes para adicionar contexto a grupos de entradas de log:
+
+```csharp
+using (_logger.BeginScope(new Dictionary<string, object>
+{
+    ["OrderId"] = order.Id,
+    ["CustomerId"] = order.CustomerId
+}))
+{
+    // Todos os logs dentro deste scope incluem OrderId e CustomerId
+    _logger.LogInformation("Starting order processing");
+    // ... mais operações
+    _logger.LogInformation("Order processing completed");
+}
+```
+
+### Factories de Scope Integradas
+
+```csharp
+// Scope de requisição HTTP
+using (LogScopeFactory.BeginHttpScope(_logger, "POST", "/api/orders"))
+{
+    _logger.LogInformation("Processing HTTP request");
+}
+
+// Scope de operação de banco de dados
+using (LogScopeFactory.BeginDbScope(_logger, "sqlserver", "INSERT", "Orders"))
+{
+    _logger.LogInformation("Inserting order into database");
+}
+
+// Scope de mensageria
+using (LogScopeFactory.BeginMessagingScope(_logger, "rabbitmq", "orders-queue", messageId))
+{
+    _logger.LogInformation("Processing message");
+}
+```
+
+## Configuração via appsettings.json
+
+```json
+{
+  "Mvp24Hours": {
+    "Logging": {
+      "ServiceName": "MyService",
+      "ServiceVersion": "1.0.0",
+      "EnableTraceCorrelation": true,
+      "EnableLogSampling": false
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning",
+      "Mvp24Hours": "Debug"
+    }
+  }
+}
+```
+
+---
+
+## Legado: TelemetryHelper
+
+> ⚠️ **Deprecado:** `TelemetryHelper` está deprecado. Use `ILogger<T>` com as extensões de logging do Mvp24Hours. Consulte o [Guia de Migração](observability/migration.md) para instruções de migração.
+
+---
+
+## Bibliotecas de Logging de Terceiros
+
+### Serilog
+
+Serilog é uma biblioteca de logging diagnóstico popular para aplicações .NET. Integra bem com OpenTelemetry.
+
+```csharp
+// Program.cs
+builder.Host.UseSerilog((context, config) =>
+{
+    config
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("ServiceName", "MyService")
+        .WriteTo.Console()
+        .WriteTo.OpenTelemetry(options =>
+        {
+            options.Endpoint = "http://localhost:4317";
+        });
+});
+```
+
+Saiba mais: [Serilog](https://serilog.net/)
+
+### NLog
+
+NLog é uma biblioteca fácil de configurar com múltiplos destinos de saída.
+
+Saiba mais: [NLog ASP.NET Core](https://github.com/NLog/NLog/wiki/Getting-started-with-ASP.NET-Core-3)
 
 Siga os modelos de arquivo xml para configuração do NLog.
 
@@ -49,128 +260,6 @@ Siga os modelos de arquivo xml para configuração do NLog.
 </nlog>
 ```
 
-### Log Csv
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<variable name="applicationName" value="MyApplication"/>
-	<targets>
-		<target name="asyncFile"
-				xsi:type="AsyncWrapper"
-				queueLimit="5000"
-				overflowAction="Discard">
-			<target name="file"
-					xsi:type="File"
-					fileName="${basedir}/logs/${applicationName}/log.csv"
-					archiveFileName="${basedir}/logs/${applicationName}/log.{######}.csv"
-					maxArchiveFiles="180"
-					archiveEvery="Hour"
-					archiveNumbering="Sequence"
-					concurrentWrites="true"
-					keepFileOpen="false"
-					encoding="iso-8859-2">
-				<layout xsi:type="CsvLayout">
-					<column name="Type" layout="${level}"/>
-					<column name="DateTime" layout="${date}" />
-					<column name="Custom-Message" layout="${message}" />
-					<column name="Error-Source" layout="${event-context:item=error-source}" />
-					<column name="Error-Class" layout="${event-context:item=error-class}" />
-					<column name="Error-Method" layout="${event-context:item=error-method}" />
-					<column name="Error-Message" layout="${event-context:item=error-message}" />
-					<column name="Inner-Error-Message" layout="${event-context:item=inner-error-message}" />
-					<column name="Web-Variables" layout="${web_variables}" />
-				</layout>
-			</target>
-		</target>
-	</targets>
-	<rules>
-		<logger name="*" minlevel="Debug" writeTo="file" />
-	</rules>
-</nlog>
-```
-
-### Log Email
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	  autoReload="true">
-	<targets>
-		<target name="console"
-				xsi:type="ColoredConsole"
-				layout="Server-Date: ${longdate}; Level: ${level}; Message: ${message}" />
-		<target name="debug"
-				xsi:type="Debugger"
-				layout="Server-Date: ${longdate}; Level: ${level}; Message: ${message}" />
-		<target name="logfile"
-				xsi:type="File"
-				layout="Server-Date: ${longdate}; Level: ${level}; Message: ${message}"
-				fileName="${basedir}/logs/${date:format=yyyy-MM-dd}-webapi.log" />
-		<target name="Mail"
-			 xsi:type="Mail" html="true"
-			 subject="Server-Date: ${longdate}; Level: ${level}"
-			 body="Server-Date: ${longdate}; Level: ${level}; Message: ${message}"
-			 to="recipient@sample.com"
-			 from="webmaster@sample.com"
-			 Encoding="UTF-8"
-			 smtpUsername="webmaster@sample.com"
-			 enableSsl="true"
-			 smtpPassword="123456"
-			 smtpAuthentication="Basic"
-			 smtpServer="smtp-relay.sample.com"
-			 smtpPort="587" />
-	</targets>
-	<rules>
-		<logger name="*" level="Fatal" writeTo="Mail" />
-		<logger name="*" level="Error" writeTo="Mail" />
-		<logger name="*" minlevel="Trace" writeTo="console,debug" />
-		<logger name="*" minlevel="Trace" writeTo="logfile" />
-	</rules>
-</nlog>
-```
-
-### Log SqlServer
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<!-- 
-// Running script database:
-CREATE TABLE [dbo].[logs](
-	[id] [int] IDENTITY(1,1) NOT NULL,
-	[datetime] [datetime] NOT NULL,
-	[message] [nvarchar](4000) NOT NULL,
-	[lvl] [nchar](10) NOT NULL,
- CONSTRAINT [PK_logs] PRIMARY KEY CLUSTERED 
-(
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
--->
-<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	  autoReload="true">
-	<targets>
-		<target name="logfile"
-				xsi:type="File"
-				layout="Server-Date: ${longdate}; Level: ${level}; Message: ${message}"
-				fileName="${basedir}/logs/${date:format=yyyy-MM-dd}-webapi.log" />
-		<target xsi:type="Database"
-				name="database"
-				dbProvider="System.Data.SqlClient"
-				connectionString="data source=.;Initial Catalog=nlog;Integrated Security=True;"
-				commandText="INSERT INTO [logs](datetime,message,lvl) VALUES (getutcdate(),@msg,@level)">
-			<parameter name="@msg" layout="Server-Date: ${longdate}; Level: ${level}; Message: ${message}" />
-			<parameter name="@level" layout="${level}" />
-		</target>
-	</targets>
-	<rules>
-		<logger name="*" level="Fatal" writeTo="database" />
-		<logger name="*" level="Error" writeTo="database" />
-		<logger name="*" minlevel="Trace" writeTo="logfile" />
-	</rules>
-</nlog>
-```
-
 ### Log ElasticSearch
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -199,32 +288,14 @@ Install-Package NLog.Targets.ElasticSearch
 </nlog>
 ```
 
-### ElasticSearch APM
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<!-- 
-Install-Package Elastic.Apm.NLog
--->
-<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	  autoReload="true">
-	<extensions>
-		<add assembly="Elastic.Apm.NLog"/>
-	</extensions>
-	<targets>
-		<target type="file" name="logfile" fileName="myfile.txt">
-			<layout type="jsonlayout">
-				<attribute name="traceid" layout="${ElasticApmTraceId}" />
-				<attribute name="transactionid" layout="${ElasticApmTransactionId}" />
-			</layout>
-		</target>
-	</targets>
-	<rules>
-		<logger name="*" minlevel="Trace" writeTo="logfile" />
-	</rules>
-</nlog>
-```
-O pré-requisito para funcionar corretamente é estar com um Agente Elastic APM configurado. Se o agente não estiver configurado, os espaços reservados do APM estarão vazios. Acesse [APM Agent .NET](https://github.com/elastic/apm-agent-dotnet).
-
-### Outras Configurações
+### Outras Configurações NLog
 Veja outras opções em [NLog-Project](https://nlog-project.org/config/?tab=layout-renderers).
+
+---
+
+## Documentação Relacionada
+
+- [OpenTelemetry Logging](observability/logging.md) - Guia completo de logging moderno com OpenTelemetry
+- [Tracing com OpenTelemetry](observability/tracing.md) - Configuração de rastreamento distribuído
+- [Métricas e Monitoramento](observability/metrics.md) - Métricas de aplicação
+- [Migração do TelemetryHelper](observability/migration.md) - Guia de migração para código legado

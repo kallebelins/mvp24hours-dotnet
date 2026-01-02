@@ -23,18 +23,18 @@ You may be able to use direct database connection, which is not recommended. Acc
 ```csharp
 /// Package Manager Console >
 
-Install-Package MongoDB.Driver -Version 2.13.2
-Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 8.3.261
+Install-Package MongoDB.Driver -Version 2.28.0
+Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 9.1.x
 ```
 #### Settings
 ```csharp
-/// Startup.cs
-services.AddMvp24HoursDbContext(options =>
+/// Program.cs
+builder.Services.AddMvp24HoursDbContext(options =>
 {
     options.DatabaseName = "customers";
-    options.ConnectionString = Configuration.GetConnectionString("DataContext");
+    options.ConnectionString = builder.Configuration.GetConnectionString("DataContext");
 });
-services.AddMvp24HoursRepository(); // async => AddMvp24HoursRepositoryAsync()
+builder.Services.AddMvp24HoursRepository(); // async => AddMvp24HoursRepositoryAsync()
 
 ```
 
@@ -42,7 +42,7 @@ services.AddMvp24HoursRepository(); // async => AddMvp24HoursRepositoryAsync()
 **Basic Command**
 ```
 // Command
-docker run -d --name mongo -p 27017:27017 mvertes/alpine-mongo
+docker run -d --name mongo -p 27017:27017 mongo:7
 
 // ConnectionString
 mongodb://localhost:27017
@@ -52,12 +52,14 @@ mongodb://localhost:27017
 **Command for Database with Password**
 ```
 // Command
-docker run --name mongodb -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=user -e MONGO_INITDB_ROOT_PASSWORD=123456 mongo
+docker run --name mongodb -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=user -e MONGO_INITDB_ROOT_PASSWORD=123456 mongo:7
 
 // ConnectionString
 mongodb://user:123456@localhost:27017
 
 ```
+
+> 📚 See [MongoDB Advanced](mongodb-advanced.md) for advanced features and resilience configuration.
 
 ## Key-Value Oriented
 > A key-value database, or key-value store, is a data storage paradigm designed to store, retrieve, and manage associative arrays and a data structure more commonly known today as a dictionary or hash table. [Wikipedia](https://pt.wikipedia.org/wiki/Banco_de_dados_de_chave-valor)
@@ -80,18 +82,18 @@ You can use structural configuration or connection string.
 #### Setup
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.Caching.Redis -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.Caching.Redis -Version 9.1.x
 ```
 
 #### Settings
 ```csharp
-/// Startup.cs
+/// Program.cs
 
 // structural
-services.AddMvp24HoursCaching();
+builder.Services.AddMvp24HoursCaching();
 
 // connection string
-services.AddMvp24HoursCachingRedis(Configuration.GetConnectionString("RedisDbContext"));
+builder.Services.AddMvp24HoursCachingRedis(builder.Configuration.GetConnectionString("RedisDbContext"));
 
 ```
 
@@ -138,8 +140,8 @@ You will be able to use extensions to interact with the IDistributedCache interf
 You can still use the repository concept to restrict the unique types for use.
 
 ```csharp
-/// Startup.cs
-services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
+/// Program.cs
+builder.Services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
 
 // reference object
 var customer = new Customer
@@ -176,9 +178,49 @@ var customer = repo.Get("key");
 #### Using Docker
 ```
 // Command
-docker run -d -p 6379:6379 -i -t redis:3.2.5-alpine
+docker run -d -p 6379:6379 redis:7-alpine
 
 // Connect
 127.0.0.1:6379
 
+```
+
+---
+
+## HybridCache (.NET 9+)
+
+For modern caching with .NET 9+, consider using `HybridCache` which combines L1 (in-memory) and L2 (distributed) caching:
+
+```csharp
+// Program.cs
+builder.Services.AddMvpHybridCache(options =>
+{
+    options.DefaultEntryOptions.Expiration = TimeSpan.FromMinutes(5);
+    options.DefaultEntryOptions.LocalCacheExpiration = TimeSpan.FromMinutes(1);
+});
+
+// Usage
+var item = await hybridCache.GetOrCreateAsync(
+    "key",
+    async cancel => await LoadDataAsync(cancel),
+    new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(5),
+        LocalCacheExpiration = TimeSpan.FromMinutes(1)
+    });
+```
+
+> 📚 See [HybridCache Documentation](../modernization/hybrid-cache.md) for complete guide.
+
+---
+
+## Observability Integration
+
+Enable health checks for your NoSQL databases:
+
+```csharp
+// Program.cs
+builder.Services.AddHealthChecks()
+    .AddMongoDb(builder.Configuration.GetConnectionString("DataContext"), name: "mongodb")
+    .AddRedis(builder.Configuration.GetConnectionString("RedisDbContext"), name: "redis");
 ```

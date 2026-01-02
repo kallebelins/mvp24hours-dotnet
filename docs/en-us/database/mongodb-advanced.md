@@ -5,8 +5,8 @@
 ## Installation
 
 ```bash
-Install-Package MongoDB.Driver -Version 2.13.2
-Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 8.3.261
+Install-Package MongoDB.Driver -Version 2.28.0
+Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 9.1.x
 ```
 
 ## Table of Contents
@@ -250,10 +250,33 @@ public class CustomerQueryHandler
 
 Connection resiliency and circuit breaker patterns.
 
-### Configure Resilience Options
+### Native Resilience (.NET 9+)
+
+For .NET 9+, use `Microsoft.Extensions.Resilience` for native resilience patterns:
 
 ```csharp
-services.AddMvp24HoursDbContext(options =>
+// Program.cs
+builder.Services.AddNativeMongoDbResilience(options =>
+{
+    options.MaxRetryAttempts = 3;
+    options.BaseDelay = TimeSpan.FromMilliseconds(100);
+    options.UseExponentialBackoff = true;
+    options.MaxDelay = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddMvp24HoursDbContext(options =>
+{
+    options.DatabaseName = "MyDatabase";
+    options.ConnectionString = connectionString;
+});
+```
+
+> 📚 See [Native Resilience](../modernization/generic-resilience.md) for complete guide.
+
+### Configure Resilience Options (Legacy)
+
+```csharp
+builder.Services.AddMvp24HoursDbContext(options =>
 {
     options.DatabaseName = "MyDatabase";
     options.ConnectionString = connectionString;

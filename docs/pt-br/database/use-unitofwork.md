@@ -25,7 +25,7 @@ Abaixo segue pacote para instalação e execução de comandos/consultas SQL com
 
 ```csharp
 /// Package Manager Console >
-Install-Package Dapper -Version 2.0.123
+Install-Package Dapper -Version 2.1.x
 
 /// Exemplo
 var result = await UnitOfWork

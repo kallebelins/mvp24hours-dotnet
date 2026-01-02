@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
 ```
 
 ## Table of Contents
@@ -31,11 +31,11 @@ EF Core interceptors allow you to automatically modify entity behavior during Sa
 Automatically populates audit fields (CreatedAt, CreatedBy, ModifiedAt, ModifiedBy) on entities implementing `IAuditableEntity`.
 
 ```csharp
-// Register in Startup.cs
-services.AddDbContext<AppDbContext>((sp, options) =>
+// Register in Program.cs
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
     var currentUserProvider = sp.GetService<ICurrentUserProvider>();
-    var clock = sp.GetService<IClock>();
+    var clock = sp.GetService<IClock>(); // or TimeProvider for .NET 9+
     
     options.UseSqlServer(connectionString)
            .AddInterceptors(new AuditSaveChangesInterceptor(currentUserProvider, clock));
@@ -355,10 +355,32 @@ var page = await _repository.GetByKeysetPaginationAsync(
 
 Connection resiliency and circuit breaker patterns.
 
-### Configure Resilience Options
+### Native Resilience (.NET 9+)
+
+For .NET 9+, use `Microsoft.Extensions.Resilience` for native resilience patterns:
 
 ```csharp
-services.AddMvp24HoursDbContextWithResilience<AppDbContext>(options =>
+// Program.cs
+builder.Services.AddNativeDbResilience(options =>
+{
+    options.MaxRetryAttempts = 3;
+    options.BaseDelay = TimeSpan.FromMilliseconds(100);
+    options.UseExponentialBackoff = true;
+    options.MaxDelay = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(connectionString);
+});
+```
+
+> 📚 See [Native Resilience](../modernization/generic-resilience.md) for complete guide.
+
+### Configure Resilience Options (Legacy)
+
+```csharp
+builder.Services.AddMvp24HoursDbContextWithResilience<AppDbContext>(options =>
 {
     options.ConnectionString = connectionString;
     options.EnableRetryOnFailure = true;
@@ -675,7 +697,7 @@ Complete setup for Command Query Responsibility Segregation.
 
 ```csharp
 // Register both read and write repositories
-services.AddMvp24HoursCqrsRepositories(options =>
+builder.Services.AddMvp24HoursCqrsRepositories(options =>
 {
     options.MaxQtyByQueryPage = 100;
 });
@@ -705,6 +727,32 @@ public class CreateCustomerCommandHandler
     }
 }
 ```
+
+### Domain Events with SaveChanges
+
+```csharp
+// Use SaveChangesWithEventsAsync to dispatch domain events
+public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, OrderResult>
+{
+    private readonly IRepositoryAsync<Order> _repository;
+    private readonly IUnitOfWorkAsync _unitOfWork;
+    
+    public async Task<OrderResult> Handle(CreateOrderCommand command, CancellationToken ct)
+    {
+        var order = new Order(command.CustomerId, command.Items);
+        order.AddDomainEvent(new OrderCreatedEvent(order.Id));
+        
+        await _repository.AddAsync(order);
+        
+        // This dispatches domain events after commit
+        await _unitOfWork.SaveChangesWithEventsAsync(ct);
+        
+        return new OrderResult(order.Id);
+    }
+}
+```
+
+> 📚 See [CQRS Documentation](../cqrs/home.md) for complete guide.
 
 ---
 

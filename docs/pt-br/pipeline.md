@@ -4,13 +4,15 @@
 ## Instalação
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.Pipe -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.Pipe -Version 9.1.x
 ```
+
+> 📚 Para recursos avançados como middleware pattern, pipelines tipados, fork/join, checkpoint/resume, resiliência e observabilidade, consulte a documentação avançada abaixo.
 
 ## Configuração Básica
 ```csharp
-/// Startup.cs
-services.AddMvp24HoursPipeline(options => // async => AddMvp24HoursPipelineAsync
+/// Program.cs
+builder.Services.AddMvp24HoursPipeline(options => // async => AddMvp24HoursPipelineAsync
 {
     options.IsBreakOnFail = false;
 });
@@ -18,8 +20,8 @@ services.AddMvp24HoursPipeline(options => // async => AddMvp24HoursPipelineAsync
 
 ## Configuração com Factory
 ```csharp
-/// Startup.cs
-services.AddMvp24HoursPipeline(factory: (_) => // async => AddMvp24HoursPipelineAsync
+/// Program.cs
+builder.Services.AddMvp24HoursPipeline(factory: (_) => // async => AddMvp24HoursPipelineAsync
 {
     var pipeline = new Pipeline(); // async => PipelineAsync
     pipeline.AddInterceptors(input =>
@@ -242,8 +244,8 @@ public class ProductCategoryListBuilder : IProductCategoryListBuilder
     }
 }
 
-/// Startup.cs
-services.AddScoped<IProductCategoryListBuilder, ProductCategoryListBuilder>();
+/// Program.cs
+builder.Services.AddScoped<IProductCategoryListBuilder, ProductCategoryListBuilder>();
 
 /// ..my-application/application/services/MyService.cs /MyMethod
 var pipeline = serviceProvider.GetService<IPipeline>();
@@ -267,11 +269,115 @@ public class ProductCategoryListBuilderAsync : IProductCategoryListBuilderAsync
     }
 }
 
-/// Startup.cs
-services.AddScoped<IProductCategoryListBuilderAsync, ProductCategoryListBuilderAsync>();
+/// Program.cs
+builder.Services.AddScoped<IProductCategoryListBuilderAsync, ProductCategoryListBuilderAsync>();
 
 /// ..my-application/application/services/MyService.cs /MyMethod
 var pipeline = serviceProvider.GetService<IPipelineAsync>();
 var builder = serviceProvider.GetService<IProductCategoryListBuilderAsync>();
 builder.Builder(pipeline);
 ```
+
+---
+
+## Pipeline Avançado
+
+O Pipeline Mvp24Hours suporta padrões avançados para workflows complexos:
+
+### Pipeline Tipado
+
+Use `IPipeline<TInput, TOutput>` para pipelines fortemente tipados:
+
+```csharp
+// Definir pipeline tipado
+public interface IOrderProcessingPipeline : IPipelineAsync<OrderRequest, OrderResult> { }
+
+// Implementação
+public class OrderProcessingPipeline : PipelineAsync<OrderRequest, OrderResult>, IOrderProcessingPipeline
+{
+    public OrderProcessingPipeline()
+    {
+        Add<ValidateOrderOperation>();
+        Add<ProcessPaymentOperation>();
+        Add<CreateShipmentOperation>();
+        Add<SendNotificationOperation>();
+    }
+}
+
+// Uso
+var result = await pipeline.ExecuteAsync(new OrderRequest { ... });
+```
+
+### Middleware Pattern
+
+```csharp
+pipeline.UseMiddleware<LoggingMiddleware>();
+pipeline.UseMiddleware<TransactionMiddleware>();
+pipeline.UseMiddleware<ValidationMiddleware>();
+```
+
+### Padrão Fork/Join
+
+Execute operações paralelas e junte os resultados:
+
+```csharp
+pipeline.Fork(
+    branch1 => branch1.Add<FetchInventoryOperation>(),
+    branch2 => branch2.Add<FetchPricingOperation>(),
+    branch3 => branch3.Add<FetchPromotionsOperation>()
+)
+.Join<MergeProductDataOperation>();
+```
+
+### Checkpoint/Resume
+
+Para pipelines de longa execução:
+
+```csharp
+builder.Services.AddMvp24HoursPipelineAsync(options =>
+{
+    options.EnableCheckpoints = true;
+    options.CheckpointStore = new RedisCheckpointStore(redisConnection);
+});
+
+// Na operação
+public override async Task ExecuteAsync(IPipelineMessage input)
+{
+    // Lógica da operação
+    await input.SaveCheckpointAsync("step-1-completed");
+}
+
+// Retomar do checkpoint
+await pipeline.ResumeFromCheckpointAsync(pipelineId);
+```
+
+### Resiliência
+
+Retry e circuit breaker integrados:
+
+```csharp
+pipeline.Add<ExternalServiceOperation>()
+    .WithRetry(maxAttempts: 3, delay: TimeSpan.FromSeconds(1))
+    .WithCircuitBreaker(failureThreshold: 5, breakDuration: TimeSpan.FromMinutes(1));
+```
+
+### Observabilidade
+
+Integração com OpenTelemetry:
+
+```csharp
+builder.Services.AddMvp24HoursPipelineAsync(options =>
+{
+    options.EnableTracing = true;
+    options.EnableMetrics = true;
+    options.ActivitySourceName = "MyApp.Pipeline";
+});
+```
+
+---
+
+## Consulte Também
+
+- [Documentação Avançada de Pipeline](pipeline-advanced.md) - Guia completo de funcionalidades avançadas
+- [Saga Pattern](cqrs/saga/home.md) - Transações distribuídas
+- [CQRS Pipeline Behaviors](cqrs/behaviors/home.md) - Middleware de Command/Query

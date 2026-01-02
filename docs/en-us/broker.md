@@ -6,8 +6,10 @@
 ### Setup
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 9.1.x
 ```
+
+> 📚 For advanced features (Typed Consumers, Request/Response, Scheduling, Sagas), see [RabbitMQ Advanced](broker-advanced.md).
 
 ### Basic Settings
 Basically, we can register a connection with RabbitMQ taking into account all consumers of a project (assembly), asynchronous execution and retrying if failures occur.
@@ -176,3 +178,11 @@ docker run -d --name my-rabbit -p 5672:5672 -p 5673:5673 -p 15672:15672 rabbitmq
 
 ### Injection vs Standard Instance
 An instance is created dynamically, with the exception of those registered in the service collection for the provider (IServiceProvider).
+
+---
+
+## See Also
+
+- [RabbitMQ Advanced Features](broker-advanced.md) - Typed consumers, Request/Response, Sagas, Scheduling
+- [CQRS Integration Events](cqrs/events/integration-events.md) - Using RabbitMQ with CQRS
+- [Message Observability](observability/messaging.md) - OpenTelemetry for message tracing

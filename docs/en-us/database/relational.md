@@ -19,23 +19,23 @@ You may be able to use direct database connection, which is not recommended. Acc
 ```csharp
 /// Package Manager Console >
 
-Install-Package Microsoft.Extensions.DependencyInjection -Version 6.0.0
-Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 5.0.12
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 8.3.261
+Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
+Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 9.0.0
+Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
 ```
 ### Settings
 ```csharp
-/// Startup.cs
+/// Program.cs
 
-services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(Configuration.GetConnectionString("DataContext")));
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DataContext")));
 
-services.AddMvp24HoursDbContext<DataContext>();
-services.AddMvp24HoursRepository(options =>
+builder.Services.AddMvp24HoursDbContext<DataContext>();
+builder.Services.AddMvp24HoursRepository(options =>
 {
     options.MaxQtyByQueryPage = 100;
-    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted; // Serializable, RepeatableRead, ReadUncommitted, Snapshot, Chaos
-});  // async => services.AddMvp24HoursRepositoryAsync();
+    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
+});  // async => builder.Services.AddMvp24HoursRepositoryAsync();
 
 ```
 ### Using Docker
@@ -44,7 +44,7 @@ services.AddMvp24HoursRepository(options =>
 docker run --name sqlserver -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=MyPass@word" -p 1433:1433 -d mcr.microsoft.com/mssql/server
 
 // ConnectionString
-Data Source=.,1433;Initial Catalog=MyTestDb;Persist Security Info=True;User ID=sa;Password=MyPass@word;Pooling=False;
+Data Source=.,1433;Initial Catalog=MyTestDb;Persist Security Info=True;User ID=sa;Password=MyPass@word;Pooling=False;TrustServerCertificate=True
 
 ```
 
@@ -53,31 +53,30 @@ Data Source=.,1433;Initial Catalog=MyTestDb;Persist Security Info=True;User ID=s
 ```csharp
 /// Package Manager Console >
 
-Install-Package Microsoft.Extensions.DependencyInjection -Version 6.0.0
-Install-Package Npgsql.EntityFrameworkCore.PostgreSQL -Version 5.0.10
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 8.3.261
+Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
+Install-Package Npgsql.EntityFrameworkCore.PostgreSQL -Version 9.0.0
+Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
 ```
 ### Settings
 ```csharp
-/// Startup.cs
+/// Program.cs
 
-services.AddDbContext<DataContext>(
-    options => options.UseNpgsql(Configuration.GetConnectionString("DataContext"),
-    options => options.SetPostgresVersion(new Version(9, 6)))
+builder.Services.AddDbContext<DataContext>(
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DataContext"))
 );
 
-services.AddMvp24HoursDbContext<DataContext>();
-services.AddMvp24HoursRepository(options =>
+builder.Services.AddMvp24HoursDbContext<DataContext>();
+builder.Services.AddMvp24HoursRepository(options =>
 {
     options.MaxQtyByQueryPage = 100;
-    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted; // Serializable, RepeatableRead, ReadUncommitted, Snapshot, Chaos
-});  // async => services.AddMvp24HoursRepositoryAsync();
+    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
+});  // async => builder.Services.AddMvp24HoursRepositoryAsync();
 
 ```
 ### Using Docker
 ```
 // Command
-docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=MyPass@word -d onjin/alpine-postgres
+docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=MyPass@word -d postgres:16-alpine
 
 // ConnectionString
 Host=localhost;Port=5432;Pooling=true;Database=MyTestDb;User Id=postgres;Password=MyPass@word;
@@ -89,31 +88,58 @@ Host=localhost;Port=5432;Pooling=true;Database=MyTestDb;User Id=postgres;Passwor
 ```csharp
 /// Package Manager Console >
 
-Install-Package Microsoft.Extensions.DependencyInjection -Version 6.0.0
-Install-Package MySql.EntityFrameworkCore -Version 5.0.8
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 8.3.261
+Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
+Install-Package Pomelo.EntityFrameworkCore.MySql -Version 9.0.0
+Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
 ```
 ### Settings
 ```csharp
-/// Startup.cs
+/// Program.cs
 
-services.AddDbContext<DataContext>(options =>
-    options.UseMySQL(Configuration.GetConnectionString("DataContext")));
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DataContext"),
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DataContext"))));
 
-services.AddMvp24HoursDbContext<DataContext>();
-services.AddMvp24HoursRepository(options =>
+builder.Services.AddMvp24HoursDbContext<DataContext>();
+builder.Services.AddMvp24HoursRepository(options =>
 {
     options.MaxQtyByQueryPage = 100;
-    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted; // Serializable, RepeatableRead, ReadUncommitted, Snapshot, Chaos
-});  // async => services.AddMvp24HoursRepositoryAsync();
+    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
+});  // async => builder.Services.AddMvp24HoursRepositoryAsync();
 
 ```
 ### Using Docker
 ```
 // Command
-docker run --name mysql -v /mysql/data/:/var/lib/mysql -d -p 3306:3306 -e MYSQL_ROOT_PWD=MyPass@word -e MYSQL_USER=user -e MYSQL_USER_PWD=MyPass@word leafney/docker-alpine-mysql
+docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=MyPass@word -d mysql:8
 
 // ConnectionString
 server=localhost;user=root;password=MyPass@word;database=MyTestDb
 
 ```
+
+---
+
+## Observability Integration
+
+Enable health checks and metrics for your database:
+
+```csharp
+// Program.cs
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DataContext"), name: "sqlserver");
+
+// or for PostgreSQL
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("DataContext"), name: "postgres");
+```
+
+---
+
+## Related Documentation
+
+- [EF Core Advanced](efcore-advanced.md) - Advanced features, execution strategies, resilience
+- [Use Entity](use-entity.md) - Entity configuration
+- [Use Repository](use-repository.md) - Repository pattern usage
+- [Use Unit of Work](use-unitofwork.md) - Unit of Work pattern

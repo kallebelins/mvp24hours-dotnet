@@ -25,7 +25,7 @@ Below is a package for installing and executing SQL commands/queries with Dapper
 
 ```csharp
 /// Package Manager Console >
-Install-Package Dapper -Version 2.0.123
+Install-Package Dapper -Version 2.1.x
 
 /// Example
 var result = await UnitOfWork

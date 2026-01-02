@@ -6,8 +6,10 @@
 ### Instalação
 ```csharp
 /// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 9.1.x
 ```
+
+> 📚 Para recursos avançados (Consumers Tipados, Request/Response, Scheduling, Sagas), veja [RabbitMQ Avançado](broker-advanced.md).
 
 ### Configuração Básica
 Basicamente podemos registrar uma conexão com RabbitMQ levando em consideração todos os consumers de um projeto (assembly), execução assíncrona e retentativas caso ocorram falhas.
@@ -176,3 +178,11 @@ docker run -d --name my-rabbit -p 5672:5672 -p 5673:5673 -p 15672:15672 rabbitmq
 
 ### Injeção vs Instância Padrão
 É criada uma instância dinamicamente, com exceção das registradas na coleção de serviços para provedor (IServiceProvider).
+
+---
+
+## Consulte Também
+
+- [Funcionalidades Avançadas do RabbitMQ](broker-advanced.md) - Consumers tipados, Request/Response, Sagas, Scheduling
+- [Eventos de Integração CQRS](cqrs/events/integration-events.md) - Usando RabbitMQ com CQRS
+- [Observabilidade de Mensagens](observability/messaging.md) - OpenTelemetry para rastreamento de mensagens
