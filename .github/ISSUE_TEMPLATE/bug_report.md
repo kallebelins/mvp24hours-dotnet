@@ -41,8 +41,8 @@ var customer = repository.GetById(1); // Retorna null quando não deveria
 
 ## 🌍 Ambiente
 
-- **Mvp24Hours Version:** [ex: 8.3.261]
-- **.NET Version:** [ex: 8.0.100]
+- **Mvp24Hours Version:** [ex: 9.1.x]
+- **.NET Version:** [ex: 9]
 - **OS:** [ex: Windows 11, Ubuntu 22.04, macOS 13]
 - **IDE:** [ex: Visual Studio 2022, VS Code, Rider]
 - **Database:** [ex: SQL Server 2022, PostgreSQL 15]

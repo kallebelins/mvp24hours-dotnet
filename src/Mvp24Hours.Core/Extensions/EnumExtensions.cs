@@ -61,7 +61,8 @@ namespace Mvp24Hours.Extensions
             }
 
             var attribute = (DisplayAttribute)attributes[0];
-            return attribute.GetGroupName();
+            var groupName = attribute.GetGroupName();
+            return string.IsNullOrEmpty(groupName) ? value.ToString() : groupName;
         }
 
         public static string GetDisplayName(this Enum value)

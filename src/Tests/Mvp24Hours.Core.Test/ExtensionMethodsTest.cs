@@ -313,7 +313,7 @@ public class ExtensionMethodsTest
     public void EnumerableExtensions_ForEach_ExecutesAction()
     {
         // Arrange
-        var list = new List<int> { 1, 2, 3 };
+        IEnumerable<int> list = new List<int> { 1, 2, 3 };
         var sum = 0;
 
         // Act

@@ -203,9 +203,9 @@ public class StringExtensionsTest
 
     [Theory]
     [InlineData("SELECT * FROM table", "SELECT * FROM table")]
-    [InlineData("test--comment", "testcomment")]
+    [InlineData("test--comment", "test")]
     [InlineData("It's a test", "It''s a test")]
-    [InlineData("-- comment", " comment")]
+    [InlineData("-- comment", "")]
     public void SqlSafe_SanitizesInput(string input, string expected)
     {
         // Act

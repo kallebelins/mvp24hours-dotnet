@@ -27,8 +27,8 @@ assignees: ''
 
 ## 🌍 Contexto
 
-- **Mvp24Hours Version:** [ex: 8.3.261]
-- **.NET Version:** [ex: 8.0.100]
+- **Mvp24Hours Version:** [ex: 9.1.x]
+- **.NET Version:** [ex: 9]
 - **Cenário:** [ex: API REST, Background Job, etc]
 
 ## 🎯 Objetivo

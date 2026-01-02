@@ -22,6 +22,7 @@ namespace Mvp24Hours.Extensions
         public static bool IsList(this object Value)
         {
             if (Value == null) return false;
+            if (Value is string) return false; // Strings implement IEnumerable<char> but should not be considered lists
             return Value is IEnumerable
                 || Value is ICollection
                 || Value is IList

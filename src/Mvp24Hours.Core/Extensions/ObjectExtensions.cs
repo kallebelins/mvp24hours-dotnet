@@ -54,7 +54,12 @@ namespace Mvp24Hours.Extensions
                 var srcValue = props.sourceProperty.GetValue(source, null);
                 var dstValue = props.targetProperty.GetValue(destination, null);
                 if (props.targetProperty.PropertyType.IsAssignableFrom(props.sourceProperty.PropertyType))
+                {
                     props.targetProperty.SetValue(destination, srcValue, null);
+                    var newdstValue = props.targetProperty.GetValue(destination, null);
+                    if (!Equals(newdstValue, dstValue))
+                        PropertyChanged = true;
+                }
                 else
                 {
                     try
@@ -75,6 +80,10 @@ namespace Mvp24Hours.Extensions
                         }
                         else // if null we can just set it as null
                             props.targetProperty.SetValue(destination, null, null);
+                        
+                        var newdstValue = props.targetProperty.GetValue(destination, null);
+                        if (!Equals(newdstValue, dstValue))
+                            PropertyChanged = true;
                     }
                     catch (Exception ex)
                     {
@@ -82,9 +91,6 @@ namespace Mvp24Hours.Extensions
                             throw new InvalidCastException($"Unable to copy property {props.sourceProperty.Name} with value {srcValue} from object of type ({typeSrc.FullName}) to type ({typeDest.FullName}), Error: {ex.Message}");
                         // else ignore update
                     }
-                    var newdstValue = props.targetProperty.GetValue(destination, null);
-                    if (newdstValue != null && dstValue != null && !newdstValue.Equals(dstValue))
-                        PropertyChanged = true;
                 }
             }
 

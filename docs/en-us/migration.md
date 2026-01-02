@@ -11,7 +11,7 @@ public class MyEntityConfiguration : IBsonClassMap<MyEntity>
 public class MyEntityConfiguration : IBsonClassMap
 ```
 
-## Version v8.3.261
+## Version v9.1.200
 ### EntityBase
 ```csharp
 // before

@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 8.3.261
+Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 9.1.x
 ```
 
 ## Table of Contents

@@ -69,7 +69,7 @@ Compartilhe o projeto nas redes sociais, blogs, eventos, etc.
 
 ### Pré-requisitos
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) ou superior
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) ou superior
 - [Git](https://git-scm.com/)
 - IDE recomendada: [Visual Studio 2022](https://visualstudio.microsoft.com/) ou [Visual Studio Code](https://code.visualstudio.com/)
 - [Docker](https://www.docker.com/) (opcional, para testes de integração)
@@ -420,8 +420,8 @@ GetById retorna null mesmo quando o registro existe no banco.
 Deveria retornar o customer com ID 1.
 
 **Ambiente**
-- Mvp24Hours: 8.3.261
-- .NET: 8.0.100
+- Mvp24Hours: 9.1.x
+- .NET: 9
 - SO: Windows 11
 - SQL Server: 2022
 
