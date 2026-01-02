@@ -13,9 +13,9 @@
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>99.1.10010</Version>
-		<AssemblyVersion>9.1.1.1</AssemblyVersion>
-		<FileVersion>9.1.1.1</FileVersion>
+		<Version>9.1.20</Version>
+		<AssemblyVersion>9.1.2.0</AssemblyVersion>
+		<FileVersion>9.1.2.0</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
 		<PackageTags>mediator;cqrs;mvp24hours;ddd;clean-architecture</PackageTags>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
