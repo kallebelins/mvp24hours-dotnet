@@ -1,55 +1,163 @@
 # Início
+
 Cada solução arquitetural deve ser construída baseada nas necessidades técnicas e/ou de negócio.
 O objetivo dessa biblioteca é garantir agilidade na construção de produtos digitais através de estruturas, mecanismos e ferramentas que, combinados corretamente, oferecem robustez, segurança, desempenho, monitoramento, observabilidade, resiliência e consistência.
-Abaixo estão as principais referências para API RESTful para persistência e integração de serviços.
 
-## Banco de dados relacional
+## 🚀 Instalação Rápida
+
+```bash
+# Core (obrigatório)
+dotnet add package Mvp24Hours.Core
+
+# Escolha o módulo de dados
+dotnet add package Mvp24Hours.Infrastructure.Data.EFCore    # SQL Server, PostgreSQL, MySQL
+dotnet add package Mvp24Hours.Infrastructure.Data.MongoDb   # MongoDB
+
+# CQRS e Mediator (recomendado)
+dotnet add package Mvp24Hours.Infrastructure.Cqrs
+
+# WebAPI
+dotnet add package Mvp24Hours.WebAPI
+
+# Mensageria
+dotnet add package Mvp24Hours.Infrastructure.RabbitMQ
+
+# Cache
+dotnet add package Mvp24Hours.Infrastructure.Caching
+```
+
+## 📋 Guia de Funcionalidades
+
+### 🗄️ Banco de Dados Relacional
 É um banco de dados que permite criar relacionamentos entre si com o objetivo de garantir consistência e integridade dos dados.
 
-* [SQL Server](pt-br/database/relational?id=sql-server)
-* [PostgreSql](pt-br/database/relational?id=postgresql)
-* [MySql](pt-br/database/relational?id=mysql)
+| Database | Link |
+|----------|------|
+| SQL Server | [Configuração](pt-br/database/relational?id=sql-server) |
+| PostgreSQL | [Configuração](pt-br/database/relational?id=postgresql) |
+| MySQL | [Configuração](pt-br/database/relational?id=mysql) |
 
-## Banco de dados NoSql
-NoSQL é um termo genérico que representa um banco de dados não relacional.
+**Funcionalidades avançadas:**
+- Interceptors (Audit, SoftDelete, Concurrency, SlowQuery)
+- Multi-tenancy com query filters automáticos
+- Bulk Operations (Insert, Update, Delete)
+- Specification Pattern integrado
+- Read/Write splitting para replicas
 
-### Orientado a documentos
-> É um tipo de banco de dados não relacional projetado para armazenar e consultar dados como documentos do tipo JSON. [O que é um banco de dados de documentos](https://aws.amazon.com/pt/nosql/document/)
+### 🍃 Banco de Dados NoSQL
 
-[MongoDb](pt-br/database/nosql?id=mongodb)
+#### Orientado a Documentos
+> Banco de dados projetado para armazenar e consultar dados como documentos JSON.
 
-### Orientado a chave-valor
-É uma estrutura de dados do tipo mapa ou dicionário, onde utilizamos uma chave como identificador do registro.
+[MongoDB](pt-br/database/nosql?id=mongodb) - Com Change Streams, GridFS, Geospatial queries
 
-[Redis](pt-br/database/nosql?id=redis)
+#### Orientado a Chave-Valor
+Estrutura de dados do tipo mapa/dicionário, onde utilizamos uma chave como identificador.
 
-## Message Broker
-Um message broker é um software que possibilita que aplicativos, sistemas e serviços se comuniquem e troquem informações.
+[Redis](pt-br/database/nosql?id=redis) - Cache distribuído e locks
 
-[RabbitMQ](pt-br/broker.md)
+### ⭐ CQRS e Mediator (Novo!)
+Padrão Command Query Responsibility Segregation com Mediator próprio.
 
-## Pipeline
-É um padrão de projeto que representa um tubo com diversas operações (filtros), executadas de forma sequencial, com o intuito de trafegar, integir e/ou manuear um pacote/mensagem.
+[CQRS](pt-br/cqrs/home.md) - Documentação completa
 
-[Pipeline](pt-br/pipeline.md)
+**Inclui:**
+- Commands e Queries tipados
+- Pipeline Behaviors (Logging, Validation, Caching, Transaction, Retry)
+- Domain Events e Integration Events
+- Event Sourcing e Sagas
+- Idempotência e Scheduled Commands
 
-## Documentação
-O hábito de documentar interfaces e classes de dados (value objects, dtos, entidades, ...) pode contruibuir para facilitar a manutenção de código. O Swagger permite você documentar facilmente sua API RESTful compartilhando com outros desenvolvedores a forma como poderão consumir os recursos disponíveis.
+### 📨 Message Broker
+Software que possibilita que aplicações, sistemas e serviços se comuniquem.
 
-[Swagger](pt-br/swagger.md)
+[RabbitMQ](pt-br/broker.md) - Mensageria enterprise
 
-## Mapeamento
-Com a prática de desenvolvimento de API RESTful com foco em mobile, temos como referência oferecer o mínimo de dados possível ou necessários em cada recurso da API. Sendo assim, surge a necessidade de criarmos objetos específicos para tráfeto (DTOs).
-O AutoMapper auxilia na atribuição de valores de propriedades de objetos relacionados (Pessoa => PessoaDto), ou melhor, mapeamento de um objeto para outro.
+**Funcionalidades:**
+- Consumers tipados (`IMessageConsumer<T>`)
+- Request/Response pattern
+- Message Scheduling
+- Batch consumers
+- Sagas com state machines
+- Multi-tenancy
 
-[AutoMapper](pt-br/automapper.md)
+### 📦 Pipeline
+Padrão Pipe and Filters que representa um tubo com diversas operações executadas sequencialmente.
 
-## Padrões
-Os padrões são modelos que usamos como referência ou base para resolução de um problema. Além dos padrões que apresentaremos nas definições arquiteturais exploradas por esta biblioteca, exploramos as seguintes referências:
+[Pipeline](pt-br/pipeline.md) - Documentação completa
 
-* [Unidade de Trabalho](pt-br/database/use-unitofwork.md)
-* [Repositório](pt-br/database/use-repository.md)
-* [Serviço de Repositório](pt-br/database/use-service.md): Usamos para aplicar regras de negócio e encapsular o repositório
-* [Validação de dados](pt-br/validation.md): Validação de dados usando fluent ou anotações
-* [Notificação](pt-br/notification.md): Troca de mensagens em um contexto de notificações
-* [Especificação](pt-br/specification.md): Filtro de dados
+**Funcionalidades:**
+- Pipeline tipado (`IPipeline<TInput, TOutput>`)
+- Fork/Join para fluxos paralelos
+- Saga Pattern com compensação
+- Checkpoint/Resume para pipelines longos
+
+### 📊 Observabilidade (Novo!)
+Stack completa de observabilidade com OpenTelemetry.
+
+[Observabilidade](pt-br/observability/home.md) - Documentação completa
+
+**Inclui:**
+- Tracing distribuído com Activities
+- Métricas (Counters, Histograms, Gauges)
+- Logs estruturados com ILogger
+- Exporters: OTLP, Console, Prometheus
+
+### ⏰ CronJob
+Agendamento de tarefas em background com expressões CRON.
+
+[CronJob](pt-br/cronjob.md) - Documentação completa
+
+**Funcionalidades:**
+- Retry com circuit breaker
+- Distributed locking
+- Health checks
+- Métricas e OpenTelemetry
+
+### 📝 Documentação
+Documente sua API RESTful com Swagger/OpenAPI.
+
+[Swagger](pt-br/swagger.md) - Configuração
+
+**Novo:** Suporte a OpenAPI nativo (.NET 9)
+
+### 🔄 Mapeamento
+AutoMapper para mapeamento de objetos (Entity ↔ DTO).
+
+[AutoMapper](pt-br/automapper.md) - Configuração
+
+### ✅ Validação
+Validação de dados com FluentValidation ou Data Annotations.
+
+[Validação](pt-br/validation.md) - Documentação
+
+## 🏗️ Padrões Arquiteturais
+
+| Padrão | Descrição | Link |
+|--------|-----------|------|
+| **Unit of Work** | Gerencia transações e persistência | [Documentação](pt-br/database/use-unitofwork.md) |
+| **Repository** | Abstração de acesso a dados | [Documentação](pt-br/database/use-repository.md) |
+| **Repository Service** | Regras de negócio + repositório | [Documentação](pt-br/database/use-service.md) |
+| **Specification** | Filtros reutilizáveis | [Documentação](pt-br/specification.md) |
+| **CQRS** | Separação de leitura/escrita | [Documentação](pt-br/cqrs/home.md) |
+| **Event Sourcing** | Persistência por eventos | [Documentação](pt-br/cqrs/event-sourcing/home.md) |
+| **Saga** | Transações distribuídas | [Documentação](pt-br/cqrs/saga/home.md) |
+
+## 🔧 Modernização .NET 9
+
+Funcionalidades nativas do .NET 9 integradas:
+
+| Funcionalidade | Descrição | Link |
+|----------------|-----------|------|
+| **HybridCache** | Cache L1 + L2 com stampede protection | [Documentação](pt-br/modernization/hybrid-cache.md) |
+| **TimeProvider** | Abstração de tempo para testes | [Documentação](pt-br/modernization/time-provider.md) |
+| **Rate Limiting** | Limitação de requisições nativa | [Documentação](pt-br/modernization/rate-limiting.md) |
+| **Channels** | Producer/Consumer de alta performance | [Documentação](pt-br/modernization/channels.md) |
+| **TypedResults** | Minimal APIs tipadas | [Documentação](pt-br/modernization/minimal-apis.md) |
+
+## 📚 Próximos Passos
+
+1. **Escolha seu banco de dados** e configure seguindo a documentação
+2. **Configure o CQRS** se precisar de Commands/Queries estruturados
+3. **Adicione observabilidade** para monitoramento em produção
+4. **Explore os exemplos** em [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples)

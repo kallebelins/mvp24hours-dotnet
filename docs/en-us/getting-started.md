@@ -1,54 +1,163 @@
 # Getting Started
+
 Each architectural solution must be built based on technical and/or business needs.
 The objective of this library is to ensure agility in the construction of digital products through structures, mechanisms and tools that, when combined correctly, offer robustness, security, performance, monitoring, observability, resilience and consistency.
-Below are the main references for RESTful API for persistence and service integration.
 
-## Relational Database
-It is a database that allows you to create relationships between them with the aim of guaranteeing data consistency and integrity.
+## 🚀 Quick Installation
 
-* [SQL Server](en-us/database/relational?id=sql-server)
-* [PostgreSql](en-us/database/relational?id=postgresql)
-* [MySql](en-us/database/relational?id=mysql)
+```bash
+# Core (required)
+dotnet add package Mvp24Hours.Core
 
-## NoSql Database
-NoSQL is a generic term that represents a non-relational database.
+# Choose your data module
+dotnet add package Mvp24Hours.Infrastructure.Data.EFCore    # SQL Server, PostgreSQL, MySQL
+dotnet add package Mvp24Hours.Infrastructure.Data.MongoDb   # MongoDB
 
-### Document-Oriented
-> It is a type of non-relational database designed to store and query data as JSON-type documents. [What is a document database](https://aws.amazon.com/pt/nosql/document/)
+# CQRS and Mediator (recommended)
+dotnet add package Mvp24Hours.Infrastructure.Cqrs
 
-[MongoDb](en-us/database/nosql?id=mongodb)
+# WebAPI
+dotnet add package Mvp24Hours.WebAPI
 
-### Key-value Oriented
-It is a map or dictionary type data structure, where we use a key as a record identifier.
+# Messaging
+dotnet add package Mvp24Hours.Infrastructure.RabbitMQ
 
-[Redis](en-us/database/nosql?id=redis)
+# Caching
+dotnet add package Mvp24Hours.Infrastructure.Caching
+```
 
-## Message Broker
-A message broker is software that enables applications, systems and services to communicate and exchange information.
+## 📋 Features Guide
 
-[RabbitMQ](en-us/broker.md)
+### 🗄️ Relational Database
+A database that allows you to create relationships between them to guarantee data consistency and integrity.
 
-## Pipeline
-It is a design pattern that represents a pipe with several operations (filters), executed sequentially, with the aim of traveling, integrating and/or handling a packet/message.
+| Database | Link |
+|----------|------|
+| SQL Server | [Configuration](en-us/database/relational?id=sql-server) |
+| PostgreSQL | [Configuration](en-us/database/relational?id=postgresql) |
+| MySQL | [Configuration](en-us/database/relational?id=mysql) |
 
-[Pipeline](en-us/pipeline.md)
+**Advanced features:**
+- Interceptors (Audit, SoftDelete, Concurrency, SlowQuery)
+- Multi-tenancy with automatic query filters
+- Bulk Operations (Insert, Update, Delete)
+- Integrated Specification Pattern
+- Read/Write splitting for replicas
 
-## Documentation
-The habit of documenting interfaces and data classes (value objects, dtos, entities, ...) can help to facilitate code maintenance. Swagger allows you to easily document your RESTful API by sharing with other developers how they can consume the available resources.
+### 🍃 NoSQL Database
 
-[Swagger](en-us/swagger.md)
+#### Document-Oriented
+> Database designed to store and query data as JSON documents.
 
-## Mapping
-With the practice of RESTful API development with a focus on mobile, our reference is to offer as little data as possible or necessary in each API resource. Therefore, there is a need to create specific traffic objects (DTOs).
-AutoMapper helps in assigning property values of related objects (Person => PessoaDto), or better yet, mapping one object to another.
+[MongoDB](en-us/database/nosql?id=mongodb) - With Change Streams, GridFS, Geospatial queries
 
-[AutoMapper](en-us/automapper.md)
+#### Key-Value Oriented
+Map/dictionary data structure where we use a key as identifier.
 
-## Patterns
-Patterns are models that we use as a reference or basis for solving a problem. In addition to the patterns that we will present in the architectural definitions explored by this library, we explore the following references:
+[Redis](en-us/database/nosql?id=redis) - Distributed cache and locks
 
-* [Unit of Work](en-us/database/use-unitofwork.md)
-* [Repository](en-us/database/use-repository.md)
-* [Repository Service](en-us/database/use-service.md): We use it to apply business rules and encapsulate the repository
-* [Data Validation](en-us/validation.md): Data validation using fluent or annotations
-* [Specification](en-us/specification.md): Data filter
+### ⭐ CQRS and Mediator (New!)
+Command Query Responsibility Segregation pattern with custom Mediator.
+
+[CQRS](en-us/cqrs/home.md) - Complete documentation
+
+**Includes:**
+- Typed Commands and Queries
+- Pipeline Behaviors (Logging, Validation, Caching, Transaction, Retry)
+- Domain Events and Integration Events
+- Event Sourcing and Sagas
+- Idempotency and Scheduled Commands
+
+### 📨 Message Broker
+Software that enables applications, systems and services to communicate.
+
+[RabbitMQ](en-us/broker.md) - Enterprise messaging
+
+**Features:**
+- Typed consumers (`IMessageConsumer<T>`)
+- Request/Response pattern
+- Message Scheduling
+- Batch consumers
+- Sagas with state machines
+- Multi-tenancy
+
+### 📦 Pipeline
+Pipe and Filters pattern representing a pipe with multiple operations executed sequentially.
+
+[Pipeline](en-us/pipeline.md) - Complete documentation
+
+**Features:**
+- Typed pipeline (`IPipeline<TInput, TOutput>`)
+- Fork/Join for parallel flows
+- Saga Pattern with compensation
+- Checkpoint/Resume for long-running pipelines
+
+### 📊 Observability (New!)
+Complete observability stack with OpenTelemetry.
+
+[Observability](en-us/observability/home.md) - Complete documentation
+
+**Includes:**
+- Distributed tracing with Activities
+- Metrics (Counters, Histograms, Gauges)
+- Structured logs with ILogger
+- Exporters: OTLP, Console, Prometheus
+
+### ⏰ CronJob
+Background task scheduling with CRON expressions.
+
+[CronJob](en-us/cronjob.md) - Complete documentation
+
+**Features:**
+- Retry with circuit breaker
+- Distributed locking
+- Health checks
+- Metrics and OpenTelemetry
+
+### 📝 Documentation
+Document your RESTful API with Swagger/OpenAPI.
+
+[Swagger](en-us/swagger.md) - Configuration
+
+**New:** Native OpenAPI support (.NET 9)
+
+### 🔄 Mapping
+AutoMapper for object mapping (Entity ↔ DTO).
+
+[AutoMapper](en-us/automapper.md) - Configuration
+
+### ✅ Validation
+Data validation with FluentValidation or Data Annotations.
+
+[Validation](en-us/validation.md) - Documentation
+
+## 🏗️ Architectural Patterns
+
+| Pattern | Description | Link |
+|---------|-------------|------|
+| **Unit of Work** | Manages transactions and persistence | [Documentation](en-us/database/use-unitofwork.md) |
+| **Repository** | Data access abstraction | [Documentation](en-us/database/use-repository.md) |
+| **Repository Service** | Business rules + repository | [Documentation](en-us/database/use-service.md) |
+| **Specification** | Reusable filters | [Documentation](en-us/specification.md) |
+| **CQRS** | Read/Write separation | [Documentation](en-us/cqrs/home.md) |
+| **Event Sourcing** | Event-based persistence | [Documentation](en-us/cqrs/event-sourcing/home.md) |
+| **Saga** | Distributed transactions | [Documentation](en-us/cqrs/saga/home.md) |
+
+## 🔧 .NET 9 Modernization
+
+Native .NET 9 features integrated:
+
+| Feature | Description | Link |
+|---------|-------------|------|
+| **HybridCache** | L1 + L2 cache with stampede protection | [Documentation](en-us/modernization/hybrid-cache.md) |
+| **TimeProvider** | Time abstraction for testing | [Documentation](en-us/modernization/time-provider.md) |
+| **Rate Limiting** | Native request limiting | [Documentation](en-us/modernization/rate-limiting.md) |
+| **Channels** | High-performance Producer/Consumer | [Documentation](en-us/modernization/channels.md) |
+| **TypedResults** | Typed Minimal APIs | [Documentation](en-us/modernization/minimal-apis.md) |
+
+## 📚 Next Steps
+
+1. **Choose your database** and configure following the documentation
+2. **Configure CQRS** if you need structured Commands/Queries
+3. **Add observability** for production monitoring
+4. **Explore examples** at [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples)

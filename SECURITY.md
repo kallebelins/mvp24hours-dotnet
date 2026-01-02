@@ -6,11 +6,11 @@ Nós fornecemos atualizações de segurança para as seguintes versões do Mvp24
 
 | Versão | Suportada          | Suporte até       |
 | ------ | ------------------ | ----------------- |
-| 8.3.x  | ✅ Sim             | Atual             |
-| 8.2.x  | ✅ Sim             | Dez 2025          |
-| 8.1.x  | ⚠️ Limitado        | Jun 2025          |
-| 4.1.x  | ❌ Não             | EOL               |
-| < 4.0  | ❌ Não             | EOL               |
+| 9.1.x  | ✅ Sim             | Atual             |
+| 9.0.x  | ✅ Sim             | Jun 2027          |
+| 8.3.x  | ⚠️ Limitado        | Dez 2026          |
+| 8.2.x  | ❌ Não             | EOL               |
+| < 8.2  | ❌ Não             | EOL               |
 
 **Recomendação:** Sempre use a versão mais recente para garantir que você tenha as correções de segurança mais atualizadas.
 
@@ -247,5 +247,5 @@ Para questões relacionadas a segurança:
 
 **Obrigado por ajudar a manter o Mvp24Hours seguro! 🛡️**
 
-*Última atualização: Outubro 2025*
+*Última atualização: Janeiro 2026*
 

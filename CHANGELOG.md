@@ -5,50 +5,491 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não Lançado]
+## [9.1.200] - 2026-01 🚀 Major Release
 
-### Descontinuado (Deprecated)
-- **⚠️ Sistema de Telemetria Legado**: Marcado para remoção na próxima major version
-  - `TelemetryHelper` - Use `ILogger<T>` (Microsoft.Extensions.Logging) em seu lugar
-  - `TelemetryLevels` enum - Use `Microsoft.Extensions.Logging.LogLevel` em seu lugar
-  - `ITelemetryService` interface - Use `ILogger<T>` ou implemente `ILoggerProvider` em seu lugar
-  - `AddMvp24HoursTelemetry()` extensions - Use `AddLogging()` em seu lugar
-  - `AddMvp24HoursTelemetryFiltered()` extensions - Use `AddLogging()` com `AddFilter()` em seu lugar
-  - `AddMvp24HoursTelemetryIgnore()` extensions - Use `AddLogging()` com filtros configurados em seu lugar
-  - **Guia de Migração**: Consulte `docs/pt-br/observability/migration.md` (PT-BR) ou `docs/en-us/observability/migration.md` (EN-US)
-  - **Motivação**: Adoção do padrão da indústria (`ILogger<T>`) e OpenTelemetry para observabilidade moderna
+> **Migração para .NET 9** - Esta versão introduz mudanças significativas para adotar as APIs nativas do .NET 9.
+> Consulte o guia de migração em `docs/pt-br/modernization/migration-guide.md` ou `docs/en-us/modernization/migration-guide.md`.
 
 ### Adicionado
-- **Documentação de Migração de Observabilidade**: Guias completos bilíngues para migração do TelemetryHelper
-  - `docs/pt-br/observability/migration.md` - Guia em português
-  - `docs/en-us/observability/migration.md` - Guia em inglês
-  - Exemplos de código antes/depois
-  - Checklist de migração
-  - Mapeamento de APIs antigas para novas
-- Hierarquia completa de exceções customizadas para melhor tratamento de erros
-  - `Mvp24HoursException` - Exceção base com ErrorCode e Context
-  - `DataException` - Erros de acesso a dados
-  - `ValidationException` - Falhas de validação com lista de erros
-  - `BusinessException` - Violações de regras de negócio
-  - `ConfigurationException` - Problemas de configuração
-  - `PipelineException` - Erros em operações de pipeline
-- Documentação XML completa e profissional para interfaces principais
-  - `IQuery<T>` com exemplos práticos e warnings de performance
-  - `ICommand<T>` com explicações de soft delete e auditoria
-  - `IUnitOfWork` com documentação do padrão e transações
-  - `IRepository<T>` com referências cruzadas
-- Plano estruturado de melhorias com 156 tarefas organizadas em 7 categorias
-- Suporte completo a nullable reference types (C# 8+)
 
-### Melhorado
-- Documentação de todas as interfaces com tags `<remarks>`, `<example>`, `<exception>`
-- Organização e clareza dos comentários de código
-- IntelliSense mais informativo com exemplos executáveis
-- Estrutura de exceções mais robusta e rastreável
+#### Biblioteca CQRS Completa (Mvp24Hours.Infrastructure.Cqrs)
+- `IMediator`, `ISender`, `IPublisher` - interfaces principais do Mediator
+- `IMediatorCommand<TResponse>`, `IMediatorCommand` - commands CQRS
+- `IMediatorQuery<TResponse>` - queries CQRS
+- `IMediatorNotification` - sistema de notificações in-process
+- `IMediatorRequestHandler<TRequest, TResponse>` - handlers genéricos
+- Pipeline Behaviors:
+  - `LoggingBehavior` - log de início, fim e tempo
+  - `PerformanceBehavior` - alerta de requisições lentas
+  - `UnhandledExceptionBehavior` - captura e log de exceções
+  - `ValidationBehavior` - integração com FluentValidation
+  - `CachingBehavior` - cache com IDistributedCache
+  - `TransactionBehavior` - integração com IUnitOfWork
+  - `AuthorizationBehavior` - autorização via policies
+  - `RetryBehavior` - retry com backoff exponencial
+  - `TimeoutBehavior` - timeout configurável por request
+  - `CircuitBreakerBehavior` - circuit breaker para commands
+  - `IdempotencyBehavior` - prevenção de duplicatas
+- Domain Events:
+  - `IDomainEvent` e `DomainEventBase`
+  - `IDomainEventHandler<TEvent>` e `DomainEventDispatcher`
+  - `IHasDomainEvents` para entidades/agregados
+  - `SaveChangesWithEventsAsync` para EFCore e MongoDB
+- Integration Events:
+  - `IIntegrationEvent` e `IntegrationEventBase`
+  - `IIntegrationEventHandler<TEvent>`
+  - `IIntegrationEventOutbox` e `InMemoryIntegrationEventOutbox`
+  - `RabbitMqIntegrationEventPublisher`
+- Event Sourcing:
+  - `IEventStore` e `EventStream`
+  - `AggregateRoot<TId>` com Apply/Raise
+  - `Snapshot` e `SnapshotStore`
+  - `EventStoreRepository<T>`
+  - `IProjection`, `IProjectionHandler<TEvent>`, `ProjectionManager`
+- Saga/Process Manager:
+  - `ISaga<TData>`, `SagaBase<TData>`
+  - `ISagaOrchestrator` e `ISagaStateStore`
+  - `CompensatingCommand` para rollback
+  - Timeout e expiração de sagas
+- Observabilidade CQRS:
+  - `IRequestContext` com CorrelationId/CausationId
+  - `RequestContextBehavior` para propagação de contexto
+  - `AuditBehavior` e `IAuditStore`
+- Multi-tenancy:
+  - `ITenantContext`, `TenantBehavior`
+  - `ICurrentUser`, `CurrentUserBehavior`
+  - Filtros automáticos por tenant em queries
+- Inbox/Outbox:
+  - `InboxMessage`, `IInboxStore`, `InboxProcessor`
+  - `OutboxProcessor` com retry e DLQ
+- Scheduled Commands:
+  - `IScheduledCommand`, `ICommandScheduler`
+  - `ScheduledCommandHostedService`
+- Decorators e Extensibilidade:
+  - `IPreProcessor<TRequest>`, `IPostProcessor<TRequest, TResponse>`
+  - `IExceptionHandler<TRequest, TException>`
+- Streaming: `IStreamRequest<T>`, `IStreamRequestHandler<T>` com IAsyncEnumerable
+
+#### Modernização .NET 9
+- **HybridCache** (Microsoft.Extensions.Caching.Hybrid):
+  - `AddMvpHybridCache()` para configuração
+  - `HybridCacheProvider` como `ICacheProvider`
+  - Tags para invalidação em grupo
+  - `InMemoryHybridCacheTagManager` e `RedisHybridCacheTagManager`
+- **TimeProvider**:
+  - `TimeProviderAdapter` (ponte TimeProvider → IClock)
+  - `ClockAdapter` (ponte IClock → TimeProvider)
+  - `AddTimeProvider()`, `AddClock()`, `ReplaceTimeProvider()`
+  - `FakeTimeProviderHelper` para testes
+- **PeriodicTimer**:
+  - `PeriodicTimerHelper` com padrões comuns
+  - Migração de todos os background services
+- **System.Threading.RateLimiting**:
+  - `IRateLimiterProvider`, `NativeRateLimiterProvider`
+  - `RateLimitingPipelineMiddleware` para Pipeline
+  - `RateLimitingConsumeFilter`, `RateLimitingPublishFilter` para RabbitMQ
+- **System.Threading.Channels**:
+  - `IChannel<T>`, `MvpChannel<T>`
+  - `ChannelFactory`, `ProducerConsumer<T>`
+  - `ChannelPipeline<TInput, TOutput>`
+  - `ChannelBatchProcessor<T>`
+- **Microsoft.Extensions.Http.Resilience**:
+  - `AddHttpClientWithStandardResilience()`
+  - `NativeResilienceOptions` com presets
+  - `NativeResilienceBuilder` para configuração customizada
+- **Microsoft.Extensions.Resilience**:
+  - `INativeResiliencePipeline`, `NativeResiliencePipeline`
+  - `NativeDbResilienceExtensions` para EFCore
+  - `NativeMongoDbResilienceExtensions` para MongoDB
+  - `NativePipelineResilienceMiddleware` para Pipe
+  - `NativeResilienceBehavior` para CQRS
+- **ProblemDetails (RFC 7807)**:
+  - `AddNativeProblemDetails()`, `AddNativeProblemDetailsAll()`
+  - `UseNativeProblemDetailsHandling()`
+  - Helpers: `NotFoundProblem()`, `ValidationProblem()`, `ConflictProblem()`, etc.
+- **TypedResults (.NET 9)**:
+  - `ToNativeTypedResult()` para `IBusinessResult<T>`
+  - `MapNativeCommand<T>()`, `MapNativeQuery<T>()` para CQRS
+  - Filtros: NativeValidation, ExceptionHandling, Logging, CorrelationId, Idempotency, Timeout
+- **Source Generators**:
+  - `Mvp24HoursJsonSerializerContext` para serialização AOT
+  - `[LoggerMessage]` em todos os módulos (CoreLoggerMessages, PipelineLoggerMessages, etc.)
+- **OpenAPI Nativo**:
+  - `AddMvp24HoursNativeOpenApi()`, `MapMvp24HoursNativeOpenApi()`
+  - `SecuritySchemeTransformer`, `OpenApiDocumentTransformers`
+- **Keyed Services**:
+  - `ServiceKeys.cs` com constantes
+  - `KeyedServiceExtensions.cs`
+- **Output Caching**:
+  - `AddMvp24HoursOutputCache()`, `AddMvp24HoursOutputCacheWithRedis()`
+  - `IOutputCacheInvalidator`
+  - Políticas: Short, Medium, Long, VeryLong, NoCache, Authenticated, Api
+- **.NET Aspire 9**:
+  - `AddMvp24HoursAspireDefaults()`
+  - `AddMvp24HoursRedisFromAspire()`, `AddMvp24HoursRabbitMQFromAspire()`
+  - `AddMvp24HoursSqlServerFromAspire()`, `AddMvp24HoursMongoDbFromAspire()`
+- **IOptions<T> Validation**:
+  - `IOptionsValidator<T>`, `OptionsValidatorBase<T>`
+  - `AddOptionsWithValidation<T>()`, `AddOptionsWithValidation<T, TValidator>()`
+  - `AddOptionsValidatorsFromAssembly()`
+
+#### Observabilidade (ILogger + OpenTelemetry)
+- OpenTelemetry Tracing:
+  - `ActivitySources` para todos os módulos (Core, Pipeline, Repository, Mediator, RabbitMQ, CronJob, HttpClient)
+  - `ActivityHelper` com convenções semânticas
+  - `IActivityEnricher` para enriquecimento customizável
+  - `TracePropagation` com W3C Trace Context
+- OpenTelemetry Metrics:
+  - `MetricSources` com Meters por módulo
+  - `PipelineMetrics`, `RepositoryMetrics`, `MessagingMetrics`, `CqrsMetrics`, `CacheMetrics`, `HttpMetrics`, `CronJobMetrics`
+  - `MetricNames.cs` com convenções semânticas
+- OpenTelemetry Logs:
+  - Integração `ILogger` ↔ OpenTelemetry Logs
+  - Correlação automática logs ↔ traces (TraceId, SpanId)
+  - Log sampling para ambientes de alta carga
+- Contexto e Correlação:
+  - `ICorrelationIdAccessor`, `CorrelationIdAccessor`
+  - `CorrelationIdMiddleware`, `RequestContextMiddleware`
+  - `BaggagePropagation` para TenantId, UserId
+  - `ILogEnricher` (UserContextLogEnricher, TenantContextLogEnricher)
+- Configuração:
+  - `AddMvp24HoursLogging()`, `AddMvp24HoursTracing()`, `AddMvp24HoursMetrics()`
+  - `AddMvp24HoursObservability()` - all-in-one
+  - `AddMvp24HoursOpenTelemetry()` com OTLP, Console, Prometheus exporters
+  - `ObservabilityOptions` centralizado
+- Testabilidade:
+  - `FakeLogger<T>`, `InMemoryLoggerProvider`
+  - `FakeActivityListener`, `FakeMeterListener`
+  - `LogAssertions`, `ActivityAssertions`, `MetricAssertions`
+  - `ObservabilityTestFixture`
+
+#### EFCore Avançado
+- Interceptors:
+  - `AuditSaveChangesInterceptor`
+  - `SoftDeleteInterceptor`
+  - `ConcurrencyInterceptor`
+  - `CommandLoggingInterceptor`
+  - `SlowQueryInterceptor`
+  - `TenantSaveChangesInterceptor`
+  - `StructuredLoggingInterceptor`
+- Multi-tenancy:
+  - `ITenantProvider`, query filters automáticos
+  - `TenantModelBuilderExtensions`
+  - `RowLevelSecurityHelper`
+- Performance:
+  - `AsNoTracking()` configurável, `AsNoTrackingWithIdentityResolution()`
+  - Compiled queries, Split queries
+  - `IAsyncEnumerable<T>` streaming
+  - Query tags (`TagWith()`)
+  - `ProjectTo<TDto>` com AutoMapper
+- Bulk Operations:
+  - `BulkInsertAsync()`, `BulkUpdateAsync()`, `BulkDeleteAsync()`
+  - Progress callback
+  - `ExecuteUpdate`, `ExecuteDelete` (.NET 7+)
+- Specification Pattern:
+  - `GetBySpecificationAsync()`, `CountBySpecificationAsync()`, `AnyBySpecificationAsync()`
+  - `IReadOnlyRepository<T>`, `IReadOnlyRepositoryAsync<T>`
+  - Cursor-based pagination (keyset)
+- Resiliência:
+  - `EnableRetryOnFailure()`, retry policies por exceção
+  - Timeout por query
+  - DbContext pooling
+- Health Checks:
+  - `SqlServerHealthCheck`, `PostgreSqlHealthCheck`, `MySqlHealthCheck`
+- Read/Write Splitting:
+  - `ConnectionResolver`, `ReplicaSelector`
+  - DbContext separado para leitura
+- Testabilidade:
+  - `UseInMemoryDatabase` helpers
+  - `IDataSeeder<T>`, `DbContextFactory`
+  - `IRepositoryFake<T>`
+
+#### MongoDB Avançado
+- Interceptors: `AuditInterceptor`, `SoftDeleteInterceptor`, `AuditTrailInterceptor`
+- Multi-tenancy: Query filters, `ITenantProvider`, Row-level security
+- Field-level encryption (CSFLE)
+- Bulk operations: `BulkInsertAsync()`, `BulkUpdateAsync()`, `BulkDeleteAsync()`
+- Change Streams para eventos real-time
+- GridFS para arquivos grandes
+- Time Series Collections
+- Geospatial queries
+- Text search indexes
+- Resiliência: Connection resiliency, Circuit breaker, Retry policies
+- Health checks: Conectividade, Replica set status, Índices
+- Read preference configurável
+- Testabilidade: In-memory provider, `IRepositoryFake<T>`, Testcontainers helpers
+
+#### RabbitMQ Enterprise
+- Consumers tipados:
+  - `IMessageConsumer<TMessage>`, `ConsumeContext<TMessage>`
+  - `IMessage<TPayload>`, `IMessageSerializer`
+  - `ConsumerDefinition<TConsumer>`
+  - `IFaultConsumer<TMessage>`
+- Request/Response:
+  - `IRequestClient<TRequest, TResponse>`
+  - `Response<T>` wrapper
+  - `IRequestHandler<TRequest, TResponse>`
+  - `RequestTimeoutException`
+- Message Scheduling:
+  - `IMessageScheduler`
+  - `ScheduleMessage<T>()` por DateTime ou TimeSpan
+  - `CancelScheduledMessage()`
+  - Recurring messages
+- Pipeline/Middleware:
+  - `IConsumeFilter<TMessage>`, `IPublishFilter<TMessage>`, `ISendFilter`
+  - Filtros: Logging, ExceptionHandling, Correlation, Telemetry, Validation
+- Topologia:
+  - `IEndpointNameFormatter`, `IMessageTopology<TMessage>`
+  - Topic Exchange, Fanout Exchange
+  - Auto-binding, Exchange-to-exchange bindings
+- Batch Consumers:
+  - `IBatchConsumer<TMessage>`, `BatchConsumeContext<TMessage>`
+  - Batch size, timeout, parallel processing
+- Transactional Messaging:
+  - `ITransactionalBus`
+  - Integração com `IUnitOfWork`
+  - `InMemoryOutbox`
+- Sagas:
+  - `ISagaConsumer<TData, TMessage>`
+  - `SagaStateMachine<TInstance>`
+  - Saga persistence (Redis, SQL, MongoDB)
+- Multi-tenancy:
+  - Virtual hosts por tenant
+  - `ITenantConsumeFilter`
+  - Connection pool por tenant
+- API Fluente: `AddMvpRabbitMQ(cfg => { cfg.Host(); cfg.AddConsumer<T>(); })`
+- Observabilidade: ActivitySource, Métricas Prometheus
+- Testing: `InMemoryBus`, `TestHarness`, `TestConsumeContext<T>`
+
+#### Pipeline Avançado
+- Tipagem:
+  - `IPipeline<TInput, TOutput>`, `ITypedOperation<TInput, TOutput>`
+  - API fluente `.Pipe<TIn, TOut>().Then<TNext>().Finally()`
+  - `IOperationResult<T>`, `OperationChain<T>`
+- Contexto:
+  - `IPipelineContext` (CorrelationId, CausationId, Metadata, User)
+  - State Snapshots
+  - Activity spans
+- Fluxo Avançado:
+  - Fork/Join pattern
+  - Dependency Graph
+  - OperationPriority
+  - Saga Pattern com compensação
+  - Checkpoint/Resume
+- Observabilidade:
+  - Métricas por operação (duration, memory, success rate)
+  - Logging estruturado
+  - Pipeline Visualization (diagrama de fluxo)
+  - Health Check agregado
+  - Eventos: OnOperationStart, OnOperationEnd, OnPipelineComplete
+- Integração: FluentValidation, IAsyncEnumerable, IDistributedCache, OpenTelemetry
+
+#### WebAPI
+- Exception Handling:
+  - ProblemDetails (RFC 7807)
+  - `ExceptionToProblemDetailsMapper`
+  - Mapeamento de exceções de domínio para HTTP status codes
+- Rate Limiting:
+  - Políticas por IP, User, API Key
+  - Fixed/Sliding Window, Token Bucket
+  - Headers X-RateLimit-*
+  - Redis para distribuído
+- Idempotência:
+  - `IdempotencyKeyMiddleware`
+  - Integração com `IIdempotentCommand`
+  - Retry-after headers
+- Segurança:
+  - Security headers (HSTS, CSP, X-Frame-Options)
+  - API Key authentication
+  - IP filtering
+  - Input sanitization
+- Observabilidade:
+  - Request/Response logging com masking
+  - OpenTelemetry tracing
+  - Métricas de endpoints
+  - Correlation ID propagation
+- API Versioning: URL, Header, Query String
+- Health Checks: `/health`, `/health/ready`, `/health/live`
+- Minimal APIs:
+  - `MapCommand<T>()`, `MapQuery<T>()`
+  - Endpoint filters
+  - `TypedResults` helpers
+
+#### Application Layer
+- Services:
+  - `IApplicationService<TEntity, TDto>`, `ApplicationServiceBase<T>`
+  - `IApplicationService<TEntity, TDto, TCreateDto, TUpdateDto>`
+  - `QueryService`, `CommandService` (CQRS light)
+  - `IReadOnlyApplicationService<T>`
+- AutoMapper integrado
+- Validation pipeline com `IValidationService<T>`
+- Transaction scope com `[Transactional]`
+- Specification Pattern: `GetBySpecificationAsync<TSpec>()`
+- Exception handling: `ExceptionToResultMapper`, Result status codes
+- Observabilidade: Logging, Audit trail, OpenTelemetry, Correlation ID
+- Cache: `[Cacheable]`, invalidação automática
+- Pagination: `PagedResult<T>`, cursor-based
+- Soft delete automático
+
+#### Infrastructure Base
+- HTTP Client:
+  - `ITypedHttpClient<TApi>`, `HttpClientBuilder`
+  - Delegating handlers: Logging, Auth, Correlation, Telemetry, Retry, CircuitBreaker, Timeout, Compression
+  - Polly resilience
+- Distributed Locking:
+  - `IDistributedLock`, `IDistributedLockFactory`
+  - Providers: Redis (RedLock), SQL Server, PostgreSQL, InMemory
+- File Storage:
+  - `IFileStorage`
+  - Providers: Local, Azure Blob, AWS S3, InMemory
+  - Presigned URLs, versioning, soft delete
+- Email Service:
+  - `IEmailService`, `EmailMessage`
+  - Providers: SMTP, SendGrid, Azure Communication, InMemory
+  - Template engine (Razor, Scriban)
+- SMS Service:
+  - `ISmsService`, `SmsMessage`
+  - Providers: Twilio, Azure Communication, InMemory
+- Background Jobs:
+  - `IJobScheduler`, `IBackgroundJob`
+  - Providers: Hangfire, Quartz, InMemory
+  - Fire-and-forget, Delayed, Recurring, Continuations, Batches
+- Secret Providers:
+  - `ISecretProvider`
+  - Azure KeyVault, AWS Secrets Manager, Environment Variables
+- Health Checks para todos os subsistemas
+
+#### Caching Avançado
+- `ICacheProvider`: Memory, Distributed, HybridCache
+- Patterns: Cache-Aside, Read-Through, Write-Through, Write-Behind, Refresh-Ahead
+- Multi-level cache (L1 + L2)
+- Invalidação: Tags, Pub/sub, Dependency tracking
+- Resiliência: Circuit breaker, Fallback, Graceful degradation
+- Performance: Compression, Batch operations, Prefetching, Warming
+- Observabilidade: Metrics, Tracing, Health checks
+
+#### CronJob Melhorado
+- Correções: Memory leak, IAsyncDisposable, PeriodicTimer
+- Resiliência: Retry policy, Circuit breaker, Overlapping control, Graceful shutdown
+- Observabilidade: Health checks, Métricas, OpenTelemetry spans, Logging estruturado
+- Funcionalidades:
+  - `ICronJobContext` (JobId, StartTime, Attempt)
+  - CRON de 6 campos (segundos)
+  - Job dependencies
+  - Distributed locking
+  - `ICronJobStateStore`
+  - Pausar/resumir em runtime
+  - Hooks: OnJobStarting, OnJobCompleted, OnJobFailed
+- Configuração: `CronJobOptions<T>`, `CronJobGlobalOptions`, appsettings.json, validação no startup
+
+#### Core Fundamentals
+- Guard clauses: `Guard.Against.Null`, `NullOrEmpty`, `OutOfRange`, `NegativeOrZero`, `InvalidEmail`, `InvalidCpf`, `InvalidCnpj`, `Default`, `InvalidFormat`
+- ValueObjects: Email, Cpf, Cnpj, Money, Address, DateRange, Percentage, PhoneNumber (com TryParse e implicit operators)
+- Strongly-typed IDs: `EntityId<T>` com conversores EF Core e JSON
+- Functional patterns: `Maybe<T>`, `Either<TLeft, TRight>` com Map, Bind, Match
+- Smart Enums: `Enumeration<T>` com FromValue, FromName, GetAll
+- Entity interfaces: `IEntity<TId>`, `IAuditableEntity`, `ISoftDeletable`, `ITenantEntity`, `IVersionedEntity`
+- `IClock`, `SystemClock`, `TestClock`
+- `IGuidGenerator`, `SequentialGuidGenerator`
+- Nullable reference types
+
+#### Exceções
+- `NotFoundException`, `ConflictException`, `UnauthorizedException`, `ForbiddenException`, `DomainException`
+- ErrorCode padronizado
+
+#### BusinessResult Melhorado
+- `BusinessResult.Success<T>()`, `BusinessResult.Failure<T>()`, `BusinessResult.From<T>()`
+- `Match<TResult>()`, `Bind<TNew>()`
+- Implicit operators
+- `BusinessResultFunctionalExtensions`: Map, Tap, Ensure
+- `IStructuredMessageResult` com código de erro estruturado
+
+### Descontinuado (Deprecated)
+
+> **⚠️ APIs marcadas para remoção na próxima major version**
+
+- **Telemetria Legada**:
+  - `TelemetryHelper` → Use `ILogger<T>`
+  - `TelemetryLevels` → Use `LogLevel`
+  - `ITelemetryService` → Use `ILogger<T>`
+  - `AddMvp24HoursTelemetry()` → Use `AddMvp24HoursObservability()`
+  - **Guia de Migração**: `docs/*/observability/migration.md`
+
+- **Resiliência HTTP Legada**:
+  - `HttpClientExtensions` → Use `AddStandardResilienceHandler()`
+  - `HttpPolicyHelper` → Use `Microsoft.Extensions.Http.Resilience`
+  - `HttpClientResilienceExtensions` → Use APIs nativas
+  - **Guia de Migração**: `docs/*/modernization/http-resilience.md`
+
+- **Resiliência Genérica Legada**:
+  - `MvpExecutionStrategy` → Use `ResiliencePipeline`
+  - `MongoDbResiliencyPolicy` → Use `ResiliencePipeline`
+  - `RetryPipelineMiddleware` → Use `NativePipelineResilienceMiddleware`
+  - `CircuitBreakerPipelineMiddleware` → Use `NativePipelineResilienceMiddleware`
+  - `RetryPolicy<T>`, `CircuitBreaker<T>` → Use `ResiliencePipeline`
+  - **Guia de Migração**: `docs/*/modernization/generic-resilience.md`
+
+- **Cache Legado**:
+  - `MultiLevelCache` → Use `HybridCache`
+  - **Guia de Migração**: `docs/*/modernization/hybrid-cache.md`
 
 ### Documentação
-- Roadmap de melhorias: `docs/tasks.md`
-- 156 tarefas categorizadas e priorizadas
+
+#### Nova Estrutura
+- `docs/pt-br/cqrs/` - Documentação CQRS completa (20+ documentos)
+- `docs/en-us/cqrs/` - CQRS documentation (20+ documents)
+- `docs/pt-br/core/` - Documentação Core (10 documentos)
+- `docs/en-us/core/` - Core documentation (10 documents)
+- `docs/pt-br/observability/` - Observabilidade (6 documentos)
+- `docs/en-us/observability/` - Observability (6 documents)
+- `docs/pt-br/modernization/` - Modernização .NET 9 (15+ documentos)
+- `docs/en-us/modernization/` - .NET 9 Modernization (15+ documents)
+
+#### Documentos CQRS
+- home.md, getting-started.md, mediator.md, commands.md, queries.md
+- notifications.md, behaviors.md, validation-behavior.md
+- domain-events.md, integration-events.md
+- integration-unitofwork.md, integration-repository.md, integration-rabbitmq.md, integration-caching.md
+- concepts-comparison.md, migration-mediatr.md, best-practices.md, api-reference.md
+- event-sourcing/*, saga/*, resilience/*, observability/*
+- multi-tenancy.md, scheduled-commands.md, specifications.md
+
+#### Documentos Core
+- home.md, guard-clauses.md, value-objects.md, strongly-typed-ids.md
+- functional-patterns.md, smart-enums.md, infrastructure-abstractions.md, entity-interfaces.md
+
+#### Documentos Observability
+- home.md, logging.md, tracing.md, metrics.md, migration.md, exporters.md
+
+#### Documentos Modernization
+- dotnet9-features.md, migration-guide.md
+- http-resilience.md, generic-resilience.md, rate-limiting.md
+- time-provider.md, periodic-timer.md, options-configuration.md, channels.md
+- hybrid-cache.md, output-caching.md, keyed-services.md
+- problem-details.md, minimal-apis.md, source-generators.md
+- native-openapi.md, aspire.md
+
+### Testes
+
+- 1099+ tarefas concluídas (86.6% do plano)
+- 1000+ testes unitários
+- Testes de integração com Testcontainers (SQL Server, MongoDB)
+- Benchmarks de performance vs MediatR
+- Helpers de teste para observabilidade
+
+### Melhorado
+
+- Performance geral com .NET 9 e source generators
+- Tipagem com nullable reference types
+- Documentação XML em todas as APIs públicas
+- IntelliSense com exemplos práticos
+
+### Corrigido
+
+- Memory leak em CronJob `ResetServiceProvider`
+- Diversos warnings de nullability
+
+---
 
 ## [8.3.261] - 2024
 
