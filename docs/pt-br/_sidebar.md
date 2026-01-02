@@ -111,5 +111,22 @@
 * * [Padrões de Observabilidade](pt-br/ai-context/observability-patterns.md)
 * * [Padrões de Modernização](pt-br/ai-context/modernization-patterns.md)
 * * [Estrutura de Projetos](pt-br/ai-context/project-structure.md)
+* * Detalhes de Estrutura de Projetos
+* * * [Estrutura Minimal API](pt-br/ai-context/structure-minimal-api.md)
+* * * [Estrutura Simple N-Layers](pt-br/ai-context/structure-simple-nlayers.md)
+* * * [Estrutura Complex N-Layers](pt-br/ai-context/structure-complex-nlayers.md)
+* * Templates Avançados
+* * * [Template CQRS](pt-br/ai-context/template-cqrs.md)
+* * * [Template Event-Driven](pt-br/ai-context/template-event-driven.md)
+* * * [Template Hexagonal](pt-br/ai-context/template-hexagonal.md)
+* * * [Template Clean Architecture](pt-br/ai-context/template-clean-architecture.md)
+* * * [Template DDD](pt-br/ai-context/template-ddd.md)
+* * * [Template Microservices](pt-br/ai-context/template-microservices.md)
+* * Documentação Complementar
+* * * [Padrões de Testes](pt-br/ai-context/testing-patterns.md)
+* * * [Padrões de Segurança](pt-br/ai-context/security-patterns.md)
+* * * [Padrões de Tratamento de Erros](pt-br/ai-context/error-handling-patterns.md)
+* * * [Padrões de Versionamento de API](pt-br/ai-context/api-versioning-patterns.md)
+* * * [Padrões de Containerização](pt-br/ai-context/containerization-patterns.md)
 * [Release](pt-br/release.md)
 * [Migração](pt-br/migration.md)

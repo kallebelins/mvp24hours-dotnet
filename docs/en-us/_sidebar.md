@@ -111,5 +111,22 @@
 * * [Observability Patterns](en-us/ai-context/observability-patterns.md)
 * * [Modernization Patterns](en-us/ai-context/modernization-patterns.md)
 * * [Project Structure](en-us/ai-context/project-structure.md)
+* * Project Structure Details
+* * * [Minimal API Structure](en-us/ai-context/structure-minimal-api.md)
+* * * [Simple N-Layers Structure](en-us/ai-context/structure-simple-nlayers.md)
+* * * [Complex N-Layers Structure](en-us/ai-context/structure-complex-nlayers.md)
+* * Advanced Templates
+* * * [CQRS Template](en-us/ai-context/template-cqrs.md)
+* * * [Event-Driven Template](en-us/ai-context/template-event-driven.md)
+* * * [Hexagonal Template](en-us/ai-context/template-hexagonal.md)
+* * * [Clean Architecture Template](en-us/ai-context/template-clean-architecture.md)
+* * * [DDD Template](en-us/ai-context/template-ddd.md)
+* * * [Microservices Template](en-us/ai-context/template-microservices.md)
+* * Complementary Documentation
+* * * [Testing Patterns](en-us/ai-context/testing-patterns.md)
+* * * [Security Patterns](en-us/ai-context/security-patterns.md)
+* * * [Error Handling Patterns](en-us/ai-context/error-handling-patterns.md)
+* * * [API Versioning Patterns](en-us/ai-context/api-versioning-patterns.md)
+* * * [Containerization Patterns](en-us/ai-context/containerization-patterns.md)
 * [Release](en-us/release.md)
 * [Migration](en-us/migration.md)

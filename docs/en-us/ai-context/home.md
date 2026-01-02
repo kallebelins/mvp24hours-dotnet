@@ -19,11 +19,24 @@ This section provides structured instructions and templates for AI agents to cre
 
 ## Available Architecture Templates
 
+### Basic Templates
+
 | Template | Complexity | Use Case |
 |----------|-----------|----------|
 | **Minimal API** | Low | Simple CRUD, microservices, rapid prototyping |
 | **Simple N-Layers** | Medium | Small to medium applications with basic business rules |
 | **Complex N-Layers** | High | Enterprise applications with complex business logic |
+
+### Advanced Templates
+
+| Template | Complexity | Use Case | Documentation |
+|----------|-----------|----------|---------------|
+| **CQRS** | High | Command/Query separation, read/write models | [template-cqrs.md](template-cqrs.md) |
+| **Event-Driven** | High | Audit trails, event sourcing, async communication | [template-event-driven.md](template-event-driven.md) |
+| **Hexagonal** | High | External integrations, infrastructure swap | [template-hexagonal.md](template-hexagonal.md) |
+| **Clean Architecture** | High | Domain-centric, enterprise applications | [template-clean-architecture.md](template-clean-architecture.md) |
+| **DDD** | Very High | Complex business rules, rich domain model | [template-ddd.md](template-ddd.md) |
+| **Microservices** | Very High | Independent deployments, team autonomy | [template-microservices.md](template-microservices.md) |
 
 ### Template Categories
 
@@ -37,6 +50,9 @@ This section provides structured instructions and templates for AI agents to cre
 - **CRUD**: Standard Create, Read, Update, Delete operations
 - **Pipeline**: Pipe and Filters pattern for complex workflows
 - **Ports & Adapters**: Hexagonal architecture for high decoupling
+- **CQRS**: Separate read and write models
+- **Event-Driven**: Domain events, integration events, event sourcing
+- **DDD**: Aggregates, value objects, domain services
 
 #### By Messaging
 - **Synchronous**: Direct API calls
@@ -172,13 +188,29 @@ AspNetCore.HealthChecks.UI.Client
 
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Decision Matrix](ai-context/decision-matrix.md)
-- [Database Patterns](ai-context/database-patterns.md)
-- [Messaging Patterns](ai-context/messaging-patterns.md)
-- [Observability Patterns](ai-context/observability-patterns.md)
-- [Modernization Patterns](ai-context/modernization-patterns.md)
-- [Project Structure](ai-context/project-structure.md)
+### Core Documentation
+- [Architecture Templates](architecture-templates.md)
+- [Decision Matrix](decision-matrix.md)
+- [Database Patterns](database-patterns.md)
+- [Messaging Patterns](messaging-patterns.md)
+- [Observability Patterns](observability-patterns.md)
+- [Modernization Patterns](modernization-patterns.md)
+- [Project Structure](project-structure.md)
+
+### Advanced Templates
+- [CQRS Template](template-cqrs.md)
+- [Event-Driven Template](template-event-driven.md)
+- [Hexagonal Template](template-hexagonal.md)
+- [Clean Architecture Template](template-clean-architecture.md)
+- [DDD Template](template-ddd.md)
+- [Microservices Template](template-microservices.md)
+
+### Complementary Documentation
+- [Testing Patterns](testing-patterns.md)
+- [Security Patterns](security-patterns.md)
+- [Error Handling Patterns](error-handling-patterns.md)
+- [API Versioning Patterns](api-versioning-patterns.md)
+- [Containerization Patterns](containerization-patterns.md)
 
 ---
 

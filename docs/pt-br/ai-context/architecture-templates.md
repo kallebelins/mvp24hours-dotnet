@@ -520,9 +520,36 @@ Veja [Padrões de Mensageria](ai-context/messaging-patterns.md) para implementa�
 
 ---
 
+## Templates Avançados
+
+Para padrões arquiteturais mais complexos, veja a documentação dedicada:
+
+| Template | Caso de Uso | Documentação |
+|----------|-------------|--------------|
+| **CQRS** | Command Query Responsibility Segregation | [template-cqrs.md](template-cqrs.md) |
+| **Event-Driven** | Event Sourcing, Domain Events | [template-event-driven.md](template-event-driven.md) |
+| **Hexagonal** | Ports & Adapters, Separação limpa | [template-hexagonal.md](template-hexagonal.md) |
+| **Clean Architecture** | Centrado em domínio, Regra de Dependência | [template-clean-architecture.md](template-clean-architecture.md) |
+| **DDD** | Aggregates, Value Objects, Domain Services | [template-ddd.md](template-ddd.md) |
+| **Microservices** | Decomposição de serviços, API Gateway | [template-microservices.md](template-microservices.md) |
+
+---
+
+## Documentação Complementar
+
+| Tópico | Caso de Uso | Documentação |
+|--------|-------------|--------------|
+| **Padrões de Testes** | Unitários, Integração, Mocking | [testing-patterns.md](testing-patterns.md) |
+| **Padrões de Segurança** | JWT, OAuth2, API Keys | [security-patterns.md](security-patterns.md) |
+| **Tratamento de Erros** | Exceções, ProblemDetails, Padrão Result | [error-handling-patterns.md](error-handling-patterns.md) |
+| **Versionamento de API** | URL Path, Query String, Header | [api-versioning-patterns.md](api-versioning-patterns.md) |
+| **Containerização** | Docker, Docker Compose, Health Checks | [containerization-patterns.md](containerization-patterns.md) |
+
+---
+
 ## Próximos Passos
 
-- [Matriz de Decisão](ai-context/decision-matrix.md) - Ajuda a escolher o template correto
-- [Padrões de Banco de Dados](ai-context/database-patterns.md) - Configurações específicas de banco
-- [Estrutura de Projetos](ai-context/project-structure.md) - Convenções detalhadas de estrutura
+- [Matriz de Decisão](decision-matrix.md) - Ajuda a escolher o template correto
+- [Padrões de Banco de Dados](database-patterns.md) - Configurações específicas de banco
+- [Estrutura de Projetos](project-structure.md) - Convenções detalhadas de estrutura
 

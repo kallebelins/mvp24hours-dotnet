@@ -19,11 +19,24 @@ Esta seção fornece instruções estruturadas e templates para agentes de IA cr
 
 ## Templates de Arquitetura Disponíveis
 
+### Templates Básicos
+
 | Template | Complexidade | Caso de Uso |
 |----------|-------------|-------------|
 | **Minimal API** | Baixa | CRUD simples, microsserviços, prototipagem rápida |
 | **Simple N-Layers** | Média | Aplicações pequenas a médias com regras de negócio básicas |
 | **Complex N-Layers** | Alta | Aplicações corporativas com lógica de negócio complexa |
+
+### Templates Avançados
+
+| Template | Complexidade | Caso de Uso | Documentação |
+|----------|-------------|-------------|--------------|
+| **CQRS** | Alta | Separação Command/Query, modelos de leitura/escrita | [template-cqrs.md](template-cqrs.md) |
+| **Event-Driven** | Alta | Trilhas de auditoria, event sourcing, comunicação async | [template-event-driven.md](template-event-driven.md) |
+| **Hexagonal** | Alta | Integrações externas, troca de infraestrutura | [template-hexagonal.md](template-hexagonal.md) |
+| **Clean Architecture** | Alta | Centrado em domínio, aplicações corporativas | [template-clean-architecture.md](template-clean-architecture.md) |
+| **DDD** | Muito Alta | Regras de negócio complexas, modelo de domínio rico | [template-ddd.md](template-ddd.md) |
+| **Microservices** | Muito Alta | Deploys independentes, autonomia de times | [template-microservices.md](template-microservices.md) |
 
 ### Categorias de Templates
 
@@ -37,6 +50,9 @@ Esta seção fornece instruções estruturadas e templates para agentes de IA cr
 - **CRUD**: Operações padrão de Criar, Ler, Atualizar, Excluir
 - **Pipeline**: Padrão Pipe and Filters para workflows complexos
 - **Ports & Adapters**: Arquitetura hexagonal para alto desacoplamento
+- **CQRS**: Modelos separados para leitura e escrita
+- **Event-Driven**: Domain events, integration events, event sourcing
+- **DDD**: Aggregates, value objects, domain services
 
 #### Por Mensageria
 - **Síncrona**: Chamadas diretas de API
@@ -172,13 +188,29 @@ AspNetCore.HealthChecks.UI.Client
 
 ## Documentação Relacionada
 
-- [Templates de Arquitetura](ai-context/architecture-templates.md)
-- [Matriz de Decisão](ai-context/decision-matrix.md)
-- [Padrões de Banco de Dados](ai-context/database-patterns.md)
-- [Padrões de Mensageria](ai-context/messaging-patterns.md)
-- [Padrões de Observabilidade](ai-context/observability-patterns.md)
-- [Padrões de Modernização](ai-context/modernization-patterns.md)
-- [Estrutura de Projetos](ai-context/project-structure.md)
+### Documentação Principal
+- [Templates de Arquitetura](architecture-templates.md)
+- [Matriz de Decisão](decision-matrix.md)
+- [Padrões de Banco de Dados](database-patterns.md)
+- [Padrões de Mensageria](messaging-patterns.md)
+- [Padrões de Observabilidade](observability-patterns.md)
+- [Padrões de Modernização](modernization-patterns.md)
+- [Estrutura de Projetos](project-structure.md)
+
+### Templates Avançados
+- [Template CQRS](template-cqrs.md)
+- [Template Event-Driven](template-event-driven.md)
+- [Template Hexagonal](template-hexagonal.md)
+- [Template Clean Architecture](template-clean-architecture.md)
+- [Template DDD](template-ddd.md)
+- [Template Microservices](template-microservices.md)
+
+### Documentação Complementar
+- [Padrões de Testes](testing-patterns.md)
+- [Padrões de Segurança](security-patterns.md)
+- [Padrões de Tratamento de Erros](error-handling-patterns.md)
+- [Padrões de Versionamento de API](api-versioning-patterns.md)
+- [Padrões de Containerização](containerization-patterns.md)
 
 ---
 

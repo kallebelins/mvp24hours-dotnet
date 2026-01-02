@@ -259,11 +259,71 @@ Before generating code, verify:
 
 ---
 
+## Advanced Template Selection
+
+### When to Use Advanced Templates
+
+| Template | Use When | Complexity |
+|----------|----------|------------|
+| **CQRS** | Read/write separation, different models for queries and commands | High |
+| **Event-Driven** | Audit requirements, event sourcing, async communication | High |
+| **Hexagonal** | Need to swap infrastructure easily, external integrations | High |
+| **Clean Architecture** | Domain-centric design, enterprise applications | High |
+| **DDD** | Complex business rules, rich domain model | Very High |
+| **Microservices** | Independent deployments, team autonomy, scalability | Very High |
+
+### Advanced Template Decision Tree
+
+```
+Is the business domain highly complex with many rules?
+├── YES
+│   ├── Need to track all state changes? → Event-Driven + DDD
+│   ├── Multiple bounded contexts? → DDD + Microservices
+│   └── Complex queries vs simple commands? → CQRS + DDD
+└── NO
+    ├── Need to swap external systems easily? → Hexagonal
+    ├── Multiple teams working independently? → Microservices
+    └── Use Complex N-Layers Template
+```
+
+### Advanced Template Selection Matrix
+
+| Requirement | CQRS | Event-Driven | Hexagonal | Clean | DDD | Microservices |
+|-------------|:----:|:------------:|:---------:|:-----:|:---:|:-------------:|
+| Scalability | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ |
+| Audit/History | ⚠️ | ✅ | ❌ | ⚠️ | ✅ | ⚠️ |
+| Team Autonomy | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ✅ |
+| Complex Domain | ⚠️ | ✅ | ⚠️ | ✅ | ✅ | ⚠️ |
+| External Integrations | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ | ✅ |
+| Testability | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Learning Curve | Medium | High | Medium | High | Very High | High |
+
+**Legend**: ✅ Excellent fit | ⚠️ Possible | ❌ Not recommended
+
+---
+
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Database Patterns](ai-context/database-patterns.md)
-- [Messaging Patterns](ai-context/messaging-patterns.md)
-- [Observability Patterns](ai-context/observability-patterns.md)
-- [Modernization Patterns](ai-context/modernization-patterns.md)
+- [Architecture Templates](architecture-templates.md)
+- [Database Patterns](database-patterns.md)
+- [Messaging Patterns](messaging-patterns.md)
+- [Observability Patterns](observability-patterns.md)
+- [Modernization Patterns](modernization-patterns.md)
+
+### Advanced Templates
+
+- [CQRS Template](template-cqrs.md)
+- [Event-Driven Template](template-event-driven.md)
+- [Hexagonal Template](template-hexagonal.md)
+- [Clean Architecture Template](template-clean-architecture.md)
+- [DDD Template](template-ddd.md)
+- [Microservices Template](template-microservices.md)
+
+### Complementary Documentation
+
+- [Testing Patterns](testing-patterns.md)
+- [Security Patterns](security-patterns.md)
+- [Error Handling Patterns](error-handling-patterns.md)
+- [API Versioning Patterns](api-versioning-patterns.md)
+- [Containerization Patterns](containerization-patterns.md)
 

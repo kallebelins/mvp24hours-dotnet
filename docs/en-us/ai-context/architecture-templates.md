@@ -759,9 +759,36 @@ See [Messaging Patterns](ai-context/messaging-patterns.md) for detailed implemen
 
 ---
 
+## Advanced Templates
+
+For more complex architectural patterns, see the dedicated documentation:
+
+| Template | Use Case | Documentation |
+|----------|----------|---------------|
+| **CQRS** | Command Query Responsibility Segregation | [template-cqrs.md](template-cqrs.md) |
+| **Event-Driven** | Event Sourcing, Domain Events | [template-event-driven.md](template-event-driven.md) |
+| **Hexagonal** | Ports & Adapters, Clean separation | [template-hexagonal.md](template-hexagonal.md) |
+| **Clean Architecture** | Domain-centric, Dependency Rule | [template-clean-architecture.md](template-clean-architecture.md) |
+| **DDD** | Aggregates, Value Objects, Domain Services | [template-ddd.md](template-ddd.md) |
+| **Microservices** | Service decomposition, API Gateway | [template-microservices.md](template-microservices.md) |
+
+---
+
+## Complementary Documentation
+
+| Topic | Use Case | Documentation |
+|-------|----------|---------------|
+| **Testing Patterns** | Unit, Integration, Mocking | [testing-patterns.md](testing-patterns.md) |
+| **Security Patterns** | JWT, OAuth2, API Keys | [security-patterns.md](security-patterns.md) |
+| **Error Handling** | Exceptions, ProblemDetails, Result Pattern | [error-handling-patterns.md](error-handling-patterns.md) |
+| **API Versioning** | URL Path, Query String, Header | [api-versioning-patterns.md](api-versioning-patterns.md) |
+| **Containerization** | Docker, Docker Compose, Health Checks | [containerization-patterns.md](containerization-patterns.md) |
+
+---
+
 ## Next Steps
 
-- [Decision Matrix](ai-context/decision-matrix.md) - Help choosing the right template
-- [Database Patterns](ai-context/database-patterns.md) - Database-specific configurations
-- [Project Structure](ai-context/project-structure.md) - Detailed structure conventions
+- [Decision Matrix](decision-matrix.md) - Help choosing the right template
+- [Database Patterns](database-patterns.md) - Database-specific configurations
+- [Project Structure](project-structure.md) - Detailed structure conventions
 
