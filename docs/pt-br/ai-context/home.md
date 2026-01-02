@@ -212,6 +212,34 @@ AspNetCore.HealthChecks.UI.Client
 - [Padrões de Versionamento de API](api-versioning-patterns.md)
 - [Padrões de Containerização](containerization-patterns.md)
 
+### Templates de Implementação de IA
+- [Índice de Implementação de IA](ai-implementation-index.md) - Visão geral das abordagens de IA
+- [Matriz de Decisão de IA](ai-decision-matrix.md) - Quando usar cada abordagem
+
+#### Templates Semantic Kernel
+- [Chat Completion](template-sk-chat-completion.md) - IA conversacional básica
+- [Plugins & Functions](template-sk-plugins.md) - IA com ferramentas
+- [RAG Básico](template-sk-rag-basic.md) - Q&A sobre documentos
+- [Planners](template-sk-planners.md) - Decomposição de tarefas
+
+#### Templates Semantic Kernel Graph
+- [Graph Executor](template-skg-graph-executor.md) - Orquestração de workflows
+- [ReAct Agent](template-skg-react-agent.md) - Raciocínio + Ação
+- [Chain of Thought](template-skg-chain-of-thought.md) - Raciocínio passo a passo
+- [Chatbot com Memória](template-skg-chatbot-memory.md) - Conversas contextuais
+- [Multi-Agent](template-skg-multi-agent.md) - Coordenação de agentes
+- [Document Pipeline](template-skg-document-pipeline.md) - Processamento de documentos
+- [Human-in-the-Loop](template-skg-human-in-loop.md) - Workflows de aprovação
+- [Checkpointing](template-skg-checkpointing.md) - Persistência de estado
+- [Streaming](template-skg-streaming.md) - Eventos em tempo real
+- [Observability](template-skg-observability.md) - Métricas e monitoramento
+
+#### Templates Microsoft Agent Framework
+- [Agent Framework Básico](template-agent-framework-basic.md) - Configuração de agente
+- [Graph Workflows](template-agent-framework-workflows.md) - Agentes baseados em workflow
+- [Multi-Agent](template-agent-framework-multi-agent.md) - Orquestração de agentes
+- [Middleware](template-agent-framework-middleware.md) - Processamento de request/response
+
 ---
 
 ## Repositório de Projetos de Exemplo
