@@ -43,7 +43,7 @@ namespace Mvp24Hours.Application.Logic
         /// 
         /// </summary>
         [ActivatorUtilitiesConstructor]
-        public RepositoryPagingServiceAsync(TUoW _unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryPagingServiceAsync<TEntity, TUoW>> logger = null)
+        public RepositoryPagingServiceAsync(TUoW _unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryPagingServiceAsync<TEntity, TUoW>>? logger = null)
             : base(_unitOfWork, validator)
         {
             _pagingLogger = logger ?? NullLogger<RepositoryPagingServiceAsync<TEntity, TUoW>>.Instance;
@@ -52,14 +52,14 @@ namespace Mvp24Hours.Application.Logic
 
         #region [ Implements IQueryPagingServiceAsync ]
 
-        public virtual async Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null, CancellationToken cancellationToken = default)
+        public virtual async Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
         {
             _pagingLogger.LogDebug("application-repositorypagingserviceasync-getbywithpaginationasync");
             var repo = UnitOfWork.GetRepository<TEntity>();
             return await repo.ToBusinessPagingAsync(clause, criteria);
         }
 
-        public virtual async Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria criteria = null, CancellationToken cancellationToken = default)
+        public virtual async Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
         {
             _pagingLogger.LogDebug("application-repositorypagingserviceasync-listwithpaginationasync");
             var repo = UnitOfWork.GetRepository<TEntity>();

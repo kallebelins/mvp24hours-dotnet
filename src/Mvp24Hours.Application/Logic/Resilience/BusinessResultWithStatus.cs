@@ -188,13 +188,13 @@ namespace Mvp24Hours.Application.Logic.Resilience
         /// </summary>
         public static implicit operator T?(BusinessResultWithStatus<T>? result)
         {
-            return result != null ? result.Data : default;
+            return result != null ? result.Data : default(T?);
         }
 
         /// <summary>
         /// Implicitly converts result to boolean (true if success).
         /// </summary>
-        public static implicit operator bool(BusinessResultWithStatus<T> result)
+        public static implicit operator bool(BusinessResultWithStatus<T>? result)
         {
             return result != null && result.IsSuccess;
         }

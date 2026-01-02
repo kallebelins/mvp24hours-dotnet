@@ -364,7 +364,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     #region Event Handling
 
     /// <inheritdoc />
-    public virtual Task HandleEventAsync(IDomainEvent @event, CancellationToken cancellationToken = default)
+    public virtual Task HandleEventAsync(IMediatorDomainEvent @event, CancellationToken cancellationToken = default)
     {
         // Override in derived classes to handle events for choreography-style sagas
         return Task.CompletedTask;

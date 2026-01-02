@@ -140,8 +140,8 @@ public static class DomainToIntegrationEventExtensions
 ///     OrderCreatedDomainToIntegrationConverter&gt;();
 /// </code>
 /// </example>
-public sealed class AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent> : IDomainEventHandler<TDomainEvent>
-    where TDomainEvent : IDomainEvent
+public sealed class AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent> : IMediatorDomainEventHandler<TDomainEvent>
+    where TDomainEvent : IMediatorDomainEvent
     where TIntegrationEvent : class, IIntegrationEvent
 {
     private readonly IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>? _converter;

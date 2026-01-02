@@ -212,13 +212,13 @@ public class ConvertExtensionsTest
     #region [ ToDecimal Tests ]
 
     [Theory]
-    [InlineData("123.45", 123.45)]
-    [InlineData("0", 0)]
-    [InlineData("-456.78", -456.78)]
-    public void ToDecimal_WithValidString_ReturnsDecimal(string input, double expectedDouble)
+    [InlineData("123.45", "123.45")]
+    [InlineData("0", "0")]
+    [InlineData("-456.78", "-456.78")]
+    public void ToDecimal_WithValidString_ReturnsDecimal(string input, string expectedString)
     {
         // Arrange
-        var expected = (decimal)expectedDouble;
+        var expected = decimal.Parse(expectedString, System.Globalization.CultureInfo.InvariantCulture);
 
         // Act
         var result = input.ToDecimal();

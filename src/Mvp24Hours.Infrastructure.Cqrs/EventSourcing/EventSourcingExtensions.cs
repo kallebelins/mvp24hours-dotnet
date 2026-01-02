@@ -84,7 +84,7 @@ public static class EventSourcingExtensions
     /// <param name="services">The service collection.</param>
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddEventStoreRepository<TAggregate>(this IServiceCollection services)
-        where TAggregate : IAggregate, new()
+        where TAggregate : IEventSourcedAggregate, new()
     {
         services.AddScoped<IEventStoreRepository<TAggregate>>(sp =>
         {
@@ -115,7 +115,7 @@ public static class EventSourcingExtensions
     public static IServiceCollection AddEventStoreRepository<TAggregate>(
         this IServiceCollection services,
         Func<IServiceProvider, IEventStoreRepository<TAggregate>> factory)
-        where TAggregate : IAggregate
+        where TAggregate : IEventSourcedAggregate
     {
         services.AddScoped(factory);
         return services;

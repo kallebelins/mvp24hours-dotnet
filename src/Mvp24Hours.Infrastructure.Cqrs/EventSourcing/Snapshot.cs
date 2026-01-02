@@ -131,7 +131,7 @@ public interface ISnapshotStrategy
     /// <param name="lastSnapshotVersion">The version of the last snapshot (0 if none).</param>
     /// <returns>True if a snapshot should be taken.</returns>
     bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IAggregate;
+        where TAggregate : IEventSourcedAggregate;
 }
 
 /// <summary>
@@ -161,7 +161,7 @@ public class EventCountSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IAggregate
+        where TAggregate : IEventSourcedAggregate
     {
         return aggregate.Version - lastSnapshotVersion >= _threshold;
     }
@@ -185,7 +185,7 @@ public class CompositeSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IAggregate
+        where TAggregate : IEventSourcedAggregate
     {
         return _strategies.Any(s => s.ShouldTakeSnapshot(aggregate, lastSnapshotVersion));
     }
@@ -205,7 +205,7 @@ public class NeverSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IAggregate => false;
+        where TAggregate : IEventSourcedAggregate => false;
 }
 
 /// <summary>
@@ -223,6 +223,6 @@ public class AlwaysSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IAggregate => aggregate.Version > lastSnapshotVersion;
+        where TAggregate : IEventSourcedAggregate => aggregate.Version > lastSnapshotVersion;
 }
 

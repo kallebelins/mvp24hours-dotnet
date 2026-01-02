@@ -20,10 +20,10 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Gets all representations of the entity typed with criteria.
         /// </summary>
-        IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria criteria = null);
+        IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria? criteria = null);
         /// <summary>
         /// Gets the filter-based representations of the entity typed with criteria.
         /// </summary>
-        IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null);
+        IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null);
     }
 }

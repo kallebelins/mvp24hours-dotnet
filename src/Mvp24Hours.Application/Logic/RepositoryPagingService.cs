@@ -44,7 +44,7 @@ namespace Mvp24Hours.Application.Logic
         /// 
         /// </summary>
         [ActivatorUtilitiesConstructor]
-        public RepositoryPagingService(TUoW _unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryPagingService<TEntity, TUoW>> logger = null)
+        public RepositoryPagingService(TUoW _unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryPagingService<TEntity, TUoW>>? logger = null)
             : base(_unitOfWork, validator)
         {
             _pagingLogger = logger ?? NullLogger<RepositoryPagingService<TEntity, TUoW>>.Instance;
@@ -53,14 +53,14 @@ namespace Mvp24Hours.Application.Logic
 
         #region [ Implements IQueryPagingService ]
 
-        public virtual IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null)
+        public virtual IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null)
         {
             _pagingLogger.LogDebug("application-repositorypagingservice-getbywithpagination");
             var repo = UnitOfWork.GetRepository<TEntity>();
             return repo.ToBusinessPaging(clause, criteria);
         }
 
-        public virtual IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria criteria = null)
+        public virtual IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria? criteria = null)
         {
             _pagingLogger.LogDebug("application-repositorypagingservice-listwithpagination");
             var repo = UnitOfWork.GetRepository<TEntity>();

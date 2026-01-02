@@ -53,7 +53,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 throw new ArgumentNullException(nameof(entityType));
             }
 
-            _logger.LogDebug( "application-cache-invalidateentity-start", entityType.Name);
+            _logger.LogDebug("application-cache-invalidateentity-start EntityType={EntityType}", entityType.Name);
 
             try
             {
@@ -73,7 +73,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidateentity-end", entityType.Name);
+                _logger.LogDebug("application-cache-invalidateentity-end EntityType={EntityType}", entityType.Name);
             }
         }
 
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidatebyid-start", typeof(TEntity).Name, id);
+            _logger.LogDebug("application-cache-invalidatebyid-start EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
 
             try
             {
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidatebyid-end", typeof(TEntity).Name, id);
+                _logger.LogDebug("application-cache-invalidatebyid-end EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidateregion-start", region);
+            _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
 
             try
             {
@@ -136,7 +136,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidateregion-end", region);
+                _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
             }
         }
 
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidatebytags-start", string.Join(",", tags));
+            _logger.LogDebug("application-cache-invalidatebytags-start Tags={Tags}", string.Join(",", tags));
 
             try
             {
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidatebytags-end", string.Join(",", tags));
+                _logger.LogDebug("application-cache-invalidatebytags-end Tags={Tags}", string.Join(",", tags));
             }
         }
 
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidatebypattern-start", pattern);
+            _logger.LogDebug("application-cache-invalidatebypattern-start Pattern={Pattern}", pattern);
 
             try
             {
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidatebypattern-end", pattern);
+                _logger.LogDebug("application-cache-invalidatebypattern-end Pattern={Pattern}", pattern);
             }
         }
 
@@ -206,7 +206,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidatekeys-start", string.Join(",", keys));
+            _logger.LogDebug("application-cache-invalidatekeys-start Keys={Keys}", string.Join(",", keys));
 
             try
             {
@@ -226,7 +226,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidatekeys-end", string.Join(",", keys));
+                _logger.LogDebug("application-cache-invalidatekeys-end Keys={Keys}", string.Join(",", keys));
             }
         }
     }

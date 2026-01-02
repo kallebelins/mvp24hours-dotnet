@@ -86,11 +86,21 @@ public abstract class AggregateRoot : IEventSourcedAggregate
 {
     private readonly List<CoreDomainEvent> _uncommittedEvents = new();
     private long _version;
+    private Guid _id;
 
     /// <summary>
     /// Gets the unique identifier of the aggregate.
     /// </summary>
-    object CoreIEntityBase.EntityKey => Guid.Empty;
+    public Guid Id
+    {
+        get => _id;
+        protected set => _id = value;
+    }
+
+    /// <summary>
+    /// Gets the entity key (for IEntityBase compatibility).
+    /// </summary>
+    object CoreIEntityBase.EntityKey => _id;
 
     /// <summary>
     /// Gets the current version of the aggregate.
@@ -215,6 +225,19 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
     /// Gets or sets the typed identifier of the aggregate.
     /// </summary>
     public TId Id { get; protected set; } = default!;
+
+    /// <summary>
+    /// Explicit implementation of IEventSourcedAggregate.Id.
+    /// Converts the typed Id to Guid. If TId is Guid, returns it directly;
+    /// otherwise returns a deterministic Guid based on the Id's hash code.
+    /// </summary>
+    Guid IEventSourcedAggregate.Id => Id switch
+    {
+        Guid guid => guid,
+        _ => Id?.GetHashCode() is int hash 
+            ? new Guid(hash, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            : Guid.Empty
+    };
 
     /// <summary>
     /// Gets the entity key (for IEntityBase compatibility).

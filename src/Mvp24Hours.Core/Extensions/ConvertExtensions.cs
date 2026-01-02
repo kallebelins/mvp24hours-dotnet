@@ -82,7 +82,7 @@ namespace Mvp24Hours.Extensions
                 return defaultValue;
             }
 
-            return decimal.TryParse(value, out decimal result) ? result : defaultValue;
+            return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal result) ? result : defaultValue;
         }
 
         public static DateTime? ToDateTime(this string value, DateTime? defaultValue = null, CultureInfo info = null)

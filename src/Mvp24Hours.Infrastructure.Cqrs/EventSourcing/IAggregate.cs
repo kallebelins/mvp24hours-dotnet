@@ -61,6 +61,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 public interface IEventSourcedAggregate : CoreVersionedAggregate, CoreHasDomainEvents
 {
     /// <summary>
+    /// Gets the unique identifier of the aggregate.
+    /// Required for event stream identification.
+    /// </summary>
+    Guid Id { get; }
+
+    /// <summary>
     /// Gets the uncommitted events that have been raised but not yet persisted.
     /// </summary>
     IReadOnlyCollection<CoreDomainEvent> UncommittedEvents { get; }
@@ -83,10 +89,6 @@ public interface IEventSourcedAggregate : CoreVersionedAggregate, CoreHasDomainE
 [Obsolete("Use IEventSourcedAggregate instead. This alias will be removed in a future version.")]
 public interface IAggregate : IEventSourcedAggregate
 {
-    /// <summary>
-    /// Gets the unique identifier of the aggregate.
-    /// </summary>
-    new Guid Id { get; }
 }
 
 /// <summary>
@@ -134,7 +136,7 @@ public interface ISnapshotAggregate<TSnapshot> : IEventSourcedAggregate
 /// </summary>
 /// <typeparam name="TAggregate">The type of aggregate to create.</typeparam>
 public interface IAggregateFactory<TAggregate>
-    where TAggregate : IAggregate
+    where TAggregate : IEventSourcedAggregate
 {
     /// <summary>
     /// Creates a new instance of the aggregate.
@@ -148,7 +150,7 @@ public interface IAggregateFactory<TAggregate>
 /// </summary>
 /// <typeparam name="TAggregate">The type of aggregate to create.</typeparam>
 public class DefaultAggregateFactory<TAggregate> : IAggregateFactory<TAggregate>
-    where TAggregate : IAggregate, new()
+    where TAggregate : IEventSourcedAggregate, new()
 {
     /// <inheritdoc />
     public TAggregate Create() => new TAggregate();

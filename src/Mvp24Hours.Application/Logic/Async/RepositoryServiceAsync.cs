@@ -27,7 +27,7 @@ namespace Mvp24Hours.Application.Logic
     /// <remarks>
     /// 
     /// </remarks>
-    public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryServiceAsync<TEntity, TUoW>> logger = null) : IQueryServiceAsync<TEntity>, ICommandServiceAsync<TEntity>
+    public class RepositoryServiceAsync<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryServiceAsync<TEntity, TUoW>>? logger = null) : IQueryServiceAsync<TEntity>, ICommandServiceAsync<TEntity>
         where TEntity : class, IEntityBase
         where TUoW : class, IUnitOfWorkAsync
     {
@@ -35,7 +35,7 @@ namespace Mvp24Hours.Application.Logic
 
         private readonly IRepositoryAsync<TEntity> repository = unitOfWork.GetRepository<TEntity>();
         private readonly TUoW unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        private readonly IValidator<TEntity> validator = validator;
+        private readonly IValidator<TEntity>? validator = validator;
         private readonly ILogger<RepositoryServiceAsync<TEntity, TUoW>> _logger = logger ?? NullLogger<RepositoryServiceAsync<TEntity, TUoW>>.Instance;
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Mvp24Hours.Application.Logic
         /// <summary>
         /// Defines a validator for a particular type.
         /// </summary>
-        protected virtual IValidator<TEntity> Validator => validator;
+        protected virtual IValidator<TEntity>? Validator => validator;
 
         #endregion
 
@@ -89,10 +89,10 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(CancellationToken cancellationToken = default)
         {
-            return this.ListAsync(null, cancellationToken: cancellationToken);
+            return this.ListAsync(null!, cancellationToken: cancellationToken);
         }
 
-        public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-listasync");
             return this.UnitOfWork
@@ -121,10 +121,10 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            return GetByAsync(clause, null, cancellationToken: cancellationToken);
+            return GetByAsync(clause, null!, cancellationToken: cancellationToken);
         }
 
-        public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-getbyasync");
             return UnitOfWork
@@ -135,10 +135,10 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            return this.GetByIdAsync(id, null, cancellationToken: cancellationToken);
+            return this.GetByIdAsync(id, null!, cancellationToken: cancellationToken);
         }
 
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-getbyidasync");
             return this.UnitOfWork
@@ -183,7 +183,7 @@ namespace Mvp24Hours.Application.Logic
                 }
             }
             var rep = this.UnitOfWork.GetRepository<TEntity>();
-            await Task.WhenAll(tasks: entities.Select(entity => rep.AddAsync(entity, cancellationToken: cancellationToken)));
+            await Task.WhenAll(entities.Select(entity => rep.AddAsync(entity, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
         }
@@ -242,7 +242,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             var rep = this.UnitOfWork.GetRepository<TEntity>();
-            await Task.WhenAll(entities?.Select(entity => rep.RemoveAsync(entity, cancellationToken: cancellationToken)));
+            await Task.WhenAll(entities.Select(entity => rep.RemoveAsync(entity, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
         }
@@ -264,7 +264,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             var rep = this.UnitOfWork.GetRepository<TEntity>();
-            await Task.WhenAll(ids?.Select(entity => rep.RemoveByIdAsync(entity, cancellationToken: cancellationToken)));
+            await Task.WhenAll(ids.Select(id => rep.RemoveByIdAsync(id, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
         }

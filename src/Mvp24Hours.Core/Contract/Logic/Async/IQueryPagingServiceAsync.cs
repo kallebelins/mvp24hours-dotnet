@@ -20,10 +20,10 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Gets all representations of the entity typed with criteria.
         /// </summary>
-        Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria criteria = null, CancellationToken cancellationToken = default);
+        Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria? criteria = null, CancellationToken cancellationToken = default);
         /// <summary>
         /// Gets the filter-based representations of the entity typed with criteria.
         /// </summary>
-        Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null, CancellationToken cancellationToken = default);
+        Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, CancellationToken cancellationToken = default);
     }
 }

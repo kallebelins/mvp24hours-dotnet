@@ -69,7 +69,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
             }
 
-            _logger.LogDebug( "application-cache-get-start", key);
+            _logger.LogDebug("application-cache-get-start CacheKey={CacheKey}", key);
 
             try
             {
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-get-end", key);
+                _logger.LogDebug("application-cache-get-end CacheKey={CacheKey}", key);
             }
         }
 
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
             }
 
-            _logger.LogDebug( "application-cache-set-start", key);
+            _logger.LogDebug("application-cache-set-start CacheKey={CacheKey}", key);
 
             try
             {
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-set-end", key);
+                _logger.LogDebug("application-cache-set-end CacheKey={CacheKey}", key);
             }
         }
 
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-remove-start", key);
+            _logger.LogDebug("application-cache-remove-start CacheKey={CacheKey}", key);
 
             try
             {
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-remove-end", key);
+                _logger.LogDebug("application-cache-remove-end CacheKey={CacheKey}", key);
             }
         }
 
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidateregion-start", region);
+            _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
 
             try
             {
@@ -304,7 +304,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidateregion-end", region);
+                _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
             }
         }
 
@@ -316,7 +316,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return;
             }
 
-            _logger.LogDebug( "application-cache-invalidatepattern-start", pattern);
+            _logger.LogDebug("application-cache-invalidatepattern-start Pattern={Pattern}", pattern);
 
             try
             {
@@ -340,7 +340,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
             finally
             {
-                _logger.LogDebug( "application-cache-invalidatepattern-end", pattern);
+                _logger.LogDebug("application-cache-invalidatepattern-end Pattern={Pattern}", pattern);
             }
         }
 

@@ -31,7 +31,7 @@ public interface IIncrementalProjection : IProjection
     /// <param name="event">The event to process.</param>
     /// <param name="context">The projection context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task ProcessEventAsync(IDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
+    Task ProcessEventAsync(IMediatorDomainEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the event types this projection handles.
@@ -75,14 +75,14 @@ public abstract class IncrementalProjection<TReadModel> : ProjectionBase, IIncre
     /// Registers an event type that this projection handles.
     /// </summary>
     /// <typeparam name="TEvent">The event type.</typeparam>
-    protected void Handles<TEvent>() where TEvent : IDomainEvent
+    protected void Handles<TEvent>() where TEvent : IMediatorDomainEvent
     {
         _handledEventTypes.Add(typeof(TEvent));
     }
 
     /// <inheritdoc />
     public abstract Task ProcessEventAsync(
-        IDomainEvent @event,
+        IMediatorDomainEvent @event,
         ProjectionContext context,
         CancellationToken cancellationToken = default);
 
@@ -143,7 +143,7 @@ public abstract class IncrementalProjection<TReadModel> : ProjectionBase, IIncre
 public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadModel>
     where TReadModel : class
 {
-    private readonly Dictionary<Type, Func<IDomainEvent, ProjectionContext, CancellationToken, Task>> _handlers = new();
+    private readonly Dictionary<Type, Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task>> _handlers = new();
 
     /// <summary>
     /// Initializes a new instance of the apply projection.
@@ -156,7 +156,7 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
 
     /// <inheritdoc />
     public override async Task ProcessEventAsync(
-        IDomainEvent @event,
+        IMediatorDomainEvent @event,
         ProjectionContext context,
         CancellationToken cancellationToken = default)
     {
@@ -180,7 +180,7 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
             if (parameters.Length != 3) continue;
 
             var eventType = parameters[0].ParameterType;
-            if (!typeof(IDomainEvent).IsAssignableFrom(eventType)) continue;
+            if (!typeof(IMediatorDomainEvent).IsAssignableFrom(eventType)) continue;
             if (parameters[1].ParameterType != typeof(ProjectionContext)) continue;
             if (parameters[2].ParameterType != typeof(CancellationToken)) continue;
 
@@ -189,7 +189,7 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
         }
     }
 
-    private Func<IDomainEvent, ProjectionContext, CancellationToken, Task> CreateHandler(
+    private Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task> CreateHandler(
         System.Reflection.MethodInfo method,
         Type eventType)
     {
@@ -230,7 +230,7 @@ public interface IBatchProjection : IProjection
     /// <param name="events">The events to process.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task ProcessBatchAsync(
-        IReadOnlyList<(IDomainEvent Event, ProjectionContext Context)> events,
+        IReadOnlyList<(IMediatorDomainEvent Event, ProjectionContext Context)> events,
         CancellationToken cancellationToken = default);
 }
 
@@ -260,7 +260,7 @@ public abstract class BatchProjection<TReadModel> : ProjectionBase, IBatchProjec
 
     /// <inheritdoc />
     public abstract Task ProcessBatchAsync(
-        IReadOnlyList<(IDomainEvent Event, ProjectionContext Context)> events,
+        IReadOnlyList<(IMediatorDomainEvent Event, ProjectionContext Context)> events,
         CancellationToken cancellationToken = default);
 
     /// <inheritdoc />

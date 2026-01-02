@@ -124,7 +124,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-listasync-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-listasync-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.ListAsync(cancellationToken);
                     return result;
                 },
@@ -146,7 +146,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-listasync-paged-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-listasync-paged-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.ListAsync(criteria, cancellationToken);
                     return result;
                 },
@@ -168,7 +168,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-listanyasync-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-listanyasync-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.ListAnyAsync(cancellationToken);
                     return result;
                 },
@@ -190,7 +190,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-listcountasync-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-listcountasync-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.ListCountAsync(cancellationToken);
                     return result;
                 },
@@ -212,7 +212,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-getbyidasync-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-getbyidasync-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.GetByIdAsync(id, cancellationToken);
                     return result;
                 },
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    _logger.LogDebug( "cacheable-queryservice-getbyidasync-paged-cache-miss", cacheKey);
+                    _logger.LogDebug("cacheable-queryservice-getbyidasync-paged-cache-miss CacheKey={CacheKey}", cacheKey);
                     var result = await base.GetByIdAsync(id, criteria, cancellationToken);
                     return result;
                 },

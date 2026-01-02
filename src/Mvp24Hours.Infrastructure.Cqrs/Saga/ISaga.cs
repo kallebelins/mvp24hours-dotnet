@@ -108,7 +108,7 @@ public interface ISaga<TData> where TData : class
     /// <param name="event">The domain event.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task HandleEventAsync(IDomainEvent @event, CancellationToken cancellationToken = default);
+    Task HandleEventAsync(IMediatorDomainEvent @event, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes compensation for all completed steps in reverse order.

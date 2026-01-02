@@ -58,7 +58,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// </summary>
         [DataMember]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MessageType>))]
         public MessageType Type { get; } = type;
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult.CustomType"/>

@@ -177,8 +177,8 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-bulkaddasync-start",
-                $"count:{dtos?.Count ?? 0}|batchSize:{options.BatchSize}");
+            _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+                dtos?.Count ?? 0, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -201,8 +201,8 @@ namespace Mvp24Hours.Application.Logic
 
                 stopwatch.Stop();
 
-                _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-bulkaddasync-end",
-                    $"rows:{result.Data?.RowsAffected ?? 0}|elapsed:{stopwatch.ElapsedMilliseconds}ms|success:{result.Data?.IsSuccess ?? false}");
+                _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                    result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
                 return result;
             }
@@ -210,8 +210,8 @@ namespace Mvp24Hours.Application.Logic
             {
                 stopwatch.Stop();
 
-                _logger.LogError( "application-bulkcommandserviceseparatedtosasync-bulkaddasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                    ex.Message, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
             }
@@ -235,8 +235,8 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-start",
-                $"count:{dtos?.Count ?? 0}|batchSize:{options.BatchSize}");
+            _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+                dtos?.Count ?? 0, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -259,8 +259,8 @@ namespace Mvp24Hours.Application.Logic
 
                 stopwatch.Stop();
 
-                _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-end",
-                    $"rows:{result.Data?.RowsAffected ?? 0}|elapsed:{stopwatch.ElapsedMilliseconds}ms|success:{result.Data?.IsSuccess ?? false}");
+                _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                    result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
 
                 return result;
             }
@@ -268,8 +268,8 @@ namespace Mvp24Hours.Application.Logic
             {
                 stopwatch.Stop();
 
-                _logger.LogError( "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-error",
-                    $"error:{ex.Message}|elapsed:{stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogError(ex, "application-bulkcommandserviceseparatedtosasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                    ex.Message, stopwatch.ElapsedMilliseconds);
 
                 return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
             }
@@ -327,8 +327,8 @@ namespace Mvp24Hours.Application.Logic
                     var dtoErrors = dto.TryValidate(_createDtoValidator);
                     if (dtoErrors.AnySafe())
                     {
-                        _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-validatecreatedtos-failed",
-                            $"dtoType:{typeof(TCreateDto).Name}|errorCount:{dtoErrors.Count}");
+                        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validatecreatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                            typeof(TCreateDto).Name, dtoErrors.Count);
                         return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
                     }
                 }
@@ -342,8 +342,8 @@ namespace Mvp24Hours.Application.Logic
                     var entityErrors = entity.TryValidate(_entityValidator);
                     if (entityErrors.AnySafe())
                     {
-                        _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-validateentities-failed",
-                            $"entityType:{typeof(TEntity).Name}|errorCount:{entityErrors.Count}");
+                        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                            typeof(TEntity).Name, entityErrors.Count);
                         return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
                     }
                 }
@@ -382,8 +382,8 @@ namespace Mvp24Hours.Application.Logic
                     var dtoErrors = dto.TryValidate(_updateDtoValidator);
                     if (dtoErrors.AnySafe())
                     {
-                        _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-validateupdatedtos-failed",
-                            $"dtoType:{typeof(TUpdateDto).Name}|errorCount:{dtoErrors.Count}");
+                        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateupdatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                            typeof(TUpdateDto).Name, dtoErrors.Count);
                         return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
                     }
                 }
@@ -397,8 +397,8 @@ namespace Mvp24Hours.Application.Logic
                     var entityErrors = entity.TryValidate(_entityValidator);
                     if (entityErrors.AnySafe())
                     {
-                        _logger.LogDebug( "application-bulkcommandserviceseparatedtosasync-validateentities-failed",
-                            $"entityType:{typeof(TEntity).Name}|errorCount:{entityErrors.Count}");
+                        _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                            typeof(TEntity).Name, entityErrors.Count);
                         return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
                     }
                 }

@@ -12,7 +12,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// </summary>
 /// <typeparam name="TAggregate">The type of aggregate.</typeparam>
 public interface IEventStoreRepository<TAggregate>
-    where TAggregate : IAggregate
+    where TAggregate : IEventSourcedAggregate
 {
     /// <summary>
     /// Gets an aggregate by its identifier.
@@ -80,7 +80,7 @@ public interface IEventStoreRepository<TAggregate>
 /// </code>
 /// </example>
 public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate>
-    where TAggregate : IAggregate, new()
+    where TAggregate : IEventSourcedAggregate, new()
 {
     private readonly IEventStore _eventStore;
     private readonly ISnapshotStore? _snapshotStore;

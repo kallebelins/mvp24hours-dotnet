@@ -30,8 +30,8 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Serialization;
     PropertyNameCaseInsensitive = true,
     NumberHandling = JsonNumberHandling.AllowReadingFromString)]
 // Domain Events
-[JsonSerializable(typeof(DomainEventBase))]
-[JsonSerializable(typeof(List<DomainEventBase>))]
+[JsonSerializable(typeof(MediatorDomainEventBase))]
+[JsonSerializable(typeof(List<MediatorDomainEventBase>))]
 // Integration Events
 [JsonSerializable(typeof(IntegrationEventBase))]
 [JsonSerializable(typeof(IIntegrationEvent))]

@@ -24,7 +24,7 @@ namespace Mvp24Hours.Application.Logic
     /// <remarks>
     /// 
     /// </remarks>
-    public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity> validator, ILogger<RepositoryService<TEntity, TUoW>> logger = null) : IQueryService<TEntity>, ICommandService<TEntity>
+    public class RepositoryService<TEntity, TUoW>(TUoW unitOfWork, IValidator<TEntity>? validator, ILogger<RepositoryService<TEntity, TUoW>>? logger = null) : IQueryService<TEntity>, ICommandService<TEntity>
         where TEntity : class, IEntityBase
         where TUoW : class, IUnitOfWork
     {
@@ -32,7 +32,7 @@ namespace Mvp24Hours.Application.Logic
 
         private readonly IRepository<TEntity> repository = unitOfWork.GetRepository<TEntity>();
         private readonly TUoW unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        private readonly IValidator<TEntity> validator = validator;
+        private readonly IValidator<TEntity>? validator = validator;
         private readonly ILogger<RepositoryService<TEntity, TUoW>> _logger = logger ?? NullLogger<RepositoryService<TEntity, TUoW>>.Instance;
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Mvp24Hours.Application.Logic
         /// <summary>
         /// Defines a validator for a particular type.
         /// </summary>
-        protected virtual IValidator<TEntity> Validator => validator;
+        protected virtual IValidator<TEntity>? Validator => validator;
 
         #endregion
 
@@ -95,13 +95,13 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> List()
         {
-            return this.List(null);
+            return this.List(null!);
         }
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.List(IPagingCriteria)"/>
         /// </summary>
-        public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria criteria)
+        public virtual IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-repositoryservice-list");
             return this.UnitOfWork
@@ -139,13 +139,13 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause)
         {
-            return GetBy(clause, null);
+            return GetBy(clause, null!);
         }
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetBy(Expression{Func{T, bool}}, IPagingCriteria)"/>
         /// </summary>
-        public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria)
+        public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-repositoryservice-getby");
             return UnitOfWork
@@ -159,13 +159,13 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<TEntity> GetById(object id)
         {
-            return this.GetById(id, null);
+            return this.GetById(id, null!);
         }
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(int, IPagingCriteria)"/>
         /// </summary>
-        public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria)
+        public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-repositoryservice-getbyid");
             return this.UnitOfWork

@@ -82,7 +82,7 @@ public interface IIntegrationEventPublisher
 /// </code>
 /// </example>
 public interface IDomainToIntegrationEventConverter<in TDomainEvent, out TIntegrationEvent>
-    where TDomainEvent : IDomainEvent
+    where TDomainEvent : IMediatorDomainEvent
     where TIntegrationEvent : IIntegrationEvent
 {
     /// <summary>

@@ -135,7 +135,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null, int? maxQtyByQueryDefault = null)
+        public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
             where TEntity : class, IEntityBase
         {
             int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;
@@ -163,7 +163,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, IPagingCriteria criteria = null, int? maxQtyByQueryDefault = null)
+        public static IPagingResult<IList<TEntity>> ToBusinessPaging<TEntity>(this IRepository<TEntity> repository, IPagingCriteria? criteria = null, int? maxQtyByQueryDefault = null)
             where TEntity : class, IEntityBase
         {
             int limit = maxQtyByQueryDefault ?? ContantsHelper.Data.MaxQtyByQueryPage;

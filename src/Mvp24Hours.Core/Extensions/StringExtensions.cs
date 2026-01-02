@@ -38,12 +38,23 @@ namespace Mvp24Hours.Extensions
 
         public static string SubstringSafe(this string text, int start, int length = int.MaxValue)
         {
+            if (text == null)
+            {
+                return string.Empty;
+            }
+
+            if (start < 0)
+            {
+                start = 0;
+            }
+
             if (start >= text.Length)
             {
                 return string.Empty;
             }
 
-            if (start + length > text.Length)
+            // Se length é int.MaxValue ou muito grande, retornar até o final da string
+            if (length == int.MaxValue || start + length > text.Length)
             {
                 length = text.Length - start;
             }

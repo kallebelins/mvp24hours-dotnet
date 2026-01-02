@@ -244,7 +244,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: use the specification's expression directly
-            return _repository.GetBy(specification.IsSatisfiedByExpression, null).ToBusiness();
+            return _repository.GetBy(specification.IsSatisfiedByExpression, null!).ToBusiness();
         }
 
         /// <inheritdoc/>
@@ -255,7 +255,7 @@ namespace Mvp24Hours.Application.Logic
 
             if (specification == null)
             {
-                return ((TEntity?)null).ToBusiness();
+                return ((TEntity?)null!).ToBusiness();
             }
 
             // Try to use repository's specification method if available
@@ -265,7 +265,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take single
-            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
             var entity = result?.SingleOrDefault();
             return entity.ToBusiness();
         }
@@ -278,7 +278,7 @@ namespace Mvp24Hours.Application.Logic
 
             if (specification == null)
             {
-                return ((TEntity?)null).ToBusiness();
+                return ((TEntity?)null!).ToBusiness();
             }
 
             // Try to use repository's specification method if available
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take first
-            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
+            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
             var entity = result?.FirstOrDefault();
             return entity.ToBusiness();
         }

@@ -73,9 +73,6 @@ public class TestOrder : AggregateRoot<Guid>, IAggregate
 {
     private readonly List<OrderItem> _items = new();
 
-    // Explicit implementation of IAggregate.Id (which uses new keyword)
-    Guid IAggregate.Id => Id;
-
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }
