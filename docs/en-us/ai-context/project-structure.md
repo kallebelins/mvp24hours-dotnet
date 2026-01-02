@@ -1,221 +1,87 @@
 # Project Structure for AI Agents
 
-> **AI Agent Instruction**: Follow these conventions when generating project structure. Maintain consistency across all generated code.
+> **AI Agent Instruction**: This is the index page for project structures. Choose the appropriate structure based on project complexity and requirements.
 
 ---
 
-## Solution Structure
+## Available Structures
 
-### Minimal API
+| Structure | Complexity | Layers | Best For |
+|-----------|------------|--------|----------|
+| [Minimal API](structure-minimal-api.md) | Low | 1 | Microservices, simple CRUDs, MVPs |
+| [Simple N-Layers](structure-simple-nlayers.md) | Medium | 3 | Medium projects, clear separation |
+| [Complex N-Layers](structure-complex-nlayers.md) | High | 4 | Enterprise, complex business logic |
 
-```
-ProjectName/
-├── ProjectName.sln
-└── src/
-    └── ProjectName/
-        ├── ProjectName.csproj
-        ├── Program.cs
-        ├── appsettings.json
-        ├── appsettings.Development.json
-        ├── appsettings.Production.json
-        ├── Entities/
-        │   ├── Customer.cs
-        │   └── Contact.cs
-        ├── ValueObjects/
-        │   ├── CustomerDto.cs
-        │   └── ContactDto.cs
-        ├── Validators/
-        │   └── CustomerValidator.cs
-        ├── Data/
-        │   ├── DataContext.cs
-        │   └── Configurations/
-        │       ├── CustomerConfiguration.cs
-        │       └── ContactConfiguration.cs
-        ├── Endpoints/
-        │   ├── CustomerEndpoints.cs
-        │   └── ContactEndpoints.cs
-        └── Extensions/
-            └── ServiceBuilderExtensions.cs
-```
+---
 
-### Simple N-Layers
+## Quick Selection Guide
 
-```
-ProjectName/
-├── ProjectName.sln
-└── src/
-    ├── ProjectName.Core/
-    │   ├── ProjectName.Core.csproj
-    │   ├── Entities/
-    │   │   ├── Customer.cs
-    │   │   └── Contact.cs
-    │   ├── ValueObjects/
-    │   │   ├── CustomerDto.cs
-    │   │   ├── CustomerFilterDto.cs
-    │   │   └── ContactDto.cs
-    │   └── Validators/
-    │       ├── CustomerValidator.cs
-    │       └── ContactValidator.cs
-    ├── ProjectName.Infrastructure/
-    │   ├── ProjectName.Infrastructure.csproj
-    │   └── Data/
-    │       ├── DataContext.cs
-    │       └── Configurations/
-    │           ├── CustomerConfiguration.cs
-    │           └── ContactConfiguration.cs
-    └── ProjectName.WebAPI/
-        ├── ProjectName.WebAPI.csproj
-        ├── Program.cs
-        ├── Startup.cs
-        ├── appsettings.json
-        ├── appsettings.Development.json
-        ├── appsettings.Production.json
-        ├── appsettings.Staging.json
-        ├── Controllers/
-        │   ├── CustomerController.cs
-        │   └── ContactController.cs
-        ├── Extensions/
-        │   └── ServiceBuilderExtensions.cs
-        ├── Properties/
-        │   └── launchSettings.json
-        └── NLog.config
-```
+### Use Minimal API when:
+- Building microservices with single responsibility
+- Creating simple CRUD APIs (1-5 entities)
+- Developing prototypes or MVPs
+- Need lightweight, fast deployment
+- No complex business logic required
 
-### Complex N-Layers
+### Use Simple N-Layers when:
+- Building medium-sized applications (5-15 entities)
+- Need clear separation of concerns
+- Multiple developers working on the project
+- Project may grow over time
+- Business logic in services (not complex pipelines)
+
+### Use Complex N-Layers when:
+- Building enterprise applications (15+ entities)
+- Complex business logic requiring dedicated application layer
+- Using patterns like CQRS, DDD, or Ports & Adapters
+- Multiple data sources (EF Core + Dapper)
+- Long-term projects with multiple teams
+
+---
+
+## Structure Comparison
 
 ```
-ProjectName/
-├── ProjectName.sln
-└── src/
-    ├── ProjectName.Core/
-    │   ├── ProjectName.Core.csproj
-    │   ├── Entities/
-    │   │   ├── Customer.cs
-    │   │   └── Contact.cs
-    │   ├── ValueObjects/
-    │   │   ├── Customers/
-    │   │   │   ├── CustomerDto.cs
-    │   │   │   ├── CustomerCreateDto.cs
-    │   │   │   ├── CustomerUpdateDto.cs
-    │   │   │   └── CustomerFilterDto.cs
-    │   │   └── Contacts/
-    │   │       ├── ContactDto.cs
-    │   │       ├── ContactCreateDto.cs
-    │   │       └── ContactUpdateDto.cs
-    │   ├── Validators/
-    │   │   ├── Customers/
-    │   │   │   ├── CustomerCreateValidator.cs
-    │   │   │   └── CustomerUpdateValidator.cs
-    │   │   └── Contacts/
-    │   │       ├── ContactCreateValidator.cs
-    │   │       └── ContactUpdateValidator.cs
-    │   ├── Contract/
-    │   │   ├── Services/
-    │   │   │   ├── ICustomerService.cs
-    │   │   │   └── IContactService.cs
-    │   │   └── Specifications/
-    │   │       └── ICustomerSpecification.cs
-    │   ├── Specifications/
-    │   │   ├── CustomerByFilterSpec.cs
-    │   │   └── CustomerActiveSpec.cs
-    │   └── Resources/
-    │       └── Messages.resx
-    ├── ProjectName.Infrastructure/
-    │   ├── ProjectName.Infrastructure.csproj
-    │   ├── Data/
-    │   │   ├── DataContext.cs
-    │   │   └── Configurations/
-    │   │       ├── CustomerConfiguration.cs
-    │   │       └── ContactConfiguration.cs
-    │   ├── Repositories/
-    │   │   └── CustomerDapperRepository.cs (optional)
-    │   └── Migrations/
-    │       └── 20240101000000_InitialCreate.cs
-    ├── ProjectName.Application/
-    │   ├── ProjectName.Application.csproj
-    │   ├── Services/
-    │   │   ├── CustomerService.cs
-    │   │   └── ContactService.cs
-    │   ├── Mappings/
-    │   │   ├── CustomerProfile.cs
-    │   │   └── ContactProfile.cs
-    │   └── FacadeService.cs
-    └── ProjectName.WebAPI/
-        ├── ProjectName.WebAPI.csproj
-        ├── Program.cs
-        ├── Startup.cs
-        ├── appsettings.json
-        ├── appsettings.Development.json
-        ├── appsettings.Production.json
-        ├── appsettings.Staging.json
-        ├── Controllers/
-        │   ├── CustomerController.cs
-        │   └── ContactController.cs
-        ├── Extensions/
-        │   └── ServiceBuilderExtensions.cs
-        ├── Middlewares/
-        │   ├── ExceptionMiddleware.cs
-        │   └── CorrelationIdMiddleware.cs
-        ├── Properties/
-        │   └── launchSettings.json
-        ├── HealthChecks/
-        │   └── CustomHealthCheck.cs
-        └── NLog.config
-```
+Minimal API (1 project):
+└── ProjectName/
+    ├── Entities/
+    ├── ValueObjects/
+    ├── Validators/
+    ├── Data/
+    └── Endpoints/
 
-### With RabbitMQ
+Simple N-Layers (3 projects):
+├── ProjectName.Core/
+│   ├── Entities/
+│   ├── ValueObjects/
+│   └── Validators/
+├── ProjectName.Infrastructure/
+│   └── Data/
+└── ProjectName.WebAPI/
+    └── Controllers/
 
-```
-ProjectName/
-├── ProjectName.sln
-└── src/
-    ├── ProjectName.Core/
-    │   ├── ... (same as Complex)
-    │   └── Messages/
-    │       ├── CustomerCreatedMessage.cs
-    │       ├── CustomerUpdatedMessage.cs
-    │       └── CustomerDeletedMessage.cs
-    ├── ProjectName.Infrastructure/
-    │   └── ... (same as Complex)
-    ├── ProjectName.Application/
-    │   ├── ... (same as Complex)
-    │   └── Consumers/
-    │       ├── CustomerCreatedConsumer.cs
-    │       └── CustomerUpdatedConsumer.cs
-    └── ProjectName.WebAPI/
-        ├── ... (same as Complex)
-        └── HostedServices/
-            └── RabbitMQConsumerHostedService.cs
-```
-
-### With Pipeline Pattern
-
-```
-ProjectName/
-├── ProjectName.sln
-└── src/
-    ├── ProjectName.Core/
-    │   ├── ... (same as Complex)
-    │   └── Contract/
-    │       └── Pipelines/
-    │           └── ICustomerPipeline.cs
-    ├── ProjectName.Infrastructure/
-    │   └── ... (same as Complex)
-    ├── ProjectName.Application/
-    │   ├── ... (same as Complex)
-    │   └── Pipelines/
-    │       ├── CustomerPipeline.cs
-    │       └── Operations/
-    │           ├── ValidateCustomerOperation.cs
-    │           ├── CreateCustomerOperation.cs
-    │           └── NotifyCustomerOperation.cs
-    └── ProjectName.WebAPI/
-        └── ... (same as Complex)
+Complex N-Layers (4 projects):
+├── ProjectName.Core/
+│   ├── Entities/
+│   ├── ValueObjects/
+│   ├── Validators/
+│   └── Contract/
+├── ProjectName.Infrastructure/
+│   └── Data/
+├── ProjectName.Application/
+│   ├── Services/
+│   ├── Mappings/
+│   └── Pipelines/
+└── ProjectName.WebAPI/
+    ├── Controllers/
+    └── Middlewares/
 ```
 
 ---
 
-## Naming Conventions
+## Common Naming Conventions
+
+These conventions apply to all structures:
 
 ### Files and Folders
 
@@ -236,137 +102,34 @@ ProjectName/
 | Operation | Verb + Entity + Operation | `ValidateCustomerOperation.cs` |
 | Profile (AutoMapper) | PascalCase + Profile | `CustomerProfile.cs` |
 
-### Namespaces
+### Common Namespace Patterns
 
 ```csharp
-// Core
-ProjectName.Core.Entities
-ProjectName.Core.ValueObjects
-ProjectName.Core.ValueObjects.Customers
-ProjectName.Core.Validators
-ProjectName.Core.Validators.Customers
-ProjectName.Core.Contract.Services
-ProjectName.Core.Contract.Specifications
-ProjectName.Core.Specifications
-ProjectName.Core.Messages
+// Core Layer
+{ProjectName}.Core.Entities
+{ProjectName}.Core.ValueObjects
+{ProjectName}.Core.Validators
+{ProjectName}.Core.Contract.Services
+{ProjectName}.Core.Specifications
 
-// Infrastructure
-ProjectName.Infrastructure.Data
-ProjectName.Infrastructure.Data.Configurations
-ProjectName.Infrastructure.Repositories
+// Infrastructure Layer
+{ProjectName}.Infrastructure.Data
+{ProjectName}.Infrastructure.Data.Configurations
 
-// Application
-ProjectName.Application.Services
-ProjectName.Application.Mappings
-ProjectName.Application.Consumers
-ProjectName.Application.Pipelines
-ProjectName.Application.Pipelines.Operations
+// Application Layer (Complex only)
+{ProjectName}.Application.Services
+{ProjectName}.Application.Mappings
+{ProjectName}.Application.Pipelines
 
-// WebAPI
-ProjectName.WebAPI.Controllers
-ProjectName.WebAPI.Extensions
-ProjectName.WebAPI.Middlewares
-ProjectName.WebAPI.HostedServices
-ProjectName.WebAPI.HealthChecks
+// WebAPI Layer
+{ProjectName}.WebAPI.Controllers
+{ProjectName}.WebAPI.Extensions
+{ProjectName}.WebAPI.Middlewares
 ```
 
 ---
 
-## Project Files (.csproj)
-
-### Core Project
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
-    <PackageReference Include="FluentValidation" Version="11.*" />
-  </ItemGroup>
-</Project>
-```
-
-### Infrastructure Project
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ProjectName.Core\ProjectName.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-</Project>
-```
-
-### Application Project
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ProjectName.Core\ProjectName.Core.csproj" />
-    <ProjectReference Include="..\ProjectName.Infrastructure\ProjectName.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Application" Version="8.*" />
-    <PackageReference Include="AutoMapper" Version="13.*" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.*" />
-  </ItemGroup>
-</Project>
-```
-
-### WebAPI Project
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ProjectName.Application\ProjectName.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mvp24Hours.WebAPI" Version="8.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.*" />
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="8.*" />
-  </ItemGroup>
-</Project>
-```
-
----
-
-## Configuration Files
+## Configuration Files (All Structures)
 
 ### appsettings.json
 
@@ -383,37 +146,6 @@ ProjectName.WebAPI.HealthChecks
     }
   },
   "AllowedHosts": "*"
-}
-```
-
-### appsettings.Development.json
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=ProjectDb_Dev;User Id=sa;Password=YourPassword;TrustServerCertificate=True;"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Debug",
-      "Microsoft.AspNetCore": "Information",
-      "Microsoft.EntityFrameworkCore": "Information"
-    }
-  }
-}
-```
-
-### appsettings.Production.json
-
-```json
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Warning",
-      "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore": "Warning"
-    }
-  }
 }
 ```
 
@@ -449,163 +181,75 @@ ProjectName.WebAPI.HealthChecks
 
 ---
 
-## Program.cs Templates
+## Base Entity Classes
 
-### Minimal API
+All entities should inherit from Mvp24Hours base classes:
 
 ```csharp
-using FluentValidation;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
-using Mvp24Hours.Extensions;
-using NLog;
-using NLog.Web;
-using ProjectName.Data;
-using ProjectName.Extensions;
-
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-
-try
+// For entities with auto-increment integer ID
+public class Customer : EntityBase<int>
 {
-    logger.Info("Starting application");
-
-    var builder = WebApplication.CreateBuilder(args);
-
-    // Logging
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
-
-    // Services
-    builder.Services.AddMyServices(builder.Configuration);
-
-    // Swagger
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    var app = builder.Build();
-
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
-    app.UseHttpsRedirection();
-
-    // Health Checks
-    app.MapHealthChecks("/health", new HealthCheckOptions
-    {
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-    });
-
-    // Endpoints
-    app.MapCustomerEndpoints();
-
-    app.Run();
+    public string Name { get; set; } = string.Empty;
 }
-catch (Exception ex)
+
+// For entities with GUID ID
+public class Order : EntityBase<Guid>
 {
-    logger.Error(ex, "Application stopped due to exception");
-    throw;
+    public DateTime OrderDate { get; set; }
 }
-finally
+
+// For entities with audit fields (Created, Modified, etc.)
+public class AuditableEntity : EntityBaseLog<int, int>
 {
-    LogManager.Shutdown();
+    public string Description { get; set; } = string.Empty;
 }
 ```
 
-### N-Layers (with Startup.cs)
+---
+
+## DTO Patterns
+
+### Record DTOs (Recommended)
 
 ```csharp
-// Program.cs
-using NLog;
-using NLog.Web;
+// Response DTO
+public record CustomerDto(
+    int Id,
+    string Name,
+    string Email,
+    bool Active
+);
 
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+// Create DTO
+public record CustomerCreateDto(
+    string Name,
+    string Email
+);
 
-try
+// Update DTO
+public record CustomerUpdateDto(
+    string Name,
+    string Email,
+    bool Active
+);
+
+// Filter DTO (for queries)
+public record CustomerFilterDto(
+    string? Name,
+    string? Email,
+    bool? Active
+);
+```
+
+### Class DTOs (When mutation is needed)
+
+```csharp
+public class CustomerDto
 {
-    logger.Info("Starting application");
-
-    var builder = WebApplication.CreateBuilder(args);
-
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
-
-    var startup = new Startup(builder.Configuration);
-    startup.ConfigureServices(builder.Services);
-
-    var app = builder.Build();
-
-    startup.Configure(app, app.Environment);
-
-    app.Run();
-}
-catch (Exception ex)
-{
-    logger.Error(ex, "Application stopped due to exception");
-    throw;
-}
-finally
-{
-    LogManager.Shutdown();
-}
-
-// Startup.cs
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using ProjectName.WebAPI.Extensions;
-using ProjectName.WebAPI.Middlewares;
-
-public class Startup
-{
-    public IConfiguration Configuration { get; }
-
-    public Startup(IConfiguration configuration)
-    {
-        Configuration = configuration;
-    }
-
-    public void ConfigureServices(IServiceCollection services)
-    {
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new() { Title = "ProjectName API", Version = "v1" });
-        });
-
-        services.AddFluentValidationAutoValidation();
-        services.AddMyServices(Configuration);
-    }
-
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        if (env.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ProjectName API v1"));
-        }
-
-        app.UseCorrelationId();
-        app.UseExceptionHandling();
-
-        app.UseHttpsRedirection();
-        app.UseRouting();
-        app.UseAuthorization();
-
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-            endpoints.MapHealthChecks("/health", new HealthCheckOptions
-            {
-                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-            });
-        });
-    }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public bool Active { get; set; }
 }
 ```
 
@@ -613,7 +257,8 @@ public class Startup
 
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Decision Matrix](ai-context/decision-matrix.md)
-- [Database Patterns](ai-context/database-patterns.md)
-
+- [Architecture Templates](architecture-templates.md)
+- [Decision Matrix](decision-matrix.md)
+- [Database Patterns](database-patterns.md)
+- [Messaging Patterns](messaging-patterns.md)
+- [Observability Patterns](observability-patterns.md)
