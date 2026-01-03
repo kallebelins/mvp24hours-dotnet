@@ -98,12 +98,12 @@ if (order == null)
 
 ## Documentation
 
-- [Guard Clauses](en-us/core/guard-clauses.md) - Defensive programming
-- [Value Objects](en-us/core/value-objects.md) - Email, CPF, CNPJ, Money, etc.
-- [Strongly-Typed IDs](en-us/core/strongly-typed-ids.md) - Type-safe identifiers
-- [Functional Patterns](en-us/core/functional-patterns.md) - Maybe, Either
-- [Smart Enums](en-us/core/smart-enums.md) - Enumeration pattern
-- [Entity Interfaces](en-us/core/entity-interfaces.md) - IEntity, IAuditable, etc.
-- [Infrastructure](en-us/core/infrastructure-abstractions.md) - IClock, IGuidGenerator
-- [Exceptions](en-us/core/exceptions.md) - Exception hierarchy
+- [Guard Clauses](core/guard-clauses.md) - Defensive programming
+- [Value Objects](core/value-objects.md) - Email, CPF, CNPJ, Money, etc.
+- [Strongly-Typed IDs](core/strongly-typed-ids.md) - Type-safe identifiers
+- [Functional Patterns](core/functional-patterns.md) - Maybe, Either
+- [Smart Enums](core/smart-enums.md) - Enumeration pattern
+- [Entity Interfaces](core/entity-interfaces.md) - IEntity, IAuditable, etc.
+- [Infrastructure](core/infrastructure-abstractions.md) - IClock, IGuidGenerator
+- [Exceptions](core/exceptions.md) - Exception hierarchy
 

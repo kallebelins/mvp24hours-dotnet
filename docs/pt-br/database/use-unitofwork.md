@@ -3,7 +3,7 @@ Utilizamos o padrão de unidade de trabalho para controlar as transações. Segu
 > Mantém uma lista de objetos afetados por uma transação de negócios e coordena a gravação das alterações e a resolução de problemas de simultaneidade. [Unit Of Work](http://martinfowler.com/eaaCatalog/unitOfWork.html)
 
 ## Pré-Requisitos
-Realizar instalação e configuração para usar um banco de dados [relacional](pt-br/database/relational.md) ou [NoSQL](pt-br/database/nosql.md).
+Realizar instalação e configuração para usar um banco de dados [relacional](database/relational.md) ou [NoSQL](database/nosql.md).
 
 # Unidade de Trabalho
 Para obter basta aplicar o conceito de injeção através do construtor ou utilizar o provedor de ajuda da arquitetura Mvp24Hours, assim:

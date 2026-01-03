@@ -33,9 +33,9 @@ A database that allows you to create relationships between them to guarantee dat
 
 | Database | Link |
 |----------|------|
-| SQL Server | [Configuration](en-us/database/relational?id=sql-server) |
-| PostgreSQL | [Configuration](en-us/database/relational?id=postgresql) |
-| MySQL | [Configuration](en-us/database/relational?id=mysql) |
+| SQL Server | [Configuration](database/relational?id=sql-server) |
+| PostgreSQL | [Configuration](database/relational?id=postgresql) |
+| MySQL | [Configuration](database/relational?id=mysql) |
 
 **Advanced features:**
 - Interceptors (Audit, SoftDelete, Concurrency, SlowQuery)
@@ -49,17 +49,17 @@ A database that allows you to create relationships between them to guarantee dat
 #### Document-Oriented
 > Database designed to store and query data as JSON documents.
 
-[MongoDB](en-us/database/nosql?id=mongodb) - With Change Streams, GridFS, Geospatial queries
+[MongoDB](database/nosql?id=mongodb) - With Change Streams, GridFS, Geospatial queries
 
 #### Key-Value Oriented
 Map/dictionary data structure where we use a key as identifier.
 
-[Redis](en-us/database/nosql?id=redis) - Distributed cache and locks
+[Redis](database/nosql?id=redis) - Distributed cache and locks
 
 ### ⭐ CQRS and Mediator (New!)
 Command Query Responsibility Segregation pattern with custom Mediator.
 
-[CQRS](en-us/cqrs/home.md) - Complete documentation
+[CQRS](cqrs/home.md) - Complete documentation
 
 **Includes:**
 - Typed Commands and Queries
@@ -71,7 +71,7 @@ Command Query Responsibility Segregation pattern with custom Mediator.
 ### 📨 Message Broker
 Software that enables applications, systems and services to communicate.
 
-[RabbitMQ](en-us/broker.md) - Enterprise messaging
+[RabbitMQ](broker.md) - Enterprise messaging
 
 **Features:**
 - Typed consumers (`IMessageConsumer<T>`)
@@ -84,7 +84,7 @@ Software that enables applications, systems and services to communicate.
 ### 📦 Pipeline
 Pipe and Filters pattern representing a pipe with multiple operations executed sequentially.
 
-[Pipeline](en-us/pipeline.md) - Complete documentation
+[Pipeline](pipeline.md) - Complete documentation
 
 **Features:**
 - Typed pipeline (`IPipeline<TInput, TOutput>`)
@@ -95,7 +95,7 @@ Pipe and Filters pattern representing a pipe with multiple operations executed s
 ### 📊 Observability (New!)
 Complete observability stack with OpenTelemetry.
 
-[Observability](en-us/observability/home.md) - Complete documentation
+[Observability](observability/home.md) - Complete documentation
 
 **Includes:**
 - Distributed tracing with Activities
@@ -106,7 +106,7 @@ Complete observability stack with OpenTelemetry.
 ### ⏰ CronJob
 Background task scheduling with CRON expressions.
 
-[CronJob](en-us/cronjob.md) - Complete documentation
+[CronJob](cronjob.md) - Complete documentation
 
 **Features:**
 - Retry with circuit breaker
@@ -117,31 +117,31 @@ Background task scheduling with CRON expressions.
 ### 📝 Documentation
 Document your RESTful API with Swagger/OpenAPI.
 
-[Swagger](en-us/swagger.md) - Configuration
+[Swagger](swagger.md) - Configuration
 
 **New:** Native OpenAPI support (.NET 9)
 
 ### 🔄 Mapping
 AutoMapper for object mapping (Entity ↔ DTO).
 
-[AutoMapper](en-us/automapper.md) - Configuration
+[AutoMapper](automapper.md) - Configuration
 
 ### ✅ Validation
 Data validation with FluentValidation or Data Annotations.
 
-[Validation](en-us/validation.md) - Documentation
+[Validation](validation.md) - Documentation
 
 ## 🏗️ Architectural Patterns
 
 | Pattern | Description | Link |
 |---------|-------------|------|
-| **Unit of Work** | Manages transactions and persistence | [Documentation](en-us/database/use-unitofwork.md) |
-| **Repository** | Data access abstraction | [Documentation](en-us/database/use-repository.md) |
-| **Repository Service** | Business rules + repository | [Documentation](en-us/database/use-service.md) |
-| **Specification** | Reusable filters | [Documentation](en-us/specification.md) |
-| **CQRS** | Read/Write separation | [Documentation](en-us/cqrs/home.md) |
-| **Event Sourcing** | Event-based persistence | [Documentation](en-us/cqrs/event-sourcing/home.md) |
-| **Saga** | Distributed transactions | [Documentation](en-us/cqrs/saga/home.md) |
+| **Unit of Work** | Manages transactions and persistence | [Documentation](database/use-unitofwork.md) |
+| **Repository** | Data access abstraction | [Documentation](database/use-repository.md) |
+| **Repository Service** | Business rules + repository | [Documentation](database/use-service.md) |
+| **Specification** | Reusable filters | [Documentation](specification.md) |
+| **CQRS** | Read/Write separation | [Documentation](cqrs/home.md) |
+| **Event Sourcing** | Event-based persistence | [Documentation](cqrs/event-sourcing/home.md) |
+| **Saga** | Distributed transactions | [Documentation](cqrs/saga/home.md) |
 
 ## 🔧 .NET 9 Modernization
 
@@ -149,11 +149,11 @@ Native .NET 9 features integrated:
 
 | Feature | Description | Link |
 |---------|-------------|------|
-| **HybridCache** | L1 + L2 cache with stampede protection | [Documentation](en-us/modernization/hybrid-cache.md) |
-| **TimeProvider** | Time abstraction for testing | [Documentation](en-us/modernization/time-provider.md) |
-| **Rate Limiting** | Native request limiting | [Documentation](en-us/modernization/rate-limiting.md) |
-| **Channels** | High-performance Producer/Consumer | [Documentation](en-us/modernization/channels.md) |
-| **TypedResults** | Typed Minimal APIs | [Documentation](en-us/modernization/minimal-apis.md) |
+| **HybridCache** | L1 + L2 cache with stampede protection | [Documentation](modernization/hybrid-cache.md) |
+| **TimeProvider** | Time abstraction for testing | [Documentation](modernization/time-provider.md) |
+| **Rate Limiting** | Native request limiting | [Documentation](modernization/rate-limiting.md) |
+| **Channels** | High-performance Producer/Consumer | [Documentation](modernization/channels.md) |
+| **TypedResults** | Typed Minimal APIs | [Documentation](modernization/minimal-apis.md) |
 
 ## 📚 Next Steps
 

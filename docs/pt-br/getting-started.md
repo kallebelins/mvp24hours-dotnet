@@ -33,9 +33,9 @@ dotnet add package Mvp24Hours.Infrastructure.Caching
 
 | Database | Link |
 |----------|------|
-| SQL Server | [Configuração](pt-br/database/relational?id=sql-server) |
-| PostgreSQL | [Configuração](pt-br/database/relational?id=postgresql) |
-| MySQL | [Configuração](pt-br/database/relational?id=mysql) |
+| SQL Server | [Configuração](database/relational?id=sql-server) |
+| PostgreSQL | [Configuração](database/relational?id=postgresql) |
+| MySQL | [Configuração](database/relational?id=mysql) |
 
 **Funcionalidades avançadas:**
 - Interceptors (Audit, SoftDelete, Concurrency, SlowQuery)
@@ -49,17 +49,17 @@ dotnet add package Mvp24Hours.Infrastructure.Caching
 #### Orientado a Documentos
 > Banco de dados projetado para armazenar e consultar dados como documentos JSON.
 
-[MongoDB](pt-br/database/nosql?id=mongodb) - Com Change Streams, GridFS, Geospatial queries
+[MongoDB](database/nosql?id=mongodb) - Com Change Streams, GridFS, Geospatial queries
 
 #### Orientado a Chave-Valor
 Estrutura de dados do tipo mapa/dicionário, onde utilizamos uma chave como identificador.
 
-[Redis](pt-br/database/nosql?id=redis) - Cache distribuído e locks
+[Redis](database/nosql?id=redis) - Cache distribuído e locks
 
 ### ⭐ CQRS e Mediator (Novo!)
 Padrão Command Query Responsibility Segregation com Mediator próprio.
 
-[CQRS](pt-br/cqrs/home.md) - Documentação completa
+[CQRS](cqrs/home.md) - Documentação completa
 
 **Inclui:**
 - Commands e Queries tipados
@@ -71,7 +71,7 @@ Padrão Command Query Responsibility Segregation com Mediator próprio.
 ### 📨 Message Broker
 Software que possibilita que aplicações, sistemas e serviços se comuniquem.
 
-[RabbitMQ](pt-br/broker.md) - Mensageria enterprise
+[RabbitMQ](broker.md) - Mensageria enterprise
 
 **Funcionalidades:**
 - Consumers tipados (`IMessageConsumer<T>`)
@@ -84,7 +84,7 @@ Software que possibilita que aplicações, sistemas e serviços se comuniquem.
 ### 📦 Pipeline
 Padrão Pipe and Filters que representa um tubo com diversas operações executadas sequencialmente.
 
-[Pipeline](pt-br/pipeline.md) - Documentação completa
+[Pipeline](pipeline.md) - Documentação completa
 
 **Funcionalidades:**
 - Pipeline tipado (`IPipeline<TInput, TOutput>`)
@@ -95,7 +95,7 @@ Padrão Pipe and Filters que representa um tubo com diversas operações executa
 ### 📊 Observabilidade (Novo!)
 Stack completa de observabilidade com OpenTelemetry.
 
-[Observabilidade](pt-br/observability/home.md) - Documentação completa
+[Observabilidade](observability/home.md) - Documentação completa
 
 **Inclui:**
 - Tracing distribuído com Activities
@@ -106,7 +106,7 @@ Stack completa de observabilidade com OpenTelemetry.
 ### ⏰ CronJob
 Agendamento de tarefas em background com expressões CRON.
 
-[CronJob](pt-br/cronjob.md) - Documentação completa
+[CronJob](cronjob.md) - Documentação completa
 
 **Funcionalidades:**
 - Retry com circuit breaker
@@ -117,31 +117,31 @@ Agendamento de tarefas em background com expressões CRON.
 ### 📝 Documentação
 Documente sua API RESTful com Swagger/OpenAPI.
 
-[Swagger](pt-br/swagger.md) - Configuração
+[Swagger](swagger.md) - Configuração
 
 **Novo:** Suporte a OpenAPI nativo (.NET 9)
 
 ### 🔄 Mapeamento
 AutoMapper para mapeamento de objetos (Entity ↔ DTO).
 
-[AutoMapper](pt-br/automapper.md) - Configuração
+[AutoMapper](automapper.md) - Configuração
 
 ### ✅ Validação
 Validação de dados com FluentValidation ou Data Annotations.
 
-[Validação](pt-br/validation.md) - Documentação
+[Validação](validation.md) - Documentação
 
 ## 🏗️ Padrões Arquiteturais
 
 | Padrão | Descrição | Link |
 |--------|-----------|------|
-| **Unit of Work** | Gerencia transações e persistência | [Documentação](pt-br/database/use-unitofwork.md) |
-| **Repository** | Abstração de acesso a dados | [Documentação](pt-br/database/use-repository.md) |
-| **Repository Service** | Regras de negócio + repositório | [Documentação](pt-br/database/use-service.md) |
-| **Specification** | Filtros reutilizáveis | [Documentação](pt-br/specification.md) |
-| **CQRS** | Separação de leitura/escrita | [Documentação](pt-br/cqrs/home.md) |
-| **Event Sourcing** | Persistência por eventos | [Documentação](pt-br/cqrs/event-sourcing/home.md) |
-| **Saga** | Transações distribuídas | [Documentação](pt-br/cqrs/saga/home.md) |
+| **Unit of Work** | Gerencia transações e persistência | [Documentação](database/use-unitofwork.md) |
+| **Repository** | Abstração de acesso a dados | [Documentação](database/use-repository.md) |
+| **Repository Service** | Regras de negócio + repositório | [Documentação](database/use-service.md) |
+| **Specification** | Filtros reutilizáveis | [Documentação](specification.md) |
+| **CQRS** | Separação de leitura/escrita | [Documentação](cqrs/home.md) |
+| **Event Sourcing** | Persistência por eventos | [Documentação](cqrs/event-sourcing/home.md) |
+| **Saga** | Transações distribuídas | [Documentação](cqrs/saga/home.md) |
 
 ## 🔧 Modernização .NET 9
 
@@ -149,11 +149,11 @@ Funcionalidades nativas do .NET 9 integradas:
 
 | Funcionalidade | Descrição | Link |
 |----------------|-----------|------|
-| **HybridCache** | Cache L1 + L2 com stampede protection | [Documentação](pt-br/modernization/hybrid-cache.md) |
-| **TimeProvider** | Abstração de tempo para testes | [Documentação](pt-br/modernization/time-provider.md) |
-| **Rate Limiting** | Limitação de requisições nativa | [Documentação](pt-br/modernization/rate-limiting.md) |
-| **Channels** | Producer/Consumer de alta performance | [Documentação](pt-br/modernization/channels.md) |
-| **TypedResults** | Minimal APIs tipadas | [Documentação](pt-br/modernization/minimal-apis.md) |
+| **HybridCache** | Cache L1 + L2 com stampede protection | [Documentação](modernization/hybrid-cache.md) |
+| **TimeProvider** | Abstração de tempo para testes | [Documentação](modernization/time-provider.md) |
+| **Rate Limiting** | Limitação de requisições nativa | [Documentação](modernization/rate-limiting.md) |
+| **Channels** | Producer/Consumer de alta performance | [Documentação](modernization/channels.md) |
+| **TypedResults** | Minimal APIs tipadas | [Documentação](modernization/minimal-apis.md) |
 
 ## 📚 Próximos Passos
 

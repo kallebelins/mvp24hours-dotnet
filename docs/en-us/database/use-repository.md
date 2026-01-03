@@ -3,7 +3,7 @@ We use the repository pattern to interact with the database. According to Martin
 > Mediates between the domain and data mapping layers using a collection-like interface to access domain objects. [Repository](http://martinfowler.com/eaaCatalog/repository.html)
 
 ## Prerequisites
-Perform installation and configuration to use a [relational](en-us/database/relational.md) or [NoSQL](en-us/database/nosql.md) database.
+Perform installation and configuration to use a [relational](database/relational.md) or [NoSQL](database/nosql.md) database.
 
 # Repository
 Use the unit of work to load the repository, like this:

@@ -1,4 +1,4 @@
-# <img  style="vertical-align:middle" width="42" height="42" src="/_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET9 (v9.1.200) 🚀
+# <img  style="vertical-align:middle" width="42" height="42" src="../_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET9 (v9.1.200) 🚀
 
 This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/pt-br/training/dotnet/). I used the reference of market solutions for building microservices.
 
@@ -70,7 +70,7 @@ Users, interested parties, students, enthusiasts, developers, programmers [conne
 Be a sponsor by choosing this project to accelerate your products.
 
 ## What's new?
-See the news and updates on this project. [News](en-us/release)
+See the news and updates on this project. [News](release)
 
 ## Have you migrated your project?
-Keep track of changes to keep your code working correctly. [Migration](en-us/migration)
+Keep track of changes to keep your code working correctly. [Migration](migration)

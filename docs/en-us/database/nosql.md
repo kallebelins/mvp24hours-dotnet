@@ -4,7 +4,7 @@
 ## Document Oriented
 > A document-oriented database, or document store, is a computer program and data storage system designed to store, retrieve, and manage document-oriented information, also known as semi-structured data. [Wikipedia](https://en.wikipedia.org/wiki/Document-oriented_database)
 
-A repository pattern with search and pagination criteria was implemented, as well as a unit of work ([See Repository](en-us/database/use-repository)). This implementation does not support late loading of related objects only.
+A repository pattern with search and pagination criteria was implemented, as well as a unit of work ([See Repository](database/use-repository)). This implementation does not support late loading of related objects only.
 
 ### MongoDB
 
