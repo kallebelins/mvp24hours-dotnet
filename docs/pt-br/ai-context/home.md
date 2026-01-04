@@ -11,9 +11,9 @@ Esta seção fornece instruções estruturadas e templates para agentes de IA cr
 ### Como os Agentes de IA Devem Usar Esta Documentação
 
 1. **Analisar Requisitos**: Compreender os requisitos do projeto (tipo de banco de dados, complexidade, necessidades de mensageria)
-2. **Selecionar Template**: Usar a [Matriz de Decisão](ai-context/decision-matrix.md) para escolher o template de arquitetura apropriado
+2. **Selecionar Template**: Usar a [Matriz de Decisão](decision-matrix.md) para escolher o template de arquitetura apropriado
 3. **Aplicar Padrões**: Seguir os padrões específicos para cada componente (banco de dados, mensageria, observabilidade)
-4. **Gerar Estrutura**: Criar a estrutura do projeto seguindo as convenções definidas em [Estrutura de Projetos](ai-context/project-structure.md)
+4. **Gerar Estrutura**: Criar a estrutura do projeto seguindo as convenções definidas em [Estrutura de Projetos](project-structure.md)
 
 ---
 

@@ -3,7 +3,7 @@ We use the unit of work standard to control transactions. According to Martin Fo
 > Maintains a list of objects affected by a business transaction and coordinates recording changes and resolving concurrency issues. [Unit Of Work](http://martinfowler.com/eaaCatalog/unitOfWork.html)
 
 ## Prerequisites
-Perform installation and configuration to use a [relational](database/relational.md) or [NoSQL](database/nosql.md) database.
+Perform installation and configuration to use a [relational](relational.md) or [NoSQL](nosql.md) database.
 
 # Unit of Work
 To obtain this, simply apply the injection concept through the constructor or use the Mvp24Hours architecture help provider, like this:

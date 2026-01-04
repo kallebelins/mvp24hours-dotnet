@@ -28,7 +28,7 @@ public class MyDataContext : Mvp24HoursContext
     public override bool CanApplyEntityLog => true;
 }
 ```
-Your entity must implement a log interface. [See Entity](database/use-entity.md)
+Your entity must implement a log interface. [See Entity](use-entity.md)
 
 One of the logging implementations offers the possibility to fill in the ID of the user who is creating, updating or deleting the record (logical deletion). To load logged in user data, I suggest:
 ```csharp

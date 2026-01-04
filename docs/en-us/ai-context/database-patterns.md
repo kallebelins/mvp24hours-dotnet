@@ -569,7 +569,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Decision Matrix](ai-context/decision-matrix.md)
-- [Project Structure](ai-context/project-structure.md)
+- [Architecture Templates](architecture-templates.md)
+- [Decision Matrix](decision-matrix.md)
+- [Project Structure](project-structure.md)
 

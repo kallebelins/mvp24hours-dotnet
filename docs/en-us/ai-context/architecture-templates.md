@@ -755,7 +755,7 @@ See [Pipeline Documentation](../pipeline.md) for detailed implementation.
 
 ### With RabbitMQ
 
-See [Messaging Patterns](ai-context/messaging-patterns.md) for detailed implementation.
+See [Messaging Patterns](messaging-patterns.md) for detailed implementation.
 
 ---
 

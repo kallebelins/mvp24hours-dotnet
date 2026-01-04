@@ -516,7 +516,7 @@ Veja [Documentação de Pipeline](../pipeline.md) para implementação detalhada
 
 ### Com RabbitMQ
 
-Veja [Padrões de Mensageria](ai-context/messaging-patterns.md) para implementação detalhada.
+Veja [Padrões de Mensageria](messaging-patterns.md) para implementação detalhada.
 
 ---
 

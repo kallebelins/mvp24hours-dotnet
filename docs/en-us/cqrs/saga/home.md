@@ -194,6 +194,6 @@ public class OrderSaga : ISaga<OrderSagaData>
 
 ## Next Steps
 
-- [Implementation](saga/implementation.md) - Implementing Sagas
-- [Compensation](saga/compensation.md) - Rollback strategies
+- [Implementation](implementation.md) - Implementing Sagas
+- [Compensation](compensation.md) - Rollback strategies
 

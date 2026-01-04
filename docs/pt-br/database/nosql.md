@@ -4,7 +4,7 @@
 ## Orientado a Documento
 > Um banco de dados orientado a documentos, ou armazenamento de documentos, é um programa de computador e sistema de armazenamento de dados projetado para armazenar, recuperar e gerenciar informações orientadas a documentos, também conhecido como dados semiestruturados. [Wikipedia](https://en.wikipedia.org/wiki/Document-oriented_database)
 
-Foi implementado padrão de repositório com critérios de pesquisa e paginação, além de unidade de trabalho ([Veja Repositório](database/use-repository)). Esta implementação não oferece suporte apenas a carga tardia de objetos relacionados. 
+Foi implementado padrão de repositório com critérios de pesquisa e paginação, além de unidade de trabalho ([Veja Repositório](use-repository.md)). Esta implementação não oferece suporte apenas a carga tardia de objetos relacionados. 
 
 ### MongoDB
 

@@ -541,7 +541,7 @@ public static IServiceCollection AddMyServices(this IServiceCollection services,
 
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Decision Matrix](ai-context/decision-matrix.md)
-- [Observability Patterns](ai-context/observability-patterns.md)
+- [Architecture Templates](architecture-templates.md)
+- [Decision Matrix](decision-matrix.md)
+- [Observability Patterns](observability-patterns.md)
 

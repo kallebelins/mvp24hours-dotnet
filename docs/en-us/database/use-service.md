@@ -2,7 +2,7 @@
 You will be able to reduce the complexity of building services at the application layer using Mvp24Hours architecture patterns.
 
 ## Prerequisites
-Perform installation and configuration to use a [relational](database/relational.md) or [NoSQL](database/nosql.md) database.
+Perform installation and configuration to use a [relational](relational.md) or [NoSQL](nosql.md) database.
 
 ## Core Repository Service
 ### Inheritance

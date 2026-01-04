@@ -175,8 +175,8 @@ public class OrderSummaryProjection : IProjection
 
 ## Next Steps
 
-- [Aggregates](event-sourcing/aggregate.md) - Implementing aggregates
-- [Event Store](event-sourcing/event-store.md) - Event storage
-- [Projections](event-sourcing/projections.md) - Read Models
-- [Snapshots](event-sourcing/snapshots.md) - Performance optimization
+- [Aggregates](aggregate.md) - Implementing aggregates
+- [Event Store](event-store.md) - Event storage
+- [Projections](projections.md) - Read Models
+- [Snapshots](snapshots.md) - Performance optimization
 

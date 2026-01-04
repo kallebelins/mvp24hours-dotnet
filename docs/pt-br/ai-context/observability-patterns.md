@@ -500,7 +500,7 @@ app.MapPrometheusScrapingEndpoint("/metrics");
 
 ## Documentação Relacionada
 
-- [Templates de Arquitetura](ai-context/architecture-templates.md)
-- [Matriz de Decisão](ai-context/decision-matrix.md)
-- [Padrões de Modernização](ai-context/modernization-patterns.md)
+- [Templates de Arquitetura](architecture-templates.md)
+- [Matriz de Decisão](decision-matrix.md)
+- [Padrões de Modernização](modernization-patterns.md)
 

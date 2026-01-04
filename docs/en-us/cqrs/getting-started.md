@@ -157,7 +157,7 @@ services.AddMvpMediator(options =>
 
 ## Next Steps
 
-- [Commands](cqrs/commands.md) - Command details
-- [Queries](cqrs/queries.md) - Implementing queries
-- [Behaviors](cqrs/behaviors.md) - Pipeline behaviors in detail
+- [Commands](commands.md) - Command details
+- [Queries](queries.md) - Implementing queries
+- [Behaviors](behaviors.md) - Pipeline behaviors in detail
 

@@ -74,8 +74,8 @@ O módulo **Mvp24Hours.Infrastructure.Cqrs** fornece uma implementação complet
 
 ## Próximos Passos
 
-- [Começando](cqrs/getting-started.md) - Configuração inicial
-- [Commands](cqrs/commands.md) - Criando e executando commands
-- [Queries](cqrs/queries.md) - Implementando queries
-- [Behaviors](cqrs/behaviors.md) - Pipeline behaviors
+- [Começando](getting-started.md) - Configuração inicial
+- [Commands](commands.md) - Criando e executando commands
+- [Queries](queries.md) - Implementando queries
+- [Behaviors](behaviors.md) - Pipeline behaviors
 

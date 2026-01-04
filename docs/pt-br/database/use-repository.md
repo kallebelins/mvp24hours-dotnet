@@ -3,7 +3,7 @@ Utilizamos o padrão de repositório para interação com banco de dados. Segund
 > Faz a mediação entre o domínio e as camadas de mapeamento de dados usando uma interface semelhante a uma coleção para acessar objetos de domínio. [Repository](http://martinfowler.com/eaaCatalog/repository.html)
 
 ## Pré-Requisitos
-Realizar instalação e configuração para usar um banco de dados [relacional](database/relational.md) ou [NoSQL](database/nosql.md).
+Realizar instalação e configuração para usar um banco de dados [relacional](relational.md) ou [NoSQL](nosql.md).
 
 # Repositório
 Utilize a unidade de trabalho para carregar o repositório, assim:

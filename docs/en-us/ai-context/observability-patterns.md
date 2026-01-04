@@ -588,7 +588,7 @@ app.MapPrometheusScrapingEndpoint("/metrics");
 
 ## Related Documentation
 
-- [Architecture Templates](ai-context/architecture-templates.md)
-- [Decision Matrix](ai-context/decision-matrix.md)
-- [Modernization Patterns](ai-context/modernization-patterns.md)
+- [Architecture Templates](architecture-templates.md)
+- [Decision Matrix](decision-matrix.md)
+- [Modernization Patterns](modernization-patterns.md)
 

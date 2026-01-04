@@ -11,9 +11,9 @@ This section provides structured instructions and templates for AI agents to cre
 ### How AI Agents Should Use This Documentation
 
 1. **Analyze Requirements**: Understand the project requirements (database type, complexity, messaging needs)
-2. **Select Template**: Use the [Decision Matrix](ai-context/decision-matrix.md) to choose the appropriate architecture template
+2. **Select Template**: Use the [Decision Matrix](decision-matrix.md) to choose the appropriate architecture template
 3. **Apply Patterns**: Follow the specific patterns for each component (database, messaging, observability)
-4. **Generate Structure**: Create the project structure following the conventions defined in [Project Structure](ai-context/project-structure.md)
+4. **Generate Structure**: Create the project structure following the conventions defined in [Project Structure](project-structure.md)
 
 ---
 

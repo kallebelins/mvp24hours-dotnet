@@ -28,7 +28,7 @@ public class MyDataContext : Mvp24HoursContext
     public override bool CanApplyEntityLog => true;
 }
 ```
-Sua entidade deverá implementar interface de log. [Veja Entidade](database/use-entity.md)
+Sua entidade deverá implementar interface de log. [Veja Entidade](use-entity.md)
 
 Uma das implementações de log oferecem a possibilidade de preencher o ID do usuário que está criando, atualizando ou excluindo o registro (exclusão lógica). Para carregar os dados do usuário logado, sugiro:
 ```csharp
