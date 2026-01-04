@@ -12,7 +12,9 @@
   * [Exceptions](/en-us/core/exceptions.md)
 * Database
   * [Relational Database](/en-us/database/relational.md)
+  * [EF Core Advanced](/en-us/database/efcore-advanced.md)
   * [NoSQL Database](/en-us/database/nosql.md)
+  * [MongoDB Advanced](/en-us/database/mongodb-advanced.md)
   * [Entity](/en-us/database/use-entity.md)
   * [Database Context](/en-us/database/use-context.md)
   * [Unit of Work](/en-us/database/use-unitofwork.md)
@@ -20,6 +22,7 @@
   * [Repository Service](/en-us/database/use-service.md)
 * Infrastructure
   * [Message Broker](/en-us/broker.md)
+  * [Message Broker Advanced](/en-us/broker-advanced.md)
   * [Pipeline](/en-us/pipeline.md)
   * [Caching](/en-us/caching-advanced.md)
 * [Application Services](/en-us/application-services.md)
@@ -73,6 +76,7 @@
   * [Basics](/en-us/webapi.md)
   * [Advanced Features](/en-us/webapi-advanced.md)
 * Observability
+  * [Overview](/en-us/observability/home.md)
   * [Logging](/en-us/logging.md)
   * [Telemetry](/en-us/telemetry.md)
   * [OpenTelemetry Logging](/en-us/observability/logging.md)
