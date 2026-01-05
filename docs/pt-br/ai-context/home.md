@@ -12,10 +12,10 @@ Esta documentação inclui arquivos de regras prontos para uso no Cursor IDE que
 
 | Arquivo | Descrição | Idioma |
 |---------|-----------|--------|
-| `docs/llms_complete_pt.txt` | Regras completas com instruções detalhadas | Português |
-| `docs/llms_compact_pt.txt` | Regras compactas com índice de palavras-chave | Português |
-| `docs/llms_complete_en.txt` | Regras completas com instruções detalhadas | Inglês |
-| `docs/llms_compact_en.txt` | Regras compactas com índice de palavras-chave | Inglês |
+| [`llms_complete_pt.txt`](../../llms_complete_pt.txt) | Regras completas com instruções detalhadas | Português |
+| [`llms_compact_pt.txt`](../../llms_compact_pt.txt) | Regras compactas com índice de palavras-chave | Português |
+| [`llms_complete_en.txt`](../../llms_complete_en.txt) | Regras completas com instruções detalhadas | Inglês |
+| [`llms_compact_en.txt`](../../llms_compact_en.txt) | Regras compactas com índice de palavras-chave | Inglês |
 
 ### Como Usar com o Cursor IDE
 

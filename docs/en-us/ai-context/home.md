@@ -12,10 +12,10 @@ This documentation includes ready-to-use rule files for Cursor IDE that enable A
 
 | File | Description | Language |
 |------|-------------|----------|
-| `docs/llms_complete_en.txt` | Complete rules with detailed instructions | English |
-| `docs/llms_compact_en.txt` | Compact rules with keyword index | English |
-| `docs/llms_complete_pt.txt` | Complete rules with detailed instructions | Portuguese |
-| `docs/llms_compact_pt.txt` | Compact rules with keyword index | Portuguese |
+| [`llms_complete_en.txt`](../../llms_complete_en.txt) | Complete rules with detailed instructions | English |
+| [`llms_compact_en.txt`](../../llms_compact_en.txt) | Compact rules with keyword index | English |
+| [`llms_complete_pt.txt`](../../llms_complete_pt.txt) | Complete rules with detailed instructions | Portuguese |
+| [`llms_compact_pt.txt`](../../llms_compact_pt.txt) | Compact rules with keyword index | Portuguese |
 
 ### How to Use with Cursor IDE
 
