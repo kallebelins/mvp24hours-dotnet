@@ -4,6 +4,54 @@
 
 ---
 
+## 🚀 Quick Setup - Cursor Rules Files
+
+This documentation includes ready-to-use rule files for Cursor IDE that enable AI agents to follow Mvp24Hours SDK patterns automatically.
+
+### Available Files
+
+| File | Description | Language |
+|------|-------------|----------|
+| `docs/llms_complete_en.txt` | Complete rules with detailed instructions | English |
+| `docs/llms_compact_en.txt` | Compact rules with keyword index | English |
+| `docs/llms_complete_pt.txt` | Complete rules with detailed instructions | Portuguese |
+| `docs/llms_compact_pt.txt` | Compact rules with keyword index | Portuguese |
+
+### How to Use with Cursor IDE
+
+#### Method 1: Root `.cursorrules` File (Recommended for single project)
+
+1. Copy the desired file to your project root
+2. Rename it to `.cursorrules`
+
+```
+your-project/
+├── .cursorrules          ← Rename llms_complete_en.txt to .cursorrules
+├── src/
+└── ...
+```
+
+#### Method 2: `.cursor/rules/` Folder (Recommended for multiple rules)
+
+1. Create a `.cursor/rules/` folder in your project root
+2. Copy the file and rename with `.mdc` extension
+
+```
+your-project/
+├── .cursor/
+│   └── rules/
+│       └── mvp24hours.mdc    ← Rename llms_complete_en.txt to mvp24hours.mdc
+├── src/
+└── ...
+```
+
+### Official Cursor Documentation
+
+- [Cursor Rules](https://docs.cursor.com/context/rules) - How rules work
+- [Rules for AI](https://docs.cursor.com/context/rules-for-ai) - Best practices for AI rules
+
+---
+
 ## Overview
 
 This section provides structured instructions and templates for AI agents to create .NET applications following best practices and patterns implemented in the Mvp24Hours ecosystem.

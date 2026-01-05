@@ -1,0 +1,163 @@
+- When developing any solution or architecture in .NET, you MUST consult the Mvp24Hours SDK documentation BEFORE making any implementation decision. The SDK contains ready-made solutions, architecture templates, and validated patterns.
+
+## Documentation Sources (ALWAYS CONSULT)
+- Complete Documentation: "D:\Github\mvp24hours-dotnet\docs\en-us\"
+- AI Documentation: "D:\Github\mvp24hours-dotnet\docs\en-us\ai-context\"
+- Decision Files: "ai-context/decision-matrix.md", "ai-context/architecture-templates.md"
+
+## Keywords that FORCE Documentation Consultation
+
+### Architecture (consult: decision-matrix.md, architecture-templates.md)
+- "create an architecture", "review the architecture", "restructure the architecture"
+- "clean architecture" → template-clean-architecture.md
+- "hexagonal" → template-hexagonal.md
+- "ddd" → template-ddd.md
+- "cqrs" → template-cqrs.md, cqrs/home.md
+- "event-driven" → template-event-driven.md
+- "microservices" → template-microservices.md
+- "minimal api" → structure-minimal-api.md
+- "n-layers", "layers" → structure-simple-nlayers.md, structure-complex-nlayers.md
+
+### Cache and Performance (consult: modernization-patterns.md, database-patterns.md)
+- "add cache", "implement cache" → modernization/hybrid-cache.md, caching-advanced.md
+- "redis" → database-patterns.md (Redis section), cqrs/integration-caching.md
+- "output caching" → modernization/output-caching.md
+- "hybrid cache" → modernization/hybrid-cache.md
+
+### Observability (consult: observability-patterns.md)
+- "add monitoring" → observability-patterns.md, observability/home.md
+- "add log", "logging" → observability-patterns.md, logging.md
+- "add tracing" → observability/tracing.md, cqrs/observability/tracing.md
+- "add metrics", "metrics" → observability/metrics.md
+- "opentelemetry" → observability-patterns.md, observability/
+- "health checks" → observability-patterns.md
+- "telemetry" → telemetry.md, cqrs/observability/telemetry.md
+
+### Messaging (consult: messaging-patterns.md, broker.md)
+- "add rabbitmq" → messaging-patterns.md, cqrs/integration-rabbitmq.md, broker.md
+- "message broker" → broker.md, broker-advanced.md
+- "message queue" → messaging-patterns.md
+- "domain events" → cqrs/domain-events.md
+- "integration events" → cqrs/integration-events.md
+
+### Jobs and Tasks (consult: cronjob.md)
+- "add hangfire" → cronjob.md, cronjob-advanced.md
+- "cronjob", "scheduled job" → cronjob.md, cronjob-advanced.md
+- "background service", "hosted service" → messaging-patterns.md
+- "scheduled commands" → cqrs/scheduled-commands.md
+
+### API (consult: webapi.md, modernization/)
+- "add openapi" → modernization/native-openapi.md, webapi.md
+- "swagger" → webapi.md, webapi-advanced.md
+- "api versioning" → api-versioning-patterns.md
+- "problem details" → modernization/problem-details.md
+- "minimal apis" → modernization/minimal-apis.md
+
+### Mediator/CQRS (consult: cqrs/home.md)
+- "replace mediator" → cqrs/home.md, cqrs/migration-mediatr.md
+- "implement mediator" → cqrs/mediator.md, cqrs/getting-started.md
+- "commands", "queries" → cqrs/commands.md, cqrs/queries.md
+- "pipeline behaviors" → cqrs/behaviors.md
+- "saga pattern" → cqrs/saga/home.md
+
+### Resilience (consult: modernization/http-resilience.md)
+- "resilience" → modernization/http-resilience.md, modernization/generic-resilience.md
+- "circuit breaker" → cqrs/resilience/circuit-breaker.md
+- "retry" → cqrs/resilience/retry.md
+- "rate limiting" → modernization/rate-limiting.md
+- "idempotency" → cqrs/resilience/idempotency.md
+- "inbox/outbox" → cqrs/resilience/inbox-outbox.md
+
+### Database (consult: database-patterns.md)
+- "entity framework", "ef core" → database-patterns.md, database/efcore-advanced.md
+- "mongodb" → database-patterns.md, database/mongodb-advanced.md
+- "dapper" → database-patterns.md
+- "unit of work" → database/use-unitofwork.md, cqrs/integration-unitofwork.md
+- "repository" → database/use-repository.md
+- "specification" → specification.md, cqrs/specifications.md
+
+### Security (consult: security-patterns.md)
+- "security" → security-patterns.md
+- "validation" → validation.md, cqrs/validation-behavior.md
+- "fluent validation" → validation.md
+
+### Testing (consult: testing-patterns.md)
+- "testing", "unit test", "integration test" → testing-patterns.md
+
+### Containerization (consult: containerization-patterns.md)
+- "docker", "container" → containerization-patterns.md
+- "aspire" → modernization/aspire.md
+
+### AI (consult: ai-implementation-index.md, ai-decision-matrix.md)
+- "semantic kernel" → ai-implementation-index.md, template-sk-*.md
+- "chatbot" → template-sk-chat-completion.md, template-skg-chatbot-memory.md
+- "rag" → template-sk-rag-basic.md
+- "ai agent" → ai-decision-matrix.md, template-skg-react-agent.md
+- "multi-agent" → template-skg-multi-agent.md, template-agent-framework-multi-agent.md
+- "planners", "task decomposition" → template-sk-planners.md
+- "plugins", "functions", "tools" → template-sk-plugins.md
+- "chain of thought", "reasoning" → template-skg-chain-of-thought.md
+- "checkpointing", "state persistence" → template-skg-checkpointing.md
+- "document pipeline", "document processing" → template-skg-document-pipeline.md
+- "graph executor", "workflow orchestration" → template-skg-graph-executor.md
+- "human in loop", "approval workflow" → template-skg-human-in-loop.md
+- "ai observability", "ai metrics" → template-skg-observability.md
+- "streaming", "real-time events" → template-skg-streaming.md
+- "agent framework" → template-agent-framework-basic.md, template-agent-framework-workflows.md
+- "agent middleware" → template-agent-framework-middleware.md
+
+## MANDATORY Consultation Process
+
+1. IDENTIFY keywords in user request
+2. READ ai-context/home.md for general context
+3. READ ai-context/decision-matrix.md for decision guidance
+4. READ specific documentation based on keyword
+5. APPLY documented patterns STRICTLY
+6. USE Mvp24Hours NuGet packages
+7. FOLLOW defined project structures
+
+## Standard Mvp24Hours NuGet Packages
+
+```xml
+<!-- Core -->
+<PackageReference Include="Mvp24Hours.Core" Version="9.*" />
+<PackageReference Include="Mvp24Hours.Application" Version="9.*" />
+
+<!-- Database EF -->
+<PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
+
+<!-- Database MongoDB -->
+<PackageReference Include="Mvp24Hours.Infrastructure.Data.MongoDb" Version="9.*" />
+
+<!-- Cache Redis -->
+<PackageReference Include="Mvp24Hours.Infrastructure.Caching.Redis" Version="9.*" />
+
+<!-- RabbitMQ -->
+<PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="9.*" />
+
+<!-- Pipeline -->
+<PackageReference Include="Mvp24Hours.Infrastructure.Pipe" Version="9.*" />
+
+<!-- Web API -->
+<PackageReference Include="Mvp24Hours.WebAPI" Version="9.*" />
+
+<!-- CQRS/Mediator -->
+<PackageReference Include="Mvp24Hours.Infrastructure.Cqrs" Version="9.*" />
+```
+
+## Mvp24Hours Code Conventions
+
+- Entities: use IEntityBase<TKey>, IEntityLog
+- Repository: use IRepository<TEntity>, IRepositoryAsync<TEntity>
+- Services: use IBusinessResult<T> for returns
+- DI: use extension methods (AddMvp24HoursDbContext, AddMvp24HoursRepository)
+
+## Important Rules
+
+1. NEVER implement a solution without consulting documentation first
+2. ALWAYS prefer documented SDK solutions
+3. ALWAYS use Mvp24Hours NuGet packages when available
+4. ALWAYS follow project structure templates
+5. NEVER reinvent patterns already implemented in the SDK
+6. ALWAYS validate if a ready template exists before creating from scratch
+
