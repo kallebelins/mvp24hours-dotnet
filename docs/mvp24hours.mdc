@@ -1,4 +1,10 @@
-- When developing any solution or architecture in .NET, you MUST consult the Mvp24Hours SDK documentation BEFORE making any implementation decision. The SDK contains ready-made solutions, architecture templates, and validated patterns.
+---
+description: Mvp24Hours SDK development guidelines - Enforces consultation of SDK documentation before implementing .NET solutions
+globs: "**/*.cs"
+alwaysApply: true
+---
+
+When developing any solution or architecture in .NET, you MUST consult the Mvp24Hours SDK documentation BEFORE making any implementation decision. The SDK contains ready-made solutions, architecture templates, and validated patterns.
 
 ## Documentation Sources (ALWAYS CONSULT)
 
