@@ -171,7 +171,7 @@ ProjectName.WebAPI.Extensions
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Core" Version="9.*" />
     <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="MediatR.Contracts" Version="2.*" />
   </ItemGroup>
@@ -194,7 +194,7 @@ ProjectName.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Application" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Application" Version="9.*" />
     <PackageReference Include="MediatR" Version="12.*" />
     <PackageReference Include="AutoMapper" Version="13.*" />
   </ItemGroup>

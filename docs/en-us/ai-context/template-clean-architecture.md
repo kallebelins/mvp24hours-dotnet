@@ -210,7 +210,7 @@ ProjectName.WebAPI.Services
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Core" Version="9.*" />
     <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="MediatR" Version="12.*" />
     <PackageReference Include="AutoMapper" Version="13.*" />
@@ -233,7 +233,7 @@ ProjectName.WebAPI.Services
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*">
       <PrivateAssets>all</PrivateAssets>

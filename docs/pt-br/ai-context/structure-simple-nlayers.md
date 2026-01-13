@@ -145,7 +145,7 @@ NomeProjeto.WebAPI.Extensions
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Core" Version="9.*" />
     <PackageReference Include="FluentValidation" Version="11.*" />
   </ItemGroup>
 </Project>
@@ -166,7 +166,7 @@ NomeProjeto.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*">
       <PrivateAssets>all</PrivateAssets>
@@ -191,12 +191,12 @@ NomeProjeto.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.WebAPI" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.WebAPI" Version="9.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.*" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="8.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.*" />
   </ItemGroup>
 </Project>
 ```

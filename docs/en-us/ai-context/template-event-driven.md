@@ -158,8 +158,8 @@ ProjectName.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
     <PackageReference Include="RabbitMQ.Client" Version="6.*" />
   </ItemGroup>

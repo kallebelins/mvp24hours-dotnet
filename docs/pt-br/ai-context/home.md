@@ -160,28 +160,28 @@ AspNetCore.HealthChecks.UI.Client
 ```xml
 <!-- Projeto Core -->
 <ItemGroup>
-  <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
+  <PackageReference Include="Mvp24Hours.Core" Version="9.*" />
   <PackageReference Include="FluentValidation" Version="11.*" />
 </ItemGroup>
 
 <!-- Projeto Infrastructure -->
 <ItemGroup>
   <ProjectReference Include="..\NomeProjeto.Core\NomeProjeto.Core.csproj" />
-  <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
+  <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
 </ItemGroup>
 
 <!-- Projeto Application -->
 <ItemGroup>
   <ProjectReference Include="..\NomeProjeto.Core\NomeProjeto.Core.csproj" />
   <ProjectReference Include="..\NomeProjeto.Infrastructure\NomeProjeto.Infrastructure.csproj" />
-  <PackageReference Include="Mvp24Hours.Application" Version="8.*" />
+  <PackageReference Include="Mvp24Hours.Application" Version="9.*" />
   <PackageReference Include="AutoMapper" Version="12.*" />
 </ItemGroup>
 
 <!-- Projeto WebAPI -->
 <ItemGroup>
   <ProjectReference Include="..\NomeProjeto.Application\NomeProjeto.Application.csproj" />
-  <PackageReference Include="Mvp24Hours.WebAPI" Version="8.*" />
+  <PackageReference Include="Mvp24Hours.WebAPI" Version="9.*" />
   <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
   <PackageReference Include="NLog.Web.AspNetCore" Version="5.*" />
 </ItemGroup>

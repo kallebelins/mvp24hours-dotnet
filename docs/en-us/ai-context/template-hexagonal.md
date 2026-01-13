@@ -179,7 +179,7 @@ ProjectName.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Core" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Core" Version="9.*" />
     <PackageReference Include="FluentValidation" Version="11.*" />
   </ItemGroup>
 </Project>
@@ -200,8 +200,8 @@ ProjectName.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="8.*" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="9.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="9.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
   </ItemGroup>
 </Project>
@@ -222,7 +222,7 @@ ProjectName.WebAPI.Extensions
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.WebAPI" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.WebAPI" Version="9.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
   </ItemGroup>
 </Project>

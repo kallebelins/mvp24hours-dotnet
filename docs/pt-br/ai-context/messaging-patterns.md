@@ -9,7 +9,7 @@
 ### Instalação de Pacotes
 
 ```xml
-<PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="8.*" />
+<PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="9.*" />
 <PackageReference Include="RabbitMQ.Client" Version="6.*" />
 ```
 

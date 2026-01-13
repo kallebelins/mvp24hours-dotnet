@@ -204,12 +204,12 @@ Shared.Infrastructure.ServiceDiscovery
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mvp24Hours.WebAPI" Version="8.*" />
-    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="8.*" />
+    <PackageReference Include="Mvp24Hours.WebAPI" Version="9.*" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="9.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="8.*" />
-    <PackageReference Include="AspNetCore.HealthChecks.RabbitMQ" Version="8.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.RabbitMQ" Version="9.*" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.*" />
   </ItemGroup>
 </Project>
