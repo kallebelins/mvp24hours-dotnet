@@ -23,7 +23,7 @@ Você poderá usar a conexão de banco de dados direto, o que não é recomendad
 ```csharp
 /// Package Manager Console >
 
-Install-Package MongoDB.Driver -Version 2.28.0
+Install-Package MongoDB.Driver -Version 2.23.1
 Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 9.1.x
 ```
 #### Configuração

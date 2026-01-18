@@ -2,6 +2,11 @@
 
 # NET9
 
+## 9.1.210 (Janeiro 2026)
+* Correção de versões de pacotes NuGet em todos os projetos;
+* Atualização de dependências para compatibilidade com .NET 9;
+* Remoção de arquivos obsoletos de DelegatingHandlers e TypedHttpClient;
+
 ## 9.1.200 (Janeiro 2026) 🚀 Major Release
 
 ### ⭐ Biblioteca CQRS Completa (Mvp24Hours.Infrastructure.Cqrs)

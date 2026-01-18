@@ -203,18 +203,40 @@ namespace Mvp24Hours.WebAPI.Extensions
             .ExcludeFromDescription()
             .WithTags("OpenAPI");
 
-            // Add Swagger UI redirect
+            // Add Swagger UI if enabled
             if (options.EnableSwaggerUI)
             {
-                // Swagger UI is still handled by UseSwaggerUI middleware
-                // But we can add a convenience redirect
-                app.MapGet($"/{options.SwaggerUIRoutePrefix}", (HttpContext context) =>
+                // Configure and enable Swagger UI middleware
+                app.UseSwaggerUI(swaggerOptions =>
                 {
-                    return Results.Redirect($"/{options.SwaggerUIRoutePrefix}/index.html");
-                })
-                .ExcludeFromDescription();
+                    swaggerOptions.RoutePrefix = options.SwaggerUIRoutePrefix;
 
-                // Add embedded Swagger UI page for Minimal APIs without UseSwaggerUI
+                    // Add the main document
+                    var documentPath = options.DocumentRoutePattern.Replace("{documentName}", options.DocumentName);
+                    swaggerOptions.SwaggerEndpoint($"/{documentPath}", $"{options.Title} {options.Version}");
+
+                    // Add additional version documents
+                    foreach (var version in options.AdditionalVersions)
+                    {
+                        var versionDocPath = options.DocumentRoutePattern.Replace("{documentName}", version.DocumentName);
+                        var versionTitle = version.IsDeprecated
+                            ? $"{version.Title ?? options.Title} {version.Version} (Deprecated)"
+                            : $"{version.Title ?? options.Title} {version.Version}";
+
+                        swaggerOptions.SwaggerEndpoint($"/{versionDocPath}", versionTitle);
+                    }
+
+                    // Configure Swagger UI features
+                    swaggerOptions.EnableDeepLinking();
+                    swaggerOptions.EnableFilter();
+                    swaggerOptions.EnableTryItOutByDefault();
+                    swaggerOptions.DisplayRequestDuration();
+                    swaggerOptions.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+                    swaggerOptions.DefaultModelsExpandDepth(2);
+                    swaggerOptions.EnablePersistAuthorization();
+                });
+
+                // Add embedded Swagger UI page as an alternative (standalone - uses CDN)
                 app.MapGet($"/{options.SwaggerUIRoutePrefix}/standalone", (HttpContext context) =>
                 {
                     var html = GenerateSwaggerUIHtml(options);
@@ -223,17 +245,20 @@ namespace Mvp24Hours.WebAPI.Extensions
                 .ExcludeFromDescription();
             }
 
-            // Add ReDoc redirect
+            // Add ReDoc if enabled (using embedded standalone page via CDN)
+            // Note: Swashbuckle.AspNetCore.ReDoc is not included as a dependency,
+            // so we serve a standalone ReDoc page using the CDN version
             if (options.EnableReDoc)
             {
+                // Redirect /redoc to the standalone page
                 app.MapGet($"/{options.ReDocRoutePrefix}", (HttpContext context) =>
                 {
                     return Results.Redirect($"/{options.ReDocRoutePrefix}/index.html");
                 })
                 .ExcludeFromDescription();
 
-                // Add embedded ReDoc page for Minimal APIs without UseReDoc
-                app.MapGet($"/{options.ReDocRoutePrefix}/standalone", (HttpContext context) =>
+                // Serve embedded ReDoc page at /redoc/index.html (uses CDN)
+                app.MapGet($"/{options.ReDocRoutePrefix}/index.html", (HttpContext context) =>
                 {
                     var html = GenerateReDocHtml(options);
                     return Results.Content(html, "text/html");

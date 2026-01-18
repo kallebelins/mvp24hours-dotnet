@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -10,9 +10,9 @@
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>9.1.20</Version>
-		<AssemblyVersion>9.1.2.0</AssemblyVersion>
-		<FileVersion>9.1.2.0</FileVersion>
+		<Version>9.1.21</Version>
+		<AssemblyVersion>9.1.2.1</AssemblyVersion>
+		<FileVersion>9.1.2.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
 	</PropertyGroup>
 
@@ -21,13 +21,13 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.4.0" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.8" />
 	</ItemGroup>
 
 	<ItemGroup>

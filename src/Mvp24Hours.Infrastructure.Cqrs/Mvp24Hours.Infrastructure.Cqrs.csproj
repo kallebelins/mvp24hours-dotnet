@@ -13,9 +13,9 @@
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>9.1.20</Version>
-		<AssemblyVersion>9.1.2.0</AssemblyVersion>
-		<FileVersion>9.1.2.0</FileVersion>
+		<Version>9.1.21</Version>
+		<AssemblyVersion>9.1.2.1</AssemblyVersion>
+		<FileVersion>9.1.2.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
 		<PackageTags>mediator;cqrs;mvp24hours;ddd;clean-architecture</PackageTags>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -23,12 +23,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Resilience" Version="9.8.0" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
 	</ItemGroup>

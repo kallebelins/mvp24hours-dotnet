@@ -23,7 +23,7 @@ You may be able to use direct database connection, which is not recommended. Acc
 ```csharp
 /// Package Manager Console >
 
-Install-Package MongoDB.Driver -Version 2.28.0
+Install-Package MongoDB.Driver -Version 2.23.1
 Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 9.1.x
 ```
 #### Settings

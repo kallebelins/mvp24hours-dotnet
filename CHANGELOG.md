@@ -5,6 +5,34 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [9.1.210] - 2026-01
+
+### Corrigido
+
+- **Pacotes NuGet**: Correção de versões de pacotes em todos os projetos
+  - `Mvp24Hours.Core.csproj`
+  - `Mvp24Hours.Application.csproj`
+  - `Mvp24Hours.Infrastructure.csproj`
+  - `Mvp24Hours.Infrastructure.Caching.csproj`
+  - `Mvp24Hours.Infrastructure.Caching.Redis.csproj`
+  - `Mvp24Hours.Infrastructure.Cqrs.csproj`
+  - `Mvp24Hours.Infrastructure.CronJob.csproj`
+  - `Mvp24Hours.Infrastructure.Data.EFCore.csproj`
+  - `Mvp24Hours.Infrastructure.Data.MongoDb.csproj`
+  - `Mvp24Hours.Infrastructure.Pipe.csproj`
+  - `Mvp24Hours.Infrastructure.RabbitMQ.csproj`
+  - `Mvp24Hours.WebAPI.csproj`
+
+### Removido
+
+- **Arquivos Obsoletos**: Remoção de arquivos de DelegatingHandlers e TypedHttpClient
+  - `PropagationAuthorizationDelegatingHandler.cs`
+  - `PropagationCorrelationIdDelegatingHandler.cs`
+  - `PropagationHeaderDelegatingHandler.cs`
+  - `TypedHttpClient.cs`
+
+---
+
 ## [9.1.200] - 2026-01 🚀 Major Release
 
 > **Migração para .NET 9** - Esta versão introduz mudanças significativas para adotar as APIs nativas do .NET 9.
