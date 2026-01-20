@@ -1,4 +1,4 @@
-# <img  style="vertical-align:middle" width="42" height="42" src="../_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET9 (v9.1.200) 🚀
+# <img  style="vertical-align:middle" width="42" height="42" src="../_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET9 (v9.1.210) 🚀
 
 This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/pt-br/training/dotnet/). I used the reference of market solutions for building microservices.
 
