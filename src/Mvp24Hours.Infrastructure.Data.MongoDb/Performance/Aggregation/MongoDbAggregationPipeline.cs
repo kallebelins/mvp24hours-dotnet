@@ -75,9 +75,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The pipeline builder for chaining.</returns>
         public MongoDbAggregationPipeline<T> Match(FilterDefinition<T> filter)
         {
-            var bsonFilter = filter.Render(
-                _collection.DocumentSerializer,
-                _collection.Settings.SerializerRegistry);
+            var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
+            var bsonFilter = filter.Render(renderArgs);
 
             _stages.Add(new BsonDocument("$match", bsonFilter));
             return this;
@@ -90,9 +89,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The pipeline builder for chaining.</returns>
         public MongoDbAggregationPipeline<T> Project(ProjectionDefinition<T> projection)
         {
-            var bsonProjection = projection.Render(
-                _collection.DocumentSerializer,
-                _collection.Settings.SerializerRegistry);
+            var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
+            var bsonProjection = projection.Render(renderArgs);
 
             // The render result is already a BsonDocument
             _stages.Add(new BsonDocument("$project", bsonProjection));
@@ -165,9 +163,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The pipeline builder for chaining.</returns>
         public MongoDbAggregationPipeline<T> Sort(SortDefinition<T> sort)
         {
-            var bsonSort = sort.Render(
-                _collection.DocumentSerializer,
-                _collection.Settings.SerializerRegistry);
+            var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
+            var bsonSort = sort.Render(renderArgs);
 
             _stages.Add(new BsonDocument("$sort", bsonSort));
             return this;

@@ -18,7 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.WebAPI.Binders;
@@ -436,16 +436,9 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             if (authTypes == null)
             {
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement() {
-                    {
-                        new OpenApiSecurityScheme {
-                            Reference = new OpenApiReference {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Basic"
-                            },
-                        },
-                        new List<string>()
-                    }
+                c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Basic", document)] = []
                 });
             }
         }
@@ -465,16 +458,9 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             if (authTypes == null)
             {
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement() {
+                c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
                 {
-                    new OpenApiSecurityScheme {
-                            Reference = new OpenApiReference {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new List<string>()
-                    }
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
                 });
             }
         }

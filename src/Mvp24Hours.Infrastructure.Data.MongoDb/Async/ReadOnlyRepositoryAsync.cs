@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async ListAnyAsync operation started.");
             try
             {
-                return await ((IMongoQueryable<T>)GetQuery(null, true)).AnyAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(null, true)).AnyAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async ListAnyAsync operation completed."); }
         }
@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async ListCountAsync operation started.");
             try
             {
-                return await ((IMongoQueryable<T>)GetQuery(null, true)).CountAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(null, true)).CountAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async ListCountAsync operation completed."); }
         }
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async ListAsync operation started.");
             try
             {
-                return await ((IMongoQueryable<T>)GetQuery(criteria)).ToListAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(criteria)).ToListAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async ListAsync operation completed."); }
         }
@@ -110,12 +110,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByAnyAsync operation started.");
             try
             {
-                IMongoQueryable<T> query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
-                    query = (IMongoQueryable<T>)query.Where(clause);
+                    query = (IQueryable<T>)query.Where(clause);
                 }
-                return await ((IMongoQueryable<T>)GetQuery(query, null, true)).AnyAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(query, null, true)).AnyAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetByAnyAsync operation completed."); }
         }
@@ -126,12 +126,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByCountAsync operation started.");
             try
             {
-                IMongoQueryable<T> query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
-                    query = (IMongoQueryable<T>)query.Where(clause);
+                    query = (IQueryable<T>)query.Where(clause);
                 }
-                return await ((IMongoQueryable<T>)GetQuery(query, null, true)).CountAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(query, null, true)).CountAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetByCountAsync operation completed."); }
         }
@@ -148,12 +148,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByAsync operation started.");
             try
             {
-                IMongoQueryable<T> query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
-                    query = (IMongoQueryable<T>)query.Where(clause);
+                    query = (IQueryable<T>)query.Where(clause);
                 }
-                return await ((IMongoQueryable<T>)GetQuery(query, criteria)).ToListAsync(cancellationToken);
+                return await ((IQueryable<T>)GetQuery(query, criteria)).ToListAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetByAsync operation completed."); }
         }
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByIdAsync operation started.");
             try
             {
-                return await ((IMongoQueryable<T>)GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id))
+                return await ((IQueryable<T>)GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id))
                     .SingleOrDefaultAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetByIdAsync operation completed."); }
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                return await ((IMongoQueryable<T>)query).AnyAsync(cancellationToken);
+                return await ((IQueryable<T>)query).AnyAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async AnyBySpecificationAsync operation completed."); }
         }
@@ -245,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                return await ((IMongoQueryable<T>)query).CountAsync(cancellationToken);
+                return await ((IQueryable<T>)query).CountAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async CountBySpecificationAsync operation completed."); }
         }
@@ -258,7 +258,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                return await ((IMongoQueryable<T>)query).ToListAsync(cancellationToken);
+                return await ((IQueryable<T>)query).ToListAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetBySpecificationAsync operation completed."); }
         }
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                return await ((IMongoQueryable<T>)query).SingleOrDefaultAsync(cancellationToken);
+                return await ((IQueryable<T>)query).SingleOrDefaultAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetSingleBySpecificationAsync operation completed."); }
         }
@@ -284,7 +284,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                return await ((IMongoQueryable<T>)query).FirstOrDefaultAsync(cancellationToken);
+                return await ((IQueryable<T>)query).FirstOrDefaultAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetFirstBySpecificationAsync operation completed."); }
         }
@@ -305,24 +305,24 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync operation started.");
             try
             {
-                IMongoQueryable<T> query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
 
                 // Apply filter clause
                 if (clause != null)
                 {
-                    query = (IMongoQueryable<T>)query.Where(clause);
+                    query = (IQueryable<T>)query.Where(clause);
                 }
 
                 // Apply keyset condition
                 if (lastKey.HasValue)
                 {
-                    query = (IMongoQueryable<T>)ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
+                    query = (IQueryable<T>)ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
                 }
 
                 // Apply ordering
                 query = ascending
-                    ? (IMongoQueryable<T>)query.OrderBy(keySelector)
-                    : (IMongoQueryable<T>)query.OrderByDescending(keySelector);
+                    ? (IQueryable<T>)query.OrderBy(keySelector)
+                    : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
                 var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
@@ -357,18 +357,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             try
             {
                 var baseQuery = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-                IMongoQueryable<T> query = (IMongoQueryable<T>)baseQuery;
+                IQueryable<T> query = (IQueryable<T>)baseQuery;
 
                 // Apply keyset condition
                 if (lastKey.HasValue)
                 {
-                    query = (IMongoQueryable<T>)ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
+                    query = (IQueryable<T>)ApplyKeysetCondition(query, keySelector, lastKey.Value, ascending);
                 }
 
                 // Apply ordering (override specification ordering for keyset)
                 query = ascending
-                    ? (IMongoQueryable<T>)query.OrderBy(keySelector)
-                    : (IMongoQueryable<T>)query.OrderByDescending(keySelector);
+                    ? (IQueryable<T>)query.OrderBy(keySelector)
+                    : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
                 var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
@@ -400,24 +400,24 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync (string key) operation started.");
             try
             {
-                IMongoQueryable<T> query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
 
                 // Apply filter clause
                 if (clause != null)
                 {
-                    query = (IMongoQueryable<T>)query.Where(clause);
+                    query = (IQueryable<T>)query.Where(clause);
                 }
 
                 // Apply keyset condition
                 if (!string.IsNullOrEmpty(lastKey))
                 {
-                    query = (IMongoQueryable<T>)ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
+                    query = (IQueryable<T>)ApplyKeysetConditionString(query, keySelector, lastKey, ascending);
                 }
 
                 // Apply ordering
                 query = ascending
-                    ? (IMongoQueryable<T>)query.OrderBy(keySelector)
-                    : (IMongoQueryable<T>)query.OrderByDescending(keySelector);
+                    ? (IQueryable<T>)query.OrderBy(keySelector)
+                    : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
                 var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);

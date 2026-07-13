@@ -5,6 +5,7 @@
 //=====================================================================================
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Logic;
 using System;
 using System.Collections.Generic;
@@ -120,7 +121,7 @@ namespace Mvp24Hours.Application.Extensions
                 {
                     cfg.AddProfile(profileType);
                 }
-            });
+            }, NullLoggerFactory.Instance);
 
             // Register IMapper as singleton
             var mapper = config.CreateMapper();
@@ -164,7 +165,7 @@ namespace Mvp24Hours.Application.Extensions
                 {
                     cfg.AddProfile(profileType);
                 }
-            });
+            }, NullLoggerFactory.Instance);
 
             // Register IMapper as singleton
             var mapper = config.CreateMapper();

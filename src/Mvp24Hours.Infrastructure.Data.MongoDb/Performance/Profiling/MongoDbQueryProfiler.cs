@@ -102,12 +102,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 }
 
                 // Use explain via command
+                var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
                 var command = new BsonDocument
                 {
                     { "explain", new BsonDocument
                         {
                             { "find", _collection.CollectionNamespace.CollectionName },
-                            { "filter", filter.Render(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry) }
+                            { "filter", filter.Render(renderArgs) }
                         }
                     },
                     { "verbosity", verbosity.ToString().ToLowerInvariant() }
@@ -115,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
 
                 if (sort != null)
                 {
-                    var sortDoc = sort.Render(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
+                    var sortDoc = sort.Render(renderArgs);
                     command["explain"]["sort"] = sortDoc;
                 }
 
@@ -148,9 +149,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
 
             try
             {
-                var pipelineDocs = pipeline.Render(
-                    _collection.DocumentSerializer,
-                    _collection.Settings.SerializerRegistry);
+                var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
+                var pipelineDocs = pipeline.Render(renderArgs);
 
                 var command = new BsonDocument
                 {

@@ -163,7 +163,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             var serializerRegistry = MongoDB.Bson.Serialization.BsonSerializer.SerializerRegistry;
             var documentSerializer = serializerRegistry.GetSerializer<T>();
             
-            return filter.Render(documentSerializer, serializerRegistry);
+            return filter.Render(new RenderArgs<T>(documentSerializer, serializerRegistry));
         }
 
         /// <summary>

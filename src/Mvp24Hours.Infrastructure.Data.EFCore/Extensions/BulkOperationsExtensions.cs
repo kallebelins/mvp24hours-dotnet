@@ -343,13 +343,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
             try
             {
-                // Convert the Expression to a Func for EF Core's SetProperty
-                var compiledProperty = property.Compile();
-
                 var rowsAffected = await dbContext.Set<TEntity>()
                     .Where(predicate)
                     .ExecuteUpdateAsync(
-                        setters => setters.SetProperty(compiledProperty, value),
+                        setters => setters.SetProperty(property, value),
                         cancellationToken);
 
                 stopwatch.Stop();
@@ -376,7 +373,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static async Task<int> ExecuteUpdateAsync<TEntity>(
             this DbContext dbContext,
             Expression<Func<TEntity, bool>> predicate,
-            Expression<Func<Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<TEntity>, Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<TEntity>>> setPropertyCalls,
+            Action<Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<TEntity>> setPropertyCalls,
             CancellationToken cancellationToken = default)
             where TEntity : class, IEntityBase
         {

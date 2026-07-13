@@ -91,8 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
             {
                 Capped = true,
                 MaxSize = options.MaxSizeBytes,
-                MaxDocuments = options.MaxDocuments,
-                AutoIndexId = options.AutoIndexId
+                MaxDocuments = options.MaxDocuments
             };
 
             await _database.CreateCollectionAsync(collectionName, createOptions, cancellationToken);

@@ -4,7 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Mvp24Hours.Extensions;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -48,25 +48,11 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
 
             if (hasAuthAttributes && !hasAllowAnonymousAttributes)
             {
-                var securityRequirement = new OpenApiSecurityRequirement()
+                var securityRequirement = new OpenApiSecurityRequirement
                 {
-                    {
-                        // Put here you own security scheme, this one is an example
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header,
-                        },
-                        new List<string>()
-                    }
+                    [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
                 };
-                operation.Security = new List<OpenApiSecurityRequirement> { securityRequirement };
+                operation.Security = [securityRequirement];
                 operation.Responses.Add("401", new OpenApiResponse { Description = "Unauthorized" });
             }
         }

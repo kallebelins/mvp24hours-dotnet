@@ -4,11 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace Mvp24Hours.WebAPI.Filters.Swagger
 {
@@ -86,7 +87,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
         {
             if (operation.Extensions == null)
             {
-                operation.Extensions = new Dictionary<string, Microsoft.OpenApi.Interfaces.IOpenApiExtension>();
+                operation.Extensions = new Dictionary<string, IOpenApiExtension>();
             }
 
             // Add deprecation warning to operation description
@@ -100,7 +101,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             }
 
             // Add x-deprecation-warning extension
-            operation.Extensions["x-deprecation-warning"] = new Microsoft.OpenApi.Any.OpenApiString(message);
+            operation.Extensions["x-deprecation-warning"] = new JsonNodeExtension(JsonValue.Create(message));
         }
     }
 }

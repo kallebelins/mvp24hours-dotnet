@@ -4,10 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
             {
                 foreach (var operation in path.Operations.Values)
                 {
-                    operation.Parameters ??= new List<OpenApiParameter>();
+                    operation.Parameters ??= new List<IOpenApiParameter>();
 
                     foreach (var (name, description, required) in _headers)
                     {
@@ -67,7 +68,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
                             In = ParameterLocation.Header,
                             Description = description,
                             Required = required,
-                            Schema = new OpenApiSchema { Type = "string" }
+                            Schema = new OpenApiSchema { Type = JsonSchemaType.String }
                         });
                     }
                 }
@@ -258,7 +259,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
             foreach (var (pathKey, path) in document.Paths)
             {
-                var operationsToRemove = new List<OperationType>();
+                var operationsToRemove = new List<HttpMethod>();
 
                 foreach (var (operationType, operation) in path.Operations)
                 {
@@ -315,22 +316,22 @@ namespace Mvp24Hours.WebAPI.OpenApi
             CancellationToken cancellationToken)
         {
             document.Components ??= new OpenApiComponents();
-            document.Components.Schemas ??= new Dictionary<string, OpenApiSchema>();
+            document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>();
 
             // Add ProblemDetails schema if not exists
             if (!document.Components.Schemas.ContainsKey("ProblemDetails"))
             {
                 document.Components.Schemas["ProblemDetails"] = new OpenApiSchema
                 {
-                    Type = "object",
-                    Properties = new Dictionary<string, OpenApiSchema>
+                    Type = JsonSchemaType.Object,
+                    Properties = new Dictionary<string, IOpenApiSchema>
                     {
-                        ["type"] = new OpenApiSchema { Type = "string", Description = "A URI reference that identifies the problem type." },
-                        ["title"] = new OpenApiSchema { Type = "string", Description = "A short, human-readable summary of the problem type." },
-                        ["status"] = new OpenApiSchema { Type = "integer", Format = "int32", Description = "The HTTP status code." },
-                        ["detail"] = new OpenApiSchema { Type = "string", Description = "A human-readable explanation specific to this occurrence of the problem." },
-                        ["instance"] = new OpenApiSchema { Type = "string", Description = "A URI reference that identifies the specific occurrence of the problem." },
-                        ["traceId"] = new OpenApiSchema { Type = "string", Description = "The trace identifier for the request." }
+                        ["type"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "A URI reference that identifies the problem type." },
+                        ["title"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "A short, human-readable summary of the problem type." },
+                        ["status"] = new OpenApiSchema { Type = JsonSchemaType.Integer, Format = "int32", Description = "The HTTP status code." },
+                        ["detail"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "A human-readable explanation specific to this occurrence of the problem." },
+                        ["instance"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "A URI reference that identifies the specific occurrence of the problem." },
+                        ["traceId"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "The trace identifier for the request." }
                     },
                     AdditionalPropertiesAllowed = true
                 };
@@ -341,26 +342,16 @@ namespace Mvp24Hours.WebAPI.OpenApi
             {
                 document.Components.Schemas["ValidationProblemDetails"] = new OpenApiSchema
                 {
-                    AllOf = new List<OpenApiSchema>
-                    {
-                        new OpenApiSchema
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.Schema,
-                                Id = "ProblemDetails"
-                            }
-                        }
-                    },
-                    Properties = new Dictionary<string, OpenApiSchema>
+                    AllOf = [new OpenApiSchemaReference("ProblemDetails")],
+                    Properties = new Dictionary<string, IOpenApiSchema>
                     {
                         ["errors"] = new OpenApiSchema
                         {
-                            Type = "object",
+                            Type = JsonSchemaType.Object,
                             AdditionalProperties = new OpenApiSchema
                             {
-                                Type = "array",
-                                Items = new OpenApiSchema { Type = "string" }
+                                Type = JsonSchemaType.Array,
+                                Items = new OpenApiSchema { Type = JsonSchemaType.String }
                             },
                             Description = "The validation errors."
                         }
@@ -381,21 +372,17 @@ namespace Mvp24Hours.WebAPI.OpenApi
                                 ? "ValidationProblemDetails"
                                 : "ProblemDetails";
 
-                            response.Content ??= new Dictionary<string, OpenApiMediaType>();
-
-                            if (!response.Content.ContainsKey("application/problem+json"))
+                            if (response is OpenApiResponse openApiResponse)
                             {
-                                response.Content["application/problem+json"] = new OpenApiMediaType
+                                openApiResponse.Content ??= new Dictionary<string, OpenApiMediaType>();
+
+                                if (!openApiResponse.Content.ContainsKey("application/problem+json"))
                                 {
-                                    Schema = new OpenApiSchema
+                                    openApiResponse.Content["application/problem+json"] = new OpenApiMediaType
                                     {
-                                        Reference = new OpenApiReference
-                                        {
-                                            Type = ReferenceType.Schema,
-                                            Id = schemaName
-                                        }
-                                    }
-                                };
+                                        Schema = new OpenApiSchemaReference(schemaName)
+                                    };
+                                }
                             }
                         }
                     }
@@ -423,32 +410,37 @@ namespace Mvp24Hours.WebAPI.OpenApi
                 {
                     foreach (var response in operation.Responses.Values)
                     {
-                        response.Headers ??= new Dictionary<string, OpenApiHeader>();
-
-                        if (!response.Headers.ContainsKey("X-RateLimit-Limit"))
+                        if (response is not OpenApiResponse openApiResponse)
                         {
-                            response.Headers["X-RateLimit-Limit"] = new OpenApiHeader
+                            continue;
+                        }
+
+                        openApiResponse.Headers ??= new Dictionary<string, IOpenApiHeader>();
+
+                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Limit"))
+                        {
+                            openApiResponse.Headers["X-RateLimit-Limit"] = new OpenApiHeader
                             {
                                 Description = "The maximum number of requests allowed in the current window.",
-                                Schema = new OpenApiSchema { Type = "integer" }
+                                Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                             };
                         }
 
-                        if (!response.Headers.ContainsKey("X-RateLimit-Remaining"))
+                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Remaining"))
                         {
-                            response.Headers["X-RateLimit-Remaining"] = new OpenApiHeader
+                            openApiResponse.Headers["X-RateLimit-Remaining"] = new OpenApiHeader
                             {
                                 Description = "The number of requests remaining in the current window.",
-                                Schema = new OpenApiSchema { Type = "integer" }
+                                Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                             };
                         }
 
-                        if (!response.Headers.ContainsKey("X-RateLimit-Reset"))
+                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Reset"))
                         {
-                            response.Headers["X-RateLimit-Reset"] = new OpenApiHeader
+                            openApiResponse.Headers["X-RateLimit-Reset"] = new OpenApiHeader
                             {
                                 Description = "The time at which the current rate limit window resets (Unix timestamp).",
-                                Schema = new OpenApiSchema { Type = "integer" }
+                                Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                             };
                         }
                     }
@@ -459,12 +451,12 @@ namespace Mvp24Hours.WebAPI.OpenApi
                         operation.Responses["429"] = new OpenApiResponse
                         {
                             Description = "Too Many Requests - Rate limit exceeded",
-                            Headers = new Dictionary<string, OpenApiHeader>
+                            Headers = new Dictionary<string, IOpenApiHeader>
                             {
                                 ["Retry-After"] = new OpenApiHeader
                                 {
                                     Description = "The number of seconds to wait before retrying.",
-                                    Schema = new OpenApiSchema { Type = "integer" }
+                                    Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                                 }
                             }
                         };

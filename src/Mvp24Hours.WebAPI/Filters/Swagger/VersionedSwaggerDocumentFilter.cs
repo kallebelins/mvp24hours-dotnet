@@ -4,7 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Mvp24Hours.WebAPI.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;

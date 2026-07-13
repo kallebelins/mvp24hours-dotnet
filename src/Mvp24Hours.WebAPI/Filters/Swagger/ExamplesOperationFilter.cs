@@ -3,13 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Mvp24Hours.WebAPI.Filters.Swagger
 {
@@ -62,7 +63,10 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             {
                 foreach (var parameter in operation.Parameters)
                 {
-                    AddExampleToParameter(parameter, context);
+                    if (parameter is OpenApiParameter openApiParameter)
+                    {
+                        AddExampleToParameter(openApiParameter, context);
+                    }
                 }
             }
         }
@@ -99,55 +103,59 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             }
         }
 
-        private static Microsoft.OpenApi.Any.IOpenApiAny? GenerateExampleFromSchema(OpenApiSchema schema, OperationFilterContext context)
+        private static JsonNode? GenerateExampleFromSchema(IOpenApiSchema schema, OperationFilterContext context)
         {
+            if (schema is not OpenApiSchema openApiSchema)
+            {
+                return null;
+            }
+
             // Handle different schema types
-            if (schema.Type == "string")
+            if (HasSchemaType(openApiSchema, JsonSchemaType.String))
             {
-                if (schema.Format == "date-time")
+                if (openApiSchema.Format == "date-time")
                 {
-                    return new Microsoft.OpenApi.Any.OpenApiString(DateTime.UtcNow.ToString("O"));
+                    return JsonValue.Create(DateTime.UtcNow.ToString("O"));
                 }
-                if (schema.Format == "email")
+                if (openApiSchema.Format == "email")
                 {
-                    return new Microsoft.OpenApi.Any.OpenApiString("user@example.com");
+                    return JsonValue.Create("user@example.com");
                 }
-                if (schema.Format == "uri")
+                if (openApiSchema.Format == "uri")
                 {
-                    return new Microsoft.OpenApi.Any.OpenApiString("https://example.com");
+                    return JsonValue.Create("https://example.com");
                 }
-                return new Microsoft.OpenApi.Any.OpenApiString("string");
+                return JsonValue.Create("string");
             }
 
-            if (schema.Type == "integer")
+            if (HasSchemaType(openApiSchema, JsonSchemaType.Integer))
             {
-                return new Microsoft.OpenApi.Any.OpenApiInteger(0);
+                return JsonValue.Create(0);
             }
 
-            if (schema.Type == "number")
+            if (HasSchemaType(openApiSchema, JsonSchemaType.Number))
             {
-                return new Microsoft.OpenApi.Any.OpenApiDouble(0.0);
+                return JsonValue.Create(0.0);
             }
 
-            if (schema.Type == "boolean")
+            if (HasSchemaType(openApiSchema, JsonSchemaType.Boolean))
             {
-                return new Microsoft.OpenApi.Any.OpenApiBoolean(false);
+                return JsonValue.Create(false);
             }
 
-            if (schema.Type == "array" && schema.Items != null)
+            if (HasSchemaType(openApiSchema, JsonSchemaType.Array) && openApiSchema.Items != null)
             {
-                var itemExample = GenerateExampleFromSchema(schema.Items, context);
+                var itemExample = GenerateExampleFromSchema(openApiSchema.Items, context);
                 if (itemExample != null)
                 {
-                    return new Microsoft.OpenApi.Any.OpenApiArray
-                    {
-                        itemExample
-                    };
+                    return new JsonArray(itemExample);
                 }
             }
 
             return null;
         }
+
+        private static bool HasSchemaType(OpenApiSchema schema, JsonSchemaType type) =>
+            schema.Type?.HasFlag(type) == true;
     }
 }
-

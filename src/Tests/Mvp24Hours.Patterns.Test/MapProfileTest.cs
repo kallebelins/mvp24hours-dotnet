@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Core.Mappings;
 using Mvp24Hours.Extensions;
@@ -72,7 +73,7 @@ namespace Mvp24Hours.Patterns.Test
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile(local));
-            });
+            }, NullLoggerFactory.Instance);
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
@@ -87,7 +88,7 @@ namespace Mvp24Hours.Patterns.Test
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile(local));
-            });
+            }, NullLoggerFactory.Instance);
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
@@ -102,7 +103,7 @@ namespace Mvp24Hours.Patterns.Test
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile(local));
-            });
+            }, NullLoggerFactory.Instance);
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
@@ -117,7 +118,7 @@ namespace Mvp24Hours.Patterns.Test
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new MappingProfile(local));
-            });
+            }, NullLoggerFactory.Instance);
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };

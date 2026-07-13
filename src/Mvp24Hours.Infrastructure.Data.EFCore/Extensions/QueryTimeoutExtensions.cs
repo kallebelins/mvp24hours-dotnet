@@ -307,8 +307,7 @@ namespace Mvp24Hours.Extensions
         public static async Task<int> ExecuteUpdateWithTimeoutAsync<T>(
             this IQueryable<T> query,
             DbContext context,
-            Expression<Func<Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<T>,
-                Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<T>>> setPropertyCalls,
+            Action<Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>> setPropertyCalls,
             int timeoutSeconds,
             CancellationToken cancellationToken = default)
         {

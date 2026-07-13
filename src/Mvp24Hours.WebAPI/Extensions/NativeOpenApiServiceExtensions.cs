@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.OpenApi;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mvp24Hours.WebAPI.Extensions
@@ -275,7 +276,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                         Description = s.Description,
                         Variables = s.Variables.ToDictionary(
                             v => v.Key,
-                            v => new Microsoft.OpenApi.Models.OpenApiServerVariable
+                            v => new Microsoft.OpenApi.OpenApiServerVariable
                             {
                                 Default = v.Value.Default,
                                 Description = v.Value.Description,
@@ -298,14 +299,14 @@ namespace Mvp24Hours.WebAPI.Extensions
             {
                 openApiOptions.AddDocumentTransformer((document, context, ct) =>
                 {
-                    document.Tags = options.Tags.Select(t => new OpenApiTag
+                    document.Tags = new HashSet<OpenApiTag>(options.Tags.Select(t => new OpenApiTag
                     {
                         Name = t.Name,
                         Description = t.Description,
                         ExternalDocs = !string.IsNullOrEmpty(t.ExternalDocsUrl)
                             ? new OpenApiExternalDocs { Url = new Uri(t.ExternalDocsUrl) }
                             : null
-                    }).ToList();
+                    }));
 
                     return System.Threading.Tasks.Task.CompletedTask;
                 });

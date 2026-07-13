@@ -313,13 +313,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
             try
             {
-                // Convert the Expression to a Func for EF Core's SetProperty
-                var compiledProperty = property.Compile();
-                
                 var rowsAffected = await dbEntities
                     .Where(predicate)
                     .ExecuteUpdateAsync(
-                        setters => setters.SetProperty(compiledProperty, value),
+                        setters => setters.SetProperty(property, value),
                         cancellationToken);
 
                 stopwatch.Stop();
@@ -392,49 +389,44 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             var query = dbEntities.Where(predicate);
 
-            // Build the SetPropertyCalls expression dynamically
-            var efSetPropertyCallsType = typeof(Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<T>);
-            var parameter = Expression.Parameter(efSetPropertyCallsType, "s");
-
-            Expression body = parameter;
-            foreach (var setter in setters)
+            return await query.ExecuteUpdateAsync(builder =>
             {
-                var propertyType = GetPropertyTypeFromExpression(setter.Property);
-                
-                if (setter.ValueExpression != null)
+                foreach (var setter in setters)
                 {
-                    // Value is an expression (e.g., c => c.Count + 1)
-                    var setPropertyMethod = efSetPropertyCallsType
-                        .GetMethods()
-                        .First(m => m.Name == "SetProperty" && 
-                                    m.GetParameters().Length == 2 &&
-                                    m.GetParameters()[1].ParameterType.IsGenericType &&
-                                    m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>));
-
-                    var genericMethod = setPropertyMethod.MakeGenericMethod(propertyType);
-                    body = Expression.Call(body, genericMethod, 
-                        Expression.Constant(setter.Property), 
-                        Expression.Constant(setter.ValueExpression));
+                    ApplyDynamicSetter(builder, setter);
                 }
-                else
-                {
-                    // Value is a constant
-                    var setPropertyMethod = efSetPropertyCallsType
-                        .GetMethods()
-                        .First(m => m.Name == "SetProperty" && 
-                                    m.GetParameters().Length == 2 &&
-                                    !m.GetParameters()[1].ParameterType.IsGenericType);
+            }, cancellationToken);
+        }
 
-                    var genericMethod = setPropertyMethod.MakeGenericMethod(propertyType);
-                    body = Expression.Call(body, genericMethod, 
-                        Expression.Constant(setter.Property),
-                        Expression.Constant(setter.Value, propertyType));
-                }
+        private static void ApplyDynamicSetter(
+            Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T> builder,
+            SetPropertyCall setter)
+        {
+            var propertyType = GetPropertyTypeFromExpression(setter.Property);
+
+            if (setter.ValueExpression != null)
+            {
+                var setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
+                    .GetMethods()
+                    .First(m => m.Name == "SetProperty" &&
+                                m.GetParameters().Length == 2 &&
+                                m.GetParameters()[1].ParameterType.IsGenericType &&
+                                m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>));
+
+                setPropertyMethod.MakeGenericMethod(propertyType)
+                    .Invoke(builder, [setter.Property, setter.ValueExpression]);
             }
+            else
+            {
+                var setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
+                    .GetMethods()
+                    .First(m => m.Name == "SetProperty" &&
+                                m.GetParameters().Length == 2 &&
+                                !m.GetParameters()[1].ParameterType.IsGenericType);
 
-            var lambda = Expression.Lambda<Func<Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<T>, Microsoft.EntityFrameworkCore.Query.SetPropertyCalls<T>>>(body, parameter);
-
-            return await query.ExecuteUpdateAsync(lambda, cancellationToken);
+                setPropertyMethod.MakeGenericMethod(propertyType)
+                    .Invoke(builder, [setter.Property, setter.Value]);
+            }
         }
 
         private static Type GetPropertyTypeFromExpression(LambdaExpression expression)

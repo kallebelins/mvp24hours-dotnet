@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -44,14 +44,14 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <para>
         /// The default mapping handles common Mvp24Hours exceptions:
         /// <list type="bullet">
-        /// <item><see cref="NotFoundException"/> → 404</item>
-        /// <item><see cref="ValidationException"/> → 400</item>
-        /// <item><see cref="UnauthorizedException"/> → 401</item>
-        /// <item><see cref="ForbiddenException"/> → 403</item>
-        /// <item><see cref="ConflictException"/> → 409</item>
-        /// <item><see cref="DomainException"/> → 422</item>
-        /// <item><see cref="BusinessException"/> → 422</item>
-        /// <item>Other exceptions → 500</item>
+        /// <item><see cref="NotFoundException"/> ? 404</item>
+        /// <item><see cref="ValidationException"/> ? 400</item>
+        /// <item><see cref="UnauthorizedException"/> ? 401</item>
+        /// <item><see cref="ForbiddenException"/> ? 403</item>
+        /// <item><see cref="ConflictException"/> ? 409</item>
+        /// <item><see cref="DomainException"/> ? 422</item>
+        /// <item><see cref="BusinessException"/> ? 422</item>
+        /// <item>Other exceptions ? 500</item>
         /// </list>
         /// </para>
         /// </remarks>
