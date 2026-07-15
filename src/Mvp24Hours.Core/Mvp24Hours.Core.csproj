@@ -20,16 +20,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Microsoft.Extensions.* / System.Threading.RateLimiting: provided by FrameworkReference Microsoft.AspNetCore.App (NU1510). -->
 		<PackageReference Include="AutoMapper" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Configuration" />
-		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="OpenTelemetry" />
-		<PackageReference Include="System.Threading.RateLimiting" />
 	</ItemGroup>
 
 	<ItemGroup>

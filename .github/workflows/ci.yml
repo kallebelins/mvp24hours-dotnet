@@ -127,8 +127,16 @@ jobs:
 
     - name: 🔒 Run security scan
       run: |
-        dotnet list package --vulnerable --include-transitive 2>&1 | tee security-scan.log
-        
+        set -o pipefail
+        # Solution lives under src/ — bare `dotnet list package` from repo root fails.
+        dotnet list src/Mvp24Hours.sln package --vulnerable --include-transitive 2>&1 | tee security-scan.log
+        # Exit code of `dotnet list` stays 0 even when advisories exist; fail the job on hits.
+        if grep -Eiq 'has the following vulnerable packages|tem os seguintes pacotes vulneráveis' security-scan.log; then
+          echo "::error::Vulnerable NuGet packages were detected (see security-scan.log)."
+          exit 1
+        fi
+        echo "No vulnerable packages detected across the solution."
+
     - name: 📤 Upload security scan results
       uses: actions/upload-artifact@v4
       if: always()
