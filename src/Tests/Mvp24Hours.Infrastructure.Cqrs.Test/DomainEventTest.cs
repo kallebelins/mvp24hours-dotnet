@@ -33,7 +33,7 @@ public class DomainEventTest
     }
 
     [Fact, Priority(1)]
-    public void DomainEventBase_ShouldHaveDefaultOccurredAt()
+    public void MediatorDomainEventBase_ShouldHaveDefaultOccurredAt()
     {
         // Arrange & Act
         var @event = new UserRegisteredEvent { UserId = 1, Email = "test@example.com" };
@@ -143,18 +143,18 @@ public class DomainEventTest
     }
 
     [Fact, Priority(9)]
-    public void IDomainEventHandler_ShouldInheritFromIMediatorNotificationHandler()
+    public void IMediatorDomainEventHandler_ShouldInheritFromIMediatorNotificationHandler()
     {
         // Assert - Type check
-        Assert.True(typeof(IDomainEventHandler<UserRegisteredEvent>)
+        Assert.True(typeof(IMediatorDomainEventHandler<UserRegisteredEvent>)
             .IsAssignableTo(typeof(IMediatorNotificationHandler<UserRegisteredEvent>)));
     }
 
     [Fact, Priority(10)]
-    public void IDomainEvent_ShouldInheritFromIMediatorNotification()
+    public void IMediatorDomainEvent_ShouldInheritFromIMediatorNotification()
     {
         // Assert
-        Assert.True(typeof(IDomainEvent).IsAssignableTo(typeof(IMediatorNotification)));
+        Assert.True(typeof(IMediatorDomainEvent).IsAssignableTo(typeof(IMediatorNotification)));
     }
 
     private static TestAggregate CreateAggregateWithRegistration(int id, string email)

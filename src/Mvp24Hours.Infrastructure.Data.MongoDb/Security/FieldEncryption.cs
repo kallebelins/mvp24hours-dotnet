@@ -396,10 +396,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 throw new ArgumentException("Salt must be at least 16 bytes.", nameof(salt));
             }
 
-            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256))
-            {
-                return pbkdf2.GetBytes(32); // 256 bits
-            }
+            return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, 32); // 256 bits
         }
 
         /// <summary>

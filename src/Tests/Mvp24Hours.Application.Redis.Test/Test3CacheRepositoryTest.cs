@@ -21,8 +21,7 @@ namespace Mvp24Hours.Application.Redis.Test
     public class Test3CacheRepositoryTest : IAsyncLifetime
     {
         #region [ Container ]
-        private readonly RedisContainer _redisContainer = new RedisBuilder()
-            .WithImage("redis:3.2.5-alpine")
+        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
             .WithExposedPort(6379)
             .WithCleanUp(true)
             .Build();

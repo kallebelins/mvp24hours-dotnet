@@ -244,7 +244,8 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
             else
             {
                 // Use default credential chain (IAM role, environment variables, etc.)
-                credentials = Amazon.Runtime.FallbackCredentialsFactory.GetCredentials();
+                credentials = Amazon.Runtime.Credentials.DefaultAWSCredentialsIdentityResolver
+                    .GetCredentials(config);
             }
 
             return new Amazon.SecretsManager.AmazonSecretsManagerClient(credentials, config);

@@ -25,7 +25,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
     {
         #region [ Container ]
         private readonly MongoDbContainer _mongoDbContainer =
-            new MongoDbBuilder().Build();
+            new MongoDbBuilder("mongo:6.0").Build();
 
         public async Task InitializeAsync()
             => await _mongoDbContainer.StartAsync().ConfigureAwait(false);

@@ -23,8 +23,7 @@ public class SqlServerContainerFixture : IAsyncLifetime
 
     public SqlServerContainerFixture()
     {
-        _container = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
             .WithPassword("YourStrong@Passw0rd!")
             .WithEnvironment("ACCEPT_EULA", "Y")
             .WithEnvironment("MSSQL_PID", "Developer")

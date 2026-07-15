@@ -430,7 +430,7 @@ public class ProjectionTest
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
-    public record TestProjectionEvent(Guid ItemId, string Name) : DomainEventBase;
+    public record TestProjectionEvent(Guid ItemId, string Name) : MediatorDomainEventBase;
 
     public class TestProjectionHandler : IProjectionHandler<TestProjectionEvent>
     {

@@ -23,8 +23,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
     public class Test1RabbitMQ : IAsyncLifetime
     {
         #region [ Container ]
-        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management")
+        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-management")
             .WithExposedPort(5672)
             .WithUsername("guest")
             .WithPassword("guest")

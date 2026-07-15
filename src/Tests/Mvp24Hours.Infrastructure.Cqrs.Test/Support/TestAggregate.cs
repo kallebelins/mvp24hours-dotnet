@@ -12,14 +12,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
 #region Domain Events
 
-public record OrderCreatedEvent : DomainEventBase
+public record OrderCreatedEvent : MediatorDomainEventBase
 {
     public Guid OrderId { get; init; }
     public string CustomerEmail { get; init; } = string.Empty;
     public decimal TotalAmount { get; init; }
 }
 
-public record OrderItemAddedEvent : DomainEventBase
+public record OrderItemAddedEvent : MediatorDomainEventBase
 {
     public Guid OrderId { get; init; }
     public Guid ProductId { get; init; }
@@ -28,20 +28,20 @@ public record OrderItemAddedEvent : DomainEventBase
     public decimal UnitPrice { get; init; }
 }
 
-public record OrderPaidEvent : DomainEventBase
+public record OrderPaidEvent : MediatorDomainEventBase
 {
     public Guid OrderId { get; init; }
     public Guid PaymentId { get; init; }
     public decimal Amount { get; init; }
 }
 
-public record OrderShippedEvent : DomainEventBase
+public record OrderShippedEvent : MediatorDomainEventBase
 {
     public Guid OrderId { get; init; }
     public string TrackingNumber { get; init; } = string.Empty;
 }
 
-public record OrderCancelledEvent : DomainEventBase
+public record OrderCancelledEvent : MediatorDomainEventBase
 {
     public Guid OrderId { get; init; }
     public string Reason { get; init; } = string.Empty;

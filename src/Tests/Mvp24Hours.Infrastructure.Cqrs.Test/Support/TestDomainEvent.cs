@@ -13,7 +13,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 /// <summary>
 /// Test domain event for user registration.
 /// </summary>
-public record UserRegisteredEvent : DomainEventBase
+public record UserRegisteredEvent : MediatorDomainEventBase
 {
     public int UserId { get; init; }
     public string Email { get; init; } = string.Empty;
@@ -22,12 +22,12 @@ public record UserRegisteredEvent : DomainEventBase
 /// <summary>
 /// Test domain event for order placement.
 /// </summary>
-public record OrderPlacedEvent(int OrderId, decimal Amount) : DomainEventBase;
+public record OrderPlacedEvent(int OrderId, decimal Amount) : MediatorDomainEventBase;
 
 /// <summary>
 /// Handler for UserRegisteredEvent.
 /// </summary>
-public class UserRegisteredEventHandler : IDomainEventHandler<UserRegisteredEvent>
+public class UserRegisteredEventHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
     public static List<string> HandledEvents { get; } = new();
 
@@ -41,7 +41,7 @@ public class UserRegisteredEventHandler : IDomainEventHandler<UserRegisteredEven
 /// <summary>
 /// Second handler for UserRegisteredEvent.
 /// </summary>
-public class WelcomeEmailHandler : IDomainEventHandler<UserRegisteredEvent>
+public class WelcomeEmailHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
     public static List<string> HandledEvents { get; } = new();
 
@@ -55,7 +55,7 @@ public class WelcomeEmailHandler : IDomainEventHandler<UserRegisteredEvent>
 /// <summary>
 /// Handler for OrderPlacedEvent.
 /// </summary>
-public class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
+public class OrderPlacedEventHandler : IMediatorDomainEventHandler<OrderPlacedEvent>
 {
     public static List<string> HandledEvents { get; } = new();
 
