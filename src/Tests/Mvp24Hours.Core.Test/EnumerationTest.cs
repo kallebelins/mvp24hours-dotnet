@@ -373,6 +373,7 @@ public class EnumerationTest
     {
         // Arrange
         var pending = OrderStatus.Pending;
+        var pendingEqual = OrderStatus.Pending;
         var shipped = OrderStatus.Shipped;
 
         // Assert
@@ -380,8 +381,8 @@ public class EnumerationTest
         (shipped > pending).Should().BeTrue();
         (pending <= shipped).Should().BeTrue();
         (shipped >= pending).Should().BeTrue();
-        (pending <= pending).Should().BeTrue();
-        (pending >= pending).Should().BeTrue();
+        (pending <= pendingEqual).Should().BeTrue();
+        (pending >= pendingEqual).Should().BeTrue();
     }
 
     #endregion

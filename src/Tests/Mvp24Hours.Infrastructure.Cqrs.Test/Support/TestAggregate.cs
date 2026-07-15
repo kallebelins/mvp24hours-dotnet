@@ -203,8 +203,6 @@ public class TestOrderWithSnapshot : SnapshotAggregateRoot<OrderSnapshot>
 {
     private readonly List<OrderItem> _items = new();
 
-    // Local Id property since SnapshotAggregateRoot inherits from non-generic AggregateRoot
-    public Guid Id { get; private set; }
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }

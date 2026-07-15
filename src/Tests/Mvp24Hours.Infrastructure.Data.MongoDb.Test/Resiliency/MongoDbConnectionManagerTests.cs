@@ -243,18 +243,18 @@ public class MongoDbConnectionManagerTests
     }
 
     [Fact]
-    public void Should_Reset_Reconnect_Attempts_On_Success()
+    public async Task Should_Reset_Reconnect_Attempts_On_Success()
     {
         // Arrange
         var options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Simulate some failed reconnect attempts
-        _ = manager.TryReconnectAsync(async ct =>
+        _ = await manager.TryReconnectAsync(async ct =>
         {
             await Task.Delay(1, ct);
             return false;
-        }).Result;
+        });
 
         var attemptsAfterFailure = manager.ReconnectAttempts;
 

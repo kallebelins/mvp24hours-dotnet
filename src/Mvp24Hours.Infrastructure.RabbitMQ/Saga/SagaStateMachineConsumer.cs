@@ -66,7 +66,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
 
             // Find or create saga instance
             var instance = await repository.FindAsync(correlationId, cancellationToken);
-            var isNew = false;
 
             if (instance == null)
             {
@@ -77,7 +76,6 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                         machine.InitialState,
                         new TData(),
                         cancellationToken);
-                    isNew = true;
 
                     _logger?.LogInformation(
                         "Created new saga instance {SagaId} from message {MessageType} via state machine",

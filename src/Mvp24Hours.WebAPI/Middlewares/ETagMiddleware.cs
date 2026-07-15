@@ -166,7 +166,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
 
             bodyStream.Seek(0, SeekOrigin.Begin);
             var buffer = new byte[bodyStream.Length];
-            await bodyStream.ReadAsync(buffer, 0, buffer.Length);
+            await bodyStream.ReadExactlyAsync(buffer);
             bodyStream.Seek(0, SeekOrigin.Begin);
 
             return GenerateETagFromBytes(buffer);

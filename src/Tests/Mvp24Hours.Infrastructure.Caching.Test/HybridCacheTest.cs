@@ -595,41 +595,41 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
         }
 
         [Fact]
-        public void InvalidateByTagAsync_WithNonHybridCacheProvider_ShouldThrow()
+        public async Task InvalidateByTagAsync_WithNonHybridCacheProvider_ShouldThrow()
         {
             // Arrange
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = Assert.ThrowsAsync<InvalidOperationException>(() =>
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.InvalidateByTagAsync("tag"));
-            exception.Result.Message.Should().Contain("HybridCacheProvider");
+            exception.Message.Should().Contain("HybridCacheProvider");
         }
 
         [Fact]
-        public void InvalidateByTagsAsync_WithNonHybridCacheProvider_ShouldThrow()
+        public async Task InvalidateByTagsAsync_WithNonHybridCacheProvider_ShouldThrow()
         {
             // Arrange
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = Assert.ThrowsAsync<InvalidOperationException>(() =>
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.InvalidateByTagsAsync(new[] { "tag1", "tag2" }));
-            exception.Result.Message.Should().Contain("HybridCacheProvider");
+            exception.Message.Should().Contain("HybridCacheProvider");
         }
 
         [Fact]
-        public void GetOrCreateAsync_WithNonHybridCacheProvider_ShouldThrow()
+        public async Task GetOrCreateAsync_WithNonHybridCacheProvider_ShouldThrow()
         {
             // Arrange
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = Assert.ThrowsAsync<InvalidOperationException>(() =>
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.GetOrCreateAsync(
                     "key",
                     ct => ValueTask.FromResult(new TestEntity { Id = 1 })));
-            exception.Result.Message.Should().Contain("HybridCacheProvider");
+            exception.Message.Should().Contain("HybridCacheProvider");
         }
 
         #endregion

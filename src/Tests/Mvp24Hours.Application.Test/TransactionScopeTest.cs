@@ -302,7 +302,7 @@ public class TransactionScopeTest
     }
 
     [Fact]
-    public void Dispose_WhenActive_ShouldAutoRollback()
+    public async Task Dispose_WhenActive_ShouldAutoRollback()
     {
         // Arrange
         var unitOfWork = new MockUnitOfWorkAsync();
@@ -310,7 +310,7 @@ public class TransactionScopeTest
         // Act
         using (var scope = new TransactionScope(unitOfWork))
         {
-            scope.BeginAsync().GetAwaiter().GetResult();
+            await scope.BeginAsync();
             // Not committing - should auto-rollback on dispose
         }
 
