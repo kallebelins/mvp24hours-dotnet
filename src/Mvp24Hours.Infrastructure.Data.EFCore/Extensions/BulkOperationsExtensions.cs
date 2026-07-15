@@ -353,7 +353,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 return rowsAffected;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 stopwatch.Stop();
 
@@ -393,7 +393,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 return rowsAffected;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 stopwatch.Stop();
 
@@ -434,7 +434,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 return rowsAffected;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 stopwatch.Stop();
 

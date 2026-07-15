@@ -26,7 +26,7 @@ namespace Mvp24Hours.Extensions
                 {
                     InvokeSeeder(seeder, context, services);
                 }
-                catch (SqlException ex)
+                catch (SqlException)
                 {
                     if (retryForAvailability < 50)
                     {
