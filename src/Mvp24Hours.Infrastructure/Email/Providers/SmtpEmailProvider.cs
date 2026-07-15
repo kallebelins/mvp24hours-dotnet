@@ -152,13 +152,18 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 client.Credentials = new NetworkCredential(_smtpOptions.Username, _smtpOptions.Password);
             }
 
-            // Configure certificate validation callback
+            // System.Net.Mail.SmtpClient has no per-client certificate validation hook.
+            // ServicePointManager.ServerCertificateValidationCallback is obsolete (SYSLIB0014)
+            // and must not be used — that global callback also affected unrelated HTTP traffic.
+            // Custom validation for HTTP belongs on HttpClientHandler /
+            // SocketsHttpHandler.ServerCertificateCustomValidationCallback (see HttpClientServiceExtensions).
             if (_smtpOptions.ServerCertificateValidationCallback != null)
             {
-                // Note: System.Net.Mail.SmtpClient doesn't directly support certificate validation callback
-                // This would require using ServicePointManager.ServerCertificateValidationCallback
-                // which is global. For better control, consider using MailKit instead.
-                ServicePointManager.ServerCertificateValidationCallback = _smtpOptions.ServerCertificateValidationCallback;
+                _logger?.LogWarning(
+                    "SmtpEmailOptions.ServerCertificateValidationCallback is configured but ignored: " +
+                    "System.Net.Mail.SmtpClient does not support custom certificate validation without the " +
+                    "obsolete ServicePointManager API. Use the default OS trust store validation, or a " +
+                    "provider that supports per-connection callbacks (e.g. MailKit).");
             }
 
             // Configure STARTTLS (if enabled and SSL is not enabled)

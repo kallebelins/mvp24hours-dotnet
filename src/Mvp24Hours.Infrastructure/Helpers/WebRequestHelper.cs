@@ -188,8 +188,8 @@ namespace Mvp24Hours.Helpers
             _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-
+                // Do not use ServicePointManager (SYSLIB0014); TLS is negotiated by SslStream.
+                // Prefer HttpClient / HttpClientServiceExtensions for new code.
                 EncodingRequest ??= Encoding.UTF8;
 
 #pragma warning disable SYSLIB0014 // Type or member is obsolete

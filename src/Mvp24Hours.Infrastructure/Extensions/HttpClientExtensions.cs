@@ -177,8 +177,8 @@ namespace Mvp24Hours.Extensions
             _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-
+                // TLS is configured on HttpClientHandler / SocketsHttpHandler (SslProtocols),
+                // not via obsolete ServicePointManager (SYSLIB0014).
                 EncodingRequest ??= Encoding.UTF8;
 
                 string urlRequest = $"{client.BaseAddress}{url}";

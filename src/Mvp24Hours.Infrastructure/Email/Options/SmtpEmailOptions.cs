@@ -133,24 +133,30 @@ namespace Mvp24Hours.Infrastructure.Email.Options
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This callback is used to validate the SSL/TLS certificate presented by the SMTP server.
-        /// If not specified, the default certificate validation is used.
+        /// <strong>Not applied by <see cref="Providers.SmtpEmailProvider"/>.</strong>
+        /// <c>System.Net.Mail.SmtpClient</c> has no per-client certificate validation API.
+        /// The previous implementation used the obsolete global
+        /// <c>ServicePointManager.ServerCertificateValidationCallback</c> (SYSLIB0014), which was
+        /// removed. When this callback is set, the provider logs a warning and uses the default
+        /// OS trust-store validation instead.
+        /// </para>
+        /// <para>
+        /// For HTTP clients, configure certificate validation on
+        /// <c>HttpClientHandler.ServerCertificateCustomValidationCallback</c> /
+        /// <c>SocketsHttpHandler</c> (see HTTP infrastructure registration). For custom SMTP
+        /// certificate validation, use a library that supports per-connection callbacks (e.g. MailKit).
         /// </para>
         /// <para>
         /// <strong>Security Warning:</strong>
-        /// Returning <c>true</c> from this callback bypasses certificate validation. Only use this
-        /// for development/testing or when you understand the security implications.
+        /// Returning <c>true</c> from this callback would bypass certificate validation if a future
+        /// provider honors it. Only use that pattern for development/testing.
         /// </para>
         /// </remarks>
         /// <example>
         /// <code>
-        /// // Accept all certificates (NOT RECOMMENDED FOR PRODUCTION)
-        /// options.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
-        /// 
-        /// // Custom validation logic
+        /// // Retained for API compatibility — ignored by SmtpEmailProvider (built-in SmtpClient).
         /// options.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
         /// {
-        ///     // Your custom validation logic here
         ///     return errors == SslPolicyErrors.None;
         /// };
         /// </code>
