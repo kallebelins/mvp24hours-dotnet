@@ -150,7 +150,7 @@ namespace Mvp24Hours.WebAPI.Binders
             return false;
         }
 
-        private static Type GetEntityIdValueType(Type entityIdType)
+        private static Type? GetEntityIdValueType(Type entityIdType)
         {
             var baseType = entityIdType.BaseType;
             while (baseType != null && baseType != typeof(object))

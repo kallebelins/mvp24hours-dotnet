@@ -50,8 +50,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             OpenApiDocumentTransformerContext context,
             CancellationToken cancellationToken)
         {
+            if (document.Paths == null) return Task.CompletedTask;
             foreach (var path in document.Paths.Values)
             {
+                if (path.Operations == null) continue;
                 foreach (var operation in path.Operations.Values)
                 {
                     operation.Parameters ??= new List<IOpenApiParameter>();
@@ -127,8 +129,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             OpenApiDocumentTransformerContext context,
             CancellationToken cancellationToken)
         {
+            if (document.Paths == null) return Task.CompletedTask;
             foreach (var path in document.Paths.Values)
             {
+                if (path.Operations == null) continue;
                 foreach (var operation in path.Operations.Values)
                 {
                     operation.Responses ??= new OpenApiResponses();
@@ -204,8 +208,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             OpenApiDocumentTransformerContext context,
             CancellationToken cancellationToken)
         {
+            if (document.Paths == null) return Task.CompletedTask;
             foreach (var path in document.Paths.Values)
             {
+                if (path.Operations == null) continue;
                 foreach (var operation in path.Operations.Values)
                 {
                     if (operation.Deprecated)
@@ -257,10 +263,13 @@ namespace Mvp24Hours.WebAPI.OpenApi
         {
             var pathsToRemove = new List<string>();
 
+            if (document.Paths == null) return Task.CompletedTask;
+
             foreach (var (pathKey, path) in document.Paths)
             {
                 var operationsToRemove = new List<HttpMethod>();
 
+                if (path.Operations == null) continue;
                 foreach (var (operationType, operation) in path.Operations)
                 {
                     var operationTags = operation.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
@@ -360,8 +369,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             }
 
             // Update 4xx and 5xx responses to reference ProblemDetails
+            if (document.Paths == null) return Task.CompletedTask;
             foreach (var path in document.Paths.Values)
             {
+                if (path.Operations == null) continue;
                 foreach (var operation in path.Operations.Values)
                 {
                     foreach (var (statusCode, response) in operation.Responses ?? new OpenApiResponses())
@@ -404,8 +415,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             OpenApiDocumentTransformerContext context,
             CancellationToken cancellationToken)
         {
+            if (document.Paths == null) return Task.CompletedTask;
             foreach (var path in document.Paths.Values)
             {
+                if (path.Operations == null) continue;
                 foreach (var operation in path.Operations.Values)
                 {
                     foreach (var response in operation.Responses?.Values ?? Enumerable.Empty<IOpenApiResponse>())
@@ -416,28 +429,29 @@ namespace Mvp24Hours.WebAPI.OpenApi
                         }
 
                         openApiResponse.Headers ??= new Dictionary<string, IOpenApiHeader>();
+                        var headers = openApiResponse.Headers;
 
-                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Limit"))
+                        if (!headers.ContainsKey("X-RateLimit-Limit"))
                         {
-                            openApiResponse.Headers["X-RateLimit-Limit"] = new OpenApiHeader
+                            headers["X-RateLimit-Limit"] = new OpenApiHeader
                             {
                                 Description = "The maximum number of requests allowed in the current window.",
                                 Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                             };
                         }
 
-                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Remaining"))
+                        if (!headers.ContainsKey("X-RateLimit-Remaining"))
                         {
-                            openApiResponse.Headers["X-RateLimit-Remaining"] = new OpenApiHeader
+                            headers["X-RateLimit-Remaining"] = new OpenApiHeader
                             {
                                 Description = "The number of requests remaining in the current window.",
                                 Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
                             };
                         }
 
-                        if (!openApiResponse.Headers.ContainsKey("X-RateLimit-Reset"))
+                        if (!headers.ContainsKey("X-RateLimit-Reset"))
                         {
-                            openApiResponse.Headers["X-RateLimit-Reset"] = new OpenApiHeader
+                            headers["X-RateLimit-Reset"] = new OpenApiHeader
                             {
                                 Description = "The time at which the current rate limit window resets (Unix timestamp).",
                                 Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
@@ -446,6 +460,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
                     }
 
                     // Add 429 response
+                    operation.Responses ??= new OpenApiResponses();
                     if (!operation.Responses.ContainsKey("429"))
                     {
                         operation.Responses["429"] = new OpenApiResponse

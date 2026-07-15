@@ -79,11 +79,11 @@ namespace Mvp24Hours.WebAPI.Binders
             // Handle nullable types
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                type = Nullable.GetUnderlyingType(type);
+                var underlying = Nullable.GetUnderlyingType(type);
+                if (underlying == null)
+                    return false;
+                type = underlying;
             }
-
-            if (type == null)
-                return false;
 
             // Check if it's EntityId<TSelf, TValue> or a derived type
             var baseType = type.BaseType;
