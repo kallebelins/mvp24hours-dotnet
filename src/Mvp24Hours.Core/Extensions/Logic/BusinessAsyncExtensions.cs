@@ -22,14 +22,14 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Transform a message into a business object
         /// </summary>
-        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IPipelineMessage> messageAsync, string key = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IPipelineMessage> messageAsync, string? key = null, string? tokenDefault = null)
         {
             var message = await messageAsync;
             if (message != null)
             {
                 return new BusinessResult<T>(
                     token: message.Token ?? tokenDefault,
-                    data: key.HasValue() ? message.GetContent<T>(key) : message.GetContent<T>(),
+                    data: key.HasValue() ? message.GetContent<T>(key!) : message.GetContent<T>()!,
                     messages: new ReadOnlyCollection<IMessageResult>(message.Messages ?? new List<IMessageResult>())
                 );
             }
@@ -39,12 +39,16 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IMessageResult> messageResultAsync, IMessageResult defaultMessage = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IMessageResult> messageResultAsync, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             var messageResult = await messageResultAsync;
             if (messageResult != null || defaultMessage != null)
             {
-                return await ToBusinessAsync<T>(default, new List<IMessageResult> { messageResult }, defaultMessage, tokenDefault);
+                if (messageResult != null)
+                {
+                    return await ToBusinessAsync<T>(default!, new List<IMessageResult> { messageResult }, defaultMessage, tokenDefault);
+                }
+                return await ToBusinessAsync<T>(default!, messageResult: new List<IMessageResult>(), defaultMessage: defaultMessage, tokenDefault: tokenDefault);
             }
             return new BusinessResult<T>(token: tokenDefault);
         }
@@ -52,12 +56,12 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IList<IMessageResult>> messageResultAsync, IMessageResult defaultMessage, string tokenDefault = null)
+        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<IList<IMessageResult>> messageResultAsync, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             var messageResult = await messageResultAsync;
             if (messageResult != null || defaultMessage != null)
             {
-                return await ToBusinessAsync<T>(default, messageResult, defaultMessage, tokenDefault);
+                return await ToBusinessAsync<T>(default!, messageResult, defaultMessage, tokenDefault);
             }
             return new BusinessResult<T>(token: tokenDefault);
         }
@@ -65,7 +69,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<T> valueAsync, IMessageResult messageResult, IMessageResult defaultMessage = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<T> valueAsync, IMessageResult? messageResult, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             var value = await valueAsync;
             if (value != null)
@@ -92,13 +96,13 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<T> valueAsync, IList<IMessageResult> messageResult = null, IMessageResult defaultMessage = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<T>> ToBusinessAsync<T>(this Task<T> valueAsync, IList<IMessageResult>? messageResult = null, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             var value = await valueAsync;
             if (value != null)
             {
                 var messages = new List<IMessageResult>();
-                if (messageResult.AnySafe())
+                if (messageResult != null && messageResult.AnySafe())
                 {
                     messages.AddRange(messageResult);
                 }
@@ -119,7 +123,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<VoidResult>> ToBusinessAsync(this Task task, IMessageResult messageResult, IMessageResult defaultMessage = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<VoidResult>> ToBusinessAsync(this Task task, IMessageResult? messageResult, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             await task;
 
@@ -142,12 +146,12 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business
         /// </summary>
-        public static async Task<IBusinessResult<VoidResult>> ToBusinessAsync(this Task task, IList<IMessageResult> messageResult = null, IMessageResult defaultMessage = null, string tokenDefault = null)
+        public static async Task<IBusinessResult<VoidResult>> ToBusinessAsync(this Task task, IList<IMessageResult>? messageResult = null, IMessageResult? defaultMessage = null, string? tokenDefault = null)
         {
             await task;
 
             var messages = new List<IMessageResult>();
-            if (messageResult.AnySafe())
+            if (messageResult != null && messageResult.AnySafe())
             {
                 messages.AddRange(messageResult);
             }
@@ -172,13 +176,13 @@ namespace Mvp24Hours.Extensions
 
             if (value.Data.IsList())
             {
-                return (value.Data as IEnumerable<object>).AnySafe();
+                return (value.Data as IEnumerable<object>)?.AnySafe() ?? false;
             }
 
             return true;
         }
 
-        public static async Task<T> GetDataValueAsync<T>(this Task<IBusinessResult<T>> valueAsync)
+        public static async Task<T?> GetDataValueAsync<T>(this Task<IBusinessResult<T>> valueAsync)
         {
             var value = await valueAsync;
             if (value.HasData())
@@ -195,7 +199,7 @@ namespace Mvp24Hours.Extensions
             {
                 if (value.Data.IsList())
                 {
-                    return (value.Data as IEnumerable<object>).Count();
+                    return (value.Data as IEnumerable<object>)?.Count() ?? 0;
                 }
                 else
                 {
@@ -210,19 +214,19 @@ namespace Mvp24Hours.Extensions
             var value = await valueAsync;
             if (value.HasData() && value.Data.IsList())
             {
-                return (value.Data as IEnumerable<object>).Count() == count;
+                return (value.Data as IEnumerable<object>)?.Count() == count;
             }
             return false;
         }
 
-        public static async Task<object> GetDataFirstOrDefaultAsync<T>(this Task<IBusinessResult<T>> valueAsync)
+        public static async Task<object?> GetDataFirstOrDefaultAsync<T>(this Task<IBusinessResult<T>> valueAsync)
         {
             var value = await valueAsync;
             if (value.HasData())
             {
                 if (value.Data.IsList())
                 {
-                    return (value.Data as IEnumerable<object>).FirstOrDefault();
+                    return (value.Data as IEnumerable<object>)?.FirstOrDefault();
                 }
                 else
                 {

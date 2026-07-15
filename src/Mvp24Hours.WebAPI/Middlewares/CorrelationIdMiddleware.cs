@@ -33,7 +33,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
         {
             if (context.Request.Headers.TryGetValue(_options.Header, out StringValues correlationId))
             {
-                context.TraceIdentifier = correlationId;
+                context.TraceIdentifier = correlationId.ToString();
             }
 
             if (_options.IncludeInResponse)

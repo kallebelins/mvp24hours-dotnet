@@ -225,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
                 await using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue(lockIdInt);
 
-                var count = (long)await command.ExecuteScalarAsync(cancellationToken)!;
+                var count = Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken) ?? 0L);
                 return count > 0;
             }
             catch (Exception ex)

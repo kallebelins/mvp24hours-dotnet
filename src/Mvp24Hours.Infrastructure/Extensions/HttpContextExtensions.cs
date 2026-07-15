@@ -15,7 +15,7 @@ namespace Mvp24Hours.Infrastructure.Extensions
         /// <summary>
         /// Gets IP of the user who originated the current request
         /// </summary>
-        public static string GetUserIP(this IHttpContextAccessor accessor)
+        public static string? GetUserIP(this IHttpContextAccessor accessor)
         {
             return accessor?.HttpContext?.GetUserIP();
         }
@@ -47,7 +47,7 @@ namespace Mvp24Hours.Infrastructure.Extensions
         /// <summary>
         /// Get web address dynamically from current service
         /// </summary>
-        public static string GetBaseUrl(this IHttpContextAccessor accessor)
+        public static string? GetBaseUrl(this IHttpContextAccessor accessor)
         {
             return accessor?.HttpContext?.GetBaseUrl();
         }
@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.Extensions
         /// <summary>
         /// Get web address dynamically from current service
         /// </summary>
-        public static string GetBaseUrl(this HttpContext context)
+        public static string? GetBaseUrl(this HttpContext context)
         {
             if (context != null)
             {

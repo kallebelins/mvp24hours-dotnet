@@ -48,7 +48,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     private readonly List<TEntity> _pendingAdds = [];
     private readonly List<TEntity> _pendingModifies = [];
     private readonly List<TEntity> _pendingRemoves = [];
-    private readonly Func<TEntity, object> _keySelector;
+    private readonly Func<TEntity, object?> _keySelector;
     private bool _disposed;
 
     /// <summary>
@@ -63,7 +63,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// Initializes a new instance with a custom key selector.
     /// </summary>
     /// <param name="keySelector">Function to extract the entity key.</param>
-    public RepositoryFakeAsync(Func<TEntity, object> keySelector)
+    public RepositoryFakeAsync(Func<TEntity, object?> keySelector)
     {
         _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     }
@@ -86,7 +86,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// </summary>
     /// <param name="initialData">Initial entities to populate the repository.</param>
     /// <param name="keySelector">Function to extract the entity key.</param>
-    public RepositoryFakeAsync(IEnumerable<TEntity> initialData, Func<TEntity, object> keySelector)
+    public RepositoryFakeAsync(IEnumerable<TEntity> initialData, Func<TEntity, object?> keySelector)
         : this(keySelector)
     {
         if (initialData != null)

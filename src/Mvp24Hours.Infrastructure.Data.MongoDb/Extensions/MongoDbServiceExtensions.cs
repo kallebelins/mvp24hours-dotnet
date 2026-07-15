@@ -23,8 +23,8 @@ namespace Mvp24Hours.Extensions
         /// Add database context services
         /// </summary>
         public static IServiceCollection AddMvp24HoursDbContext(this IServiceCollection services,
-            Action<MongoDbOptions> options = null,
-            Func<IServiceProvider, Mvp24HoursContext> dbFactory = null,
+            Action<MongoDbOptions>? options = null,
+            Func<IServiceProvider, Mvp24HoursContext>? dbFactory = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             return services.AddMvp24HoursDbContext<Mvp24HoursContext>(options, dbFactory, lifetime);
@@ -34,8 +34,8 @@ namespace Mvp24Hours.Extensions
         /// Add database context services
         /// </summary>
         public static IServiceCollection AddMvp24HoursDbContext<DbContext>(this IServiceCollection services,
-            Action<MongoDbOptions> options = null,
-            Func<IServiceProvider, DbContext> dbFactory = null,
+            Action<MongoDbOptions>? options = null,
+            Func<IServiceProvider, DbContext>? dbFactory = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped) where DbContext : Mvp24HoursContext
         {
             if (options != null)
@@ -63,9 +63,9 @@ namespace Mvp24Hours.Extensions
         /// Add repository
         /// </summary>
         public static IServiceCollection AddMvp24HoursRepository(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type repository = null,
-            Type unitOfWork = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? repository = null,
+            Type? unitOfWork = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -102,9 +102,9 @@ namespace Mvp24Hours.Extensions
         /// Add repository
         /// </summary>
         public static IServiceCollection AddMvp24HoursRepositoryAsync(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type repositoryAsync = null,
-            Type unitOfWorkAsync = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? repositoryAsync = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -177,8 +177,8 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursRepositoryAsyncWithInterceptors(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type unitOfWorkAsync = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -270,9 +270,9 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursBulkOperationsRepositoryAsync(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type bulkOperationsRepositoryAsync = null,
-            Type unitOfWorkAsync = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? bulkOperationsRepositoryAsync = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -337,8 +337,8 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursBulkOperationsRepositoryAsyncWithInterceptors(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type unitOfWorkAsync = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -418,8 +418,8 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOnlyRepository(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type readOnlyRepository = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? readOnlyRepository = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -491,8 +491,8 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOnlyRepositoryAsync(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
-            Type readOnlyRepositoryAsync = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
+            Type? readOnlyRepositoryAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (repositoryOptions != null)
@@ -540,7 +540,7 @@ namespace Mvp24Hours.Extensions
         /// </code>
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOnlyRepositories(this IServiceCollection services,
-            Action<MongoDbRepositoryOptions> repositoryOptions = null,
+            Action<MongoDbRepositoryOptions>? repositoryOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             return services

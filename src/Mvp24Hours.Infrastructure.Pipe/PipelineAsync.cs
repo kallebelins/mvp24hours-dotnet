@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
     {
         #region [ Ctor ]
 
-        public PipelineAsync(IServiceProvider _provider = null)
+        public PipelineAsync(IServiceProvider? _provider = null)
         {
             this.provider = _provider;
             this._logger = _provider?.GetService<ILogger<PipelineAsync>>();
@@ -57,8 +57,8 @@ namespace Mvp24Hours.Infrastructure.Pipe
         #endregion
 
         #region [ Fields / Properties ]
-        private readonly IServiceProvider provider;
-        private readonly ILogger<PipelineAsync> _logger;
+        private readonly IServiceProvider? provider;
+        private readonly ILogger<PipelineAsync>? _logger;
         private readonly List<IOperationAsync> operations;
         private readonly List<IOperationAsync> executedOperations;
 
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipelineAsync Add<T>() where T : class, IOperationAsync
         {
-            IOperationAsync instance = provider?.GetService<T>();
+            IOperationAsync? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipelineAsync AddBuilder<T>() where T : class, IPipelineBuilderAsync
         {
-            IPipelineBuilderAsync pipelineBuilder = provider?.GetService<T>();
+            IPipelineBuilderAsync? pipelineBuilder = provider?.GetService<T>();
             if (pipelineBuilder == null)
             {
                 Type type = typeof(T);
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipelineAsync AddInterceptors<T>(PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation) where T : class, IOperationAsync
         {
-            IOperationAsync instance = provider?.GetService<T>();
+            IOperationAsync? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 throw new ArgumentNullException(nameof(operation), "Operation has not been defined or is null.");
             }
-            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperationAsync> value))
+            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperationAsync>? value))
             {
                 value = [];
                 this.dictionaryInterceptors.Add(pipelineInterceptor, value);
@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 throw new ArgumentNullException(nameof(action), "Action is mandatory.");
             }
-            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperationAsync> value))
+            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperationAsync>? value))
             {
                 value = [];
                 this.dictionaryInterceptors.Add(pipelineInterceptor, value);
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         public IPipelineAsync AddInterceptors<T>(Func<IPipelineMessage, bool> condition, bool postOperation = true) where T : class, IOperationAsync
         {
-            IOperationAsync instance = provider?.GetService<T>();
+            IOperationAsync? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -253,7 +253,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                 throw new ArgumentNullException(nameof(handler), "Handler has not been defined or is null.");
             }
 
-            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<MvpEventHandler<IPipelineMessage, EventArgs>> value))
+            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<MvpEventHandler<IPipelineMessage, EventArgs>>? value))
             {
                 value = [];
                 this.dictionaryEventInterceptors.Add(pipelineInterceptor, value);
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             return this;
         }
 
-        public async Task ExecuteAsync(IPipelineMessage input = null)
+        public async Task ExecuteAsync(IPipelineMessage? input = null)
         {
             executedOperations.Clear();
             _logger?.LogDebug("PipelineAsync: ExecuteAsync started");
@@ -413,7 +413,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         protected virtual async Task RunOperationInterceptorsAsync(IPipelineMessage input, PipelineInterceptorType interceptorType, bool canClearList = false)
         {
-            if (dictionaryInterceptors.TryGetValue(interceptorType, out List<IOperationAsync> value))
+            if (dictionaryInterceptors.TryGetValue(interceptorType, out List<IOperationAsync>? value))
             {
                 await RunOperationsAsync(value, input, true);
                 if (canClearList)
@@ -447,7 +447,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         protected virtual async Task RunEventInterceptorsAsync(IPipelineMessage input, PipelineInterceptorType interceptorType, bool canClearList = false)
         {
-            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<MvpEventHandler<IPipelineMessage, EventArgs>> value))
+            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<MvpEventHandler<IPipelineMessage, EventArgs>>? value))
             {
                 await RunEventsAsync(value, input);
                 if (canClearList)

@@ -16,7 +16,7 @@ namespace Mvp24Hours.Helpers
     {
         #region [ Envionment ]
 
-        private static IHostEnvironment _environment;
+        private static IHostEnvironment? _environment;
 
         /// <summary>
         /// Defines the host environment of the application that is running
@@ -33,7 +33,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Gets the host environment of the application that is running
         /// </summary>
-        public static IHostEnvironment GetEnvironment()
+        public static IHostEnvironment? GetEnvironment()
         {
             return _environment;
         }
@@ -42,7 +42,7 @@ namespace Mvp24Hours.Helpers
 
         #region [ Settings ]
 
-        private static IConfigurationRoot _appSettings;
+        private static IConfigurationRoot? _appSettings;
 
         /// <summary>
         /// 
@@ -55,7 +55,7 @@ namespace Mvp24Hours.Helpers
                 {
                     LoadSettings();
                 }
-                return _appSettings;
+                return _appSettings!;
             }
         }
 
@@ -74,7 +74,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Get the settings of the application that is running
         /// </summary>
-        public static string GetSettings(string key)
+        public static string? GetSettings(string key)
         {
             return GetSection(key)?.Value;
         }
@@ -82,19 +82,19 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Get an instance of the settings of the running application
         /// </summary>
-        public static T GetSettings<T>(string key)
+        public static T? GetSettings<T>(string key) where T : class
         {
-            return GetSection(key).Get<T>();
+            return GetSection(key)?.Get<T>();
         }
 
         /// <summary>
         /// Get the section of the application that is running
         /// </summary>
-        public static IConfigurationSection GetSection(string key)
+        public static IConfigurationSection? GetSection(string key)
         {
             if (AppSettings != null)
             {
-                return AppSettings?.GetSection(key);
+                return AppSettings.GetSection(key);
             }
             return default;
         }

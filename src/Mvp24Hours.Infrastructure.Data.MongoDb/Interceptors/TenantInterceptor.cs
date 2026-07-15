@@ -52,11 +52,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     /// </example>
     public class TenantInterceptor : MongoDbInterceptorBase
     {
-        private readonly ITenantProvider _tenantProvider;
+        private readonly ITenantProvider? _tenantProvider;
         private readonly bool _validateOnUpdate;
         private readonly bool _validateOnDelete;
         private readonly bool _throwOnMissingTenant;
-        private readonly ILogger<TenantInterceptor> _logger;
+        private readonly ILogger<TenantInterceptor>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TenantInterceptor"/> class.
@@ -72,7 +72,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             bool validateOnUpdate = true,
             bool validateOnDelete = true,
             bool throwOnMissingTenant = true,
-            ILogger<TenantInterceptor> logger = null)
+            ILogger<TenantInterceptor>? logger = null)
         {
             _tenantProvider = tenantProvider ?? throw new ArgumentNullException(nameof(tenantProvider));
             _validateOnUpdate = validateOnUpdate;
@@ -92,7 +92,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         {
             if (entity is ITenantEntity tenantEntity)
             {
-                var currentTenantId = _tenantProvider.TenantId;
+                var currentTenantId = _tenantProvider?.TenantId;
 
                 if (_throwOnMissingTenant && string.IsNullOrEmpty(currentTenantId))
                 {
@@ -101,8 +101,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                         "Ensure a tenant is set in the current context.");
                 }
 
-                // Set the tenant ID
-                tenantEntity.TenantId = currentTenantId;
+                // Set the tenant ID only when we have a current tenant
+                if (!string.IsNullOrEmpty(currentTenantId))
+                {
+                    tenantEntity.TenantId = currentTenantId;
+                }
 
                 _logger?.LogDebug(
                     "MongoDB tenant interceptor insert: EntityType={EntityType}, TenantId={TenantId}",
@@ -140,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
         private void ValidateTenantOwnership(ITenantEntity entity, string entityTypeName)
         {
-            var currentTenantId = _tenantProvider.TenantId;
+            var currentTenantId = _tenantProvider?.TenantId;
 
             // If no tenant is set in context and we're not throwing on missing tenant, allow the operation
             if (string.IsNullOrEmpty(currentTenantId) && !_throwOnMissingTenant)
@@ -181,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                     if (property != null && property.CanWrite)
                     {
                         var tenantIdType = property.PropertyType;
-                        var currentTenantId = _tenantProvider.TenantId;
+                        var currentTenantId = _tenantProvider?.TenantId;
 
                         if (string.IsNullOrEmpty(currentTenantId))
                         {

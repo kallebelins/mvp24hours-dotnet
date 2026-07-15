@@ -25,7 +25,7 @@ namespace Mvp24Hours.Helpers
     /// </remarks>
     public static class WebRequestHelper
     {
-        private static ILogger _logger;
+        private static ILogger? _logger;
 
         /// <summary>
         /// Sets the logger instance for logging web request operations.
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Helpers
                     }
                     else
                     {
-                        result.Add(string.Format("{0}={1}", p.Name, HttpUtility.UrlEncode(value.ToString())));
+                        result.Add(string.Format("{0}={1}", p.Name, HttpUtility.UrlEncode(value!.ToString())));
                     }
                 }
             }
@@ -80,7 +80,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> PostAsync(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null)
+        public static async Task<string?> PostAsync(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null)
         {
             return await SendAsync(urlService, headers, credentials, "POST", data);
         }
@@ -88,7 +88,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> PostAsync<T>(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> PostAsync<T>(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await SendAsync(urlService, headers, credentials, "POST", data);
             if (!result.HasValue())
@@ -96,13 +96,13 @@ namespace Mvp24Hours.Helpers
                 return default;
             }
 
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> GetAsync(string url, IDictionary<string, string> headers = null, ICredentials credentials = null)
+        public static async Task<string?> GetAsync(string url, IDictionary<string, string>? headers = null, ICredentials? credentials = null)
         {
             return await SendAsync(url, headers, credentials, "GET", null);
         }
@@ -110,20 +110,20 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> GetAsync<T>(string url, IDictionary<string, string> headers = null, ICredentials credentials = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> GetAsync<T>(string url, IDictionary<string, string>? headers = null, ICredentials? credentials = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await SendAsync(url, headers, credentials, "GET", null);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> PutAsync(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null)
+        public static async Task<string?> PutAsync(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null)
         {
             return await SendAsync(urlService, headers, credentials, "PUT", data);
         }
@@ -131,20 +131,20 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> PutAsync<T>(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> PutAsync<T>(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await SendAsync(urlService, headers, credentials, "PUT", data);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> PatchAsync(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null)
+        public static async Task<string?> PatchAsync(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null)
         {
             return await SendAsync(urlService, headers, credentials, "PATCH", data);
         }
@@ -152,20 +152,20 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> PatchAsync<T>(string urlService, string data = "", IDictionary<string, string> headers = null, ICredentials credentials = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> PatchAsync<T>(string urlService, string data = "", IDictionary<string, string>? headers = null, ICredentials? credentials = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await SendAsync(urlService, headers, credentials, "PATCH", data);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> DeleteAsync(string url, IDictionary<string, string> headers = null, ICredentials credentials = null)
+        public static async Task<string?> DeleteAsync(string url, IDictionary<string, string>? headers = null, ICredentials? credentials = null)
         {
             return await SendAsync(url, headers, credentials, "DELETE", null);
         }
@@ -173,17 +173,17 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> DeleteAsync<T>(string url, IDictionary<string, string> headers = null, ICredentials credentials = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> DeleteAsync<T>(string url, IDictionary<string, string>? headers = null, ICredentials? credentials = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await SendAsync(url, headers, credentials, "DELETE", null);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
-        private static async Task<string> SendAsync(string url, IDictionary<string, string> headers, ICredentials credentials, string method, string data)
+        private static async Task<string?> SendAsync(string url, IDictionary<string, string>? headers, ICredentials? credentials, string method, string? data)
         {
             _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
@@ -201,7 +201,7 @@ namespace Mvp24Hours.Helpers
                 if (credentials != null)
                     client.Credentials = credentials;
 
-                if (headers.AnyOrNotNull())
+                if (headers != null && headers.AnyOrNotNull())
                 {
                     foreach (var keyValue in headers)
                     {
@@ -209,16 +209,16 @@ namespace Mvp24Hours.Helpers
                     }
                 }
 
-                if (!headers.ContainsKeySafe("Content-Type"))
+                if (!(headers?.ContainsKeySafe("Content-Type") ?? false))
                     client.ContentType = $"application/json; charset={EncodingRequest.BodyName.ToLower()}";
 
-                if (!headers.ContainsKeySafe("Accept-Encoding"))
+                if (!(headers?.ContainsKeySafe("Accept-Encoding") ?? false))
                 {
                     client.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
                     client.Headers.Add("Accept-Encoding", "gzip,deflate");
                 }
 
-                byte[] bytes = null;
+                byte[]? bytes = null;
                 if (method == "POST" || method == "PUT" || method == "PATCH")
                 {
                     bytes = EncodingRequest.GetBytes(data ?? string.Empty);
@@ -233,7 +233,7 @@ namespace Mvp24Hours.Helpers
                     {
                         using var response = client.GetResponse();
                         using var content = response.GetResponseStream();
-                        using var reader = new StreamReader(content, EncodingRequest);
+                        using var reader = new StreamReader(content!, EncodingRequest);
                         var result = await reader.ReadToEndAsync();
                         _logger?.LogDebug("Successfully received response from {Url}", url);
                         return result;
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Helpers
                         using var reqstream = client.GetRequestStream();
                         reqstream.Write(bytes, 0, bytes.Length);
                         var httpResponse = (HttpWebResponse)client.GetResponse();
-                        using var streamReader = new StreamReader(httpResponse.GetResponseStream(), EncodingRequest);
+                        using var streamReader = new StreamReader(httpResponse.GetResponseStream()!, EncodingRequest);
                         var result = await streamReader.ReadToEndAsync();
                         _logger?.LogDebug("Successfully received response from {Url}", url);
                         return result;
@@ -255,7 +255,7 @@ namespace Mvp24Hours.Helpers
                     if (we.Response != null)
                     {
                         using var stream = we.Response.GetResponseStream();
-                        using var reader = new StreamReader(stream);
+                        using var reader = new StreamReader(stream!);
                         return reader.ReadToEnd();
                     }
                     throw;

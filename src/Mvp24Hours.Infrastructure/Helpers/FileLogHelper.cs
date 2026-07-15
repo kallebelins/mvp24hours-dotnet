@@ -17,7 +17,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Writes log with model characteristics in the parameter
         /// </summary>
-        public static void WriteLog<T>(T dto, string logPath, string suffixFilename = null, string header = null)
+        public static void WriteLog<T>(T dto, string logPath, string? suffixFilename = null, string? header = null) where T : class
         {
             if (string.IsNullOrEmpty(logPath))
             {
@@ -35,8 +35,9 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Writes log with model characteristics in the parameter using token to map location (system folder)
         /// </summary>
-        public static void WriteLogToken<T>(string token, string fileName, T obj, string logPath)
+        public static void WriteLogToken<T>(string token, string fileName, T obj, string logPath) where T : class
         {
+            ArgumentNullException.ThrowIfNull(obj);
             lock (obj)
             {
                 if (string.IsNullOrEmpty(logPath))
@@ -54,7 +55,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Performs log reading based on token (system folder path)
         /// </summary>
-        public static T ReadLogToken<T>(string token, string fileName, string logPath)
+        public static T? ReadLogToken<T>(string token, string fileName, string logPath) where T : class
         {
             var fullPath = $"{logPath}/{token}/{fileName}.json";
             if (!File.Exists(fullPath))
@@ -64,8 +65,9 @@ namespace Mvp24Hours.Helpers
 
             return JsonConvert.DeserializeObject<T>(File.ReadAllText(fullPath));
         }
-        private static void WriteDisk<T>(T obj, string folder, string fileName, string header = null, bool append = false)
+        private static void WriteDisk<T>(T obj, string folder, string fileName, string? header = null, bool append = false) where T : class
         {
+            ArgumentNullException.ThrowIfNull(obj);
             lock (obj)
             {
                 Directory.CreateDirectory(folder);

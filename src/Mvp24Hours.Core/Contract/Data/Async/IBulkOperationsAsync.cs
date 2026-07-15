@@ -52,7 +52,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <summary>
         /// Error message if the operation failed.
         /// </summary>
-        public string ErrorMessage { get; init; }
+        public string? ErrorMessage { get; init; }
 
         /// <summary>
         /// Creates a successful result.
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <summary>
         /// Optional progress callback for long-running operations.
         /// </summary>
-        public BulkProgressCallback ProgressCallback { get; set; }
+        public BulkProgressCallback? ProgressCallback { get; set; }
 
         /// <summary>
         /// Timeout for the bulk operation in seconds. Default is 300 (5 minutes).
@@ -357,17 +357,17 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <summary>
         /// Property selector expression.
         /// </summary>
-        public LambdaExpression Property { get; init; }
+        public required LambdaExpression Property { get; init; }
 
         /// <summary>
         /// Constant value to set (if not using expression).
         /// </summary>
-        public object Value { get; init; }
+        public object? Value { get; init; }
 
         /// <summary>
         /// Value expression to compute the new value (if not using constant).
         /// </summary>
-        public LambdaExpression ValueExpression { get; init; }
+        public LambdaExpression? ValueExpression { get; init; }
     }
 
     /// <summary>

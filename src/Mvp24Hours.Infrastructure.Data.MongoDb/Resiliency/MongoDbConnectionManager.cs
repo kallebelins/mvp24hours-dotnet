@@ -209,7 +209,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// Marks the connection as lost.
         /// </summary>
         /// <param name="reason">The reason for disconnection.</param>
-        public void OnConnectionLost(string reason = null)
+        public void OnConnectionLost(string? reason = null)
         {
             var wasConnected = _isConnected;
             _isConnected = false;
@@ -350,12 +350,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <summary>
         /// Gets the reason for the state change, if applicable.
         /// </summary>
-        public string Reason { get; }
+        public string? Reason { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionStateChangedEventArgs"/> class.
         /// </summary>
-        public ConnectionStateChangedEventArgs(bool isConnected, bool previousState, DateTimeOffset timestamp, string reason = null)
+        public ConnectionStateChangedEventArgs(bool isConnected, bool previousState, DateTimeOffset timestamp, string? reason = null)
         {
             IsConnected = isConnected;
             PreviousState = previousState;

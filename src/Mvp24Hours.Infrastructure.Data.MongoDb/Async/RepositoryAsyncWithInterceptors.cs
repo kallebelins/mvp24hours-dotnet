@@ -62,8 +62,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         public RepositoryAsyncWithInterceptors(
             Mvp24HoursContext dbContext,
             IOptions<MongoDbRepositoryOptions> options,
-            IMongoDbInterceptorPipeline interceptorPipeline = null,
-            ILogger<RepositoryBase<T>> logger = null)
+            IMongoDbInterceptorPipeline? interceptorPipeline = null,
+            ILogger<RepositoryBase<T>>? logger = null)
             : base(dbContext, options, logger)
         {
             _interceptorPipeline = interceptorPipeline ?? NoOpInterceptorPipeline.Instance;
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public async Task<IList<T>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("MongoDB repository async ListAsync started");
             try
@@ -154,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("MongoDB repository async GetByAsync started");
             try
@@ -171,19 +171,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public Task<T> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return GetByIdAsync(id, null, cancellationToken: cancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<T> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("MongoDB repository async GetByIdAsync started: Id={Id}", id);
             try
             {
-                return await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
-                    .SingleOrDefaultAsync(cancellationToken: cancellationToken);
+                return (await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
+                    .SingleOrDefaultAsync(cancellationToken: cancellationToken))!;
             }
             finally { _logger?.LogDebug("MongoDB repository async GetByIdAsync completed: Id={Id}", id); }
         }
@@ -200,21 +200,21 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException("Relationship loading via navigation not available for MongoDB.");
         }
 
         /// <inheritdoc />
-        public Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException("Relationship loading via navigation not available for MongoDB.");
         }
 
         /// <inheritdoc />
-        public Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException("Relationship loading via navigation not available for MongoDB.");
@@ -420,7 +420,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        protected override object EntityLogBy => throw new NotSupportedException(
+        protected override object? EntityLogBy => throw new NotSupportedException(
             "EntityLogBy is not supported. Use ICurrentUserProvider with AuditInterceptor instead.");
 
         #endregion

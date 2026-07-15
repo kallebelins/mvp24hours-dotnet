@@ -83,6 +83,6 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
         /// <summary>
         /// Performs async operations
         /// </summary>
-        Task ExecuteAsync(IPipelineMessage input = null);
+        Task ExecuteAsync(IPipelineMessage? input = null);
     }
 }

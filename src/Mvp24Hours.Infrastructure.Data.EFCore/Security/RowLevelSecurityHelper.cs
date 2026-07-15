@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
     /// </example>
     public class RowLevelSecurityHelper
     {
-        private readonly ITenantProvider _tenantProvider;
+        private readonly ITenantProvider? _tenantProvider;
         private readonly string _defaultSessionContextKey;
         private readonly ILogger<RowLevelSecurityHelper>? _logger;
 
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
         /// </remarks>
         public string GenerateSqlServerRls<TEntity>(
             string schema = "dbo",
-            string tableName = null)
+            string? tableName = null)
             where TEntity : class, ITenantEntity
         {
             tableName ??= typeof(TEntity).Name;
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
         /// <returns>SQL script to create RLS policy.</returns>
         public string GeneratePostgreSqlRls<TEntity>(
             string schema = "public",
-            string tableName = null)
+            string? tableName = null)
             where TEntity : class, ITenantEntity
         {
             tableName ??= typeof(TEntity).Name.ToLowerInvariant();
@@ -377,7 +377,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
         public Dictionary<string, string> GenerateRlsScriptsForModel(
             ModelBuilder modelBuilder,
             DatabaseType databaseType,
-            string schema = null)
+            string? schema = null)
         {
             var scripts = new Dictionary<string, string>();
             schema ??= databaseType == DatabaseType.PostgreSql ? "public" : "dbo";
@@ -392,9 +392,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
                     var script = databaseType switch
                     {
                         DatabaseType.SqlServer => GenerateSqlServerRlsScript(
-                            entitySchema, tableName, nameof(ITenantEntity.TenantId)),
+                            entitySchema, tableName ?? entityType.ClrType.Name, nameof(ITenantEntity.TenantId)),
                         DatabaseType.PostgreSql => GeneratePostgreSqlRlsScript(
-                            entitySchema, tableName, nameof(ITenantEntity.TenantId)),
+                            entitySchema, tableName ?? entityType.ClrType.Name, nameof(ITenantEntity.TenantId)),
                         _ => throw new NotSupportedException($"Database type {databaseType} is not supported for RLS.")
                     };
 
@@ -415,7 +415,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
         public string GenerateCombinedRlsScript(
             ModelBuilder modelBuilder,
             DatabaseType databaseType,
-            string schema = null)
+            string? schema = null)
         {
             var scripts = GenerateRlsScriptsForModel(modelBuilder, databaseType, schema);
             var sb = new StringBuilder();

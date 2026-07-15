@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
     public class MongoDbTextSearchService<TDocument> : IMongoDbTextSearchService<TDocument>
     {
         private readonly IMongoCollection<TDocument> _collection;
-        private readonly ILogger<MongoDbTextSearchService<TDocument>> _logger;
+        private readonly ILogger<MongoDbTextSearchService<TDocument>>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbTextSearchService{TDocument}"/> class.
@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <param name="logger">Optional logger.</param>
         public MongoDbTextSearchService(
             IMongoCollection<TDocument> collection,
-            ILogger<MongoDbTextSearchService<TDocument>> logger = null)
+            ILogger<MongoDbTextSearchService<TDocument>>? logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _logger = logger;
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task<string> CreateTextIndexAsync(
             IEnumerable<string> fields,
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (fields == null || !fields.Any())
@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task<string> CreateTextIndexAsync(
             IDictionary<string, int> fieldWeights,
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (fieldWeights == null || !fieldWeights.Any())
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
 
         /// <inheritdoc/>
         public async Task<string> CreateWildcardTextIndexAsync(
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             var indexKeys = new BsonDocument("$**", "text");
@@ -146,7 +146,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             return await SearchAsync(searchText, FilterDefinition<TDocument>.Empty, options, cancellationToken);
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         public async Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
             FilterDefinition<TDocument> filter,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(searchText))
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         public async Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
             Expression<Func<TDocument, bool>> filter,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             var filterDefinition = Builders<TDocument>.Filter.Where(filter);
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task<IList<TextSearchResult<TDocument>>> SearchPhraseAsync(
             string phrase,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(phrase))
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         public async Task<IList<TextSearchResult<TDocument>>> SearchWithExclusionsAsync(
             IEnumerable<string> includeTerms,
             IEnumerable<string> excludeTerms,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (includeTerms == null || !includeTerms.Any())
@@ -293,7 +293,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task<long> CountAsync(
             string searchText,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(searchText))

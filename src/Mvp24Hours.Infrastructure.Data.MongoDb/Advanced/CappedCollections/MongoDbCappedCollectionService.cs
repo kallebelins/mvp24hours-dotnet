@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
     {
         private readonly IMongoDatabase _database;
         private readonly string _collectionName;
-        private readonly ILogger<MongoDbCappedCollectionService<TDocument>> _logger;
+        private readonly ILogger<MongoDbCappedCollectionService<TDocument>>? _logger;
         private IMongoCollection<TDocument> _collection;
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
         public MongoDbCappedCollectionService(
             IMongoDatabase database,
             string collectionName,
-            ILogger<MongoDbCappedCollectionService<TDocument>> logger = null)
+            ILogger<MongoDbCappedCollectionService<TDocument>>? logger = null)
         {
             _database = database ?? throw new ArgumentNullException(nameof(database));
             _collectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));

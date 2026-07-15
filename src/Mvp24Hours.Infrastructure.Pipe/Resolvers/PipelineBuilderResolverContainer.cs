@@ -14,26 +14,26 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
     public class PipelineBuilderResolverContainer<TService>
     {
         private readonly Dictionary<string, PipelineBuilderResolver> _resolvers;
-        private readonly string _keyDefault;
+        private readonly string? _keyDefault;
 
         /// <summary>
         /// 
         /// </summary>
         public PipelineBuilderResolverContainer()
-        : this(null)
+        : this((string?)null)
         {
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public PipelineBuilderResolverContainer(string keyDefault)
+        public PipelineBuilderResolverContainer(string? keyDefault)
         {
             _resolvers = [];
 
             if (keyDefault.HasValue())
             {
-                _keyDefault = keyDefault;
+                _keyDefault = keyDefault!;
             }
         }
 
@@ -53,11 +53,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         /// <summary>
         /// 
         /// </summary>
-        public PipelineBuilderResolver GetDefault()
+        public PipelineBuilderResolver? GetDefault()
         {
             if (_keyDefault.HasValue())
             {
-                return Get(_keyDefault);
+                return Get(_keyDefault!);
             }
             return default;
         }
@@ -65,9 +65,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         /// <summary>
         /// 
         /// </summary>
-        public PipelineBuilderResolver Get(string key)
+        public PipelineBuilderResolver? Get(string key)
         {
-            if (_resolvers.TryGetValue(key, out PipelineBuilderResolver value))
+            if (_resolvers.TryGetValue(key, out PipelineBuilderResolver? value))
             {
                 return value;
             }

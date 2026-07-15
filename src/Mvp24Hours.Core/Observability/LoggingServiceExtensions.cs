@@ -476,7 +476,7 @@ public class LogContextAccessor : ILogContextAccessor
         var properties = GetEnrichmentProperties();
         if (properties.Count == 0) return null;
 
-        return logger.BeginScope(properties);
+        return logger.BeginScope(properties)!;
     }
 
     /// <inheritdoc />
@@ -720,7 +720,7 @@ public static class LoggerTraceContextExtensions
             ["TraceId"] = activity.TraceId.ToString(),
             ["SpanId"] = activity.SpanId.ToString(),
             [SemanticTags.CorrelationId] = correlationId
-        });
+        })!;
     }
 
     /// <summary>
@@ -753,7 +753,7 @@ public static class LoggerTraceContextExtensions
             properties["SpanId"] = activity.SpanId.ToString();
         }
 
-        return logger.BeginScope(properties);
+        return logger.BeginScope(properties)!;
     }
 
     /// <summary>

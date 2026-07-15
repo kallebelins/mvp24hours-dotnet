@@ -49,9 +49,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     /// </example>
     public class AuditTrailInterceptor : MongoDbInterceptorBase
     {
-        private readonly ICurrentUserProvider _currentUserProvider;
-        private readonly IClock _clock;
-        private readonly ILogger _logger;
+        private readonly ICurrentUserProvider? _currentUserProvider;
+        private readonly IClock? _clock;
+        private readonly ILogger? _logger;
         private readonly bool _logEntityData;
         private readonly JsonSerializerOptions _jsonOptions;
 
@@ -63,9 +63,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <param name="logger">Optional logger for structured audit logging.</param>
         /// <param name="logEntityData">If true, logs the entity data in the audit trail. Default is false for privacy.</param>
         public AuditTrailInterceptor(
-            ICurrentUserProvider currentUserProvider = null,
-            IClock clock = null,
-            ILogger<AuditTrailInterceptor> logger = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            IClock? clock = null,
+            ILogger<AuditTrailInterceptor>? logger = null,
             bool logEntityData = false)
         {
             _currentUserProvider = currentUserProvider;
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <summary>
         /// Gets or sets the user who performed the operation.
         /// </summary>
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the type of operation performed.
@@ -181,12 +181,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <summary>
         /// Gets or sets the ID of the entity.
         /// </summary>
-        public string EntityId { get; set; }
+        public string? EntityId { get; set; }
 
         /// <summary>
         /// Gets or sets the serialized entity data (optional, for detailed auditing).
         /// </summary>
-        public string EntityData { get; set; }
+        public string? EntityData { get; set; }
     }
 
     /// <summary>

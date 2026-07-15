@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <summary>
         /// Gets the value of the user logged in the context or logged into the database
         /// </summary>
-        protected abstract object EntityLogBy { get; }
+        protected abstract object? EntityLogBy { get; }
         /// <summary>
         /// Repository configuration options
         /// </summary>
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <summary>
         /// Gets database query with clause and aggregation of relationships
         /// </summary>
-        protected IQueryable<T> GetQuery(IPagingCriteria criteria, bool onlyNavigation = false)
+        protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             // cria query
             var query = this.dbEntities.AsQueryable();
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// Gets database query with clause and aggregation of relationships
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
-        protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria criteria, bool onlyNavigation = false)
+        protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             Logger?.LogDebug("EFCore RepositoryBase query criteria. EntityType: {EntityType}, Criteria: {Criteria}", typeof(T).Name, criteria);
 
@@ -90,13 +90,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 if (criteria != null)
                 {
                     // ordination
-                    if (criteria is IPagingCriteriaExpression<T>)
+                    if (criteria is IPagingCriteriaExpression<T> clauseExpr)
                     {
-                        var clauseExpr = criteria as IPagingCriteriaExpression<T>;
                         // ordination by ascending expression
                         if (clauseExpr.OrderByAscendingExpr.AnySafe())
                         {
-                            IOrderedQueryable<T> queryOrdered = null;
+                            IOrderedQueryable<T>? queryOrdered = null;
                             foreach (var ord in clauseExpr.OrderByAscendingExpr)
                             {
                                 if (queryOrdered == null)
@@ -115,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                         // ordination by descending expression
                         if (clauseExpr.OrderByDescendingExpr.AnySafe())
                         {
-                            IOrderedQueryable<T> queryOrdered = null;
+                            IOrderedQueryable<T>? queryOrdered = null;
                             foreach (var ord in clauseExpr.OrderByDescendingExpr)
                             {
                                 if (queryOrdered == null)
@@ -135,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     // ordination by string
                     if (criteria.OrderBy.AnySafe())
                     {
-                        IOrderedQueryable<T> queryOrdered = null;
+                        IOrderedQueryable<T>? queryOrdered = null;
                         foreach (var ord in criteria.OrderBy)
                         {
                             if (queryOrdered == null)
@@ -171,9 +170,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             if (criteria != null)
             {
                 // navigation
-                if (criteria is IPagingCriteriaExpression<T>)
+                if (criteria is IPagingCriteriaExpression<T> clauseExpr)
                 {
-                    var clauseExpr = criteria as IPagingCriteriaExpression<T>;
                     // navigation by expression
                     if (clauseExpr.NavigationExpr.AnySafe())
                     {
@@ -199,7 +197,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <summary>
         /// Makes a code block transactional.
         /// </summary>
-        protected TransactionScope CreateTransactionScope(bool isAggregate = false)
+        protected TransactionScope? CreateTransactionScope(bool isAggregate = false)
         {
             if (isAggregate || Options.TransactionIsolationLevel != null)
             {
@@ -220,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         #region [ Supports ]
 
-        PropertyInfo _keyInfo;
+        PropertyInfo? _keyInfo;
         /// <summary>
         /// 
         /// </summary>

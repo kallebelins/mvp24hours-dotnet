@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             return List(null);
         }
 
-        public IList<T> List(IPagingCriteria criteria)
+        public IList<T> List(IPagingCriteria? criteria)
         {
             _logger?.LogDebug("MongoDB repository List started");
             try
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             return GetBy(clause, null);
         }
 
-        public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria criteria)
+        public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("MongoDB repository GetBy started");
             try
@@ -111,17 +111,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             finally { _logger?.LogDebug("MongoDB repository GetBy completed"); }
         }
 
-        public T GetById(object id)
+        public T? GetById(object id)
         {
-            return GetById(id, null);
+            return GetById(id, null)!;
         }
 
-        public T GetById(object id, IPagingCriteria criteria)
+        public T? GetById(object id, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("MongoDB repository GetById started: Id={Id}", id);
             try
             {
-                return GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefault();
+                return GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefault()!;
             }
             finally { _logger?.LogDebug("MongoDB repository GetById completed: Id={Id}", id); }
         }
@@ -133,15 +133,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             throw new NotSupportedException();
         }
-        public void LoadRelation<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
+        public void LoadRelation<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0) where TProperty : class
         {
             throw new NotSupportedException();
         }
-        public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
+        public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0) where TProperty : class
         {
             throw new NotSupportedException();
         }
-        public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
+        public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0) where TProperty : class
         {
             throw new NotSupportedException();
         }
@@ -168,7 +168,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository Add list started: Count={Count}", entities?.Count ?? 0);
             try
             {
-                if (entities.AnySafe())
+                if (entities?.AnySafe() == true)
                 {
                     foreach (var entity in entities)
                     {
@@ -197,8 +197,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 if (entity.GetType() == typeof(IEntityLog<>))
                 {
                     _logger?.LogDebug("MongoDB repository Modify: preserving log fields");
-                    var entityLog = entity as IEntityLog<object>;
-                    var entityDbLog = entityDb as IEntityLog<object>;
+                    var entityLog = (IEntityLog<object>)entity;
+                    var entityDbLog = (IEntityLog<object>)entityDb;
                     entityLog.Created = entityDbLog.Created;
                     entityLog.CreatedBy = entityDbLog.CreatedBy;
                     entityLog.Modified = entityDbLog.Modified;
@@ -215,7 +215,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository Modify list started: Count={Count}", entities?.Count ?? 0);
             try
             {
-                if (entities.AnySafe())
+                if (entities?.AnySafe() == true)
                 {
                     foreach (var entity in entities)
                     {
@@ -239,7 +239,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 if (entity.GetType() == typeof(IEntityLog<>))
                 {
                     _logger?.LogDebug("MongoDB repository Remove: performing soft delete");
-                    var entityLog = entity as IEntityLog<object>;
+                    var entityLog = (IEntityLog<object>)entity;
                     entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
                     entityLog.RemovedBy = EntityLogBy;
                     this.Modify(entity);
@@ -257,7 +257,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository Remove list started: Count={Count}", entities?.Count ?? 0);
             try
             {
-                if (entities.AnySafe())
+                if (entities?.AnySafe() == true)
                 {
                     foreach (var entity in entities)
                     {
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository RemoveById list started: Count={Count}", ids?.Count ?? 0);
             try
             {
-                if (ids.AnySafe())
+                if (ids?.AnySafe() == true)
                 {
                     foreach (var id in ids)
                     {
@@ -320,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         #region [ Properties ]
 
-        protected override object EntityLogBy => throw new NotSupportedException();
+        protected override object? EntityLogBy => throw new NotSupportedException();
 
         #endregion
     }

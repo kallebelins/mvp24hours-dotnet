@@ -22,19 +22,19 @@ namespace Mvp24Hours.Extensions
         /// <param name="key">The cache key.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
         /// <returns>The deserialized object or default if not found.</returns>
-        public static T GetObject<T>(this IDistributedCache cache, string key, JsonSerializerSettings jsonSerializerSettings = null)
+        public static T? GetObject<T>(this IDistributedCache cache, string key, JsonSerializerSettings? jsonSerializerSettings = null)
             where T : class
         {
             if (cache == null || !key.HasValue())
             {
                 return default;
             }
-            string value = cache.GetString(key);
+            string? value = cache.GetString(key);
             if (!value.HasValue())
             {
                 return default;
             }
-            return value.ToDeserialize<T>(jsonSerializerSettings);
+            return value!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="key">The cache key.</param>
         /// <param name="value">The object to cache.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
-        public static void SetObject<T>(this IDistributedCache cache, string key, T value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static void SetObject<T>(this IDistributedCache cache, string key, T value, JsonSerializerSettings? jsonSerializerSettings = null)
             where T : class
         {
             if (cache == null || !key.HasValue() || value == null)
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="value">The object to cache.</param>
         /// <param name="minutes">Expiration time in minutes.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
-        public static void SetObject<T>(this IDistributedCache cache, string key, T value, int minutes, JsonSerializerSettings jsonSerializerSettings = null)
+        public static void SetObject<T>(this IDistributedCache cache, string key, T value, int minutes, JsonSerializerSettings? jsonSerializerSettings = null)
             where T : class
         {
             if (cache == null || !key.HasValue() || value == null)
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="value">The object to cache.</param>
         /// <param name="time">Absolute expiration time.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
-        public static void SetObject(this IDistributedCache cache, string key, object value, DateTimeOffset time, JsonSerializerSettings jsonSerializerSettings = null)
+        public static void SetObject(this IDistributedCache cache, string key, object value, DateTimeOffset time, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             if (cache == null || !key.HasValue() || value == null)
             {

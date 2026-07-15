@@ -17,16 +17,17 @@ namespace Mvp24Hours.Extensions
     /// </summary>
     public static class MemoryCacheExtensions
     {
-        private static readonly Func<MemoryCache, object> GetEntriesCollection = Delegate.CreateDelegate(
+        private static readonly Func<MemoryCache, object>? GetEntriesCollection = Delegate.CreateDelegate(
             typeof(Func<MemoryCache, object>),
-            typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.Public | BindingFlags.Instance).GetGetMethod(true),
+            typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance)?.GetGetMethod(true)
+                ?? throw new InvalidOperationException("EntriesCollection property not found on MemoryCache."),
             throwOnBindFailure: true) as Func<MemoryCache, object>;
 
         /// <summary>
         /// 
         /// </summary>
         public static IEnumerable GetKeys(this IMemoryCache memoryCache) =>
-            ((IDictionary)GetEntriesCollection((MemoryCache)memoryCache)).Keys;
+            ((IDictionary)GetEntriesCollection!((MemoryCache)memoryCache)).Keys;
 
         /// <summary>
         /// 

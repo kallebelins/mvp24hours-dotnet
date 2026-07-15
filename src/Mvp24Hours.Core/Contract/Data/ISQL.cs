@@ -28,7 +28,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// List with items projected in the query
         /// </returns>
-        IEnumerable<T> Query<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        IEnumerable<T> Query<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// First item projected in the query
         /// </returns>
-        T QueryFirst<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        T QueryFirst<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -58,7 +58,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// First item projected in the query
         /// </returns>
-        T QueryFirstOrDefault<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        T QueryFirstOrDefault<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -73,7 +73,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Single item projected in the query
         /// </returns>
-        T QuerySingle<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        T QuerySingle<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -88,7 +88,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Single item projected in the query
         /// </returns>
-        T QuerySingleOrDefault<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        T QuerySingleOrDefault<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -103,7 +103,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Item projected in the query
         /// </returns>
-        T ExecuteScalar<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        T ExecuteScalar<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute arbitrary commands in the database.
         /// </summary>
@@ -115,6 +115,6 @@ namespace Mvp24Hours.Core.Contract.Data
         ///</param>
         /// <param name="param">Parameter vector</param>
         /// <returns>Number of records affected</returns>
-        int Execute(string sqlCommand, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        int Execute(string sqlCommand, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
     }
 }

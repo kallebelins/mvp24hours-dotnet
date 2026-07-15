@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// <exception cref="ArgumentNullException">Thrown when tenantProvider is null.</exception>
         public TenantSaveChangesInterceptor(
             ITenantProvider tenantProvider,
-            TenantInterceptorOptions options = null)
+            TenantInterceptorOptions? options = null)
         {
             _tenantProvider = tenantProvider ?? throw new ArgumentNullException(nameof(tenantProvider));
             _options = options ?? new TenantInterceptorOptions();
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void ProcessTenantEntities(DbContext context)
+        private void ProcessTenantEntities(DbContext? context)
         {
             if (context == null) return;
 

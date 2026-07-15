@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Specifications
             // Apply ordering
             if (specification.OrderBy != null && specification.OrderBy.Count > 0)
             {
-                IOrderedQueryable<T> orderedQuery = null;
+                IOrderedQueryable<T>? orderedQuery = null;
 
                 foreach (var (keySelector, descending) in specification.OrderBy)
                 {

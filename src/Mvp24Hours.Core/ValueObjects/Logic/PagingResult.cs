@@ -17,9 +17,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     public class PagingResult<T>(
         IPageResult paging,
         ISummaryResult summary,
-        T data = default,
-        IReadOnlyCollection<IMessageResult> messages = null,
-        string token = null
+        T? data = default,
+        IReadOnlyCollection<IMessageResult>? messages = null,
+        string? token = null
         ) : BusinessResult<T>(data, messages, token), IPagingResult<T>
     {
         #region [ Properties ]

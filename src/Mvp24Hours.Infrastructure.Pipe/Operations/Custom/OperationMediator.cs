@@ -16,19 +16,19 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
         /// <summary>
         /// Key defined for the content attached to the message (mapped object) for request
         /// </summary>
-        public virtual string RequestContentKey => null;
+        public virtual string? RequestContentKey => null;
         /// <summary>
         /// Key defined for the content attached to the message (mapped object) for response
         /// </summary>
-        public virtual string ResponseContentKey => null;
+        public virtual string? ResponseContentKey => null;
         /// <summary>
         /// Represents the model used for requisition
         /// </summary>
-        public virtual T ModelRequest { get; private set; }
+        public virtual T? ModelRequest { get; private set; }
         /// <summary>
         /// Represents the model used for response
         /// </summary>
-        public virtual U ModelResponse { get; private set; }
+        public virtual U? ModelResponse { get; private set; }
 
         public override void Execute(IPipelineMessage input)
         {
@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
             {
                 if (RequestContentKey.HasValue())
                 {
-                    input.AddContent(RequestContentKey, ModelRequest);
+                    input.AddContent(RequestContentKey!, ModelRequest);
                 }
                 else
                 {
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
             {
                 if (ResponseContentKey.HasValue())
                 {
-                    input.AddContent(ResponseContentKey, ModelResponse);
+                    input.AddContent(ResponseContentKey!, ModelResponse);
                 }
                 else
                 {

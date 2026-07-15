@@ -60,7 +60,7 @@ namespace Mvp24Hours.Core.Domain.Entities
         public DateTime? ModifiedAt { get; set; }
 
         /// <inheritdoc />
-        public string ModifiedBy { get; set; } = string.Empty;
+        public string? ModifiedBy { get; set; } = string.Empty;
     }
 
     /// <summary>

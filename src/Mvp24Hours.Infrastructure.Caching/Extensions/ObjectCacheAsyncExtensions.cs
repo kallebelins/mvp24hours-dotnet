@@ -25,19 +25,19 @@ namespace Mvp24Hours.Extensions
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The deserialized object or default if not found.</returns>
-        public static async Task<T> GetObjectAsync<T>(this IDistributedCache cache, string key, JsonSerializerSettings jsonSerializerSettings = null, CancellationToken cancellationToken = default)
+        public static async Task<T?> GetObjectAsync<T>(this IDistributedCache cache, string key, JsonSerializerSettings? jsonSerializerSettings = null, CancellationToken cancellationToken = default)
             where T : class
         {
             if (cache == null || !key.HasValue())
             {
                 return default;
             }
-            string value = await cache.GetStringAsync(key, cancellationToken);
+            string? value = await cache.GetStringAsync(key, cancellationToken);
             if (!value.HasValue())
             {
                 return default;
             }
-            return value.ToDeserialize<T>(jsonSerializerSettings);
+            return value!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="value">The object to cache.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public static async Task SetObjectAsync<T>(this IDistributedCache cache, string key, T value, JsonSerializerSettings jsonSerializerSettings = null, CancellationToken cancellationToken = default)
+        public static async Task SetObjectAsync<T>(this IDistributedCache cache, string key, T value, JsonSerializerSettings? jsonSerializerSettings = null, CancellationToken cancellationToken = default)
             where T : class
         {
             if (cache == null || !key.HasValue() || value == null)
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="minutes">Expiration time in minutes.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public static async Task SetObjectAsync<T>(this IDistributedCache cache, string key, T value, int minutes, JsonSerializerSettings jsonSerializerSettings = null, CancellationToken cancellationToken = default)
+        public static async Task SetObjectAsync<T>(this IDistributedCache cache, string key, T value, int minutes, JsonSerializerSettings? jsonSerializerSettings = null, CancellationToken cancellationToken = default)
             where T : class
         {
             if (cache == null || !key.HasValue() || value == null)
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Extensions
         /// <param name="time">Absolute expiration time.</param>
         /// <param name="jsonSerializerSettings">Optional JSON serializer settings.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public static async Task SetObjectAsync(this IDistributedCache cache, string key, object value, DateTimeOffset time, JsonSerializerSettings jsonSerializerSettings = null, CancellationToken cancellationToken = default)
+        public static async Task SetObjectAsync(this IDistributedCache cache, string key, object value, DateTimeOffset time, JsonSerializerSettings? jsonSerializerSettings = null, CancellationToken cancellationToken = default)
         {
             if (cache == null || !key.HasValue() || value == null)
             {

@@ -419,7 +419,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         #region [ Protected Properties ]
 
         /// <inheritdoc />
-        protected override object EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy!;
+        protected override object? EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy!;
 
         #endregion
 

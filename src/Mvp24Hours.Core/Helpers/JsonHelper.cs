@@ -35,7 +35,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static string Serialize<T>(T dto, JsonSerializerSettings jsonSerializerSettings = null)
+        public static string Serialize<T>(T dto, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.SerializeObject(dto, jsonSerializerSettings ?? JsonDefaultSettings);
         }
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static T Deserialize<T>(string value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static T? Deserialize<T>(string value, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings ?? JsonDefaultSettings);
         }
@@ -51,7 +51,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static object Deserialize(string value, Type type, JsonSerializerSettings jsonSerializerSettings = null)
+        public static object? Deserialize(string value, Type type, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.DeserializeObject(value, type, jsonSerializerSettings ?? JsonDefaultSettings);
         }
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static T Deserialize<T>(string value, params JsonConverter[] converters)
+        public static T? Deserialize<T>(string value, params JsonConverter[] converters)
         {
             return JsonConvert.DeserializeObject<T>(value, converters);
         }
@@ -67,7 +67,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static object Deserialize(string value, Type type, params JsonConverter[] converters)
+        public static object? Deserialize(string value, Type type, params JsonConverter[] converters)
         {
             return JsonConvert.DeserializeObject(value, type, converters);
         }
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static T DeserializeAnonymous<T>(string value, T anonymousType, JsonSerializerSettings jsonSerializerSettings = null)
+        public static T? DeserializeAnonymous<T>(string value, T anonymousType, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.DeserializeAnonymousType(value, anonymousType, jsonSerializerSettings ?? JsonDefaultSettings);
         }
@@ -83,7 +83,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static JsonSerializerSettings JsonPagingResultSettings<T>(JsonSerializerSettings jsonSerializerSettings = null)
+        public static JsonSerializerSettings JsonPagingResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IPagingResult<T>, PagingResult<T>>());
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static JsonSerializerSettings JsonBusinessResultSettings<T>(JsonSerializerSettings jsonSerializerSettings = null)
+        public static JsonSerializerSettings JsonBusinessResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IBusinessResult<T>, BusinessResult<T>>());
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static JsonSerializerSettings JsonBusinessEventSettings(JsonSerializerSettings jsonSerializerSettings = null)
+        public static JsonSerializerSettings JsonBusinessEventSettings(JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IBusinessEvent, BusinessEvent>());

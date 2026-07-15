@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void IncrementVersionCounters(DbContext context)
+        private void IncrementVersionCounters(DbContext? context)
         {
             if (context == null) return;
 

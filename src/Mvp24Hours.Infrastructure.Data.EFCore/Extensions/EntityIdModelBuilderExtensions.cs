@@ -127,33 +127,33 @@ namespace Mvp24Hours.Extensions
                     // Skip nullable types - get underlying type
                     var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
 
-                    ValueConverter converter = null;
+                    ValueConverter? converter = null;
 
                     // Check if the property type is a strongly-typed ID
                     if (IsGuidEntityId(underlyingType))
                     {
                         var converterType = typeof(GuidEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                        converter = (ValueConverter)Activator.CreateInstance(converterType);
+                        converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     }
                     else if (IsIntEntityId(underlyingType))
                     {
                         var converterType = typeof(IntEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                        converter = (ValueConverter)Activator.CreateInstance(converterType);
+                        converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     }
                     else if (IsLongEntityId(underlyingType))
                     {
                         var converterType = typeof(LongEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                        converter = (ValueConverter)Activator.CreateInstance(converterType);
+                        converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     }
                     else if (IsStringEntityId(underlyingType))
                     {
                         var converterType = typeof(StringEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                        converter = (ValueConverter)Activator.CreateInstance(converterType);
+                        converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     }
-                    else if (IsGenericEntityId(underlyingType, out var valueType))
+                    else if (IsGenericEntityId(underlyingType, out var valueType) && valueType != null)
                     {
                         var converterType = typeof(EntityIdValueConverter<,>).MakeGenericType(underlyingType, valueType);
-                        converter = (ValueConverter)Activator.CreateInstance(converterType);
+                        converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     }
 
                     if (converter != null)
@@ -187,32 +187,33 @@ namespace Mvp24Hours.Extensions
                 if (IsGuidEntityId(underlyingType))
                 {
                     var converterType = typeof(GuidEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                    var converter = (ValueConverter)Activator.CreateInstance(converterType);
+                    var converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     builder.Property(property.Name).HasConversion(converter);
                 }
                 else if (IsIntEntityId(underlyingType))
                 {
                     var converterType = typeof(IntEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                    var converter = (ValueConverter)Activator.CreateInstance(converterType);
+                    var converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     builder.Property(property.Name).HasConversion(converter);
                 }
                 else if (IsLongEntityId(underlyingType))
                 {
                     var converterType = typeof(LongEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                    var converter = (ValueConverter)Activator.CreateInstance(converterType);
+                    var converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     builder.Property(property.Name).HasConversion(converter);
                 }
                 else if (IsStringEntityId(underlyingType))
                 {
                     var converterType = typeof(StringEntityIdValueConverter<>).MakeGenericType(underlyingType);
-                    var converter = (ValueConverter)Activator.CreateInstance(converterType);
+                    var converter = (ValueConverter?)Activator.CreateInstance(converterType);
                     builder.Property(property.Name).HasConversion(converter);
                 }
-                else if (IsGenericEntityId(underlyingType, out var valueType))
+                else if (IsGenericEntityId(underlyingType, out var valueType) && valueType != null)
                 {
                     var converterType = typeof(EntityIdValueConverter<,>).MakeGenericType(underlyingType, valueType);
-                    var converter = (ValueConverter)Activator.CreateInstance(converterType);
-                    builder.Property(property.Name).HasConversion(converter);
+                    var converter = (ValueConverter?)Activator.CreateInstance(converterType);
+                    if (converter != null)
+                        builder.Property(property.Name).HasConversion(converter);
                 }
             }
 
@@ -247,7 +248,7 @@ namespace Mvp24Hours.Extensions
                    type.BaseType.GetGenericTypeDefinition() == typeof(StringEntityId<>);
         }
 
-        private static bool IsGenericEntityId(Type type, out Type valueType)
+        private static bool IsGenericEntityId(Type type, out Type? valueType)
         {
             valueType = null;
             var baseType = type.BaseType;

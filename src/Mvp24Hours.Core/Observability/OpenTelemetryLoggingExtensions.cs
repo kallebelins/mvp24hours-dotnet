@@ -180,7 +180,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -213,7 +213,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ public static class LogScopeFactory
                 ?? Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -276,7 +276,7 @@ public static class LogScopeFactory
             props["SpanId"] = Activity.Current.SpanId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -305,7 +305,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -334,7 +334,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -363,7 +363,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 
     /// <summary>
@@ -401,7 +401,7 @@ public static class LogScopeFactory
             props["TraceId"] = Activity.Current.TraceId.ToString();
         }
 
-        return logger.BeginScope(props);
+        return logger.BeginScope(props)!;
     }
 }
 

@@ -56,7 +56,7 @@ namespace Mvp24Hours.Extensions
         /// <code>
         /// public class AppDbContext : DbContext
         /// {
-        ///     private readonly ITenantProvider _tenantProvider;
+        ///     private readonly ITenantProvider? _tenantProvider;
         ///     
         ///     public AppDbContext(DbContextOptions options, ITenantProvider tenantProvider) 
         ///         : base(options)
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Extensions
                     ApplyTenantFilter(modelBuilder, entityType.ClrType, tenantProvider);
                 }
                 // Check for generic ITenantEntity<T>
-                else if (ImplementsGenericTenantEntity(entityType.ClrType, out var tenantIdType))
+                else if (ImplementsGenericTenantEntity(entityType.ClrType, out var tenantIdType) && tenantIdType != null)
                 {
                     ApplyGenericTenantFilter(modelBuilder, entityType.ClrType, tenantIdType, tenantProvider);
                 }
@@ -263,7 +263,8 @@ namespace Mvp24Hours.Extensions
                 // Convert string to Guid using Guid.Parse wrapped in a null check
                 var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
                     nameof(ParseGuidOrDefault), 
-                    BindingFlags.NonPublic | BindingFlags.Static);
+                    BindingFlags.NonPublic | BindingFlags.Static)
+                    ?? throw new InvalidOperationException("ParseGuidOrDefault method not found.");
                 var parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
                 
                 var equalExpression = Expression.Equal(methodCall, parsedGuid);
@@ -286,7 +287,8 @@ namespace Mvp24Hours.Extensions
                 
                 var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
                     nameof(ParseIntOrDefault), 
-                    BindingFlags.NonPublic | BindingFlags.Static);
+                    BindingFlags.NonPublic | BindingFlags.Static)
+                    ?? throw new InvalidOperationException("ParseIntOrDefault method not found.");
                 var parsedInt = Expression.Call(parseMethod, currentTenantIdString);
                 
                 var equalExpression = Expression.Equal(methodCall, parsedInt);
@@ -338,7 +340,7 @@ namespace Mvp24Hours.Extensions
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
 
-        private static bool ImplementsGenericTenantEntity(Type type, out Type tenantIdType)
+        private static bool ImplementsGenericTenantEntity(Type type, out Type? tenantIdType)
         {
             tenantIdType = null;
             
@@ -362,7 +364,8 @@ namespace Mvp24Hours.Extensions
         {
             var efPropertyMethod = typeof(EF)
                 .GetMethod(nameof(EF.Property))
-                .MakeGenericMethod(propertyType);
+                ?.MakeGenericMethod(propertyType)
+                ?? throw new InvalidOperationException("EF.Property method not found.");
 
             return Expression.Call(
                 efPropertyMethod,
@@ -370,13 +373,13 @@ namespace Mvp24Hours.Extensions
                 Expression.Constant(propertyName));
         }
 
-        private static Guid ParseGuidOrDefault(string value)
+        private static Guid ParseGuidOrDefault(string? value)
         {
             if (string.IsNullOrEmpty(value)) return Guid.Empty;
             return Guid.TryParse(value, out var result) ? result : Guid.Empty;
         }
 
-        private static int ParseIntOrDefault(string value)
+        private static int ParseIntOrDefault(string? value)
         {
             if (string.IsNullOrEmpty(value)) return 0;
             return int.TryParse(value, out var result) ? result : 0;

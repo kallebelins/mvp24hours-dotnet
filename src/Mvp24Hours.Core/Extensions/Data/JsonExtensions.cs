@@ -19,7 +19,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static string ToSerialize<T>(this T value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static string ToSerialize<T>(this T value, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             if (value == null)
             {
@@ -32,7 +32,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static T ToDeserialize<T>(this string value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static T? ToDeserialize<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             if (!value.HasValue())
             {
@@ -45,7 +45,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static object ToDeserialize(this string value, Type type, JsonSerializerSettings jsonSerializerSettings = null)
+        public static object? ToDeserialize(this string value, Type type, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             if (!value.HasValue())
             {
@@ -58,7 +58,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static T ToDeserializeAnonymous<T>(this string value, T anonymousType, JsonSerializerSettings jsonSerializerSettings = null)
+        public static T? ToDeserializeAnonymous<T>(this string value, T anonymousType, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             if (!value.HasValue())
             {
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToDeserializePagingResult<T>(this string value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static IPagingResult<T>? ToDeserializePagingResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.DeserializeObject<IPagingResult<T>>(value, JsonHelper.JsonPagingResultSettings<T>(jsonSerializerSettings));
         }
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IBusinessResult<T> ToDeserializeBusinessResult<T>(this string value, JsonSerializerSettings jsonSerializerSettings = null)
+        public static IBusinessResult<T>? ToDeserializeBusinessResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.DeserializeObject<IBusinessResult<T>>(value, JsonHelper.JsonBusinessResultSettings<T>(jsonSerializerSettings));
         }
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static dynamic ToDynamic<T>(this T obj)
+        public static dynamic? ToDynamic<T>(this T obj) where T : notnull
         {
             return ObjectHelper.ConvertToDynamic(obj);
         }

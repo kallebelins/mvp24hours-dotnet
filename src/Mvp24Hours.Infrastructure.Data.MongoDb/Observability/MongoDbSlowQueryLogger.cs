@@ -53,9 +53,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
     /// </example>
     public class MongoDbSlowQueryLogger : IDisposable
     {
-        private readonly ILogger<MongoDbSlowQueryLogger> _logger;
+        private readonly ILogger<MongoDbSlowQueryLogger>? _logger;
         private readonly MongoDbObservabilityOptions _options;
-        private readonly IMongoDbMetrics _metrics;
+        private readonly IMongoDbMetrics? _metrics;
 
         // Track command start times
         private readonly ConcurrentDictionary<int, CommandInfo> _pendingCommands = new();
@@ -73,8 +73,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="metrics">Optional metrics collector.</param>
         public MongoDbSlowQueryLogger(
             IOptions<MongoDbObservabilityOptions> options,
-            ILogger<MongoDbSlowQueryLogger> logger = null,
-            IMongoDbMetrics metrics = null)
+            ILogger<MongoDbSlowQueryLogger>? logger = null,
+            IMongoDbMetrics? metrics = null)
         {
             _options = options?.Value ?? new MongoDbObservabilityOptions();
             _logger = logger;
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private void LogCommandFailure(CommandInfo info, TimeSpan duration, Exception exception)
+        private void LogCommandFailure(CommandInfo info, TimeSpan duration, Exception? exception)
         {
             var details = new CommandFailureDetails
             {
@@ -264,7 +264,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private static string ExtractCollectionName(BsonDocument command, string commandName)
+        private static string? ExtractCollectionName(BsonDocument? command, string commandName)
         {
             if (command == null)
                 return null;
@@ -333,10 +333,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private class CommandInfo
         {
             public string CommandName { get; set; }
-            public string DatabaseName { get; set; }
-            public string CollectionName { get; set; }
+            public string? DatabaseName { get; set; }
+            public string? CollectionName { get; set; }
             public Stopwatch Stopwatch { get; set; }
-            public BsonDocument Command { get; set; }
+            public BsonDocument? Command { get; set; }
         }
 
         /// <summary>
@@ -345,12 +345,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         public class SlowQueryDetails
         {
             public string CommandName { get; set; }
-            public string DatabaseName { get; set; }
-            public string CollectionName { get; set; }
+            public string? DatabaseName { get; set; }
+            public string? CollectionName { get; set; }
             public double DurationMs { get; set; }
             public double ThresholdMs { get; set; }
             public long DocumentsReturned { get; set; }
-            public string Filter { get; set; }
+            public string? Filter { get; set; }
             public DateTimeOffset Timestamp { get; set; }
         }
 
@@ -360,11 +360,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         public class CommandFailureDetails
         {
             public string CommandName { get; set; }
-            public string DatabaseName { get; set; }
-            public string CollectionName { get; set; }
+            public string? DatabaseName { get; set; }
+            public string? CollectionName { get; set; }
             public double DurationMs { get; set; }
-            public string ErrorMessage { get; set; }
-            public string ErrorType { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? ErrorType { get; set; }
             public DateTimeOffset Timestamp { get; set; }
         }
 

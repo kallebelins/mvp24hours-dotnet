@@ -57,10 +57,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
     /// </example>
     public class MongoDbRowLevelSecurity
     {
-        private readonly ITenantProvider _tenantProvider;
-        private readonly ICurrentUserProvider _currentUserProvider;
-        private readonly IRowLevelSecurityPolicy _defaultPolicy;
-        private readonly ILogger<MongoDbRowLevelSecurity> _logger;
+        private readonly ITenantProvider? _tenantProvider;
+        private readonly ICurrentUserProvider? _currentUserProvider;
+        private readonly IRowLevelSecurityPolicy? _defaultPolicy;
+        private readonly ILogger<MongoDbRowLevelSecurity>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbRowLevelSecurity"/> class.
@@ -70,10 +70,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <param name="logger">Optional logger for structured logging.</param>
         /// <param name="defaultPolicy">Optional default security policy.</param>
         public MongoDbRowLevelSecurity(
-            ITenantProvider tenantProvider = null,
-            ICurrentUserProvider currentUserProvider = null,
-            ILogger<MongoDbRowLevelSecurity> logger = null,
-            IRowLevelSecurityPolicy defaultPolicy = null)
+            ITenantProvider? tenantProvider = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            ILogger<MongoDbRowLevelSecurity>? logger = null,
+            IRowLevelSecurityPolicy? defaultPolicy = null)
         {
             _tenantProvider = tenantProvider;
             _currentUserProvider = currentUserProvider;
@@ -251,9 +251,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <param name="tenantProvider">The tenant provider.</param>
         /// <param name="currentUserProvider">The current user provider.</param>
         /// <returns>A filter definition, or null if no filter applies.</returns>
-        FilterDefinition<T> CreateFilter<T>(
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class;
+        FilterDefinition<T>? CreateFilter<T>(
+            ITenantProvider? tenantProvider,
+            ICurrentUserProvider? currentUserProvider) where T : class;
 
         /// <summary>
         /// Validates access to an entity.
@@ -265,8 +265,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <exception cref="UnauthorizedAccessException">Thrown when access is denied.</exception>
         void ValidateAccess<T>(
             T entity,
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class;
+            ITenantProvider? tenantProvider,
+            ICurrentUserProvider? currentUserProvider) where T : class;
     }
 
     /// <summary>
@@ -275,7 +275,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
     public class OwnerBasedSecurityPolicy : IRowLevelSecurityPolicy
     {
         private readonly string _ownerFieldName;
-        private readonly Func<ICurrentUserProvider, bool> _isAdminCheck;
+        private readonly Func<ICurrentUserProvider, bool>? _isAdminCheck;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OwnerBasedSecurityPolicy"/> class.
@@ -284,16 +284,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <param name="isAdminCheck">Optional function to check if current user is admin. If null, no admin bypass.</param>
         public OwnerBasedSecurityPolicy(
             string ownerFieldName = "CreatedBy",
-            Func<ICurrentUserProvider, bool> isAdminCheck = null)
+            Func<ICurrentUserProvider, bool>? isAdminCheck = null)
         {
             _ownerFieldName = ownerFieldName;
             _isAdminCheck = isAdminCheck;
         }
 
         /// <inheritdoc />
-        public FilterDefinition<T> CreateFilter<T>(
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class
+        public FilterDefinition<T>? CreateFilter<T>(ITenantProvider? tenantProvider, ICurrentUserProvider? currentUserProvider) where T : class
         {
             // Skip if user is admin and bypass is allowed
             if (_isAdminCheck != null && currentUserProvider != null && _isAdminCheck(currentUserProvider))
@@ -319,10 +317,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public void ValidateAccess<T>(
-            T entity,
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class
+        public void ValidateAccess<T>(T entity, ITenantProvider? tenantProvider, ICurrentUserProvider? currentUserProvider) where T : class
         {
             // Skip if user is admin
             if (_isAdminCheck != null && currentUserProvider != null && _isAdminCheck(currentUserProvider))
@@ -383,9 +378,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public FilterDefinition<T> CreateFilter<T>(
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class
+        public FilterDefinition<T>? CreateFilter<T>(ITenantProvider? tenantProvider, ICurrentUserProvider? currentUserProvider) where T : class
         {
             var filters = new List<FilterDefinition<T>>();
 
@@ -407,10 +400,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public void ValidateAccess<T>(
-            T entity,
-            ITenantProvider tenantProvider,
-            ICurrentUserProvider currentUserProvider) where T : class
+        public void ValidateAccess<T>(T entity, ITenantProvider? tenantProvider, ICurrentUserProvider? currentUserProvider) where T : class
         {
             foreach (var policy in _policies)
             {
@@ -435,7 +425,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         public static IFindFluent<T, T> SecureFind<T>(
             this IMongoCollection<T> collection,
             MongoDbRowLevelSecurity rls,
-            FilterDefinition<T> additionalFilter = null)
+            FilterDefinition<T>? additionalFilter = null)
             where T : class
         {
             var filter = additionalFilter != null
@@ -489,7 +479,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         public static long SecureCount<T>(
             this IMongoCollection<T> collection,
             MongoDbRowLevelSecurity rls,
-            FilterDefinition<T> additionalFilter = null)
+            FilterDefinition<T>? additionalFilter = null)
             where T : class
         {
             var filter = additionalFilter != null

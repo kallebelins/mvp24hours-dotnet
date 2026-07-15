@@ -129,7 +129,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// </remarks>
         public static implicit operator T?(BusinessResult<T>? result)
         {
-            return result != null ? result.Data : default;
+            return result is not null ? result.Data : default(T?);
         }
 
         /// <summary>
@@ -143,9 +143,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// if (result) { /* process success */ }
         /// </code>
         /// </example>
-        public static implicit operator bool(BusinessResult<T> result)
+        public static implicit operator bool(BusinessResult<T>? result)
         {
-            return result != null && result.IsSuccess;
+            return result is not null && result.IsSuccess;
         }
 
         #endregion

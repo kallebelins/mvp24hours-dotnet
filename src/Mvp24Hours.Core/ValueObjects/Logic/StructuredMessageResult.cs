@@ -61,9 +61,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
             string errorCode,
             MessageType type = MessageType.Error,
             ErrorCategory category = ErrorCategory.General,
-            object details = null,
-            string helpLink = null,
-            string propertyName = null,
+            object? details = null,
+            string? helpLink = null,
+            string? propertyName = null,
             int? httpStatusCode = null)
         {
             Key = key;
@@ -71,9 +71,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
             ErrorCode = errorCode ?? "UNKNOWN_ERROR";
             Type = type;
             Category = category;
-            Details = details;
-            HelpLink = helpLink;
-            PropertyName = propertyName;
+            Details = details!;
+            HelpLink = helpLink!;
+            PropertyName = propertyName!;
             HttpStatusCode = httpStatusCode ?? GetDefaultHttpStatusCode(category);
         }
 
@@ -81,7 +81,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// Creates a simple structured message result with minimal parameters.
         /// </summary>
         public StructuredMessageResult(string message, string errorCode, ErrorCategory category = ErrorCategory.General)
-            : this(null, message, errorCode, MessageType.Error, category)
+            : this(string.Empty, message, errorCode, MessageType.Error, category)
         {
         }
 
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
 
         /// <inheritdoc />
         [DataMember]
-        public string CustomType => null;
+        public string CustomType => null!;
 
         /// <inheritdoc />
         [DataMember]
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="message">The validation error message.</param>
         /// <param name="errorCode">Optional error code (default: "VALIDATION_FAILED").</param>
         /// <returns>A structured validation error message.</returns>
-        public static StructuredMessageResult Validation(string propertyName, string message, string errorCode = null)
+        public static StructuredMessageResult Validation(string propertyName, string message, string? errorCode = null)
         {
             return new StructuredMessageResult(
                 key: propertyName,
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="resourceName">The name of the resource that was not found.</param>
         /// <param name="resourceId">Optional identifier of the resource.</param>
         /// <returns>A structured not found error message.</returns>
-        public static StructuredMessageResult NotFound(string resourceName, object resourceId = null)
+        public static StructuredMessageResult NotFound(string resourceName, object? resourceId = null)
         {
             var message = resourceId != null
                 ? $"{resourceName} with identifier '{resourceId}' was not found."
@@ -185,7 +185,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="message">The error message.</param>
         /// <param name="details">Optional details object.</param>
         /// <returns>A structured business error message.</returns>
-        public static StructuredMessageResult BusinessError(string errorCode, string message, object details = null)
+        public static StructuredMessageResult BusinessError(string errorCode, string message, object? details = null)
         {
             return new StructuredMessageResult(
                 key: errorCode,
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="resource">The resource being accessed.</param>
         /// <param name="action">The action being attempted.</param>
         /// <returns>A structured authorization error message.</returns>
-        public static StructuredMessageResult Forbidden(string resource, string action = null)
+        public static StructuredMessageResult Forbidden(string resource, string? action = null)
         {
             var message = action != null
                 ? $"You do not have permission to {action} {resource}."
@@ -224,7 +224,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// </summary>
         /// <param name="message">Optional custom message.</param>
         /// <returns>A structured authentication error message.</returns>
-        public static StructuredMessageResult Unauthorized(string message = null)
+        public static StructuredMessageResult Unauthorized(string? message = null)
         {
             return new StructuredMessageResult(
                 key: "Authentication",
@@ -242,7 +242,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="message">The conflict message.</param>
         /// <param name="details">Optional details object.</param>
         /// <returns>A structured conflict error message.</returns>
-        public static StructuredMessageResult Conflict(string resourceName, string message, object details = null)
+        public static StructuredMessageResult Conflict(string resourceName, string message, object? details = null)
         {
             return new StructuredMessageResult(
                 key: resourceName,
@@ -260,7 +260,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="message">The error message.</param>
         /// <param name="errorCode">Optional error code.</param>
         /// <returns>A structured system error message.</returns>
-        public static StructuredMessageResult SystemError(string message, string errorCode = null)
+        public static StructuredMessageResult SystemError(string message, string? errorCode = null)
         {
             return new StructuredMessageResult(
                 key: "System",
@@ -282,7 +282,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
             return new StructuredMessageResult(
                 key: key,
                 message: message,
-                errorCode: null,
+                errorCode: string.Empty,
                 type: MessageType.Info,
                 category: ErrorCategory.General);
         }
@@ -294,7 +294,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// <param name="message">The warning message.</param>
         /// <param name="code">Optional warning code.</param>
         /// <returns>A structured warning message.</returns>
-        public static StructuredMessageResult Warning(string key, string message, string code = null)
+        public static StructuredMessageResult Warning(string key, string message, string? code = null)
         {
             return new StructuredMessageResult(
                 key: key,

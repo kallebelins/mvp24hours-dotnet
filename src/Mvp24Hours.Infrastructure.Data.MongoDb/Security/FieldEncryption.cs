@@ -63,28 +63,28 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// </summary>
         /// <param name="plainText">The text to encrypt.</param>
         /// <returns>The encrypted text as a Base64 string.</returns>
-        string Encrypt(string plainText);
+        string? Encrypt(string? plainText);
 
         /// <summary>
         /// Decrypts an encrypted string.
         /// </summary>
         /// <param name="cipherText">The encrypted text (Base64).</param>
         /// <returns>The decrypted plaintext.</returns>
-        string Decrypt(string cipherText);
+        string? Decrypt(string? cipherText);
 
         /// <summary>
         /// Encrypts binary data.
         /// </summary>
         /// <param name="data">The data to encrypt.</param>
         /// <returns>The encrypted data.</returns>
-        byte[] EncryptBytes(byte[] data);
+        byte[]? EncryptBytes(byte[]? data);
 
         /// <summary>
         /// Decrypts binary data.
         /// </summary>
         /// <param name="encryptedData">The encrypted data.</param>
         /// <returns>The decrypted data.</returns>
-        byte[] DecryptBytes(byte[] encryptedData);
+        byte[]? DecryptBytes(byte[]? encryptedData);
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public string Encrypt(string plainText)
+        public string? Encrypt(string? plainText)
         {
             if (string.IsNullOrEmpty(plainText))
             {
@@ -165,12 +165,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             }
 
             var plainBytes = Encoding.UTF8.GetBytes(plainText);
-            var encryptedBytes = EncryptBytes(plainBytes);
+            var encryptedBytes = EncryptBytes(plainBytes) ?? Array.Empty<byte>();
             return Convert.ToBase64String(encryptedBytes);
         }
 
         /// <inheritdoc />
-        public string Decrypt(string cipherText)
+        public string? Decrypt(string? cipherText)
         {
             if (string.IsNullOrEmpty(cipherText))
             {
@@ -178,12 +178,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             }
 
             var encryptedBytes = Convert.FromBase64String(cipherText);
-            var decryptedBytes = DecryptBytes(encryptedBytes);
+            var decryptedBytes = DecryptBytes(encryptedBytes) ?? Array.Empty<byte>();
             return Encoding.UTF8.GetString(decryptedBytes);
         }
 
         /// <inheritdoc />
-        public byte[] EncryptBytes(byte[] data)
+        public byte[]? EncryptBytes(byte[]? data)
         {
             if (data == null || data.Length == 0)
             {
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public byte[] DecryptBytes(byte[] encryptedData)
+        public byte[]? DecryptBytes(byte[]? encryptedData)
         {
             if (encryptedData == null || encryptedData.Length <= 16)
             {
@@ -320,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        public override string? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             var bsonType = context.Reader.GetCurrentBsonType();
 

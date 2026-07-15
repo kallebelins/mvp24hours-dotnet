@@ -108,12 +108,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <summary>
         /// Gets or sets the username for SCRAM authentication.
         /// </summary>
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         /// <summary>
         /// Gets or sets the password for SCRAM authentication.
         /// </summary>
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
         /// <summary>
         /// Gets or sets the authentication database (default: "admin").
@@ -123,22 +123,22 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <summary>
         /// Gets or sets the path to the X.509 client certificate.
         /// </summary>
-        public string CertificatePath { get; set; }
+        public string? CertificatePath { get; set; }
 
         /// <summary>
         /// Gets or sets the password for the X.509 certificate (if encrypted).
         /// </summary>
-        public string CertificatePassword { get; set; }
+        public string? CertificatePassword { get; set; }
 
         /// <summary>
         /// Gets or sets the X.509 certificate directly (alternative to CertificatePath).
         /// </summary>
-        public X509Certificate2 Certificate { get; set; }
+        public X509Certificate2? Certificate { get; set; }
 
         /// <summary>
         /// Gets or sets the CA certificate path for server verification.
         /// </summary>
-        public string CaCertificatePath { get; set; }
+        public string? CaCertificatePath { get; set; }
 
         /// <summary>
         /// Gets or sets whether to validate server certificates.
@@ -149,17 +149,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <summary>
         /// Gets or sets the AWS access key for AWS IAM authentication.
         /// </summary>
-        public string AwsAccessKeyId { get; set; }
+        public string? AwsAccessKeyId { get; set; }
 
         /// <summary>
         /// Gets or sets the AWS secret key for AWS IAM authentication.
         /// </summary>
-        public string AwsSecretAccessKey { get; set; }
+        public string? AwsSecretAccessKey { get; set; }
 
         /// <summary>
         /// Gets or sets the AWS session token for temporary credentials.
         /// </summary>
-        public string AwsSessionToken { get; set; }
+        public string? AwsSessionToken { get; set; }
 
         /// <summary>
         /// Gets or sets the LDAP bind DN for LDAP authentication.
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <summary>
         /// Gets or sets the Kerberos service name for GSSAPI.
         /// </summary>
-        public string KerberosServiceName { get; set; }
+        public string? KerberosServiceName { get; set; }
 
         /// <summary>
         /// Gets or sets the allowed TLS protocols. Default is TLS 1.2+.
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// Creates a MongoCredential based on the configured mechanism.
         /// </summary>
         /// <returns>The configured credential, or null if no authentication is configured.</returns>
-        public MongoCredential CreateCredential()
+        public MongoCredential? CreateCredential()
         {
             return Mechanism switch
             {
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             };
         }
 
-        private MongoCredential CreateDefaultCredential()
+        private MongoCredential? CreateDefaultCredential()
         {
             if (string.IsNullOrEmpty(Username))
             {
@@ -337,7 +337,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             }
         }
 
-        private X509Certificate2 GetClientCertificate()
+        private X509Certificate2? GetClientCertificate()
         {
             if (Certificate != null)
             {
@@ -354,7 +354,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             return null;
         }
 
-        private string GetX509Username()
+        private string? GetX509Username()
         {
             var cert = GetClientCertificate();
             if (cert != null)
@@ -370,6 +370,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         {
             return (sender, certificate, chain, errors) =>
             {
+                if (certificate == null || chain == null)
+                {
+                    return false;
+                }
+
                 if (errors == SslPolicyErrors.None)
                 {
                     return true;
@@ -450,7 +455,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         public static MongoClientSettings WithX509Certificate(
             this MongoClientSettings settings,
             string certificatePath,
-            string certificatePassword = null)
+            string? certificatePassword = null)
         {
             var options = new MongoDbAuthenticationOptions
             {

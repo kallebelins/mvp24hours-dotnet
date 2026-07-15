@@ -19,13 +19,13 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Convert instance to mapped object
         /// </summary>
-        public static async Task<IPagingResult<TDestination>> MapPagingToAsync<TSource, TDestination>(this IMapper mapper, Task<IPagingResult<TSource>> sourceAsync)
+        public static async Task<IPagingResult<TDestination>?> MapPagingToAsync<TSource, TDestination>(this IMapper mapper, Task<IPagingResult<TSource>?> sourceAsync)
         {
             var source = await sourceAsync;
 
             if (source == null)
             {
-                return default;
+                return null;
             }
 
             if (mapper == null)
@@ -38,7 +38,7 @@ namespace Mvp24Hours.Extensions
                     .ToBusinessPaging(
                         source.Paging,
                         source.Summary,
-                        source.Messages.ToList()
+                        (source.Messages ?? []).ToList()
                     );
             }
             else
@@ -55,13 +55,13 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Convert instance to mapped object
         /// </summary>
-        public static async Task<IBusinessResult<TDestination>> MapBusinessToAsync<TSource, TDestination>(this IMapper mapper, Task<IBusinessResult<TSource>> sourceAsync)
+        public static async Task<IBusinessResult<TDestination>?> MapBusinessToAsync<TSource, TDestination>(this IMapper mapper, Task<IBusinessResult<TSource>?> sourceAsync)
         {
             var source = await sourceAsync;
 
             if (source == null)
             {
-                return default;
+                return null;
             }
 
             if (mapper == null)
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Extensions
             {
                 return mapper
                     .Map<TDestination>(source.Data)
-                    .ToBusiness(source.Messages.ToList());
+                    .ToBusiness((source.Messages ?? []).ToList());
             }
             else
             {

@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     /// </example>
     public class CommandLogger : MongoDbInterceptorBase
     {
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
         private readonly TimeSpan _slowOperationThreshold;
         private readonly bool _logAllOperations;
         private readonly bool _logEntityDetails;
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <param name="logAllOperations">If true, logs all operations. If false, only logs slow operations and errors.</param>
         /// <param name="logEntityDetails">If true, logs entity key and type details. Default is true in debug, false in release.</param>
         public CommandLogger(
-            ILogger<CommandLogger> logger = null,
+            ILogger<CommandLogger>? logger = null,
             TimeSpan? slowOperationThreshold = null,
             bool logAllOperations = true,
             bool? logEntityDetails = null)

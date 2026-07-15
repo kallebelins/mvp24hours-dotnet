@@ -23,10 +23,10 @@ using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb
 {
-    public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryAsync<T>> logger = null) : RepositoryBase<T>(dbContext, options), IRepositoryAsync<T>
+    public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryAsync<T>>? logger = null) : RepositoryBase<T>(dbContext, options), IRepositoryAsync<T>
         where T : class, IEntityBase
     {
-        private readonly ILogger<RepositoryAsync<T>> _logger = logger;
+        private readonly ILogger<RepositoryAsync<T>>? _logger = logger;
         #region [ IQueryAsync ]
 
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             return await ListAsync(null, cancellationToken: cancellationToken);
         }
 
-        public async Task<IList<T>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Listing entities from collection {CollectionName} with paging criteria", typeof(T).Name);
             try
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             return await GetByAsync(clause, null, cancellationToken: cancellationToken);
         }
 
-        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Getting entities matching clause from collection {CollectionName}", typeof(T).Name);
             try
@@ -156,12 +156,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
         }
 
-        public async Task<T> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return await GetByIdAsync(id, null, cancellationToken: cancellationToken);
         }
 
-        public async Task<T> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Getting entity by id {Id} from collection {CollectionName}", id, typeof(T).Name);
             try
@@ -186,17 +186,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             throw new NotSupportedException();
         }
-        public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException();
         }
-        public Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException();
         }
-        public Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0, CancellationToken cancellationToken = default)
+        public Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
             throw new NotSupportedException();
@@ -262,11 +262,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
                 // properties that can not be changed
 
-                if (entity.GetType() == typeof(IEntityLog<>))
+                if (entity is IEntityLog<object> entityLog && entityDb is IEntityLog<object> entityDbLog)
                 {
                     _logger?.LogDebug("Preserving audit fields for entity in collection {CollectionName}", typeof(T).Name);
-                    var entityLog = entity as IEntityLog<object>;
-                    var entityDbLog = entityDb as IEntityLog<object>;
                     entityLog.Created = entityDbLog.Created;
                     entityLog.CreatedBy = entityDbLog.CreatedBy;
                     entityLog.Modified = entityDbLog.Modified;
@@ -315,10 +313,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     return;
                 }
 
-                if (entity.GetType() == typeof(IEntityLog<>))
+                if (entity is IEntityLog<object> entityLog)
                 {
                     _logger?.LogDebug("Performing soft delete for entity in collection {CollectionName}", typeof(T).Name);
-                    var entityLog = entity as IEntityLog<object>;
                     entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
                     entityLog.RemovedBy = EntityLogBy;
                     await ModifyAsync(entity, cancellationToken: cancellationToken);
@@ -423,7 +420,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         #region [ Properties ]
 
-        protected override object EntityLogBy => throw new NotSupportedException();
+        protected override object? EntityLogBy => throw new NotSupportedException();
 
         #endregion
     }

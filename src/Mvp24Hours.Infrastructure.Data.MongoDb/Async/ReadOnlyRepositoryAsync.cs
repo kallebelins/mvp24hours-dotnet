@@ -159,13 +159,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public Task<T> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return GetByIdAsync(id, null, cancellationToken)!;
         }
 
         /// <inheritdoc />
-        public async Task<T> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("MongoDB read-only repository async GetByIdAsync operation started.");
             try
@@ -442,7 +442,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         #region [ Protected Properties ]
 
         /// <inheritdoc />
-        protected override object EntityLogBy => throw new NotSupportedException(
+        protected override object? EntityLogBy => throw new NotSupportedException(
             "EntityLogBy is not used in ReadOnlyRepository as it does not perform write operations.");
 
         #endregion

@@ -33,7 +33,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
 
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            yield return Id;
+            yield return Id!;
         }
     }
 }

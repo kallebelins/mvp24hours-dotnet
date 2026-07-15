@@ -115,7 +115,7 @@ public class NativeValidationEndpointFilter<TRequest> : IEndpointFilter
 /// </example>
 public class ExceptionHandlingEndpointFilter : IEndpointFilter
 {
-    private readonly ILogger<ExceptionHandlingEndpointFilter> _logger;
+    private readonly ILogger<ExceptionHandlingEndpointFilter>? _logger;
     private readonly bool _includeExceptionDetails;
 
     /// <summary>
@@ -142,7 +142,7 @@ public class ExceptionHandlingEndpointFilter : IEndpointFilter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception caught in endpoint filter: {ExceptionType} - {Message}",
+            _logger?.LogError(ex, "Exception caught in endpoint filter: {ExceptionType} - {Message}",
                 ex.GetType().Name, ex.Message);
 
             return ex.ToNativeTypedProblem(_includeExceptionDetails, context.HttpContext.Request.Path);

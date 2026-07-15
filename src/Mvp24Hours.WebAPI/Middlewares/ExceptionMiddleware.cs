@@ -19,7 +19,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
     public class ExceptionMiddleware(RequestDelegate next, IOptions<ExceptionOptions> options, ILogger<ExceptionMiddleware> logger)
     {
         private readonly ExceptionOptions options = options?.Value ?? throw new ArgumentNullException(nameof(options), "[ExceptionMiddleware] Options is required. Check: services.AddMvp24HoursWebExceptions().");
-        private readonly ILogger<ExceptionMiddleware> _logger = logger;
+        private readonly ILogger<ExceptionMiddleware>? _logger = logger;
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
@@ -27,16 +27,16 @@ namespace Mvp24Hours.WebAPI.Middlewares
             {
                 if (!httpContext.Response.HasStarted)
                 {
-                    _logger.LogDebug("Exception middleware processing request. Path: {Path}", httpContext.Request.Path);
+                    _logger?.LogDebug("Exception middleware processing request. Path: {Path}", httpContext.Request.Path);
                     await next(httpContext);
-                    _logger.LogDebug("Exception middleware completed request. Path: {Path}", httpContext.Request.Path);
+                    _logger?.LogDebug("Exception middleware completed request. Path: {Path}", httpContext.Request.Path);
                 }
             }
             catch (Exception ex)
             {
                 if (!httpContext.Response.HasStarted)
                 {
-                    _logger.LogError(ex, "Exception occurred in middleware. Path: {Path}", httpContext.Request.Path);
+                    _logger?.LogError(ex, "Exception occurred in middleware. Path: {Path}", httpContext.Request.Path);
                     await HandleExceptionAsync(httpContext, ex);
                 }
             }

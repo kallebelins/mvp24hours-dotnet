@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.Helpers
         {
             UriBuilder uri = new(uri: Assembly.GetExecutingAssembly().Location);
             string path = Uri.UnescapeDataString(uri.Path);
-            return Path.GetDirectoryName(path);
+            return Path.GetDirectoryName(path) ?? string.Empty;
         }
 
         /// <summary>

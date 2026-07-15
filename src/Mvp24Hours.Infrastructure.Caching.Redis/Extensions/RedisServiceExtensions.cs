@@ -17,7 +17,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IServiceCollection AddMvp24HoursCachingRedis(this IServiceCollection services,
             ConfigurationOptions configurationOptions,
-            string instanceName = null)
+            string? instanceName = null)
         {
             if (configurationOptions == null)
             {
@@ -27,7 +27,7 @@ namespace Mvp24Hours.Extensions
             services.AddStackExchangeRedisCache(options =>
             {
                 options.ConfigurationOptions = configurationOptions;
-                options.InstanceName = $"{(instanceName ?? Assembly.GetEntryAssembly().GetName().Name.Replace(".", "_"))}".ToLower();
+                options.InstanceName = $"{(instanceName ?? Assembly.GetEntryAssembly()?.GetName().Name?.Replace(".", "_") ?? "mvp24hours")}".ToLower();
             });
 
             return services;
@@ -38,7 +38,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IServiceCollection AddMvp24HoursCachingRedis(this IServiceCollection services,
             string connectionString,
-            string instanceName = null)
+            string? instanceName = null)
         {
             if (!connectionString.HasValue())
             {
@@ -48,7 +48,7 @@ namespace Mvp24Hours.Extensions
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = connectionString;
-                options.InstanceName = $"{instanceName ?? Assembly.GetEntryAssembly().GetName().Name.Replace(".", "_")}_".ToLower();
+                options.InstanceName = $"{instanceName ?? Assembly.GetEntryAssembly()?.GetName().Name?.Replace(".", "_") ?? "mvp24hours"}_".ToLower();
             });
 
             return services;

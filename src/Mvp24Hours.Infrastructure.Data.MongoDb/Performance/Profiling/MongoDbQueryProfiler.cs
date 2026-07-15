@@ -48,14 +48,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
     public class MongoDbQueryProfiler<T>
     {
         private readonly IMongoCollection<T> _collection;
-        private readonly ILogger<MongoDbQueryProfiler<T>> _logger;
+        private readonly ILogger<MongoDbQueryProfiler<T>>? _logger;
 
         /// <summary>
         /// Initializes a new query profiler for the specified collection.
         /// </summary>
         /// <param name="collection">The MongoDB collection.</param>
         /// <param name="logger">Optional logger for structured logging.</param>
-        public MongoDbQueryProfiler(IMongoCollection<T> collection, ILogger<MongoDbQueryProfiler<T>> logger = null)
+        public MongoDbQueryProfiler(IMongoCollection<T> collection, ILogger<MongoDbQueryProfiler<T>>? logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _logger = logger;
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <returns>The query explain result.</returns>
         public async Task<QueryExplainResult> ExplainAsync(
             FilterDefinition<T> filter,
-            SortDefinition<T> sort = null,
+            SortDefinition<T>? sort = null,
             ExplainVerbosity verbosity = ExplainVerbosity.ExecutionStats,
             CancellationToken cancellationToken = default)
         {
@@ -477,7 +477,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <summary>
         /// Gets or sets the partial filter expression (for partial indexes).
         /// </summary>
-        public BsonDocument PartialFilterExpression { get; set; }
+        public BsonDocument? PartialFilterExpression { get; set; }
     }
 
     /// <summary>

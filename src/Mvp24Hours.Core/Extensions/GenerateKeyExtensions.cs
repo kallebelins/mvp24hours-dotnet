@@ -58,6 +58,10 @@ namespace Mvp24Hours.Extensions
                 foreach (var property in typeof(T).GetProperties())
                 {
                     var getMethod = property.GetGetMethod();
+                    if (getMethod == null)
+                    {
+                        continue;
+                    }
                     var function = (Func<T, dynamic>)Delegate.CreateDelegate(typeof(Func<T, dynamic>), getMethod);
                     Properties.Add(function);
                 }

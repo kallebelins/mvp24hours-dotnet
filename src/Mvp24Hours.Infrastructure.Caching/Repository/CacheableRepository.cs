@@ -118,11 +118,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             return List(null);
         }
 
-        public IList<TEntity> List(IPagingCriteria criteria)
+        public IList<TEntity> List(IPagingCriteria? criteria)
         {
             return ExecuteWithCache(
                 nameof(List),
-                () => _repository.List(criteria),
+                () => criteria != null ? _repository.List(criteria) : _repository.List(),
                 criteria);
         }
 
@@ -143,25 +143,25 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             return GetBy(clause, null);
         }
 
-        public IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria)
+        public IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
             return ExecuteWithCache(
                 nameof(GetBy),
-                () => _repository.GetBy(clause, criteria),
+                () => criteria != null ? _repository.GetBy(clause, criteria) : _repository.GetBy(clause),
                 new { clause, criteria });
         }
 
         public TEntity GetById(object id)
         {
-            return GetById(id, null);
+            return GetById(id, null)!;
         }
 
-        public TEntity GetById(object id, IPagingCriteria criteria)
+        public TEntity GetById(object id, IPagingCriteria? criteria)
         {
             return ExecuteWithCache(
                 nameof(GetById),
-                () => _repository.GetById(id, criteria),
-                new { id, criteria });
+                () => criteria != null ? _repository.GetById(id, criteria) : _repository.GetById(id),
+                new { id, criteria })!;
         }
 
         #endregion
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
         public void LoadRelation<TProperty>(
             TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class
         {
@@ -188,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class
         {
@@ -199,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class
         {
@@ -311,7 +311,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
                         .GetAwaiter().GetResult();
                 }
 
-                return result;
+                return result!;
             }
             catch (Exception ex)
             {
@@ -420,6 +420,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             try
             {
                 var entityId = GetEntityId(entity);
+                if (entityId == null) return;
                 InvalidateCacheForEntityId(entityId);
             }
             catch (Exception ex)

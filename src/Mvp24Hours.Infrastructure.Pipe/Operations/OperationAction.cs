@@ -16,12 +16,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations
     public class OperationAction : IOperation
     {
         private readonly Action<IPipelineMessage> _action;
-        private readonly Action<IPipelineMessage> _rollbackAction;
+        private readonly Action<IPipelineMessage>? _rollbackAction;
         private readonly bool _isRequired;
 
         public bool IsRequired => _isRequired;
 
-        public OperationAction(Action<IPipelineMessage> action, Action<IPipelineMessage> rollbackAction = default, bool isRequired = false)
+        public OperationAction(Action<IPipelineMessage> action, Action<IPipelineMessage>? rollbackAction = null, bool isRequired = false)
         {
             _action = action;
             _rollbackAction = rollbackAction;
@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations
         }
 
         public OperationAction(Action<IPipelineMessage> action, bool isRequired)
-            : this(action, default, isRequired)
+            : this(action, null, isRequired)
         {
         }
 

@@ -418,7 +418,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 if (header.Key.StartsWith("X-", StringComparison.OrdinalIgnoreCase) ||
                     header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
                 {
-                    headerDict[header.Key] = header.Value.ToArray();
+                    headerDict[header.Key] = header.Value.Where(v => v != null).Cast<string>().ToArray();
                 }
             }
 

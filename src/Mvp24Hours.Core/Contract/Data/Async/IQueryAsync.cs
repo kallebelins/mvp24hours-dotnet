@@ -67,12 +67,12 @@ namespace Mvp24Hours.Core.Contract.Data
         /// </summary>
         /// <param name="id">Identifier of entity</param>
         /// <returns>A representation of the entity async</returns>
-        Task<TEntity> GetByIdAsync(object id, CancellationToken cancellationToken = default);
+        Task<TEntity?> GetByIdAsync(object id, CancellationToken cancellationToken = default);
         /// <summary>
         /// Gets a representation of the entity typed with criteria.
         /// </summary>
         /// <param name="id">Identifier of entity</param>
         /// <returns>A representation of the entity async</returns>
-        Task<TEntity> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<TEntity?> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
     }
 }

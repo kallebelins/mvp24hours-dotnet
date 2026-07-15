@@ -22,7 +22,7 @@ namespace Mvp24Hours.Extensions
     /// </summary>
     public static class BusinessPagingExtensions
     {
-        public static IPagingCriteria ToPagingCriteria(this PagingCriteriaRequest request, int? limit = null, int? offset = null, IList<string> orderBy = null, IList<string> navigation = null)
+        public static IPagingCriteria ToPagingCriteria(this PagingCriteriaRequest request, int? limit = null, int? offset = null, IList<string>? orderBy = null, IList<string>? navigation = null)
         {
             return new PagingCriteria(
                 limit ?? request?.Limit ?? 0,
@@ -42,7 +42,7 @@ namespace Mvp24Hours.Extensions
             );
         }
 
-        public static IPagingCriteria NewCriteria(this IPagingCriteria criteria, int? limit = null, int? offset = null, IList<string> orderBy = null, IList<string> navigation = null)
+        public static IPagingCriteria NewCriteria(this IPagingCriteria criteria, int? limit = null, int? offset = null, IList<string>? orderBy = null, IList<string>? navigation = null)
         {
             return new PagingCriteria(
                 limit ?? criteria?.Limit ?? 0,
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IPageResult page, ISummaryResult summary, IList<IMessageResult> messageResult = null, string tokenDefault = null)
+        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IPageResult page, ISummaryResult summary, IList<IMessageResult>? messageResult = null, string? tokenDefault = null)
         {
             return new PagingResult<T>(
                 page,
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IList<IMessageResult> messageResult, string tokenDefault = null)
+        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IList<IMessageResult>? messageResult, string? tokenDefault = null)
         {
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
@@ -93,13 +93,13 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IMessageResult messageResult, string tokenDefault = null)
+        public static IPagingResult<T> ToBusinessPaging<T>(this T value, IMessageResult? messageResult, string? tokenDefault = null)
         {
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: value,
-                messages: new ReadOnlyCollection<IMessageResult>(new List<IMessageResult>() { messageResult }),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult != null ? new List<IMessageResult>() { messageResult } : []),
                 token: tokenDefault
             );
         }
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToBusinessPaging<T>(this IList<IMessageResult> messageResult, string tokenDefault = null)
+        public static IPagingResult<T> ToBusinessPaging<T>(this IList<IMessageResult> messageResult, string? tokenDefault = null)
         {
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
@@ -121,13 +121,13 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IPagingResult<T> ToBusinessPaging<T>(this IMessageResult messageResult, string tokenDefault = null)
+        public static IPagingResult<T> ToBusinessPaging<T>(this IMessageResult messageResult, string? tokenDefault = null)
         {
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: default,
-                messages: new ReadOnlyCollection<IMessageResult>(new List<IMessageResult>() { messageResult }),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult != null ? new List<IMessageResult>() { messageResult } : []),
                 token: tokenDefault
             );
         }
@@ -150,7 +150,8 @@ namespace Mvp24Hours.Extensions
             var totalCount = repository.GetByCount(clause);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var items = repository.GetBy(clause, criteria);
+            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            var items = repository.GetBy(clause, effectiveCriteria);
 
             var result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),
@@ -178,7 +179,8 @@ namespace Mvp24Hours.Extensions
             var totalCount = repository.ListCount();
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var items = repository.List(criteria);
+            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            var items = repository.List(effectiveCriteria);
 
             var result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),

@@ -54,7 +54,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// <summary>
         /// Optional progress callback for long-running operations.
         /// </summary>
-        public BulkProgressCallback ProgressCallback { get; set; }
+        public BulkProgressCallback? ProgressCallback { get; set; }
 
         /// <summary>
         /// Timeout for the bulk operation in seconds. Default is 300 (5 minutes).

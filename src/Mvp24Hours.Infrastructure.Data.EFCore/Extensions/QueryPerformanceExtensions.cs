@@ -220,8 +220,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> TagWithOperationContext<T>(
             this IQueryable<T> query,
             string operationName,
-            string correlationId = null,
-            string userId = null)
+            string? correlationId = null,
+            string? userId = null)
             where T : class
         {
             var tag = $"Operation: {operationName}";
@@ -318,7 +318,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> OptimizeForReadPerformance<T>(
             this IQueryable<T> query,
             bool hasCollectionIncludes = false,
-            string operationTag = null)
+            string? operationTag = null)
             where T : class
         {
             // Apply no tracking with appropriate mode
@@ -362,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             this IQueryable<T> query,
             int skip,
             int take,
-            string operationTag = null)
+            string? operationTag = null)
             where T : class
         {
             query = query.AsNoTracking();
@@ -392,7 +392,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// </example>
         public static IQueryable<T> OptimizeForCount<T>(
             this IQueryable<T> query,
-            string operationTag = null)
+            string? operationTag = null)
             where T : class
         {
             query = query.AsNoTracking();
@@ -423,7 +423,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         public static IQueryable<T> OptimizeForSingleLookup<T>(
             this IQueryable<T> query,
             bool forUpdate = false,
-            string operationTag = null)
+            string? operationTag = null)
             where T : class
         {
             if (!forUpdate)

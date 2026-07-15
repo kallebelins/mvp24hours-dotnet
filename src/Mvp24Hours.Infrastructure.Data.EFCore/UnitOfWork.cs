@@ -53,14 +53,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
-                this.repositories.Add(typeof(T), serviceProvider.GetService<IRepository<T>>());
+                var repository = serviceProvider.GetService<IRepository<T>>()
+                    ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
+                this.repositories.Add(typeof(T), repository);
             }
-            return repositories[typeof(T)] as IRepository<T>;
+            return (IRepository<T>)repositories[typeof(T)];
         }
 
         public IDbConnection GetConnection()
         {
-            return DbContext?.Database?.GetDbConnection();
+            return DbContext?.Database?.GetDbConnection()!;
         }
 
         #endregion

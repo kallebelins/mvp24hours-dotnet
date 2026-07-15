@@ -218,7 +218,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// }
         /// </code>
         /// </example>
-        TEntity GetById(object id);
+        TEntity? GetById(object id);
 
         /// <summary>
         /// Retrieves a single entity by its unique identifier with navigation properties.
@@ -240,6 +240,6 @@ namespace Mvp24Hours.Core.Contract.Data
         /// // customer.Orders and customer.Orders[*].Items are now loaded
         /// </code>
         /// </example>
-        TEntity GetById(object id, IPagingCriteria criteria);
+        TEntity? GetById(object id, IPagingCriteria criteria);
     }
 }

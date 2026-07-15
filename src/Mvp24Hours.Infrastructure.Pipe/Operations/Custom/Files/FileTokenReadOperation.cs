@@ -12,7 +12,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files
     /// <summary>
     /// Operation to read file log token
     /// </summary>
-    public class FileTokenReadOperation<T>(string _filePath) : OperationBase
+    public class FileTokenReadOperation<T>(string _filePath) : OperationBase where T : class
     {
         public override bool IsRequired => true;
 

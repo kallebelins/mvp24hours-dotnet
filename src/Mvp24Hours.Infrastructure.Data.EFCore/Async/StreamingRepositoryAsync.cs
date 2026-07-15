@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<T> StreamAllAsync(IPagingCriteria criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<T> StreamAllAsync(IPagingCriteria? criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var query = GetQuery(criteria);
 
@@ -155,7 +155,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var query = dbEntities.AsQueryable();
 

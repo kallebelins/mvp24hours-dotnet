@@ -40,7 +40,7 @@ namespace Mvp24Hours.Core.Serialization.Json
         {
             if (reader.TokenType == JsonTokenType.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonTokenType.String)
@@ -56,9 +56,9 @@ namespace Mvp24Hours.Core.Serialization.Json
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNullValue();
             }
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Core.Serialization.Json
         {
             if (reader.TokenType == JsonTokenType.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonTokenType.Number)
@@ -123,9 +123,9 @@ namespace Mvp24Hours.Core.Serialization.Json
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNullValue();
             }
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Core.Serialization.Json
         {
             if (reader.TokenType == JsonTokenType.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonTokenType.Number)
@@ -190,9 +190,9 @@ namespace Mvp24Hours.Core.Serialization.Json
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNullValue();
             }
@@ -236,22 +236,22 @@ namespace Mvp24Hours.Core.Serialization.Json
         {
             if (reader.TokenType == JsonTokenType.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonTokenType.String)
             {
                 var stringValue = reader.GetString();
-                return _createInstance(stringValue);
+                return _createInstance(stringValue ?? string.Empty);
             }
 
             throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
         }
 
         /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNullValue();
             }
@@ -312,25 +312,25 @@ namespace Mvp24Hours.Core.Serialization.Json
             if (IsGuidEntityId(typeToConvert))
             {
                 var converterType = typeof(GuidEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType);
+                return (JsonConverter)Activator.CreateInstance(converterType)!;
             }
 
             if (IsIntEntityId(typeToConvert))
             {
                 var converterType = typeof(IntEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType);
+                return (JsonConverter)Activator.CreateInstance(converterType)!;
             }
 
             if (IsLongEntityId(typeToConvert))
             {
                 var converterType = typeof(LongEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType);
+                return (JsonConverter)Activator.CreateInstance(converterType)!;
             }
 
             if (IsStringEntityId(typeToConvert))
             {
                 var converterType = typeof(StringEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType);
+                return (JsonConverter)Activator.CreateInstance(converterType)!;
             }
 
             throw new NotSupportedException($"Cannot create converter for type {typeToConvert}");

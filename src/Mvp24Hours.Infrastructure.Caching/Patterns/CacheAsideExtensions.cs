@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The cached or newly loaded value.</returns>
         /// <exception cref="ArgumentNullException">Thrown when cache, key, or factory is null.</exception>
-        public static async Task<T> GetOrSetAsync<T>(
+        public static async Task<T?> GetOrSetAsync<T>(
             this ICacheProvider cache,
             string key,
             Func<CancellationToken, Task<T>> factory,
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The cached or newly loaded value.</returns>
         /// <exception cref="ArgumentNullException">Thrown when cache, key, or factory is null.</exception>
-        public static async Task<T> GetOrSetAsync<T>(
+        public static async Task<T?> GetOrSetAsync<T>(
             this ICacheProvider cache,
             string key,
             Func<CancellationToken, Task<T>> factory,
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The cached or newly loaded value.</returns>
         /// <exception cref="ArgumentNullException">Thrown when cache, key, or factory is null.</exception>
-        public static async Task<T> GetOrSetAsync<T>(
+        public static async Task<T?> GetOrSetAsync<T>(
             this ICacheProvider cache,
             string key,
             Func<Task<T>> factory,
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The cached or newly loaded value.</returns>
         /// <exception cref="ArgumentNullException">Thrown when cache, key, or factory is null.</exception>
-        public static async Task<T> GetOrSetAsync<T>(
+        public static async Task<T?> GetOrSetAsync<T>(
             this ICacheProvider cache,
             string key,
             Func<Task<T>> factory,

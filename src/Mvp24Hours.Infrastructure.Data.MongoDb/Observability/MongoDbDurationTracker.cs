@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// </summary>
         /// <param name="commandName">The command name.</param>
         /// <returns>The duration statistics, or null if no data.</returns>
-        public DurationStatistics GetStatistics(string commandName)
+        public DurationStatistics? GetStatistics(string commandName)
         {
             if (!_commandBuckets.TryGetValue(commandName, out var bucket))
                 return null;
@@ -151,6 +151,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             return _commandBuckets
                 .Select(kvp => kvp.Value.GetStatistics(kvp.Key))
                 .Where(s => s != null && s.Count > 0)
+                .Cast<DurationStatistics>()
                 .ToList();
         }
 
@@ -194,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private static string ExtractCollectionName(MongoDB.Bson.BsonDocument command, string commandName)
+        private static string? ExtractCollectionName(MongoDB.Bson.BsonDocument? command, string commandName)
         {
             if (command == null)
                 return null;
@@ -278,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 }
             }
 
-            public DurationStatistics GetStatistics(string commandName)
+            public DurationStatistics? GetStatistics(string commandName)
             {
                 var samples = _samples.ToArray();
                 if (samples.Length == 0)

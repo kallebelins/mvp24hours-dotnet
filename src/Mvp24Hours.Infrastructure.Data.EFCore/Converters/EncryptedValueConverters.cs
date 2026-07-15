@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
     /// <remarks>
     /// Use this for binary data like files, images, or serialized objects that need encryption.
     /// </remarks>
-    public class EncryptedBinaryConverter : ValueConverter<byte[], byte[]>
+    public class EncryptedBinaryConverter : ValueConverter<byte[]?, byte[]?>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="EncryptedBinaryConverter"/> class.
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
     /// Serializes objects to JSON, encrypts, and stores as string.
     /// Useful for encrypted complex types.
     /// </remarks>
-    public class EncryptedJsonConverter<T> : ValueConverter<T, string> where T : class
+    public class EncryptedJsonConverter<T> : ValueConverter<T?, string?> where T : class
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="EncryptedJsonConverter{T}"/> class.
@@ -130,14 +130,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                 throw new ArgumentNullException(nameof(encryptionProvider));
         }
 
-        private static string EncryptJson(T value, IEncryptionProvider provider)
+        private static string? EncryptJson(T? value, IEncryptionProvider provider)
         {
             if (value == null) return null;
             var json = System.Text.Json.JsonSerializer.Serialize(value);
             return provider.Encrypt(json);
         }
 
-        private static T DecryptJson(string encrypted, IEncryptionProvider provider)
+        private static T? DecryptJson(string? encrypted, IEncryptionProvider provider)
         {
             if (string.IsNullOrEmpty(encrypted)) return null;
             var json = provider.Decrypt(encrypted);

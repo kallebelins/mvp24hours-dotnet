@@ -53,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
     public class MongoDbGeospatialService<TDocument> : IMongoDbGeospatialService<TDocument>
     {
         private readonly IMongoCollection<TDocument> _collection;
-        private readonly ILogger<MongoDbGeospatialService<TDocument>> _logger;
+        private readonly ILogger<MongoDbGeospatialService<TDocument>>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbGeospatialService{TDocument}"/> class.
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
         /// <param name="logger">Optional logger.</param>
         public MongoDbGeospatialService(
             IMongoCollection<TDocument> collection,
-            ILogger<MongoDbGeospatialService<TDocument>> logger = null)
+            ILogger<MongoDbGeospatialService<TDocument>>? logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _logger = logger;

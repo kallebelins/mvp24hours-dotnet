@@ -39,7 +39,7 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         public void IgnoreProperty(Type type, params string[] jsonPropertyNames)
         {
-            if (!_ignores.TryGetValue(type, out HashSet<string> value))
+            if (!_ignores.TryGetValue(type, out HashSet<string>? value))
             {
                 value = [];
                 _ignores[type] = value;
@@ -53,7 +53,7 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         public void RenameProperty(Type type, string propertyName, string newJsonPropertyName)
         {
-            if (!_renames.TryGetValue(type, out Dictionary<string, string> value))
+            if (!_renames.TryGetValue(type, out Dictionary<string, string>? value))
             {
                 value = [];
                 _renames[type] = value;
@@ -65,12 +65,12 @@ namespace Mvp24Hours.Core.Serialization.Json
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
             var property = base.CreateProperty(member, memberSerialization);
-            if (IsIgnored(property.DeclaringType, property.PropertyName))
+            if (property.DeclaringType != null && IsIgnored(property.DeclaringType, property.PropertyName!))
             {
                 property.ShouldSerialize = i => false;
                 property.Ignored = true;
             }
-            if (IsRenamed(property.DeclaringType, property.PropertyName, out var newJsonPropertyName))
+            if (property.DeclaringType != null && property.PropertyName != null && IsRenamed(property.DeclaringType, property.PropertyName, out var newJsonPropertyName))
             {
                 property.PropertyName = newJsonPropertyName;
             }
@@ -80,7 +80,7 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         private bool IsIgnored(Type type, string jsonPropertyName)
         {
-            if (!_ignores.TryGetValue(type, out HashSet<string> value))
+            if (!_ignores.TryGetValue(type, out HashSet<string>? value))
             {
                 return false;
             }
@@ -88,9 +88,9 @@ namespace Mvp24Hours.Core.Serialization.Json
             return value.Contains(jsonPropertyName);
         }
 
-        private bool IsRenamed(Type type, string jsonPropertyName, out string newJsonPropertyName)
+        private bool IsRenamed(Type type, string jsonPropertyName, out string? newJsonPropertyName)
         {
-            if (!_renames.TryGetValue(type, out Dictionary<string, string> renames) || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
+            if (!_renames.TryGetValue(type, out Dictionary<string, string>? renames) || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
             {
                 newJsonPropertyName = null;
                 return false;

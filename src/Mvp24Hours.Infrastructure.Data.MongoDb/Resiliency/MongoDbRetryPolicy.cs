@@ -33,14 +33,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         private readonly Random _random = new();
         private readonly HashSet<Type> _retryableExceptions;
         private readonly HashSet<Type> _nonRetryableExceptions;
-        private readonly ILogger<MongoDbRetryPolicy> _logger;
+        private readonly ILogger<MongoDbRetryPolicy>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbRetryPolicy"/> class.
         /// </summary>
         /// <param name="options">The resiliency options.</param>
         /// <param name="logger">The logger instance.</param>
-        public MongoDbRetryPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbRetryPolicy> logger = null)
+        public MongoDbRetryPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbRetryPolicy>? logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             }
 
             var startTime = DateTimeOffset.UtcNow;
-            Exception lastException = null;
+            Exception? lastException = null;
             var attempt = 0;
 
             while (attempt <= _options.RetryCount)

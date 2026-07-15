@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         /// <summary>
         /// Gets the value of the user logged in the context or logged into the database
         /// </summary>
-        protected abstract object EntityLogBy { get; }
+        protected abstract object? EntityLogBy { get; }
         /// <summary>
         /// Repository configuration options
         /// </summary>
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         /// <summary>
         /// Gets database query with clause and aggregation of relationships
         /// </summary>
-        protected IQueryable<T> GetQuery(IPagingCriteria criteria, bool onlyNavigation = false)
+        protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             // cria query
             var query = dbEntities.AsQueryable();
@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         /// Gets database query with clause and aggregation of relationships
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
-        protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria criteria, bool onlyNavigation = false)
+        protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             _logger?.LogDebug("Building query with criteria. Type: {CriteriaType}", criteria?.GetType().Name);
             var ordered = false;
@@ -91,13 +91,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
                 if (criteria != null)
                 {
                     // ordination
-                    if (criteria is IPagingCriteriaExpression<T>)
+                    if (criteria is IPagingCriteriaExpression<T> clauseExpr)
                     {
-                        var clauseExpr = criteria as IPagingCriteriaExpression<T>;
                         // ordination by ascending expression
                         if (clauseExpr.OrderByAscendingExpr.AnySafe())
                         {
-                            IOrderedQueryable<T> queryOrdered = null;
+                            IOrderedQueryable<T>? queryOrdered = null;
                             foreach (var ord in clauseExpr.OrderByAscendingExpr)
                             {
                                 if (queryOrdered == null)
@@ -116,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
                         // ordination by descending expression
                         if (clauseExpr.OrderByDescendingExpr.AnySafe())
                         {
-                            IOrderedQueryable<T> queryOrdered = null;
+                            IOrderedQueryable<T>? queryOrdered = null;
                             foreach (var ord in clauseExpr.OrderByDescendingExpr)
                             {
                                 if (queryOrdered == null)
@@ -136,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
                     // ordination by string
                     if (criteria.OrderBy.AnySafe())
                     {
-                        IOrderedQueryable<T> queryOrdered = null;
+                        IOrderedQueryable<T>? queryOrdered = null;
                         foreach (var ord in criteria.OrderBy)
                         {
                             if (queryOrdered == null)
@@ -172,9 +171,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
             if (criteria != null)
             {
                 // navigation
-                if (criteria is IPagingCriteriaExpression<T>)
+                if (criteria is IPagingCriteriaExpression<T> clauseExpr)
                 {
-                    var clauseExpr = criteria as IPagingCriteriaExpression<T>;
                     // navigation by expression
                     if (clauseExpr.NavigationExpr.AnySafe())
                     {
@@ -202,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
             return Builders<T>.Filter.Eq(key.Name, entity.EntityKey);
         }
 
-        PropertyInfo _keyInfo;
+        PropertyInfo? _keyInfo;
         /// <summary>
         /// 
         /// </summary>

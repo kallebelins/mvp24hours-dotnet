@@ -14,7 +14,7 @@ namespace Mvp24Hours.Extensions
 {
     public static class ValidatorEntityExtensions
     {
-        public static IList<IMessageResult> TryValidate<TEntity>(this TEntity entity, IValidator<TEntity> _validator = null)
+        public static IList<IMessageResult> TryValidate<TEntity>(this TEntity entity, IValidator<TEntity>? _validator = null)
             where TEntity : class
         {
             var validator = _validator;
@@ -35,7 +35,7 @@ namespace Mvp24Hours.Extensions
                 if (!Validator.TryValidateObject(entity, validationCntxt, validationRslts, true))
                 {
                     return validationRslts
-                        .Select(item => (IMessageResult)new MessageResult(string.Join("|", item.MemberNames), item.ErrorMessage, Core.Enums.MessageType.Error))
+                        .Select(item => (IMessageResult)new MessageResult(string.Join("|", item.MemberNames), item.ErrorMessage ?? string.Empty, Core.Enums.MessageType.Error))
                         .ToList();
                 }
             }

@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// var customer = GetCustomerById(dbContext, 123);
         /// </code>
         /// </example>
-        public static Func<TContext, TKey, T> CompileGetById<TContext, T, TKey>(
+        public static Func<TContext, TKey, T?> CompileGetById<TContext, T, TKey>(
             Expression<Func<T, TKey>> keySelector)
             where TContext : DbContext
             where T : class, IEntityBase
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// var customer = await GetCustomerByIdAsync(dbContext, 123);
         /// </code>
         /// </example>
-        public static Func<TContext, TKey, Task<T>> CompileGetByIdAsync<TContext, T, TKey>(
+        public static Func<TContext, TKey, Task<T?>> CompileGetByIdAsync<TContext, T, TKey>(
             Expression<Func<T, TKey>> keySelector)
             where TContext : DbContext
             where T : class, IEntityBase
@@ -228,7 +228,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// <typeparam name="TParam">The parameter type.</typeparam>
         /// <param name="predicate">The filter condition.</param>
         /// <returns>A compiled async query function.</returns>
-        public static Func<TContext, TParam, Task<T>> CompileFirstOrDefaultAsync<TContext, T, TParam>(
+        public static Func<TContext, TParam, Task<T?>> CompileFirstOrDefaultAsync<TContext, T, TParam>(
             Expression<Func<T, TParam, bool>> predicate)
             where TContext : DbContext
             where T : class, IEntityBase
@@ -321,7 +321,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// <summary>
         /// Creates a compiled async query that returns a single entity by ID.
         /// </summary>
-        protected static Func<TContext, TKey, Task<T>> CompileGetByIdAsync<T, TKey>(
+        protected static Func<TContext, TKey, Task<T?>> CompileGetByIdAsync<T, TKey>(
             Expression<Func<T, TKey>> keySelector)
             where T : class, IEntityBase
         {

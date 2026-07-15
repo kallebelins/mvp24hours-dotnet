@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             return List(null);
         }
 
-        public IList<T> List(IPagingCriteria criteria)
+        public IList<T> List(IPagingCriteria? criteria)
         {
             _logger?.LogDebug("Repository: List started");
             try
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             return GetBy(clause, null);
         }
 
-        public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria criteria)
+        public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("Repository: GetBy started");
             try
@@ -158,10 +158,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public T GetById(object id)
         {
-            return GetById(id, null);
+            return GetById(id, null)!;
         }
 
-        public T GetById(object id, IPagingCriteria criteria)
+        public T GetById(object id, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("Repository: GetById started");
             try
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     scope.Complete();
                     _logger?.LogDebug("Repository: GetById transaction scope complete");
                 }
-                return result;
+                return result!;
             }
             finally { _logger?.LogDebug("Repository: GetById finished"); }
         }
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         }
 
         public void LoadRelation<TProperty>(T entity,
-            Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class
         {
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             finally { _logger?.LogDebug("Repository: LoadRelation (collection) finished"); }
         }
 
-        public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
+        public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0) where TProperty : class
         {
             _logger?.LogDebug("Repository: LoadRelationSortByAscending started");
             try
@@ -245,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             finally { _logger?.LogDebug("Repository: LoadRelationSortByAscending finished"); }
         }
 
-        public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>> clause = null, int limit = 0) where TProperty : class
+        public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0) where TProperty : class
         {
             _logger?.LogDebug("Repository: LoadRelationSortByDescending started");
             try
@@ -384,7 +384,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
                     if (hasUserLog)
                     {
-                        entityLog.RemovedBy = (dynamic)EntityLogBy;
+                        entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
                     }
                     this.Modify(entity);
                 }
@@ -475,7 +475,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         #region [ Properties ]
 
-        protected override object EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
+        protected override object? EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
 
         #endregion
     }

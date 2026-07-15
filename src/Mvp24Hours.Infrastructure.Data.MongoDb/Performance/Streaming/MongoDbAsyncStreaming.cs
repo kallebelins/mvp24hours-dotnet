@@ -58,14 +58,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
     public class MongoDbAsyncStreaming<T>
     {
         private readonly IMongoCollection<T> _collection;
-        private readonly ILogger<MongoDbAsyncStreaming<T>> _logger;
+        private readonly ILogger<MongoDbAsyncStreaming<T>>? _logger;
 
         /// <summary>
         /// Initializes a new async streaming provider for the specified collection.
         /// </summary>
         /// <param name="collection">The MongoDB collection.</param>
         /// <param name="logger">Optional logger for structured logging.</param>
-        public MongoDbAsyncStreaming(IMongoCollection<T> collection, ILogger<MongoDbAsyncStreaming<T>> logger = null)
+        public MongoDbAsyncStreaming(IMongoCollection<T> collection, ILogger<MongoDbAsyncStreaming<T>>? logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _logger = logger;
@@ -105,8 +105,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
         /// <returns>An async enumerable of documents.</returns>
         public async IAsyncEnumerable<T> StreamAsync(
             FilterDefinition<T> filter,
-            SortDefinition<T> sort = null,
-            ProjectionDefinition<T> projection = null,
+            SortDefinition<T>? sort = null,
+            ProjectionDefinition<T>? projection = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Starting streaming for collection {CollectionName}", typeof(T).Name);
@@ -172,8 +172,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
         public async IAsyncEnumerable<IReadOnlyList<T>> StreamBatchesAsync(
             FilterDefinition<T> filter,
             int batchSize,
-            SortDefinition<T> sort = null,
-            ProjectionDefinition<T> projection = null,
+            SortDefinition<T>? sort = null,
+            ProjectionDefinition<T>? projection = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Starting batch streaming for collection {CollectionName} with batch size {BatchSize}", typeof(T).Name, batchSize);
@@ -223,7 +223,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
         public async IAsyncEnumerable<TProjection> StreamProjectedAsync<TProjection>(
             FilterDefinition<T> filter,
             ProjectionDefinition<T, TProjection> projection,
-            SortDefinition<T> sort = null,
+            SortDefinition<T>? sort = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Starting projected streaming for collection {CollectionName}", typeof(T).Name);

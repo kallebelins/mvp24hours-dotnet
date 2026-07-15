@@ -67,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
     /// </example>
     public class CommandLoggingInterceptor : DbCommandInterceptor
     {
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
         private readonly TimeSpan _slowQueryThreshold;
         private readonly bool _logAllQueries;
         private readonly bool _logParameters;
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         }
 
         /// <inheritdoc />
-        public override object ScalarExecuted(
+        public override object? ScalarExecuted(
             DbCommand command,
             CommandExecutedEventData eventData,
             object result)
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         }
 
         /// <inheritdoc />
-        public override ValueTask<object> ScalarExecutedAsync(
+        public override ValueTask<object?> ScalarExecutedAsync(
             DbCommand command,
             CommandExecutedEventData eventData,
             object result,
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             _stopwatch.Value = Stopwatch.StartNew();
         }
 
-        private void LogCommandExecution(DbCommand command, TimeSpan duration, string additionalInfo = null)
+        private void LogCommandExecution(DbCommand command, TimeSpan duration, string? additionalInfo = null)
         {
             var isSlowQuery = duration >= _slowQueryThreshold;
 
@@ -300,10 +300,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             }
         }
 
-        private void LogCommandFailure(DbCommand command, Exception exception)
+        private void LogCommandFailure(DbCommand command, Exception? exception)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"❌ SQL Command FAILED: {exception.Message}");
+            sb.AppendLine($"❌ SQL Command FAILED: {exception?.Message}");
             sb.AppendLine($"Command: {command.CommandText}");
 
             if (_logParameters && command.Parameters.Count > 0)

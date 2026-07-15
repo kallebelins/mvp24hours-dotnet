@@ -100,7 +100,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(actions));
             }
-            if (!servicesAction1.TryGetValue(level, out List<Action<string>> value))
+            if (!servicesAction1.TryGetValue(level, out List<Action<string>>? value))
             {
                 value = [];
                 servicesAction1.Add(level, value);
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(actions));
             }
-            if (!servicesAction2.TryGetValue(level, out List<Action<string, object[]>> value))
+            if (!servicesAction2.TryGetValue(level, out List<Action<string, object[]>>? value))
             {
                 value = [];
                 servicesAction2.Add(level, value);
@@ -146,7 +146,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(telemetryServices));
             }
-            if (!services.TryGetValue(level, out List<ITelemetryService> value))
+            if (!services.TryGetValue(level, out List<ITelemetryService>? value))
             {
                 value = [];
                 services.Add(level, value);
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(actions));
             }
-            if (!serviceActionFilters1.TryGetValue(serviceName, out List<Action<string>> value))
+            if (!serviceActionFilters1.TryGetValue(serviceName, out List<Action<string>>? value))
             {
                 value = [];
                 serviceActionFilters1.Add(serviceName, value);
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(actions));
             }
-            if (!serviceActionFilters2.TryGetValue(serviceName, out List<Action<string, object[]>> value))
+            if (!serviceActionFilters2.TryGetValue(serviceName, out List<Action<string, object[]>>? value))
             {
                 value = [];
                 serviceActionFilters2.Add(serviceName, value);
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Helpers
             {
                 throw new ArgumentNullException(nameof(telemetryServices));
             }
-            if (!serviceFilters.TryGetValue(serviceName, out List<ITelemetryService> value))
+            if (!serviceFilters.TryGetValue(serviceName, out List<ITelemetryService>? value))
             {
                 value = [];
                 serviceFilters.Add(serviceName, value);
@@ -241,32 +241,32 @@ namespace Mvp24Hours.Helpers
         #region [ Get Services ]
         public static IList<ITelemetryService> GetServices(TelemetryLevels level)
         {
-            return services.TryGetValue(level, out List<ITelemetryService> value) ? value : [];
+            return services.TryGetValue(level, out List<ITelemetryService>? value) ? value : [];
         }
 
         public static IList<Action<string>> GetActions1(TelemetryLevels level)
         {
-            return servicesAction1.TryGetValue(level, out List<Action<string>> value) ? value : [];
+            return servicesAction1.TryGetValue(level, out List<Action<string>>? value) ? value : [];
         }
 
         public static IList<Action<string, object[]>> GetActions2(TelemetryLevels level)
         {
-            return servicesAction2.TryGetValue(level, out List<Action<string, object[]>> value) ? value : [];
+            return servicesAction2.TryGetValue(level, out List<Action<string, object[]>>? value) ? value : [];
         }
 
         public static IList<ITelemetryService> GetFilters(string serviceName)
         {
-            return serviceFilters.TryGetValue(serviceName, out List<ITelemetryService> value) ? value : [];
+            return serviceFilters.TryGetValue(serviceName, out List<ITelemetryService>? value) ? value : [];
         }
 
         public static IList<Action<string>> GetActionFilters1(string serviceName)
         {
-            return serviceActionFilters1.TryGetValue(serviceName, out List<Action<string>> value) ? value : [];
+            return serviceActionFilters1.TryGetValue(serviceName, out List<Action<string>>? value) ? value : [];
         }
 
         public static IList<Action<string, object[]>> GetActionFilters2(string serviceName)
         {
-            return serviceActionFilters2.TryGetValue(serviceName, out List<Action<string, object[]>> value) ? value : [];
+            return serviceActionFilters2.TryGetValue(serviceName, out List<Action<string, object[]>>? value) ? value : [];
         }
         #endregion
 
@@ -377,21 +377,21 @@ namespace Mvp24Hours.Helpers
 
         private static void ExecuteFilters(string eventName, object[] args)
         {
-            if (serviceFiltersStarted && serviceFilters.TryGetValue(eventName, out List<ITelemetryService> value1))
+            if (serviceFiltersStarted && serviceFilters.TryGetValue(eventName, out List<ITelemetryService>? value1))
             {
                 foreach (var item in value1)
                 {
                     item.Execute(eventName, args);
                 }
             }
-            if (serviceActionFilters1Started && serviceActionFilters1.TryGetValue(eventName, out List<Action<string>> value2))
+            if (serviceActionFilters1Started && serviceActionFilters1.TryGetValue(eventName, out List<Action<string>>? value2))
             {
                 foreach (var item in value2)
                 {
                     item.Invoke(eventName);
                 }
             }
-            if (serviceActionFilters2Started && serviceActionFilters2.TryGetValue(eventName, out List<Action<string, object[]>> value3))
+            if (serviceActionFilters2Started && serviceActionFilters2.TryGetValue(eventName, out List<Action<string, object[]>>? value3))
             {
                 foreach (var item in value3)
                 {

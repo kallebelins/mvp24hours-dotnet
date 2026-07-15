@@ -98,14 +98,14 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         /// Gets or sets the encryption key.
         /// Should be at least 256 bits (32 bytes) for AES-256.
         /// </summary>
-        public string Key { get; set; }
+        public required string Key { get; set; }
 
         /// <summary>
         /// Gets or sets the initialization vector (IV).
         /// For AES, should be 128 bits (16 bytes).
         /// If null, a random IV is generated for each encryption.
         /// </summary>
-        public string InitializationVector { get; set; }
+        public string? InitializationVector { get; set; }
 
         /// <summary>
         /// Gets or sets whether to use deterministic encryption.
@@ -118,12 +118,12 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         /// <summary>
         /// Gets or sets the key identifier for key rotation scenarios.
         /// </summary>
-        public string KeyId { get; set; }
+        public string? KeyId { get; set; }
 
         /// <summary>
         /// Gets or sets the salt for blind index computation.
         /// </summary>
-        public string BlindIndexSalt { get; set; }
+        public string? BlindIndexSalt { get; set; }
     }
 }
 

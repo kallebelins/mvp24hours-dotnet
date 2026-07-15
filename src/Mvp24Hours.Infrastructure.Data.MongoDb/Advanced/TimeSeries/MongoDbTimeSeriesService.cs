@@ -56,8 +56,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
         private readonly IMongoDatabase _database;
         private readonly string _collectionName;
         private readonly string _timeField;
-        private readonly string _metaField;
-        private readonly ILogger<MongoDbTimeSeriesService<TDocument>> _logger;
+        private readonly string? _metaField;
+        private readonly ILogger<MongoDbTimeSeriesService<TDocument>>? _logger;
         private IMongoCollection<TDocument> _collection;
 
         /// <summary>
@@ -72,8 +72,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             IMongoDatabase database,
             string collectionName,
             string timeField,
-            string metaField = null,
-            ILogger<MongoDbTimeSeriesService<TDocument>> logger = null)
+            string? metaField = null,
+            ILogger<MongoDbTimeSeriesService<TDocument>>? logger = null)
         {
             _database = database ?? throw new ArgumentNullException(nameof(database));
             _collectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));

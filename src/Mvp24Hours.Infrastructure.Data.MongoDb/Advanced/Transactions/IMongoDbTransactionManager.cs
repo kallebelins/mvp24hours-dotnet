@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <summary>
         /// Gets the current session handle.
         /// </summary>
-        IClientSessionHandle CurrentSession { get; }
+        IClientSessionHandle? CurrentSession { get; }
 
         /// <summary>
         /// Gets whether a transaction is currently active.
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <returns>The result of the operation.</returns>
         Task<TResult> ExecuteInTransactionAsync<TResult>(
             Func<IClientSessionHandle, CancellationToken, Task<TResult>> operation,
-            TransactionOptions options = null,
+            TransactionOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <param name="cancellationToken">Cancellation token.</param>
         Task ExecuteInTransactionAsync(
             Func<IClientSessionHandle, CancellationToken, Task> operation,
-            TransactionOptions options = null,
+            TransactionOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>

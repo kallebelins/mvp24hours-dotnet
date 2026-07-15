@@ -22,7 +22,7 @@ namespace Mvp24Hours.Extensions
         /// <exception cref="InvalidCastException">if there is a data type mismatch between source/destination and ThrowOnTypeMismatch is enabled and unable to coerce the data type.</exception>
         /// <returns>true if any properties were changed</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
-        public static bool CopyPropertiesTo<T, U>(this T source, U destination, IEnumerable<string> PropertiesToIgnore = null, bool IgnoreNullProperties = false, bool ThrowOnTypeMismatch = true, bool CoerceDataType = false)
+        public static bool CopyPropertiesTo<T, U>(this T source, U destination, IEnumerable<string>? PropertiesToIgnore = null, bool IgnoreNullProperties = false, bool ThrowOnTypeMismatch = true, bool CoerceDataType = false)
             where T : class
             where U : class
         {
@@ -38,8 +38,8 @@ namespace Mvp24Hours.Extensions
                            let targetProperty = typeDest.GetProperty(srcProp.Name)
                            where srcProp.CanRead
                            && targetProperty != null
-                           && (targetProperty.GetSetMethod(true) != null && !targetProperty.GetSetMethod(true).IsPrivate)
-                           && (targetProperty.GetSetMethod().Attributes & MethodAttributes.Static) == 0
+                           && (targetProperty.GetSetMethod(true) != null && !targetProperty.GetSetMethod(true)!.IsPrivate)
+                           && (targetProperty.GetSetMethod()!.Attributes & MethodAttributes.Static) == 0
                            && !(
                                from i in PropertiesToIgnore ?? Enumerable.Empty<string>()
                                select i
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Extensions
                         if (srcValue != null)
                         {
                             // determine if nullable type
-                            Type tgtType = Nullable.GetUnderlyingType(props.targetProperty.PropertyType);
+                            Type? tgtType = Nullable.GetUnderlyingType(props.targetProperty.PropertyType);
                             // if it is, use the underlying type
                             // without this we cannot convert int? -> decimal? when value is not null
                             if (tgtType != null)
@@ -97,10 +97,10 @@ namespace Mvp24Hours.Extensions
             return PropertyChanged;
         }
 
-        public static T DeepClone<T>(this T objectToClone)
+        public static T? DeepClone<T>(this T objectToClone)
             where T : class
         {
-            return ObjectHelper.Clone<T>(objectToClone);
+            return ObjectHelper.Clone(objectToClone);
         }
 
         /// <summary>
@@ -154,33 +154,37 @@ namespace Mvp24Hours.Extensions
             return parent;
         }
 
-        public static void SetPropValue(this object obj, string name, object value)
+        public static void SetPropValue(this object obj, string name, object? value)
         {
-            PropertyInfo property = obj.GetType().GetProperty(name);
+            PropertyInfo? property = obj.GetType().GetProperty(name);
+            if (property == null)
+            {
+                return;
+            }
             Type t = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-            object safeValue = (value == null) ? null : Convert.ChangeType(value, t);
+            object? safeValue = (value == null) ? null : Convert.ChangeType(value, t);
 
             property.SetValue(obj, safeValue, null);
         }
 
-        public static object GetPropValue(this object obj, string name)
+        public static object? GetPropValue(this object obj, string name)
         {
             foreach (string part in name.Split('.'))
             {
                 if (obj == null) { return null; }
 
                 Type type = obj.GetType();
-                PropertyInfo info = type.GetProperty(part);
+                PropertyInfo? info = type.GetProperty(part);
                 if (info == null) { return null; }
 
-                obj = info.GetValue(obj, null);
+                obj = info.GetValue(obj, null)!;
             }
             return obj;
         }
 
-        public static T GetPropValue<T>(this object obj, string name)
+        public static T? GetPropValue<T>(this object obj, string name)
         {
-            object retval = GetPropValue(obj, name);
+            object? retval = GetPropValue(obj, name);
             if (retval == null) { return default; }
 
             // throws InvalidCastException if types are incompatible

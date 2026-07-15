@@ -49,7 +49,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMongoDbObservability(
             this IServiceCollection services,
-            Action<MongoDbObservabilityOptions> configureOptions = null)
+            Action<MongoDbObservabilityOptions>? configureOptions = null)
         {
             // Configure options
             if (configureOptions != null)
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Extensions
             this IServiceCollection services,
             bool logParameters = false,
             bool logResultCounts = true,
-            string[] sensitiveFields = null)
+            string[]? sensitiveFields = null)
         {
             return services.AddMongoDbObservability(options =>
             {

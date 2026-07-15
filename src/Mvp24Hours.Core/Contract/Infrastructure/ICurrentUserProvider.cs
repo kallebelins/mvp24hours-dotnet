@@ -81,8 +81,8 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
     /// </example>
     public class AsyncLocalCurrentUserProvider : ICurrentUserProvider
     {
-        private static readonly System.Threading.AsyncLocal<(string UserId, string UserName)> _current
-            = new System.Threading.AsyncLocal<(string, string)>();
+        private static readonly System.Threading.AsyncLocal<(string? UserId, string? UserName)> _current
+            = new System.Threading.AsyncLocal<(string?, string?)>();
 
         /// <summary>
         /// Gets the singleton instance of the provider.
@@ -90,17 +90,17 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         public static AsyncLocalCurrentUserProvider Instance { get; } = new AsyncLocalCurrentUserProvider();
 
         /// <inheritdoc />
-        public string UserId => _current.Value.UserId;
+        public string UserId => _current.Value.UserId!;
 
         /// <inheritdoc />
-        public string UserName => _current.Value.UserName;
+        public string UserName => _current.Value.UserName!;
 
         /// <summary>
         /// Sets the current user for the current async context.
         /// </summary>
         /// <param name="userId">The user ID.</param>
         /// <param name="userName">The user name.</param>
-        public static void SetCurrentUser(string userId, string userName = null)
+        public static void SetCurrentUser(string userId, string? userName = null)
         {
             _current.Value = (userId, userName);
         }

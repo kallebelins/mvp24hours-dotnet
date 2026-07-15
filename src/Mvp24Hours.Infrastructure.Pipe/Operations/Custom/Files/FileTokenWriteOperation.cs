@@ -12,7 +12,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files
     /// <summary>
     /// Operation for writing file log token
     /// </summary>
-    public class FileTokenWriteOperation<T>(string _filePath) : OperationBase
+    public class FileTokenWriteOperation<T>(string _filePath) : OperationBase where T : class
     {
         public override bool IsRequired => true;
 

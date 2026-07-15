@@ -65,7 +65,7 @@ namespace Mvp24Hours.Extensions
 
             return result.HasErrors
                 ? onFailure(result.Messages ?? new List<IMessageResult>().AsReadOnly())
-                : onSuccess(result.Data);
+                : onSuccess(result.Data!);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Mvp24Hours.Extensions
             }
             else
             {
-                onSuccess(result.Data);
+                onSuccess(result.Data!);
             }
 
             return result;
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Extensions
 
             return result.HasErrors
                 ? await onFailure(result.Messages ?? new List<IMessageResult>().AsReadOnly())
-                : await onSuccess(result.Data);
+                : await onSuccess(result.Data!);
         }
 
         #endregion
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Extensions
             }
 
             return new BusinessResult<TNew>(
-                data: mapper(result.Data),
+                data: mapper(result.Data!),
                 messages: result.Messages,
                 token: result.Token);
         }
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var mappedData = await mapper(result.Data);
+            var mappedData = await mapper(result.Data!);
 
             return new BusinessResult<TNew>(
                 data: mappedData,
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var bindResult = binder(result.Data);
+            var bindResult = binder(result.Data!);
 
             // Preserve token from original result if new result doesn't have one
             if (string.IsNullOrEmpty(bindResult.Token) && !string.IsNullOrEmpty(result.Token))
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var bindResult = await binder(result.Data);
+            var bindResult = await binder(result.Data!);
 
             if (string.IsNullOrEmpty(bindResult.Token) && !string.IsNullOrEmpty(result.Token))
             {
@@ -330,7 +330,7 @@ namespace Mvp24Hours.Extensions
 
             if (!result.HasErrors)
             {
-                action(result.Data);
+                action(result.Data!);
             }
 
             return result;
@@ -375,7 +375,7 @@ namespace Mvp24Hours.Extensions
 
             if (!result.HasErrors)
             {
-                await action(result.Data);
+                await action(result.Data!);
             }
 
             return result;
@@ -414,9 +414,9 @@ namespace Mvp24Hours.Extensions
         /// <param name="result">The business result.</param>
         /// <param name="defaultValue">The default value to return on failure.</param>
         /// <returns>The data if successful, or the default value.</returns>
-        public static T GetValueOrDefault<T>(
+        public static T? GetValueOrDefault<T>(
             this IBusinessResult<T> result,
-            T defaultValue = default!)
+            T? defaultValue = default)
         {
             return result.IsSuccess() ? result.Data : defaultValue;
         }
@@ -439,7 +439,7 @@ namespace Mvp24Hours.Extensions
                 throw new InvalidOperationException($"Result has errors: {errorMessages}");
             }
 
-            return result.Data;
+            return result.Data!;
         }
 
         /// <summary>
@@ -486,7 +486,7 @@ namespace Mvp24Hours.Extensions
                 return result;
             }
 
-            if (!predicate(result.Data))
+            if (!predicate(result.Data!))
             {
                 return BusinessResult.Failure<T>(errorMessage, errorKey ?? "VALIDATION_ERROR", result.Token);
             }

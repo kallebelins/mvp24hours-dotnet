@@ -30,7 +30,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         Task CreateCollectionWithValidationAsync(
             string collectionName,
             BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions options = null,
+            MongoDbSchemaValidationOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         Task SetValidationAsync(
             string collectionName,
             BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions options = null,
+            MongoDbSchemaValidationOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// <param name="collectionName">The collection name.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The validation rules, or null if no validation is set.</returns>
-        Task<BsonDocument> GetValidationAsync(
+        Task<BsonDocument?> GetValidationAsync(
             string collectionName,
             CancellationToken cancellationToken = default);
 

@@ -125,7 +125,7 @@ namespace Mvp24Hours.Extensions
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                if (map.TryGetValue(node, out ParameterExpression replacement))
+                if (map.TryGetValue(node, out ParameterExpression? replacement) && replacement != null)
                 {
                     node = replacement;
                 }

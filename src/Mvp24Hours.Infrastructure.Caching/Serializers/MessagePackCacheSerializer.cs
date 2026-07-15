@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Serializers
             try
             {
                 var value = MessagePackSerializer.Deserialize<T>(bytes, _options);
-                return Task.FromResult(value);
+                return Task.FromResult<T?>(value);
             }
             catch (Exception ex)
             {
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Serializers
                 // Base64 decode from string storage
                 var bytes = Convert.FromBase64String(value);
                 var result = MessagePackSerializer.Deserialize<T>(bytes, _options);
-                return Task.FromResult(result);
+                return Task.FromResult<T?>(result);
             }
             catch (Exception ex)
             {

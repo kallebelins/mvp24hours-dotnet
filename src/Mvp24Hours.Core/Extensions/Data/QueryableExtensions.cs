@@ -70,13 +70,13 @@ namespace Mvp24Hours.Extensions
             {
                 methodName = isDescending ? "ThenByDescending" : "ThenBy";
             }
-            object result = typeof(Queryable).GetMethods().Single(
+            object? result = typeof(Queryable).GetMethods().Single(
                 method => method.Name == methodName
                         && method.IsGenericMethodDefinition
                         && method.GetGenericArguments().Length == 2
                         && method.GetParameters().Length == 2)
                 .MakeGenericMethod(typeof(T), type)
-                .Invoke(null, new object[] { source, lambda });
+                .Invoke(null, new object[] { source, lambda })!;
             return (IOrderedQueryable<T>)result;
         }
     }

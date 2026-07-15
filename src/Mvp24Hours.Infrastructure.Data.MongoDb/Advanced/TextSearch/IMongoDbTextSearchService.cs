@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <returns>The name of the created index.</returns>
         Task<string> CreateTextIndexAsync(
             IEnumerable<string> fields,
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// </remarks>
         Task<string> CreateTextIndexAsync(
             IDictionary<string, int> fieldWeights,
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The name of the created index.</returns>
         Task<string> CreateWildcardTextIndexAsync(
-            CreateIndexOptions options = null,
+            CreateIndexOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <returns>A list of matching documents with scores.</returns>
         Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
             FilterDefinition<TDocument> filter,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         Task<IList<TextSearchResult<TDocument>>> SearchAsync(
             string searchText,
             Expression<System.Func<TDocument, bool>> filter,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <returns>A list of matching documents with scores.</returns>
         Task<IList<TextSearchResult<TDocument>>> SearchPhraseAsync(
             string phrase,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         Task<IList<TextSearchResult<TDocument>>> SearchWithExclusionsAsync(
             IEnumerable<string> includeTerms,
             IEnumerable<string> excludeTerms,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <returns>The count of matching documents.</returns>
         Task<long> CountAsync(
             string searchText,
-            MongoDbTextSearchOptions options = null,
+            MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>

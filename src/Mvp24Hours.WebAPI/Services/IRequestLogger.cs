@@ -88,7 +88,7 @@ public record RequestLogData
     /// <summary>
     /// Gets or sets the host.
     /// </summary>
-    public string Host { get; init; } = string.Empty;
+    public string? Host { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the client IP address.

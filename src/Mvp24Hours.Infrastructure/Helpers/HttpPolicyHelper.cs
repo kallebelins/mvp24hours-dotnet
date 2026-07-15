@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.Helpers
         /// <summary>
         /// Guarantees the caller won't have to wait beyond the timeout.
         /// </summary>
-        public static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy(Action<Guid> action = null, int timeoutInSeconds = 300)
+        public static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy(Action<Guid>? action = null, int timeoutInSeconds = 300)
         {
             return Policy
                 .TimeoutAsync<HttpResponseMessage>(

@@ -52,14 +52,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         private readonly MongoDbResiliencyOptions _options;
         private readonly MongoDbCircuitBreaker _circuitBreaker;
         private readonly MongoDbRetryPolicy _retryPolicy;
-        private readonly ILogger<MongoDbResiliencyPolicy> _logger;
+        private readonly ILogger<MongoDbResiliencyPolicy>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbResiliencyPolicy"/> class.
         /// </summary>
         /// <param name="options">The resiliency options.</param>
         /// <param name="logger">The logger instance.</param>
-        public MongoDbResiliencyPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbResiliencyPolicy> logger = null)
+        public MongoDbResiliencyPolicy(MongoDbResiliencyOptions options, ILogger<MongoDbResiliencyPolicy>? logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;

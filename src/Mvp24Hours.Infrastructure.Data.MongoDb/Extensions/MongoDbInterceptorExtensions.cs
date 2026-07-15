@@ -173,7 +173,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Extensions
         /// </example>
         public static IServiceCollection AddAllMongoDbInterceptors(
             this IServiceCollection services,
-            Action<MongoDbInterceptorOptions> options = null)
+            Action<MongoDbInterceptorOptions>? options = null)
         {
             var config = new MongoDbInterceptorOptions();
             options?.Invoke(config);

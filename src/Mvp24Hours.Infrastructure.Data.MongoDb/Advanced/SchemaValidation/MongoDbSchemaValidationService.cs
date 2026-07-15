@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
     public class MongoDbSchemaValidationService : IMongoDbSchemaValidationService
     {
         private readonly IMongoDatabase _database;
-        private readonly ILogger<MongoDbSchemaValidationService> _logger;
+        private readonly ILogger<MongoDbSchemaValidationService>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbSchemaValidationService"/> class.
@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// <param name="logger">Optional logger.</param>
         public MongoDbSchemaValidationService(
             IMongoDatabase database,
-            ILogger<MongoDbSchemaValidationService> logger = null)
+            ILogger<MongoDbSchemaValidationService>? logger = null)
         {
             _database = database ?? throw new ArgumentNullException(nameof(database));
             _logger = logger;
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         public async Task CreateCollectionWithValidationAsync(
             string collectionName,
             BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions options = null,
+            MongoDbSchemaValidationOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(collectionName))
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         public async Task SetValidationAsync(
             string collectionName,
             BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions options = null,
+            MongoDbSchemaValidationOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(collectionName))
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         }
 
         /// <inheritdoc/>
-        public async Task<BsonDocument> GetValidationAsync(
+        public async Task<BsonDocument?> GetValidationAsync(
             string collectionName,
             CancellationToken cancellationToken = default)
         {

@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                         data: data);
                 }
 
-                data["uploadedFilePath"] = uploadResult.FilePath;
+                data["uploadedFilePath"] = uploadResult.FilePath ?? string.Empty;
 
                 // Step 2: Verify file exists
                 var existsStopwatch = Stopwatch.StartNew();

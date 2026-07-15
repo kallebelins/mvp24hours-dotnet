@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
     {
         #region [ Ctor ]
 
-        public Pipeline(IServiceProvider _provider = null)
+        public Pipeline(IServiceProvider? _provider = null)
         {
             this.provider = _provider;
             this._logger = _provider?.GetService<ILogger<Pipeline>>();
@@ -56,8 +56,8 @@ namespace Mvp24Hours.Infrastructure.Pipe
         #endregion
 
         #region [ Fields / Properties ]
-        private readonly IServiceProvider provider;
-        private readonly ILogger<Pipeline> _logger;
+        private readonly IServiceProvider? provider;
+        private readonly ILogger<Pipeline>? _logger;
         private readonly List<IOperation> operations;
         private readonly List<IOperation> executedOperations;
 
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipeline Add<T>() where T : class, IOperation
         {
-            IOperation instance = provider?.GetService<T>();
+            IOperation? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipeline AddBuilder<T>() where T : class, IPipelineBuilder
         {
-            IPipelineBuilder pipelineBuilder = provider?.GetService<T>();
+            IPipelineBuilder? pipelineBuilder = provider?.GetService<T>();
             if (pipelineBuilder == null)
             {
                 Type type = typeof(T);
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public IPipeline AddInterceptors<T>(PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation) where T : class, IOperation
         {
-            IOperation instance = provider?.GetService<T>();
+            IOperation? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 throw new ArgumentNullException(nameof(operation), "Operation has not been defined or is null.");
             }
-            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperation> value))
+            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperation>? value))
             {
                 value = [];
                 this.dictionaryInterceptors.Add(pipelineInterceptor, value);
@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 throw new ArgumentNullException(nameof(action), "Action is mandatory.");
             }
-            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperation> value))
+            if (!dictionaryInterceptors.TryGetValue(pipelineInterceptor, out List<IOperation>? value))
             {
                 value = [];
                 this.dictionaryInterceptors.Add(pipelineInterceptor, value);
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         public IPipeline AddInterceptors<T>(Func<IPipelineMessage, bool> condition, bool postOperation = true) where T : class, IOperation
         {
-            IOperation instance = provider?.GetService<T>();
+            IOperation? instance = provider?.GetService<T>();
             if (instance == null)
             {
                 Type type = typeof(T);
@@ -253,7 +253,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                 throw new ArgumentNullException(nameof(handler), "Handler has not been defined or is null.");
             }
 
-            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<MvpEventHandler<IPipelineMessage, EventArgs>> value))
+            if (!dictionaryEventInterceptors.TryGetValue(pipelineInterceptor, out List<MvpEventHandler<IPipelineMessage, EventArgs>>? value))
             {
                 value = [];
                 this.dictionaryEventInterceptors.Add(pipelineInterceptor, value);
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             return this;
         }
 
-        public void Execute(IPipelineMessage input = null)
+        public void Execute(IPipelineMessage? input = null)
         {
             executedOperations.Clear();
             _logger?.LogDebug("Pipeline: Execute started");
@@ -408,7 +408,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         protected virtual void RunOperationInterceptors(IPipelineMessage input, PipelineInterceptorType interceptorType, bool canClearList = false)
         {
-            if (dictionaryInterceptors.TryGetValue(interceptorType, out List<IOperation> value))
+            if (dictionaryInterceptors.TryGetValue(interceptorType, out List<IOperation>? value))
             {
                 RunOperations(value, input, true);
                 if (canClearList)
@@ -442,7 +442,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         protected virtual void RunEventInterceptors(IPipelineMessage input, PipelineInterceptorType interceptorType, bool canClearList = false)
         {
-            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<MvpEventHandler<IPipelineMessage, EventArgs>> value))
+            if (dictionaryEventInterceptors.TryGetValue(interceptorType, out List<MvpEventHandler<IPipelineMessage, EventArgs>>? value))
             {
                 RunEvents(value, input);
                 if (canClearList)

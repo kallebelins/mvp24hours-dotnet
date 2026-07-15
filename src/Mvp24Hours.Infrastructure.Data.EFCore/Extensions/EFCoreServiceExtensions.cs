@@ -21,7 +21,7 @@ namespace Mvp24Hours.Extensions
         /// Add database context
         /// </summary>
         public static IServiceCollection AddMvp24HoursDbContext<TDbContext>(this IServiceCollection services,
-            Func<IServiceProvider, TDbContext> dbFactory = null,
+            Func<IServiceProvider, TDbContext>? dbFactory = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped) where TDbContext : DbContext
         {
             if (dbFactory != null)
@@ -40,9 +40,9 @@ namespace Mvp24Hours.Extensions
         /// Add repository
         /// </summary>
         public static IServiceCollection AddMvp24HoursRepository(this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type repository = null,
-            Type unitOfWork = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? repository = null,
+            Type? unitOfWork = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -79,9 +79,9 @@ namespace Mvp24Hours.Extensions
         /// Add repository
         /// </summary>
         public static IServiceCollection AddMvp24HoursRepositoryAsync(this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type repositoryAsync = null,
-            Type unitOfWorkAsync = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? repositoryAsync = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Extensions
         /// </remarks>
         public static IServiceCollection AddMvp24HoursTenantInterceptor(
             this IServiceCollection services,
-            Action<TenantInterceptorOptions> configureOptions = null)
+            Action<TenantInterceptorOptions>? configureOptions = null)
         {
             var options = new TenantInterceptorOptions();
             configureOptions?.Invoke(options);
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursMultiTenancy<TTenantProvider>(
             this IServiceCollection services,
-            Action<TenantInterceptorOptions> configureInterceptor = null)
+            Action<TenantInterceptorOptions>? configureInterceptor = null)
             where TTenantProvider : class, ITenantProvider
         {
             services.AddMvp24HoursTenantProvider<TTenantProvider>();
@@ -336,9 +336,9 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursStreamingRepositoryAsync(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type streamingRepositoryAsync = null,
-            Type unitOfWorkAsync = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? streamingRepositoryAsync = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -444,9 +444,9 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursBulkOperationsRepositoryAsync(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type bulkOperationsRepositoryAsync = null,
-            Type unitOfWorkAsync = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? bulkOperationsRepositoryAsync = null,
+            Type? unitOfWorkAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -545,8 +545,8 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOnlyRepository(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type readOnlyRepository = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? readOnlyRepository = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -614,8 +614,8 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOnlyRepositoryAsync(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
-            Type readOnlyRepositoryAsync = null,
+            Action<EFCoreRepositoryOptions>? options = null,
+            Type? readOnlyRepositoryAsync = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             if (options != null)
@@ -681,7 +681,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursCqrsRepositories(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> options = null,
+            Action<EFCoreRepositoryOptions>? options = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             // Register read-only repository for queries
@@ -724,7 +724,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursReadOptimizedRepository(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> additionalOptions = null,
+            Action<EFCoreRepositoryOptions>? additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             return services.AddMvp24HoursRepositoryAsync(options =>
@@ -767,7 +767,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursWriteOptimizedRepository(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> additionalOptions = null,
+            Action<EFCoreRepositoryOptions>? additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             return services.AddMvp24HoursRepositoryAsync(options =>
@@ -817,7 +817,7 @@ namespace Mvp24Hours.Extensions
         /// </example>
         public static IServiceCollection AddMvp24HoursDevRepository(
             this IServiceCollection services,
-            Action<EFCoreRepositoryOptions> additionalOptions = null,
+            Action<EFCoreRepositoryOptions>? additionalOptions = null,
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
         {
             return services.AddMvp24HoursRepositoryAsync(options =>

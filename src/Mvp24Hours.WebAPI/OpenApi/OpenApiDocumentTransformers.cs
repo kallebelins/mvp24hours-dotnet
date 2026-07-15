@@ -263,7 +263,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
                 foreach (var (operationType, operation) in path.Operations)
                 {
-                    var operationTags = operation.Tags?.Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
+                    var operationTags = operation.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
 
                     // Check if should exclude
                     if (_excludeTags.Any() && operationTags.Overlaps(_excludeTags))
@@ -364,7 +364,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
             {
                 foreach (var operation in path.Operations.Values)
                 {
-                    foreach (var (statusCode, response) in operation.Responses)
+                    foreach (var (statusCode, response) in operation.Responses ?? new OpenApiResponses())
                     {
                         if (int.TryParse(statusCode, out var code) && code >= 400)
                         {
@@ -408,7 +408,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
             {
                 foreach (var operation in path.Operations.Values)
                 {
-                    foreach (var response in operation.Responses.Values)
+                    foreach (var response in operation.Responses?.Values ?? Enumerable.Empty<IOpenApiResponse>())
                     {
                         if (response is not OpenApiResponse openApiResponse)
                         {

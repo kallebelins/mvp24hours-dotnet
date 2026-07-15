@@ -30,7 +30,7 @@ namespace Mvp24Hours.Core.Serialization.Json
         {
             var x = base.CreateProperty(member, memberSerialization);
             var t = member.DeclaringType;
-            if (Attribute.IsDefined(t, typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)) && t.Name.Contains("AnonymousType"))
+            if (t != null && Attribute.IsDefined(t, typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)) && t.Name.Contains("AnonymousType"))
             {
                 try
                 {
@@ -48,8 +48,8 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         class AnonymousTypeValueProvider : IValueProvider
         {
-            private Func<object, object> _getter;
-            private Action<object, object> _setter;
+            private Func<object, object>? _getter;
+            private Action<object, object>? _setter;
             private readonly FieldInfo _fieldInfo;
             private readonly MemberInfo _memberInfo;
 
@@ -58,7 +58,7 @@ namespace Mvp24Hours.Core.Serialization.Json
                 _memberInfo = memberInfo;
                 var fieldName = string.Format("<{0}>i__Field", memberInfo.Name);
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-                _fieldInfo = memberInfo.DeclaringType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                _fieldInfo = memberInfo.DeclaringType!.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                         .First(fi => fi.Name.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             }
@@ -76,11 +76,11 @@ namespace Mvp24Hours.Core.Serialization.Json
                 }
             }
 
-            public object GetValue(object target)
+            public object? GetValue(object target)
             {
                 try
                 {
-                    _getter ??= t => { return _fieldInfo.GetValue(t); };
+                    _getter ??= t => _fieldInfo.GetValue(t)!;
                     return _getter(target);
                 }
                 catch (Exception ex)

@@ -21,7 +21,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     {
         #region [ Ctor ]
 
-        public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork> logger = null)
+        public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork>? logger = null)
         {
             this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             this.repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
@@ -31,7 +31,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         [ActivatorUtilitiesConstructor]
-        public UnitOfWork(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork> logger = null)
+        public UnitOfWork(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork>? logger = null)
         {
             this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
@@ -47,9 +47,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         private readonly Dictionary<Type, object> repositories;
 
-        protected Mvp24HoursContext DbContext { get; private set; }
+        protected Mvp24HoursContext? DbContext { get; private set; }
         private readonly IServiceProvider serviceProvider;
-        private readonly ILogger<UnitOfWork> _logger;
+        private readonly ILogger<UnitOfWork>? _logger;
 
         /// <summary>
         ///  <see cref="Mvp24Hours.Core.Contract.Data.IUnitOfWork"/>
@@ -59,9 +59,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
-                this.repositories.Add(typeof(T), serviceProvider.GetService<IRepository<T>>());
+                var repository = serviceProvider.GetService<IRepository<T>>()
+                    ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
+                this.repositories.Add(typeof(T), repository);
             }
-            return repositories[typeof(T)] as IRepository<T>;
+            return (IRepository<T>)repositories[typeof(T)];
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Info Code Smell", "S1133:Deprecated code should be removed", Justification = "Maintain implementation reference standards.")]
@@ -102,6 +104,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB UnitOfWork SaveChanges started");
             try
             {
+                ArgumentNullException.ThrowIfNull(DbContext);
                 DbContext.SaveChanges(cancellationToken);
                 return 1;
             }
@@ -124,6 +127,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB UnitOfWork Rollback started");
             try
             {
+                ArgumentNullException.ThrowIfNull(DbContext);
                 DbContext.Rollback();
             }
             finally { _logger?.LogDebug("MongoDB UnitOfWork Rollback completed"); }

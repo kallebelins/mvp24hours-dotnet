@@ -67,7 +67,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     private readonly List<TEntity> _pendingAdds = [];
     private readonly List<TEntity> _pendingModifies = [];
     private readonly List<TEntity> _pendingRemoves = [];
-    private readonly Func<TEntity, object> _keySelector;
+    private readonly Func<TEntity, object?> _keySelector;
     private bool _disposed;
 
     /// <summary>
@@ -90,7 +90,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// var repository = new RepositoryFake&lt;Customer&gt;(c => c.Id);
     /// </code>
     /// </example>
-    public RepositoryFake(Func<TEntity, object> keySelector)
+    public RepositoryFake(Func<TEntity, object?> keySelector)
     {
         _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     }
@@ -122,7 +122,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// </summary>
     /// <param name="initialData">Initial entities to populate the repository.</param>
     /// <param name="keySelector">Function to extract the entity key.</param>
-    public RepositoryFake(IEnumerable<TEntity> initialData, Func<TEntity, object> keySelector)
+    public RepositoryFake(IEnumerable<TEntity> initialData, Func<TEntity, object?> keySelector)
         : this(keySelector)
     {
         if (initialData != null)

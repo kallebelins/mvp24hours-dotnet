@@ -69,7 +69,7 @@ public class MongoRepositoryFake<TEntity> : IRepository<TEntity>, IDisposable
     private readonly List<TEntity> _pendingAdds = [];
     private readonly List<TEntity> _pendingModifies = [];
     private readonly List<TEntity> _pendingRemoves = [];
-    private readonly Func<TEntity, object> _keySelector;
+    private readonly Func<TEntity, object?> _keySelector;
     private bool _disposed;
 
     /// <summary>
@@ -92,7 +92,7 @@ public class MongoRepositoryFake<TEntity> : IRepository<TEntity>, IDisposable
     /// var repository = new MongoRepositoryFake&lt;Customer&gt;(c => c.Id);
     /// </code>
     /// </example>
-    public MongoRepositoryFake(Func<TEntity, object> keySelector)
+    public MongoRepositoryFake(Func<TEntity, object?> keySelector)
     {
         _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     }
@@ -124,7 +124,7 @@ public class MongoRepositoryFake<TEntity> : IRepository<TEntity>, IDisposable
     /// </summary>
     /// <param name="initialData">Initial entities to populate the repository.</param>
     /// <param name="keySelector">Function to extract the entity key.</param>
-    public MongoRepositoryFake(IEnumerable<TEntity> initialData, Func<TEntity, object> keySelector)
+    public MongoRepositoryFake(IEnumerable<TEntity> initialData, Func<TEntity, object?> keySelector)
         : this(keySelector)
     {
         if (initialData != null)
@@ -600,7 +600,7 @@ public class MongoRepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, IDis
     /// Initializes a new instance with a custom key selector.
     /// </summary>
     /// <param name="keySelector">Function to extract the entity key.</param>
-    public MongoRepositoryFakeAsync(Func<TEntity, object> keySelector)
+    public MongoRepositoryFakeAsync(Func<TEntity, object?> keySelector)
     {
         _syncRepository = new MongoRepositoryFake<TEntity>(keySelector);
     }
@@ -655,7 +655,7 @@ public class MongoRepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, IDis
     }
 
     /// <inheritdoc />
-    public Task<IList<TEntity>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
+    public Task<IList<TEntity>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_syncRepository.List(criteria));
     }
@@ -679,7 +679,7 @@ public class MongoRepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, IDis
     }
 
     /// <inheritdoc />
-    public Task<IList<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+    public Task<IList<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_syncRepository.GetBy(clause, criteria));
     }
@@ -691,7 +691,7 @@ public class MongoRepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, IDis
     }
 
     /// <inheritdoc />
-    public Task<TEntity?> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+    public Task<TEntity?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_syncRepository.GetById(id, criteria));
     }

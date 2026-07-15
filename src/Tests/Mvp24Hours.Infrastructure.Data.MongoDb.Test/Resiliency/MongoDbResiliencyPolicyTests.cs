@@ -241,7 +241,7 @@ public class MongoDbResiliencyPolicyTests
         catch { }
 
         // Assert
-        policy.Metrics.TotalFailureCount.Should().BeGreaterOrEqualTo(1);
+        policy.Metrics.TotalFailureCount.Should().BeGreaterThanOrEqualTo(1);
     }
 
     [Fact]

@@ -46,8 +46,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
     /// </example>
     public class SoftDeleteInterceptor : SaveChangesInterceptor
     {
-        private readonly ICurrentUserProvider _currentUserProvider;
-        private readonly IClock _clock;
+        private readonly ICurrentUserProvider? _currentUserProvider;
+        private readonly IClock? _clock;
         private readonly string _defaultUser;
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// <param name="clock">Optional clock for getting current time. If null, UTC now is used.</param>
         /// <param name="defaultUser">Default user identifier when no user is available. Defaults to "System".</param>
         public SoftDeleteInterceptor(
-            ICurrentUserProvider currentUserProvider = null,
-            IClock clock = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            IClock? clock = null,
             string defaultUser = "System")
         {
             _currentUserProvider = currentUserProvider;
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void ConvertDeleteToSoftDelete(DbContext context)
+        private void ConvertDeleteToSoftDelete(DbContext? context)
         {
             if (context == null) return;
 

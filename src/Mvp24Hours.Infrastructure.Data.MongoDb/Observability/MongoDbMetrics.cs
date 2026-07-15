@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private readonly ConcurrentDictionary<string, long> _commandCounts = new();
 
         // Connection pool stats (latest)
-        private ConnectionPoolStats _latestPoolStats;
+        private ConnectionPoolStats? _latestPoolStats;
 
         // Checkout durations
         private readonly DurationTracker _checkoutDurations = new(1000);
@@ -70,13 +70,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// Initializes a new instance of the <see cref="MongoDbMetrics"/> class.
         /// </summary>
         /// <param name="options">The observability options.</param>
-        public MongoDbMetrics(IOptions<MongoDbObservabilityOptions> options = null)
+        public MongoDbMetrics(IOptions<MongoDbObservabilityOptions>? options = null)
         {
             _options = options?.Value ?? new MongoDbObservabilityOptions();
         }
 
         /// <inheritdoc />
-        public void RecordCommandDuration(string commandName, string collectionName, TimeSpan duration, bool success)
+        public void RecordCommandDuration(string commandName, string? collectionName, TimeSpan duration, bool success)
         {
             Interlocked.Increment(ref _totalCommands);
 
@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         }
 
         /// <inheritdoc />
-        public void RecordSlowQuery(string commandName, string collectionName, TimeSpan duration, long documentsExamined, long documentsReturned)
+        public void RecordSlowQuery(string commandName, string? collectionName, TimeSpan duration, long documentsExamined, long documentsReturned)
         {
             Interlocked.Increment(ref _slowQueries);
         }
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         }
 
         /// <inheritdoc />
-        public void RecordError(string commandName, string collectionName, string errorType)
+        public void RecordError(string commandName, string? collectionName, string errorType)
         {
             var key = $"{commandName}:{errorType}";
             _errorCounts.AddOrUpdate(key, 1, (_, count) => count + 1);

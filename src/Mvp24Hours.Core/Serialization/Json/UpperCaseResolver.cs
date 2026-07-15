@@ -36,7 +36,7 @@ namespace Mvp24Hours.Core.Serialization.Json
             JsonProperty property = base.CreateProperty(member, memberSerialization);
             if (property.DeclaringType == typeof(T))
             {
-                property.PropertyName = property.PropertyName.ToUpper();
+                property.PropertyName = property.PropertyName!.ToUpper();
             }
             return property;
         }

@@ -71,13 +71,13 @@ namespace Mvp24Hours.Core.Domain.Entities
         #region Equality
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return Equals(obj as EntityBase<TId>);
+            return obj is EntityBase<TId> other && Equals(other);
         }
 
         /// <inheritdoc />
-        public bool Equals(EntityBase<TId> other)
+        public bool Equals(EntityBase<TId>? other)
         {
             if (other is null)
             {

@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool IsList(this object Value)
+        public static bool IsList(this object? Value)
         {
             if (Value == null) return false;
             if (Value is string) return false; // Strings implement IEnumerable<char> but should not be considered lists
@@ -85,7 +86,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool AnySafe<T>(this IEnumerable<T> source)
+        public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source)
         {
             if (source != null && source.Any())
             {
@@ -100,7 +101,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool AnySafe<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source, Func<T, bool> predicate)
         {
             if (source != null && source.Any(predicate))
             {
@@ -127,21 +128,21 @@ namespace Mvp24Hours.Extensions
             }
         }
 
-        public static async Task<TSource> FirstOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool> predicate = null)
+        public static async Task<TSource?> FirstOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
         {
-            var list = await task;
+            var list = await task ?? [];
             return predicate == null ? list.FirstOrDefault() : list.FirstOrDefault(predicate);
         }
 
-        public static async Task<TSource> LastOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool> predicate = null)
+        public static async Task<TSource?> LastOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
         {
-            var list = await task;
+            var list = await task ?? [];
             return predicate == null ? list.LastOrDefault() : list.LastOrDefault(predicate);
         }
 
-        public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, int index)
+        public static async Task<TSource?> ElementAtOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, int index)
         {
-            var list = await task;
+            var list = await task ?? [];
             return list.ElementAtOrDefault(index);
         }
     }

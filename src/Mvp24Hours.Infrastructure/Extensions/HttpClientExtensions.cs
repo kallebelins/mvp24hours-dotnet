@@ -46,7 +46,7 @@ namespace Mvp24Hours.Extensions
     [Obsolete("Deprecated: Use ITypedHttpClient<TApi> from Mvp24Hours.Infrastructure.Http with AddStandardResilienceHandler() from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
     public static class HttpClientExtensions
     {
-        private static ILogger _logger;
+        private static ILogger? _logger;
 
         /// <summary>
         /// Sets the logger instance for logging HTTP client operations.
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> HttpPostAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null)
+        public static async Task<string?> HttpPostAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null)
         {
             return await HttpSendAsync(client, url, headers, METHOD_POST, data);
         }
@@ -78,20 +78,20 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> HttpPostAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> HttpPostAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await HttpSendAsync(client, url, headers, METHOD_POST, data);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> HttpGetAsync(this HttpClient client, string url = "", Dictionary<string, string> headers = null)
+        public static async Task<string?> HttpGetAsync(this HttpClient client, string url = "", Dictionary<string, string>? headers = null)
         {
             return await HttpSendAsync(client, url, headers, METHOD_GET, null);
         }
@@ -99,20 +99,20 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> HttpGetAsync<T>(this HttpClient client, string url = "", Dictionary<string, string> headers = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> HttpGetAsync<T>(this HttpClient client, string url = "", Dictionary<string, string>? headers = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await HttpSendAsync(client, url, headers, METHOD_GET, null);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> HttpPutAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null)
+        public static async Task<string?> HttpPutAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null)
         {
             return await HttpSendAsync(client, url, headers, METHOD_PUT, data);
         }
@@ -120,20 +120,20 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> HttpPutAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> HttpPutAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await HttpSendAsync(client, url, headers, METHOD_PUT, data);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> HttpPatchAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null)
+        public static async Task<string?> HttpPatchAsync(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null)
         {
             return await HttpSendAsync(client, url, headers, METHOD_PATCH, data);
         }
@@ -141,20 +141,20 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> HttpPatchAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string> headers = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> HttpPatchAsync<T>(this HttpClient client, string url = "", string data = "", Dictionary<string, string>? headers = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await HttpSendAsync(client, url, headers, METHOD_PATCH, data);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<string> HttpDeleteAsync(this HttpClient client, string url = "", Dictionary<string, string> headers = null)
+        public static async Task<string?> HttpDeleteAsync(this HttpClient client, string url = "", Dictionary<string, string>? headers = null)
         {
             return await HttpSendAsync(client, url, headers, METHOD_DELETE, null);
         }
@@ -162,17 +162,17 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static async Task<T> HttpDeleteAsync<T>(this HttpClient client, string url = "", Dictionary<string, string> headers = null, JsonSerializerSettings jsonSerializerSettings = null)
+        public static async Task<T?> HttpDeleteAsync<T>(this HttpClient client, string url = "", Dictionary<string, string>? headers = null, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             var result = await HttpSendAsync(client, url, headers, METHOD_DELETE, null);
             if (!result.HasValue())
             {
                 return default;
             }
-            return result.ToDeserialize<T>(jsonSerializerSettings);
+            return result!.ToDeserialize<T>(jsonSerializerSettings);
         }
 
-        public static async Task<string> HttpSendAsync(this HttpClient client, string url, Dictionary<string, string> headers, string method, string data)
+        public static async Task<string?> HttpSendAsync(this HttpClient client, string url, Dictionary<string, string>? headers, string method, string? data)
         {
             _logger?.LogDebug("Sending {Method} request to {Url}", method, url);
             try
@@ -221,11 +221,11 @@ namespace Mvp24Hours.Extensions
             }
         }
 
-        private static void MediaTypeBuilder(Dictionary<string, string> headers, string method, string data, HttpRequestMessage request)
+        private static void MediaTypeBuilder(Dictionary<string, string>? headers, string method, string? data, HttpRequestMessage request)
         {
-            string mediaType = string.Empty;
+            string? mediaType = string.Empty;
 
-            if (headers.AnyOrNotNull())
+            if (headers != null && headers.AnyOrNotNull())
             {
                 foreach (var keyValue in headers)
                 {
@@ -244,17 +244,17 @@ namespace Mvp24Hours.Extensions
                 mediaType = "application/json";
             }
 
-            if (!headers.ContainsKeySafe("Content-Type"))
+            if (!(headers?.ContainsKeySafe("Content-Type") ?? false))
             {
-                request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue(mediaType));
+                request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue(mediaType!));
                 request.Headers.TryAddWithoutValidation("Content-Type", $"{mediaType}; charset={EncodingRequest.BodyName.ToLower()}");
             }
 
             if (method == "POST" || method == "PUT" || method == "PATCH")
             {
                 request.Headers.TryAddWithoutValidation("Content-Length", EncodingRequest.GetBytes(data ?? string.Empty).Length.ToString());
-                request.Content = new StringContent(data, EncodingRequest);
-                request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType);
+                request.Content = new StringContent(data ?? string.Empty, EncodingRequest);
+                request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType!);
             }
         }
 
@@ -272,11 +272,11 @@ namespace Mvp24Hours.Extensions
             return c;
         }
 
-        public static HttpClient PropagateHeaderKey(this HttpClient c, IHttpContextAccessor httpAccessor, params string[] keys)
+        public static HttpClient PropagateHeaderKey(this HttpClient c, IHttpContextAccessor? httpAccessor, params string[] keys)
         {
             foreach (var key in keys)
             {
-                string headerValue = httpAccessor.GetHeaderValue(key);
+                string? headerValue = httpAccessor?.GetHeaderValue(key);
                 if (headerValue != null)
                     c.DefaultRequestHeaders.TryAddWithoutValidation(key, headerValue);
             }
@@ -297,7 +297,7 @@ namespace Mvp24Hours.Extensions
             return request;
         }
 
-        public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IHttpContextAccessor httpAccessor, params string[] keys)
+        public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IHttpContextAccessor? httpAccessor, params string[] keys)
         {
             if (httpAccessor?.HttpContext != null)
             {
@@ -312,7 +312,7 @@ namespace Mvp24Hours.Extensions
             return request;
         }
 
-        public static string GetHeaderValue(this IHttpContextAccessor httpAccessor, string key)
+        public static string? GetHeaderValue(this IHttpContextAccessor httpAccessor, string key)
         {
             if (httpAccessor?.HttpContext != null)
             {
@@ -321,7 +321,7 @@ namespace Mvp24Hours.Extensions
             return null;
         }
 
-        public static string GetHeaderValue(this IHeaderDictionary headers, string key)
+        public static string? GetHeaderValue(this IHeaderDictionary headers, string key)
         {
             if (headers.AnyOrNotNull() && headers.TryGetValue(key, out Microsoft.Extensions.Primitives.StringValues value) && !string.IsNullOrEmpty(value))
             {
@@ -330,20 +330,20 @@ namespace Mvp24Hours.Extensions
             return null;
         }
 
-        public static string GetQueryStringFrom<T>(this T model)
+        public static string? GetQueryStringFrom<T>(this T model)
         {
             if (model == null) return null;
             return WebRequestHelper.ToQueryString(model);
         }
 
-        public static T GetFromQueryString<T>(this HttpRequest request)
+        public static T? GetFromQueryString<T>(this HttpRequest request)
            where T : class
         {
             if (request == null) return null;
-            return GetFromQueryString<T>(request.QueryString.Value);
+            return GetFromQueryString<T>(request.QueryString.Value!);
         }
 
-        public static T GetFromQueryString<T>(this string queryString)
+        public static T? GetFromQueryString<T>(this string queryString)
             where T : class
         {
             if (!queryString.HasValue()) return null;

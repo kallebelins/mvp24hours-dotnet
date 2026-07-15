@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
     {
         private readonly IMongoCollection<T> _collection;
         private FilterDefinition<T> _filter = Builders<T>.Filter.Empty;
-        private SortDefinition<T> _sort;
+        private SortDefinition<T>? _sort;
         private readonly List<(string FieldName, bool Descending)> _sortFields = new();
         private ProjectionDefinition<T> _projection;
 
@@ -231,7 +231,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             }
 
             var sortBuilder = Builders<T>.Sort;
-            SortDefinition<T> sort = null;
+            SortDefinition<T>? sort = null;
 
             foreach (var (fieldName, descending) in _sortFields)
             {
@@ -245,10 +245,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             _sort = sort;
         }
 
-        private SortDefinition<T> BuildReversedSort()
+        private SortDefinition<T>? BuildReversedSort()
         {
             var sortBuilder = Builders<T>.Sort;
-            SortDefinition<T> sort = null;
+            SortDefinition<T>? sort = null;
 
             foreach (var (fieldName, descending) in _sortFields)
             {
@@ -369,8 +369,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
                 }
             }
 
-            Dictionary<string, BsonValue> firstCursor = null;
-            Dictionary<string, BsonValue> lastCursor = null;
+            Dictionary<string, BsonValue>? firstCursor = null;
+            Dictionary<string, BsonValue>? lastCursor = null;
 
             if (items.Count > 0)
             {
@@ -443,12 +443,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         /// <summary>
         /// Gets or sets the cursor for the first item (for backward pagination).
         /// </summary>
-        public Dictionary<string, BsonValue> FirstCursor { get; set; }
+        public Dictionary<string, BsonValue>? FirstCursor { get; set; }
 
         /// <summary>
         /// Gets or sets the cursor for the last item (for forward pagination).
         /// </summary>
-        public Dictionary<string, BsonValue> LastCursor { get; set; }
+        public Dictionary<string, BsonValue>? LastCursor { get; set; }
 
         /// <summary>
         /// Gets or sets the page size.

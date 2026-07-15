@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         #region [ Properties ]
 
-        protected DbContext DbContext { get; private set; }
+        protected DbContext? DbContext { get; private set; }
         private readonly Dictionary<Type, object> repositories;
         private readonly IServiceProvider serviceProvider;
 
@@ -49,14 +49,17 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
-                this.repositories.Add(typeof(T), serviceProvider.GetService<IRepositoryAsync<T>>());
+                var repo = serviceProvider.GetService<IRepositoryAsync<T>>()
+                    ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
+                this.repositories.Add(typeof(T), repo);
             }
-            return repositories[typeof(T)] as IRepositoryAsync<T>;
+            return (IRepositoryAsync<T>)repositories[typeof(T)];
         }
 
         public IDbConnection GetConnection()
         {
-            return DbContext?.Database?.GetDbConnection();
+            return DbContext?.Database?.GetDbConnection()
+                ?? throw new InvalidOperationException("DbContext is not available.");
         }
 
         #endregion
@@ -86,6 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                ArgumentNullException.ThrowIfNull(DbContext);
                 return await this.DbContext.SaveChangesAsync(cancellationToken);
             }
             await RollbackAsync();
@@ -93,6 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         }
         public async Task RollbackAsync()
         {
+            ArgumentNullException.ThrowIfNull(DbContext);
             var changedEntries = this.DbContext.ChangeTracker.Entries()
             .Where(x => x.State != EntityState.Unchanged).ToList();
 

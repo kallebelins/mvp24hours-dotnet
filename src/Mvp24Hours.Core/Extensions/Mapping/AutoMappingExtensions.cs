@@ -45,11 +45,11 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Convert instance to mapped object
         /// </summary>
-        public static IPagingResult<TDestination> MapPagingTo<TSource, TDestination>(this IMapper mapper, IPagingResult<TSource> source)
+        public static IPagingResult<TDestination>? MapPagingTo<TSource, TDestination>(this IMapper mapper, IPagingResult<TSource>? source)
         {
             if (source == null)
             {
-                return default;
+                return null;
             }
 
             if (mapper == null)
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Extensions
                     .ToBusinessPaging(
                         source.Paging,
                         source.Summary,
-                        source.Messages.ToList()
+                        (source.Messages ?? []).ToList()
                     );
             }
             else
@@ -79,11 +79,11 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Convert instance to mapped object
         /// </summary>
-        public static IBusinessResult<TDestination> MapBusinessTo<TSource, TDestination>(this IMapper mapper, IBusinessResult<TSource> source)
+        public static IBusinessResult<TDestination>? MapBusinessTo<TSource, TDestination>(this IMapper mapper, IBusinessResult<TSource>? source)
         {
             if (source == null)
             {
-                return default;
+                return null;
             }
 
             if (mapper == null)
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Extensions
             {
                 return mapper
                     .Map<TDestination>(source.Data)
-                    .ToBusiness(source.Messages.ToList());
+                    .ToBusiness((source.Messages ?? []).ToList());
             }
             else
             {
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Extensions
         /// 
         /// var personViewModel = EntityMapper.Map<PersonViewModel>(person, address, comment);
         /// </example>
-        public static T MapMerge<T>(this IMapper mapper, IList<object> sources) where T : class
+        public static T? MapMerge<T>(this IMapper mapper, IList<object>? sources) where T : class
         {
             return MapMerge<T>(mapper, sources?.ToArray());
         }
@@ -142,20 +142,20 @@ namespace Mvp24Hours.Extensions
         /// 
         /// var personViewModel = EntityMapper.Map<PersonViewModel>(person, address, comment);
         /// </example>
-        public static T MapMerge<T>(this IMapper mapper, params object[] sources) where T : class
+        public static T? MapMerge<T>(this IMapper mapper, params object?[]? sources) where T : class
         {
             // If there are no sources just return the destination object
             if (mapper == null || !sources.AnySafe())
             {
-                return default;
+                return null;
             }
 
             // Get the inital source and map it
-            var initialSource = sources[0];
+            var initialSource = sources![0]!;
             var mappingResult = Map<T>(mapper, initialSource);
 
             // Now map the remaining source objects
-            if (sources.Length > 1)
+            if (sources.Length > 1 && mappingResult != null)
             {
                 Map(mapper, mappingResult, sources.Skip(1).ToArray());
             }
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Extensions
         /// <typeparam name="T">type of teh destination</typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        private static T Map<T>(IMapper mapper, object source) where T : class
+        private static T? Map<T>(IMapper mapper, object source) where T : class
         {
             // Get thr source and destination types
             var destinationType = typeof(T);

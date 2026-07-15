@@ -1,0 +1,15 @@
+<Project>
+  <!--
+    Shared build defaults for every project under src/.
+    Individual .csproj files should only keep justified overrides
+    (e.g. ImplicitUsings=disable, temporary TargetFramework).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>

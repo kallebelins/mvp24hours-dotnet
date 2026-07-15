@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
     public class MongoDbShardingService : IMongoDbShardingService
     {
         private readonly IMongoClient _client;
-        private readonly ILogger<MongoDbShardingService> _logger;
+        private readonly ILogger<MongoDbShardingService>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbShardingService"/> class.
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <param name="logger">Optional logger.</param>
         public MongoDbShardingService(
             IMongoClient client,
-            ILogger<MongoDbShardingService> logger = null)
+            ILogger<MongoDbShardingService>? logger = null)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger;
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             {
                 Id = s["_id"].AsString,
                 Host = s["host"].AsString,
-                State = s.Contains("state") ? s["state"].ToString() : "unknown",
+                State = s.Contains("state") ? (s["state"].ToString() ?? "unknown") : "unknown",
                 Tags = s.Contains("tags") ? s["tags"].AsBsonArray.Select(t => t.AsString).ToList() : new List<string>()
             }).ToList();
         }
@@ -223,7 +223,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         }
 
         /// <inheritdoc/>
-        public async Task<BsonDocument> GetShardKeyAsync(
+        public async Task<BsonDocument?> GetShardKeyAsync(
             string databaseName,
             string collectionName,
             CancellationToken cancellationToken = default)

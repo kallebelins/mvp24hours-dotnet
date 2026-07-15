@@ -20,7 +20,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     /// </summary>
     public class UnitOfWorkAsync : IUnitOfWorkAsync
     {
-        private readonly ILogger<UnitOfWorkAsync> _logger;
+        private readonly ILogger<UnitOfWorkAsync>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
@@ -28,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="dbContext">MongoDB context.</param>
         /// <param name="repositories">Dictionary of repositories.</param>
         /// <param name="logger">Optional logger instance.</param>
-        public UnitOfWorkAsync(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWorkAsync> logger = null)
+        public UnitOfWorkAsync(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWorkAsync>? logger = null)
         {
             this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             this.repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="serviceProvider">Service provider for resolving repositories.</param>
         /// <param name="logger">Optional logger instance.</param>
         [ActivatorUtilitiesConstructor]
-        public UnitOfWorkAsync(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWorkAsync> logger = null)
+        public UnitOfWorkAsync(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWorkAsync>? logger = null)
         {
             this.DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
             this.serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         /// <param name="dbContext">MongoDB context.</param>
         /// <param name="logger">Optional logger instance.</param>
-        public UnitOfWorkAsync(Mvp24HoursContext dbContext, ILogger<UnitOfWorkAsync> logger = null)
+        public UnitOfWorkAsync(Mvp24HoursContext dbContext, ILogger<UnitOfWorkAsync>? logger = null)
         {
             this.DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             repositories = [];
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         private readonly Dictionary<Type, object> repositories;
 
-        protected Mvp24HoursContext DbContext { get; private set; }
+        protected Mvp24HoursContext? DbContext { get; private set; }
         private readonly IServiceProvider serviceProvider;
 
         /// <summary>
@@ -116,9 +116,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (!repositories.ContainsKey(typeof(T)))
             {
-                repositories.Add(typeof(T), serviceProvider.GetService<IRepositoryAsync<T>>());
+                var repo = serviceProvider.GetService<IRepositoryAsync<T>>()
+                    ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
+                repositories.Add(typeof(T), repo);
             }
-            return repositories[typeof(T)] as IRepositoryAsync<T>;
+            return (IRepositoryAsync<T>)repositories[typeof(T)];
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Info Code Smell", "S1133:Deprecated code should be removed", Justification = "Maintain implementation reference standards.")]
@@ -159,6 +161,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Saving changes to MongoDB");
             try
             {
+                ArgumentNullException.ThrowIfNull(DbContext);
                 await DbContext.SaveChangesAsync(cancellationToken);
                 _logger?.LogDebug("Successfully saved changes to MongoDB");
                 return 1;
@@ -179,6 +182,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Rolling back MongoDB transaction");
             try
             {
+                ArgumentNullException.ThrowIfNull(DbContext);
                 await DbContext.RollbackAsync();
                 _logger?.LogDebug("Successfully rolled back MongoDB transaction");
             }

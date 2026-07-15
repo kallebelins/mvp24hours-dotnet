@@ -19,13 +19,13 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
     public class PagingCriteriaExpression<T>(
         int limit,
         int offset,
-        IReadOnlyCollection<string> orderBy = null,
-        IReadOnlyCollection<string> navigation = null) : PagingCriteria(limit, offset, orderBy, navigation), IPagingCriteriaExpression<T>
+        IReadOnlyCollection<string>? orderBy = null,
+        IReadOnlyCollection<string>? navigation = null) : PagingCriteria(limit, offset, orderBy, navigation), IPagingCriteriaExpression<T>
     {
         #region [ Fields ]
-        private IList<Expression<Func<T, dynamic>>> orderByAscendingExpr;
-        private IList<Expression<Func<T, dynamic>>> orderByDescendingExpr;
-        private IList<Expression<Func<T, dynamic>>> navigationExpr;
+        private IList<Expression<Func<T, dynamic>>>? orderByAscendingExpr;
+        private IList<Expression<Func<T, dynamic>>>? orderByDescendingExpr;
+        private IList<Expression<Func<T, dynamic>>>? navigationExpr;
         #endregion
 
         #region [ Properties ]

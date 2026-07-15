@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
         ///     new CacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) });
         /// </code>
         /// </example>
-        public static async Task<T> GetOrSetAsync<T>(
+        public static async Task<T?> GetOrSetAsync<T>(
             this ICacheProvider cache,
             string key,
             Func<CancellationToken, Task<T>> sourceFactory,

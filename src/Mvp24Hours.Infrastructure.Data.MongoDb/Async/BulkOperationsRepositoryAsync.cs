@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     {
         #region [ Constructor ]
 
-        private readonly ILogger<BulkOperationsRepositoryAsync<T>> _logger;
+        private readonly ILogger<BulkOperationsRepositoryAsync<T>>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BulkOperationsRepositoryAsync{T}"/> class.
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         public BulkOperationsRepositoryAsync(
             Mvp24HoursContext dbContext,
             IOptions<MongoDbRepositoryOptions> options,
-            ILogger<BulkOperationsRepositoryAsync<T>> logger = null)
+            ILogger<BulkOperationsRepositoryAsync<T>>? logger = null)
             : base(dbContext, options, logger)
         {
             _logger = logger;
@@ -573,11 +573,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                         var propertyType = GetPropertyTypeFromExpression(setter.Property);
                         var genericSetMethod = setMethod.MakeGenericMethod(propertyType);
 
-                        var updateDef = (UpdateDefinition<T>)genericSetMethod.Invoke(
+                        var updateDef = (UpdateDefinition<T>?)genericSetMethod.Invoke(
                             updateBuilder,
                             new[] { setter.Property, setter.Value });
 
-                        updates.Add(updateDef);
+                        if (updateDef != null)
+                            updates.Add(updateDef);
                     }
                 }
 
@@ -951,7 +952,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         #region [ Properties ]
 
         /// <inheritdoc />
-        protected override object EntityLogBy => null;
+        protected override object? EntityLogBy => null;
 
         #endregion
     }

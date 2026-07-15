@@ -56,9 +56,12 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             IOptions<WriteBehindOptions> options,
             ILogger<WriteBehindBackgroundService> logger)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(options);
+            ArgumentNullException.ThrowIfNull(logger);
+            _serviceProvider = serviceProvider;
+            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger;
         }
 
         /// <inheritdoc />

@@ -54,9 +54,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     /// </example>
     public class SoftDeleteInterceptor : MongoDbInterceptorBase
     {
-        private readonly ICurrentUserProvider _currentUserProvider;
-        private readonly IClock _clock;
-        private readonly ILogger<SoftDeleteInterceptor> _logger;
+        private readonly ICurrentUserProvider? _currentUserProvider;
+        private readonly IClock? _clock;
+        private readonly ILogger<SoftDeleteInterceptor>? _logger;
         private readonly string _defaultUser;
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <param name="logger">Optional logger for structured logging.</param>
         /// <param name="defaultUser">Default user identifier when no user is available. Defaults to "System".</param>
         public SoftDeleteInterceptor(
-            ICurrentUserProvider currentUserProvider = null,
-            IClock clock = null,
-            ILogger<SoftDeleteInterceptor> logger = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            IClock? clock = null,
+            ILogger<SoftDeleteInterceptor>? logger = null,
             string defaultUser = "System")
         {
             _currentUserProvider = currentUserProvider;

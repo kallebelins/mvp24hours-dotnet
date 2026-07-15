@@ -14,12 +14,12 @@ namespace Mvp24Hours.Infrastructure.Caching
     /// <summary>
     ///  <see cref="IRepositoryCache{T}"/>
     /// </summary>
-    public class RepositoryCache<T>(IDistributedCache cache, ILogger<RepositoryCache<T>> logger = null) : RepositoryCacheBase(cache), IRepositoryCache<T>
+    public class RepositoryCache<T>(IDistributedCache cache, ILogger<RepositoryCache<T>>? logger = null) : RepositoryCacheBase(cache), IRepositoryCache<T>
         where T : class
     {
-        private readonly ILogger<RepositoryCache<T>> _logger = logger;
+        private readonly ILogger<RepositoryCache<T>>? _logger = logger;
 
-        public virtual T Get(string key)
+        public virtual T? Get(string key)
         {
             _logger?.LogDebug("Getting cached object with key: {CacheKey}", key);
             try
@@ -35,7 +35,7 @@ namespace Mvp24Hours.Infrastructure.Caching
             }
         }
 
-        public virtual string GetString(string key)
+        public virtual string? GetString(string key)
         {
             _logger?.LogDebug("Getting cached string with key: {CacheKey}", key);
             try

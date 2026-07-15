@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <param name="collectionName">The collection name.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The shard key, or null if not sharded.</returns>
-        Task<BsonDocument> GetShardKeyAsync(
+        Task<BsonDocument?> GetShardKeyAsync(
             string databaseName,
             string collectionName,
             CancellationToken cancellationToken = default);

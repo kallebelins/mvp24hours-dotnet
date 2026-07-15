@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddMvpMongoDbTransactions(
             this IServiceCollection services,
-            Action<MongoDbTransactionOptions> configureOptions = null)
+            Action<MongoDbTransactionOptions>? configureOptions = null)
         {
             if (configureOptions != null)
             {
@@ -72,8 +72,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
             services.AddScoped<IMongoDbTransactionManager>(sp =>
             {
                 var client = sp.GetRequiredService<IMongoClient>();
-                var options = configureOptions != null ? new MongoDbTransactionOptions() : null;
-                configureOptions?.Invoke(options);
+                MongoDbTransactionOptions? options = null;
+                if (configureOptions != null)
+                {
+                    options = new MongoDbTransactionOptions();
+                    configureOptions(options);
+                }
                 return new MongoDbTransactionManager(client, options: options);
             });
 
@@ -105,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddMvpMongoDbChangeStream<TDocument>(
             this IServiceCollection services,
-            string collectionName = null)
+            string? collectionName = null)
         {
             services.AddScoped<IMongoDbChangeStreamService<TDocument>>(sp =>
             {
@@ -126,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddMvpMongoDbTextSearch<TDocument>(
             this IServiceCollection services,
-            string collectionName = null)
+            string? collectionName = null)
         {
             services.AddScoped<IMongoDbTextSearchService<TDocument>>(sp =>
             {
@@ -151,7 +155,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
             this IServiceCollection services,
             string collectionName,
             string timeField,
-            string metaField = null)
+            string? metaField = null)
         {
             services.AddScoped<IMongoDbTimeSeriesService<TDocument>>(sp =>
             {
@@ -191,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddMvpMongoDbGeospatial<TDocument>(
             this IServiceCollection services,
-            string collectionName = null)
+            string? collectionName = null)
         {
             services.AddScoped<IMongoDbGeospatialService<TDocument>>(sp =>
             {

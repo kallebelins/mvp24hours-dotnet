@@ -19,7 +19,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
     {
         private readonly Specification<T> _left;
         private readonly Specification<T> _right;
-        private Expression<Func<T, bool>> _combinedExpression;
+        private Expression<Func<T, bool>>? _combinedExpression;
 
         /// <summary>
         /// Creates a new AND specification combining two specifications.
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
     {
         private readonly Specification<T> _left;
         private readonly Specification<T> _right;
-        private Expression<Func<T, bool>> _combinedExpression;
+        private Expression<Func<T, bool>>? _combinedExpression;
 
         /// <summary>
         /// Creates a new OR specification combining two specifications.
@@ -88,7 +88,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
         where T : class
     {
         private readonly Specification<T> _specification;
-        private Expression<Func<T, bool>> _negatedExpression;
+        private Expression<Func<T, bool>>? _negatedExpression;
 
         /// <summary>
         /// Creates a new NOT specification negating the given specification.
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                if (_map.TryGetValue(node, out ParameterExpression replacement))
+                if (_map.TryGetValue(node, out ParameterExpression? replacement) && replacement is not null)
                 {
                     node = replacement;
                 }

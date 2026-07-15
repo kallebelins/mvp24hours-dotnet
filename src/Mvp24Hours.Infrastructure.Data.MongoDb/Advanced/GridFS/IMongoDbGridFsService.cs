@@ -47,7 +47,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task<ObjectId> UploadAsync(
             string filename,
             Stream stream,
-            GridFSUploadOptions options = null,
+            GridFSUploadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task<ObjectId> UploadAsync(
             string filename,
             byte[] bytes,
-            GridFSUploadOptions options = null,
+            GridFSUploadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task<ObjectId> UploadFromFileAsync(
             string filename,
             string filePath,
-            GridFSUploadOptions options = null,
+            GridFSUploadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task DownloadAsync(
             ObjectId id,
             Stream destination,
-            GridFSDownloadOptions options = null,
+            GridFSDownloadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task DownloadByNameAsync(
             string filename,
             Stream destination,
-            GridFSDownloadByNameOptions options = null,
+            GridFSDownloadByNameOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <returns>The file content as bytes.</returns>
         Task<byte[]> DownloadAsBytesAsync(
             ObjectId id,
-            GridFSDownloadOptions options = null,
+            GridFSDownloadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         Task DownloadToFileAsync(
             ObjectId id,
             string filePath,
-            GridFSDownloadOptions options = null,
+            GridFSDownloadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <returns>A stream for reading the file.</returns>
         Task<Stream> OpenDownloadStreamAsync(
             ObjectId id,
-            GridFSDownloadOptions options = null,
+            GridFSDownloadOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A list of file information.</returns>
         Task<IList<GridFSFileInfo>> ListFilesAsync(
-            BsonDocument filter = null,
+            BsonDocument? filter = null,
             int? skip = null,
             int? limit = null,
             CancellationToken cancellationToken = default);

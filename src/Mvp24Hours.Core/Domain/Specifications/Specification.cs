@@ -33,7 +33,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
         private readonly List<Expression<Func<T, object>>> _includes = [];
         private readonly List<string> _includeStrings = [];
         private readonly List<(Expression<Func<T, object>> KeySelector, bool Descending)> _orderBy = [];
-        private Func<T, bool> _compiledExpression;
+        private Func<T, bool>? _compiledExpression;
 
         #endregion
 

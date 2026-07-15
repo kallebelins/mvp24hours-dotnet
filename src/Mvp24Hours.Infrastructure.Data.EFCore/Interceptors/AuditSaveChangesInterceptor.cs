@@ -47,8 +47,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
     /// </example>
     public class AuditSaveChangesInterceptor : SaveChangesInterceptor
     {
-        private readonly ICurrentUserProvider _currentUserProvider;
-        private readonly IClock _clock;
+        private readonly ICurrentUserProvider? _currentUserProvider;
+        private readonly IClock? _clock;
         private readonly string _defaultUser;
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// <param name="clock">Optional clock for getting current time. If null, UTC now is used.</param>
         /// <param name="defaultUser">Default user identifier when no user is available. Defaults to "System".</param>
         public AuditSaveChangesInterceptor(
-            ICurrentUserProvider currentUserProvider = null,
-            IClock clock = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            IClock? clock = null,
             string defaultUser = "System")
         {
             _currentUserProvider = currentUserProvider;
@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void ApplyAuditInformation(DbContext context)
+        private void ApplyAuditInformation(DbContext? context)
         {
             if (context == null) return;
 
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             }
         }
 
-        private static void SetPropertyValue(EntityEntry entry, string propertyName, object value)
+        private static void SetPropertyValue(EntityEntry entry, string propertyName, object? value)
         {
             var property = entry.Property(propertyName);
             if (property != null)

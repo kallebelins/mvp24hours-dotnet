@@ -60,10 +60,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
     public class MongoDbTransactionManager : IMongoDbTransactionManager
     {
         private readonly IMongoClient _client;
-        private readonly ILogger<MongoDbTransactionManager> _logger;
+        private readonly ILogger<MongoDbTransactionManager>? _logger;
         private readonly MongoDbTransactionOptions _options;
         private readonly HashSet<string> _savepoints;
-        private IClientSessionHandle _currentSession;
+        private IClientSessionHandle? _currentSession;
         private bool _disposed;
 
         /// <summary>
@@ -74,8 +74,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <param name="options">Transaction options.</param>
         public MongoDbTransactionManager(
             IMongoClient client,
-            ILogger<MongoDbTransactionManager> logger = null,
-            MongoDbTransactionOptions options = null)
+            ILogger<MongoDbTransactionManager>? logger = null,
+            MongoDbTransactionOptions? options = null)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger;
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         }
 
         /// <inheritdoc/>
-        public IClientSessionHandle CurrentSession => _currentSession;
+        public IClientSessionHandle? CurrentSession => _currentSession;
 
         /// <inheritdoc/>
         public bool IsTransactionActive => _currentSession?.IsInTransaction == true;
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <inheritdoc/>
         public async Task<TResult> ExecuteInTransactionAsync<TResult>(
             Func<IClientSessionHandle, CancellationToken, Task<TResult>> operation,
-            TransactionOptions options = null,
+            TransactionOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (operation == null)
@@ -183,7 +183,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
             {
                 try
                 {
-                    TResult result = default;
+                    TResult? result = default;
 
                     session.StartTransaction(options);
 
@@ -223,13 +223,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
         /// <inheritdoc/>
         public async Task ExecuteInTransactionAsync(
             Func<IClientSessionHandle, CancellationToken, Task> operation,
-            TransactionOptions options = null,
+            TransactionOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             await ExecuteInTransactionAsync<object>(async (session, ct) =>
             {
                 await operation(session, ct);
-                return null;
+                return new object();
             }, options, cancellationToken);
         }
 

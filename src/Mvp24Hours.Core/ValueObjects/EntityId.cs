@@ -78,7 +78,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <summary>
         /// Implicit conversion to the underlying value type.
         /// </summary>
-        public static implicit operator TValue(EntityId<TSelf, TValue>? id) => id != null ? id.Value : default!;
+        public static implicit operator TValue?(EntityId<TSelf, TValue>? id) => id is null ? default : id.Value;
     }
 
     /// <summary>

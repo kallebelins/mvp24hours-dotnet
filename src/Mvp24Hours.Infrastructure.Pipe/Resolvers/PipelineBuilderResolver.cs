@@ -33,7 +33,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
             where T : IPipelineBuilder
             where U : IPipelineBuilder, new()
         {
-            return AddList<T, U>(typeof(T).FullName);
+            return AddList<T, U>(typeof(T).FullName!);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
                 keyName = $"{key}_{typeof(T).FullName}";
             }
 
-            if (!_buildersComplex.TryGetValue(keyName, out List<Type> value))
+            if (!_buildersComplex.TryGetValue(keyName, out List<Type>? value))
             {
                 value = [];
                 _buildersComplex.Add(keyName, value);
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
             where T : IPipelineBuilder
             where U : IPipelineBuilder, new()
         {
-            Add<T, U>(typeof(T).FullName);
+            Add<T, U>(typeof(T).FullName!);
             return this;
         }
 
@@ -98,16 +98,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         /// <summary>
         /// 
         /// </summary>
-        public T Get<T>()
+        public T? Get<T>()
             where T : IPipelineBuilder
         {
-            return Get<T>(typeof(T).FullName);
+            return Get<T>(typeof(T).FullName!);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public T Get<T>(string key, bool isSimpleKey = false)
+        public T? Get<T>(string key, bool isSimpleKey = false)
             where T : IPipelineBuilder
         {
             string keyName = key;
@@ -116,9 +116,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
                 keyName = $"{key}_{typeof(T).FullName}";
             }
 
-            if (_builders.TryGetValue(keyName, out Type value))
+            if (_builders.TryGetValue(keyName, out Type? value))
             {
-                return (T)Activator.CreateInstance(value);
+                return (T?)Activator.CreateInstance(value);
             }
             return default;
         }
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         public List<T> GetList<T>()
             where T : IPipelineBuilder
         {
-            return GetList<T>(typeof(T).FullName);
+            return GetList<T>(typeof(T).FullName!);
         }
 
         /// <summary>
@@ -144,12 +144,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
                 keyName = $"{key}_{typeof(T).FullName}";
             }
 
-            if (_buildersComplex.TryGetValue(keyName, out List<Type> value))
+            if (_buildersComplex.TryGetValue(keyName, out List<Type>? value))
             {
                 var result = new List<T>();
                 foreach (var item in value)
                 {
-                    result.Add((T)Activator.CreateInstance(item));
+                    var instance = (T?)Activator.CreateInstance(item);
+                    if (instance != null)
+                        result.Add(instance);
                 }
 
                 return result;
@@ -163,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         public bool Has<T>()
             where T : IPipelineBuilder
         {
-            return Has(typeof(T).FullName);
+            return Has(typeof(T).FullName!);
         }
 
         /// <summary>
@@ -178,7 +180,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         /// <summary>
         /// 
         /// </summary>
-        public bool Has(string key, Type typeComposeKey = null)
+        public bool Has(string key, Type? typeComposeKey = null)
         {
             string keyName = key;
             if (typeComposeKey != null)
@@ -201,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
         /// <summary>
         /// 
         /// </summary>
-        public bool HasList(string key, Type typeComposeKey = null)
+        public bool HasList(string key, Type? typeComposeKey = null)
         {
             string keyName = key;
             if (typeComposeKey != null)

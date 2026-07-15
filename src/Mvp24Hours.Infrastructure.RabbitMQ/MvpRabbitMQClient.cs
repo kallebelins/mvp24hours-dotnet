@@ -290,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _metrics?.IncrementMessagesSent(Options.Exchange);
                     
                     _structuredLogger?.LogMessagePublished(
-                        tokenDefault,
+                        tokenDefault!,
                         Options.Exchange,
                         routingKey ?? Options.RoutingKey ?? string.Empty,
                         body.Length,
@@ -301,7 +301,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _logger?.LogDebug("Publish success. Token={Token}", tokenDefault);
                 }
 
-                return tokenDefault;
+                return tokenDefault!;
             }
             catch (Exception ex)
             {
@@ -411,7 +411,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
         }
 
-        private IModel CreateConsumerChannel(Action<IModel, RabbitMQClientOptions, string, string> action, string routingKey, string queueName)
+        private IModel CreateConsumerChannel(Action<IModel, RabbitMQClientOptions, string, string> action, string? routingKey, string? queueName)
         {
             string queueKeyName = queueName ?? Options.QueueName ?? string.Empty;
             IModel? channel = null;
@@ -437,15 +437,18 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                 _logger?.LogDebug("Channel created. ChannelNumber={ChannelNumber}", channel.ChannelNumber);
 
+                var resolvedRoutingKey = routingKey ?? string.Empty;
+                var resolvedQueueName = queueName ?? string.Empty;
+
                 channel.CallbackException += (sender, ea) =>
                 {
                     if (!channel.IsOpen)
                         channel.Dispose();
-                    channel = CreateConsumerChannel(action, routingKey, queueName);
+                    channel = CreateConsumerChannel(action, resolvedRoutingKey, resolvedQueueName);
                     _logger?.LogWarning("Channel recreating. ChannelNumber={ChannelNumber}", channel.ChannelNumber);
                 };
 
-                action?.Invoke(channel, Options, routingKey, queueName);
+                action.Invoke(channel, Options, resolvedRoutingKey, resolvedQueueName);
 
                 Channels.TryAdd(queueKeyName, channel);
             }
@@ -647,7 +650,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _logger?.LogError(ex, "Consumer received failure. Token={Token}", token);
 
                     if (consumerSync is IMvpRabbitMQConsumerRecoverySync recoverySync)
-                        recoverySync.Failure(ex, token);
+                        recoverySync.Failure(ex, token ?? string.Empty);
 
                     if (redeliveredCount < Options.MaxRedeliveredCount)
                     {
@@ -660,7 +663,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     {
                         _logger?.LogError("Consumer rejecting message. RedeliveredCount={RedeliveredCount}", redeliveredCount);
                         if (consumerSync is IMvpRabbitMQConsumerRecoverySync rejectedSync)
-                            rejectedSync.Rejected(data, token);
+                            rejectedSync.Rejected(data!, token ?? string.Empty);
                         BasicNack(e, channel, token ?? "unknown");
                     }
                 }
@@ -758,7 +761,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _logger?.LogError(ex, "Consumer received failure. Token={Token}", token);
                     
                     if (consumerAsync is IMvpRabbitMQConsumerRecoveryAsync recoveryAsync)
-                        await recoveryAsync.FailureAsync(ex, token);
+                        await recoveryAsync.FailureAsync(ex, token ?? string.Empty);
 
                     if (redeliveredCount < Options.MaxRedeliveredCount)
                     {
@@ -772,7 +775,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     {
                         _logger?.LogError("Consumer rejecting message. RedeliveredCount={RedeliveredCount}", redeliveredCount);
                         if (consumerAsync is IMvpRabbitMQConsumerRecoveryAsync rejectedAsync)
-                            await rejectedAsync.RejectedAsync(data, token);
+                            await rejectedAsync.RejectedAsync(data!, token ?? string.Empty);
                         BasicNack(e, channel, token ?? "unknown");
                     }
                 }
@@ -823,8 +826,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             {
                 var body = e.Body.ToArray();
                 string messageString = Encoding.UTF8.GetString(body);
-                IBusinessEvent bsEvent = messageString.ToDeserialize<IBusinessEvent>(JsonHelper.JsonBusinessEventSettings());
-                return bsEvent;
+                return messageString.ToDeserialize<IBusinessEvent>(JsonHelper.JsonBusinessEventSettings())
+                    ?? throw new InvalidOperationException("Failed to deserialize message body to IBusinessEvent.");
             }
             finally
             {

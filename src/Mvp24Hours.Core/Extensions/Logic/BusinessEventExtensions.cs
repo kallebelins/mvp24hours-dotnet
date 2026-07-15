@@ -16,7 +16,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for business event
         /// </summary>
-        public static IBusinessEvent ToBusinessEvent(this object value, string tokenDefault = null)
+        public static IBusinessEvent ToBusinessEvent(this object value, string? tokenDefault = null)
         {
             return new BusinessEvent(
                 data: value,

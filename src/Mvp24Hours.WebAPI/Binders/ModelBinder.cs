@@ -54,12 +54,12 @@ namespace Mvp24Hours.WebAPI.Binders
         /// <summary>
         /// Gets the binding exception, if any occurred during binding.
         /// </summary>
-        public Exception Error { get; private set; }
+        public Exception? Error { get; private set; }
 
         /// <summary>
         /// Gets the validation errors, if validation failed.
         /// </summary>
-        public Dictionary<string, string[]> ValidationErrors { get; private set; }
+        public Dictionary<string, string[]>? ValidationErrors { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether binding or validation failed.
@@ -78,9 +78,9 @@ namespace Mvp24Hours.WebAPI.Binders
         /// <returns>The model binder instance with bound data and validation results.</returns>
         public static ValueTask<ModelBinder<T>> BindAsync(HttpContext context)
         {
-            Exception exception = null;
-            T data = null;
-            Dictionary<string, string[]> validationErrors = null;
+            Exception? exception = null;
+            T? data = null;
+            Dictionary<string, string[]>? validationErrors = null;
 
             try
             {

@@ -79,8 +79,8 @@ namespace Mvp24Hours.Extensions
         public static IAsyncEnumerable<T> StreamAsync<T>(
             this IMongoCollection<T> collection,
             FilterDefinition<T> filter,
-            SortDefinition<T> sort = null,
-            ProjectionDefinition<T> projection = null,
+            SortDefinition<T>? sort = null,
+            ProjectionDefinition<T>? projection = null,
             CancellationToken cancellationToken = default)
         {
             return new MongoDbAsyncStreaming<T>(collection).StreamAsync(filter, sort, projection, cancellationToken);

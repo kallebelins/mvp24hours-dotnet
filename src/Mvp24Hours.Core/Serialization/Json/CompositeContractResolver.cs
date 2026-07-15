@@ -31,10 +31,9 @@ namespace Mvp24Hours.Core.Serialization.Json
         /// <returns></returns>
         public JsonContract ResolveContract(Type type)
         {
-            return
-                _contractResolvers
+            return _contractResolvers
                     .Select(x => x.ResolveContract(type))
-                    .FirstOrDefault();
+                    .FirstOrDefault()!;
         }
 
         /// <summary>

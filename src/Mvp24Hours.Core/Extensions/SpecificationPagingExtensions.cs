@@ -87,7 +87,7 @@ namespace Mvp24Hours.Extensions
         /// <returns>A Specification with the criteria's settings applied</returns>
         public static Specification<T> ToSpecification<T>(
             this IPagingCriteria criteria,
-            Expression<Func<T, bool>> filter = null)
+            Expression<Func<T, bool>>? filter = null)
             where T : class
         {
             var spec = new PagingSpecification<T>(
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Extensions
         /// <returns>A Specification with the criteria's settings applied</returns>
         public static Specification<T> ToSpecification<T>(
             this IPagingCriteriaExpression<T> criteria,
-            Expression<Func<T, bool>> filter = null)
+            Expression<Func<T, bool>>? filter = null)
             where T : class
         {
             var spec = new PagingExpressionSpecification<T>(

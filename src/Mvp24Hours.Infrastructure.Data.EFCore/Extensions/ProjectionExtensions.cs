@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// <param name="selector">Projection expression.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A single projected result or null.</returns>
-        public static async Task<TResult> ProjectToSingleAsync<TSource, TResult>(
+        public static async Task<TResult?> ProjectToSingleAsync<TSource, TResult>(
             this IQueryable<TSource> query,
             Expression<Func<TSource, TResult>> selector,
             CancellationToken cancellationToken = default)

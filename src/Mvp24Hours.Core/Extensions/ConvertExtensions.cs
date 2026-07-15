@@ -40,9 +40,9 @@ namespace Mvp24Hours.Extensions
 
         }
 
-        public static T ToEnum<T>(this string value, T defaultValue = default) where T : Enum
+        public static T ToEnum<T>(this string value, T defaultValue = default!) where T : struct, Enum
         {
-            return Enum.TryParse(typeof(T), value, true, out object result) ? (T)result : defaultValue;
+            return Enum.TryParse(typeof(T), value, true, out object? result) ? (T)result! : defaultValue;
         }
 
         public static int? ToInt(this string value, int? defaultValue = null)
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Extensions
             return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal result) ? result : defaultValue;
         }
 
-        public static DateTime? ToDateTime(this string value, DateTime? defaultValue = null, CultureInfo info = null)
+        public static DateTime? ToDateTime(this string value, DateTime? defaultValue = null, CultureInfo? info = null)
         {
             if (!value.HasValue())
             {

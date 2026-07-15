@@ -80,7 +80,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Parse the string value to the underlying type
-            object parsedValue = null;
+            object? parsedValue = null;
             try
             {
                 parsedValue = ParseValue(value, valueType);

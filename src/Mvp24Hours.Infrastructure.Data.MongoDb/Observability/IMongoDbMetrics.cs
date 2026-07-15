@@ -31,7 +31,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="collectionName">The collection name.</param>
         /// <param name="duration">The command duration.</param>
         /// <param name="success">Whether the command succeeded.</param>
-        void RecordCommandDuration(string commandName, string collectionName, TimeSpan duration, bool success);
+        void RecordCommandDuration(string commandName, string? collectionName, TimeSpan duration, bool success);
 
         /// <summary>
         /// Records a slow query event.
@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="duration">The query duration.</param>
         /// <param name="documentsExamined">Number of documents examined.</param>
         /// <param name="documentsReturned">Number of documents returned.</param>
-        void RecordSlowQuery(string commandName, string collectionName, TimeSpan duration, long documentsExamined, long documentsReturned);
+        void RecordSlowQuery(string commandName, string? collectionName, TimeSpan duration, long documentsExamined, long documentsReturned);
 
         /// <summary>
         /// Records connection pool statistics.
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="commandName">The command name.</param>
         /// <param name="collectionName">The collection name.</param>
         /// <param name="errorType">The error type or exception type name.</param>
-        void RecordError(string commandName, string collectionName, string errorType);
+        void RecordError(string commandName, string? collectionName, string errorType);
 
         /// <summary>
         /// Gets the current metrics snapshot.
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets the latest connection pool stats.
         /// </summary>
-        public ConnectionPoolStats ConnectionPool { get; set; }
+        public ConnectionPoolStats? ConnectionPool { get; set; }
 
         /// <summary>
         /// Gets or sets average command duration by type.

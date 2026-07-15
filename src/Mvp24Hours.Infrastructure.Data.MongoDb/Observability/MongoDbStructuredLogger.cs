@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
     public class MongoDbStructuredLogger : IDisposable
     {
         private readonly MongoDbObservabilityOptions _options;
-        private readonly ILogger<MongoDbStructuredLogger> _logger;
+        private readonly ILogger<MongoDbStructuredLogger>? _logger;
         private readonly ConcurrentDictionary<int, CommandLogContext> _pendingCommands = new();
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="logger">Optional ILogger for output.</param>
         public MongoDbStructuredLogger(
             IOptions<MongoDbObservabilityOptions> options,
-            ILogger<MongoDbStructuredLogger> logger = null)
+            ILogger<MongoDbStructuredLogger>? logger = null)
         {
             _options = options?.Value ?? new MongoDbObservabilityOptions();
             _logger = logger;
@@ -150,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 Category = "MongoDB",
                 EventName = "CommandStarted",
                 Timestamp = context.Timestamp,
-                Properties = new Dictionary<string, object>
+                Properties = new Dictionary<string, object?>
                 {
                     ["CommandName"] = context.CommandName,
                     ["Database"] = context.DatabaseName,
@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 Category = "MongoDB",
                 EventName = context.Success ? "CommandSucceeded" : "CommandFailed",
                 Timestamp = DateTimeOffset.UtcNow,
-                Properties = new Dictionary<string, object>
+                Properties = new Dictionary<string, object?>
                 {
                     ["CommandName"] = context.CommandName,
                     ["Database"] = context.DatabaseName,
@@ -272,7 +272,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             return sb.ToString();
         }
 
-        private BsonDocument MaskSensitiveData(BsonDocument document)
+        private BsonDocument? MaskSensitiveData(BsonDocument? document)
         {
             if (document == null || _options.SensitiveFields == null || _options.SensitiveFields.Length == 0)
                 return document;
@@ -363,7 +363,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private static string ExtractCollectionName(BsonDocument command, string commandName)
+        private static string? ExtractCollectionName(BsonDocument? command, string commandName)
         {
             if (command == null)
                 return null;
@@ -412,15 +412,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         {
             public int RequestId { get; set; }
             public string CommandName { get; set; }
-            public string DatabaseName { get; set; }
-            public string CollectionName { get; set; }
-            public BsonDocument Command { get; set; }
+            public string? DatabaseName { get; set; }
+            public string? CollectionName { get; set; }
+            public BsonDocument? Command { get; set; }
             public Stopwatch Stopwatch { get; set; }
             public TimeSpan Duration { get; set; }
             public DateTimeOffset Timestamp { get; set; }
             public bool Success { get; set; }
-            public string ErrorMessage { get; set; }
-            public string ErrorType { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? ErrorType { get; set; }
             public long? DocumentsReturned { get; set; }
             public long? DocumentsAffected { get; set; }
             public long? DocumentsModified { get; set; }
@@ -432,7 +432,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             public string Category { get; set; }
             public string EventName { get; set; }
             public DateTimeOffset Timestamp { get; set; }
-            public Dictionary<string, object> Properties { get; set; }
+            public Dictionary<string, object?> Properties { get; set; } = new();
         }
 
         #endregion

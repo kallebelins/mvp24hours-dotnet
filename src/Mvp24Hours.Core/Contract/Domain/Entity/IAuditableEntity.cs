@@ -56,7 +56,7 @@ namespace Mvp24Hours.Core.Contract.Domain.Entity
         /// Gets or sets the identifier of the user who last modified the entity.
         /// Null if the entity has never been modified after creation.
         /// </summary>
-        string ModifiedBy { get; set; }
+        string? ModifiedBy { get; set; }
     }
 
     /// <summary>

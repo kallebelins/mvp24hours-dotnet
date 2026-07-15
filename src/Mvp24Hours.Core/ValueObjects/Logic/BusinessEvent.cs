@@ -72,9 +72,9 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         {
             if (DataType.IsClass && DataType != typeof(string))
             {
-                return Data.ToDeserialize(DataType);
+                return Data.ToDeserialize(DataType)!;
             }
-            return Convert.ChangeType(Data, DataType);
+            return Convert.ChangeType(Data, DataType)!;
         }
         protected override IEnumerable<object> GetEqualityComponents()
         {

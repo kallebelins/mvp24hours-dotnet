@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
     public class MongoDbChangeStreamService<TDocument> : IMongoDbChangeStreamService<TDocument>
     {
         private readonly IMongoCollection<TDocument> _collection;
-        private readonly ILogger<MongoDbChangeStreamService<TDocument>> _logger;
+        private readonly ILogger<MongoDbChangeStreamService<TDocument>>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbChangeStreamService{TDocument}"/> class.
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <param name="logger">Optional logger.</param>
         public MongoDbChangeStreamService(
             IMongoCollection<TDocument> collection,
-            ILogger<MongoDbChangeStreamService<TDocument>> logger = null)
+            ILogger<MongoDbChangeStreamService<TDocument>>? logger = null)
         {
             _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _logger = logger;
@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <inheritdoc/>
         public async Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (handler == null)
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         public async Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
             PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (handler == null)
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         public async Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
             IEnumerable<ChangeStreamOperationType> operationTypes,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             if (handler == null)
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
 
         /// <inheritdoc/>
         public async Task<IChangeStreamCursor<ChangeStreamDocument<TDocument>>> GetChangeStreamCursorAsync(
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             options ??= CreateDefaultOptions();
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <inheritdoc/>
         public async Task<IChangeStreamCursor<ChangeStreamDocument<TDocument>>> GetChangeStreamCursorAsync(
             PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             options ??= CreateDefaultOptions();

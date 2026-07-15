@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <summary>
         /// Gets the tenant provider for multi-tenancy support.
         /// </summary>
-        public ITenantProvider TenantProvider { get; private set; }
+        public ITenantProvider? TenantProvider { get; private set; }
 
         /// <summary>
         /// Gets the row-level security helper.
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// </summary>
         protected MongoDbOptions Options { get; private set; }
 
-        private readonly ILogger<Mvp24HoursContext> _logger;
+        private readonly ILogger<Mvp24HoursContext>? _logger;
         private bool _isTransactionAsync;
         #endregion
 
@@ -106,9 +106,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         [ActivatorUtilitiesConstructor]
         public Mvp24HoursContext(
             IOptions<MongoDbOptions> options,
-            ITenantProvider tenantProvider = null,
-            ICurrentUserProvider currentUserProvider = null,
-            ILogger<Mvp24HoursContext> logger = null)
+            ITenantProvider? tenantProvider = null,
+            ICurrentUserProvider? currentUserProvider = null,
+            ILogger<Mvp24HoursContext>? logger = null)
         {
             if (options == null)
             {
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="enableTls">Whether to enable TLS.</param>
         /// <param name="enableTransaction">Whether to enable transactions.</param>
         /// <param name="logger">The logger instance.</param>
-        public Mvp24HoursContext(string databaseName, string connectionString, bool enableTls = false, bool enableTransaction = false, ILogger<Mvp24HoursContext> logger = null)
+        public Mvp24HoursContext(string databaseName, string connectionString, bool enableTls = false, bool enableTransaction = false, ILogger<Mvp24HoursContext>? logger = null)
         {
             if (!databaseName.HasValue())
             {
@@ -175,8 +175,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="currentUserProvider">Optional current user provider.</param>
         public Mvp24HoursContext(
             MongoDbOptions options,
-            ITenantProvider tenantProvider = null,
-            ICurrentUserProvider currentUserProvider = null)
+            ITenantProvider? tenantProvider = null,
+            ICurrentUserProvider? currentUserProvider = null)
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
             DatabaseName = options.DatabaseName;

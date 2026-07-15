@@ -52,7 +52,7 @@ namespace Mvp24Hours.Extensions
             return decimal.TryParse(value, out _);
         }
 
-        public static bool IsDateTime(this string value, CultureInfo cultureInfo = null)
+        public static bool IsDateTime(this string value, CultureInfo? cultureInfo = null)
         {
             if (!value.HasValue())
             {
@@ -73,7 +73,7 @@ namespace Mvp24Hours.Extensions
             return target.HasValue() && WebUrlExpression.IsMatch(target);
         }
 
-        public static bool HasValue(this string target)
+        public static bool HasValue(this string? target)
         {
             return !(string.IsNullOrEmpty(target) || string.IsNullOrWhiteSpace(target));
         }

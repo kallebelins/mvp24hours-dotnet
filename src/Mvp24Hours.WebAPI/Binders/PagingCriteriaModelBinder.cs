@@ -89,7 +89,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Parse orderBy (comma-separated or multiple values)
-            IReadOnlyCollection<string> orderBy = null;
+            IReadOnlyCollection<string>? orderBy = null;
             if (!string.IsNullOrWhiteSpace(orderByValue))
             {
                 var orderByList = orderByValue
@@ -105,7 +105,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Parse navigation (comma-separated or multiple values)
-            IReadOnlyCollection<string> navigation = null;
+            IReadOnlyCollection<string>? navigation = null;
             if (!string.IsNullOrWhiteSpace(navigationValue))
             {
                 var navigationList = navigationValue
@@ -121,7 +121,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Create the appropriate instance based on model type
-            object result = null;
+            object? result = null;
 
             if (modelType == typeof(IPagingCriteria) || modelType == typeof(PagingCriteria))
             {
@@ -162,7 +162,7 @@ namespace Mvp24Hours.WebAPI.Binders
             return Task.CompletedTask;
         }
 
-        private static string GetValue(IValueProvider valueProvider, string modelName, string propertyName)
+        private static string? GetValue(IValueProvider valueProvider, string modelName, string propertyName)
         {
             var fullName = string.IsNullOrEmpty(modelName) ? propertyName : $"{modelName}.{propertyName}";
             var result = valueProvider.GetValue(fullName);

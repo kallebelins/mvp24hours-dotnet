@@ -18,7 +18,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// Clone object instance with binary method in memory
         /// </summary>
-        public static T Clone<T>(T source)
+        public static T? Clone<T>(T source)
         {
             if (source == null)
             {
@@ -29,13 +29,13 @@ namespace Mvp24Hours.Helpers
             MemoryStream memoryStream = new();
             dcSer.WriteObject(memoryStream, source);
             memoryStream.Position = 0;
-            return (T)dcSer.ReadObject(memoryStream);
+            return (T?)dcSer.ReadObject(memoryStream);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static dynamic ConvertToDynamic(object obj)
+        public static dynamic? ConvertToDynamic(object obj)
         {
             var json = obj.ToSerialize();
             return json.ToDeserialize<ExpandoObject>();

@@ -41,7 +41,7 @@ namespace Mvp24Hours.Core.Converters
         {
             if (reader.TokenType == JsonToken.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonToken.String)
@@ -57,9 +57,9 @@ namespace Mvp24Hours.Core.Converters
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, TId value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TId? value, JsonSerializer serializer)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNull();
             }
@@ -103,7 +103,7 @@ namespace Mvp24Hours.Core.Converters
         {
             if (reader.TokenType == JsonToken.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonToken.Integer)
@@ -124,9 +124,9 @@ namespace Mvp24Hours.Core.Converters
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, TId value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TId? value, JsonSerializer serializer)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNull();
             }
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Core.Converters
         {
             if (reader.TokenType == JsonToken.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonToken.Integer)
@@ -191,9 +191,9 @@ namespace Mvp24Hours.Core.Converters
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, TId value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TId? value, JsonSerializer serializer)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNull();
             }
@@ -237,22 +237,22 @@ namespace Mvp24Hours.Core.Converters
         {
             if (reader.TokenType == JsonToken.Null)
             {
-                return null;
+                return default!;
             }
 
             if (reader.TokenType == JsonToken.String)
             {
                 var stringValue = reader.Value?.ToString();
-                return _createInstance(stringValue);
+                return _createInstance(stringValue ?? string.Empty);
             }
 
             throw new JsonSerializationException($"Cannot convert value to {typeof(TId).Name}");
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, TId value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TId? value, JsonSerializer serializer)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNull();
             }
@@ -315,11 +315,11 @@ namespace Mvp24Hours.Core.Converters
         }
 
         /// <inheritdoc />
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
-                return null;
+                return default!;
             }
 
             if (IsGuidEntityId(objectType))
@@ -359,7 +359,7 @@ namespace Mvp24Hours.Core.Converters
             {
                 if (reader.TokenType == JsonToken.String)
                 {
-                    return CreateInstance(objectType, reader.Value?.ToString());
+                    return CreateInstance(objectType, reader.Value?.ToString() ?? string.Empty);
                 }
             }
 
@@ -367,9 +367,9 @@ namespace Mvp24Hours.Core.Converters
         }
 
         /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            if (value == null)
+            if (value is null)
             {
                 writer.WriteNull();
                 return;
@@ -405,8 +405,9 @@ namespace Mvp24Hours.Core.Converters
             }
         }
 
-        private static object CreateInstance(Type type, object value)
+        private static object CreateInstance(Type type, object? value)
         {
+            ArgumentNullException.ThrowIfNull(value);
             var valueType = value.GetType();
             var ctor = type.GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
@@ -420,10 +421,10 @@ namespace Mvp24Hours.Core.Converters
                     $"Type {type.Name} must have a constructor that accepts a {valueType.Name} parameter.");
             }
 
-            return ctor.Invoke(new[] { value });
+            return ctor.Invoke(new[] { value })!;
         }
 
-        private static PropertyInfo GetValueProperty(Type type)
+        private static PropertyInfo? GetValueProperty(Type type)
         {
             return type.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance);
         }

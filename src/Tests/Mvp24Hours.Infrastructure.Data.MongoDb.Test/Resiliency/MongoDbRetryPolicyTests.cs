@@ -238,8 +238,8 @@ public class MongoDbRetryPolicyTests
         var maxDelay = delays.Max();
         
         // With 20% jitter, delays should be between 800 and 1200
-        minDelay.Should().BeGreaterOrEqualTo(800);
-        maxDelay.Should().BeLessOrEqualTo(1200);
+        minDelay.Should().BeGreaterThanOrEqualTo(800);
+        maxDelay.Should().BeLessThanOrEqualTo(1200);
         
         // Not all delays should be the same
         delays.Distinct().Count().Should().BeGreaterThan(1);

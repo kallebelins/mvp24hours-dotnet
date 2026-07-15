@@ -84,9 +84,9 @@ namespace Mvp24Hours.Core.Domain.Enumerations.Examples
         /// </summary>
         /// <param name="newStatus">The target status.</param>
         /// <returns>True if the transition is allowed; otherwise, false.</returns>
-        public bool CanTransitionTo(OrderStatus newStatus)
+        public bool CanTransitionTo(OrderStatus? newStatus)
         {
-            if (newStatus == null) return false;
+            if (newStatus is null) return false;
             if (this == newStatus) return false;
             if (IsTerminal) return false;
 

@@ -19,24 +19,24 @@ namespace Mvp24Hours.Infrastructure.Pipe
         #region [ Ctor ]
 
         public PipelineMessage()
-            : this(Guid.NewGuid().ToString(), args: null)
+            : this(Guid.NewGuid().ToString())
         {
         }
 
-        public PipelineMessage(params object[] args)
+        public PipelineMessage(params object[]? args)
             : this(Guid.NewGuid().ToString(), args)
         {
         }
 
-        public PipelineMessage(string token)
-            : this(token, args: null)
+        public PipelineMessage(string? token)
+            : this(token, null)
         {
         }
 
-        public PipelineMessage(string token, params object[] args)
+        public PipelineMessage(string? token, params object[]? args)
         {
             this._contents = [];
-            this.Token = token;
+            this.Token = token ?? Guid.NewGuid().ToString();
             this.DynamicContents = new DynamicContents(this);
 
             if (args?.Length > 0)
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         #region [ Fields ]
         private readonly Dictionary<string, object> _contents;
-        private IList<IMessageResult> _messages;
+        private IList<IMessageResult>? _messages;
         private bool isFaulty = false;
         #endregion
 
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
                 return;
             }
 
-            AddContent<T>(obj.GetType().FullName, obj);
+            AddContent<T>(obj.GetType().FullName!, obj);
         }
         public void AddContent<T>(string key, T obj)
         {
@@ -104,19 +104,19 @@ namespace Mvp24Hours.Infrastructure.Pipe
         }
         public T GetContent<T>()
         {
-            return GetContent<T>(typeof(T).FullName);
+            return GetContent<T>(typeof(T).FullName!);
         }
         public T GetContent<T>(string key)
         {
-            if (_contents.TryGetValue(key, out object value))
+            if (_contents.TryGetValue(key, out object? value) && value != null)
             {
                 return (T)value;
             }
-            return default;
+            return default!;
         }
         public bool HasContent<T>()
         {
-            return HasContent(typeof(T).FullName);
+            return HasContent(typeof(T).FullName!);
         }
         public bool HasContent(string key)
         {

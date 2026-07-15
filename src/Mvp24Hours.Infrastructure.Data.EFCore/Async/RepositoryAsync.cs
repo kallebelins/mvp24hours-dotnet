@@ -56,7 +56,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             return ListAsync(null, cancellationToken);
         }
 
-        public async Task<IList<T>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             using var scope = CreateTransactionScope();
             var result = await GetQuery(criteria).ToListAsync(cancellationToken);
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             return GetByAsync(clause, null, cancellationToken);
         }
 
-        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             using var scope = CreateTransactionScope();
             var query = dbEntities.AsQueryable();
@@ -120,12 +120,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             return result;
         }
 
-        public Task<T> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return GetByIdAsync(id, null, cancellationToken);
         }
 
-        public async Task<T> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             using var scope = CreateTransactionScope();
             var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefaultAsync(cancellationToken);
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         }
 
         public Task LoadRelationAsync<TProperty>(T entity,
-            Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0,
             CancellationToken cancellationToken = default)
             where TProperty : class
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity,
             Expression<Func<T, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0,
             CancellationToken cancellationToken = default) where TProperty : class
         {
@@ -197,7 +197,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity,
             Expression<Func<T, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0,
             CancellationToken cancellationToken = default) where TProperty : class
         {
@@ -250,7 +250,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return Task.FromResult(false);
             }
 
-            return Task.WhenAll(entities?.Select(x => AddAsync(x, cancellationToken)));
+            return Task.WhenAll(entities.Select(x => AddAsync(x, cancellationToken)));
         }
 
         public async Task ModifyAsync(T entity, CancellationToken cancellationToken = default)
@@ -260,7 +260,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return;
             }
 
-            var entityDb = await dbContext.Set<T>().FindAsync(new object[] { entity.EntityKey }, cancellationToken);
+            ArgumentNullException.ThrowIfNull(entity.EntityKey);
+            var entityDb = await dbContext.Set<T>().FindAsync([entity.EntityKey], cancellationToken);
 
             if (entityDb == null)
             {
@@ -289,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return Task.FromResult(false);
             }
 
-            return Task.WhenAll(entities?.Select(x => ModifyAsync(x, cancellationToken)));
+            return Task.WhenAll(entities.Select(x => ModifyAsync(x, cancellationToken)));
         }
 
         public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
@@ -305,7 +306,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 var entityLog = (dynamic)entity;
                 entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
-                entityLog.RemovedBy = (dynamic)EntityLogBy;
+                entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
                 await ModifyAsync(entity, cancellationToken);
             }
             else
@@ -321,7 +322,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return Task.FromResult(false);
             }
 
-            return Task.WhenAll(entities?.Select(x => RemoveAsync(x, cancellationToken)));
+            return Task.WhenAll(entities.Select(x => RemoveAsync(x, cancellationToken)));
         }
 
         public async Task RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
@@ -341,7 +342,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return Task.FromResult(false);
             }
 
-            return Task.WhenAll(ids?.Select(x => RemoveByIdAsync(x, cancellationToken)));
+            return Task.WhenAll(ids.Select(x => RemoveByIdAsync(x, cancellationToken)));
         }
 
         public Task ForceRemoveAsync(T entity, CancellationToken cancellationToken = default)
@@ -373,7 +374,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         #region [ Properties ]
 
-        protected override object EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
+        protected override object? EntityLogBy => (dbContext as Mvp24HoursContext)?.EntityLogBy;
 
         #endregion
     }

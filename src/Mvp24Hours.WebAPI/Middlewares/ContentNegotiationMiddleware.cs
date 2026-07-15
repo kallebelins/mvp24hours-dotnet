@@ -227,7 +227,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             await _next(context);
         }
 
-        private static string NormalizeContentType(string contentType)
+        private static string NormalizeContentType(string? contentType)
         {
             if (string.IsNullOrEmpty(contentType))
             {

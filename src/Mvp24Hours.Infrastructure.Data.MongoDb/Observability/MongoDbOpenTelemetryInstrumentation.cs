@@ -130,6 +130,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (e.ConnectionId?.ServerId?.EndPoint != null)
             {
                 var endpoint = e.ConnectionId.ServerId.EndPoint.ToString();
+                if (string.IsNullOrEmpty(endpoint))
+                    return;
                 var parts = endpoint.Split(':');
                 if (parts.Length >= 1)
                 {
@@ -254,7 +256,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private static string ExtractCollectionName(BsonDocument command, string commandName)
+        private static string? ExtractCollectionName(BsonDocument? command, string commandName)
         {
             if (command == null)
                 return null;
@@ -297,7 +299,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="databaseName">The database name.</param>
         /// <param name="collectionName">The collection name.</param>
         /// <returns>The created activity, or null if not sampling.</returns>
-        public Activity StartOperation(string operationName, string databaseName = null, string collectionName = null)
+        public Activity? StartOperation(string operationName, string? databaseName = null, string? collectionName = null)
         {
             var activity = _activitySource.StartActivity(
                 $"MongoDB.{operationName}",

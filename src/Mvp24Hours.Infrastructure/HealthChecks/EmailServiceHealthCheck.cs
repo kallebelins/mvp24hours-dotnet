@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                             data: data);
                     }
 
-                    data["messageId"] = sendResult.MessageId;
+                    data["messageId"] = sendResult.MessageId ?? string.Empty;
 
                     // Check response time thresholds
                     if (stopwatch.ElapsedMilliseconds >= _options.FailureThresholdMs)

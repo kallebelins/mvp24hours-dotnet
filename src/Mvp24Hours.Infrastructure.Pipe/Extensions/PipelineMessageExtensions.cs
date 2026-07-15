@@ -9,6 +9,7 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe;
+using System;
 using System.Collections.Generic;
 
 namespace Mvp24Hours.Extensions
@@ -23,7 +24,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IPipelineMessage ToMessage<T>(this T value)
         {
-            return ToMessageWithToken<T>(value, null);
+            return ToMessageWithToken<T>(value, null!);
         }
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IPipelineMessage ToMessage<T>(this T value, string keyContent)
         {
-            return ToMessageWithToken<T>(value, keyContent, null);
+            return ToMessageWithToken<T>(value, keyContent, null!);
         }
 
         /// <summary>
@@ -39,18 +40,21 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IPipelineMessage ToMessage<T>(IBusinessResult<T> bo)
         {
-            return ToMessageWithToken<T>(bo, null);
+            return ToMessageWithToken<T>(bo, null!);
         }
 
         /// <summary>
         /// Encapsulates object for pipeline message
         /// </summary>
-        public static IPipelineMessage ToMessageWithToken<T>(this T value, string keyContent, string tokenDefault)
+        public static IPipelineMessage ToMessageWithToken<T>(this T value, string? keyContent, string? tokenDefault)
         {
             var message = new PipelineMessage(tokenDefault);
             if (value != null)
             {
-                message.AddContent(keyContent, value);
+                if (keyContent != null)
+                    message.AddContent(keyContent, value);
+                else
+                    message.AddContent(value);
             }
             return message;
         }
@@ -58,7 +62,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Encapsulates object for pipeline message
         /// </summary>
-        public static IPipelineMessage ToMessageWithToken<T>(this T value, string tokenDefault)
+        public static IPipelineMessage ToMessageWithToken<T>(this T value, string? tokenDefault)
         {
             var message = new PipelineMessage(tokenDefault);
             if (value != null)
@@ -71,14 +75,14 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// Transform business object to pipeline message
         /// </summary>
-        public static IPipelineMessage ToMessageWithToken<T>(IBusinessResult<T> bo, string tokenDefault)
+        public static IPipelineMessage ToMessageWithToken<T>(IBusinessResult<T> bo, string? tokenDefault)
         {
             var message = new PipelineMessage(bo?.Token ?? tokenDefault);
             if (bo != null && bo.Data != null)
             {
                 if (bo.Data.IsList())
                 {
-                    foreach (var item in bo.Data as IEnumerable<object>)
+                    foreach (var item in (bo.Data as IEnumerable<object>)!)
                     {
                         message.AddContent(item);
                     }
@@ -96,20 +100,20 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IPipelineMessage ToMessageClone<T>(IBusinessResult<T> bo)
         {
-            return ToMessageCloneWithToken<T>(bo, null);
+            return ToMessageCloneWithToken<T>(bo, null!);
         }
 
         /// <summary>
         /// Transform business object to pipeline message and clone content
         /// </summary>
-        public static IPipelineMessage ToMessageCloneWithToken<T>(IBusinessResult<T> bo, string tokenDefault)
+        public static IPipelineMessage ToMessageCloneWithToken<T>(IBusinessResult<T> bo, string? tokenDefault)
         {
             var message = new PipelineMessage(bo?.Token ?? tokenDefault);
             if (bo != null && bo.Data != null)
             {
                 if (bo.Data.IsList())
                 {
-                    foreach (var item in bo.Data as IEnumerable<object>)
+                    foreach (var item in (bo.Data as IEnumerable<object>)!)
                     {
                         message.AddContent(ObjectHelper.Clone(item));
                     }
@@ -143,7 +147,8 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IList<IMessageResult> AddMessage(this IList<IMessageResult> messages, IMessageResult message)
         {
-            if (messages == null || message == null) return messages;
+            ArgumentNullException.ThrowIfNull(messages);
+            ArgumentNullException.ThrowIfNull(message);
             messages.Add(message);
             return messages;
         }

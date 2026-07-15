@@ -170,14 +170,14 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
     /// </example>
     public class AsyncLocalTenantProvider : ITenantProvider
     {
-        private static readonly System.Threading.AsyncLocal<TenantData> _current
-            = new System.Threading.AsyncLocal<TenantData>();
+        private static readonly System.Threading.AsyncLocal<TenantData?> _current
+            = new System.Threading.AsyncLocal<TenantData?>();
 
         private class TenantData
         {
-            public string TenantId { get; set; }
-            public string ConnectionString { get; set; }
-            public string Schema { get; set; }
+            public string? TenantId { get; set; }
+            public string? ConnectionString { get; set; }
+            public string? Schema { get; set; }
         }
 
         /// <summary>
@@ -186,16 +186,16 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         public static AsyncLocalTenantProvider Instance { get; } = new AsyncLocalTenantProvider();
 
         /// <inheritdoc />
-        public string TenantId => _current.Value?.TenantId;
+        public string TenantId => _current.Value?.TenantId!;
 
         /// <inheritdoc />
         public bool HasTenant => !string.IsNullOrEmpty(TenantId);
 
         /// <inheritdoc />
-        public string ConnectionString => _current.Value?.ConnectionString;
+        public string ConnectionString => _current.Value?.ConnectionString!;
 
         /// <inheritdoc />
-        public string Schema => _current.Value?.Schema;
+        public string Schema => _current.Value?.Schema!;
 
         /// <summary>
         /// Sets the current tenant for the current async context.
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         /// <param name="tenantId">The tenant ID.</param>
         /// <param name="connectionString">Optional connection string for database-per-tenant.</param>
         /// <param name="schema">Optional schema name for schema-per-tenant.</param>
-        public static void SetCurrentTenant(string tenantId, string connectionString = null, string schema = null)
+        public static void SetCurrentTenant(string tenantId, string? connectionString = null, string? schema = null)
         {
             _current.Value = new TenantData
             {
@@ -234,16 +234,16 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         public static NoTenantProvider Instance { get; } = new NoTenantProvider();
 
         /// <inheritdoc />
-        public string TenantId => null;
+        public string TenantId => null!;
 
         /// <inheritdoc />
         public bool HasTenant => false;
 
         /// <inheritdoc />
-        public string ConnectionString => null;
+        public string ConnectionString => null!;
 
         /// <inheritdoc />
-        public string Schema => null;
+        public string Schema => null!;
     }
 }
 

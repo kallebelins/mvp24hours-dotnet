@@ -340,7 +340,7 @@ public class MongoDbCircuitBreakerTests
         // Assert
         remaining.Should().NotBeNull();
         remaining.Value.TotalSeconds.Should().BeGreaterThan(0);
-        remaining.Value.TotalSeconds.Should().BeLessOrEqualTo(10);
+        remaining.Value.TotalSeconds.Should().BeLessThanOrEqualTo(10);
     }
 
     [Fact]

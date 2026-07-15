@@ -36,13 +36,16 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
                 return;
             }
 
-            var hasAuthAttributes = context.MethodInfo.DeclaringType.GetCustomAttributes(true)
-                .Union(context.MethodInfo.GetCustomAttributes(true))
+            var declaringAttrs = context.MethodInfo.DeclaringType?.GetCustomAttributes(true) ?? Array.Empty<object>();
+            var methodAttrs = context.MethodInfo.GetCustomAttributes(true);
+
+            var hasAuthAttributes = declaringAttrs
+                .Union(methodAttrs)
                 .Where(x => AuthTypes.Contains(x.GetType()) && !x.GetType().Equals(typeof(AllowAnonymousAttribute)))
                 .AnySafe();
 
-            var hasAllowAnonymousAttributes = context.MethodInfo.DeclaringType.GetCustomAttributes(true)
-                .Union(context.MethodInfo.GetCustomAttributes(true))
+            var hasAllowAnonymousAttributes = declaringAttrs
+                .Union(methodAttrs)
                 .Where(x => x.GetType().Equals(typeof(AllowAnonymousAttribute)))
                 .AnySafe();
 
@@ -53,6 +56,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
                     [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
                 };
                 operation.Security = [securityRequirement];
+                operation.Responses ??= [];
                 operation.Responses.Add("401", new OpenApiResponse { Description = "Unauthorized" });
             }
         }

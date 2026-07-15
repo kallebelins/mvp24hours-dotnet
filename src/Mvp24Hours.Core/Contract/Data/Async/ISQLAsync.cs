@@ -29,7 +29,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// List with items projected in the query
         /// </returns>
-        Task<IEnumerable<T>> QueryAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<IEnumerable<T>> QueryAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -44,7 +44,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// First item projected in the query
         /// </returns>
-        Task<T> QueryFirstAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<T> QueryFirstAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// First item projected in the query
         /// </returns>
-        Task<T> QueryFirstOrDefaultAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<T> QueryFirstOrDefaultAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -74,7 +74,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Single item projected in the query
         /// </returns>
-        Task<T> QuerySingleAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<T> QuerySingleAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Single item projected in the query
         /// </returns>
-        Task<T> QuerySingleOrDefaultAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<T> QuerySingleOrDefaultAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute command for data projection - query - in the database.
         /// </summary>
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <returns>
         /// Item projected in the query
         /// </returns>
-        Task<T> ExecuteScalarAsync<T>(string sqlQuery, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<T> ExecuteScalarAsync<T>(string sqlQuery, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
         /// <summary>
         /// Execute arbitrary commands in the database.
         /// </summary>
@@ -116,6 +116,6 @@ namespace Mvp24Hours.Core.Contract.Data
         ///</param>
         /// <param name="param">Parameter vector</param>
         /// <returns>Number of records affected</returns>
-        Task<int> ExecuteAsync(string sqlCommand, object param = null, int? commandTimeout = null, CommandType? commandType = null);
+        Task<int> ExecuteAsync(string sqlCommand, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
     }
 }

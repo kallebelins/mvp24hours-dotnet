@@ -50,9 +50,9 @@ namespace Mvp24Hours.Core.Infrastructure.Security
     public class AesEncryptionProvider : IExtendedEncryptionProvider, IDisposable
     {
         private readonly byte[] _key;
-        private readonly byte[] _iv;
+        private readonly byte[]? _iv;
         private readonly bool _deterministic;
-        private readonly byte[] _blindIndexSalt;
+        private readonly byte[]? _blindIndexSalt;
         private bool _disposed;
 
         /// <summary>
@@ -164,10 +164,10 @@ namespace Mvp24Hours.Core.Infrastructure.Security
         }
 
         /// <inheritdoc />
-        public byte[] Encrypt(byte[] data)
+        public byte[] Encrypt(byte[]? data)
         {
             if (data == null || data.Length == 0)
-                return data;
+                return data ?? [];
 
             ThrowIfDisposed();
 
@@ -223,10 +223,10 @@ namespace Mvp24Hours.Core.Infrastructure.Security
         }
 
         /// <inheritdoc />
-        public byte[] Decrypt(byte[] encryptedData)
+        public byte[] Decrypt(byte[]? encryptedData)
         {
             if (encryptedData == null || encryptedData.Length == 0)
-                return encryptedData;
+                return encryptedData ?? [];
 
             ThrowIfDisposed();
 

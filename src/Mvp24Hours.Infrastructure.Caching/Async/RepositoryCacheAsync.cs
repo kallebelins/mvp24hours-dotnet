@@ -16,12 +16,12 @@ namespace Mvp24Hours.Infrastructure.Caching
     /// <summary>
     ///  <see cref="Mvp24Hours.Core.Contract.Data.IRepositoryCacheAsync{T}"/>
     /// </summary>
-    public class RepositoryCacheAsync<T>(IDistributedCache cache, ILogger<RepositoryCacheAsync<T>> logger = null) : RepositoryCacheBase(cache), IRepositoryCacheAsync<T>
+    public class RepositoryCacheAsync<T>(IDistributedCache cache, ILogger<RepositoryCacheAsync<T>>? logger = null) : RepositoryCacheBase(cache), IRepositoryCacheAsync<T>
         where T : class
     {
-        private readonly ILogger<RepositoryCacheAsync<T>> _logger = logger;
+        private readonly ILogger<RepositoryCacheAsync<T>>? _logger = logger;
 
-        public virtual async Task<T> GetAsync(string key, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> GetAsync(string key, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Getting cached object with key: {CacheKey}", key);
             try
@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.Caching
             }
         }
 
-        public virtual async Task<string> GetStringAsync(string key, CancellationToken cancellationToken = default)
+        public virtual async Task<string?> GetStringAsync(string key, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Getting cached string with key: {CacheKey}", key);
             try

@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <param name="message">The error message.</param>
         /// <param name="errorCode">The error code.</param>
         /// <param name="innerException">The inner exception.</param>
-        public MongoDbResiliencyException(string message, string errorCode, Exception innerException)
+        public MongoDbResiliencyException(string message, string errorCode, Exception? innerException)
             : base(message, innerException)
         {
             ErrorCode = errorCode;
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <param name="retryCount">The number of retry attempts.</param>
         /// <param name="totalDuration">The total time spent on retries.</param>
         /// <param name="innerException">The inner exception from the last attempt.</param>
-        public MongoDbRetryExhaustedException(int retryCount, TimeSpan totalDuration, Exception innerException)
+        public MongoDbRetryExhaustedException(int retryCount, TimeSpan totalDuration, Exception? innerException)
             : base($"MongoDB operation failed after {retryCount} retry attempts over {totalDuration.TotalSeconds:F1} seconds.",
                    "MONGODB_RETRY_EXHAUSTED", innerException)
         {

@@ -624,7 +624,7 @@ namespace Mvp24Hours.Extensions
         public static async Task<MongoDbBulkOperationResult> BulkWriteAsync<TEntity>(
             this Mvp24HoursContext context,
             IEnumerable<WriteModel<TEntity>> requests,
-            MongoDbBulkOperationOptions options = null,
+            MongoDbBulkOperationOptions? options = null,
             CancellationToken cancellationToken = default)
             where TEntity : class, IEntityBase
         {

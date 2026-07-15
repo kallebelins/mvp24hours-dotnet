@@ -48,8 +48,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
     public class MongoDbConnectionPoolMetrics : IDisposable
     {
         private readonly MongoDbObservabilityOptions _options;
-        private readonly ILogger<MongoDbConnectionPoolMetrics> _logger;
-        private readonly IMongoDbMetrics _metrics;
+        private readonly ILogger<MongoDbConnectionPoolMetrics>? _logger;
+        private readonly IMongoDbMetrics? _metrics;
 
         // Per-server statistics
         private readonly ConcurrentDictionary<string, ServerPoolStats> _serverStats = new();
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private DateTime _lastAlertTime = DateTime.MinValue;
         private readonly TimeSpan _alertCooldown = TimeSpan.FromMinutes(1);
 
-        private Timer _collectionTimer;
+        private Timer? _collectionTimer;
         private bool _disposed;
 
         /// <summary>
@@ -72,8 +72,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="metrics">Optional metrics collector.</param>
         public MongoDbConnectionPoolMetrics(
             IOptions<MongoDbObservabilityOptions> options,
-            ILogger<MongoDbConnectionPoolMetrics> logger = null,
-            IMongoDbMetrics metrics = null)
+            ILogger<MongoDbConnectionPoolMetrics>? logger = null,
+            IMongoDbMetrics? metrics = null)
         {
             _options = options?.Value ?? new MongoDbObservabilityOptions();
             _logger = logger;
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// </summary>
         /// <param name="endpoint">The server endpoint.</param>
         /// <returns>The connection pool stats, or null if not found.</returns>
-        public ConnectionPoolStats GetStats(string endpoint)
+        public ConnectionPoolStats? GetStats(string endpoint)
         {
             if (_serverStats.TryGetValue(endpoint, out var stats))
             {

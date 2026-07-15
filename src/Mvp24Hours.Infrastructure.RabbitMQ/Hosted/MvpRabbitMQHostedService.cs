@@ -28,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         /// </summary>
         [ActivatorUtilitiesConstructor]
         public MvpRabbitMQHostedService(IOptions<RabbitMQHostedOptions> options)
-            : this(options?.Value)
+            : this(options?.Value ?? throw new ArgumentNullException(nameof(options)))
         {
         }
 

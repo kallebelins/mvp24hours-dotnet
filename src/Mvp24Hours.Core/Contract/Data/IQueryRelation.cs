@@ -28,7 +28,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// </summary>
         void LoadRelation<TProperty>(TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class;
         /// <summary>
@@ -37,7 +37,7 @@ namespace Mvp24Hours.Core.Contract.Data
         void LoadRelationSortByAscending<TProperty, TKey>(TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class;
         /// <summary>
@@ -46,7 +46,7 @@ namespace Mvp24Hours.Core.Contract.Data
         void LoadRelationSortByDescending<TProperty, TKey>(TEntity entity,
             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
             Expression<Func<TProperty, TKey>> orderKey,
-            Expression<Func<TProperty, bool>> clause = null,
+            Expression<Func<TProperty, bool>>? clause = null,
             int limit = 0)
             where TProperty : class;
     }

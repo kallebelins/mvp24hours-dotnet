@@ -13,7 +13,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             _pipelineMessage = pipelineMessage;
         }
 
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             if (_pipelineMessage.HasContent(binder.Name))
             {
@@ -28,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             throw new ArgumentOutOfRangeException($"{binder.Name} property does not exist in pipeline message");
         }
 
-        public override bool TrySetMember(SetMemberBinder binder, object value)
+        public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
             if (value == null)
                 throw new ArgumentNullException($"{binder.Name} property cannot be null in pipeline message");
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
         public override string ToString()
         {
-            return base.ToString();
+            return base.ToString() ?? nameof(DynamicContents);
         }
     }
 }

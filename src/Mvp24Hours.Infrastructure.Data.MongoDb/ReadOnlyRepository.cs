@@ -159,13 +159,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         }
 
         /// <inheritdoc />
-        public T GetById(object id)
+        public T? GetById(object id)
         {
             return GetById(id, null)!;
         }
 
         /// <inheritdoc />
-        public T GetById(object id, IPagingCriteria? criteria)
+        public T? GetById(object id, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("MongoDB read-only repository GetById operation started.");
             try
@@ -433,7 +433,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         #region [ Protected Properties ]
 
         /// <inheritdoc />
-        protected override object EntityLogBy => throw new NotSupportedException(
+        protected override object? EntityLogBy => throw new NotSupportedException(
             "EntityLogBy is not used in ReadOnlyRepository as it does not perform write operations.");
 
         #endregion

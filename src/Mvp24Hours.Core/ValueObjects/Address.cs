@@ -77,12 +77,12 @@ namespace Mvp24Hours.Core.ValueObjects
 
         private Address(
             string street,
-            string number,
-            string complement,
-            string neighborhood,
+            string? number,
+            string? complement,
+            string? neighborhood,
             string city,
-            string state,
-            string postalCode,
+            string? state,
+            string? postalCode,
             string country)
         {
             Street = street?.Trim() ?? string.Empty;

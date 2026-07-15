@@ -60,7 +60,7 @@ namespace Mvp24Hours.Extensions
         public static Task<QueryExplainResult> ExplainAsync<T>(
             this IMongoCollection<T> collection,
             FilterDefinition<T> filter,
-            SortDefinition<T> sort = null,
+            SortDefinition<T>? sort = null,
             ExplainVerbosity verbosity = ExplainVerbosity.ExecutionStats,
             CancellationToken cancellationToken = default)
         {

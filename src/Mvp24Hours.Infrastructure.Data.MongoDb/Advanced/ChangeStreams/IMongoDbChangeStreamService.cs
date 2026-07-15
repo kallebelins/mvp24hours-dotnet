@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <returns>A task that completes when the watch is cancelled or an error occurs.</returns>
         Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
             PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         Task WatchCollectionAsync(
             Func<ChangeStreamDocument<TDocument>, Task> handler,
             IEnumerable<ChangeStreamOperationType> operationTypes,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A change stream cursor.</returns>
         Task<IChangeStreamCursor<ChangeStreamDocument<TDocument>>> GetChangeStreamCursorAsync(
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         /// <returns>A change stream cursor.</returns>
         Task<IChangeStreamCursor<ChangeStreamDocument<TDocument>>> GetChangeStreamCursorAsync(
             PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline,
-            ChangeStreamOptions options = null,
+            ChangeStreamOptions? options = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>

@@ -66,7 +66,8 @@ namespace Mvp24Hours.WebAPI.Extensions
             {
                 services.AddSingleton<IActionContextAccessor, ActionContextAccessor>()
                     .AddScoped<IUrlHelper>(x => x.GetRequiredService<IUrlHelperFactory>()
-                    .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext));
+                    .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext
+                        ?? throw new InvalidOperationException("ActionContext is not available.")));
             }
             return services;
         }
@@ -74,7 +75,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// <summary>
         /// Add json serialization
         /// </summary>
-        public static IServiceCollection AddMvp24HoursWebJson(this IServiceCollection services, JsonSerializerSettings jsonSerializerSettings = null)
+        public static IServiceCollection AddMvp24HoursWebJson(this IServiceCollection services, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
@@ -165,9 +166,9 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// </remarks>
         [Obsolete("Use AddMvp24HoursNativeOpenApi() for .NET 9+ native OpenAPI support. Swashbuckle is still supported but native OpenAPI is preferred. Will be removed in a future major version.")]
         public static IServiceCollection AddMvp24HoursWebSwagger(this IServiceCollection services,
-            string title, string version = "v1", string xmlCommentsFileName = null,
+            string title, string version = "v1", string? xmlCommentsFileName = null,
             bool enableExample = false, SwaggerAuthorizationScheme oAuthScheme = SwaggerAuthorizationScheme.None,
-            IEnumerable<Type> authTypes = null)
+            IEnumerable<Type>? authTypes = null)
         {
             services.AddSwaggerGen(c =>
             {
@@ -421,7 +422,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             return services;
         }
 
-        private static void BasicBuilder(IEnumerable<Type> authTypes, SwaggerGenOptions c)
+        private static void BasicBuilder(IEnumerable<Type>? authTypes, SwaggerGenOptions c)
         {
             c.AddSecurityDefinition("Basic", new OpenApiSecurityScheme
             {
@@ -443,7 +444,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             }
         }
 
-        private static void BearerBuilder(IEnumerable<Type> authTypes, SwaggerGenOptions c)
+        private static void BearerBuilder(IEnumerable<Type>? authTypes, SwaggerGenOptions c)
         {
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -468,7 +469,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// <summary>
         /// Add configuration cors middleware
         /// </summary>
-        public static IServiceCollection AddMvp24HoursWebCors(this IServiceCollection services, Action<CorsOptions> options = null)
+        public static IServiceCollection AddMvp24HoursWebCors(this IServiceCollection services, Action<CorsOptions>? options = null)
         {
             if (options != null)
             {
@@ -484,7 +485,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// <summary>
         /// Add configuration exception middleware
         /// </summary>
-        public static IServiceCollection AddMvp24HoursWebExceptions(this IServiceCollection services, Action<ExceptionOptions> options = null)
+        public static IServiceCollection AddMvp24HoursWebExceptions(this IServiceCollection services, Action<ExceptionOptions>? options = null)
         {
             if (options != null)
             {

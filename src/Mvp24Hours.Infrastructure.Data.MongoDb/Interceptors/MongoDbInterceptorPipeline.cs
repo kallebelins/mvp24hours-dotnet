@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
     public class MongoDbInterceptorPipeline : IMongoDbInterceptorPipeline
     {
         private readonly IReadOnlyList<IMongoDbInterceptor> _interceptors;
-        private readonly ILogger<MongoDbInterceptorPipeline> _logger;
+        private readonly ILogger<MongoDbInterceptorPipeline>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbInterceptorPipeline"/> class.
@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <param name="logger">The logger instance.</param>
         public MongoDbInterceptorPipeline(
             IEnumerable<IMongoDbInterceptor> interceptors,
-            ILogger<MongoDbInterceptorPipeline> logger = null)
+            ILogger<MongoDbInterceptorPipeline>? logger = null)
         {
             _interceptors = (interceptors ?? Enumerable.Empty<IMongoDbInterceptor>())
                 .OrderBy(i => i.Order)

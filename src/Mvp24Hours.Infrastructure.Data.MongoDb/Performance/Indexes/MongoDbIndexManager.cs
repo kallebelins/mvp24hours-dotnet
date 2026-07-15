@@ -53,13 +53,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
     {
         private static readonly ConcurrentDictionary<Type, bool> _indexesCreated = new();
         private readonly object _lock = new();
-        private readonly ILogger<MongoDbIndexManager> _logger;
+        private readonly ILogger<MongoDbIndexManager>? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbIndexManager"/> class.
         /// </summary>
         /// <param name="logger">Optional logger for structured logging.</param>
-        public MongoDbIndexManager(ILogger<MongoDbIndexManager> logger = null)
+        public MongoDbIndexManager(ILogger<MongoDbIndexManager>? logger = null)
         {
             _logger = logger;
         }
@@ -132,8 +132,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
 
                 if (method != null)
                 {
-                    var task = (Task)method.Invoke(this, new object[] { database, collectionName, cancellationToken });
-                    await task;
+                    var task = method.Invoke(this, new object[] { database, collectionName, cancellationToken }) as Task;
+                    if (task != null)
+                        await task;
                 }
             }
         }
@@ -303,12 +304,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             return new CreateIndexModel<T>(keyDefinition, options);
         }
 
-        private static CreateIndexModel<T> BuildCompoundIndexFromProperties<T>(
+        private static CreateIndexModel<T>? BuildCompoundIndexFromProperties<T>(
             string groupName,
             List<(PropertyInfo Property, MongoIndexAttribute Attr)> properties)
         {
             var keyBuilder = Builders<T>.IndexKeys;
-            IndexKeysDefinition<T> keys = null;
+            IndexKeysDefinition<T>? keys = null;
 
             foreach (var (property, attr) in properties)
             {
@@ -330,7 +331,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             return new CreateIndexModel<T>(keys, options);
         }
 
-        private static CreateIndexModel<T> BuildCompoundIndex<T>(MongoCompoundIndexAttribute attr)
+        private static CreateIndexModel<T>? BuildCompoundIndex<T>(MongoCompoundIndexAttribute attr)
         {
             if (string.IsNullOrEmpty(attr.Fields))
             {
@@ -338,7 +339,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             }
 
             var fieldDefinitions = attr.Fields.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            IndexKeysDefinition<T> keys = null;
+            IndexKeysDefinition<T>? keys = null;
 
             foreach (var fieldDef in fieldDefinitions)
             {

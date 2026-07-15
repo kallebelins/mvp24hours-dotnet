@@ -43,7 +43,7 @@ namespace Mvp24Hours.Helpers
             return TimeZoneInfo.ConvertTime(dUtc, GetTimeZoneInfo());
         }
 
-        private static TimeZoneInfo _timeZoneInfo;
+        private static TimeZoneInfo? _timeZoneInfo;
 
         private static TimeZoneInfo GetTimeZoneInfo()
         {

@@ -1,9 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>12.0</LangVersion>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Authors>Kallebe Lins</Authors>
     <Description>Scheduled background tasks using CRON expressions with OpenTelemetry tracing support.</Description>
@@ -19,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cronos" Version="0.13.0" />
+    <PackageReference Include="Cronos" />
   </ItemGroup>
 
   <ItemGroup>
