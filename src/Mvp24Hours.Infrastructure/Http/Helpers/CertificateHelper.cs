@@ -83,8 +83,8 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             }
 
             return string.IsNullOrWhiteSpace(password)
-                ? new X509Certificate2(filePath)
-                : new X509Certificate2(filePath, password, keyStorageFlags);
+                ? X509CertificateLoader.LoadCertificateFromFile(filePath)
+                : X509CertificateLoader.LoadPkcs12FromFile(filePath, password, keyStorageFlags);
         }
 
         /// <summary>
@@ -107,8 +107,8 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             var certificateBytes = Convert.FromBase64String(base64Certificate);
 
             return string.IsNullOrWhiteSpace(password)
-                ? new X509Certificate2(certificateBytes)
-                : new X509Certificate2(certificateBytes, password, keyStorageFlags);
+                ? X509CertificateLoader.LoadCertificate(certificateBytes)
+                : X509CertificateLoader.LoadPkcs12(certificateBytes, password, keyStorageFlags);
         }
 
         /// <summary>
@@ -129,8 +129,8 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             }
 
             return string.IsNullOrWhiteSpace(password)
-                ? new X509Certificate2(certificateBytes)
-                : new X509Certificate2(certificateBytes, password, keyStorageFlags);
+                ? X509CertificateLoader.LoadCertificate(certificateBytes)
+                : X509CertificateLoader.LoadPkcs12(certificateBytes, password, keyStorageFlags);
         }
 
         /// <summary>

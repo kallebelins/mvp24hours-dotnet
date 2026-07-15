@@ -37,7 +37,7 @@ namespace Mvp24Hours.Core.Converters
         private static readonly Func<Guid, TId> _createInstance = CreateFactory();
 
         /// <inheritdoc />
-        public override TId ReadJson(JsonReader reader, Type objectType, TId existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TId ReadJson(JsonReader reader, Type objectType, TId? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Core.Converters
         private static readonly Func<int, TId> _createInstance = CreateFactory();
 
         /// <inheritdoc />
-        public override TId ReadJson(JsonReader reader, Type objectType, TId existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TId ReadJson(JsonReader reader, Type objectType, TId? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Core.Converters
         private static readonly Func<long, TId> _createInstance = CreateFactory();
 
         /// <inheritdoc />
-        public override TId ReadJson(JsonReader reader, Type objectType, TId existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TId ReadJson(JsonReader reader, Type objectType, TId? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
@@ -233,7 +233,7 @@ namespace Mvp24Hours.Core.Converters
         private static readonly Func<string, TId> _createInstance = CreateFactory();
 
         /// <inheritdoc />
-        public override TId ReadJson(JsonReader reader, Type objectType, TId existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TId ReadJson(JsonReader reader, Type objectType, TId? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {

@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
                     SamplingDuration = options.CircuitBreakerSamplingDuration,
                     BreakDuration = options.CircuitBreakerBreakDuration,
                     ShouldHandle = new PredicateBuilder<TResult>()
-                        .Handle<Exception>(ex => ShouldHandleForCircuitBreaker(ex, options)),
+                        .Handle<Exception>(ex => NativeResiliencePredicates.ShouldHandleForCircuitBreaker(ex, options)),
                     OnOpened = args =>
                     {
                         _logger?.LogWarning(
@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
                     UseJitter = options.RetryUseJitter,
                     BackoffType = ConvertBackoffType(options.RetryBackoffType),
                     ShouldHandle = new PredicateBuilder<TResult>()
-                        .Handle<Exception>(ex => ShouldHandleForRetry(ex, options)),
+                        .Handle<Exception>(ex => NativeResiliencePredicates.ShouldHandleForRetry(ex, options)),
                     OnRetry = args =>
                     {
                         _logger?.LogWarning(
@@ -214,61 +214,8 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
             return pipeline;
         }
 
-        private static bool ShouldHandleForRetry(Exception exception, NativeResilienceOptions options)
-        {
-            // Use custom predicate if provided
-            if (options.ShouldRetryOnException != null)
-            {
-                return options.ShouldRetryOnException(exception);
-            }
-
-            // Use exception type list if provided
-            if (options.RetryableExceptionTypes is { Count: > 0 })
-            {
-                foreach (var type in options.RetryableExceptionTypes)
-                {
-                    if (type.IsInstanceOfType(exception))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            // Default: retry all exceptions except cancellation
-            return exception is not OperationCanceledException;
-        }
-
-        private static bool ShouldHandleForCircuitBreaker(Exception exception, NativeResilienceOptions options)
-        {
-            // Use exception type list if provided
-            if (options.CircuitBreakerExceptionTypes is { Count: > 0 })
-            {
-                foreach (var type in options.CircuitBreakerExceptionTypes)
-                {
-                    if (type.IsInstanceOfType(exception))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            // Default: count all exceptions except cancellation as failures
-            return exception is not OperationCanceledException;
-        }
-
         private static DelayBackoffType ConvertBackoffType(ResilienceBackoffType backoffType)
-        {
-            return backoffType switch
-            {
-                ResilienceBackoffType.Constant => DelayBackoffType.Constant,
-                ResilienceBackoffType.Linear => DelayBackoffType.Linear,
-                ResilienceBackoffType.Exponential => DelayBackoffType.Exponential,
-                ResilienceBackoffType.ExponentialWithJitter => DelayBackoffType.Exponential,
-                _ => DelayBackoffType.Exponential
-            };
-        }
+            => NativeResiliencePredicates.ConvertBackoffType(backoffType);
     }
 
     /// <summary>
@@ -352,7 +299,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
                     SamplingDuration = options.CircuitBreakerSamplingDuration,
                     BreakDuration = options.CircuitBreakerBreakDuration,
                     ShouldHandle = new PredicateBuilder()
-                        .Handle<Exception>(ex => ex is not OperationCanceledException),
+                        .Handle<Exception>(ex => NativeResiliencePredicates.ShouldHandleForCircuitBreaker(ex, options)),
                     OnOpened = args =>
                     {
                         _logger?.LogWarning(
@@ -386,7 +333,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
                         _ => DelayBackoffType.Exponential
                     },
                     ShouldHandle = new PredicateBuilder()
-                        .Handle<Exception>(ex => ex is not OperationCanceledException),
+                        .Handle<Exception>(ex => NativeResiliencePredicates.ShouldHandleForRetry(ex, options)),
                     OnRetry = args =>
                     {
                         _logger?.LogWarning(
@@ -401,6 +348,67 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
             }
 
             return builder.Build();
+        }
+    }
+
+    internal static class NativeResiliencePredicates
+    {
+        public static bool ShouldHandleForRetry(Exception exception, NativeResilienceOptions options)
+        {
+            if (options.ShouldRetryOnException != null)
+            {
+                return options.ShouldRetryOnException(exception);
+            }
+
+            if (options.RetryableExceptionTypes is { Count: > 0 })
+            {
+                foreach (var type in options.RetryableExceptionTypes)
+                {
+                    if (type.IsInstanceOfType(exception))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return exception is not OperationCanceledException;
+        }
+
+        public static bool ShouldHandleForCircuitBreaker(Exception exception, NativeResilienceOptions options)
+        {
+            if (options.ShouldHandleAsCircuitBreakerFailure != null)
+            {
+                return options.ShouldHandleAsCircuitBreakerFailure(exception);
+            }
+
+            if (options.CircuitBreakerExceptionTypes is { Count: > 0 })
+            {
+                foreach (var type in options.CircuitBreakerExceptionTypes)
+                {
+                    if (type.IsInstanceOfType(exception))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return exception is not OperationCanceledException;
+        }
+
+        public static DelayBackoffType ConvertBackoffType(ResilienceBackoffType backoffType)
+        {
+            return backoffType switch
+            {
+                ResilienceBackoffType.Constant => DelayBackoffType.Constant,
+                ResilienceBackoffType.Linear => DelayBackoffType.Linear,
+                ResilienceBackoffType.Exponential => DelayBackoffType.Exponential,
+                ResilienceBackoffType.ExponentialWithJitter => DelayBackoffType.Exponential,
+                _ => DelayBackoffType.Exponential
+            };
         }
     }
 }

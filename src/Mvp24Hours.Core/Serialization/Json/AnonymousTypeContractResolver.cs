@@ -48,8 +48,8 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         class AnonymousTypeValueProvider : IValueProvider
         {
-            private Func<object, object>? _getter;
-            private Action<object, object>? _setter;
+            private Func<object, object?>? _getter;
+            private Action<object, object?>? _setter;
             private readonly FieldInfo _fieldInfo;
             private readonly MemberInfo _memberInfo;
 
@@ -63,7 +63,7 @@ namespace Mvp24Hours.Core.Serialization.Json
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             }
 
-            public void SetValue(object target, object value)
+            public void SetValue(object target, object? value)
             {
                 try
                 {

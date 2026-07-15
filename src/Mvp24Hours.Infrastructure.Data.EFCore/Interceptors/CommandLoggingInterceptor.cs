@@ -210,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         public override object? ScalarExecuted(
             DbCommand command,
             CommandExecutedEventData eventData,
-            object result)
+            object? result)
         {
             LogCommandExecution(command, eventData.Duration, $"Result: {result}");
             return base.ScalarExecuted(command, eventData, result);
@@ -220,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         public override ValueTask<object?> ScalarExecutedAsync(
             DbCommand command,
             CommandExecutedEventData eventData,
-            object result,
+            object? result,
             CancellationToken cancellationToken = default)
         {
             LogCommandExecution(command, eventData.Duration, $"Result: {result}");

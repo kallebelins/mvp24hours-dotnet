@@ -33,7 +33,7 @@
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Scriban" />
 		<PackageReference Include="StackExchange.Redis" />
-		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="System.ServiceModel.Http" />
 		<PackageReference Include="Azure.Security.KeyVault.Secrets" />

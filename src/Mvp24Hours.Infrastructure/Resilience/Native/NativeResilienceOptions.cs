@@ -126,6 +126,12 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
         public ICollection<Type>? CircuitBreakerExceptionTypes { get; set; }
 
         /// <summary>
+        /// Gets or sets a custom predicate to determine if an exception should count as a
+        /// circuit breaker failure. When set, takes precedence over <see cref="CircuitBreakerExceptionTypes"/>.
+        /// </summary>
+        public Func<Exception, bool>? ShouldHandleAsCircuitBreakerFailure { get; set; }
+
+        /// <summary>
         /// Gets or sets a callback invoked when the circuit breaker state changes.
         /// Parameters: old state, new state.
         /// </summary>

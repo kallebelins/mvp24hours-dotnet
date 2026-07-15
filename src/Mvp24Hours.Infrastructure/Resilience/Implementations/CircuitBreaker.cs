@@ -315,8 +315,12 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
     /// <summary>
     /// Generic implementation of circuit breaker pattern for operations without return values.
     /// </summary>
+    [Obsolete("Deprecated: Use NativeResiliencePipeline with Microsoft.Extensions.Resilience instead. " +
+              "This class will be removed in a future version. " +
+              "See docs/en-us/modernization/generic-resilience.md for migration guide.", false)]
     public class CircuitBreaker : ICircuitBreaker
     {
+#pragma warning disable CS0618 // Obsolete type retained as thin wrapper over CircuitBreaker<TResult>
         private readonly CircuitBreaker<object?> _inner;
 
         /// <summary>
@@ -332,6 +336,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
         {
             _inner = new CircuitBreaker<object?>(options, operationName, null);
         }
+#pragma warning restore CS0618
 
         /// <inheritdoc/>
         public CircuitBreakerState State => _inner.State;

@@ -5,9 +5,7 @@
 //=====================================================================================
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Resilience.Contract;
-using Mvp24Hours.Infrastructure.Resilience.Implementations;
-using Mvp24Hours.Infrastructure.Resilience.Options;
+using Mvp24Hours.Infrastructure.Resilience.Native;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,13 +29,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
     /// </list>
     /// </para>
     /// <para>
-    /// <strong>Resilience Features:</strong>
-    /// <list type="bullet">
-    /// <item>Circuit breaker opens after configurable failure threshold</item>
-    /// <item>Automatic retry with exponential backoff for transient errors</item>
-    /// <item>Graceful degradation: cache misses don't break the application</item>
-    /// <item>Fallback to source function or default value when cache unavailable</item>
-    /// </list>
+    /// Resilience is implemented via <see cref="NativeResiliencePipeline"/> /
+    /// <see cref="NativeResiliencePipeline{TResult}"/> (Microsoft.Extensions.Resilience / Polly v8).
     /// </para>
     /// </remarks>
     /// <example>
@@ -66,8 +59,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
         private readonly ICacheProvider _innerProvider;
         private readonly CacheResilienceOptions _options;
         private readonly ILogger<ResilientCacheProvider>? _logger;
-        private readonly ICircuitBreaker<object?>? _circuitBreaker;
-        private readonly ICircuitBreaker? _circuitBreakerVoid;
+        private readonly INativeResiliencePipeline<object?>? _pipeline;
+        private readonly INativeResiliencePipeline? _pipelineVoid;
 
         /// <summary>
         /// Creates a new instance of ResilientCacheProvider.
@@ -84,26 +77,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             _options = options ?? new CacheResilienceOptions();
             _logger = logger;
 
-            // Initialize circuit breaker if enabled
-            if (_options.EnableCircuitBreaker)
+            if (_options.EnableCircuitBreaker || _options.EnableRetry)
             {
-                var cbOptions = _options.CircuitBreaker;
-                cbOptions.ShouldCountAsFailure ??= IsTransientException;
-                cbOptions.OnBreak = (info) =>
-                {
-                    _options.OnCircuitBreakerOpen?.Invoke(info.OperationName);
-                    _logger?.LogWarning(
-                        "[Cache] Circuit breaker opened for cache operations. Reason: {Reason}",
-                        info.Reason);
-                };
-                cbOptions.OnReset = (info) =>
-                {
-                    _logger?.LogInformation(
-                        "[Cache] Circuit breaker reset for cache operations.");
-                };
-
-                _circuitBreaker = new CircuitBreaker<object?>(cbOptions, "CacheOperation", null);
-                _circuitBreakerVoid = new CircuitBreaker(cbOptions, "CacheOperation", null);
+                var nativeOptions = CreateNativeOptions(_options, _logger);
+                _pipeline = new NativeResiliencePipeline<object?>(nativeOptions, _logger);
+                _pipelineVoid = new NativeResiliencePipeline(nativeOptions, _logger);
             }
         }
 
@@ -115,23 +93,15 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreaker != null)
+                if (_pipeline != null)
                 {
-                    var result = await _circuitBreaker.ExecuteAsync(
-                        async ct => (object?)await ExecuteWithRetryAsync(
-                            async () => await _innerProvider.GetAsync<T>(key, ct),
-                            key,
-                            "GetAsync",
-                            ct),
+                    var result = await _pipeline.ExecuteTaskAsync(
+                        async ct => (object?)await _innerProvider.GetAsync<T>(key, ct),
                         cancellationToken);
                     return result as T;
                 }
 
-                return await ExecuteWithRetryAsync(
-                    async () => await _innerProvider.GetAsync<T>(key, cancellationToken),
-                    key,
-                    "GetAsync",
-                    cancellationToken);
+                return await _innerProvider.GetAsync<T>(key, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
@@ -148,23 +118,15 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreaker != null)
+                if (_pipeline != null)
                 {
-                    var result = await _circuitBreaker.ExecuteAsync(
-                        async ct => (object?)await ExecuteWithRetryAsync(
-                            async () => await _innerProvider.GetStringAsync(key, ct),
-                            key,
-                            "GetStringAsync",
-                            ct),
+                    var result = await _pipeline.ExecuteTaskAsync(
+                        async ct => (object?)await _innerProvider.GetStringAsync(key, ct),
                         cancellationToken);
                     return result as string;
                 }
 
-                return await ExecuteWithRetryAsync(
-                    async () => await _innerProvider.GetStringAsync(key, cancellationToken),
-                    key,
-                    "GetStringAsync",
-                    cancellationToken);
+                return await _innerProvider.GetStringAsync(key, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
@@ -183,36 +145,19 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreakerVoid != null)
+                if (_pipelineVoid != null)
                 {
-                    await _circuitBreakerVoid.ExecuteAsync(
-                        async ct => await ExecuteWithRetryAsync(
-                            async () =>
-                            {
-                                await _innerProvider.SetAsync(key, value, options, ct);
-                                return Task.CompletedTask;
-                            },
-                            key,
-                            "SetAsync",
-                            ct),
+                    await _pipelineVoid.ExecuteTaskAsync(
+                        async ct => await _innerProvider.SetAsync(key, value, options, ct),
                         cancellationToken);
                     return;
                 }
 
-                await ExecuteWithRetryAsync(
-                    async () =>
-                    {
-                        await _innerProvider.SetAsync(key, value, options, cancellationToken);
-                        return Task.CompletedTask;
-                    },
-                    key,
-                    "SetAsync",
-                    cancellationToken);
+                await _innerProvider.SetAsync(key, value, options, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
                 HandleFailure(key, "SetAsync", ex);
-                // Don't throw - graceful degradation means we silently fail on set
             }
         }
 
@@ -226,36 +171,19 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreakerVoid != null)
+                if (_pipelineVoid != null)
                 {
-                    await _circuitBreakerVoid.ExecuteAsync(
-                        async ct => await ExecuteWithRetryAsync(
-                            async () =>
-                            {
-                                await _innerProvider.SetStringAsync(key, value, options, ct);
-                                return Task.CompletedTask;
-                            },
-                            key,
-                            "SetStringAsync",
-                            ct),
+                    await _pipelineVoid.ExecuteTaskAsync(
+                        async ct => await _innerProvider.SetStringAsync(key, value, options, ct),
                         cancellationToken);
                     return;
                 }
 
-                await ExecuteWithRetryAsync(
-                    async () =>
-                    {
-                        await _innerProvider.SetStringAsync(key, value, options, cancellationToken);
-                        return Task.CompletedTask;
-                    },
-                    key,
-                    "SetStringAsync",
-                    cancellationToken);
+                await _innerProvider.SetStringAsync(key, value, options, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
                 HandleFailure(key, "SetStringAsync", ex);
-                // Don't throw - graceful degradation means we silently fail on set
             }
         }
 
@@ -267,36 +195,19 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreakerVoid != null)
+                if (_pipelineVoid != null)
                 {
-                    await _circuitBreakerVoid.ExecuteAsync(
-                        async ct => await ExecuteWithRetryAsync(
-                            async () =>
-                            {
-                                await _innerProvider.RemoveAsync(key, ct);
-                                return Task.CompletedTask;
-                            },
-                            key,
-                            "RemoveAsync",
-                            ct),
+                    await _pipelineVoid.ExecuteTaskAsync(
+                        async ct => await _innerProvider.RemoveAsync(key, ct),
                         cancellationToken);
                     return;
                 }
 
-                await ExecuteWithRetryAsync(
-                    async () =>
-                    {
-                        await _innerProvider.RemoveAsync(key, cancellationToken);
-                        return Task.CompletedTask;
-                    },
-                    key,
-                    "RemoveAsync",
-                    cancellationToken);
+                await _innerProvider.RemoveAsync(key, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
                 HandleFailure(key, "RemoveAsync", ex);
-                // Don't throw - graceful degradation means we silently fail on remove
             }
         }
 
@@ -321,28 +232,20 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreaker != null)
+                if (_pipeline != null)
                 {
-                    var result = await _circuitBreaker.ExecuteAsync(
-                        async ct => (object?)await ExecuteWithRetryAsync(
-                            async () => await _innerProvider.ExistsAsync(key, ct),
-                            key,
-                            "ExistsAsync",
-                            ct),
+                    var result = await _pipeline.ExecuteTaskAsync(
+                        async ct => (object?)await _innerProvider.ExistsAsync(key, ct),
                         cancellationToken);
                     return result as bool? ?? false;
                 }
 
-                return await ExecuteWithRetryAsync(
-                    async () => await _innerProvider.ExistsAsync(key, cancellationToken),
-                    key,
-                    "ExistsAsync",
-                    cancellationToken);
+                return await _innerProvider.ExistsAsync(key, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
                 HandleFailure(key, "ExistsAsync", ex);
-                return false; // Assume doesn't exist on failure
+                return false;
             }
         }
 
@@ -393,117 +296,72 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                if (_options.EnableCircuitBreaker && _circuitBreakerVoid != null)
+                if (_pipelineVoid != null)
                 {
-                    await _circuitBreakerVoid.ExecuteAsync(
-                        async ct => await ExecuteWithRetryAsync(
-                            async () =>
-                            {
-                                await _innerProvider.RefreshAsync(key, ct);
-                                return Task.CompletedTask;
-                            },
-                            key,
-                            "RefreshAsync",
-                            ct),
+                    await _pipelineVoid.ExecuteTaskAsync(
+                        async ct => await _innerProvider.RefreshAsync(key, ct),
                         cancellationToken);
                     return;
                 }
 
-                await ExecuteWithRetryAsync(
-                    async () =>
-                    {
-                        await _innerProvider.RefreshAsync(key, cancellationToken);
-                        return Task.CompletedTask;
-                    },
-                    key,
-                    "RefreshAsync",
-                    cancellationToken);
+                await _innerProvider.RefreshAsync(key, cancellationToken);
             }
             catch (Exception ex) when (_options.EnableGracefulDegradation)
             {
                 HandleFailure(key, "RefreshAsync", ex);
-                // Don't throw - graceful degradation
             }
         }
 
         #region Private Helpers
 
-        private async Task<T> ExecuteWithRetryAsync<T>(
-            Func<Task<T>> operation,
-            string key,
-            string operationName,
-            CancellationToken cancellationToken)
+        private static NativeResilienceOptions CreateNativeOptions(
+            CacheResilienceOptions options,
+            ILogger? logger)
         {
-            if (!_options.EnableRetry)
+            var cb = options.CircuitBreaker;
+            var shouldCountAsFailure = options.ShouldCountAsFailure
+                ?? cb.ShouldCountAsFailure
+                ?? IsTransientException;
+
+            return new NativeResilienceOptions
             {
-                return await operation();
-            }
-
-            Exception? lastException = null;
-            var maxAttempts = _options.MaxRetries + 1; // Initial attempt + retries
-
-            for (var attempt = 1; attempt <= maxAttempts; attempt++)
-            {
-                try
+                Name = "CacheOperation",
+                EnableTimeout = false,
+                EnableCircuitBreaker = options.EnableCircuitBreaker,
+                CircuitBreakerFailureRatio = cb.FailureRatio,
+                CircuitBreakerMinimumThroughput = cb.MinimumThroughput,
+                CircuitBreakerSamplingDuration = cb.SamplingDuration,
+                CircuitBreakerBreakDuration = cb.BreakDuration,
+                ShouldHandleAsCircuitBreakerFailure = shouldCountAsFailure,
+                OnCircuitBreakerOpen = _ =>
                 {
-                    if (attempt > 1)
-                    {
-                        var delay = CalculateRetryDelay(attempt);
-                        _logger?.LogDebug(
-                            "[Cache] Retry attempt {Attempt}/{MaxAttempts} for {Operation} on key '{Key}' after {Delay}ms",
-                            attempt,
-                            maxAttempts,
-                            operationName,
-                            key,
-                            delay.TotalMilliseconds);
-
-                        await Task.Delay(delay, cancellationToken);
-                    }
-
-                    return await operation();
-                }
-                catch (Exception ex) when (attempt < maxAttempts && ShouldRetryException(ex))
+                    options.OnCircuitBreakerOpen?.Invoke("CacheOperation");
+                    logger?.LogWarning(
+                        "[Cache] Circuit breaker opened for cache operations.");
+                },
+                OnCircuitBreakerReset = () =>
                 {
-                    lastException = ex;
-                    _logger?.LogWarning(
+                    logger?.LogInformation(
+                        "[Cache] Circuit breaker reset for cache operations.");
+                },
+                EnableRetry = options.EnableRetry,
+                RetryMaxAttempts = options.MaxRetries,
+                RetryDelay = options.RetryDelay,
+                RetryMaxDelay = options.MaxRetryDelay,
+                RetryUseJitter = false,
+                RetryBackoffType = options.UseExponentialBackoff
+                    ? ResilienceBackoffType.Exponential
+                    : ResilienceBackoffType.Constant,
+                ShouldRetryOnException = options.ShouldRetry ?? IsTransientException,
+                OnRetry = (ex, attempt, delay) =>
+                {
+                    logger?.LogWarning(
                         ex,
-                        "[Cache] Transient failure on {Operation} for key '{Key}' (attempt {Attempt}/{MaxAttempts})",
-                        operationName,
-                        key,
+                        "[Cache] Retry attempt {Attempt} after {Delay}ms",
                         attempt,
-                        maxAttempts);
+                        delay.TotalMilliseconds);
                 }
-            }
-
-            _logger?.LogError(
-                lastException,
-                "[Cache] All {MaxAttempts} retry attempts failed for {Operation} on key '{Key}'",
-                maxAttempts,
-                operationName,
-                key);
-
-            throw lastException!;
-        }
-
-        private TimeSpan CalculateRetryDelay(int attempt)
-        {
-            var delay = _options.UseExponentialBackoff
-                ? TimeSpan.FromMilliseconds(_options.RetryDelay.TotalMilliseconds * Math.Pow(2, attempt - 1))
-                : _options.RetryDelay;
-
-            // Cap at max delay
-            return delay > _options.MaxRetryDelay ? _options.MaxRetryDelay : delay;
-        }
-
-        private bool ShouldRetryException(Exception exception)
-        {
-            if (_options.ShouldRetry != null)
-            {
-                return _options.ShouldRetry(exception);
-            }
-
-            // Default: retry on transient exceptions
-            return IsTransientException(exception);
+            };
         }
 
         private static bool IsTransientException(Exception exception)
@@ -531,4 +389,3 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
         #endregion
     }
 }
-

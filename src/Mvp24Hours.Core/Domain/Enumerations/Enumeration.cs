@@ -183,7 +183,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         #region Equality
 
         /// <inheritdoc />
-        public bool Equals(Enumeration<TEnum> other)
+        public bool Equals(Enumeration<TEnum>? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Enumeration<TEnum> other && Equals(other);
         }
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         #region Comparison
 
         /// <inheritdoc />
-        public int CompareTo(Enumeration<TEnum> other)
+        public int CompareTo(Enumeration<TEnum>? other)
         {
             if (other is null) return 1;
             return Value.CompareTo(other.Value);
