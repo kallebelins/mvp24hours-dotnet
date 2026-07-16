@@ -34,7 +34,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// <summary>
         /// Gets or sets the property name to sort by.
         /// </summary>
-        public string PropertyName { get; set; }
+        public required string PropertyName { get; set; }
 
         /// <summary>
         /// Gets or sets the sort direction.
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// <summary>
         /// Gets or sets the property selector expression.
         /// </summary>
-        public Expression<Func<TEntity, object>> PropertySelector { get; set; }
+        public required Expression<Func<TEntity, object>> PropertySelector { get; set; }
 
         /// <summary>
         /// Gets or sets the sort direction.
@@ -130,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// <summary>
         /// Gets or sets whether to include related entities (navigation properties).
         /// </summary>
-        public IReadOnlyCollection<string> Includes { get; set; }
+        public IReadOnlyCollection<string>? Includes { get; set; }
 
         #endregion
 

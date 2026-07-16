@@ -32,7 +32,7 @@
 		<PackageReference Include="AWSSDK.SecretsManager" />
 		<PackageReference Include="System.ServiceModel.Primitives" />
 		<!-- Security pin: ServiceModel.Primitives → Cryptography.Xml 10.0.0 (NU1903 GHSA-37gx / GHSA-w3x6). Version in Directory.Packages.props (10.0.10). NU1510 expected here (AspNetCore.App); required so consumers without the shared framework resolve the patched version. -->
-		<PackageReference Include="System.Security.Cryptography.Xml" />
+		<PackageReference Include="System.Security.Cryptography.Xml" NoWarn="NU1510" />
 	</ItemGroup>
 
 	<ItemGroup>

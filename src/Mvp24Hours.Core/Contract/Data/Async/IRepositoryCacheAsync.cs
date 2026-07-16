@@ -20,11 +20,11 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <summary>
         /// Get model by key
         /// </summary>
-        Task<T> GetAsync(string key, CancellationToken cancellationToken = default);
+        Task<T?> GetAsync(string key, CancellationToken cancellationToken = default);
         /// <summary>
         /// Get string by key
         /// </summary>
-        Task<string> GetStringAsync(string key, CancellationToken cancellationToken = default);
+        Task<string?> GetStringAsync(string key, CancellationToken cancellationToken = default);
         /// <summary>
         /// Register model by key
         /// </summary>

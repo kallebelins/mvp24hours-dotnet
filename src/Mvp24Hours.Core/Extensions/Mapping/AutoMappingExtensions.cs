@@ -169,7 +169,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         /// <param name="destination">The destination.</param>
         /// <param name="sources">The sources.</param>
-        private static void Map(IMapper mapper, object destination, params object[] sources)
+        private static void Map(IMapper mapper, object destination, params object?[] sources)
         {
             // If there are no sources just return the destination object
             if (sources.Length == 0)
@@ -183,6 +183,11 @@ namespace Mvp24Hours.Extensions
             // Itereate through all of the sources...
             foreach (var source in sources)
             {
+                if (source == null)
+                {
+                    continue;
+                }
+
                 // ... get the source type and map the source to the destination
                 var sourceType = source.GetType();
                 mapper.Map(source, destination, sourceType, destinationType);

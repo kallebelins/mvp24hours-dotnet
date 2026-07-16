@@ -151,7 +151,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <param name="b">The second Value Object to compare.</param>
         /// <returns>true if the Value Objects are equal; otherwise, false.</returns>
 #pragma warning disable S3875 // "operator==" should not be overloaded on reference types
-        public static bool operator ==(BaseVO a, BaseVO b)
+        public static bool operator ==(BaseVO? a, BaseVO? b)
 #pragma warning restore S3875 // "operator==" should not be overloaded on reference types
         {
             if (a is null && b is null)
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <param name="a">The first Value Object to compare.</param>
         /// <param name="b">The second Value Object to compare.</param>
         /// <returns>true if the Value Objects are not equal; otherwise, false.</returns>
-        public static bool operator !=(BaseVO a, BaseVO b)
+        public static bool operator !=(BaseVO? a, BaseVO? b)
         {
             return !(a == b);
         }

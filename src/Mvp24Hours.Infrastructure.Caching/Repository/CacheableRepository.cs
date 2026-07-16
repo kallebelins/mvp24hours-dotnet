@@ -160,8 +160,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
         {
             return ExecuteWithCache(
                 nameof(GetById),
-                () => criteria != null ? _repository.GetById(id, criteria) : _repository.GetById(id),
-                new { id, criteria })!;
+                () => (criteria != null ? _repository.GetById(id, criteria) : _repository.GetById(id))!,
+                new { id, criteria });
         }
 
         #endregion

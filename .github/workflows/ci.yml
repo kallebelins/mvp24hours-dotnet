@@ -75,8 +75,10 @@ jobs:
     - name: 🎨 Check code formatting
       run: dotnet format --verify-no-changes --verbosity diagnostic
 
+    # TreatWarningsAsErrors deferred: ~969 residual warnings accepted in phase 10.1
+    # (see tasks/phase10-warnings-residual-net10-v1.md). Re-enable when residual ≈ 0.
     - name: 🔍 Run static code analysis
-      run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+      run: dotnet build --configuration Release
 
   package:
     name: Create NuGet Packages

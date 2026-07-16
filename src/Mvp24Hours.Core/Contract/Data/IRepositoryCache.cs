@@ -18,11 +18,11 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <summary>
         /// Get model by key
         /// </summary>
-        T Get(string key);
+        T? Get(string key);
         /// <summary>
         /// Get string by key
         /// </summary>
-        string GetString(string key);
+        string? GetString(string key);
         /// <summary>
         /// Register model by key
         /// </summary>

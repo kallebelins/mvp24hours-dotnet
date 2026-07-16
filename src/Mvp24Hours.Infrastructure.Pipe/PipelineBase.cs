@@ -22,6 +22,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         {
             this.IsBreakOnFail = isBreakOnFail;
             this.ForceRollbackOnFalure = forceRollbackOnFalure;
+            this.Message = new PipelineMessage();
         }
         #endregion
 

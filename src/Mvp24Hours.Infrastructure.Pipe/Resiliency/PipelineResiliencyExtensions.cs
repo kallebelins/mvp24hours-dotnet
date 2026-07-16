@@ -80,11 +80,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             options ??= RetryOptions.Default;
 
             services.TryAddSingleton(options);
+#pragma warning disable CS0618 // Intentional: RetryPipelineMiddleware is kept for backward compatibility.
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
                 var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<RetryPipelineMiddleware>>();
                 return new RetryPipelineMiddleware(options, logger);
             });
+#pragma warning restore CS0618
 
             return services;
         }
@@ -102,12 +104,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             options ??= CircuitBreakerOptions.Default;
 
             services.TryAddSingleton(options);
+#pragma warning disable CS0618 // Intentional: CircuitBreakerPipelineMiddleware is kept for backward compatibility.
             services.AddSingleton<CircuitBreakerPipelineMiddleware>(sp =>
             {
                 var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<CircuitBreakerPipelineMiddleware>>();
                 return new CircuitBreakerPipelineMiddleware(options, logger);
             });
             services.AddSingleton<IPipelineMiddleware>(sp => sp.GetRequiredService<CircuitBreakerPipelineMiddleware>());
+#pragma warning restore CS0618
 
             return services;
         }

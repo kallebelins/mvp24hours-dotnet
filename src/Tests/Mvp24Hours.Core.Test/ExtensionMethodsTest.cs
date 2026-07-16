@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -93,10 +93,12 @@ public class ExtensionMethodsTest
     {
         // Arrange
         string? text = null;
-        var size = 10;
+        int size = 10;
 
         // Act
-        var result = text.Truncate(size);
+#pragma warning disable CS8604 // Possible null reference argument.
+        string? result = text.Truncate(size);
+#pragma warning restore CS8604 // Possible null reference argument.
 
         // Assert
         result.Should().BeEmpty();

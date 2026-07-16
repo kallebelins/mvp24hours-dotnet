@@ -79,12 +79,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// Gets or sets the ordering fields.
         /// Format: "PropertyName" for ascending, "-PropertyName" for descending.
         /// </summary>
-        public IReadOnlyCollection<string> OrderBy { get; set; }
+        public IReadOnlyCollection<string>? OrderBy { get; set; }
 
         /// <summary>
         /// Gets or sets the navigation properties to include.
         /// </summary>
-        public IReadOnlyCollection<string> Navigation { get; set; }
+        public IReadOnlyCollection<string>? Navigation { get; set; }
 
         #endregion
 
@@ -103,12 +103,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// <summary>
         /// Gets the order by collection for IPagingCriteria.
         /// </summary>
-        IReadOnlyCollection<string> IPagingCriteria.OrderBy => OrderBy;
+        IReadOnlyCollection<string> IPagingCriteria.OrderBy => OrderBy!;
 
         /// <summary>
         /// Gets the navigation collection for IPagingCriteria.
         /// </summary>
-        IReadOnlyCollection<string> IPagingCriteria.Navigation => Navigation;
+        IReadOnlyCollection<string> IPagingCriteria.Navigation => Navigation!;
 
         #endregion
 

@@ -47,7 +47,7 @@ namespace Mvp24Hours.Infrastructure.Helpers
     [Obsolete("Deprecated: Use AddStandardResilienceHandler() or AddResilienceHandler() from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
     public static class HttpPolicyHelper
     {
-        private static ILogger _logger;
+        private static ILogger? _logger;
 
         /// <summary>
         /// Sets the logger instance for logging policy operations.

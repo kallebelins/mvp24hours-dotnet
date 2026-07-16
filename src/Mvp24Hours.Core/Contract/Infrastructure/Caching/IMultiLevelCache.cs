@@ -110,7 +110,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Caching
         /// If data is found in L2 but not L1, it will be automatically promoted to L1 (write-through).
         /// </para>
         /// </remarks>
-        Task<T> GetOrSetAsync<T>(
+        Task<T?> GetOrSetAsync<T>(
             string key,
             Func<CancellationToken, Task<T>> factory,
             CacheEntryOptions? options = null,
