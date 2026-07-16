@@ -89,6 +89,9 @@ StyleCopReport.xml
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+# Ad-hoc build error/dump files (e.g. build-webapi-errors.txt, mongo-cs8625.txt)
+build-*.txt
+*-cs[0-9]*.txt
 *.vspscc
 *.vssscc
 .builds
@@ -358,10 +361,10 @@ MigrationBackup/
 .sonarqube/
 
 
-# Local Ofuscated Files
+# Local personal notes (root); tasks/ docs (.md/.json) may be versioned
 tasks.md
 **/tasks.md
-tasks-*.md
+/tasks-*.md
 prompts.md
 **/prompts.md
 prompts-*.md
