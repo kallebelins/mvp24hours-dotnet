@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -15,6 +15,7 @@ namespace Mvp24Hours.Application.Test.Resilience;
 /// <summary>
 /// Unit tests for ExceptionToResultMapper functionality.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExceptionToResultMapperTest
 {
     private readonly IExceptionToResultMapper _mapper;

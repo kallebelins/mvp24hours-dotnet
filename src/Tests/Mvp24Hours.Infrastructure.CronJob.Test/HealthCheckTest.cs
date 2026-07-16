@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -18,6 +18,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test;
 /// <summary>
 /// Tests for CronJob health check functionality.
 /// </summary>
+[Trait("Category", "Unit")]
 public class HealthCheckTest
 {
     #region Basic Health Check Tests

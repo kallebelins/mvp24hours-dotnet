@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Mvp24Hours.Application.Pipe.Test.Integration
 {
+    [Trait("Category", "Unit")]
     public class FluentValidationOperationTest
     {
         [Fact]
@@ -117,12 +118,14 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             Assert.NotEmpty(result.Messages);
         }
 
+        [Trait("Category", "Unit")]
         public class TestOrder
         {
             public string CustomerName { get; set; } = "";
             public decimal Amount { get; set; }
         }
 
+        [Trait("Category", "Unit")]
         public class TestOrderValidator : AbstractValidator<TestOrder>
         {
             public TestOrderValidator()
@@ -137,6 +140,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             }
         }
 
+        [Trait("Category", "Unit")]
         public class TestOrderAmountValidator : AbstractValidator<TestOrder>
         {
             public TestOrderAmountValidator()

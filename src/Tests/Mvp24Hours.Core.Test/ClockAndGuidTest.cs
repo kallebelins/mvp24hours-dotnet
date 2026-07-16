@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -11,6 +11,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Clock and GUID Generator implementations.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ClockAndGuidTest
 {
     #region SystemClock Tests

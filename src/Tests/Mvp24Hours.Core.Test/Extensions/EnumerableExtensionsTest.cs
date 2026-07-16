@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Extensions;
+﻿namespace Mvp24Hours.Core.Test.Extensions;
 
 /// <summary>
-/// Testes unitários para EnumerableExtensions (métodos existentes).
+/// Testes unitÃ¡rios para EnumerableExtensions (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class EnumerableExtensionsTest
 {
     #region [ IsList Tests ]
@@ -141,13 +142,13 @@ public class EnumerableExtensionsTest
         var collection = new[] { 1, 2, 3 };
         var counter = 0;
 
-        // Act (não chama ToList())
+        // Act (nÃ£o chama ToList())
         var query = collection.ForEach(x => counter++);
 
         // Assert
-        counter.Should().Be(0); // Não foi executado ainda
+        counter.Should().Be(0); // NÃ£o foi executado ainda
 
-        // Act (força enumeração)
+        // Act (forÃ§a enumeraÃ§Ã£o)
         query.ToList();
 
         // Assert

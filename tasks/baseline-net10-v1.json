@@ -1,0 +1,75 @@
+﻿{
+    "generatedAt":  "2026-07-15 09:59:58 -03:00",
+    "sdk":  "10.0.301",
+    "command":  "dotnet build src/Mvp24Hours.sln -c \u003cConfig\u003e -v:q --no-incremental -flp:LogFile=build-baseline-\u003cconfig\u003e.log;Verbosity=minimal",
+    "logs":  [
+                 "build-baseline-debug.log",
+                 "build-baseline-release.log"
+             ],
+    "totals":  {
+                   "debug":  {
+                                 "errors":  0,
+                                 "warnings":  4235
+                             },
+                   "release":  {
+                                   "errors":  0,
+                                   "warnings":  4235
+                               }
+               },
+    "byCode":  {
+                   "CS0219":  1,
+                   "CS8632":  3275,
+                   "CS8619":  5,
+                   "CS8603":  83,
+                   "CS8602":  9,
+                   "CS8601":  5,
+                   "SYSLIB0057":  9,
+                   "NU1903":  102,
+                   "CS0108":  3,
+                   "CS8618":  35,
+                   "CS8765":  15,
+                   "CS8625":  151,
+                   "SYSLIB0014":  2,
+                   "NU1510":  48,
+                   "LOGGEN002":  93,
+                   "xUnit1031":  1,
+                   "CS1718":  2,
+                   "CS0168":  4,
+                   "CS0618":  63,
+                   "CS8767":  4,
+                   "SYSLIB0060":  1,
+                   "CS8609":  1,
+                   "CS8604":  219,
+                   "ASPDEPR006":  4,
+                   "NU1900":  62,
+                   "CA2022":  1,
+                   "CS8600":  37
+               },
+    "byProject":  {
+                      "Mvp24Hours.WebAPI":  376,
+                      "Mvp24Hours.Application.PostgreSql.Test":  6,
+                      "Mvp24Hours.Application.MySql.Test":  6,
+                      "Mvp24Hours.Application":  157,
+                      "Mvp24Hours.Infrastructure.Pipe":  562,
+                      "Mvp24Hours.Application.MongoDb.Test":  8,
+                      "Mvp24Hours.Application.SQLServer.Test":  6,
+                      "Mvp24Hours.Infrastructure.CronJob.Test":  8,
+                      "Mvp24Hours.Application.Redis.Test":  10,
+                      "Mvp24Hours.Infrastructure.RabbitMQ":  869,
+                      "Mvp24Hours.Core.Test":  42,
+                      "Mvp24Hours.Infrastructure.Caching.Redis":  9,
+                      "Mvp24Hours.Core":  383,
+                      "Mvp24Hours.Application.RabbitMQ.Test":  11,
+                      "Mvp24Hours.Infrastructure.Data.MongoDb":  136,
+                      "Mvp24Hours.WebAPI.Test":  6,
+                      "Mvp24Hours.Infrastructure.CronJob":  9,
+                      "Mvp24Hours.Infrastructure":  959,
+                      "Mvp24Hours.Application.Integration.Test":  7,
+                      "Mvp24Hours.Infrastructure.Caching":  305,
+                      "Mvp24Hours.Infrastructure.Cqrs":  14,
+                      "Mvp24Hours.Infrastructure.Cqrs.Test":  16,
+                      "Mvp24Hours.Application.Pipe.Test":  6,
+                      "Mvp24Hours.Infrastructure.Data.EFCore":  318,
+                      "Mvp24Hours.Patterns.Test":  6
+                  }
+}

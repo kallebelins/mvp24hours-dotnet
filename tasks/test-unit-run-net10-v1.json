@@ -1,0 +1,41 @@
+{
+  "task": "9.2",
+  "ado": 87315,
+  "date": "2026-07-16",
+  "configuration": "Debug",
+  "scope": ["A", "B"],
+  "excluded": ["C"],
+  "totals": {
+    "projects": 12,
+    "passed": 2188,
+    "failed": 0,
+    "skipped": 4,
+    "total": 2192,
+    "wallClockSecondsApprox": 260
+  },
+  "projects": [
+    { "group": "A", "name": "Mvp24Hours.Core.Test", "passed": 788, "failed": 0, "skipped": 0, "total": 788, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Application.Test", "passed": 264, "failed": 0, "skipped": 0, "total": 264, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Infrastructure.Cqrs.Test", "passed": 347, "failed": 0, "skipped": 0, "total": 347, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Infrastructure.Data.MongoDb.Test", "passed": 133, "failed": 0, "skipped": 0, "total": 133, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Infrastructure.CronJob.Test", "passed": 91, "failed": 0, "skipped": 0, "total": 91, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Application.Pipe.Test", "passed": 78, "failed": 0, "skipped": 0, "total": 78, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Infrastructure.Caching.Test", "passed": 38, "failed": 0, "skipped": 0, "total": 38, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.Patterns.Test", "passed": 20, "failed": 0, "skipped": 0, "total": 20, "exitCode": 0 },
+    { "group": "A", "name": "Mvp24Hours.WebAPI.Test", "passed": 5, "failed": 0, "skipped": 0, "total": 5, "exitCode": 0 },
+    { "group": "B", "name": "Mvp24Hours.Application.SQLServer.Test", "passed": 232, "failed": 0, "skipped": 4, "total": 236, "exitCode": 0 },
+    { "group": "B", "name": "Mvp24Hours.Application.MySql.Test", "passed": 96, "failed": 0, "skipped": 0, "total": 96, "exitCode": 0 },
+    { "group": "B", "name": "Mvp24Hours.Application.PostgreSql.Test", "passed": 96, "failed": 0, "skipped": 0, "total": 96, "exitCode": 0 }
+  ],
+  "skippedDetail": [
+    {
+      "project": "Mvp24Hours.Application.SQLServer.Test",
+      "file": "Test7BulkOperations.cs",
+      "reasons": [
+        "ExecuteUpdateAsync is not supported by InMemory provider",
+        "ExecuteDeleteAsync is not supported by InMemory provider"
+      ],
+      "count": 4
+    }
+  ]
+}

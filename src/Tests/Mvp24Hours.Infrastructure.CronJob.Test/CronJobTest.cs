@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test
     /// <summary>
     /// Tests for CronJob module functionality.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class CronJobTest
     {
         #region [ Fields ]

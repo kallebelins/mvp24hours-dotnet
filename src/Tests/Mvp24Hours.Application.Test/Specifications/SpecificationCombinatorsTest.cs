@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -14,6 +14,7 @@ namespace Mvp24Hours.Application.Test.Specifications;
 /// <summary>
 /// Unit tests for SpecificationCombinators static class functionality.
 /// </summary>
+[Trait("Category", "Unit")]
 public class SpecificationCombinatorsTest
 {
     #region [ And Tests ]

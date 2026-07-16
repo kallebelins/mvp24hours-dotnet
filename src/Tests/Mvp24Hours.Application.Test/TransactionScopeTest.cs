@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Application.Test;
 /// <summary>
 /// Unit tests for TransactionScope and related transaction functionality.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TransactionScopeTest
 {
     #region [ TransactionScope Basic Tests ]

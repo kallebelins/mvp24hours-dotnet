@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// These tests verify CRUD operations with a real database.
 /// </summary>
 [Collection("SqlServer")]
+[Trait("Category", "Integration")]
 public class RepositoryServiceIntegrationTest : IAsyncLifetime
 {
     private readonly SqlServerContainerFixture _fixture;

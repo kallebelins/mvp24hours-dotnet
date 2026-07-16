@@ -369,3 +369,10 @@ prompts.md
 **/prompts.md
 prompts-*.md
 tasks/*
+!tasks/*.md
+!tasks/*.json
+# Raw TRX/coverage dumps under tasks/ (keep only md/json summaries versioned)
+tasks/test-results*/
+**/TestResults/
+*.trx
+coverage.cobertura.xml

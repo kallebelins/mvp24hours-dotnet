@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Observability;
 using System.Diagnostics;
@@ -9,6 +9,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Tests for OpenTelemetry Tracing components in Core.Observability
 /// </summary>
+[Trait("Category", "Unit")]
 public class ObservabilityTest
 {
     #region ActivitySources Tests

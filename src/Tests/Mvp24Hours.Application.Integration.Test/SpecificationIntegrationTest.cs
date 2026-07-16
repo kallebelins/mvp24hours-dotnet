@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// Integration tests for Specification Pattern using real SQL Server via Testcontainers.
 /// </summary>
 [Collection("SqlServer")]
+[Trait("Category", "Integration")]
 public class SpecificationIntegrationTest : IAsyncLifetime
 {
     private readonly SqlServerContainerFixture _fixture;

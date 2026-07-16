@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Helpers;
+﻿namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
-/// Testes unitários para JsonHelper (métodos existentes).
+/// Testes unitÃ¡rios para JsonHelper (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class JsonHelperTest
 {
     #region [ Serialize Tests ]
@@ -186,14 +187,14 @@ public class JsonHelperTest
     public void Serialize_WithUnicodeCharacters_HandlesCorrectly()
     {
         // Arrange
-        var obj = new Person { Id = 1, Name = "José 世界 🌍", Age = 30 };
+        var obj = new Person { Id = 1, Name = "JosÃ© ä¸–ç•Œ ðŸŒ", Age = 30 };
 
         // Act
         var json = JsonHelper.Serialize(obj);
         var deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
-        deserialized.Name.Should().Be("José 世界 🌍");
+        deserialized.Name.Should().Be("JosÃ© ä¸–ç•Œ ðŸŒ");
     }
 
     [Fact]
@@ -236,7 +237,7 @@ public class JsonHelperTest
         var child = new ChildNode { Name = "Child", Parent = parent };
         parent.Child = child;
 
-        // Act (não deve lançar exceção)
+        // Act (nÃ£o deve lanÃ§ar exceÃ§Ã£o)
         var json = JsonHelper.Serialize(parent);
 
         // Assert

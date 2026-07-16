@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -17,6 +17,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// <summary>
 /// Tests for Inbox/Outbox patterns implementation.
 /// </summary>
+[Trait("Category", "Unit")]
 public class InboxOutboxTest
 {
     #region [ Inbox Store Tests ]

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -14,6 +14,7 @@ using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
+[Trait("Category", "Unit")]
 public class ProjectionTest
 {
     #region [ Read Model Repository Tests ]
@@ -422,6 +423,7 @@ public class ProjectionTest
 
     #region [ Support Classes ]
 
+    [Trait("Category", "Unit")]
     public class TestReadModel
     {
         public Guid Id { get; set; }
@@ -432,6 +434,7 @@ public class ProjectionTest
 
     public record TestProjectionEvent(Guid ItemId, string Name) : MediatorDomainEventBase;
 
+    [Trait("Category", "Unit")]
     public class TestProjectionHandler : IProjectionHandler<TestProjectionEvent>
     {
         private readonly IReadModelRepository<TestReadModel> _repository;
@@ -453,6 +456,7 @@ public class ProjectionTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class ConcreteProjection : ProjectionBase
     {
         public override string Name => "ConcreteProjection";

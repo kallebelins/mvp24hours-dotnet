@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -17,6 +17,7 @@ namespace Mvp24Hours.Core.Test.Options;
 /// <summary>
 /// Tests for IOptions validation extensions and validators.
 /// </summary>
+[Trait("Category", "Unit")]
 public class OptionsValidationTest
 {
     #region Test Options Classes
@@ -38,6 +39,7 @@ public class OptionsValidationTest
         public bool EnableLogging { get; set; } = true;
     }
 
+    [Trait("Category", "Unit")]
     public class TestOptionsValidator : OptionsValidatorBase<TestOptions>
     {
         protected override void ConfigureValidation(
@@ -59,6 +61,7 @@ public class OptionsValidationTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class SimpleTestOptions
     {
         public string? ApiKey { get; set; }

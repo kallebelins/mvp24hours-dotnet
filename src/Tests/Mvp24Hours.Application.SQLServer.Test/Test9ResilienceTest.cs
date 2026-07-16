@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -18,6 +18,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
     /// <summary>
     /// Tests for EF Core resilience features.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class Test9ResilienceTest
     {
         #region EFCoreResilienceOptions Tests

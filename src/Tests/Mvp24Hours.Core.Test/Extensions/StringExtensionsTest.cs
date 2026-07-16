@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Extensions;
+﻿namespace Mvp24Hours.Core.Test.Extensions;
 
 /// <summary>
-/// Testes unitários para StringExtensions (métodos existentes).
+/// Testes unitÃ¡rios para StringExtensions (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class StringExtensionsTest
 {
     #region [ RegexReplace Tests ]

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -21,6 +21,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+    [Trait("Category", "Integration")]
     public class QueryServiceTest : IAsyncLifetime
     {
         #region [ Container ]

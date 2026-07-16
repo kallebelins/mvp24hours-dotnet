@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -13,6 +13,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// Unit tests for Domain Events.
 /// </summary>
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
 public class DomainEventTest
 {
     private readonly IServiceProvider _serviceProvider;

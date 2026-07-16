@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Guard clause validations.
 /// </summary>
+[Trait("Category", "Unit")]
 public class GuardTest
 {
     #region Null Tests

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -17,6 +17,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// <summary>
 /// Tests for observability components: RequestContext, Tracing, Telemetry, and Audit.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ObservabilityTest
 {
     #region [ RequestContext Tests ]
@@ -465,6 +466,7 @@ public class ObservabilityTest
     
     public record ContextResult(string? CorrelationId, string? RequestId, string? CausationId);
 
+    [Trait("Category", "Unit")]
     public class GetContextCommandHandler : IMediatorCommandHandler<GetContextCommand, ContextResult>
     {
         private readonly IRequestContextAccessor _contextAccessor;
@@ -490,6 +492,7 @@ public class ObservabilityTest
         public bool ShouldAuditRequestData => true;
     }
 
+    [Trait("Category", "Unit")]
     public class AuditableCommandHandler : IMediatorRequestHandler<AuditableCommand, Unit>
     {
         public Task<Unit> Handle(AuditableCommand request, CancellationToken cancellationToken)
@@ -500,6 +503,7 @@ public class ObservabilityTest
 
     public record FailingAuditableCommand : IMediatorCommand, IAuditable;
 
+    [Trait("Category", "Unit")]
     public class FailingAuditableCommandHandler : IMediatorRequestHandler<FailingAuditableCommand, Unit>
     {
         public Task<Unit> Handle(FailingAuditableCommand request, CancellationToken cancellationToken)

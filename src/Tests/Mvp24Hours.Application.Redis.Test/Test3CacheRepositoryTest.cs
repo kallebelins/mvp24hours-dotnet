@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -18,6 +18,7 @@ using Xunit.Priority;
 namespace Mvp24Hours.Application.Redis.Test
 {
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+    [Trait("Category", "Integration")]
     public class Test3CacheRepositoryTest : IAsyncLifetime
     {
         #region [ Container ]

@@ -1,4 +1,4 @@
-//=====================================================================================
+ï»¿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -15,13 +15,14 @@ namespace Mvp24Hours.Patterns.Test
     /// 
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+    [Trait("Category", "Unit")]
     public class HelperTest
     {
         [Fact, Priority(1)]
         public void ToDeserializeBusinessResult()
         {
             // arrange
-            var result = "{\"data\":\"77ec9da6-71c8-4be5-95e7-fc70fae45320\",\"messages\":[{\"key\":\"OPERATION_SUCCESS\",\"message\":\"Operação realizada com sucesso.\",\"type\":\"Success\"}],\"hasErrors\":false}".ToDeserializeBusinessResult<Guid>();
+            var result = "{\"data\":\"77ec9da6-71c8-4be5-95e7-fc70fae45320\",\"messages\":[{\"key\":\"OPERATION_SUCCESS\",\"message\":\"OperaÃ§Ã£o realizada com sucesso.\",\"type\":\"Success\"}],\"hasErrors\":false}".ToDeserializeBusinessResult<Guid>();
             // assert
             Assert.NotNull(result);
         }

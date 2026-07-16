@@ -10,6 +10,7 @@ using Xunit.Priority;
 namespace Mvp24Hours.Patterns.Test
 {
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+    [Trait("Category", "Unit")]
     public class MapProfileTest
     {
         public class TestAClass
@@ -17,6 +18,7 @@ namespace Mvp24Hours.Patterns.Test
             public int MyProperty1 { get; set; }
         }
 
+        [Trait("Category", "Unit")]
         public class TestBClass : IMapFrom
         {
             public int MyProperty1 { get; set; }
@@ -26,6 +28,7 @@ namespace Mvp24Hours.Patterns.Test
             }
         }
 
+        [Trait("Category", "Unit")]
         public class TestCClass : IMapFrom
         {
             public int MyProperty2 { get; set; }
@@ -35,6 +38,7 @@ namespace Mvp24Hours.Patterns.Test
             }
         }
 
+        [Trait("Category", "Unit")]
         public class TestDClass : IMapFrom
         {
             public int MyProperty1 { get; set; }
@@ -46,6 +50,7 @@ namespace Mvp24Hours.Patterns.Test
             }
         }
 
+        [Trait("Category", "Unit")]
         public class TestIgnoreClass : IMapFrom
         {
             public int MyProperty1 { get; set; }
@@ -56,6 +61,7 @@ namespace Mvp24Hours.Patterns.Test
             }
         }
 
+        [Trait("Category", "Unit")]
         public class TestPropertyClass : IMapFrom
         {
             public int MyPropertyX { get; set; }

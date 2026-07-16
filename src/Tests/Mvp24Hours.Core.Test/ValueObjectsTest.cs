@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Value Objects.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ValueObjectsTest
 {
     #region Email Tests
@@ -415,7 +416,7 @@ public class ValueObjectsTest
         var address = Address.Create(
             street: "Av. Paulista",
             number: "1000",
-            city: "São Paulo",
+            city: "SÃ£o Paulo",
             state: "SP",
             postalCode: "01310-100",
             country: "Brasil"
@@ -424,7 +425,7 @@ public class ValueObjectsTest
         // Assert
         address.Should().NotBeNull();
         address.Street.Should().Be("Av. Paulista");
-        address.City.Should().Be("São Paulo");
+        address.City.Should().Be("SÃ£o Paulo");
         address.Country.Should().Be("Brasil");
     }
 
@@ -435,7 +436,7 @@ public class ValueObjectsTest
         var address = Address.Create(
             street: "Av. Paulista",
             number: "1000",
-            city: "São Paulo",
+            city: "SÃ£o Paulo",
             state: "SP",
             postalCode: "01310-100",
             country: "Brasil"
@@ -447,7 +448,7 @@ public class ValueObjectsTest
         // Assert
         fullAddress.Should().Contain("Av. Paulista");
         fullAddress.Should().Contain("1000");
-        fullAddress.Should().Contain("São Paulo");
+        fullAddress.Should().Contain("SÃ£o Paulo");
         fullAddress.Should().Contain("SP");
         fullAddress.Should().Contain("Brasil");
     }
@@ -459,7 +460,7 @@ public class ValueObjectsTest
         var act = () => Address.Create(
             street: "",
             number: "1000",
-            city: "São Paulo",
+            city: "SÃ£o Paulo",
             state: "SP",
             postalCode: "01310-100",
             country: "Brasil"

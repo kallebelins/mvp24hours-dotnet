@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -14,6 +14,7 @@ using Xunit.Priority;
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Assembly)]
+[Trait("Category", "Unit")]
 public class SagaTest
 {
     #region Test Data
@@ -30,6 +31,7 @@ public class SagaTest
         public List<string> CompensatedSteps { get; set; } = new();
     }
 
+    [Trait("Category", "Unit")]
     public class ReserveStockStep : SagaStepBase<OrderSagaData>
     {
         public override string Name => "ReserveStock";
@@ -50,6 +52,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class ProcessPaymentStep : SagaStepBase<OrderSagaData>
     {
         public override string Name => "ProcessPayment";
@@ -70,6 +73,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class ShipOrderStep : SagaStepBase<OrderSagaData>
     {
         public override string Name => "ShipOrder";
@@ -90,6 +94,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class FailingStep : SagaStepBase<OrderSagaData>
     {
         public override string Name => "FailingStep";
@@ -101,6 +106,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class FailingCompensationStep : SagaStepBase<OrderSagaData>
     {
         public override string Name => "FailingCompensation";
@@ -118,6 +124,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class TestOrderSaga : SagaBase<OrderSagaData>
     {
         public TestOrderSaga(IServiceProvider serviceProvider) : base(serviceProvider)
@@ -134,6 +141,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class FailingSaga : SagaBase<OrderSagaData>
     {
         public FailingSaga(IServiceProvider serviceProvider) : base(serviceProvider)
@@ -147,6 +155,7 @@ public class SagaTest
         }
     }
 
+    [Trait("Category", "Unit")]
     public class PartialCompensationSaga : SagaBase<OrderSagaData>
     {
         public PartialCompensationSaga(IServiceProvider serviceProvider) : base(serviceProvider)

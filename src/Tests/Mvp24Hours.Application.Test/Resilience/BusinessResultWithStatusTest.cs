@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -13,6 +13,7 @@ namespace Mvp24Hours.Application.Test.Resilience;
 /// <summary>
 /// Unit tests for BusinessResultWithStatus functionality.
 /// </summary>
+[Trait("Category", "Unit")]
 public class BusinessResultWithStatusTest
 {
     #region [ Factory Method Tests - Success ]

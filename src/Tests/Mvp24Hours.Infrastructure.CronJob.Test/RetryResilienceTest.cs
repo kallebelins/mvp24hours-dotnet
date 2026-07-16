@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -24,6 +24,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test;
 /// <summary>
 /// Tests for CronJob retry and resilience features.
 /// </summary>
+[Trait("Category", "Unit")]
 public class RetryResilienceTest
 {
     #region Retry Tests

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -17,6 +17,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 {
     #region [ Test Commands ]
 
+    [Trait("Category", "Unit")]
     public class TestScheduledCommand : IScheduledCommand
     {
         public string Data { get; set; } = string.Empty;
@@ -29,6 +30,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
     #endregion
 
+    [Trait("Category", "Unit")]
     public class ScheduledCommandTest
     {
         #region [ InMemoryScheduledCommandStore Tests ]

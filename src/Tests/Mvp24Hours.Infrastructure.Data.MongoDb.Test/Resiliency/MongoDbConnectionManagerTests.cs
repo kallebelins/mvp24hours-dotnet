@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Tests for MongoDbConnectionManager
 //=====================================================================================
 using FluentAssertions;
@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 
+[Trait("Category", "Unit")]
 public class MongoDbConnectionManagerTests
 {
     private MongoDbResiliencyOptions CreateDefaultOptions() => new()

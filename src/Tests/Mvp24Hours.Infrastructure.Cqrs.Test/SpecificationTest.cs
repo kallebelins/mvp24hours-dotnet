@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -15,6 +15,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 {
     #region [ Test Entities ]
 
+    [Trait("Category", "Unit")]
     public class Product
     {
         public int Id { get; set; }
@@ -29,12 +30,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
     #region [ Test Specifications ]
 
+    [Trait("Category", "Unit")]
     public class ActiveProductSpec : Specification<Product>
     {
         protected override Expression<Func<Product, bool>> Criteria =>
             p => p.IsActive;
     }
 
+    [Trait("Category", "Unit")]
     public class ExpensiveProductSpec : Specification<Product>
     {
         private readonly decimal _minPrice;
@@ -48,12 +51,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             p => p.Price >= _minPrice;
     }
 
+    [Trait("Category", "Unit")]
     public class InStockProductSpec : Specification<Product>
     {
         protected override Expression<Func<Product, bool>> Criteria =>
             p => p.Stock > 0;
     }
 
+    [Trait("Category", "Unit")]
     public class CategoryProductSpec : Specification<Product>
     {
         private readonly string _category;
@@ -67,6 +72,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             p => p.Category == _category;
     }
 
+    [Trait("Category", "Unit")]
     public class ProductWithIncludesSpec : Specification<Product>
     {
         public ProductWithIncludesSpec()
@@ -84,6 +90,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
     #region [ Test Queries ]
 
+    [Trait("Category", "Unit")]
     public class GetProductsQuery : PaginatedQuery<Product, IEnumerable<Product>>
     {
         public string? CategoryFilter { get; set; }
@@ -94,6 +101,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         }
     }
 
+    [Trait("Category", "Unit")]
     public class GetActiveProductsQuery : SortedQuery<Product, IEnumerable<Product>>
     {
         public GetActiveProductsQuery()
@@ -105,6 +113,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
     #endregion
 
+    [Trait("Category", "Unit")]
     public class SpecificationTest
     {
         #region [ Specification<T> - IsSatisfiedBy Tests ]

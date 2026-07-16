@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Helpers;
+﻿namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
-/// Testes unitários para StringHelper (métodos existentes).
+/// Testes unitÃ¡rios para StringHelper (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class StringHelperTest
 {
     #region [ GenerateKey Tests ]
@@ -54,7 +55,7 @@ public class StringHelperTest
 
         // Assert
         result.Should().MatchRegex("^[A-Z0-9]+$");
-        result.Should().NotContainAny("a", "b", "c", "z"); // Sem letras minúsculas
+        result.Should().NotContainAny("a", "b", "c", "z"); // Sem letras minÃºsculas
     }
 
     [Fact]
@@ -78,7 +79,7 @@ public class StringHelperTest
 
         // Assert
         results.Should().HaveCount(100);
-        results.Distinct().Should().HaveCount(100); // Todos únicos (alta probabilidade)
+        results.Distinct().Should().HaveCount(100); // Todos Ãºnicos (alta probabilidade)
     }
 
     [Fact]

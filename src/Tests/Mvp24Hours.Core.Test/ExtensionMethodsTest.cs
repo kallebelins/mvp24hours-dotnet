@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Extension Methods in Mvp24Hours.Core.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExtensionMethodsTest
 {
     #region StringExtensions Tests
@@ -776,6 +777,7 @@ public class ExtensionMethodsTest
 
     #region ObjectExtensions Tests
 
+    [Trait("Category", "Unit")]
     public class SourceClass
     {
         public int Id { get; set; }
@@ -783,6 +785,7 @@ public class ExtensionMethodsTest
         public decimal Price { get; set; }
     }
 
+    [Trait("Category", "Unit")]
     public class DestinationClass
     {
         public int Id { get; set; }

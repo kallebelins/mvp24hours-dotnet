@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -14,12 +14,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// <summary>
 /// Tests for extensibility components: Pre/Post Processors, Exception Handlers, Pipeline Hooks, and Decorators.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ExtensibilityTests
 {
     #region [ Test Types ]
 
     public record TestCommand(string Value) : IMediatorCommand<string>;
 
+    [Trait("Category", "Unit")]
     public class TestCommandHandler : IMediatorCommandHandler<TestCommand, string>
     {
         public Task<string> Handle(TestCommand request, CancellationToken cancellationToken)
@@ -30,6 +32,7 @@ public class ExtensibilityTests
 
     public record FailingCommand(string Value) : IMediatorCommand<string>;
 
+    [Trait("Category", "Unit")]
     public class FailingCommandHandler : IMediatorCommandHandler<FailingCommand, string>
     {
         public Task<string> Handle(FailingCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class ExtensibilityTests
 
     #region [ Pre-Processor Tests ]
 
+    [Trait("Category", "Unit")]
     public class TestPreProcessor : IPreProcessor<TestCommand>
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -53,6 +57,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class GlobalTestPreProcessor : IPreProcessorGlobal
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -121,6 +126,7 @@ public class ExtensibilityTests
 
     #region [ Post-Processor Tests ]
 
+    [Trait("Category", "Unit")]
     public class TestPostProcessor : IPostProcessor<TestCommand, string>
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -132,6 +138,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class GlobalTestPostProcessor : IPostProcessorGlobal
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -199,6 +206,7 @@ public class ExtensibilityTests
 
     #region [ Exception Handler Tests ]
 
+    [Trait("Category", "Unit")]
     public class InvalidOperationExceptionHandler 
         : IExceptionHandler<FailingCommand, string, InvalidOperationException>
     {
@@ -212,6 +220,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class RethrowExceptionHandler 
         : IExceptionHandler<FailingCommand, string, InvalidOperationException>
     {
@@ -225,6 +234,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class GlobalInvalidOperationExceptionHandler : IExceptionHandlerGlobal<InvalidOperationException>
     {
         public Task<ExceptionHandlingResult<object?>> HandleAsync(
@@ -307,6 +317,7 @@ public class ExtensibilityTests
 
     #region [ Pipeline Hook Tests ]
 
+    [Trait("Category", "Unit")]
     public class TestPipelineHook : PipelineHookBase
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -330,6 +341,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class TypedTestPipelineHook : PipelineHookBase<TestCommand>
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -431,6 +443,7 @@ public class ExtensibilityTests
 
     #region [ Mediator Decorator Tests ]
 
+    [Trait("Category", "Unit")]
     public class TestMediatorDecorator : MediatorDecoratorBase
     {
         public static List<string> ExecutionLog { get; } = new();
@@ -448,6 +461,7 @@ public class ExtensibilityTests
         }
     }
 
+    [Trait("Category", "Unit")]
     public class AnotherMediatorDecorator : MediatorDecoratorBase
     {
         public static List<string> ExecutionLog { get; } = new();

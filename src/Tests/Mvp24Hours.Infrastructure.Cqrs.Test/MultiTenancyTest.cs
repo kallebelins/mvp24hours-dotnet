@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -15,6 +15,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// Unit tests for multi-tenancy features.
 /// </summary>
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
 public class MultiTenancyTest
 {
     #region [ TenantContext Tests ]

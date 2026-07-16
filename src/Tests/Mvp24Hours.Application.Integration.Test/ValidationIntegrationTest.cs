@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -12,6 +12,7 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// <summary>
 /// Tests for validation using FluentValidation.
 /// </summary>
+[Trait("Category", "Integration")]
 public class ValidationIntegrationTest
 {
     private readonly ProductValidator _productValidator;

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Strongly-Typed Entity IDs.
 /// </summary>
+[Trait("Category", "Unit")]
 public class EntityIdTest
 {
     #region Test ID Types
@@ -22,12 +23,14 @@ public class EntityIdTest
         public static TestGuidId Empty => new(Guid.Empty);
     }
 
+    [Trait("Category", "Unit")]
     public sealed class AnotherGuidId : GuidEntityId<AnotherGuidId>
     {
         public AnotherGuidId(Guid value) : base(value) { }
         public static AnotherGuidId New() => new(Guid.NewGuid());
     }
 
+    [Trait("Category", "Unit")]
     public sealed class TestIntId : IntEntityId<TestIntId>
     {
         public TestIntId(int value) : base(value) { }
@@ -38,6 +41,7 @@ public class EntityIdTest
         public TestLongId(long value) : base(value) { }
     }
 
+    [Trait("Category", "Unit")]
     public sealed class TestStringId : StringEntityId<TestStringId>
     {
         public TestStringId(string value) : base(value) { }

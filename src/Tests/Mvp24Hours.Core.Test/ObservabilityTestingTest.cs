@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Observability;
@@ -17,6 +17,7 @@ namespace Mvp24Hours.Core.Test;
 /// Tests for the observability testing utilities (FakeLogger, FakeActivityListener, FakeMeterListener, assertions).
 /// These tests demonstrate how to use the testing infrastructure for observability.
 /// </summary>
+[Trait("Category", "Unit")]
 public class ObservabilityTestingTest
 {
     #region FakeLogger Tests

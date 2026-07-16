@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -23,6 +23,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
     /// Tests for bulk operations (BulkInsert, BulkUpdate, BulkDelete, ExecuteUpdate, ExecuteDelete)
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+    [Trait("Category", "Unit")]
     public class Test7BulkOperations
     {
         private readonly IServiceProvider _serviceProvider;

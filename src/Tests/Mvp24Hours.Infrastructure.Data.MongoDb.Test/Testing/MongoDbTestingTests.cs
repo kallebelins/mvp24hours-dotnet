@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -14,6 +14,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Testing;
 /// <summary>
 /// Tests for MongoDB Testing utilities.
 /// </summary>
+[Trait("Category", "Unit")]
 public class MongoDbTestingTests
 {
     #region Test Entity
@@ -526,6 +527,7 @@ public class MongoDbTestingTests
 
     #region IMongoDataSeeder Tests
 
+    [Trait("Category", "Unit")]
     public class TestCustomerSeeder : IMongoDataSeeder
     {
         public void Seed(Mvp24HoursContext context)

@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Helpers;
+﻿namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
-/// Testes unitários para ObjectHelper (métodos existentes).
+/// Testes unitÃ¡rios para ObjectHelper (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class ObjectHelperTest
 {
     #region [ Clone Tests ]

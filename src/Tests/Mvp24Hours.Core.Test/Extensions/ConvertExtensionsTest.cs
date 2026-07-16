@@ -1,8 +1,9 @@
-namespace Mvp24Hours.Core.Test.Extensions;
+﻿namespace Mvp24Hours.Core.Test.Extensions;
 
 /// <summary>
-/// Testes unitários para ConvertExtensions (métodos existentes).
+/// Testes unitÃ¡rios para ConvertExtensions (mÃ©todos existentes).
 /// </summary>
+[Trait("Category", "Unit")]
 public class ConvertExtensionsTest
 {
     #region [ ToBase64 / From64 Tests ]
@@ -25,7 +26,7 @@ public class ConvertExtensionsTest
     public void ToBase64_WithUnicode_EncodesCorrectly()
     {
         // Arrange
-        var input = "José 世界 🌍";
+        var input = "JosÃ© ä¸–ç•Œ ðŸŒ";
 
         // Act
         var base64 = input.ToBase64();
@@ -393,10 +394,10 @@ public class ConvertExtensionsTest
     #region [ RemoveDiacritics Tests ]
 
     [Theory]
-    [InlineData("Olá Mundo", "Ola Mundo")]
-    [InlineData("Àçênto", "Acento")]
-    [InlineData("Café", "Cafe")]
-    [InlineData("Zürich", "Zurich")]
+    [InlineData("Ol\u00e1 Mundo", "Ola Mundo")]
+    [InlineData("\u00c0\u00e7\u00eanto", "Acento")]
+    [InlineData("Caf\u00e9", "Cafe")]
+    [InlineData("Z\u00fcrich", "Zurich")]
     public void RemoveDiacritics_RemovesAccents(string input, string expected)
     {
         // Act
@@ -424,8 +425,8 @@ public class ConvertExtensionsTest
     #region [ ReplaceSpecialChar Tests ]
 
     [Theory]
-    [InlineData("Olá", "Ola")]
-    [InlineData("Café", "Cafe")]
+    [InlineData("Ol\u00e1", "Ola")]
+    [InlineData("Caf\u00e9", "Cafe")]
     public void ReplaceSpecialChar_RemovesDiacritics(string input, string expected)
     {
         // Act

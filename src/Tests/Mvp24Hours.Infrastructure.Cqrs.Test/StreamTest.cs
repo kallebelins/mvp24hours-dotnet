@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -12,6 +12,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// Unit tests for streaming requests (IAsyncEnumerable).
 /// </summary>
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
 public class StreamTest
 {
     private readonly IMediator _mediator;

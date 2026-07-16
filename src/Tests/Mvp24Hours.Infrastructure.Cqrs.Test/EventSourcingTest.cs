@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
+[Trait("Category", "Unit")]
 public class EventSourcingTest
 {
     #region AggregateRoot Tests
@@ -453,7 +454,7 @@ public class EventSourcingTest
         var strategy = new EventCountSnapshotStrategy(5);
         var order = TestOrder.Create("test@example.com");
 
-        // Version 1, last snapshot 0 → not yet
+        // Version 1, last snapshot 0 â†’ not yet
         Assert.False(strategy.ShouldTakeSnapshot(order, 0));
 
         // Simulate more events
@@ -462,7 +463,7 @@ public class EventSourcingTest
             order.AddItem(Guid.NewGuid(), $"Product {i}", 1, 10.00m);
         }
 
-        // Version 5, last snapshot 0 → should take
+        // Version 5, last snapshot 0 â†’ should take
         Assert.True(strategy.ShouldTakeSnapshot(order, 0));
     }
 

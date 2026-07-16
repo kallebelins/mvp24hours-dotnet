@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -19,6 +19,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 /// For detailed performance analysis, consider using BenchmarkDotNet in a separate project.
 /// </remarks>
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
 public class BenchmarkTest
 {
     private IServiceProvider _serviceProvider = null!;

@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -10,6 +10,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Smart Enumerations (Enumeration Pattern).
 /// </summary>
+[Trait("Category", "Unit")]
 public class EnumerationTest
 {
     #region Test Enumeration
@@ -17,6 +18,7 @@ public class EnumerationTest
     /// <summary>
     /// Test enumeration for order status.
     /// </summary>
+    [Trait("Category", "Unit")]
     public class OrderStatus : Enumeration<OrderStatus>
     {
         public static readonly OrderStatus Pending = new(1, nameof(Pending));

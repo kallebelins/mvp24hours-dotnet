@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -15,6 +15,7 @@ namespace Mvp24Hours.Core.Test;
 /// Unit tests for Keyed Services extensions.
 /// Tests the .NET 8+ Keyed Services functionality wrapper.
 /// </summary>
+[Trait("Category", "Unit")]
 public class KeyedServicesTest
 {
     #region Test Interfaces and Implementations
@@ -24,6 +25,7 @@ public class KeyedServicesTest
         string GetName();
     }
 
+    [Trait("Category", "Unit")]
     public class ServiceA : ITestService
     {
         public string GetName() => "ServiceA";
@@ -34,6 +36,7 @@ public class KeyedServicesTest
         public string GetName() => "ServiceB";
     }
 
+    [Trait("Category", "Unit")]
     public class ServiceC : ITestService
     {
         public string GetName() => "ServiceC";
@@ -44,6 +47,7 @@ public class KeyedServicesTest
         string GetValue();
     }
 
+    [Trait("Category", "Unit")]
     public class TestDependency : ITestDependency
     {
         public string GetValue() => "dependency-value";
@@ -62,12 +66,14 @@ public class KeyedServicesTest
     }
 
     [KeyedService("test:attributed", typeof(ITestService))]
+    [Trait("Category", "Unit")]
     public class AttributedService : ITestService
     {
         public string GetName() => "AttributedService";
     }
 
     [KeyedService("test:scoped", typeof(ITestService), Lifetime = ServiceLifetime.Scoped)]
+    [Trait("Category", "Unit")]
     public class ScopedAttributedService : ITestService
     {
         public string GetName() => "ScopedAttributedService";

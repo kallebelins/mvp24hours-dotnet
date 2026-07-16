@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Core.Test;
 /// Unit tests for TimeProvider integration with IClock.
 /// Tests the adapters, extensions, and DI registration.
 /// </summary>
+[Trait("Category", "Unit")]
 public class TimeProviderTest
 {
     #region TimeProviderAdapter Tests

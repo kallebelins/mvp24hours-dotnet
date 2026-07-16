@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -16,6 +16,7 @@ namespace Mvp24Hours.Core.Test;
 /// <summary>
 /// Unit tests for Rate Limiting functionality using System.Threading.RateLimiting.
 /// </summary>
+[Trait("Category", "Unit")]
 public class RateLimitingTest : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;

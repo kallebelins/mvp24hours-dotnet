@@ -1,4 +1,4 @@
-//=====================================================================================
+﻿//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -20,6 +20,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
     /// <summary>
     /// Unit tests for HybridCache integration (.NET 9).
     /// </summary>
+    [Trait("Category", "Unit")]
     public class HybridCacheTest
     {
         #region MvpHybridCacheOptions Tests
@@ -783,6 +784,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
 
     #region Test Entities
 
+    [Trait("Category", "Unit")]
     public class TestEntity
     {
         public int Id { get; set; }
