@@ -6,7 +6,9 @@
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- Keep false: transitive pinning force-downgrades RabbitMQ.Client 6.8.1 vs MassTransit (>= 7.2.1) → NU1109. Cryptography.Xml pinned via direct PackageReference on Infrastructure (task 7.1). Revisit when bumping RabbitMQ.Client to ≥7.2.1. -->
+    <!-- Keep false for now: enabling transitive pinning previously conflicted when MassTransit
+         forced RabbitMQ.Client ≥7 while Infrastructure.RabbitMQ stays on 6.8.1 (IModel).
+         Cryptography.Xml is pinned via direct PackageReference on Infrastructure (task 7.1). -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
@@ -18,9 +20,6 @@
     <PackageVersion Include="Cronos" Version="0.13.0" />
     <PackageVersion Include="FluentAssertions" Version="8.10.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
-    <PackageVersion Include="MassTransit" Version="9.1.2" />
-    <PackageVersion Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="9.1.2" />
     <PackageVersion Include="MessagePack" Version="3.1.8" />
     <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.3.11" />
     <PackageVersion Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.11" />
