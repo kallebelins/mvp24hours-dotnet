@@ -13,7 +13,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 /// Uses <see cref="LoggerMessageAttribute"/> for zero-allocation logging.
 /// </summary>
 /// <remarks>
-/// Event IDs: 4000-4999 (RabbitMQ module range)
+/// Event IDs: 4000-4999 (RabbitMQ module range). Each message has a unique EventId.
 /// </remarks>
 public static partial class RabbitMQLoggerMessages
 {
@@ -21,51 +21,107 @@ public static partial class RabbitMQLoggerMessages
 
     private const int RabbitMQEventIdBase = 4000;
 
-    public const int ConnectionEventId = RabbitMQEventIdBase + 1;
-    public const int ChannelEventId = RabbitMQEventIdBase + 2;
-    public const int PublishEventId = RabbitMQEventIdBase + 3;
-    public const int ConsumeEventId = RabbitMQEventIdBase + 4;
-    public const int AckNackEventId = RabbitMQEventIdBase + 5;
-    public const int ExchangeQueueEventId = RabbitMQEventIdBase + 6;
-    public const int RequestResponseEventId = RabbitMQEventIdBase + 7;
-    public const int BatchEventId = RabbitMQEventIdBase + 8;
-    public const int SchedulingEventId = RabbitMQEventIdBase + 9;
-    public const int SagaEventId = RabbitMQEventIdBase + 10;
-    public const int FilterEventId = RabbitMQEventIdBase + 11;
-    public const int TenantEventId = RabbitMQEventIdBase + 12;
-    public const int DeadLetterEventId = RabbitMQEventIdBase + 13;
-    public const int ResiliencyEventId = RabbitMQEventIdBase + 14;
+    // Connection
+    public const int ConnectionEstablishedEventId = RabbitMQEventIdBase + 1;
+    public const int ConnectionLostEventId = RabbitMQEventIdBase + 2;
+    public const int ConnectionRecoveredEventId = RabbitMQEventIdBase + 3;
+    public const int ConnectionFailedEventId = RabbitMQEventIdBase + 4;
+    public const int ConnectionClosedEventId = RabbitMQEventIdBase + 5;
+
+    // Channel
+    public const int ChannelCreatedEventId = RabbitMQEventIdBase + 6;
+    public const int ChannelClosedEventId = RabbitMQEventIdBase + 7;
+
+    // Publishing
+    public const int MessagePublishedEventId = RabbitMQEventIdBase + 8;
+    public const int PublisherConfirmReceivedEventId = RabbitMQEventIdBase + 9;
+    public const int PublisherNackReceivedEventId = RabbitMQEventIdBase + 10;
+    public const int PublishFailedEventId = RabbitMQEventIdBase + 11;
+
+    // Consuming
+    public const int MessageReceivedEventId = RabbitMQEventIdBase + 12;
+    public const int MessageProcessedEventId = RabbitMQEventIdBase + 13;
+    public const int MessageProcessingFailedEventId = RabbitMQEventIdBase + 14;
+    public const int ConsumerStartedEventId = RabbitMQEventIdBase + 15;
+    public const int ConsumerStoppedEventId = RabbitMQEventIdBase + 16;
+
+    // Acknowledgment
+    public const int MessageAcknowledgedEventId = RabbitMQEventIdBase + 17;
+    public const int MessageRejectedEventId = RabbitMQEventIdBase + 18;
+    public const int MessageNackedEventId = RabbitMQEventIdBase + 19;
+
+    // Exchange/Queue
+    public const int ExchangeDeclaredEventId = RabbitMQEventIdBase + 20;
+    public const int QueueDeclaredEventId = RabbitMQEventIdBase + 21;
+    public const int QueueBoundEventId = RabbitMQEventIdBase + 22;
+
+    // Request/Response
+    public const int RequestSentEventId = RabbitMQEventIdBase + 23;
+    public const int ResponseReceivedEventId = RabbitMQEventIdBase + 24;
+    public const int RequestTimedOutEventId = RabbitMQEventIdBase + 25;
+
+    // Batch
+    public const int BatchStartedEventId = RabbitMQEventIdBase + 26;
+    public const int BatchCompletedEventId = RabbitMQEventIdBase + 27;
+    public const int BatchPartiallyFailedEventId = RabbitMQEventIdBase + 28;
+
+    // Scheduling
+    public const int MessageScheduledEventId = RabbitMQEventIdBase + 29;
+    public const int ScheduledMessageDeliveredEventId = RabbitMQEventIdBase + 30;
+    public const int ScheduledMessageCancelledEventId = RabbitMQEventIdBase + 31;
+    public const int RecurringMessageTriggeredEventId = RabbitMQEventIdBase + 32;
+
+    // Saga
+    public const int SagaMessageReceivedEventId = RabbitMQEventIdBase + 33;
+    public const int SagaStateTransitionedEventId = RabbitMQEventIdBase + 34;
+
+    // Filters
+    public const int FilterExecutedEventId = RabbitMQEventIdBase + 35;
+    public const int MessageRejectedByFilterEventId = RabbitMQEventIdBase + 36;
+
+    // Multi-tenancy
+    public const int TenantContextResolvedEventId = RabbitMQEventIdBase + 37;
+    public const int TenantQueueUsedEventId = RabbitMQEventIdBase + 38;
+
+    // Dead Letter
+    public const int MessageSentToDeadLetterEventId = RabbitMQEventIdBase + 39;
+    public const int DeadLetterMessageReprocessedEventId = RabbitMQEventIdBase + 40;
+
+    // Resiliency
+    public const int MessageRetryScheduledEventId = RabbitMQEventIdBase + 41;
+    public const int CircuitBreakerOpenedEventId = RabbitMQEventIdBase + 42;
+    public const int CircuitBreakerClosedEventId = RabbitMQEventIdBase + 43;
 
     #endregion
 
     #region [ Connection ]
 
     [LoggerMessage(
-        EventId = ConnectionEventId,
+        EventId = ConnectionEstablishedEventId,
         Level = LogLevel.Information,
         Message = "RabbitMQ connection established. Host: {Host}, Port: {Port}")]
     public static partial void ConnectionEstablished(ILogger logger, string host, int port);
 
     [LoggerMessage(
-        EventId = ConnectionEventId,
+        EventId = ConnectionLostEventId,
         Level = LogLevel.Warning,
         Message = "RabbitMQ connection lost. Attempting reconnection...")]
     public static partial void ConnectionLost(ILogger logger);
 
     [LoggerMessage(
-        EventId = ConnectionEventId,
+        EventId = ConnectionRecoveredEventId,
         Level = LogLevel.Information,
         Message = "RabbitMQ connection recovered. Reconnection attempts: {Attempts}")]
     public static partial void ConnectionRecovered(ILogger logger, int attempts);
 
     [LoggerMessage(
-        EventId = ConnectionEventId,
+        EventId = ConnectionFailedEventId,
         Level = LogLevel.Error,
         Message = "RabbitMQ connection failed after {Attempts} attempts")]
     public static partial void ConnectionFailed(ILogger logger, Exception exception, int attempts);
 
     [LoggerMessage(
-        EventId = ConnectionEventId,
+        EventId = ConnectionClosedEventId,
         Level = LogLevel.Information,
         Message = "RabbitMQ connection closed gracefully")]
     public static partial void ConnectionClosed(ILogger logger);
@@ -75,13 +131,13 @@ public static partial class RabbitMQLoggerMessages
     #region [ Channel ]
 
     [LoggerMessage(
-        EventId = ChannelEventId,
+        EventId = ChannelCreatedEventId,
         Level = LogLevel.Debug,
         Message = "RabbitMQ channel created. ChannelNumber: {ChannelNumber}")]
     public static partial void ChannelCreated(ILogger logger, int channelNumber);
 
     [LoggerMessage(
-        EventId = ChannelEventId,
+        EventId = ChannelClosedEventId,
         Level = LogLevel.Debug,
         Message = "RabbitMQ channel closed. ChannelNumber: {ChannelNumber}")]
     public static partial void ChannelClosed(ILogger logger, int channelNumber);
@@ -91,25 +147,25 @@ public static partial class RabbitMQLoggerMessages
     #region [ Publishing ]
 
     [LoggerMessage(
-        EventId = PublishEventId,
+        EventId = MessagePublishedEventId,
         Level = LogLevel.Debug,
         Message = "Message published to exchange '{Exchange}' with routing key '{RoutingKey}'. MessageId: {MessageId}")]
     public static partial void MessagePublished(ILogger logger, string exchange, string routingKey, string messageId);
 
     [LoggerMessage(
-        EventId = PublishEventId,
+        EventId = PublisherConfirmReceivedEventId,
         Level = LogLevel.Debug,
         Message = "Publisher confirm received. DeliveryTag: {DeliveryTag}, Multiple: {Multiple}")]
     public static partial void PublisherConfirmReceived(ILogger logger, ulong deliveryTag, bool multiple);
 
     [LoggerMessage(
-        EventId = PublishEventId,
+        EventId = PublisherNackReceivedEventId,
         Level = LogLevel.Warning,
         Message = "Publisher nack received. DeliveryTag: {DeliveryTag}, Multiple: {Multiple}")]
     public static partial void PublisherNackReceived(ILogger logger, ulong deliveryTag, bool multiple);
 
     [LoggerMessage(
-        EventId = PublishEventId,
+        EventId = PublishFailedEventId,
         Level = LogLevel.Error,
         Message = "Message publish failed to exchange '{Exchange}'. MessageId: {MessageId}")]
     public static partial void PublishFailed(ILogger logger, Exception exception, string exchange, string messageId);
@@ -119,31 +175,31 @@ public static partial class RabbitMQLoggerMessages
     #region [ Consuming ]
 
     [LoggerMessage(
-        EventId = ConsumeEventId,
+        EventId = MessageReceivedEventId,
         Level = LogLevel.Debug,
         Message = "Message received from queue '{Queue}'. MessageId: {MessageId}, Type: {MessageType}")]
     public static partial void MessageReceived(ILogger logger, string queue, string messageId, string messageType);
 
     [LoggerMessage(
-        EventId = ConsumeEventId,
+        EventId = MessageProcessedEventId,
         Level = LogLevel.Debug,
         Message = "Message '{MessageId}' processed by consumer '{ConsumerType}' in {ElapsedMs}ms")]
     public static partial void MessageProcessed(ILogger logger, string messageId, string consumerType, long elapsedMs);
 
     [LoggerMessage(
-        EventId = ConsumeEventId,
+        EventId = MessageProcessingFailedEventId,
         Level = LogLevel.Error,
         Message = "Message '{MessageId}' processing failed by consumer '{ConsumerType}'")]
     public static partial void MessageProcessingFailed(ILogger logger, Exception exception, string messageId, string consumerType);
 
     [LoggerMessage(
-        EventId = ConsumeEventId,
+        EventId = ConsumerStartedEventId,
         Level = LogLevel.Information,
         Message = "Consumer '{ConsumerType}' started on queue '{Queue}'. PrefetchCount: {PrefetchCount}")]
     public static partial void ConsumerStarted(ILogger logger, string consumerType, string queue, int prefetchCount);
 
     [LoggerMessage(
-        EventId = ConsumeEventId,
+        EventId = ConsumerStoppedEventId,
         Level = LogLevel.Information,
         Message = "Consumer '{ConsumerType}' stopped on queue '{Queue}'")]
     public static partial void ConsumerStopped(ILogger logger, string consumerType, string queue);
@@ -153,19 +209,19 @@ public static partial class RabbitMQLoggerMessages
     #region [ Acknowledgment ]
 
     [LoggerMessage(
-        EventId = AckNackEventId,
+        EventId = MessageAcknowledgedEventId,
         Level = LogLevel.Trace,
         Message = "Message acknowledged. DeliveryTag: {DeliveryTag}")]
     public static partial void MessageAcknowledged(ILogger logger, ulong deliveryTag);
 
     [LoggerMessage(
-        EventId = AckNackEventId,
+        EventId = MessageRejectedEventId,
         Level = LogLevel.Warning,
         Message = "Message rejected. DeliveryTag: {DeliveryTag}, Requeue: {Requeue}")]
     public static partial void MessageRejected(ILogger logger, ulong deliveryTag, bool requeue);
 
     [LoggerMessage(
-        EventId = AckNackEventId,
+        EventId = MessageNackedEventId,
         Level = LogLevel.Warning,
         Message = "Message nacked. DeliveryTag: {DeliveryTag}, Requeue: {Requeue}")]
     public static partial void MessageNacked(ILogger logger, ulong deliveryTag, bool requeue);
@@ -175,19 +231,19 @@ public static partial class RabbitMQLoggerMessages
     #region [ Exchange/Queue ]
 
     [LoggerMessage(
-        EventId = ExchangeQueueEventId,
+        EventId = ExchangeDeclaredEventId,
         Level = LogLevel.Debug,
         Message = "Exchange '{Exchange}' declared. Type: {ExchangeType}")]
     public static partial void ExchangeDeclared(ILogger logger, string exchange, string exchangeType);
 
     [LoggerMessage(
-        EventId = ExchangeQueueEventId,
+        EventId = QueueDeclaredEventId,
         Level = LogLevel.Debug,
         Message = "Queue '{Queue}' declared. Durable: {Durable}")]
     public static partial void QueueDeclared(ILogger logger, string queue, bool durable);
 
     [LoggerMessage(
-        EventId = ExchangeQueueEventId,
+        EventId = QueueBoundEventId,
         Level = LogLevel.Debug,
         Message = "Queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'")]
     public static partial void QueueBound(ILogger logger, string queue, string exchange, string routingKey);
@@ -197,19 +253,19 @@ public static partial class RabbitMQLoggerMessages
     #region [ Request/Response ]
 
     [LoggerMessage(
-        EventId = RequestResponseEventId,
+        EventId = RequestSentEventId,
         Level = LogLevel.Debug,
         Message = "Request sent. CorrelationId: {CorrelationId}, RequestType: {RequestType}")]
     public static partial void RequestSent(ILogger logger, string correlationId, string requestType);
 
     [LoggerMessage(
-        EventId = RequestResponseEventId,
+        EventId = ResponseReceivedEventId,
         Level = LogLevel.Debug,
         Message = "Response received. CorrelationId: {CorrelationId}, Duration: {ElapsedMs}ms")]
     public static partial void ResponseReceived(ILogger logger, string correlationId, long elapsedMs);
 
     [LoggerMessage(
-        EventId = RequestResponseEventId,
+        EventId = RequestTimedOutEventId,
         Level = LogLevel.Warning,
         Message = "Request timed out. CorrelationId: {CorrelationId}, Timeout: {TimeoutMs}ms")]
     public static partial void RequestTimedOut(ILogger logger, string correlationId, int timeoutMs);
@@ -219,19 +275,19 @@ public static partial class RabbitMQLoggerMessages
     #region [ Batch ]
 
     [LoggerMessage(
-        EventId = BatchEventId,
+        EventId = BatchStartedEventId,
         Level = LogLevel.Debug,
         Message = "Batch started. Messages: {MessageCount}")]
     public static partial void BatchStarted(ILogger logger, int messageCount);
 
     [LoggerMessage(
-        EventId = BatchEventId,
+        EventId = BatchCompletedEventId,
         Level = LogLevel.Debug,
         Message = "Batch completed. Messages: {MessageCount}, Duration: {ElapsedMs}ms")]
     public static partial void BatchCompleted(ILogger logger, int messageCount, long elapsedMs);
 
     [LoggerMessage(
-        EventId = BatchEventId,
+        EventId = BatchPartiallyFailedEventId,
         Level = LogLevel.Warning,
         Message = "Batch partially failed. Success: {SuccessCount}/{TotalCount}")]
     public static partial void BatchPartiallyFailed(ILogger logger, int successCount, int totalCount);
@@ -241,25 +297,25 @@ public static partial class RabbitMQLoggerMessages
     #region [ Scheduling ]
 
     [LoggerMessage(
-        EventId = SchedulingEventId,
+        EventId = MessageScheduledEventId,
         Level = LogLevel.Information,
         Message = "Message scheduled. MessageId: {MessageId}, ScheduledTime: {ScheduledTime}")]
     public static partial void MessageScheduled(ILogger logger, string messageId, DateTimeOffset scheduledTime);
 
     [LoggerMessage(
-        EventId = SchedulingEventId,
+        EventId = ScheduledMessageDeliveredEventId,
         Level = LogLevel.Debug,
         Message = "Scheduled message delivered. MessageId: {MessageId}")]
     public static partial void ScheduledMessageDelivered(ILogger logger, string messageId);
 
     [LoggerMessage(
-        EventId = SchedulingEventId,
+        EventId = ScheduledMessageCancelledEventId,
         Level = LogLevel.Information,
         Message = "Scheduled message cancelled. MessageId: {MessageId}")]
     public static partial void ScheduledMessageCancelled(ILogger logger, string messageId);
 
     [LoggerMessage(
-        EventId = SchedulingEventId,
+        EventId = RecurringMessageTriggeredEventId,
         Level = LogLevel.Debug,
         Message = "Recurring message triggered. ScheduleId: {ScheduleId}, Occurrence: {OccurrenceCount}")]
     public static partial void RecurringMessageTriggered(ILogger logger, string scheduleId, int occurrenceCount);
@@ -269,13 +325,13 @@ public static partial class RabbitMQLoggerMessages
     #region [ Saga ]
 
     [LoggerMessage(
-        EventId = SagaEventId,
+        EventId = SagaMessageReceivedEventId,
         Level = LogLevel.Information,
         Message = "Saga message received. SagaId: {SagaId}, MessageType: {MessageType}")]
     public static partial void SagaMessageReceived(ILogger logger, string sagaId, string messageType);
 
     [LoggerMessage(
-        EventId = SagaEventId,
+        EventId = SagaStateTransitionedEventId,
         Level = LogLevel.Debug,
         Message = "Saga state transitioned. SagaId: {SagaId}, From: {FromState}, To: {ToState}")]
     public static partial void SagaStateTransitioned(ILogger logger, string sagaId, string fromState, string toState);
@@ -285,13 +341,13 @@ public static partial class RabbitMQLoggerMessages
     #region [ Filters ]
 
     [LoggerMessage(
-        EventId = FilterEventId,
+        EventId = FilterExecutedEventId,
         Level = LogLevel.Trace,
         Message = "Filter '{FilterName}' executed for message '{MessageType}'. Duration: {ElapsedMs}ms")]
     public static partial void FilterExecuted(ILogger logger, string filterName, string messageType, long elapsedMs);
 
     [LoggerMessage(
-        EventId = FilterEventId,
+        EventId = MessageRejectedByFilterEventId,
         Level = LogLevel.Debug,
         Message = "Message rejected by filter '{FilterName}'. Reason: {Reason}")]
     public static partial void MessageRejectedByFilter(ILogger logger, string filterName, string reason);
@@ -301,13 +357,13 @@ public static partial class RabbitMQLoggerMessages
     #region [ Multi-tenancy ]
 
     [LoggerMessage(
-        EventId = TenantEventId,
+        EventId = TenantContextResolvedEventId,
         Level = LogLevel.Debug,
         Message = "Tenant context resolved. TenantId: {TenantId}, VirtualHost: {VirtualHost}")]
     public static partial void TenantContextResolved(ILogger logger, string tenantId, string virtualHost);
 
     [LoggerMessage(
-        EventId = TenantEventId,
+        EventId = TenantQueueUsedEventId,
         Level = LogLevel.Debug,
         Message = "Using tenant-specific queue: {Queue}")]
     public static partial void TenantQueueUsed(ILogger logger, string queue);
@@ -317,13 +373,13 @@ public static partial class RabbitMQLoggerMessages
     #region [ Dead Letter ]
 
     [LoggerMessage(
-        EventId = DeadLetterEventId,
+        EventId = MessageSentToDeadLetterEventId,
         Level = LogLevel.Warning,
         Message = "Message sent to dead letter queue. MessageId: {MessageId}, Reason: {Reason}")]
     public static partial void MessageSentToDeadLetter(ILogger logger, string messageId, string reason);
 
     [LoggerMessage(
-        EventId = DeadLetterEventId,
+        EventId = DeadLetterMessageReprocessedEventId,
         Level = LogLevel.Debug,
         Message = "Dead letter message reprocessed. MessageId: {MessageId}")]
     public static partial void DeadLetterMessageReprocessed(ILogger logger, string messageId);
@@ -333,23 +389,22 @@ public static partial class RabbitMQLoggerMessages
     #region [ Resiliency ]
 
     [LoggerMessage(
-        EventId = ResiliencyEventId,
+        EventId = MessageRetryScheduledEventId,
         Level = LogLevel.Warning,
         Message = "Message retry scheduled. MessageId: {MessageId}, Attempt: {Attempt}/{MaxAttempts}, Delay: {DelayMs}ms")]
     public static partial void MessageRetryScheduled(ILogger logger, string messageId, int attempt, int maxAttempts, int delayMs);
 
     [LoggerMessage(
-        EventId = ResiliencyEventId,
+        EventId = CircuitBreakerOpenedEventId,
         Level = LogLevel.Warning,
         Message = "Circuit breaker opened for queue '{Queue}'. Failures: {FailureCount}")]
     public static partial void CircuitBreakerOpened(ILogger logger, string queue, int failureCount);
 
     [LoggerMessage(
-        EventId = ResiliencyEventId,
+        EventId = CircuitBreakerClosedEventId,
         Level = LogLevel.Information,
         Message = "Circuit breaker closed for queue '{Queue}'")]
     public static partial void CircuitBreakerClosed(ILogger logger, string queue);
 
     #endregion
 }
-

@@ -23,10 +23,9 @@ using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb
 {
-    public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryAsync<T>>? logger = null) : RepositoryBase<T>(dbContext, options), IRepositoryAsync<T>
+    public class RepositoryAsync<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryAsync<T>>? logger = null) : RepositoryBase<T>(dbContext, options, logger), IRepositoryAsync<T>
         where T : class, IEntityBase
     {
-        private readonly ILogger<RepositoryAsync<T>>? _logger = logger;
         #region [ IQueryAsync ]
 
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)

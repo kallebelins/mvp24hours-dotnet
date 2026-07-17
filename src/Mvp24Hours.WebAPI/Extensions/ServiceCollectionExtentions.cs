@@ -14,12 +14,14 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.ResponseCaching;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +55,7 @@ namespace Mvp24Hours.WebAPI.Extensions
     public static class ServiceCollectionExtentions
     {
         /// <summary>
-        /// Adds IHttpContextAccessor and IActionContextAccessor
+        /// Adds IHttpContextAccessor and a request-scoped IUrlHelper
         /// </summary>
         public static IServiceCollection AddMvp24HoursWebEssential(this IServiceCollection services)
         {
@@ -62,12 +64,19 @@ namespace Mvp24Hours.WebAPI.Extensions
             {
                 services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             }
-            if (!services.Exists<IActionContextAccessor>())
+            if (!services.Exists<IUrlHelper>())
             {
-                services.AddSingleton<IActionContextAccessor, ActionContextAccessor>()
-                    .AddScoped<IUrlHelper>(x => x.GetRequiredService<IUrlHelperFactory>()
-                    .GetUrlHelper(x.GetRequiredService<IActionContextAccessor>().ActionContext
-                        ?? throw new InvalidOperationException("ActionContext is not available.")));
+                // IActionContextAccessor is obsolete (ASPDEPR006); with endpoint routing the
+                // ActionContext is rebuilt from the current HttpContext/endpoint metadata.
+                services.AddScoped<IUrlHelper>(x =>
+                {
+                    var httpContext = x.GetRequiredService<IHttpContextAccessor>().HttpContext
+                        ?? throw new InvalidOperationException("HttpContext is not available.");
+                    var actionDescriptor = httpContext.GetEndpoint()?.Metadata.GetMetadata<ActionDescriptor>()
+                        ?? new ActionDescriptor();
+                    var actionContext = new ActionContext(httpContext, httpContext.GetRouteData(), actionDescriptor);
+                    return x.GetRequiredService<IUrlHelperFactory>().GetUrlHelper(actionContext);
+                });
             }
             return services;
         }

@@ -22,14 +22,18 @@
     codes here without documenting the reason.
       Nullable (NRT):      CS8600 CS8602 CS8603 CS8604 CS8618 CS8619 CS8620
                            CS8622 CS8625 CS8629 CS8631 CS8764
-      Logging source-gen:  LOGGEN002
-      Obsolete API:        CS0618  ASPDEPR006  SYSLIB0057
-      Member hiding:       CS0108
-      xUnit async:         xUnit1031
+      Obsolete API:        CS0618 (4 residuals: MongoDbResiliencyExtensions.cs
+                           compat shim + EFCore MvpExecutionStrategy auto-obsolete)
       NuGet (intentional): NU1510 (redundant ref kept for the 7.1 security pin)
+    Zeroed in v2 (removed from the list):
+      LOGGEN002 (task 4.1 — unique EventIds),
+      ASPDEPR006 (task 4.5 — IActionContextAccessor removed),
+      SYSLIB0057 (task 4.4 — X509CertificateLoader),
+      CS0108 (task 4.6 — removed hidden _logger fields),
+      xUnit1031 (task 4.7 — async test converted to await).
   -->
   <PropertyGroup>
-    <MvpResidualWarnings>CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8622;CS8625;CS8629;CS8631;CS8764;LOGGEN002;CS0618;ASPDEPR006;SYSLIB0057;CS0108;xUnit1031;NU1510</MvpResidualWarnings>
+    <MvpResidualWarnings>CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8622;CS8625;CS8629;CS8631;CS8764;CS0618;NU1510</MvpResidualWarnings>
     <WarningsNotAsErrors>$(WarningsNotAsErrors);$(MvpResidualWarnings)</WarningsNotAsErrors>
   </PropertyGroup>
 </Project>

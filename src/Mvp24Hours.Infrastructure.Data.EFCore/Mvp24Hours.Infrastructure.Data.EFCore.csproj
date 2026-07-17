@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Resilience" />
-		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -80,8 +80,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     {
         #region [ Constructor ]
 
-        private readonly ILogger<BulkOperationsRepositoryAsync<T>>? _logger;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="BulkOperationsRepositoryAsync{T}"/> class.
         /// </summary>
@@ -94,7 +92,6 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             ILogger<BulkOperationsRepositoryAsync<T>>? logger = null)
             : base(dbContext, options, logger)
         {
-            _logger = logger;
         }
 
         #endregion

@@ -330,7 +330,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 }
                 else if (!string.IsNullOrEmpty(CaCertificatePath))
                 {
-                    var caCert = new X509Certificate2(CaCertificatePath);
+                    // CA certificate holds only the public key, loaded as a plain X.509 certificate.
+                    var caCert = X509CertificateLoader.LoadCertificateFromFile(CaCertificatePath);
                     settings.SslSettings.ServerCertificateValidationCallback =
                         CreateCaValidationCallback(caCert);
                 }
@@ -346,9 +347,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 
             if (!string.IsNullOrEmpty(CertificatePath))
             {
-                return string.IsNullOrEmpty(CertificatePassword)
-                    ? new X509Certificate2(CertificatePath)
-                    : new X509Certificate2(CertificatePath, CertificatePassword);
+                // Client certificate for X.509 mutual TLS requires the private key,
+                // so the file is expected to be a PKCS#12/PFX bundle.
+                return X509CertificateLoader.LoadPkcs12FromFile(CertificatePath, CertificatePassword);
             }
 
             return null;

@@ -59,7 +59,7 @@ public class StringHelperTest
     }
 
     [Fact]
-    public void GenerateKey_ThreadSafety_MultipleThreadsGeneratingKeys()
+    public async Task GenerateKey_ThreadSafety_MultipleThreadsGeneratingKeys()
     {
         // Arrange
         var results = new System.Collections.Concurrent.ConcurrentBag<string>();
@@ -75,7 +75,7 @@ public class StringHelperTest
             }));
         }
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         results.Should().HaveCount(100);

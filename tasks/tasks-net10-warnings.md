@@ -125,55 +125,64 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 > **Estratégia:** cada código abaixo está concentrado em 1–4 projetos e pode ser **zerado por completo** rapidamente, permitindo **removê-lo do gate imediatamente** (redução de 6 dos 19 códigos). Ganho alto, diff pequeno, baixo risco.
 > **ADO:** US a criar.
 
-[ ] 4.0 - Reconciliar o baseline residual (dedup) e versionar
+[x] 4.0 - Reconciliar o baseline residual (dedup) e versionar
 - Rodar o build `Release` da solução (§2, mas na `.sln`) e extrair a contagem **deduplicada** do resumo MSBuild por código e por projeto, para servir de métrica objetiva de progresso. Versionar em `tasks/warnings-baseline-v2.md` (+ `.json`). Reexecutar ao fim de cada fase.
 - `src/Mvp24Hours.sln`
 - https://learn.microsoft.com/dotnet/core/tools/dotnet-build
+- **Concluído 2026-07-17:** build `Release` (0 erros; resumo MSBuild = 463 avisos). Total **deduplicado = 446** em **18 códigos**. Baseline versionado em [`warnings-baseline-v2.md`](./warnings-baseline-v2.md) + [`.json`](./warnings-baseline-v2.json); script de recontagem em [`parse-warnings.ps1`](./parse-warnings.ps1). Reconciliação v1 (~948 linhas) → v2 (446 dedup). Top famílias p/ Fase 4: LOGGEN002 93, CS0618 38, ASPDEPR006 4, SYSLIB0057 3, CS0108 2, xUnit1031 1.
 
-[ ] 4.1 - LOGGEN002 — atribuir EventIds únicos nos `[LoggerMessage]` (Pipe, RabbitMQ, WebAPI, EFCore)
+[x] 4.1 - LOGGEN002 — atribuir EventIds únicos nos `[LoggerMessage]` (Pipe, RabbitMQ, WebAPI, EFCore)
 - **Padrão:** §1.C. Localizar os tipos `*LoggerMessages`/`*Log` com `[LoggerMessage(EventId = ...)]` duplicados e reatribuir IDs únicos e sequenciais por tipo, com faixas por módulo. Ex. inicial: `Mvp24Hours.Infrastructure.Pipe/Logging/PipelineLoggerMessages.cs` (event id `2003` repetido).
 - Ao final, se LOGGEN002 = 0 na solução ⇒ remover de `MvpResidualWarnings`.
 - `src/Mvp24Hours.Infrastructure.Pipe/**`, `src/Mvp24Hours.Infrastructure.RabbitMQ/**`, `src/Mvp24Hours.WebAPI/**`, `src/Mvp24Hours.Infrastructure.Data.EFCore/**`
 - https://learn.microsoft.com/dotnet/core/extensions/logger-message-generator
 - https://aka.ms/dotnet-extensions-warnings/LOGGEN002
+- **Concluído 2026-07-17:** cada `[LoggerMessage]` passou a ter um `EventId` único e sequencial dentro do tipo, mantendo as faixas por módulo (Pipe `2001–2033`, RabbitMQ `4001–4043`, EFCore `5001–5036`, WebAPI `6001–6035`). Substituídos os constantes por-categoria compartilhados por um constante por método. Build isolado dos 4 projetos e da solução: **LOGGEN002 = 0**. `LOGGEN002` **removido de `MvpResidualWarnings`** em [`src/Directory.Build.props`](../src/Directory.Build.props); `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Gate: 19 → **18 códigos**.
 
-[ ] 4.2 - CS0618 (EFCore) — `System.Data.SqlClient` → `Microsoft.Data.SqlClient` (residual da 5.2)
+[x] 4.2 - CS0618 (EFCore) — `System.Data.SqlClient` → `Microsoft.Data.SqlClient` (residual da 5.2)
 - **Padrão:** §1.B. Concluir em `Infrastructure.Data.EFCore` a migração iniciada na tarefa 5.2 da v1 (que deixou o EFCore fora de escopo). Trocar `using`/tipos `SqlConnection`/`SqlCommand`/`SqlParameter` e o `PackageReference` (CPM) de `System.Data.SqlClient` para `Microsoft.Data.SqlClient`. Ex.: `HealthChecks/SqlServerHealthCheck.cs` (linha ~189).
 - Rodar os testes que cobrem EFCore SQL Server (grupo B/InMemory + integração quando houver Docker).
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/**`, `src/Directory.Packages.props`
 - https://learn.microsoft.com/sql/connect/ado-net/introduction-microsoft-data-sqlclient-namespace
+- **Concluído 2026-07-17:** `PackageReference` do EFCore trocado de `System.Data.SqlClient` para `Microsoft.Data.SqlClient` (7.0.2, já no CPM); entrada `System.Data.SqlClient` **removida** de [`Directory.Packages.props`](../src/Directory.Packages.props) (sem outros consumidores). `using`/tipos migrados em `HealthChecks/SqlServerHealthCheck.cs`, `Extensions/DatabaseExtensions.cs`, `Security/RowLevelSecurityHelper.cs` (`SqlParameter` qualificado) e `Resilience/MvpExecutionStrategy.cs` (checagem forte agora em `Microsoft.Data.SqlClient.SqlException`, com *fallback* por reflexão para o namespace legado). `using` órfão removido de `Extensions/ResilienceDbContextExtensions.cs`. Build isolado do EFCore: **0 erro(s)**; CS0618 de `System.Data.SqlClient` = **0** (os 3 CS0618 residuais no projeto são do `MvpExecutionStrategy` auto-obsoleto — fora do escopo desta tarefa). Testes `Mvp24Hours.Application.SQLServer.Test` (Debug/InMemory): **232 aprovados, 4 ignorados, 0 falhas**.
 
-[ ] 4.3 - CS0618 (MongoDb.Test) — `MongoDbResiliencyPolicy` → `NativeMongoDbResilienceExtensions`
+[x] 4.3 - CS0618 (MongoDb.Test) — `MongoDbResiliencyPolicy` → `NativeMongoDbResilienceExtensions`
 - **Padrão:** §1.B. Substituir os usos da API obsoleta `MongoDbResiliencyPolicy` nos testes (`Resiliency/MongoDbResiliencyPolicyTests.cs` e correlatos) pela recomendação citada na mensagem (`NativeMongoDbResilienceExtensions`). Se algum teste existe apenas para exercitar a API obsoleta, avaliar realocá-lo/removê-lo, documentando.
 - Rodar `Mvp24Hours.Infrastructure.Data.MongoDb.Test`.
 - `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Resiliency/**`
 - https://learn.microsoft.com/dotnet/csharp/language-reference/attributes/general#obsolete-attribute
+- **Concluído 2026-07-17:** `MongoDbResiliencyPolicyTests.cs` existia **apenas** para exercitar a API obsoleta `MongoDbResiliencyPolicy` (fonte de todos os CS0618 do projeto de teste). Como o substituto recomendado `NativeMongoDbResilienceExtensions` tem formato totalmente diferente (pipeline Polly v8 registrado via DI, sem `TripCircuitBreaker`/`Metrics`/`ExecuteWithFallbackAsync`) e **não tinha cobertura**, o arquivo foi **realocado**: removido `MongoDbResiliencyPolicyTests.cs` e criado [`NativeMongoDbResilienceExtensionsTests.cs`](../src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Resiliency/NativeMongoDbResilienceExtensionsTests.cs) exercitando a API recomendada (registro/nome, retry transiente, callback `OnRetry`, timeout `TimeoutRejectedException`, cancelamento e presets ReplicaSet/ShardedCluster/Standalone). Build isolado do MongoDb.Test: **CS0618 = 0** no projeto de teste. Testes `Category=Unit`: **129 aprovados, 0 falhas** (inclui os 12 novos). **Residual conhecido (fora de escopo de 4.3):** 2 CS0618 permanecem em **produção** — `Extensions/MongoDbResiliencyExtensions.cs:126` (`new MongoDbResiliencyPolicy(options)` registrado como `IMongoDbResiliencyPolicy` por compatibilidade). Precisa ser tratado (migração da extensão ou `#pragma` justificado) antes de a 4.8 remover `CS0618` do gate.
 
-[ ] 4.4 - SYSLIB0057 (MongoDb) — `X509Certificate2` → `X509CertificateLoader` (residual da 5.3)
+[x] 4.4 - SYSLIB0057 (MongoDb) — `X509Certificate2` → `X509CertificateLoader` (residual da 5.3)
 - **Padrão:** §1.B. Concluir em `MongoDbAuthenticationOptions` (linha ~333) a substituição dos construtores de `X509Certificate2` por `X509CertificateLoader.LoadCertificate*/LoadPkcs12*`, deixada fora do escopo na tarefa 5.3 da v1.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Security/MongoDbAuthenticationOptions.cs`
 - https://aka.ms/dotnet-warnings/SYSLIB0057
+- **Concluído 2026-07-17:** as 3 ocorrências de SYSLIB0057 (`MongoDbAuthenticationOptions.cs:333/350/351`) foram migradas. CA cert (só chave pública) → `X509CertificateLoader.LoadCertificateFromFile(CaCertificatePath)`; certificado cliente do X.509 mTLS (exige chave privada) → `X509CertificateLoader.LoadPkcs12FromFile(CertificatePath, CertificatePassword)`, unificando os dois ramos com/sem senha (o parâmetro `password` é anulável). O construtor de cópia `new X509Certificate2(certificate)` no callback de validação (linha ~389) **não** é obsoleto sob SYSLIB0057 e foi mantido. Build isolado do MongoDb: **0 erro(s)**, **SYSLIB0057 = 0**. Testes `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (`Category=Unit`): **129 aprovados, 0 falhas**. Remoção do gate ocorre na 4.8 (SYSLIB0057 já estava concentrado só no MongoDb).
 
-[ ] 4.5 - ASPDEPR006 (WebAPI) — `IActionContextAccessor` obsoleto
+[x] 4.5 - ASPDEPR006 (WebAPI) — `IActionContextAccessor` obsoleto
 - **Padrão:** §1.B. Em `Extensions/ServiceCollectionExtentions.cs` (linha ~65), substituir `IActionContextAccessor`/`AddActionContextAccessor` pela abordagem recomendada na mensagem (uso de `IHttpContextAccessor` / obtenção do `ActionContext` via serviços atuais), validando o comportamento dependente.
 - Rodar `Mvp24Hours.WebAPI.Test`.
 - `src/Mvp24Hours.WebAPI/Extensions/ServiceCollectionExtentions.cs`
 - https://learn.microsoft.com/aspnet/core/mvc/advanced/app-parts
+- **Concluído 2026-07-17:** removido o registro de `IActionContextAccessor`/`ActionContextAccessor` (obsoletos sob ASPDEPR006) em `AddMvp24HoursWebEssential`. O `IUrlHelper` (scoped) passou a reconstruir o `ActionContext` a partir do `IHttpContextAccessor` seguindo o roteamento por endpoint (`HttpContext.GetEndpoint()?.Metadata.GetMetadata<ActionDescriptor>() ?? new ActionDescriptor()` + `HttpContext.GetRouteData()`), conforme a recomendação oficial ([breaking change .NET 10](https://learn.microsoft.com/aspnet/core/breaking-changes/10/iactioncontextaccessor-obsolete)). `using`s adicionados: `Microsoft.AspNetCore.Mvc.Abstractions` (`ActionDescriptor`) e `Microsoft.AspNetCore.Routing` (`GetRouteData`). Build isolado do WebAPI: **0 erro(s)**, **ASPDEPR006 = 0** (residual do projeto agora só CS8618/CS8603 nullable, fora de escopo). Testes `Mvp24Hours.WebAPI.Test`: **5 aprovados, 0 falhas**. Remoção do gate ocorre na 4.8 (ASPDEPR006 estava concentrado só no WebAPI).
 
-[ ] 4.6 - CS0108 (MongoDb) — remover ocultação de `RepositoryAsync._logger`
+[x] 4.6 - CS0108 (MongoDb) — remover ocultação de `RepositoryAsync._logger`
 - **Padrão:** §1.D. `RepositoryAsync<T>._logger` oculta `RepositoryBase<T>._logger`. Remover o campo redundante e usar o da base (ou `new` explícito se houver diferença real de tipo/uso — investigar antes).
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Async/RepositoryAsync.cs` (linha ~29) e correlatos
 - https://learn.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs0108
+- **Concluído 2026-07-17:** os 2 CS0108 vinham de dois campos `_logger` que ocultavam o `protected RepositoryBase<T>._logger`: `RepositoryAsync<T>._logger` e `BulkOperationsRepositoryAsync<T>._logger`. Ambos foram **removidos** (campo redundante), passando o `logger` ao construtor da base — `RepositoryAsync<T>` agora usa `RepositoryBase<T>(dbContext, options, logger)` (antes omitia o `logger`) e `BulkOperationsRepositoryAsync<T>` deixou de reatribuir `_logger` no corpo do construtor. Isso alinha as duas classes ao padrão já usado por `Repository<T>`/`ReadOnlyRepository<T>`. Não há mudança de categoria de log: `ILogger<TCategoryName>` é covariante (`out`), então o logger mais derivado flui para o campo `_logger` da base sem perda da categoria original. Build isolado do MongoDb: **0 erro(s)**, **CS0108 = 0** (residual do projeto agora só nullable + 2 CS0618 conhecidos da 4.3, fora de escopo). Testes `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (`Category=Unit`): **129 aprovados, 0 falhas**. Remoção do gate ocorre na 4.8 (CS0108 estava concentrado só no MongoDb).
 
-[ ] 4.7 - xUnit1031 — eliminar o bloqueio síncrono residual
+[x] 4.7 - xUnit1031 — eliminar o bloqueio síncrono residual
 - **Padrão:** §1.E. Localizar as 2 ocorrências residuais (`.Result`/`.Wait()`/`GetAwaiter().GetResult()` em teste `async`) e converter para `await`.
 - Projeto(s) de teste apontados pela recontagem 4.0
 - https://xunit.net/xunit.analyzers/rules/xUnit1031
+- **Concluído 2026-07-17:** a única origem (dedup) do xUnit1031 estava em `Mvp24Hours.Core.Test/Helpers/StringHelperTest.cs:78` — o teste `GenerateKey_ThreadSafety_MultipleThreadsGeneratingKeys` era `[Fact] void` e bloqueava com `Task.WaitAll(tasks.ToArray())`. Convertido para `async Task` trocando o bloqueio por `await Task.WhenAll(tasks)`. Build isolado do `Core.Test`: **0 erro(s)**, **xUnit1031 = 0** (os 19 avisos residuais do projeto são nullable, tratados na 6.2). Testes `StringHelperTest`: **11 aprovados, 0 falhas**. Remoção do gate ocorre na 4.8 (xUnit1031 estava concentrado só no Core.Test).
 
-[ ] 4.8 - Encolher o gate: remover códigos zerados de `MvpResidualWarnings`
+[x] 4.8 - Encolher o gate: remover códigos zerados de `MvpResidualWarnings`
 - Recompilar a solução e remover de `MvpResidualWarnings` os códigos que agora estão em **0 na solução**: `LOGGEN002`, `ASPDEPR006`, `SYSLIB0057`, `CS0108`, `xUnit1031` e `CS0618` (se 4.2 e 4.3 o zeraram por completo). Confirmar `dotnet build ... /p:TreatWarningsAsErrors=true` **verde**.
 - `src/Directory.Build.props`
 - https://learn.microsoft.com/visualstudio/msbuild/msbuild-warnings-as-errors
+- **Concluído 2026-07-17:** build `Release --no-incremental` da solução → **0 erro(s)**, recontagem dedup (§2) = **309 avisos em 13 códigos**. Removidos de `MvpResidualWarnings` em [`src/Directory.Build.props`](../src/Directory.Build.props) os 4 códigos que zeraram na solução inteira nesta fase: **`ASPDEPR006`** (4.5), **`SYSLIB0057`** (4.4), **`CS0108`** (4.6) e **`xUnit1031`** (4.7). **`CS0618` NÃO foi removido** — restam **4 ocorrências residuais** legítimas fora do escopo da Fase 4: `MongoDbResiliencyExtensions.cs:126` (shim de compatibilidade `new MongoDbResiliencyPolicy(...)` registrado por `IMongoDbResiliencyPolicy`) e `ResilienceDbContextExtensions.cs:477/478/480` (EFCore `MvpExecutionStrategy` auto-obsoleto). Comentário do gate atualizado documentando o motivo. `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s)** (as removidas viram erro, mas estão em 0). Baseline atualizado em [`warnings-baseline-v2.md`](./warnings-baseline-v2.md) + [`.json`](./warnings-baseline-v2.json). Gate: 18 → **14 códigos** (`CS86xx`×12 + `CS0618` + `NU1510`).
 
 ---
 

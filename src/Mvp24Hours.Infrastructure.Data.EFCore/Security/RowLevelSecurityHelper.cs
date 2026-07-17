@@ -186,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
 
             var sql = $"EXEC sp_set_session_context @key=N'{_defaultSessionContextKey}', @value=@tenantId";
             context.Database.ExecuteSqlRaw(sql,
-                new System.Data.SqlClient.SqlParameter("@tenantId",
+                new Microsoft.Data.SqlClient.SqlParameter("@tenantId",
                     tenantId ?? (object)DBNull.Value));
 
             _logger?.LogDebug("SQL Server tenant context set. TenantId: {TenantId}", tenantId);
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
 
             var sql = $"EXEC sp_set_session_context @key=N'{_defaultSessionContextKey}', @value=@tenantId";
             await context.Database.ExecuteSqlRawAsync(sql,
-                new[] { new System.Data.SqlClient.SqlParameter("@tenantId",
+                new[] { new Microsoft.Data.SqlClient.SqlParameter("@tenantId",
                     tenantId ?? (object)DBNull.Value) },
                 cancellationToken);
 

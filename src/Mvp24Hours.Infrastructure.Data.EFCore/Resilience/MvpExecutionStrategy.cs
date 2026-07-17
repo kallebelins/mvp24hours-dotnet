@@ -173,14 +173,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
         private bool IsSqlTransientError(Exception exception)
         {
             // Check for SqlException with transient error numbers
-            if (exception is System.Data.SqlClient.SqlException sqlException)
+            if (exception is Microsoft.Data.SqlClient.SqlException sqlException)
             {
                 return IsTransientSqlErrorNumber(sqlException.Number);
             }
 
-            // Check for Microsoft.Data.SqlClient.SqlException (newer driver)
+            // Check for legacy System.Data.SqlClient.SqlException via reflection
             Type exceptionType = exception.GetType();
-            if (exceptionType.FullName == "Microsoft.Data.SqlClient.SqlException")
+            if (exceptionType.FullName == "System.Data.SqlClient.SqlException")
             {
                 PropertyInfo? numberProperty = exceptionType.GetProperty("Number");
                 if (numberProperty != null)
