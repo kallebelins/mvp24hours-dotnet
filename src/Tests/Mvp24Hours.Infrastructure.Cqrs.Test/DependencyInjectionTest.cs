@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using FluentValidation;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -25,10 +26,10 @@ public class DependencyInjectionTest
 
         // Act
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Assert
-        var mediator = sp.GetService<IMediator>();
+        IMediator? mediator = sp.GetRequiredService<IMediator>();
         Assert.NotNull(mediator);
         Assert.IsType<Mediator>(mediator);
     }
@@ -40,10 +41,10 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var sender = sp.GetService<ISender>();
+        ISender? sender = sp.GetRequiredService<ISender>();
 
         // Assert
         Assert.NotNull(sender);
@@ -56,10 +57,10 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var publisher = sp.GetService<IPublisher>();
+        IPublisher? publisher = sp.GetRequiredService<IPublisher>();
 
         // Assert
         Assert.NotNull(publisher);
@@ -72,10 +73,10 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var streamSender = sp.GetService<IStreamSender>();
+        IStreamSender? streamSender = sp.GetRequiredService<IStreamSender>();
 
         // Assert
         Assert.NotNull(streamSender);
@@ -88,10 +89,10 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var dispatcher = sp.GetService<IDomainEventDispatcher>();
+        IDomainEventDispatcher? dispatcher = sp.GetRequiredService<IDomainEventDispatcher>();
 
         // Assert
         Assert.NotNull(dispatcher);
@@ -105,10 +106,10 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var handler = sp.GetService<IMediatorRequestHandler<TestCommand, string>>();
+        IMediatorRequestHandler<TestCommand, string>? handler = sp.GetRequiredService<IMediatorRequestHandler<TestCommand, string>>();
 
         // Assert
         Assert.NotNull(handler);
@@ -122,7 +123,7 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(OrderCreatedNotification).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
         var handlers = sp.GetServices<IMediatorNotificationHandler<OrderCreatedNotification>>().ToList();
@@ -142,7 +143,7 @@ public class DependencyInjectionTest
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
             options.WithDefaultBehaviors();
         });
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
         var behaviors = sp.GetServices<IPipelineBehavior<TestCommand, string>>().ToList();
@@ -163,7 +164,7 @@ public class DependencyInjectionTest
             options.RegisterValidationBehavior = true;
         });
         services.AddTransient<IValidator<CreateUserCommand>, CreateUserCommandValidator>();
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
         var behaviors = sp.GetServices<IPipelineBehavior<CreateUserCommand, int>>().ToList();
@@ -179,13 +180,13 @@ public class DependencyInjectionTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        var assembly = typeof(TestCommand).Assembly;
+        Assembly assembly = typeof(TestCommand).Assembly;
         services.AddMvpMediator(assembly); // Passing same assembly multiple times for test
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
-        var commandHandler = sp.GetService<IMediatorRequestHandler<TestCommand, string>>();
-        var queryHandler = sp.GetService<IMediatorRequestHandler<GetUserQuery, UserDto?>>();
+        IMediatorRequestHandler<TestCommand, string>? commandHandler = sp.GetRequiredService<IMediatorRequestHandler<TestCommand, string>>();
+        IMediatorRequestHandler<GetUserQuery, UserDto?>? queryHandler = sp.GetRequiredService<IMediatorRequestHandler<GetUserQuery, UserDto?>>();
 
         // Assert
         Assert.NotNull(commandHandler);
@@ -249,16 +250,16 @@ public class DependencyInjectionTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
-        using var scope = sp.CreateScope();
-        var scopedSp = scope.ServiceProvider;
+        using IServiceScope scope = sp.CreateScope();
+        IServiceProvider scopedSp = scope.ServiceProvider;
 
         // Act
-        var mediator = scopedSp.GetRequiredService<IMediator>();
-        var sender = scopedSp.GetRequiredService<ISender>();
-        var publisher = scopedSp.GetRequiredService<IPublisher>();
-        var streamSender = scopedSp.GetRequiredService<IStreamSender>();
+        IMediator mediator = scopedSp.GetRequiredService<IMediator>();
+        ISender sender = scopedSp.GetRequiredService<ISender>();
+        IPublisher publisher = scopedSp.GetRequiredService<IPublisher>();
+        IStreamSender streamSender = scopedSp.GetRequiredService<IStreamSender>();
 
         // Assert - All should be the same scoped instance
         Assert.Same(mediator, sender);
@@ -304,8 +305,8 @@ public class DependencyInjectionTest
         {
             options.RegisterHandlersFromAssemblyContaining<TestCommand>();
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "AssemblyContainingTest", Value = 99 };
 
         // Act

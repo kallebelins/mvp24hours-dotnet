@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             Expression<Func<T, bool>> filter,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
             return StreamAsync(filterDef, null, null, cancellationToken);
         }
 
@@ -118,11 +118,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 BatchSize = 1000 // MongoDB cursor batch size
             };
 
-            using var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            using IAsyncCursor<T> cursor = await _collection.FindAsync(filter, options, cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (T? document in cursor.Current)
                 {
                     yield return document;
                 }
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
             return StreamBatchesAsync(filterDef, batchSize, null, null, cancellationToken);
         }
 
@@ -185,12 +185,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 BatchSize = batchSize
             };
 
-            using var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            using IAsyncCursor<T> cursor = await _collection.FindAsync(filter, options, cancellationToken);
             var batch = new List<T>(batchSize);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (T? document in cursor.Current)
                 {
                     batch.Add(document);
 
@@ -235,11 +235,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 BatchSize = 1000
             };
 
-            using var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            using IAsyncCursor<TProjection> cursor = await _collection.FindAsync(filter, options, cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (TProjection? document in cursor.Current)
                 {
                     yield return document;
                 }
@@ -266,11 +266,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
                 BatchSize = 1000
             };
 
-            using var cursor = await _collection.AggregateAsync(pipeline, options, cancellationToken);
+            using IAsyncCursor<TResult> cursor = await _collection.AggregateAsync(pipeline, options, cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (TResult? document in cursor.Current)
                 {
                     yield return document;
                 }
@@ -299,7 +299,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
             var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
 
-            await foreach (var document in StreamAsync(filter, null, null, cancellationToken))
+            await foreach (T? document in StreamAsync(filter, null, null, cancellationToken))
             {
                 await semaphore.WaitAsync(cancellationToken);
 
@@ -340,7 +340,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Streaming
         {
             long count = 0;
 
-            await foreach (var _ in StreamAsync(filter, null, null, cancellationToken))
+            await foreach (T _ in StreamAsync(filter, null, null, cancellationToken))
             {
                 count++;
                 if (count % progressInterval == 0)

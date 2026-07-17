@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Security.Extensions
 
             services.AddSingleton<ISecretProvider>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<EnvironmentVariableOptions>>();
+                IOptions<EnvironmentVariableOptions> options = serviceProvider.GetRequiredService<IOptions<EnvironmentVariableOptions>>();
                 return new EnvironmentVariableSecretProvider(options);
             });
 
@@ -106,8 +106,8 @@ namespace Mvp24Hours.Infrastructure.Security.Extensions
 
             services.AddSingleton<ISecretProvider>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<AzureKeyVaultOptions>>();
-                var logger = serviceProvider.GetService<ILogger<AzureKeyVaultSecretProvider>>();
+                IOptions<AzureKeyVaultOptions> options = serviceProvider.GetRequiredService<IOptions<AzureKeyVaultOptions>>();
+                ILogger<AzureKeyVaultSecretProvider>? logger = serviceProvider.GetService<ILogger<AzureKeyVaultSecretProvider>>();
                 return new AzureKeyVaultSecretProvider(options, logger);
             });
 
@@ -153,8 +153,8 @@ namespace Mvp24Hours.Infrastructure.Security.Extensions
 
             services.AddSingleton<ISecretProvider>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<AwsSecretsManagerOptions>>();
-                var logger = serviceProvider.GetService<ILogger<AwsSecretsManagerProvider>>();
+                IOptions<AwsSecretsManagerOptions> options = serviceProvider.GetRequiredService<IOptions<AwsSecretsManagerOptions>>();
+                ILogger<AwsSecretsManagerProvider>? logger = serviceProvider.GetService<ILogger<AwsSecretsManagerProvider>>();
                 return new AwsSecretsManagerProvider(options, logger);
             });
 
@@ -190,8 +190,8 @@ namespace Mvp24Hours.Infrastructure.Security.Extensions
 
             services.AddScoped<ISecretRotationHelper>(serviceProvider =>
             {
-                var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
-                var logger = serviceProvider.GetService<ILogger<SecretRotationHelper>>();
+                ISecretProvider secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+                ILogger<SecretRotationHelper>? logger = serviceProvider.GetService<ILogger<SecretRotationHelper>>();
                 return new SecretRotationHelper(secretProvider, logger);
             });
 

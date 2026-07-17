@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Context
             };
 
             // Copy properties
-            foreach (var property in _properties)
+            foreach (KeyValuePair<string, object?> property in _properties)
             {
                 retryContext._properties[property.Key] = property.Value;
             }

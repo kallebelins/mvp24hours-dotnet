@@ -13,7 +13,7 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Support.Entities
     {
         public Customer()
         {
-            Contacts = new List<Contact>();
+            Contacts = [];
         }
 
         [Required]

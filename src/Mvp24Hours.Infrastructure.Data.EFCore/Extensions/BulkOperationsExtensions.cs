@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
@@ -81,12 +82,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
             try
             {
-                var dbSet = dbContext.Set<TEntity>();
+                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in entities.Batch(options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -97,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (TEntity? entity in batch)
                         {
                             await dbSet.AddAsync(entity, cancellationToken);
                         }
@@ -171,12 +172,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
             try
             {
-                var dbSet = dbContext.Set<TEntity>();
+                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in entities.Batch(options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -187,9 +188,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (TEntity? entity in batch)
                         {
-                            var entry = dbContext.Entry(entity);
+                            EntityEntry<TEntity> entry = dbContext.Entry(entity);
                             if (entry.State == EntityState.Detached)
                             {
                                 dbSet.Attach(entity);
@@ -266,12 +267,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
             try
             {
-                var dbSet = dbContext.Set<TEntity>();
+                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in entities.Batch(options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -282,9 +283,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (TEntity? entity in batch)
                         {
-                            var entry = dbContext.Entry(entity);
+                            EntityEntry<TEntity> entry = dbContext.Entry(entity);
                             if (entry.State == EntityState.Detached)
                             {
                                 dbSet.Attach(entity);
@@ -451,7 +452,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
         /// </summary>
         private static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
         {
-            using var enumerator = source.GetEnumerator();
+            using IEnumerator<T> enumerator = source.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 yield return YieldBatchElements(enumerator, batchSize - 1);

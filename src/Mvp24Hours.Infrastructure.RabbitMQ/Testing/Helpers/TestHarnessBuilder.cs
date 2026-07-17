@@ -19,8 +19,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
     public class TestHarnessBuilder
     {
         private readonly IServiceCollection _services;
-        private readonly List<Type> _consumerTypes = new();
-        private readonly List<Type> _requestHandlerTypes = new();
+        private readonly List<Type> _consumerTypes = [];
+        private readonly List<Type> _requestHandlerTypes = [];
 
         /// <summary>
         /// Creates a new test harness builder.
@@ -65,15 +65,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <typeparam name="TConsumer">The consumer type.</typeparam>
         public TestHarnessBuilder AddConsumer<TConsumer>() where TConsumer : class
         {
-            var consumerType = typeof(TConsumer);
+            Type consumerType = typeof(TConsumer);
             _consumerTypes.Add(consumerType);
             _services.AddScoped(consumerType);
 
             // Register consumer for its message type
-            var interfaces = consumerType.GetInterfaces()
+            IEnumerable<Type> interfaces = consumerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-            foreach (var iface in interfaces)
+            foreach (Type? iface in interfaces)
             {
                 _services.AddScoped(iface, consumerType);
             }
@@ -87,15 +87,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <typeparam name="THandler">The handler type.</typeparam>
         public TestHarnessBuilder AddRequestHandler<THandler>() where THandler : class
         {
-            var handlerType = typeof(THandler);
+            Type handlerType = typeof(THandler);
             _requestHandlerTypes.Add(handlerType);
             _services.AddScoped(handlerType);
 
             // Register handler for its request/response types
-            var interfaces = handlerType.GetInterfaces()
+            IEnumerable<Type> interfaces = handlerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
 
-            foreach (var iface in interfaces)
+            foreach (Type? iface in interfaces)
             {
                 _services.AddScoped(iface, handlerType);
             }
@@ -109,20 +109,20 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <param name="assembly">The assembly to scan.</param>
         public TestHarnessBuilder AddConsumersFromAssembly(Assembly assembly)
         {
-            var consumerTypes = assembly.GetTypes()
+            IEnumerable<Type> consumerTypes = assembly.GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface)
                 .Where(t => t.GetInterfaces().Any(i =>
                     i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
 
-            foreach (var consumerType in consumerTypes)
+            foreach (Type? consumerType in consumerTypes)
             {
                 _consumerTypes.Add(consumerType);
                 _services.AddScoped(consumerType);
 
-                var interfaces = consumerType.GetInterfaces()
+                IEnumerable<Type> interfaces = consumerType.GetInterfaces()
                     .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-                foreach (var iface in interfaces)
+                foreach (Type? iface in interfaces)
                 {
                     _services.AddScoped(iface, consumerType);
                 }
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <returns>A configured test harness.</returns>
         public ITestHarness Build()
         {
-            var serviceProvider = _services.BuildServiceProvider();
+            ServiceProvider serviceProvider = _services.BuildServiceProvider();
             return new TestHarness(serviceProvider);
         }
 

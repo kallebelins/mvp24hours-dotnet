@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Warming
             var successCount = 0;
             var failureCount = 0;
 
-            foreach (var operation in operations)
+            foreach (ICacheWarmupOperation? operation in operations)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -72,9 +72,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Warming
                     _logger?.LogDebug("Executing warmup operation: {OperationName} (Priority: {Priority})",
                         operation.Name, operation.Priority);
 
-                    var startTime = DateTime.UtcNow;
+                    DateTime startTime = DateTime.UtcNow;
                     await operation.ExecuteAsync(cancellationToken);
-                    var duration = DateTime.UtcNow - startTime;
+                    TimeSpan duration = DateTime.UtcNow - startTime;
 
                     successCount++;
                     _logger?.LogInformation(

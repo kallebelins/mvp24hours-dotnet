@@ -5,6 +5,7 @@
 //=====================================================================================
 
 using System;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -98,16 +99,16 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
 
     private async Task ProcessPendingEventsAsync(CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = _serviceProvider.CreateScope();
 
-        var outbox = scope.ServiceProvider.GetService<IApplicationEventOutbox>();
+        IApplicationEventOutbox? outbox = scope.ServiceProvider.GetService<IApplicationEventOutbox>();
         if (outbox == null)
         {
             _logger?.LogDebug("[ApplicationEventOutbox] Outbox not registered, skipping");
             return;
         }
 
-        var pending = await outbox.GetPendingAsync(_options.BatchSize, cancellationToken);
+        IReadOnlyList<ApplicationEventOutboxEntry> pending = await outbox.GetPendingAsync(_options.BatchSize, cancellationToken);
         if (pending.Count == 0)
         {
             return;
@@ -117,7 +118,7 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
             "[ApplicationEventOutbox] Processing {Count} pending events",
             pending.Count);
 
-        foreach (var entry in pending)
+        foreach (ApplicationEventOutboxEntry entry in pending)
         {
             await ProcessEntryAsync(scope.ServiceProvider, outbox, entry, cancellationToken);
         }
@@ -154,8 +155,8 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
             }
 
             // Get handlers
-            var handlerType = typeof(IApplicationEventHandler<>).MakeGenericType(eventType);
-            var handlers = serviceProvider.GetServices(handlerType);
+            Type handlerType = typeof(IApplicationEventHandler<>).MakeGenericType(eventType);
+            IEnumerable<object?> handlers = serviceProvider.GetServices(handlerType);
 
             // Dispatch to handlers
             foreach (var handler in handlers)
@@ -164,7 +165,7 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
 
                 try
                 {
-                    var handleMethod = handlerType.GetMethod("HandleAsync");
+                    MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
                     if (handleMethod != null)
                     {
                         var task = handleMethod.Invoke(handler, [@event, cancellationToken]) as Task;

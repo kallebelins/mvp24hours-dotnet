@@ -22,7 +22,7 @@ namespace Mvp24Hours.Core.Serialization.Json
     /// </remarks>
     public class CompositeContractResolver : IContractResolver, IEnumerable<IContractResolver>
     {
-        private readonly IList<IContractResolver> _contractResolvers = new List<IContractResolver>();
+        private readonly IList<IContractResolver> _contractResolvers = [];
 
         /// <summary>
         /// 

@@ -23,7 +23,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         public async Task CachingOperation_CachesResult_OnSuccess()
         {
             // Arrange
-            var cache = CreateMemoryCache();
+            IDistributedCache cache = CreateMemoryCache();
             var executionCount = 0;
             var innerOperation = new TestOperation(() =>
             {
@@ -37,8 +37,8 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                 input => $"test-{input}");
 
             // Act
-            var result1 = await cachingOperation.ExecuteAsync(1);
-            var result2 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
 
             // Assert
             Assert.True(result1.IsSuccess);
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         public async Task CachingOperation_DifferentKeys_ExecutesMultipleTimes()
         {
             // Arrange
-            var cache = CreateMemoryCache();
+            IDistributedCache cache = CreateMemoryCache();
             var executionCount = 0;
             var innerOperation = new TestOperation(() =>
             {
@@ -66,8 +66,8 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                 input => $"test-{input}");
 
             // Act
-            var result1 = await cachingOperation.ExecuteAsync(1);
-            var result2 = await cachingOperation.ExecuteAsync(2);
+            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(2);
 
             // Assert
             Assert.True(result1.IsSuccess);
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         public async Task CachingOperation_DoesNotCacheFailures_ByDefault()
         {
             // Arrange
-            var cache = CreateMemoryCache();
+            IDistributedCache cache = CreateMemoryCache();
             var executionCount = 0;
             var innerOperation = new TestOperation(() =>
             {
@@ -94,8 +94,8 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                 options: new CacheOperationOptions { CacheFailedResults = false });
 
             // Act
-            var result1 = await cachingOperation.ExecuteAsync(1);
-            var result2 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
 
             // Assert
             Assert.False(result1.IsSuccess);
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         public async Task CachingOperation_CachesFailures_WhenEnabled()
         {
             // Arrange
-            var cache = CreateMemoryCache();
+            IDistributedCache cache = CreateMemoryCache();
             var executionCount = 0;
             var innerOperation = new TestOperation(() =>
             {
@@ -122,8 +122,8 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                 options: new CacheOperationOptions { CacheFailedResults = true });
 
             // Act
-            var result1 = await cachingOperation.ExecuteAsync(1);
-            var result2 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
 
             // Assert
             Assert.False(result1.IsSuccess);
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         public async Task CachingOperation_InvalidateCache_ClearsEntry()
         {
             // Arrange
-            var cache = CreateMemoryCache();
+            IDistributedCache cache = CreateMemoryCache();
             var executionCount = 0;
             var innerOperation = new TestOperation(() =>
             {
@@ -149,9 +149,9 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                 input => $"test-{input}");
 
             // Act
-            var result1 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
             await cachingOperation.InvalidateCacheAsync(1);
-            var result2 = await cachingOperation.ExecuteAsync(1);
+            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
 
             // Assert
             Assert.True(result1.IsSuccess);
@@ -163,7 +163,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
 
         private static IDistributedCache CreateMemoryCache()
         {
-            var options = Options.Create(new MemoryDistributedCacheOptions());
+            IOptions<MemoryDistributedCacheOptions> options = Options.Create(new MemoryDistributedCacheOptions());
             return new MemoryDistributedCache(options);
         }
 

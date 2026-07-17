@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             IMongoCollection<T> collection,
             CancellationToken cancellationToken = default)
         {
-            var type = typeof(T);
+            Type type = typeof(T);
 
             // Check if indexes were already created for this type
             if (_indexesCreated.ContainsKey(type))
@@ -88,12 +88,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
 
                 try
                 {
-                    var indexes = BuildIndexModels<T>();
+                    IReadOnlyList<CreateIndexModel<T>> indexes = BuildIndexModels<T>();
 
                     if (indexes.Count > 0)
                     {
                         // Create indexes synchronously within lock to ensure thread safety
-                        var task = collection.Indexes.CreateManyAsync(indexes, cancellationToken);
+                        Task<IEnumerable<string>> task = collection.Indexes.CreateManyAsync(indexes, cancellationToken);
                         task.Wait(cancellationToken);
 
                         _logger?.LogInformation("Created {IndexCount} indexes for type {TypeName}", indexes.Count, type.Name);
@@ -123,10 +123,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             _logger?.LogDebug("Scanning assembly {AssemblyName} for index attributes: found {TypeCount} types",
                 assembly.GetName().Name, entityTypes.Count);
 
-            foreach (var type in entityTypes)
+            foreach (Type? type in entityTypes)
             {
                 var collectionName = GetCollectionName(type);
-                var method = typeof(MongoDbIndexManager)
+                MethodInfo? method = typeof(MongoDbIndexManager)
                     .GetMethod(nameof(EnsureIndexesForTypeAsync), BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.MakeGenericMethod(type);
 
@@ -142,32 +142,32 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
         /// <inheritdoc/>
         public IReadOnlyList<CreateIndexModel<T>> BuildIndexModels<T>()
         {
-            var type = typeof(T);
+            Type type = typeof(T);
             var indexes = new List<CreateIndexModel<T>>();
 
             // Process property-level indexes
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
             // Group properties by compound index group
             var compoundGroups = new Dictionary<string, List<(PropertyInfo Property, MongoIndexAttribute Attr)>>();
 
-            foreach (var property in properties)
+            foreach (PropertyInfo property in properties)
             {
-                var indexAttr = property.GetCustomAttribute<MongoIndexAttribute>();
+                MongoIndexAttribute? indexAttr = property.GetCustomAttribute<MongoIndexAttribute>();
                 if (indexAttr != null)
                 {
                     if (!string.IsNullOrEmpty(indexAttr.CompoundIndexGroup))
                     {
                         if (!compoundGroups.ContainsKey(indexAttr.CompoundIndexGroup))
                         {
-                            compoundGroups[indexAttr.CompoundIndexGroup] = new List<(PropertyInfo, MongoIndexAttribute)>();
+                            compoundGroups[indexAttr.CompoundIndexGroup] = [];
                         }
                         compoundGroups[indexAttr.CompoundIndexGroup].Add((property, indexAttr));
                     }
                     else
                     {
                         // Single-field index
-                        var index = BuildSingleFieldIndex<T>(property, indexAttr);
+                        CreateIndexModel<T> index = BuildSingleFieldIndex<T>(property, indexAttr);
                         if (index != null)
                         {
                             indexes.Add(index);
@@ -176,10 +176,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
                 }
 
                 // Process TTL indexes
-                var ttlAttr = property.GetCustomAttribute<MongoTtlIndexAttribute>();
+                MongoTtlIndexAttribute? ttlAttr = property.GetCustomAttribute<MongoTtlIndexAttribute>();
                 if (ttlAttr != null)
                 {
-                    var ttlIndex = BuildTtlIndex<T>(property, ttlAttr);
+                    CreateIndexModel<T> ttlIndex = BuildTtlIndex<T>(property, ttlAttr);
                     if (ttlIndex != null)
                     {
                         indexes.Add(ttlIndex);
@@ -188,10 +188,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             }
 
             // Create compound indexes from grouped properties
-            foreach (var group in compoundGroups)
+            foreach (KeyValuePair<string, List<(PropertyInfo Property, MongoIndexAttribute Attr)>> group in compoundGroups)
             {
                 var orderedProps = group.Value.OrderBy(x => x.Attr.Order).ToList();
-                var index = BuildCompoundIndexFromProperties<T>(group.Key, orderedProps);
+                CreateIndexModel<T>? index = BuildCompoundIndexFromProperties<T>(group.Key, orderedProps);
                 if (index != null)
                 {
                     indexes.Add(index);
@@ -199,10 +199,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             }
 
             // Process class-level compound indexes
-            var compoundAttrs = type.GetCustomAttributes<MongoCompoundIndexAttribute>();
-            foreach (var attr in compoundAttrs)
+            IEnumerable<MongoCompoundIndexAttribute> compoundAttrs = type.GetCustomAttributes<MongoCompoundIndexAttribute>();
+            foreach (MongoCompoundIndexAttribute attr in compoundAttrs)
             {
-                var index = BuildCompoundIndex<T>(attr);
+                CreateIndexModel<T>? index = BuildCompoundIndex<T>(attr);
                 if (index != null)
                 {
                     indexes.Add(index);
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             IMongoCollection<T> collection,
             CancellationToken cancellationToken = default)
         {
-            var cursor = await collection.Indexes.ListAsync(cancellationToken);
+            IAsyncCursor<BsonDocument> cursor = await collection.Indexes.ListAsync(cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -247,7 +247,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             string collectionName,
             CancellationToken cancellationToken)
         {
-            var collection = database.GetCollection<T>(collectionName);
+            IMongoCollection<T> collection = database.GetCollection<T>(collectionName);
             await EnsureIndexesAsync(collection, cancellationToken);
         }
 
@@ -256,7 +256,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             var hasClassAttr = type.GetCustomAttributes<MongoCompoundIndexAttribute>().Any();
             if (hasClassAttr) return true;
 
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             return properties.Any(p =>
                 p.GetCustomAttribute<MongoIndexAttribute>() != null ||
                 p.GetCustomAttribute<MongoTtlIndexAttribute>() != null);
@@ -265,15 +265,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
         private static string GetCollectionName(Type type)
         {
             // Check for BsonCollection attribute or use type name
-            var collectionAttr = type.GetCustomAttribute<BsonCollectionAttribute>();
+            BsonCollectionAttribute? collectionAttr = type.GetCustomAttribute<BsonCollectionAttribute>();
             return collectionAttr?.CollectionName ?? type.Name;
         }
 
         private static CreateIndexModel<T> BuildSingleFieldIndex<T>(PropertyInfo property, MongoIndexAttribute attr)
         {
             var fieldName = GetBsonFieldName(property);
-            var keyDefinition = CreateKeyDefinition<T>(fieldName, attr.IndexType);
-            var options = CreateIndexOptions<T>(attr.Name ?? $"idx_{fieldName}", attr.Unique, attr.Sparse, attr.Background);
+            IndexKeysDefinition<T> keyDefinition = CreateKeyDefinition<T>(fieldName, attr.IndexType);
+            CreateIndexOptions<T> options = CreateIndexOptions<T>(attr.Name ?? $"idx_{fieldName}", attr.Unique, attr.Sparse, attr.Background);
 
             if (!string.IsNullOrEmpty(attr.PartialFilterExpression))
             {
@@ -292,7 +292,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
         private static CreateIndexModel<T> BuildTtlIndex<T>(PropertyInfo property, MongoTtlIndexAttribute attr)
         {
             var fieldName = GetBsonFieldName(property);
-            var keyDefinition = Builders<T>.IndexKeys.Ascending(fieldName);
+            IndexKeysDefinition<T> keyDefinition = Builders<T>.IndexKeys.Ascending(fieldName);
 
             var options = new CreateIndexOptions<T>
             {
@@ -308,21 +308,21 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             string groupName,
             List<(PropertyInfo Property, MongoIndexAttribute Attr)> properties)
         {
-            var keyBuilder = Builders<T>.IndexKeys;
+            IndexKeysDefinitionBuilder<T> keyBuilder = Builders<T>.IndexKeys;
             IndexKeysDefinition<T>? keys = null;
 
-            foreach (var (property, attr) in properties)
+            foreach ((PropertyInfo? property, MongoIndexAttribute? attr) in properties)
             {
                 var fieldName = GetBsonFieldName(property);
-                var keyDef = CreateKeyDefinition<T>(fieldName, attr.IndexType);
+                IndexKeysDefinition<T> keyDef = CreateKeyDefinition<T>(fieldName, attr.IndexType);
 
                 keys = keys == null ? keyDef : Builders<T>.IndexKeys.Combine(keys, keyDef);
             }
 
             if (keys == null) return null;
 
-            var firstAttr = properties.First().Attr;
-            var options = CreateIndexOptions<T>(
+            MongoIndexAttribute firstAttr = properties.First().Attr;
+            CreateIndexOptions<T> options = CreateIndexOptions<T>(
                 firstAttr.Name ?? $"idx_compound_{groupName}",
                 firstAttr.Unique,
                 firstAttr.Sparse,
@@ -365,7 +365,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
 
             if (keys == null) return null;
 
-            var options = CreateIndexOptions<T>(attr.Name, attr.Unique, attr.Sparse, attr.Background);
+            CreateIndexOptions<T> options = CreateIndexOptions<T>(attr.Name, attr.Unique, attr.Sparse, attr.Background);
 
             if (!string.IsNullOrEmpty(attr.PartialFilterExpression))
             {
@@ -409,7 +409,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
 
         private static string GetBsonFieldName(PropertyInfo property)
         {
-            var bsonElement = property.GetCustomAttribute<BsonElementAttribute>();
+            BsonElementAttribute? bsonElement = property.GetCustomAttribute<BsonElementAttribute>();
             return bsonElement?.ElementName ?? property.Name;
         }
 

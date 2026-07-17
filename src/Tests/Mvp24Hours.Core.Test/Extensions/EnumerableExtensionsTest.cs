@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Mvp24Hours.Core.Test.Extensions;
 
 /// <summary>
@@ -125,7 +127,7 @@ public class EnumerableExtensionsTest
     public void ForEach_WithEmptyCollection_DoesNotExecuteAction()
     {
         // Arrange
-        var collection = Enumerable.Empty<int>();
+        IEnumerable<int> collection = Enumerable.Empty<int>();
         var counter = 0;
 
         // Act
@@ -143,7 +145,7 @@ public class EnumerableExtensionsTest
         var counter = 0;
 
         // Act (nÃ£o chama ToList())
-        var query = collection.ForEach(x => counter++);
+        IEnumerable<int> query = collection.ForEach(x => counter++);
 
         // Assert
         counter.Should().Be(0); // NÃ£o foi executado ainda
@@ -176,7 +178,7 @@ public class EnumerableExtensionsTest
     public void AnyOrNotNull_WithEmptyCollection_ReturnsFalse()
     {
         // Arrange
-        var collection = Enumerable.Empty<int>();
+        IEnumerable<int> collection = Enumerable.Empty<int>();
 
         // Act
         var result = collection.AnyOrNotNull();
@@ -245,7 +247,7 @@ public class EnumerableExtensionsTest
     public void AnySafe_WithEmptyCollection_ReturnsFalse()
     {
         // Arrange
-        var collection = Enumerable.Empty<int>();
+        IEnumerable<int> collection = Enumerable.Empty<int>();
 
         // Act
         var result = collection.AnySafe();
@@ -331,7 +333,7 @@ public class EnumerableExtensionsTest
     public async Task FirstOrDefaultAsync_ReturnsFirstElement()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
 
         // Act
         var result = await task.FirstOrDefaultAsync();
@@ -344,7 +346,7 @@ public class EnumerableExtensionsTest
     public async Task FirstOrDefaultAsync_WithPredicate_ReturnsMatch()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
 
         // Act
         var result = await task.FirstOrDefaultAsync(x => x > 3);
@@ -357,7 +359,7 @@ public class EnumerableExtensionsTest
     public async Task FirstOrDefaultAsync_WithEmptyCollection_ReturnsDefault()
     {
         // Arrange
-        var task = Task.FromResult(Enumerable.Empty<int>());
+        Task<IEnumerable<int>> task = Task.FromResult(Enumerable.Empty<int>());
 
         // Act
         var result = await task.FirstOrDefaultAsync();
@@ -370,7 +372,7 @@ public class EnumerableExtensionsTest
     public async Task LastOrDefaultAsync_ReturnsLastElement()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
 
         // Act
         var result = await task.LastOrDefaultAsync();
@@ -383,7 +385,7 @@ public class EnumerableExtensionsTest
     public async Task LastOrDefaultAsync_WithPredicate_ReturnsMatch()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
 
         // Act
         var result = await task.LastOrDefaultAsync(x => x < 4);
@@ -396,7 +398,7 @@ public class EnumerableExtensionsTest
     public async Task ElementAtOrDefaultAsync_ReturnsElementAtIndex()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
 
         // Act
         var result = await task.ElementAtOrDefaultAsync(2);
@@ -409,7 +411,7 @@ public class EnumerableExtensionsTest
     public async Task ElementAtOrDefaultAsync_WithInvalidIndex_ReturnsDefault()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
 
         // Act
         var result = await task.ElementAtOrDefaultAsync(10);
@@ -426,7 +428,7 @@ public class EnumerableExtensionsTest
     public void EnumerableExtensions_WithLargeCollection_ShouldPerformEfficiently()
     {
         // Arrange
-        var collection = Enumerable.Range(1, 1000000);
+        IEnumerable<int> collection = Enumerable.Range(1, 1000000);
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

@@ -68,7 +68,7 @@ public abstract class OptionsValidatorBase<TOptions> :
         // First, validate with Data Annotations if enabled
         if (IncludeDataAnnotations)
         {
-            var dataAnnotationsResult = ValidateDataAnnotations(options);
+            OptionsValidationResult dataAnnotationsResult = ValidateDataAnnotations(options);
             if (!dataAnnotationsResult.Succeeded)
             {
                 errors.AddRange(dataAnnotationsResult.Failures);
@@ -115,7 +115,7 @@ public abstract class OptionsValidatorBase<TOptions> :
         }
 
         var errors = new List<string>();
-        foreach (var result in results)
+        foreach (ValidationResult result in results)
         {
             if (!string.IsNullOrEmpty(result.ErrorMessage))
             {
@@ -144,7 +144,7 @@ public abstract class OptionsValidatorBase<TOptions> :
     /// </summary>
     ValidateOptionsResult IValidateOptions<TOptions>.Validate(string? name, TOptions options)
     {
-        var result = Validate(options);
+        OptionsValidationResult result = Validate(options);
 
         return result.Succeeded
             ? ValidateOptionsResult.Success
@@ -214,7 +214,7 @@ public abstract class SimpleOptionsValidatorBase<TOptions> :
     /// </summary>
     ValidateOptionsResult IValidateOptions<TOptions>.Validate(string? name, TOptions options)
     {
-        var result = Validate(options);
+        OptionsValidationResult result = Validate(options);
 
         return result.Succeeded
             ? ValidateOptionsResult.Success
@@ -254,9 +254,9 @@ public sealed class CompositeOptionsValidator<TOptions> :
 
         var errors = new List<string>();
 
-        foreach (var validator in _validators)
+        foreach (IOptionsValidator<TOptions> validator in _validators)
         {
-            var result = validator.Validate(options);
+            OptionsValidationResult result = validator.Validate(options);
             if (!result.Succeeded)
             {
                 errors.AddRange(result.Failures);
@@ -273,7 +273,7 @@ public sealed class CompositeOptionsValidator<TOptions> :
     /// </summary>
     ValidateOptionsResult IValidateOptions<TOptions>.Validate(string? name, TOptions options)
     {
-        var result = Validate(options);
+        OptionsValidationResult result = Validate(options);
 
         return result.Succeeded
             ? ValidateOptionsResult.Success
@@ -335,7 +335,7 @@ public sealed class DelegateOptionsValidator<TOptions> :
     /// </summary>
     ValidateOptionsResult IValidateOptions<TOptions>.Validate(string? name, TOptions options)
     {
-        var result = Validate(options);
+        OptionsValidationResult result = Validate(options);
 
         return result.Succeeded
             ? ValidateOptionsResult.Success

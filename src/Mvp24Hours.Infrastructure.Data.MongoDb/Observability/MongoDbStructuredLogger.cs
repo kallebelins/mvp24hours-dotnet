@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
@@ -77,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (!_options.EnableStructuredLogging)
                 return;
 
-            var existingConfigurator = settings.ClusterConfigurator;
+            Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
 
             settings.ClusterConfigurator = builder =>
             {
@@ -113,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandSucceeded(CommandSucceededEvent e)
         {
-            if (!_pendingCommands.TryRemove(e.RequestId, out var context))
+            if (!_pendingCommands.TryRemove(e.RequestId, out CommandLogContext? context))
                 return;
 
             context.Stopwatch.Stop();
@@ -130,7 +131,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandFailed(CommandFailedEvent e)
         {
-            if (!_pendingCommands.TryRemove(e.RequestId, out var context))
+            if (!_pendingCommands.TryRemove(e.RequestId, out CommandLogContext? context))
                 return;
 
             context.Stopwatch.Stop();
@@ -209,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (_logger != null)
             {
                 var message = BuildLogMessage(log);
-                var level = log.Level switch
+                LogLevel level = log.Level switch
                 {
                     "Error" => LogLevel.Error,
                     "Warning" => LogLevel.Warning,
@@ -279,7 +280,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             try
             {
-                var clone = document.DeepClone().AsBsonDocument;
+                BsonDocument clone = document.DeepClone().AsBsonDocument;
                 MaskDocument(clone, _options.SensitiveFields);
                 return clone;
             }
@@ -291,7 +292,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private static void MaskDocument(BsonDocument document, string[] sensitiveFields)
         {
-            foreach (var element in document.Elements.ToArray())
+            foreach (BsonElement element in document.Elements.ToArray())
             {
                 var name = element.Name.ToLowerInvariant();
 
@@ -312,7 +313,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 }
                 else if (element.Value.IsBsonArray)
                 {
-                    foreach (var item in element.Value.AsBsonArray)
+                    foreach (BsonValue? item in element.Value.AsBsonArray)
                     {
                         if (item.IsBsonDocument)
                         {
@@ -331,7 +332,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             // For find commands
             if (reply.Contains("cursor"))
             {
-                var cursor = reply["cursor"].AsBsonDocument;
+                BsonDocument cursor = reply["cursor"].AsBsonDocument;
                 if (cursor.Contains("firstBatch"))
                 {
                     context.DocumentsReturned = cursor["firstBatch"].AsBsonArray.Count;
@@ -376,7 +377,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             if (collectionCommands.Contains(commandName) && command.Contains(commandName))
             {
-                var value = command[commandName];
+                BsonValue value = command[commandName];
                 if (value.IsString)
                     return value.AsString;
             }
@@ -432,7 +433,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             public string Category { get; set; }
             public string EventName { get; set; }
             public DateTimeOffset Timestamp { get; set; }
-            public Dictionary<string, object?> Properties { get; set; } = new();
+            public Dictionary<string, object?> Properties { get; set; } = [];
         }
 
         #endregion

@@ -245,7 +245,7 @@ public class OpenTelemetryLoggingOptions
     /// <summary>
     /// Gets or sets custom resource attributes to add to all logs.
     /// </summary>
-    public Dictionary<string, object> ResourceAttributes { get; set; } = new();
+    public Dictionary<string, object> ResourceAttributes { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the configuration for namespace-based log filtering.

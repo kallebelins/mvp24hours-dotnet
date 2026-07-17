@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
+            IMongoCollection<TDocument> collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
             await collectionWithConcern.InsertOneAsync(document, cancellationToken: cancellationToken);
         }
 
@@ -67,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
+            IMongoCollection<TDocument> collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
             await collectionWithConcern.InsertManyAsync(documents, cancellationToken: cancellationToken);
         }
 
@@ -88,7 +88,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
+            IMongoCollection<TDocument> collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
             return await collectionWithConcern.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
         }
 
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
+            IMongoCollection<TDocument> collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
             return await collectionWithConcern.DeleteManyAsync(filter, cancellationToken: cancellationToken);
         }
 
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection
+            IMongoCollection<TDocument> collectionWithConcern = collection
                 .WithReadConcern(options.ToReadConcern())
                 .WithReadPreference(options.ToReadPreference());
 
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection
+            IMongoCollection<TDocument> collectionWithConcern = collection
                 .WithReadConcern(options.ToReadConcern())
                 .WithReadPreference(options.ToReadPreference());
 
@@ -188,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection
+            IMongoCollection<TDocument> collectionWithConcern = collection
                 .WithReadConcern(options.ToReadConcern())
                 .WithReadPreference(options.ToReadPreference());
 
@@ -212,7 +212,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
             MongoDbConcernOptions options,
             CancellationToken cancellationToken = default)
         {
-            var collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
+            IMongoCollection<TDocument> collectionWithConcern = collection.WithWriteConcern(options.ToWriteConcern());
             return await collectionWithConcern.ReplaceOneAsync(filter, replacement, cancellationToken: cancellationToken);
         }
     }

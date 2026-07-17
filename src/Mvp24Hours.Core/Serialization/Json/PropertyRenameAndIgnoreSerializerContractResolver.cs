@@ -64,7 +64,7 @@ namespace Mvp24Hours.Core.Serialization.Json
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
-            var property = base.CreateProperty(member, memberSerialization);
+            JsonProperty property = base.CreateProperty(member, memberSerialization);
             if (property.DeclaringType != null && IsIgnored(property.DeclaringType, property.PropertyName!))
             {
                 property.ShouldSerialize = i => false;

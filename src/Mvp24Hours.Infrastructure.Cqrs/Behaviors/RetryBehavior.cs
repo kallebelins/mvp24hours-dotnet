@@ -119,7 +119,7 @@ public sealed class RetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
         var requestName = typeof(TRequest).Name;
         var maxAttempts = retryable.MaxRetryAttempts;
-        var baseDelay = retryable.RetryDelay;
+        TimeSpan baseDelay = retryable.RetryDelay;
         var useExponentialBackoff = retryable.UseExponentialBackoff;
 
         Exception? lastException = null;
@@ -143,7 +143,7 @@ public sealed class RetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
             {
                 lastException = ex;
 
-                var delay = useExponentialBackoff
+                TimeSpan delay = useExponentialBackoff
                     ? TimeSpan.FromMilliseconds(baseDelay.TotalMilliseconds * Math.Pow(2, attempt - 1))
                     : baseDelay;
 

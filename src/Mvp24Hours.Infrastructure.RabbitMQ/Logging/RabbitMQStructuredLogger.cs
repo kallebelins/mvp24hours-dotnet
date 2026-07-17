@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Logging
             var sb = new StringBuilder();
             sb.Append('{');
             var first = true;
-            foreach (var kvp in headers)
+            foreach (KeyValuePair<string, object> kvp in headers)
             {
                 if (!first) sb.Append(", ");
                 first = false;

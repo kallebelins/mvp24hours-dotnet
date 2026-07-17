@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -119,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository async GetByAnyAsync started");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -136,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository async GetByCountAsync started");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -159,7 +160,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository async GetByAsync started");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -248,7 +249,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await AddAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -288,7 +289,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await ModifyAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -333,7 +334,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await RemoveAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -348,7 +349,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository async RemoveByIdAsync started: Id={Id}", id);
             try
             {
-                var entity = await GetByIdAsync(id, cancellationToken: cancellationToken);
+                T? entity = await GetByIdAsync(id, cancellationToken: cancellationToken);
                 if (entity != null)
                 {
                     await RemoveAsync(entity, cancellationToken: cancellationToken);
@@ -397,8 +398,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             }
 
             // Try to preserve for generic IEntityLog<T>
-            var entityType = entity.GetType();
-            foreach (var iface in entityType.GetInterfaces())
+            Type entityType = entity.GetType();
+            foreach (Type iface in entityType.GetInterfaces())
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEntityLog<>))
                 {
@@ -411,7 +412,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         private static void CopyPropertyValue(object source, object target, string propertyName)
         {
-            var property = source.GetType().GetProperty(propertyName);
+            PropertyInfo? property = source.GetType().GetProperty(propertyName);
             if (property != null && property.CanRead && property.CanWrite)
             {
                 var value = property.GetValue(source);

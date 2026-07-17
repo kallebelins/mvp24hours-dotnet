@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             var newContent = new ByteArrayContent(compressedContent);
 
             // Copy original content headers
-            foreach (var header in request.Content.Headers)
+            foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
             {
                 if (!header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase) &&
                     !header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
         {
             using var outputStream = new MemoryStream();
 
-            await using (var compressionStream = CreateCompressionStream(outputStream))
+            await using (Stream compressionStream = CreateCompressionStream(outputStream))
             {
                 await compressionStream.WriteAsync(data, cancellationToken);
             }

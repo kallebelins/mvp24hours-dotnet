@@ -35,7 +35,7 @@ public class CircuitBreakerTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         // Act
-        var state = circuitBreaker.GetState("TestJob");
+        CircuitBreakerState state = circuitBreaker.GetState("TestJob");
 
         // Assert
         state.Should().Be(CircuitBreakerState.Closed);
@@ -250,7 +250,7 @@ public class CircuitBreakerTest
             circuitBreaker.RecordFailure("TestJob", failureThreshold: 5, TimeSpan.FromSeconds(30));
         }
 
-        var metrics = circuitBreaker.GetMetrics("TestJob");
+        CircuitBreakerMetrics? metrics = circuitBreaker.GetMetrics("TestJob");
 
         // Assert
         metrics.Should().NotBeNull();
@@ -266,7 +266,7 @@ public class CircuitBreakerTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         // Act
-        var metrics = circuitBreaker.GetMetrics("UnknownJob");
+        CircuitBreakerMetrics? metrics = circuitBreaker.GetMetrics("UnknownJob");
 
         // Assert
         metrics.Should().BeNull();
@@ -314,7 +314,7 @@ public class CircuitBreakerTest
         // Act - Record success
         circuitBreaker.RecordSuccess("TestJob", successThreshold: 1);
 
-        var metrics = circuitBreaker.GetMetrics("TestJob");
+        CircuitBreakerMetrics? metrics = circuitBreaker.GetMetrics("TestJob");
 
         // Assert
         metrics.Should().NotBeNull();
@@ -369,9 +369,9 @@ public class CircuitBreakerTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableCircuitBreaker = true,

@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
             // Register InMemoryEmailProvider by default (for testing/development)
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
+                EmailOptions options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
                 return new Providers.InMemoryEmailProvider(options);
             });
 
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
+                EmailOptions options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
                 return factory(serviceProvider, options);
             });
 
@@ -188,9 +188,9 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
-                var smtpOptions = serviceProvider.GetRequiredService<IOptions<SmtpEmailOptions>>();
-                var logger = serviceProvider.GetService<ILogger<SmtpEmailProvider>>();
+                IOptions<EmailOptions> emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
+                IOptions<SmtpEmailOptions> smtpOptions = serviceProvider.GetRequiredService<IOptions<SmtpEmailOptions>>();
+                ILogger<SmtpEmailProvider>? logger = serviceProvider.GetService<ILogger<SmtpEmailProvider>>();
                 return new SmtpEmailProvider(emailOptions, smtpOptions, logger);
             });
 
@@ -253,10 +253,10 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
-                var sendGridOptions = serviceProvider.GetRequiredService<IOptions<SendGridEmailOptions>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-                var logger = serviceProvider.GetService<ILogger<SendGridEmailProvider>>();
+                IOptions<EmailOptions> emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
+                IOptions<SendGridEmailOptions> sendGridOptions = serviceProvider.GetRequiredService<IOptions<SendGridEmailOptions>>();
+                IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                ILogger<SendGridEmailProvider>? logger = serviceProvider.GetService<ILogger<SendGridEmailProvider>>();
                 return new SendGridEmailProvider(emailOptions, sendGridOptions, httpClientFactory, logger);
             });
 
@@ -318,10 +318,10 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
-                var azureOptions = serviceProvider.GetRequiredService<IOptions<AzureCommunicationEmailOptions>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-                var logger = serviceProvider.GetService<ILogger<AzureCommunicationEmailProvider>>();
+                IOptions<EmailOptions> emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
+                IOptions<AzureCommunicationEmailOptions> azureOptions = serviceProvider.GetRequiredService<IOptions<AzureCommunicationEmailOptions>>();
+                IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                ILogger<AzureCommunicationEmailProvider>? logger = serviceProvider.GetService<ILogger<AzureCommunicationEmailProvider>>();
                 return new AzureCommunicationEmailProvider(emailOptions, azureOptions, httpClientFactory, logger);
             });
 
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddSingleton<IEmailService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
+                IOptions<EmailOptions> options = serviceProvider.GetRequiredService<IOptions<EmailOptions>>();
                 return new InMemoryEmailProvider(options);
             });
 
@@ -555,8 +555,8 @@ namespace Mvp24Hours.Infrastructure.Email.Extensions
 
             services.AddScoped<EmailBulkSender>(serviceProvider =>
             {
-                var emailService = serviceProvider.GetRequiredService<IEmailService>();
-                var logger = serviceProvider.GetService<ILogger<EmailBulkSender>>();
+                IEmailService emailService = serviceProvider.GetRequiredService<IEmailService>();
+                ILogger<EmailBulkSender>? logger = serviceProvider.GetService<ILogger<EmailBulkSender>>();
 
                 EmailRateLimiter? rateLimiter = null;
                 if (configureRateLimiter != null)

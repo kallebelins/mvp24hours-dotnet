@@ -7,6 +7,7 @@ using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Fixtures;
 using Mvp24Hours.Application.Integration.Test.Services;
 using Mvp24Hours.Application.Integration.Test.Specifications;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
@@ -36,9 +37,9 @@ public class SpecificationIntegrationTest : IAsyncLifetime
 
     private async Task SeedTestDataAsync()
     {
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // Create a category
         var category = new Category { Name = "Spec Test Category", IsActive = true };
@@ -67,12 +68,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task ActiveProductSpecification_ShouldReturnOnlyActiveProducts()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new ActiveProductSpecification();
 
         // Act
-        var result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         result.Should().NotBeNull();
@@ -86,12 +87,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task ActiveProductSpecification_Expression_ShouldFilterCorrectly()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new ActiveProductSpecification();
 
         // Act
-        var countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<int> countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         countResult.GetDataValue().Should().Be(4);
@@ -105,12 +106,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task PriceRangeSpecification_ShouldReturnProductsInRange()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new PriceRangeSpecification(50m, 200m);
 
         // Act
-        var result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         result.Should().NotBeNull();
@@ -132,12 +133,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
         decimal minPrice, decimal maxPrice, int expectedCount)
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new PriceRangeSpecification(minPrice, maxPrice);
 
         // Act
-        var countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<int> countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         countResult.GetDataValue().Should().Be(expectedCount);
@@ -151,12 +152,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task LowStockSpecification_DefaultThreshold_ShouldReturnLowStockProducts()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new LowStockSpecification(); // Default threshold = 50
 
         // Act
-        var result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         result.Should().NotBeNull();
@@ -177,12 +178,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
         int threshold, int expectedCount)
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
         var specification = new LowStockSpecification(threshold);
 
         // Act
-        var countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
+        IBusinessResult<int> countResult = await productService.GetByCountAsync(specification.IsSatisfiedByExpression);
 
         // Assert
         countResult.GetDataValue().Should().Be(expectedCount);
@@ -196,11 +197,11 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task CombinedSpecifications_ActiveAndPriceRange_ShouldWork()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // Act
-        var result = await productService.GetByAsync(p => p.IsActive && p.Price >= 50m && p.Price <= 200m);
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(p => p.IsActive && p.Price >= 50m && p.Price <= 200m);
 
         // Assert
         result.Should().NotBeNull();
@@ -217,12 +218,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task CombinedSpecifications_ActiveAndLowStock_ShouldWork()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // Active products with low stock (< 50)
         // Act
-        var result = await productService.GetByAsync(p => p.IsActive && p.StockQuantity < 50);
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(p => p.IsActive && p.StockQuantity < 50);
 
         // Assert
         result.Should().NotBeNull();
@@ -241,12 +242,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task CombinedSpecifications_AllThree_ShouldWork()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // Active, price 50-200, low stock < 50
         // Act
-        var result = await productService.GetByAsync(
+        IBusinessResult<IList<Product>> result = await productService.GetByAsync(
             p => p.IsActive && p.Price >= 50m && p.Price <= 200m && p.StockQuantity < 50);
 
         // Assert
@@ -266,12 +267,12 @@ public class SpecificationIntegrationTest : IAsyncLifetime
     public async Task SpecificationWithPagination_ShouldRespectBothFilters()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
         var pagingCriteria = new PagingCriteria(2, 0);
 
         // Act
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.IsActive,
             pagingCriteria);
 

@@ -181,7 +181,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var mappedData = await mapper(result.Data!);
+            TNew? mappedData = await mapper(result.Data!);
 
             return new BusinessResult<TNew>(
                 data: mappedData,
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Extensions
             this Task<IBusinessResult<T>> resultTask,
             Func<T, TNew> mapper)
         {
-            var result = await resultTask;
+            IBusinessResult<T> result = await resultTask;
             return result.Map(mapper);
         }
 
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var bindResult = binder(result.Data!);
+            IBusinessResult<TNew> bindResult = binder(result.Data!);
 
             // Preserve token from original result if new result doesn't have one
             if (string.IsNullOrEmpty(bindResult.Token) && !string.IsNullOrEmpty(result.Token))
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Extensions
                     token: result.Token);
             }
 
-            var bindResult = await binder(result.Data!);
+            IBusinessResult<TNew> bindResult = await binder(result.Data!);
 
             if (string.IsNullOrEmpty(bindResult.Token) && !string.IsNullOrEmpty(result.Token))
             {
@@ -285,7 +285,7 @@ namespace Mvp24Hours.Extensions
             this Task<IBusinessResult<T>> resultTask,
             Func<T, IBusinessResult<TNew>> binder)
         {
-            var result = await resultTask;
+            IBusinessResult<T> result = await resultTask;
             return result.Bind(binder);
         }
 
@@ -296,7 +296,7 @@ namespace Mvp24Hours.Extensions
             this Task<IBusinessResult<T>> resultTask,
             Func<T, Task<IBusinessResult<TNew>>> binder)
         {
-            var result = await resultTask;
+            IBusinessResult<T> result = await resultTask;
             return await result.BindAsync(binder);
         }
 

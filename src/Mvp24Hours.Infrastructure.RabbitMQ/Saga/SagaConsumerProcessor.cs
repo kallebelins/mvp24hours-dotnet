@@ -45,22 +45,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         /// <param name="cancellationToken">Cancellation token.</param>
         public async Task ProcessAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
         {
-            using var scope = context.CreateScope();
+            using Core.Contract.IServiceScope scope = context.CreateScope();
 
-            var consumer = scope.ServiceProvider.GetRequiredService<TConsumer>();
-            var repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
-            var scheduler = scope.ServiceProvider.GetService<IMessageScheduler>();
-            var rabbitClient = scope.ServiceProvider.GetService<IMvpRabbitMQClient>();
+            TConsumer consumer = scope.ServiceProvider.GetRequiredService<TConsumer>();
+            ISagaRepository<TData> repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
+            IMessageScheduler? scheduler = scope.ServiceProvider.GetService<IMessageScheduler>();
+            IMvpRabbitMQClient? rabbitClient = scope.ServiceProvider.GetService<IMvpRabbitMQClient>();
 
             // Extract correlation ID from message
-            var correlationId = consumer.GetCorrelationId(context.Message);
+            Guid correlationId = consumer.GetCorrelationId(context.Message);
 
             _logger?.LogDebug(
                 "Processing message {MessageType} with correlation ID {CorrelationId}",
                 typeof(TMessage).Name, correlationId);
 
             // Find or create saga instance
-            var instance = await repository.FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await repository.FindAsync(correlationId, cancellationToken);
             var isNew = false;
 
             if (instance == null)

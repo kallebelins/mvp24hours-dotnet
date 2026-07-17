@@ -27,7 +27,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
     public class InMemorySmsRateLimiter : ISmsRateLimiter
     {
         private readonly SmsRateLimitOptions _options;
-        private readonly Dictionary<string, Queue<DateTimeOffset>> _counters = new();
+        private readonly Dictionary<string, Queue<DateTimeOffset>> _counters = [];
         private readonly object _lock = new();
 
         /// <summary>
@@ -58,11 +58,11 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
             lock (_lock)
             {
                 var normalizedDestination = NormalizeDestination(destination);
-                var now = DateTimeOffset.UtcNow;
-                var windowStart = now - _options.TimeWindow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+                DateTimeOffset windowStart = now - _options.TimeWindow;
 
                 // Get or create counter for destination
-                if (!_counters.TryGetValue(normalizedDestination, out var timestamps))
+                if (!_counters.TryGetValue(normalizedDestination, out Queue<DateTimeOffset>? timestamps))
                 {
                     timestamps = new Queue<DateTimeOffset>();
                     _counters[normalizedDestination] = timestamps;
@@ -98,11 +98,11 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
             lock (_lock)
             {
                 var normalizedDestination = NormalizeDestination(destination);
-                var now = DateTimeOffset.UtcNow;
-                var windowStart = now - _options.TimeWindow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+                DateTimeOffset windowStart = now - _options.TimeWindow;
 
                 // Get or create counter for destination
-                if (!_counters.TryGetValue(normalizedDestination, out var timestamps))
+                if (!_counters.TryGetValue(normalizedDestination, out Queue<DateTimeOffset>? timestamps))
                 {
                     timestamps = new Queue<DateTimeOffset>();
                     _counters[normalizedDestination] = timestamps;
@@ -134,10 +134,10 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
             lock (_lock)
             {
                 var normalizedDestination = NormalizeDestination(destination);
-                var now = DateTimeOffset.UtcNow;
-                var windowStart = now - _options.TimeWindow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+                DateTimeOffset windowStart = now - _options.TimeWindow;
 
-                if (!_counters.TryGetValue(normalizedDestination, out var timestamps))
+                if (!_counters.TryGetValue(normalizedDestination, out Queue<DateTimeOffset>? timestamps))
                 {
                     return Task.FromResult(0);
                 }

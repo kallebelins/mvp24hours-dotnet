@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var messageId = context.MessageId;
 
             // Try to get a validator for this message type
-            var validator = context.ServiceProvider.GetService<IValidator<TMessage>>();
+            IValidator<TMessage>? validator = context.ServiceProvider.GetService<IValidator<TMessage>>();
 
             if (validator == null)
             {
@@ -59,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             }
 
             // Validate the message
-            var validationResult = await validator.ValidateAsync(context.Message, cancellationToken);
+            ValidationResult validationResult = await validator.ValidateAsync(context.Message, cancellationToken);
 
             if (validationResult.IsValid)
             {
@@ -163,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var messageId = context.MessageId;
 
             // Try to get a validator for this message type
-            var validator = context.ServiceProvider.GetService<IValidator<TMessage>>();
+            IValidator<TMessage>? validator = context.ServiceProvider.GetService<IValidator<TMessage>>();
 
             if (validator == null)
             {
@@ -173,7 +174,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             }
 
             // Validate the message
-            var validationResult = await validator.ValidateAsync(context.Message, cancellationToken);
+            ValidationResult validationResult = await validator.ValidateAsync(context.Message, cancellationToken);
 
             if (validationResult.IsValid)
             {

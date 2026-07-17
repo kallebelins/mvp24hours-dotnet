@@ -76,7 +76,7 @@ public static class LoggingServiceExtensions
         // Register composite enricher
         services.AddSingleton<ILogEnricher>(sp =>
         {
-            var enrichers = sp.GetServices<ILogEnricher>();
+            IEnumerable<ILogEnricher> enrichers = sp.GetServices<ILogEnricher>();
             return new CompositeLogEnricher(enrichers);
         });
 
@@ -177,11 +177,11 @@ public static class LoggingServiceExtensions
         this ILoggingBuilder builder,
         IConfiguration configuration)
     {
-        var logLevelSection = configuration.GetSection("Logging:LogLevel");
+        IConfigurationSection logLevelSection = configuration.GetSection("Logging:LogLevel");
 
-        foreach (var child in logLevelSection.GetChildren())
+        foreach (IConfigurationSection child in logLevelSection.GetChildren())
         {
-            if (Enum.TryParse<LogLevel>(child.Value, out var level))
+            if (Enum.TryParse<LogLevel>(child.Value, out LogLevel level))
             {
                 builder.AddFilter(child.Key, level);
             }
@@ -245,7 +245,7 @@ public class LoggingOptions
     /// <summary>
     /// Gets or sets custom resource attributes to add to all logs.
     /// </summary>
-    public Dictionary<string, object> ResourceAttributes { get; set; } = new();
+    public Dictionary<string, object> ResourceAttributes { get; set; } = [];
 }
 
 /// <summary>
@@ -268,7 +268,7 @@ public class TraceContextLogEnricher : ILogEnricher
     /// <inheritdoc />
     public Dictionary<string, object?> GetEnrichmentProperties()
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         var properties = new Dictionary<string, object?>();
 
         if (activity != null)
@@ -304,7 +304,7 @@ public class UserContextLogEnricher : ILogEnricher
     /// <inheritdoc />
     public Dictionary<string, object?> GetEnrichmentProperties()
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         var properties = new Dictionary<string, object?>();
 
         if (activity != null)
@@ -340,7 +340,7 @@ public class TenantContextLogEnricher : ILogEnricher
     /// <inheritdoc />
     public Dictionary<string, object?> GetEnrichmentProperties()
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         var properties = new Dictionary<string, object?>();
 
         if (activity != null)
@@ -383,10 +383,10 @@ public class CompositeLogEnricher : ILogEnricher
     {
         var combined = new Dictionary<string, object?>();
 
-        foreach (var enricher in _enrichers)
+        foreach (ILogEnricher enricher in _enrichers)
         {
-            var properties = enricher.GetEnrichmentProperties();
-            foreach (var prop in properties)
+            Dictionary<string, object?> properties = enricher.GetEnrichmentProperties();
+            foreach (KeyValuePair<string, object?> prop in properties)
             {
                 combined[prop.Key] = prop.Value;
             }
@@ -462,7 +462,7 @@ public class LogContextAccessor : ILogContextAccessor
     {
         get
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity == null) return null;
 
             return activity.GetBaggageItem("correlation.id")
@@ -473,7 +473,7 @@ public class LogContextAccessor : ILogContextAccessor
     /// <inheritdoc />
     public IDisposable? BeginTraceScope(ILogger logger)
     {
-        var properties = GetEnrichmentProperties();
+        Dictionary<string, object?> properties = GetEnrichmentProperties();
         if (properties.Count == 0) return null;
 
         return logger.BeginScope(properties)!;
@@ -482,7 +482,7 @@ public class LogContextAccessor : ILogContextAccessor
     /// <inheritdoc />
     public Dictionary<string, object?> GetEnrichmentProperties()
     {
-        return _enricher?.GetEnrichmentProperties() ?? new Dictionary<string, object?>();
+        return _enricher?.GetEnrichmentProperties() ?? [];
     }
 }
 
@@ -573,7 +573,7 @@ public class TraceContextLogSampler : ILogSampler
             return true;
         }
 
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         if (activity != null)
         {
             // Sample if the trace is recorded
@@ -710,7 +710,7 @@ public static class LoggerTraceContextExtensions
     /// <returns>An IDisposable scope, or null if no trace context is available.</returns>
     public static IDisposable? BeginTraceScope(this ILogger logger)
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         if (activity == null) return null;
 
         var correlationId = activity.GetBaggageItem("correlation.id") ?? activity.TraceId.ToString();
@@ -746,7 +746,7 @@ public static class LoggerTraceContextExtensions
         }
 
         // Include trace context if available
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         if (activity != null)
         {
             properties["TraceId"] = activity.TraceId.ToString();

@@ -46,16 +46,16 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of paths to exclude from ETag generation.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new HashSet<string>();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the list of HTTP methods to exclude from ETag generation.
         /// </summary>
-        public HashSet<string> ExcludedMethods { get; set; } = new HashSet<string>
-        {
+        public HashSet<string> ExcludedMethods { get; set; } =
+        [
             "HEAD",
             "OPTIONS"
-        };
+        ];
     }
 
     /// <summary>

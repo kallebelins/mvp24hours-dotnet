@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return new LocalFileStorageProvider(options);
             });
 
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return new LocalFileStorageProvider(options);
             });
 
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return new InMemoryFileStorageProvider(options);
             });
 
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return factory(serviceProvider, options);
             });
 
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return new AzureBlobStorageProvider(options, connectionString, containerName);
             });
 
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 
             services.AddSingleton<IFileStorage>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
+                FileStorageOptions options = serviceProvider.GetRequiredService<IOptions<FileStorageOptions>>().Value;
                 return new AwsS3StorageProvider(options, bucketName, accessKeyId, secretAccessKey, region);
             });
 

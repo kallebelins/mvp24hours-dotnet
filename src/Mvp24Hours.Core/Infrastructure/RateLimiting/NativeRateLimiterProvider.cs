@@ -52,12 +52,12 @@ namespace Mvp24Hours.Core.Infrastructure.RateLimiting
             ArgumentNullException.ThrowIfNull(options);
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var limiter = GetRateLimiter(key, options);
-            var lease = await limiter.AcquireAsync(permitCount, cancellationToken);
+            RateLimiter limiter = GetRateLimiter(key, options);
+            RateLimitLease lease = await limiter.AcquireAsync(permitCount, cancellationToken);
 
             if (!lease.IsAcquired)
             {
-                var retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out var retry) ? retry : TimeSpan.Zero;
+                TimeSpan retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retry) ? retry : TimeSpan.Zero;
                 _logger?.LogDebug(
                     "Rate limit acquired={Acquired} for key={Key}. RetryAfter={RetryAfter}",
                     lease.IsAcquired,
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Core.Infrastructure.RateLimiting
         /// <inheritdoc />
         public bool TryRemoveRateLimiter(string key)
         {
-            if (_rateLimiters.TryRemove(key, out var limiter))
+            if (_rateLimiters.TryRemove(key, out RateLimiter? limiter))
             {
                 limiter.Dispose();
                 return true;
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Core.Infrastructure.RateLimiting
             if (!_disposed)
             {
                 _disposed = true;
-                foreach (var limiter in _rateLimiters.Values)
+                foreach (RateLimiter limiter in _rateLimiters.Values)
                 {
                     limiter.Dispose();
                 }

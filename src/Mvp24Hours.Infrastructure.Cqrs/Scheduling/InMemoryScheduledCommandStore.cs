@@ -35,7 +35,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         {
             if (string.IsNullOrEmpty(id)) return Task.FromResult<ScheduledCommandEntry?>(null);
 
-            _entries.TryGetValue(id, out var entry);
+            _entries.TryGetValue(id, out ScheduledCommandEntry? entry);
             return Task.FromResult(entry);
         }
 
@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             var ready = _entries.Values
                 .Where(e => e.Status == ScheduledCommandStatus.Pending &&
@@ -63,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             var ready = _entries.Values
                 .Where(e => e.Status == ScheduledCommandStatus.Failed &&
@@ -158,10 +158,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         /// <inheritdoc />
         public Task<int> MarkExpiredAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             int count = 0;
 
-            foreach (var entry in _entries.Values.Where(e =>
+            foreach (ScheduledCommandEntry? entry in _entries.Values.Where(e =>
                 e.Status == ScheduledCommandStatus.Pending &&
                 e.ExpiresAt.HasValue &&
                 e.ExpiresAt.Value <= now))
@@ -176,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         /// <inheritdoc />
         public Task<ScheduledCommandStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             var entries = _entries.Values.ToList();
 
             var stats = new ScheduledCommandStatistics

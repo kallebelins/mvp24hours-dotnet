@@ -4,7 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mvp24Hours.Core.Contract.Infrastructure;
@@ -256,13 +258,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
             var converter = new EncryptedStringConverter(encryptionProvider);
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
-                foreach (var property in entityType.GetProperties())
+                foreach (IMutableProperty property in entityType.GetProperties())
                 {
                     if (property.ClrType == typeof(string))
                     {
-                        var propertyInfo = property.PropertyInfo;
+                        PropertyInfo? propertyInfo = property.PropertyInfo;
                         if (propertyInfo != null)
                         {
                             var hasEncryptedAttribute = propertyInfo.GetCustomAttributes(
@@ -299,9 +301,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
             var converter = new EncryptedStringConverter(encryptionProvider);
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
-                foreach (var property in entityType.GetProperties())
+                foreach (IMutableProperty property in entityType.GetProperties())
                 {
                     if (property.ClrType == typeof(string) && propertyPredicate(property))
                     {

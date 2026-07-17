@@ -8,9 +8,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
@@ -96,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -106,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (T? entity in batch)
                         {
                             await AddAsync(entity, cancellationToken);
                         }
@@ -170,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -180,9 +182,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (T? entity in batch)
                         {
-                            var entry = dbContext.Entry(entity);
+                            EntityEntry<T> entry = dbContext.Entry(entity);
                             if (entry.State == EntityState.Detached)
                             {
                                 dbEntities.Attach(entity);
@@ -249,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 var processedCount = 0;
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -259,9 +261,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     }
                     else
                     {
-                        foreach (var entity in batch)
+                        foreach (T? entity in batch)
                         {
-                            var entry = dbContext.Entry(entity);
+                            EntityEntry<T> entry = dbContext.Entry(entity);
                             if (entry.State == EntityState.Detached)
                             {
                                 dbEntities.Attach(entity);
@@ -354,7 +356,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 var ourSetters = new SetPropertyCalls<T>();
                 setPropertyCalls.Compile()(ourSetters);
 
-                var setters = ourSetters.Setters;
+                IReadOnlyList<SetPropertyCall> setters = ourSetters.Setters;
                 if (!setters.Any())
                 {
                     return 0;
@@ -387,11 +389,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             IReadOnlyList<SetPropertyCall> setters,
             CancellationToken cancellationToken)
         {
-            var query = dbEntities.Where(predicate);
+            IQueryable<T> query = dbEntities.Where(predicate);
 
             return await query.ExecuteUpdateAsync(builder =>
             {
-                foreach (var setter in setters)
+                foreach (SetPropertyCall setter in setters)
                 {
                     ApplyDynamicSetter(builder, setter);
                 }
@@ -402,11 +404,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T> builder,
             SetPropertyCall setter)
         {
-            var propertyType = GetPropertyTypeFromExpression(setter.Property);
+            Type propertyType = GetPropertyTypeFromExpression(setter.Property);
 
             if (setter.ValueExpression != null)
             {
-                var setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
+                MethodInfo setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
                     .GetMethods()
                     .First(m => m.Name == "SetProperty" &&
                                 m.GetParameters().Length == 2 &&
@@ -418,7 +420,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             }
             else
             {
-                var setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
+                MethodInfo setPropertyMethod = typeof(Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<T>)
                     .GetMethods()
                     .First(m => m.Name == "SetProperty" &&
                                 m.GetParameters().Length == 2 &&
@@ -481,7 +483,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         private static IEnumerable<IEnumerable<TItem>> Batch<TItem>(IEnumerable<TItem> source, int batchSize)
         {
-            using var enumerator = source.GetEnumerator();
+            using IEnumerator<TItem> enumerator = source.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 yield return YieldBatchElements(enumerator, batchSize - 1);

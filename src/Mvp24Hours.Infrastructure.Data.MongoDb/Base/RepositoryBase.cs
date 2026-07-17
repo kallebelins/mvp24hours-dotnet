@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             // cria query
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
             return GetQuery(query, criteria, onlyNavigation);
         }
         /// <summary>
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
                         if (clauseExpr.OrderByAscendingExpr.AnySafe())
                         {
                             IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (var ord in clauseExpr.OrderByAscendingExpr)
+                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByAscendingExpr)
                             {
                                 if (queryOrdered == null)
                                 {
@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
                         if (clauseExpr.OrderByDescendingExpr.AnySafe())
                         {
                             IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (var ord in clauseExpr.OrderByDescendingExpr)
+                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByDescendingExpr)
                             {
                                 if (queryOrdered == null)
                                 {
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
 
         protected FilterDefinition<T> GetKeyFilter(T entity)
         {
-            var key = GetKeyInfo();
+            PropertyInfo key = GetKeyInfo();
             return Builders<T>.Filter.Eq(key.Name, entity.EntityKey);
         }
 
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
         /// </summary>
         protected IQueryable<T> GetDynamicFilter<TValue>(IQueryable<T> query, PropertyInfo key, TValue value)
         {
-            var entityParameter = Expression.Parameter(typeof(T), "e");
+            ParameterExpression entityParameter = Expression.Parameter(typeof(T), "e");
 
             var lambda =
                 Expression.Lambda<Func<T, bool>>(
@@ -262,7 +262,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
             try
             {
                 Type t = typeof(T);
-                var param = Expression.Parameter(t);
+                ParameterExpression param = Expression.Parameter(t);
 
                 return query.Provider.CreateQuery<T>(
                     Expression.Call(

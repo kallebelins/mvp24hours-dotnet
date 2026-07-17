@@ -129,19 +129,19 @@ namespace Mvp24Hours.Extensions
             IServiceProvider serviceProvider)
         {
             // Get all observability components and configure them
-            var slowQueryLogger = serviceProvider.GetService<MongoDbSlowQueryLogger>();
+            MongoDbSlowQueryLogger? slowQueryLogger = serviceProvider.GetService<MongoDbSlowQueryLogger>();
             slowQueryLogger?.ConfigureClusterBuilder(settings);
 
-            var telemetry = serviceProvider.GetService<MongoDbOpenTelemetryInstrumentation>();
+            MongoDbOpenTelemetryInstrumentation? telemetry = serviceProvider.GetService<MongoDbOpenTelemetryInstrumentation>();
             telemetry?.ConfigureClusterBuilder(settings);
 
-            var poolMetrics = serviceProvider.GetService<MongoDbConnectionPoolMetrics>();
+            MongoDbConnectionPoolMetrics? poolMetrics = serviceProvider.GetService<MongoDbConnectionPoolMetrics>();
             poolMetrics?.ConfigureClusterBuilder(settings);
 
-            var structuredLogger = serviceProvider.GetService<MongoDbStructuredLogger>();
+            MongoDbStructuredLogger? structuredLogger = serviceProvider.GetService<MongoDbStructuredLogger>();
             structuredLogger?.ConfigureClusterBuilder(settings);
 
-            var durationTracker = serviceProvider.GetService<MongoDbDurationTracker>();
+            MongoDbDurationTracker? durationTracker = serviceProvider.GetService<MongoDbDurationTracker>();
             durationTracker?.ConfigureClusterBuilder(settings);
 
             return settings;

@@ -25,10 +25,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Setup
     {
         public static IServiceProvider Initialize(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServices;
+            IServiceProvider serviceProvider = ConfigureServices;
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -42,7 +42,7 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Setup
         public static void Cleanup(IServiceProvider serviceProvider)
         {
             // ensure database drop
-            var db = serviceProvider?.GetService<DataContext>();
+            DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
             if (db != null)
             {
                 db.Database.EnsureDeleted();
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Setup
 
         private static void LoadData(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             List<Customer> customers = [];
             for (int i = 1; i <= 10; i++)
             {

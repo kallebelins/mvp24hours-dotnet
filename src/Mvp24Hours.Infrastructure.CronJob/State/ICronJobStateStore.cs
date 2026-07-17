@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.State
         public CronJobState(string jobName)
         {
             JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
-            Properties = new Dictionary<string, object?>();
+            Properties = [];
         }
 
         /// <summary>

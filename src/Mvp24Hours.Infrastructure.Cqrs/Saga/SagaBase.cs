@@ -47,7 +47,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger _logger;
-    private readonly List<ISagaStep<TData>> _steps = new();
+    private readonly List<ISagaStep<TData>> _steps = [];
     private readonly Stack<ISagaStep<TData>> _executedSteps = new();
 
     private TData _data = default!;
@@ -211,7 +211,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
 
     private async Task ExecuteStepsAsync(CancellationToken cancellationToken)
     {
-        using var timeoutCts = _timeout.HasValue
+        using CancellationTokenSource timeoutCts = _timeout.HasValue
             ? new CancellationTokenSource(_timeout.Value)
             : new CancellationTokenSource();
 
@@ -220,7 +220,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
 
         var orderedSteps = _steps.OrderBy(s => s.Order).ToList();
 
-        foreach (var step in orderedSteps)
+        foreach (ISagaStep<TData>? step in orderedSteps)
         {
             if (linkedCts.Token.IsCancellationRequested)
             {
@@ -268,7 +268,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 attempts++;
                 _retryCount++;
 
-                var delay = CalculateRetryDelay(attempts);
+                TimeSpan delay = CalculateRetryDelay(attempts);
                 _logger.LogWarning(ex,
                     "Saga {SagaId}: Step {Step} failed, retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})",
                     _sagaId, step.Name, delay.TotalMilliseconds, attempts, _maxRetries);
@@ -322,7 +322,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         var compensationErrors = new List<Exception>();
         var failedSteps = new List<string>();
 
-        while (_executedSteps.TryPop(out var step))
+        while (_executedSteps.TryPop(out ISagaStep<TData>? step))
         {
             if (!step.CanCompensate)
             {
@@ -407,14 +407,14 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
             // Continue from current step
             var remainingSteps = orderedSteps.Skip(_currentStepIndex).ToList();
 
-            using var timeoutCts = _timeout.HasValue
+            using CancellationTokenSource timeoutCts = _timeout.HasValue
                 ? new CancellationTokenSource(_timeout.Value)
                 : new CancellationTokenSource();
 
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, timeoutCts.Token);
 
-            foreach (var step in remainingSteps)
+            foreach (ISagaStep<TData>? step in remainingSteps)
             {
                 if (linkedCts.Token.IsCancellationRequested)
                 {
@@ -543,7 +543,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
             CompletedAt = _completedAt,
             Timeout = _timeout,
             ExecutedSteps = _executedSteps.Select(s => s.Name).Reverse().ToList(),
-            Errors = _error != null ? new List<string> { _error.Message } : new List<string>(),
+            Errors = _error != null ? [_error.Message] : [],
             RetryCount = _retryCount,
             MaxRetries = _maxRetries
         };
@@ -559,7 +559,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
 public sealed class SagaStepBuilder<TData> where TData : class
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly List<ISagaStep<TData>> _steps = new();
+    private readonly List<ISagaStep<TData>> _steps = [];
 
     internal SagaStepBuilder(IServiceProvider serviceProvider)
     {
@@ -573,7 +573,7 @@ public sealed class SagaStepBuilder<TData> where TData : class
     /// <returns>The builder for chaining.</returns>
     public SagaStepBuilder<TData> Add<TStep>() where TStep : ISagaStep<TData>
     {
-        var step = ActivatorUtilities.CreateInstance<TStep>(_serviceProvider);
+        TStep step = ActivatorUtilities.CreateInstance<TStep>(_serviceProvider);
         _steps.Add(step);
         return this;
     }

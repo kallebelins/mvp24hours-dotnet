@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             CancellationToken cancellationToken = default)
             where T : class
         {
-            var headers = CreateCorrelationHeaders();
+            Dictionary<string, object> headers = CreateCorrelationHeaders();
             return await _transactionalBus.PublishAsync(message, headers, routingKey, cancellationToken);
         }
 
@@ -130,8 +130,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             where T : class
         {
             // Merge correlation headers with custom headers
-            var mergedHeaders = CreateCorrelationHeaders();
-            foreach (var header in headers)
+            Dictionary<string, object> mergedHeaders = CreateCorrelationHeaders();
+            foreach (KeyValuePair<string, object> header in headers)
             {
                 mergedHeaders[header.Key] = header.Value;
             }

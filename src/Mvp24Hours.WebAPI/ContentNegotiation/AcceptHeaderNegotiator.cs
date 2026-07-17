@@ -117,7 +117,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             // Resolve formatter
             if (!string.IsNullOrEmpty(selectedMediaType))
             {
-                var formatter = _registry.GetFormatter(selectedMediaType);
+                IContentFormatter? formatter = _registry.GetFormatter(selectedMediaType);
                 if (formatter != null)
                 {
                     return new ContentNegotiationResult
@@ -161,7 +161,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
                 throw new ArgumentNullException(nameof(request));
             }
 
-            if (!request.Headers.TryGetValue("Accept", out var acceptHeader) ||
+            if (!request.Headers.TryGetValue("Accept", out StringValues acceptHeader) ||
                 StringValues.IsNullOrEmpty(acceptHeader))
             {
                 return null;
@@ -175,7 +175,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
 
             try
             {
-                var acceptedTypes = ParseAcceptHeader(acceptHeaderValue);
+                List<MediaTypeEntry> acceptedTypes = ParseAcceptHeader(acceptHeaderValue);
 
                 if (acceptedTypes.Count == 0)
                 {
@@ -191,7 +191,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
                         .ToList();
                 }
 
-                foreach (var acceptedType in acceptedTypes)
+                foreach (MediaTypeEntry acceptedType in acceptedTypes)
                 {
                     var mediaType = acceptedType.MediaType;
 
@@ -215,7 +215,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
 
                     if (mediaType.EndsWith("/*", StringComparison.OrdinalIgnoreCase))
                     {
-                        var formatter = _registry.GetFormatter(mediaType);
+                        IContentFormatter? formatter = _registry.GetFormatter(mediaType);
                         if (formatter != null)
                         {
                             return formatter.PrimaryMediaType;
@@ -240,7 +240,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <returns>The media type, or null if not specified.</returns>
         public string? GetMediaTypeFromFormatParameter(HttpRequest request)
         {
-            if (!request.Query.TryGetValue(_options.FormatParameterName, out var formatValue) ||
+            if (!request.Query.TryGetValue(_options.FormatParameterName, out StringValues formatValue) ||
                 StringValues.IsNullOrEmpty(formatValue))
             {
                 return null;
@@ -308,7 +308,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
 
             // Split by comma, handling quoted strings properly
-            var types = SplitAcceptHeader(acceptHeader);
+            List<string> types = SplitAcceptHeader(acceptHeader);
 
             foreach (var type in types)
             {
@@ -318,7 +318,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
                     continue;
                 }
 
-                var entry = ParseMediaTypeEntry(trimmedType);
+                MediaTypeEntry? entry = ParseMediaTypeEntry(trimmedType);
                 if (entry != null)
                 {
                     result.Add(entry);
@@ -537,7 +537,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <summary>
         /// Gets or sets additional parameters.
         /// </summary>
-        public Dictionary<string, string> Parameters { get; set; } = new();
+        public Dictionary<string, string> Parameters { get; set; } = [];
     }
 
     /// <summary>

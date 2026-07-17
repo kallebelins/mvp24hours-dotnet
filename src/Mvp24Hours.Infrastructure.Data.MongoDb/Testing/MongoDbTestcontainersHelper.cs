@@ -253,7 +253,7 @@ public static class MongoDbTestcontainersHelper
     /// <returns>A new MongoDB context connected to the container.</returns>
     public static Mvp24HoursContext CreateContext(string connectionString, MongoDbTestcontainersOptions options)
     {
-        var mongoOptions = CreateOptions(connectionString, options);
+        MongoDbOptions mongoOptions = CreateOptions(connectionString, options);
         return new Mvp24HoursContext(mongoOptions);
     }
 
@@ -267,7 +267,7 @@ public static class MongoDbTestcontainersHelper
         string connectionString,
         MongoDbTestcontainersOptions? options = null)
     {
-        var effectiveOptions = options ?? MongoDbTestcontainersOptions.ForBasicTesting();
+        MongoDbTestcontainersOptions effectiveOptions = options ?? MongoDbTestcontainersOptions.ForBasicTesting();
 
         var factoryOptions = new MongoDbInMemoryOptions
         {
@@ -325,7 +325,7 @@ public static class MongoDbTestcontainersHelper
         int timeoutSeconds = 30,
         CancellationToken cancellationToken = default)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+        DateTime deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
         var retryDelay = TimeSpan.FromMilliseconds(500);
 
         while (DateTime.UtcNow < deadline)
@@ -333,7 +333,7 @@ public static class MongoDbTestcontainersHelper
             try
             {
                 var client = new MongoDB.Driver.MongoClient(connectionString);
-                var database = client.GetDatabase("admin");
+                IMongoDatabase database = client.GetDatabase("admin");
 
                 // Try to ping the server
                 await database.RunCommandAsync<MongoDB.Bson.BsonDocument>(
@@ -362,9 +362,9 @@ public static class MongoDbTestcontainersHelper
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var database = context.Database;
-        var cursor = await database.ListCollectionNamesAsync(cancellationToken: cancellationToken);
-        var collectionNames = await cursor.ToListAsync(cancellationToken);
+        IMongoDatabase database = context.Database;
+        IAsyncCursor<string> cursor = await database.ListCollectionNamesAsync(cancellationToken: cancellationToken);
+        List<string> collectionNames = await cursor.ToListAsync(cancellationToken);
 
         foreach (var collectionName in collectionNames)
         {
@@ -426,7 +426,7 @@ public record MongoDbContainerInfo(
     /// <returns>A new MongoDB context.</returns>
     public Mvp24HoursContext ToContext(Action<MongoDbOptions>? configureOptions = null)
     {
-        var options = ToMongoDbOptions(configureOptions);
+        MongoDbOptions options = ToMongoDbOptions(configureOptions);
         return new Mvp24HoursContext(options);
     }
 }

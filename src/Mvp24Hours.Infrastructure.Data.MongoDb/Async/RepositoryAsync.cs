@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Listing entities from collection {CollectionName} with paging criteria", typeof(T).Name);
             try
             {
-                var result = await GetQuery(criteria)
+                List<T> result = await GetQuery(criteria)
                                 .ToListAsync(cancellationToken: cancellationToken);
                 _logger?.LogDebug("ListAsync returned {Count} entities from collection {CollectionName}", result.Count, typeof(T).Name);
                 return result;
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Checking if any entities match clause in collection {CollectionName}", typeof(T).Name);
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Counting entities matching clause in collection {CollectionName}", typeof(T).Name);
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -139,12 +139,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Getting entities matching clause from collection {CollectionName}", typeof(T).Name);
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
                 }
-                var result = await GetQuery(query, criteria)
+                List<T> result = await GetQuery(query, criteria)
                     .ToListAsync(cancellationToken: cancellationToken);
                 _logger?.LogDebug("GetByAsync returned {Count} entities from collection {CollectionName}", result.Count, typeof(T).Name);
                 return result;
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Getting entity by id {Id} from collection {CollectionName}", id, typeof(T).Name);
             try
             {
-                var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
+                T? result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id)
                 .SingleOrDefaultAsync(cancellationToken: cancellationToken);
                 _logger?.LogDebug("GetByIdAsync {(Found)} entity with id {Id} from collection {CollectionName}", result != null ? "found" : "not found", id, typeof(T).Name);
                 return result;
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await AddAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await ModifyAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -340,7 +340,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         await RemoveAsync(entity, cancellationToken: cancellationToken);
                     }
@@ -359,7 +359,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("Removing entity by id {Id} from collection {CollectionName}", id, typeof(T).Name);
             try
             {
-                var entity = await GetByIdAsync(id, cancellationToken: cancellationToken);
+                T? entity = await GetByIdAsync(id, cancellationToken: cancellationToken);
                 if (entity == null)
                 {
                     _logger?.LogWarning("Entity with id {Id} not found in collection {CollectionName}", id, typeof(T).Name);

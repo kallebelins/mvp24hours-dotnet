@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (string.IsNullOrEmpty(instrumentName)) throw new ArgumentNullException(nameof(instrumentName));
             if (string.IsNullOrEmpty(tagKey)) throw new ArgumentNullException(nameof(tagKey));
 
-            var measurement = listener.GetMeasurements(instrumentName).FirstOrDefault();
+            RecordedMeasurement? measurement = listener.GetMeasurements(instrumentName).FirstOrDefault();
             if (measurement == null)
             {
                 throw new AssertionException(
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(instrumentName)) throw new ArgumentNullException(nameof(instrumentName));
 
-            var measurements = listener.GetMeasurements(instrumentName);
+            IReadOnlyList<RecordedMeasurement> measurements = listener.GetMeasurements(instrumentName);
             if (!measurements.Any())
             {
                 throw new AssertionException(
@@ -260,7 +260,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(instrumentName)) throw new ArgumentNullException(nameof(instrumentName));
 
-            var measurements = listener.GetMeasurements(instrumentName);
+            IReadOnlyList<RecordedMeasurement> measurements = listener.GetMeasurements(instrumentName);
             if (!measurements.Any())
             {
                 throw new AssertionException(
@@ -289,7 +289,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(instrumentName)) throw new ArgumentNullException(nameof(instrumentName));
 
-            var measurement = listener.GetMeasurements(instrumentName).FirstOrDefault();
+            RecordedMeasurement? measurement = listener.GetMeasurements(instrumentName).FirstOrDefault();
             if (measurement == null)
             {
                 var instruments = string.Join(", ", listener.Measurements.Select(m => m.InstrumentName).Distinct());

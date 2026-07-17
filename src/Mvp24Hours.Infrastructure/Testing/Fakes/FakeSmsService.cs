@@ -28,8 +28,8 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
     /// </remarks>
     public class FakeSmsService : IFakeSmsService
     {
-        private readonly List<SmsMessage> _sentMessages = new();
-        private readonly List<MmsMessage> _sentMmsMessages = new();
+        private readonly List<SmsMessage> _sentMessages = [];
+        private readonly List<MmsMessage> _sentMmsMessages = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -117,10 +117,10 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             }
 
             var results = new List<SmsSendResult>();
-            foreach (var message in messages)
+            foreach (SmsMessage message in messages)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var result = await SendAsync(message, cancellationToken);
+                SmsSendResult result = await SendAsync(message, cancellationToken);
                 results.Add(result);
             }
 

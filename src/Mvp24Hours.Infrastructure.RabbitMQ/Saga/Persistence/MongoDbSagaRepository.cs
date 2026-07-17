@@ -56,7 +56,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             TData? initialData = null,
             CancellationToken cancellationToken = default)
         {
-            var existing = await _collection.FindByCorrelationIdAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? existing = await _collection.FindByCorrelationIdAsync(correlationId, cancellationToken);
             if (existing != null)
             {
                 throw new InvalidOperationException(
@@ -125,7 +125,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             TimeSpan timeoutThreshold,
             CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
+            DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
             return _collection.FindTimedOutAsync(threshold, cancellationToken);
         }
 
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         /// <inheritdoc />
         public async Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(olderThan);
+            DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
             var cleaned = await _collection.DeleteCompletedOlderThanAsync(threshold, cancellationToken);
 
             _logger?.LogInformation("Cleaned up {Count} old saga instances from MongoDB", cleaned);
@@ -154,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             Action<SagaInstance<TData>> update,
             CancellationToken cancellationToken = default)
         {
-            var instance = await FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
             if (instance == null)
             {
                 return false;

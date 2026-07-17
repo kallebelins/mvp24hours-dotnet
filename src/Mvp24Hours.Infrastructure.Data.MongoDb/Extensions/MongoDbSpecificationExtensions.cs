@@ -86,7 +86,7 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(specification));
 
             var filter = MongoDbSpecificationEvaluator.ToFilterDefinition(specification);
-            var pipeline = collection.Aggregate().Match(filter);
+            IAggregateFluent<T> pipeline = collection.Aggregate().Match(filter);
 
             // Apply sorting if specification is enhanced
             if (specification is ISpecificationQueryEnhanced<T> enhancedSpec)
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Extensions
             CancellationToken cancellationToken = default)
             where T : class
         {
-            var pipeline = collection.WithSpecification(specification);
+            IAggregateFluent<T> pipeline = collection.WithSpecification(specification);
             return await pipeline.ToListAsync(cancellationToken);
         }
 
@@ -166,8 +166,8 @@ namespace Mvp24Hours.Extensions
             CancellationToken cancellationToken = default)
             where T : class
         {
-            var pipeline = collection.WithSpecification(specification).Limit(2);
-            var results = await pipeline.ToListAsync(cancellationToken);
+            IAggregateFluent<T> pipeline = collection.WithSpecification(specification).Limit(2);
+            List<T> results = await pipeline.ToListAsync(cancellationToken);
 
             if (results.Count > 1)
             {
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Extensions
             CancellationToken cancellationToken = default)
             where T : class
         {
-            var pipeline = collection.WithSpecification(specification).Limit(1);
+            IAggregateFluent<T> pipeline = collection.WithSpecification(specification).Limit(1);
             return await pipeline.FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -227,8 +227,8 @@ namespace Mvp24Hours.Extensions
             CancellationToken cancellationToken = default)
             where T : class
         {
-            var pipeline = collection.WithSpecification(specification).Limit(1);
-            var result = await pipeline.FirstOrDefaultAsync(cancellationToken);
+            IAggregateFluent<T> pipeline = collection.WithSpecification(specification).Limit(1);
+            T result = await pipeline.FirstOrDefaultAsync(cancellationToken);
             return result != null;
         }
 
@@ -289,7 +289,7 @@ namespace Mvp24Hours.Extensions
                 { "as", asFieldName }
             });
 
-            var pipeline = collection.Aggregate()
+            IAggregateFluent<BsonDocument> pipeline = collection.Aggregate()
                 .Match(filter)
                 .AppendStage<BsonDocument>(lookupStage);
 
@@ -333,7 +333,7 @@ namespace Mvp24Hours.Extensions
         {
             var filter = MongoDbSpecificationEvaluator.ToFilterDefinition(specification);
 
-            var pipeline = collection.Aggregate()
+            IAggregateFluent<BsonDocument> pipeline = collection.Aggregate()
                 .Match(filter)
                 .AppendStage<BsonDocument>(lookupDefinition);
 

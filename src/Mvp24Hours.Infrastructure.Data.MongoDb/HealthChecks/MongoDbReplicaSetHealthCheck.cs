@@ -90,12 +90,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
 
             try
             {
-                var client = GetOrCreateClient();
-                var adminDb = client.GetDatabase("admin");
+                IMongoClient client = GetOrCreateClient();
+                IMongoDatabase adminDb = client.GetDatabase("admin");
 
                 // Get replica set status
                 var replSetStatusCommand = new BsonDocument("replSetGetStatus", 1);
-                var replSetStatus = await adminDb.RunCommandAsync<BsonDocument>(
+                BsonDocument replSetStatus = await adminDb.RunCommandAsync<BsonDocument>(
                     replSetStatusCommand,
                     readPreference: null,
                     cancellationToken);
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 var setName = replSetStatus.GetValue("set", "unknown").AsString;
                 data["replicaSetName"] = setName;
 
-                var members = replSetStatus.GetValue("members", new BsonArray()).AsBsonArray;
+                BsonArray members = replSetStatus.GetValue("members", new BsonArray()).AsBsonArray;
                 var memberInfoList = new List<ReplicaSetMemberInfo>();
 
                 int primaryCount = 0;
@@ -124,7 +124,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 // Get optimeDate from primary for lag calculation
                 DateTime? primaryOptimeDate = null;
 
-                foreach (var member in members.OfType<BsonDocument>())
+                foreach (BsonDocument member in members.OfType<BsonDocument>())
                 {
                     var memberInfo = new ReplicaSetMemberInfo
                     {
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                     };
 
                     // Get optime for lag calculation
-                    if (member.TryGetValue("optimeDate", out var optimeValue))
+                    if (member.TryGetValue("optimeDate", out BsonValue? optimeValue))
                     {
                         memberInfo.OptimeDate = optimeValue.ToUniversalTime();
                     }
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 // Calculate replication lag for secondaries
                 if (primaryOptimeDate.HasValue)
                 {
-                    foreach (var member in memberInfoList.Where(m => m.StateStr.Equals("SECONDARY", StringComparison.OrdinalIgnoreCase)))
+                    foreach (ReplicaSetMemberInfo? member in memberInfoList.Where(m => m.StateStr.Equals("SECONDARY", StringComparison.OrdinalIgnoreCase)))
                     {
                         if (member.OptimeDate.HasValue)
                         {
@@ -231,7 +231,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                     var message = $"Replica set '{setName}' has issues: {string.Join(" ", issues)}";
 
                     // Determine if it's degraded or unhealthy
-                    var status = primaryCount > 0 && secondaryCount > 0
+                    HealthStatus status = primaryCount > 0 && secondaryCount > 0
                         ? HealthStatus.Degraded
                         : context?.Registration?.FailureStatus ?? HealthStatus.Unhealthy;
 

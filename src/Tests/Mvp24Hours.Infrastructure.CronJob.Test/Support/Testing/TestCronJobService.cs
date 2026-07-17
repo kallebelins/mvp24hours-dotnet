@@ -114,7 +114,7 @@ public class TestCronJobService<T> : IAsyncDisposable
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        var logger = NullLogger<CronJobService<TJob>>.Instance;
+        NullLogger<CronJobService<TJob>> logger = NullLogger<CronJobService<TJob>>.Instance;
 
         // Create job instance using Activator for flexibility
         var job = (TJob)Activator.CreateInstance(
@@ -141,10 +141,10 @@ public class TestCronJobService<T> : IAsyncDisposable
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        var logger = _serviceProvider!.GetService<ILogger<ResilientCronJobService<TJob>>>()
+        ILogger<ResilientCronJobService<TJob>> logger = _serviceProvider!.GetRequiredService<ILogger<ResilientCronJobService<TJob>>>()
             ?? NullLogger<ResilientCronJobService<TJob>>.Instance;
-        var executionLock = _serviceProvider.GetRequiredService<ICronJobExecutionLock>();
-        var circuitBreaker = _serviceProvider.GetRequiredService<CronJobCircuitBreaker>();
+        ICronJobExecutionLock executionLock = _serviceProvider.GetRequiredService<ICronJobExecutionLock>();
+        CronJobCircuitBreaker circuitBreaker = _serviceProvider.GetRequiredService<CronJobCircuitBreaker>();
 
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
@@ -166,7 +166,7 @@ public class TestCronJobService<T> : IAsyncDisposable
     public async Task StopJobAsync<TJob>(TJob job, TimeSpan? timeout = null)
         where TJob : BackgroundService
     {
-        var stopCts = timeout.HasValue
+        CancellationTokenSource stopCts = timeout.HasValue
             ? new CancellationTokenSource(timeout.Value)
             : new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
@@ -265,7 +265,7 @@ public class TestCronJobService<T> : IAsyncDisposable
 /// </summary>
 public class ExecutionTracker
 {
-    private readonly List<ExecutionRecord> _executions = new();
+    private readonly List<ExecutionRecord> _executions = [];
     private int _executionCount;
 
     /// <summary>

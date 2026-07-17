@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
     /// </remarks>
     public class ParentJob : IParentJob
     {
-        private readonly List<string> _childJobIds = new();
+        private readonly List<string> _childJobIds = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ParentJob"/> class.
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
             ParentJobId = parentJobId ?? throw new ArgumentNullException(nameof(parentJobId));
             ChildJobId = childJobId ?? throw new ArgumentNullException(nameof(childJobId));
             ExecutionOrder = executionOrder;
-            SiblingDependencies = siblingDependencies?.ToList() ?? new List<string>();
+            SiblingDependencies = siblingDependencies?.ToList() ?? [];
         }
 
         /// <inheritdoc />

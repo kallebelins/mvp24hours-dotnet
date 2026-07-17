@@ -69,7 +69,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetReadTimeout();
+        TimeSpan timeout = options.GetReadTimeout();
 
         // Assert
         timeout.TotalSeconds.Should().Be(30);
@@ -86,7 +86,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetReadTimeout();
+        TimeSpan timeout = options.GetReadTimeout();
 
         // Assert
         timeout.TotalSeconds.Should().Be(15);
@@ -103,7 +103,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetWriteTimeout();
+        TimeSpan timeout = options.GetWriteTimeout();
 
         // Assert
         timeout.TotalSeconds.Should().Be(30);
@@ -120,7 +120,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetWriteTimeout();
+        TimeSpan timeout = options.GetWriteTimeout();
 
         // Assert
         timeout.TotalSeconds.Should().Be(45);
@@ -136,7 +136,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetBulkOperationTimeout();
+        TimeSpan timeout = options.GetBulkOperationTimeout();
 
         // Assert
         timeout.TotalSeconds.Should().Be(300);
@@ -152,7 +152,7 @@ public class MongoDbResiliencyOptionsTests
         };
 
         // Act
-        var timeout = options.GetReadTimeout();
+        TimeSpan timeout = options.GetReadTimeout();
 
         // Assert
         timeout.Should().Be(TimeSpan.MaxValue);

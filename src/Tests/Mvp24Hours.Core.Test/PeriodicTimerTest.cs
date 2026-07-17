@@ -28,7 +28,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicAsync(
                 TimeSpan.FromMilliseconds(50),
                 async ct =>
                 {
@@ -119,12 +119,12 @@ namespace Mvp24Hours.Core.Test
         public async Task RunPeriodicImmediateAsync_ShouldExecuteImmediately()
         {
             // Arrange
-            var firstExecutionTime = DateTimeOffset.MinValue;
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset firstExecutionTime = DateTimeOffset.MinValue;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
                 TimeSpan.FromMilliseconds(500),
                 async ct =>
                 {
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Core.Test
             }
 
             // Assert - First execution should happen within 50ms of start (not waiting for period)
-            var delay = firstExecutionTime - startTime;
+            TimeSpan delay = firstExecutionTime - startTime;
             Assert.True(delay.TotalMilliseconds < 50, $"First execution took {delay.TotalMilliseconds}ms");
         }
 
@@ -159,7 +159,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
                 TimeSpan.FromMilliseconds(50),
                 async ct =>
                 {
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicWithErrorHandlingAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicWithErrorHandlingAsync(
                 TimeSpan.FromMilliseconds(50),
                 async ct =>
                 {
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicWithErrorHandlingAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicWithErrorHandlingAsync(
                 TimeSpan.FromMilliseconds(50),
                 async ct =>
                 {
@@ -308,7 +308,7 @@ namespace Mvp24Hours.Core.Test
         public void CreateTimer_ShouldCreateValidTimer()
         {
             // Act
-            using var timer = PeriodicTimerHelper.CreateTimer(TimeProvider.System, TimeSpan.FromMilliseconds(100));
+            using ITimer timer = PeriodicTimerHelper.CreateTimer(TimeProvider.System, TimeSpan.FromMilliseconds(100));
 
             // Assert
             Assert.NotNull(timer);
@@ -358,7 +358,7 @@ namespace Mvp24Hours.Core.Test
 
             // Act & Assert
             // TaskCanceledException is a subclass of OperationCanceledException
-            var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            OperationCanceledException exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
                 timer.WaitForNextTickAsync(TimeSpan.FromSeconds(1), cts.Token));
             Assert.True(exception is OperationCanceledException || exception is TaskCanceledException);
         }
@@ -449,7 +449,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicAsync(
                 TimeSpan.FromMilliseconds(50),
                 async ct =>
                 {
@@ -496,12 +496,12 @@ namespace Mvp24Hours.Core.Test
         public async Task PeriodicTimer_ShouldWorkWithTimeProvider()
         {
             // Arrange
-            var timeProvider = TimeProvider.System;
+            TimeProvider timeProvider = TimeProvider.System;
             var executionCount = 0;
             using var cts = new CancellationTokenSource();
 
             // Act - Using TimeProvider.CreatePeriodicTimer indirectly through CreateTimer
-            using var timerWrapper = PeriodicTimerHelper.CreateTimer(timeProvider, TimeSpan.FromMilliseconds(50));
+            using ITimer timerWrapper = PeriodicTimerHelper.CreateTimer(timeProvider, TimeSpan.FromMilliseconds(50));
 
             // Note: ITimer from TimeProvider doesn't have WaitForNextTickAsync,
             // so we test that CreateTimer works
@@ -539,7 +539,7 @@ namespace Mvp24Hours.Core.Test
             using var cts = new CancellationTokenSource();
 
             // Act
-            var task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
+            Task task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
                 TimeSpan.FromMilliseconds(100),
                 async ct =>
                 {

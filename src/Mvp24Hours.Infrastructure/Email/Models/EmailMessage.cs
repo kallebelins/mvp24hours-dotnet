@@ -68,11 +68,11 @@ namespace Mvp24Hours.Infrastructure.Email.Models
         /// </summary>
         public EmailMessage()
         {
-            To = new List<string>();
-            Cc = new List<string>();
-            Bcc = new List<string>();
-            Attachments = new List<IEmailAttachment>();
-            EmbeddedImages = new List<EmbeddedImage>();
+            To = [];
+            Cc = [];
+            Bcc = [];
+            Attachments = [];
+            EmbeddedImages = [];
             Headers = new Dictionary<string, string>();
         }
 

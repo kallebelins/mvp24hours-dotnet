@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public Task<string?> SelectReplicaAsync(CancellationToken cancellationToken = default)
         {
-            var healthyReplicas = GetHealthyReplicas();
+            List<string> healthyReplicas = GetHealthyReplicas();
 
             if (healthyReplicas.Count == 0)
             {
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public void MarkReplicaFailed(string connectionString)
         {
-            if (_replicaStates.TryGetValue(connectionString, out var state))
+            if (_replicaStates.TryGetValue(connectionString, out ReplicaState? state))
             {
                 state.ConsecutiveFailures++;
                 state.LastFailureTime = DateTime.UtcNow;
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// <inheritdoc/>
         public void MarkReplicaRecovered(string connectionString)
         {
-            if (_replicaStates.TryGetValue(connectionString, out var state))
+            if (_replicaStates.TryGetValue(connectionString, out ReplicaState? state))
             {
                 state.IsHealthy = true;
                 state.ConsecutiveFailures = 0;
@@ -152,12 +152,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
 
         private List<string> GetHealthyReplicas()
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             var healthyReplicas = new List<string>();
 
-            foreach (var kvp in _replicaStates)
+            foreach (KeyValuePair<string, ReplicaState> kvp in _replicaStates)
             {
-                var state = kvp.Value;
+                ReplicaState state = kvp.Value;
 
                 // Check if unhealthy replica should be retried
                 if (!state.IsHealthy &&
@@ -232,11 +232,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         private string SelectLeastLatency(List<string> replicas)
         {
             var bestReplica = replicas[0];
-            var bestLatency = TimeSpan.MaxValue;
+            TimeSpan bestLatency = TimeSpan.MaxValue;
 
             foreach (var replica in replicas)
             {
-                if (_replicaStates.TryGetValue(replica, out var state) && state.Latency.HasValue)
+                if (_replicaStates.TryGetValue(replica, out ReplicaState? state) && state.Latency.HasValue)
                 {
                     if (state.Latency.Value < bestLatency)
                     {
@@ -256,7 +256,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
 
             foreach (var replica in replicas)
             {
-                if (_replicaStates.TryGetValue(replica, out var state) && state.ActiveConnections.HasValue)
+                if (_replicaStates.TryGetValue(replica, out ReplicaState? state) && state.ActiveConnections.HasValue)
                 {
                     if (state.ActiveConnections.Value < leastConnections)
                     {

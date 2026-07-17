@@ -9,7 +9,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
@@ -31,7 +33,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = await GetQuery(null, true).AnyAsync(cancellationToken);
             if (scope != null)
             {
@@ -42,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<int> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = await GetQuery(null, true).CountAsync(cancellationToken);
             if (scope != null)
             {
@@ -58,8 +60,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var result = await GetQuery(criteria).ToListAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            List<T> result = await GetQuery(criteria).ToListAsync(cancellationToken);
             if (scope != null)
             {
                 scope.Complete();
@@ -69,8 +71,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<bool> GetByAnyAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -85,8 +87,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<int> GetByCountAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -106,13 +108,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
             }
-            var result = await GetQuery(query, criteria).ToListAsync(cancellationToken);
+            List<T> result = await GetQuery(query, criteria).ToListAsync(cancellationToken);
             if (scope != null)
             {
                 scope.Complete();
@@ -127,8 +129,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefaultAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            T? result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefaultAsync(cancellationToken);
             if (scope != null)
             {
                 scope.Complete();
@@ -152,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -174,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int limit = 0,
             CancellationToken cancellationToken = default) where TProperty : class
         {
-            var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -201,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int limit = 0,
             CancellationToken cancellationToken = default) where TProperty : class
         {
-            var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -232,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return;
             }
 
-            var entry = dbContext.Entry(entity);
+            EntityEntry<T> entry = dbContext.Entry(entity);
             if (entry.State != EntityState.Detached)
             {
                 entry.State = EntityState.Added;
@@ -261,7 +263,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             }
 
             ArgumentNullException.ThrowIfNull(entity.EntityKey);
-            var entityDb = await dbContext.Set<T>().FindAsync([entity.EntityKey], cancellationToken);
+            T? entityDb = await dbContext.Set<T>().FindAsync([entity.EntityKey], cancellationToken);
 
             if (entityDb == null)
             {
@@ -327,7 +329,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         public async Task RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            var entity = await GetByIdAsync(id, cancellationToken);
+            T? entity = await GetByIdAsync(id, cancellationToken);
             if (entity == null)
             {
                 return;
@@ -357,7 +359,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 return Task.FromResult(false);
             }
 
-            var entry = dbContext.Entry(entity);
+            EntityEntry<T> entry = dbContext.Entry(entity);
             if (entry.State != EntityState.Deleted)
             {
                 entry.State = EntityState.Deleted;

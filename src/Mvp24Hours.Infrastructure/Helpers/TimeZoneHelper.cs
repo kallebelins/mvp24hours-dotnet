@@ -34,7 +34,7 @@ namespace Mvp24Hours.Helpers
         /// </summary>
         public static DateTime GetTimeZone(DateTime utcDateTime, DateTimeKind? kind)
         {
-            var dUtc = (kind ?? utcDateTime.Kind) switch
+            DateTime dUtc = (kind ?? utcDateTime.Kind) switch
             {
                 DateTimeKind.Utc => utcDateTime,
                 DateTimeKind.Local => utcDateTime.ToUniversalTime(),

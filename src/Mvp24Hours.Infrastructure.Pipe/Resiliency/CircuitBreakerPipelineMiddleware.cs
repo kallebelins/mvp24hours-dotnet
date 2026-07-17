@@ -21,7 +21,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
     {
         private readonly object _lock = new();
         private readonly CircuitBreakerOptions _options;
-        private readonly List<DateTimeOffset> _failures = new();
+        private readonly List<DateTimeOffset> _failures = [];
         private int _halfOpenSuccesses;
         private PipelineCircuitState _state = PipelineCircuitState.Closed;
         private DateTimeOffset? _openedAt;
@@ -146,13 +146,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 
         private void CleanOldFailures()
         {
-            var cutoff = DateTimeOffset.UtcNow.Subtract(_options.SamplingDuration);
+            DateTimeOffset cutoff = DateTimeOffset.UtcNow.Subtract(_options.SamplingDuration);
             _failures.RemoveAll(f => f < cutoff);
         }
 
         private void TransitionTo(PipelineCircuitState newState)
         {
-            var oldState = _state;
+            PipelineCircuitState oldState = _state;
             if (oldState != newState)
             {
                 _state = newState;
@@ -204,7 +204,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         /// <returns>The current state, or null if the circuit doesn't exist.</returns>
         public PipelineCircuitState? GetCircuitState(string key)
         {
-            if (_circuits.TryGetValue(key, out var state))
+            if (_circuits.TryGetValue(key, out CircuitBreakerState? state))
             {
                 return state.State;
             }
@@ -239,16 +239,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
         {
             // Check if the current operation has circuit breaker protection
-            var cbOperation = GetCircuitBreakerOperation(message);
+            ICircuitBreakerOperation? cbOperation = GetCircuitBreakerOperation(message);
             var key = cbOperation?.CircuitBreakerKey ?? _defaultOptions.Key;
 
-            var options = GetEffectiveOptions(cbOperation);
-            var circuitState = _circuits.GetOrAdd(key, _ => new CircuitBreakerState(options));
+            CircuitBreakerOptions options = GetEffectiveOptions(cbOperation);
+            CircuitBreakerState circuitState = _circuits.GetOrAdd(key, _ => new CircuitBreakerState(options));
 
             // Check if circuit allows execution
             if (!circuitState.AllowExecution())
             {
-                var retryAfter = circuitState.RetryAfter ?? DateTimeOffset.UtcNow.Add(options.OpenDuration);
+                DateTimeOffset retryAfter = circuitState.RetryAfter ?? DateTimeOffset.UtcNow.Add(options.OpenDuration);
 
                 _logger?.LogWarning(
                     "Circuit breaker '{Key}' is open, rejecting operation. Retry after: {RetryAfter}",

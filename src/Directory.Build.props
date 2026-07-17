@@ -12,4 +12,24 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <!--
+    Scoped quality gate (task 10.3). The CI `code-quality` job builds with
+    /p:TreatWarningsAsErrors=true so any NEW warning category fails the build.
+    The codes below are the residual warnings accepted in task 10.1 (see
+    tasks/phase10-gate-treatwarningsaserrors-net10-v1.md); they stay warnings
+    (not errors) until the v2 hygiene pass drives them to zero. Do NOT add new
+    codes here without documenting the reason.
+      Nullable (NRT):      CS8600 CS8602 CS8603 CS8604 CS8618 CS8619 CS8620
+                           CS8622 CS8625 CS8629 CS8631 CS8764
+      Logging source-gen:  LOGGEN002
+      Obsolete API:        CS0618  ASPDEPR006  SYSLIB0057
+      Member hiding:       CS0108
+      xUnit async:         xUnit1031
+      NuGet (intentional): NU1510 (redundant ref kept for the 7.1 security pin)
+  -->
+  <PropertyGroup>
+    <MvpResidualWarnings>CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8622;CS8625;CS8629;CS8631;CS8764;LOGGEN002;CS0618;ASPDEPR006;SYSLIB0057;CS0108;xUnit1031;NU1510</MvpResidualWarnings>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);$(MvpResidualWarnings)</WarningsNotAsErrors>
+  </PropertyGroup>
 </Project>

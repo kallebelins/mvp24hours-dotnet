@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             var results = new ConcurrentBag<IBatchMessageResult>();
             var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
 
-            var tasks = context.Messages.Select(async item =>
+            IEnumerable<Task> tasks = context.Messages.Select(async item =>
             {
                 await semaphore.WaitAsync(cancellationToken);
                 try
@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         {
             var results = new List<IBatchMessageResult>();
 
-            foreach (var item in context.Messages)
+            foreach (IBatchMessageItem<TMessage> item in context.Messages)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                     if (!success && stopOnFirstError)
                     {
                         // Nack remaining messages
-                        foreach (var remaining in context.Messages.SkipWhile(m => m.DeliveryTag <= item.DeliveryTag))
+                        foreach (IBatchMessageItem<TMessage>? remaining in context.Messages.SkipWhile(m => m.DeliveryTag <= item.DeliveryTag))
                         {
                             results.Add(BatchMessageResult.Nack(remaining.DeliveryTag, requeue: true,
                                 errorMessage: "Processing stopped due to previous error"));
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                     if (stopOnFirstError)
                     {
                         // Nack remaining messages
-                        foreach (var remaining in context.Messages.SkipWhile(m => m.DeliveryTag <= item.DeliveryTag))
+                        foreach (IBatchMessageItem<TMessage>? remaining in context.Messages.SkipWhile(m => m.DeliveryTag <= item.DeliveryTag))
                         {
                             results.Add(BatchMessageResult.Nack(remaining.DeliveryTag, requeue: true,
                                 errorMessage: "Processing stopped due to previous error"));
@@ -142,10 +142,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             CancellationToken cancellationToken = default)
             where TMessage : class
         {
-            var delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
+            TimeSpan delay = retryDelay ?? TimeSpan.FromMilliseconds(100);
             var results = new List<IBatchMessageResult>();
 
-            foreach (var item in context.Messages)
+            foreach (IBatchMessageItem<TMessage> item in context.Messages)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             var results = new List<IBatchMessageResult>();
             var groups = context.Messages.GroupBy(keySelector).ToList();
 
-            foreach (var group in groups)
+            foreach (IGrouping<TKey, IBatchMessageItem<TMessage>>? group in groups)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                     var groupItems = group.ToList();
                     var success = await processGroupFunc(group.Key, groupItems, cancellationToken);
 
-                    foreach (var item in groupItems)
+                    foreach (IBatchMessageItem<TMessage>? item in groupItems)
                     {
                         results.Add(success
                             ? BatchMessageResult.Ack(item.DeliveryTag)
@@ -253,7 +253,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                 }
                 catch (Exception ex)
                 {
-                    foreach (var item in group)
+                    foreach (IBatchMessageItem<TMessage>? item in group)
                     {
                         results.Add(BatchMessageResult.Nack(item.DeliveryTag, requeue: true, errorMessage: ex.Message));
                     }

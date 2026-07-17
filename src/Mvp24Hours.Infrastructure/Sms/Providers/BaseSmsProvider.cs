@@ -71,19 +71,19 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             // Validate message
-            var validationErrors = ValidateMessage(message);
+            IList<string> validationErrors = ValidateMessage(message);
             if (validationErrors.Count > 0)
             {
                 return SmsSendResult.Failed(validationErrors);
             }
 
             // Apply defaults
-            var smsToSend = ApplyDefaults(message);
+            SmsMessage smsToSend = ApplyDefaults(message);
 
             try
             {
                 // Delegate to derived class for actual sending
-                var result = await SendSmsAsync(smsToSend, cancellationToken);
+                SmsSendResult result = await SendSmsAsync(smsToSend, cancellationToken);
                 return result;
             }
             catch (Exception ex)
@@ -112,11 +112,11 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             var results = new List<SmsSendResult>();
             var messagesList = messages.ToList();
 
-            foreach (var message in messagesList)
+            foreach (SmsMessage? message in messagesList)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = await SendAsync(message, cancellationToken);
+                SmsSendResult result = await SendAsync(message, cancellationToken);
                 results.Add(result);
             }
 
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             var errors = new List<string>();
 
             // Validate using SmsMessage.Validate()
-            var validationErrors = message.Validate();
+            IList<string> validationErrors = message.Validate();
             errors.AddRange(validationErrors);
 
             // Validate phone number format if enabled
@@ -250,14 +250,14 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             // Validate message
-            var validationErrors = ValidateMmsMessage(message);
+            IList<string> validationErrors = ValidateMmsMessage(message);
             if (validationErrors.Count > 0)
             {
                 return Task.FromResult(SmsSendResult.Failed(validationErrors));
             }
 
             // Apply defaults
-            var mmsToSend = ApplyMmsDefaults(message);
+            MmsMessage mmsToSend = ApplyMmsDefaults(message);
 
             try
             {
@@ -300,7 +300,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             var errors = new List<string>();
 
             // Validate using MmsMessage.Validate()
-            var validationErrors = message.Validate();
+            IList<string> validationErrors = message.Validate();
             errors.AddRange(validationErrors);
 
             // Validate phone number format if enabled
@@ -330,7 +330,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                 Body = message.Body,
                 Attachments = message.Attachments != null
                     ? new List<Models.MmsAttachment>(message.Attachments)
-                    : new List<Models.MmsAttachment>(),
+                    : [],
                 Metadata = message.Metadata != null
                     ? new Dictionary<string, string>(message.Metadata)
                     : null

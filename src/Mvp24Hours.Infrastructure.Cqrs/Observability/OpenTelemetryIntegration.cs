@@ -123,7 +123,7 @@ public static class MediatorActivitySource
             _ => ActivityNames.Request
         };
 
-        var activity = Source.StartActivity(activityName, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(activityName, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -154,7 +154,7 @@ public static class MediatorActivitySource
     /// </summary>
     public static Activity? StartNotificationActivity(string notificationName, IRequestContext? context = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Notification, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Notification, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -176,7 +176,7 @@ public static class MediatorActivitySource
     /// </summary>
     public static Activity? StartDomainEventActivity(string eventName, IRequestContext? context = null)
     {
-        var activity = Source.StartActivity(ActivityNames.DomainEvent, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.DomainEvent, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -198,7 +198,7 @@ public static class MediatorActivitySource
     /// </summary>
     public static Activity? StartIntegrationEventActivity(string eventName, IRequestContext? context = null)
     {
-        var activity = Source.StartActivity(ActivityNames.IntegrationEvent, ActivityKind.Producer);
+        Activity? activity = Source.StartActivity(ActivityNames.IntegrationEvent, ActivityKind.Producer);
 
         if (activity == null)
             return null;
@@ -281,7 +281,7 @@ public static class ActivityExtensions
     public static Activity RecordEvent(this Activity activity, string name, params (string Key, object Value)[] tags)
     {
         var activityTags = new ActivityTagsCollection();
-        foreach (var (key, value) in tags)
+        foreach ((string? key, object? value) in tags)
         {
             activityTags.Add(key, value);
         }

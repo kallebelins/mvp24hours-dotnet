@@ -22,7 +22,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
     /// </summary>
     public class FakeFileStorage : IFakeFileStorage
     {
-        private readonly Dictionary<string, FileEntry> _files = new();
+        private readonly Dictionary<string, FileEntry> _files = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -96,14 +96,14 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
 
             lock (_lock)
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 _files[normalizedPath] = new FileEntry
                 {
                     Content = (byte[])content.Clone(),
                     ContentType = contentType,
                     CreatedAt = now,
                     ModifiedAt = now,
-                    Metadata = metadata != null ? new Dictionary<string, string>(metadata) : new()
+                    Metadata = metadata != null ? new Dictionary<string, string>(metadata) : []
                 };
             }
 
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(normalizedPath, out var entry))
+                if (!_files.TryGetValue(normalizedPath, out FileEntry? entry))
                 {
                     return FileDownloadResult.NotFound(normalizedPath);
                 }
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             Stream destinationStream,
             CancellationToken cancellationToken = default)
         {
-            var result = await DownloadAsync(filePath, cancellationToken);
+            FileDownloadResult result = await DownloadAsync(filePath, cancellationToken);
             if (result.Success && result.Content != null)
             {
                 await destinationStream.WriteAsync(result.Content, 0, result.Content.Length, cancellationToken);
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             int chunkSize = 65536,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var result = await DownloadAsync(filePath, cancellationToken);
+            FileDownloadResult result = await DownloadAsync(filePath, cancellationToken);
             if (!result.Success || result.Content == null)
             {
                 yield break;
@@ -262,7 +262,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             var normalizedPath = NormalizePath(filePath);
             lock (_lock)
             {
-                if (!_files.TryGetValue(normalizedPath, out var entry))
+                if (!_files.TryGetValue(normalizedPath, out FileEntry? entry))
                 {
                     return Task.FromResult<IFileMetadata?>(null);
                 }
@@ -301,7 +301,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
                     .ToList();
             }
 
-            foreach (var kvp in matching)
+            foreach (KeyValuePair<string, FileEntry> kvp in matching)
             {
                 if (cancellationToken.IsCancellationRequested) yield break;
 
@@ -331,7 +331,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(normalizedSource, out var entry))
+                if (!_files.TryGetValue(normalizedSource, out FileEntry? entry))
                 {
                     return Task.FromResult(false);
                 }
@@ -357,7 +357,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(normalizedSource, out var entry))
+                if (!_files.TryGetValue(normalizedSource, out FileEntry? entry))
                 {
                     return Task.FromResult(false);
                 }
@@ -384,7 +384,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             var normalizedPath = NormalizePath(filePath);
             lock (_lock)
             {
-                return _files.TryGetValue(normalizedPath, out var entry)
+                return _files.TryGetValue(normalizedPath, out FileEntry? entry)
                     ? (byte[])entry.Content.Clone()
                     : null;
             }
@@ -396,14 +396,14 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             var normalizedPath = NormalizePath(filePath);
             lock (_lock)
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 _files[normalizedPath] = new FileEntry
                 {
                     Content = (byte[])content.Clone(),
                     ContentType = contentType,
                     CreatedAt = now,
                     ModifiedAt = now,
-                    Metadata = new Dictionary<string, string>()
+                    Metadata = []
                 };
             }
         }
@@ -430,7 +430,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             public string ContentType { get; set; } = string.Empty;
             public DateTimeOffset CreatedAt { get; set; }
             public DateTimeOffset ModifiedAt { get; set; }
-            public Dictionary<string, string> Metadata { get; set; } = new();
+            public Dictionary<string, string> Metadata { get; set; } = [];
         }
     }
 }

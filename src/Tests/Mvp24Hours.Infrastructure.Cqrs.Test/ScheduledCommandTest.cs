@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Act
             await store.SaveAsync(entry);
-            var retrieved = await store.GetByIdAsync(entry.Id);
+            ScheduledCommandEntry? retrieved = await store.GetByIdAsync(entry.Id);
 
             // Assert
             Assert.NotNull(retrieved);
@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var store = new InMemoryScheduledCommandStore();
 
             // Act
-            var result = await store.GetByIdAsync("non-existent-id");
+            ScheduledCommandEntry? result = await store.GetByIdAsync("non-existent-id");
 
             // Assert
             Assert.Null(result);
@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var ready = await store.GetReadyForExecutionAsync();
+            IReadOnlyList<ScheduledCommandEntry> ready = await store.GetReadyForExecutionAsync();
 
             // Assert
             Assert.Single(ready);
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var ready = await store.GetReadyForExecutionAsync();
+            IReadOnlyList<ScheduledCommandEntry> ready = await store.GetReadyForExecutionAsync();
 
             // Assert
             Assert.Single(ready);
@@ -161,7 +161,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var ready = await store.GetReadyForExecutionAsync();
+            IReadOnlyList<ScheduledCommandEntry> ready = await store.GetReadyForExecutionAsync();
 
             // Assert
             Assert.Equal(2, ready.Count);
@@ -186,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             // Act
             entry.Status = ScheduledCommandStatus.Completed;
             await store.UpdateAsync(entry);
-            var retrieved = await store.GetByIdAsync(entry.Id);
+            ScheduledCommandEntry? retrieved = await store.GetByIdAsync(entry.Id);
 
             // Assert
             Assert.NotNull(retrieved);
@@ -208,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Act
             var deleted = await store.DeleteAsync(entry.Id);
-            var retrieved = await store.GetByIdAsync(entry.Id);
+            ScheduledCommandEntry? retrieved = await store.GetByIdAsync(entry.Id);
 
             // Assert
             Assert.True(deleted);
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Act
             var purged = await store.PurgeCompletedAsync(DateTime.UtcNow.AddDays(-1));
-            var byStatus = await store.GetByStatusAsync(ScheduledCommandStatus.Completed);
+            IReadOnlyList<ScheduledCommandEntry> byStatus = await store.GetByStatusAsync(ScheduledCommandStatus.Completed);
 
             // Assert
             Assert.Equal(1, purged);
@@ -282,9 +282,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var pending = await store.GetByStatusAsync(ScheduledCommandStatus.Pending);
-            var completed = await store.GetByStatusAsync(ScheduledCommandStatus.Completed);
-            var failed = await store.GetByStatusAsync(ScheduledCommandStatus.Failed);
+            IReadOnlyList<ScheduledCommandEntry> pending = await store.GetByStatusAsync(ScheduledCommandStatus.Pending);
+            IReadOnlyList<ScheduledCommandEntry> completed = await store.GetByStatusAsync(ScheduledCommandStatus.Completed);
+            IReadOnlyList<ScheduledCommandEntry> failed = await store.GetByStatusAsync(ScheduledCommandStatus.Failed);
 
             // Assert
             Assert.Single(pending);
@@ -324,7 +324,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var correlated = await store.GetByCorrelationIdAsync(correlationId);
+            IReadOnlyList<ScheduledCommandEntry> correlated = await store.GetByCorrelationIdAsync(correlationId);
 
             // Assert
             Assert.Equal(2, correlated.Count);
@@ -356,7 +356,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Act
             var marked = await store.MarkExpiredAsync();
-            var expired = await store.GetByStatusAsync(ScheduledCommandStatus.Expired);
+            IReadOnlyList<ScheduledCommandEntry> expired = await store.GetByStatusAsync(ScheduledCommandStatus.Expired);
 
             // Assert
             Assert.Equal(1, marked);
@@ -377,7 +377,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             await store.SaveAsync(new ScheduledCommandEntry { Status = ScheduledCommandStatus.Failed, ScheduledAt = DateTime.UtcNow, CommandType = "T", CommandPayload = "{}" });
 
             // Act
-            var stats = await store.GetStatisticsAsync();
+            ScheduledCommandStatistics stats = await store.GetStatisticsAsync();
 
             // Assert
             Assert.Equal(2, stats.PendingCount);
@@ -430,7 +430,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             });
 
             // Act
-            var ready = await store.GetReadyForRetryAsync();
+            IReadOnlyList<ScheduledCommandEntry> ready = await store.GetReadyForRetryAsync();
 
             // Assert
             Assert.Single(ready);
@@ -456,7 +456,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Assert
             Assert.NotEmpty(id);
-            var entry = await store.GetByIdAsync(id);
+            ScheduledCommandEntry? entry = await store.GetByIdAsync(id);
             Assert.NotNull(entry);
             Assert.Contains("TestScheduledCommand", entry.CommandType);
             Assert.Contains("Test", entry.CommandPayload);
@@ -472,13 +472,13 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             var command = new TestScheduledCommand { Data = "Test" };
             var delay = TimeSpan.FromMinutes(30);
-            var beforeSchedule = DateTime.UtcNow;
+            DateTime beforeSchedule = DateTime.UtcNow;
 
             // Act
             var id = await scheduler.ScheduleAsync(command, delay);
 
             // Assert
-            var entry = await store.GetByIdAsync(id);
+            ScheduledCommandEntry? entry = await store.GetByIdAsync(id);
             Assert.NotNull(entry);
             Assert.True(entry.ScheduledAt >= beforeSchedule.Add(delay).AddSeconds(-1));
             Assert.True(entry.ScheduledAt <= DateTime.UtcNow.Add(delay).AddSeconds(1));
@@ -494,9 +494,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             var command = new TestScheduledCommand { Data = "Test" };
             var correlationId = Guid.NewGuid().ToString();
-            var expiresAt = DateTime.UtcNow.AddHours(2);
+            DateTime expiresAt = DateTime.UtcNow.AddHours(2);
 
-            var options = ScheduleOptions.After(TimeSpan.FromMinutes(10))
+            ScheduleOptions options = ScheduleOptions.After(TimeSpan.FromMinutes(10))
                 .WithMaxRetries(5)
                 .WithExpiration(expiresAt)
                 .WithPriority(10)
@@ -506,7 +506,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var id = await scheduler.ScheduleAsync(command, options);
 
             // Assert
-            var entry = await store.GetByIdAsync(id);
+            ScheduledCommandEntry? entry = await store.GetByIdAsync(id);
             Assert.NotNull(entry);
             Assert.Equal(5, entry.MaxRetries);
             Assert.Equal(expiresAt, entry.ExpiresAt);
@@ -530,7 +530,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Assert
             Assert.True(cancelled);
-            var entry = await store.GetByIdAsync(id);
+            ScheduledCommandEntry? entry = await store.GetByIdAsync(id);
             Assert.NotNull(entry);
             Assert.Equal(ScheduledCommandStatus.Cancelled, entry.Status);
         }
@@ -569,14 +569,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             var command = new TestScheduledCommand { Data = "Test" };
             var id = await scheduler.ScheduleAsync(command);
-            var newTime = DateTime.UtcNow.AddHours(5);
+            DateTime newTime = DateTime.UtcNow.AddHours(5);
 
             // Act
             var rescheduled = await scheduler.RescheduleAsync(id, newTime);
 
             // Assert
             Assert.True(rescheduled);
-            var entry = await store.GetByIdAsync(id);
+            ScheduledCommandEntry? entry = await store.GetByIdAsync(id);
             Assert.NotNull(entry);
             Assert.Equal(newTime, entry.ScheduledAt);
         }
@@ -593,7 +593,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var id = await scheduler.ScheduleAsync(command);
 
             // Act
-            var entry = await scheduler.GetStatusAsync(id);
+            ScheduledCommandEntry? entry = await scheduler.GetStatusAsync(id);
 
             // Assert
             Assert.NotNull(entry);
@@ -626,7 +626,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
 
             // Assert
             Assert.True(retried);
-            var updated = await store.GetByIdAsync(entry.Id);
+            ScheduledCommandEntry? updated = await store.GetByIdAsync(entry.Id);
             Assert.NotNull(updated);
             Assert.Equal(ScheduledCommandStatus.Pending, updated.Status);
             Assert.Null(updated.NextRetryAt);
@@ -799,9 +799,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         public void ScheduleOptions_Now_CreatesOptionsWithCurrentTime()
         {
             // Act
-            var before = DateTime.UtcNow;
+            DateTime before = DateTime.UtcNow;
             var options = ScheduleOptions.Now();
-            var after = DateTime.UtcNow;
+            DateTime after = DateTime.UtcNow;
 
             // Assert
             Assert.True(options.ScheduledAt >= before);
@@ -815,9 +815,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var delay = TimeSpan.FromMinutes(30);
 
             // Act
-            var before = DateTime.UtcNow;
+            DateTime before = DateTime.UtcNow;
             var options = ScheduleOptions.After(delay);
-            var after = DateTime.UtcNow;
+            DateTime after = DateTime.UtcNow;
 
             // Assert
             Assert.True(options.ScheduledAt >= before.Add(delay).AddSeconds(-1));
@@ -828,7 +828,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         public void ScheduleOptions_At_CreatesOptionsWithSpecificTime()
         {
             // Arrange
-            var scheduledAt = DateTime.UtcNow.AddHours(5);
+            DateTime scheduledAt = DateTime.UtcNow.AddHours(5);
 
             // Act
             var options = ScheduleOptions.At(scheduledAt);
@@ -842,10 +842,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         {
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
-            var expiresAt = DateTime.UtcNow.AddHours(2);
+            DateTime expiresAt = DateTime.UtcNow.AddHours(2);
 
             // Act
-            var options = ScheduleOptions.Now()
+            ScheduleOptions options = ScheduleOptions.Now()
                 .WithMaxRetries(5)
                 .WithExpiration(expiresAt)
                 .WithPriority(10)
@@ -865,9 +865,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var ttl = TimeSpan.FromHours(2);
 
             // Act
-            var before = DateTime.UtcNow;
-            var options = ScheduleOptions.Now().WithTtl(ttl);
-            var after = DateTime.UtcNow;
+            DateTime before = DateTime.UtcNow;
+            ScheduleOptions options = ScheduleOptions.Now().WithTtl(ttl);
+            DateTime after = DateTime.UtcNow;
 
             // Assert
             Assert.NotNull(options.ExpiresAt);
@@ -893,12 +893,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
                 options.Enabled = false; // Disable hosted service for test
             });
 
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var store = provider.GetService<IScheduledCommandStore>();
-            var scheduler = provider.GetService<ICommandScheduler>();
-            var options = provider.GetService<ScheduledCommandOptions>();
+            IScheduledCommandStore? store = provider.GetRequiredService<IScheduledCommandStore>();
+            ICommandScheduler? scheduler = provider.GetRequiredService<ICommandScheduler>();
+            ScheduledCommandOptions? options = provider.GetRequiredService<ScheduledCommandOptions>();
 
             Assert.NotNull(store);
             Assert.IsType<InMemoryScheduledCommandStore>(store);
@@ -917,11 +917,11 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             // Act
             services.AddMvpCommandSchedulerOnly();
 
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var store = provider.GetService<IScheduledCommandStore>();
-            var scheduler = provider.GetService<ICommandScheduler>();
+            IScheduledCommandStore? store = provider.GetRequiredService<IScheduledCommandStore>();
+            ICommandScheduler? scheduler = provider.GetRequiredService<ICommandScheduler>();
 
             Assert.NotNull(store);
             Assert.NotNull(scheduler);

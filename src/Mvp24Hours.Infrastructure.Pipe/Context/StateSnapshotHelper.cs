@@ -133,8 +133,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             var operations = new List<object>();
             for (int i = 0; i < snapshots.Count; i++)
             {
-                var snapshot = snapshots[i];
-                var duration = i < snapshots.Count - 1
+                PipelineStateSnapshot snapshot = snapshots[i];
+                TimeSpan duration = i < snapshots.Count - 1
                     ? snapshots[i + 1].CapturedAt - snapshot.CapturedAt
                     : TimeSpan.Zero;
 
@@ -176,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
 
             if (string.IsNullOrEmpty(operationNamePattern))
             {
-                foreach (var snapshot in snapshots)
+                foreach (PipelineStateSnapshot snapshot in snapshots)
                 {
                     yield return snapshot;
                 }
@@ -192,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
                 $"^{pattern}$",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-            foreach (var snapshot in snapshots)
+            foreach (PipelineStateSnapshot snapshot in snapshots)
             {
                 if (regex.IsMatch(snapshot.OperationName))
                 {
@@ -214,7 +214,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
                 yield break;
             }
 
-            foreach (var snapshot in snapshots)
+            foreach (PipelineStateSnapshot snapshot in snapshots)
             {
                 if (snapshot.Description?.StartsWith("Error:") == true ||
                     snapshot.OperationName.EndsWith(".Error") ||
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         /// </summary>
         private static List<object>? GetContentsSummary(IPipelineMessage message)
         {
-            var contents = message.GetContentAll();
+            IList<object> contents = message.GetContentAll();
             if (contents == null || contents.Count == 0)
             {
                 return null;

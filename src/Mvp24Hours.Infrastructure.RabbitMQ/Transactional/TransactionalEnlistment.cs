@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             if (bus == null)
                 throw new ArgumentNullException(nameof(bus));
 
-            var currentTransaction = Transaction.Current;
+            Transaction? currentTransaction = Transaction.Current;
             if (currentTransaction == null)
             {
                 _logger.LogDebug("[TransactionalEnlistment] No ambient transaction to enlist in");
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         {
             try
             {
-                var pendingMessages = _bus.GetPendingMessages();
+                IReadOnlyList<TransactionalOutboxMessage> pendingMessages = _bus.GetPendingMessages();
                 if (pendingMessages.Count > 0)
                 {
                     // Synchronously flush to outbox (we're in a transaction callback)

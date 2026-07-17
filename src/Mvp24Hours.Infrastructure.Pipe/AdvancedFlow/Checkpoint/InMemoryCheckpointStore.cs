@@ -46,19 +46,19 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task<PipelineCheckpoint?> GetCheckpointAsync(string checkpointId, CancellationToken cancellationToken = default)
         {
-            _checkpoints.TryGetValue(checkpointId, out var checkpoint);
+            _checkpoints.TryGetValue(checkpointId, out PipelineCheckpoint? checkpoint);
             return Task.FromResult(checkpoint);
         }
 
         /// <inheritdoc/>
         public Task<PipelineCheckpoint?> GetLatestCheckpointAsync(string pipelineExecutionId, CancellationToken cancellationToken = default)
         {
-            if (!_executionCheckpoints.TryGetValue(pipelineExecutionId, out var checkpointIds))
+            if (!_executionCheckpoints.TryGetValue(pipelineExecutionId, out List<string>? checkpointIds))
             {
                 return Task.FromResult<PipelineCheckpoint?>(null);
             }
 
-            var latestCheckpoint = checkpointIds
+            PipelineCheckpoint? latestCheckpoint = checkpointIds
                 .Select(id => _checkpoints.GetValueOrDefault(id))
                 .Where(c => c != null)
                 .OrderByDescending(c => c!.CreatedAt)
@@ -70,12 +70,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task<IReadOnlyList<PipelineCheckpoint>> GetCheckpointsAsync(string pipelineExecutionId, CancellationToken cancellationToken = default)
         {
-            if (!_executionCheckpoints.TryGetValue(pipelineExecutionId, out var checkpointIds))
+            if (!_executionCheckpoints.TryGetValue(pipelineExecutionId, out List<string>? checkpointIds))
             {
                 return Task.FromResult<IReadOnlyList<PipelineCheckpoint>>([]);
             }
 
-            var checkpoints = checkpointIds
+            List<PipelineCheckpoint?> checkpoints = checkpointIds
                 .Select(id => _checkpoints.GetValueOrDefault(id))
                 .Where(c => c != null)
                 .OrderBy(c => c!.CreatedAt)
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task UpdateCheckpointStatusAsync(string checkpointId, CheckpointStatus status, string? errorMessage = null, CancellationToken cancellationToken = default)
         {
-            if (_checkpoints.TryGetValue(checkpointId, out var existing))
+            if (_checkpoints.TryGetValue(checkpointId, out PipelineCheckpoint? existing))
             {
                 var updated = new PipelineCheckpoint
                 {
@@ -115,9 +115,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task DeleteCheckpointAsync(string checkpointId, CancellationToken cancellationToken = default)
         {
-            if (_checkpoints.TryRemove(checkpointId, out var checkpoint))
+            if (_checkpoints.TryRemove(checkpointId, out PipelineCheckpoint? checkpoint))
             {
-                if (_executionCheckpoints.TryGetValue(checkpoint.PipelineExecutionId, out var list))
+                if (_executionCheckpoints.TryGetValue(checkpoint.PipelineExecutionId, out List<string>? list))
                 {
                     list.Remove(checkpointId);
                 }
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task DeleteCheckpointsAsync(string pipelineExecutionId, CancellationToken cancellationToken = default)
         {
-            if (_executionCheckpoints.TryRemove(pipelineExecutionId, out var checkpointIds))
+            if (_executionCheckpoints.TryRemove(pipelineExecutionId, out List<string>? checkpointIds))
             {
                 foreach (var id in checkpointIds)
                 {
@@ -155,7 +155,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// <inheritdoc/>
         public Task<int> CleanupExpiredCheckpointsAsync(TimeSpan expirationTime, CancellationToken cancellationToken = default)
         {
-            var cutoff = DateTime.UtcNow - expirationTime;
+            DateTime cutoff = DateTime.UtcNow - expirationTime;
             var expiredIds = _checkpoints.Values
                 .Where(c => c.CreatedAt < cutoff)
                 .Select(c => c.CheckpointId)

@@ -113,13 +113,13 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
         private async Task ProcessScheduledCommandsAsync(CancellationToken cancellationToken)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
-            var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            using IServiceScope scope = _scopeFactory.CreateScope();
+            IScheduledCommandStore store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            var commands = await store.GetReadyForExecutionAsync(_options.BatchSize, cancellationToken);
+            IReadOnlyList<ScheduledCommandEntry> commands = await store.GetReadyForExecutionAsync(_options.BatchSize, cancellationToken);
 
-            foreach (var entry in commands)
+            foreach (ScheduledCommandEntry entry in commands)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
@@ -129,13 +129,13 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
         private async Task ProcessRetryCommandsAsync(CancellationToken cancellationToken)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
-            var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+            using IServiceScope scope = _scopeFactory.CreateScope();
+            IScheduledCommandStore store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
+            ISender mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            var commands = await store.GetReadyForRetryAsync(_options.BatchSize, cancellationToken);
+            IReadOnlyList<ScheduledCommandEntry> commands = await store.GetReadyForRetryAsync(_options.BatchSize, cancellationToken);
 
-            foreach (var entry in commands)
+            foreach (ScheduledCommandEntry entry in commands)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
@@ -220,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         private DateTime CalculateNextRetryTime(int retryCount)
         {
             // Exponential backoff: 5s, 25s, 125s, 625s, etc.
-            var baseDelay = _options.RetryBaseDelay;
+            TimeSpan baseDelay = _options.RetryBaseDelay;
             var delay = TimeSpan.FromSeconds(baseDelay.TotalSeconds * Math.Pow(5, retryCount - 1));
 
             // Cap at max delay
@@ -234,8 +234,8 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
         private async Task MarkExpiredCommandsAsync(CancellationToken cancellationToken)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
+            using IServiceScope scope = _scopeFactory.CreateScope();
+            IScheduledCommandStore store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
 
             var count = await store.MarkExpiredAsync(cancellationToken);
             if (count > 0)
@@ -248,10 +248,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         {
             if (!_options.PurgeCompletedAfter.HasValue) return;
 
-            using var scope = _scopeFactory.CreateScope();
-            var store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
+            using IServiceScope scope = _scopeFactory.CreateScope();
+            IScheduledCommandStore store = scope.ServiceProvider.GetRequiredService<IScheduledCommandStore>();
 
-            var olderThan = _timeProvider.GetUtcNow().UtcDateTime.Subtract(_options.PurgeCompletedAfter.Value);
+            DateTime olderThan = _timeProvider.GetUtcNow().UtcDateTime.Subtract(_options.PurgeCompletedAfter.Value);
             var count = await store.PurgeCompletedAsync(olderThan, cancellationToken);
 
             if (count > 0)

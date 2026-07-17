@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             _logger = logger;
 
             // Validate SendGrid options
-            var validationErrors = _sendGridOptions.Validate();
+            IList<string> validationErrors = _sendGridOptions.Validate();
             if (validationErrors.Count > 0)
             {
                 var errorMessage = string.Join("; ", validationErrors);
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         {
             try
             {
-                using var httpClient = _httpClientFactory.CreateClient();
+                using HttpClient httpClient = _httpClientFactory.CreateClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _sendGridOptions.ApiKey);
                 httpClient.BaseAddress = new Uri(_sendGridOptions.ApiBaseUrl);
 
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
 
                 var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await httpClient.PostAsync("/mail/send", httpContent, cancellationToken);
+                HttpResponseMessage response = await httpClient.PostAsync("/mail/send", httpContent, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -260,7 +260,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             var contentBytes = attachment.Content;
             if (contentBytes == null)
             {
-                using var stream = attachment.GetContentStream();
+                using Stream? stream = attachment.GetContentStream();
                 if (stream == null)
                 {
                     throw new InvalidOperationException($"Cannot get content for attachment '{attachment.FileName}'.");

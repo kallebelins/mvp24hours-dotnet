@@ -24,7 +24,7 @@ namespace Mvp24Hours.Infrastructure.Caching
             _logger?.LogDebug("Getting cached object with key: {CacheKey}", key);
             try
             {
-                var result = Cache.GetObject<T>(key);
+                T? result = Cache.GetObject<T>(key);
                 _logger?.LogDebug("Cache {(CacheHit)} for key: {CacheKey}", result != null ? "HIT" : "MISS", key);
                 return result;
             }

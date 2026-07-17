@@ -25,9 +25,9 @@ namespace Mvp24Hours.Patterns.Test
         public async Task GetPostsAsyncByNameClass()
         {
             // arrange
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("HttpClientTest");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("HttpClientTest");
             var result = await client.HttpGetAsync("users");
             // assert
             Assert.NotNull(result);
@@ -37,9 +37,9 @@ namespace Mvp24Hours.Patterns.Test
         public async Task GetPostsAsync()
         {
             // arrange
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpGetAsync("users");
             // assert
             Assert.NotNull(result);
@@ -51,9 +51,9 @@ namespace Mvp24Hours.Patterns.Test
             await Assert.ThrowsAsync<HttpStatusCodeException>(async () =>
             {
                 // arrange
-                var serviceProvider = Startup.InitializeHttp();
-                var factory = serviceProvider.GetService<IHttpClientFactory>();
-                var client = factory.CreateClient("jsonUrl");
+                IServiceProvider serviceProvider = Startup.InitializeHttp();
+                IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                HttpClient client = factory.CreateClient("jsonUrl");
                 var result = await client.HttpGetAsync("notFound");
                 // assert
                 Assert.NotNull(result);
@@ -64,9 +64,9 @@ namespace Mvp24Hours.Patterns.Test
         public async Task GetIdPostsAsync()
         {
             // arrange
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpGetAsync("posts/1");
             // assert
             Assert.NotNull(result);
@@ -82,9 +82,9 @@ namespace Mvp24Hours.Patterns.Test
                 body = "bar",
                 userId = 1,
             };
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpPostAsync("posts", dto.ToSerialize());
             // assert
             Assert.NotNull(result);
@@ -101,9 +101,9 @@ namespace Mvp24Hours.Patterns.Test
                 body = "bar1",
                 userId = 1,
             };
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpPutAsync("posts/1", dto.ToSerialize());
             // assert
             Assert.NotNull(result);
@@ -114,9 +114,9 @@ namespace Mvp24Hours.Patterns.Test
         public async Task DeletePostsAsync()
         {
             // arrange
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpDeleteAsync("posts/1");
             // assert
             Assert.Equal("{}", result);
@@ -130,9 +130,9 @@ namespace Mvp24Hours.Patterns.Test
             {
                 title = "foo1"
             };
-            var serviceProvider = Startup.InitializeHttp();
-            var factory = serviceProvider.GetService<IHttpClientFactory>();
-            var client = factory.CreateClient("jsonUrl");
+            IServiceProvider serviceProvider = Startup.InitializeHttp();
+            IHttpClientFactory? factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            HttpClient client = factory.CreateClient("jsonUrl");
             var result = await client.HttpPatchAsync("posts/1", dto.ToSerialize());
             // assert
             Assert.NotNull(result);

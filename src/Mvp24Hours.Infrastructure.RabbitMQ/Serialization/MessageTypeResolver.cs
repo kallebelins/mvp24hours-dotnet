@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
@@ -54,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Serialization
                 return null;
 
             // Try registered types first
-            if (_typeMap.TryGetValue(typeName, out var registeredType))
+            if (_typeMap.TryGetValue(typeName, out Type? registeredType))
                 return registeredType;
 
             // Try to resolve by assembly qualified name
@@ -73,11 +74,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Serialization
             }
 
             // Try to find type by name across loaded assemblies
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 try
                 {
-                    var type = assembly.GetType(typeName);
+                    Type? type = assembly.GetType(typeName);
                     if (type != null)
                     {
                         _typeMap.TryAdd(typeName, type);
@@ -111,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Serialization
         /// <inheritdoc />
         public void RegisterType<T>()
         {
-            var type = typeof(T);
+            Type type = typeof(T);
             RegisterType(GetTypeName(type), type);
         }
     }

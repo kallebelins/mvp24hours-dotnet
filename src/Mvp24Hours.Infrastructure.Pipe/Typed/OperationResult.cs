@@ -124,7 +124,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             try
             {
-                var newValue = transform(Value!);
+                TNew? newValue = transform(Value!);
                 return OperationResult<TNew>.Success(newValue, _messages);
             }
             catch (Exception ex)
@@ -151,7 +151,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             try
             {
-                var result = bind(Value!);
+                OperationResult<TNew> result = bind(Value!);
                 // Combine messages from both operations
                 var combinedMessages = _messages.Concat(result.Messages).ToList();
                 return OperationResult<TNew>.Create(result.Value, result.IsSuccess, combinedMessages);

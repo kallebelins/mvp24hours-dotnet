@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 consumerType.FullName);
 
             // Get message type from consumer
-            var messageType = GetMessageTypeFromConsumer(consumerType);
+            Type? messageType = GetMessageTypeFromConsumer(consumerType);
             if (messageType == null)
             {
                 throw new InvalidOperationException(
@@ -104,11 +104,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             // Get or generate names
             var queueName = GetQueueName(consumerType, messageType);
             var exchangeName = GetExchangeName(messageType);
-            var exchangeType = GetExchangeType(messageType);
+            MvpRabbitMQExchangeType exchangeType = GetExchangeType(messageType);
             var routingKey = GetRoutingKey(consumerType, messageType, exchangeType);
 
             // Build queue arguments
-            var queueArguments = BuildQueueArguments(messageType, exchangeName);
+            Dictionary<string, object> queueArguments = BuildQueueArguments(messageType, exchangeName);
 
             // Declare exchange
             _topologyBuilder.DeclareExchange(
@@ -160,18 +160,18 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(channel);
             ArgumentNullException.ThrowIfNull(assembly);
 
-            var consumerTypes = assembly.GetExportedTypes()
+            IEnumerable<Type> consumerTypes = assembly.GetExportedTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface)
                 .Where(t => t.GetInterfaces().Any(i =>
                     i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
 
             var results = new List<ConsumerBindingInfo>();
 
-            foreach (var consumerType in consumerTypes)
+            foreach (Type? consumerType in consumerTypes)
             {
                 try
                 {
-                    var bindingInfo = AutoBindConsumer(channel, consumerType);
+                    ConsumerBindingInfo bindingInfo = AutoBindConsumer(channel, consumerType);
                     results.Add(bindingInfo);
                 }
                 catch (Exception ex)
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
             // Get or generate names
             var exchangeName = GetExchangeName(messageType);
-            var exchangeType = GetExchangeType(messageType);
+            MvpRabbitMQExchangeType exchangeType = GetExchangeType(messageType);
             var queueName = _nameFormatter.FormatQueueNameFromMessage(messageType);
             var routingKey = _routingKeyConvention.GetRoutingKey(messageType);
 
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             // Declare default queue if enabled
             if (_options.CreateDefaultQueue)
             {
-                var queueArguments = BuildQueueArguments(messageType, exchangeName);
+                Dictionary<string, object> queueArguments = BuildQueueArguments(messageType, exchangeName);
 
                 _topologyBuilder.DeclareQueue(
                     channel,
@@ -263,7 +263,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
         private static Type? GetMessageTypeFromConsumer(Type consumerType)
         {
-            var consumerInterface = consumerType
+            Type? consumerInterface = consumerType
                 .GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
@@ -274,12 +274,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private string GetQueueName(Type consumerType, Type messageType)
         {
             // Check for custom endpoint mapping
-            var mapping = EndpointConvention.GetEndpoint(messageType);
+            EndpointInfo? mapping = EndpointConvention.GetEndpoint(messageType);
             if (mapping?.QueueName != null)
                 return mapping.QueueName;
 
             // Check for consumer definition
-            var definition = GetConsumerDefinition(consumerType);
+            IConsumerDefinition? definition = GetConsumerDefinition(consumerType);
             if (definition?.QueueName != null)
                 return definition.QueueName;
 
@@ -290,12 +290,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private string GetExchangeName(Type messageType)
         {
             // Check for custom endpoint mapping
-            var mapping = EndpointConvention.GetEndpoint(messageType);
+            EndpointInfo? mapping = EndpointConvention.GetEndpoint(messageType);
             if (mapping?.ExchangeName != null)
                 return mapping.ExchangeName;
 
             // Check for message topology
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             if (topology?.ExchangeName != null)
                 return topology.ExchangeName;
 
@@ -306,7 +306,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private MvpRabbitMQExchangeType GetExchangeType(Type messageType)
         {
             // Check for message topology
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             if (topology != null)
                 return topology.ExchangeType;
 
@@ -317,12 +317,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private string GetRoutingKey(Type consumerType, Type messageType, MvpRabbitMQExchangeType exchangeType)
         {
             // Check for custom endpoint mapping
-            var mapping = EndpointConvention.GetEndpoint(messageType);
+            EndpointInfo? mapping = EndpointConvention.GetEndpoint(messageType);
             if (mapping?.RoutingKey != null)
                 return mapping.RoutingKey;
 
             // Check for message topology
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             if (topology?.RoutingKey != null)
                 return topology.RoutingKey;
 
@@ -346,7 +346,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             }
 
             // Message TTL
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             if (topology?.MessageTtlMilliseconds > 0)
             {
                 arguments["x-message-ttl"] = topology.MessageTtlMilliseconds.Value;
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private static IConsumerDefinition? GetConsumerDefinition(Type consumerType)
         {
             // Look for ConsumerDefinition<T> in the same assembly
-            var definitionType = consumerType.Assembly.GetTypes()
+            Type? definitionType = consumerType.Assembly.GetTypes()
                 .FirstOrDefault(t => !t.IsAbstract &&
                     t.BaseType?.IsGenericType == true &&
                     t.BaseType.GetGenericTypeDefinition() == typeof(Consumers.ConsumerDefinition<>) &&

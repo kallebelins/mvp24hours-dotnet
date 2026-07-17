@@ -20,7 +20,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
 
         public override async Task ExecuteAsync(IPipelineMessage input)
         {
-            var result = await MapperAsync(input);
+            T? result = await MapperAsync(input);
             if (result != null)
             {
                 if (string.IsNullOrEmpty(ContentKey))
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
             else if (input.HasContent<T>())
                 content = input.GetContent<T>();
 
-            var result = await MapperAsync(content!);
+            U? result = await MapperAsync(content!);
             if (result != null)
             {
                 if (string.IsNullOrEmpty(ContentKey))

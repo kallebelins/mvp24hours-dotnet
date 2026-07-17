@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
@@ -64,7 +65,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
             events.Count,
             entity.GetType().Name);
 
-        foreach (var domainEvent in events)
+        foreach (CoreDomainEvent? domainEvent in events)
         {
             await DispatchEventAsync(domainEvent, cancellationToken);
         }
@@ -98,7 +99,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
             totalEvents,
             entitiesWithEvents.Count);
 
-        foreach (var entity in entitiesWithEvents)
+        foreach (CoreHasDomainEvents? entity in entitiesWithEvents)
         {
             await DispatchEventsAsync(entity, cancellationToken);
         }
@@ -106,7 +107,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
 
     private async Task DispatchEventAsync(CoreDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        var eventType = domainEvent.GetType();
+        Type eventType = domainEvent.GetType();
 
         _logger?.LogInformation(
             "[DomainEvents] Publishing {EventType} (OccurredAt: {OccurredAt})",
@@ -116,7 +117,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
         try
         {
             // Use reflection to call PublishAsync with the concrete event type
-            var publishMethod = typeof(IPublisher)
+            MethodInfo publishMethod = typeof(IPublisher)
                 .GetMethod(nameof(IPublisher.PublishAsync))!
                 .MakeGenericMethod(eventType);
 

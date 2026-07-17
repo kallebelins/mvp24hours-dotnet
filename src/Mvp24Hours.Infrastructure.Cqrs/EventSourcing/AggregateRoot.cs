@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Reflection;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 using CoreIEntityBase = Mvp24Hours.Core.Contract.Domain.Entity.IEntityBase;
@@ -84,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// </example>
 public abstract class AggregateRoot : IEventSourcedAggregate
 {
-    private readonly List<CoreDomainEvent> _uncommittedEvents = new();
+    private readonly List<CoreDomainEvent> _uncommittedEvents = [];
     private long _version;
     private Guid _id;
 
@@ -151,7 +152,7 @@ public abstract class AggregateRoot : IEventSourcedAggregate
     {
         ArgumentNullException.ThrowIfNull(events);
 
-        foreach (var @event in events)
+        foreach (CoreDomainEvent @event in events)
         {
             Apply(@event);
             _version++;
@@ -218,7 +219,7 @@ public abstract class AggregateRoot : IEventSourcedAggregate
 /// </example>
 public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
 {
-    private readonly List<CoreDomainEvent> _uncommittedEvents = new();
+    private readonly List<CoreDomainEvent> _uncommittedEvents = [];
     private long _version;
 
     /// <summary>
@@ -285,7 +286,7 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
     {
         ArgumentNullException.ThrowIfNull(events);
 
-        foreach (var @event in events)
+        foreach (CoreDomainEvent @event in events)
         {
             Apply(@event);
             _version++;
@@ -387,7 +388,7 @@ public abstract class SnapshotAggregateRoot<TSnapshot> : AggregateRoot, ISnapsho
     {
         _snapshotVersion = version;
         // Use reflection to set the private _version field from base class
-        var versionField = typeof(AggregateRoot).GetField("_version",
+        FieldInfo? versionField = typeof(AggregateRoot).GetField("_version",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         versionField?.SetValue(this, version);
     }

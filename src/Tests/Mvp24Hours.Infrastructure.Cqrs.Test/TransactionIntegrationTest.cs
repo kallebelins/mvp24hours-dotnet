@@ -56,7 +56,7 @@ public class TransactionIntegrationTest
         };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        OrderResult result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.True(result.Success);
@@ -80,7 +80,7 @@ public class TransactionIntegrationTest
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
 
         Assert.Equal("Handler failed", ex.Message);
@@ -101,7 +101,7 @@ public class TransactionIntegrationTest
         };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        OrderResult result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.True(result.Success);
@@ -123,7 +123,7 @@ public class TransactionIntegrationTest
         };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        OrderResult result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.True(result.Success);
@@ -142,7 +142,7 @@ public class TransactionIntegrationTest
         };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        OrderResult result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.True(result.Success);
@@ -157,13 +157,13 @@ public class TransactionIntegrationTest
         SetupServices();
 
         // Act
-        var result1 = await _mediator.SendAsync(new CreateOrderTransactionalCommand
+        OrderResult result1 = await _mediator.SendAsync(new CreateOrderTransactionalCommand
         {
             CustomerName = "Customer 1",
             Amount = 100.00m
         });
 
-        var result2 = await _mediator.SendAsync(new CreateOrderTransactionalCommand
+        OrderResult result2 = await _mediator.SendAsync(new CreateOrderTransactionalCommand
         {
             CustomerName = "Customer 2",
             Amount = 200.00m
@@ -191,7 +191,7 @@ public class TransactionIntegrationTest
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
 
         Assert.Equal("Database error", ex.Message);
@@ -216,8 +216,8 @@ public class TransactionIntegrationTest
             typeof(IPipelineBehavior<CreateAggregateTransactionalCommand, TestAggregate>),
             typeof(TransactionWithEventsBehavior<CreateAggregateTransactionalCommand, TestAggregate>));
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         var command = new CreateAggregateTransactionalCommand
         {
@@ -225,7 +225,7 @@ public class TransactionIntegrationTest
         };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        TestAggregate result = await mediator.SendAsync(command);
 
         // Assert - Verify transaction was committed
         Assert.NotNull(result);
@@ -248,8 +248,8 @@ public class TransactionIntegrationTest
         });
         // Note: NOT registering IUnitOfWorkAsync
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         CreateOrderTransactionalCommandHandler.Reset();
 
         var command = new CreateOrderTransactionalCommand
@@ -259,7 +259,7 @@ public class TransactionIntegrationTest
         };
 
         // Act - Should not throw even without UnitOfWork
-        var result = await mediator.SendAsync(command);
+        OrderResult result = await mediator.SendAsync(command);
 
         // Assert
         Assert.True(result.Success);

@@ -261,7 +261,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Extensions
             services.AddMongoDbInterceptorPipeline();
             services.AddScoped<IMongoDbInterceptor>(sp =>
             {
-                var tenantProvider = sp.GetService<ITenantProvider>();
+                ITenantProvider? tenantProvider = sp.GetService<ITenantProvider>();
                 if (tenantProvider == null)
                 {
                     // Use NoTenantProvider if no provider is registered

@@ -83,7 +83,7 @@ public class RequestTelemetryOptions
     /// <summary>
     /// Gets or sets custom tags to add to all traces.
     /// </summary>
-    public Dictionary<string, string> CustomTags { get; set; } = new();
+    public Dictionary<string, string> CustomTags { get; set; } = [];
 
     /// <summary>
     /// Gets or sets histogram bucket boundaries for request duration metrics (in milliseconds).

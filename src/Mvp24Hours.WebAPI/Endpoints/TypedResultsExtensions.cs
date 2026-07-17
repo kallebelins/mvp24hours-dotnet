@@ -258,7 +258,7 @@ public static class TypedResultsExtensions
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        var (statusCode, title, type) = GetExceptionMapping(exception);
+        (int statusCode, string? title, string? type) = GetExceptionMapping(exception);
         var detail = includeDetails ? exception.Message : GetSafeDetail(exception);
 
         var problemDetails = new ProblemDetails
@@ -323,7 +323,7 @@ public static class TypedResultsExtensions
         this Exception exception,
         string? instance = null)
     {
-        var result = exception.ToProblem(includeDetails: true, instance);
+        ProblemHttpResult result = exception.ToProblem(includeDetails: true, instance);
         result.ProblemDetails.Extensions["stackTrace"] = exception.StackTrace;
         return result;
     }
@@ -718,7 +718,7 @@ public static class TypedResultsExtensions
 
         if (extensions is not null)
         {
-            foreach (var extension in extensions)
+            foreach (KeyValuePair<string, object?> extension in extensions)
             {
                 problemDetails.Extensions[extension.Key] = extension.Value;
             }
@@ -778,7 +778,7 @@ public static class TypedResultsExtensions
                 if (validationEx.ValidationErrors?.Count > 0)
                 {
                     var errors = new List<object>();
-                    foreach (var error in validationEx.ValidationErrors)
+                    foreach (IMessageResult error in validationEx.ValidationErrors)
                     {
                         errors.Add(new
                         {

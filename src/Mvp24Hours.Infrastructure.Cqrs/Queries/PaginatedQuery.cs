@@ -180,26 +180,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
         /// <summary>
         /// Gets the ascending order expressions.
         /// </summary>
-        public IList<Expression<Func<TEntity, dynamic>>> OrderByAscendingExpr
-        {
-            get => _orderByAscendingExpr ??= new List<Expression<Func<TEntity, dynamic>>>();
-        }
+        public IList<Expression<Func<TEntity, dynamic>>> OrderByAscendingExpr => _orderByAscendingExpr ??= [];
 
         /// <summary>
         /// Gets the descending order expressions.
         /// </summary>
-        public IList<Expression<Func<TEntity, dynamic>>> OrderByDescendingExpr
-        {
-            get => _orderByDescendingExpr ??= new List<Expression<Func<TEntity, dynamic>>>();
-        }
+        public IList<Expression<Func<TEntity, dynamic>>> OrderByDescendingExpr => _orderByDescendingExpr ??= [];
 
         /// <summary>
         /// Gets the navigation expressions for eager loading.
         /// </summary>
-        public IList<Expression<Func<TEntity, dynamic>>> NavigationExpr
-        {
-            get => _navigationExpr ??= new List<Expression<Func<TEntity, dynamic>>>();
-        }
+        public IList<Expression<Func<TEntity, dynamic>>> NavigationExpr => _navigationExpr ??= [];
 
         #endregion
 

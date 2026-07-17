@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Email.Tracking
         /// </summary>
         public EmailDeliveryStatus()
         {
-            Events = new List<EmailDeliveryEventData>();
+            Events = [];
         }
 
         /// <summary>

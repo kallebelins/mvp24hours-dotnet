@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             return _wrappedPolicy.ExecuteAsync(
                 async (ct) =>
                 {
-                    var request = requestFactory();
+                    HttpRequestMessage request = requestFactory();
                     return await sendAsync(request, ct);
                 },
                 cancellationToken);
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
 
             // Wrap policies from innermost to outermost (right to left)
             // This means the first policy in the list is the outermost (executed last)
-            var wrapped = policies[0];
+            IAsyncPolicy<HttpResponseMessage> wrapped = policies[0];
             for (int i = 1; i < policies.Count; i++)
             {
                 wrapped = Policy.WrapAsync(policies[i], wrapped);

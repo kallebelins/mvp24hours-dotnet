@@ -3,9 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Diagnostics.CodeAnalysis;
 using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Core.Test;
+
+#pragma warning disable CS8604
 
 /// <summary>
 /// Unit tests for Extension Methods in Mvp24Hours.Core.
@@ -474,7 +477,7 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_FirstOrDefaultAsync_ReturnsFirst()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
 
         // Act
         var result = await task.FirstOrDefaultAsync();
@@ -487,7 +490,7 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_FirstOrDefaultAsync_WithPredicate_ReturnsMatching()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
 
         // Act
         var result = await task.FirstOrDefaultAsync(x => x > 1);
@@ -500,7 +503,7 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_LastOrDefaultAsync_ReturnsLast()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
 
         // Act
         var result = await task.LastOrDefaultAsync();
@@ -513,7 +516,7 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_ElementAtOrDefaultAsync_ReturnsElement()
     {
         // Arrange
-        var task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
 
         // Act
         var result = await task.ElementAtOrDefaultAsync(1);
@@ -530,10 +533,10 @@ public class ExtensionMethodsTest
     public void GuidExtensions_SafeNewGuid_WithEmpty_ReturnsNewGuid()
     {
         // Arrange
-        var guid = Guid.Empty;
+        Guid guid = Guid.Empty;
 
         // Act
-        var result = guid.SafeNewGuid();
+        Guid result = guid.SafeNewGuid();
 
         // Assert
         result.Should().NotBe(Guid.Empty);
@@ -546,7 +549,7 @@ public class ExtensionMethodsTest
         var guid = Guid.NewGuid();
 
         // Act
-        var result = guid.SafeNewGuid();
+        Guid result = guid.SafeNewGuid();
 
         // Assert
         result.Should().Be(guid);
@@ -660,7 +663,7 @@ public class ExtensionMethodsTest
     public void GuidExtensions_IsEmpty_WithEmpty_ReturnsTrue()
     {
         // Arrange
-        var guid = Guid.Empty;
+        Guid guid = Guid.Empty;
 
         // Act
         var result = guid.IsEmpty();
@@ -739,7 +742,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetDisplayName_WithDisplayAttribute_ReturnsName()
     {
         // Arrange
-        var value = TestEnum.First;
+        TestEnum value = TestEnum.First;
 
         // Act
         var result = value.GetDisplayName();
@@ -752,7 +755,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetDisplayName_WithoutDisplayAttribute_ReturnsToString()
     {
         // Arrange
-        var value = TestEnum.Third;
+        TestEnum value = TestEnum.Third;
 
         // Act
         var result = value.GetDisplayName();
@@ -765,7 +768,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetGroupName_WithDisplayAttribute_ReturnsGroupName()
     {
         // Arrange
-        var value = TestEnum.First;
+        TestEnum value = TestEnum.First;
 
         // Act
         var result = value.GetGroupName();
@@ -852,7 +855,7 @@ public class ExtensionMethodsTest
         var destination = new DestinationClass();
 
         // Act
-        var act = () => source!.CopyPropertiesTo(destination);
+        Func<bool> act = () => source!.CopyPropertiesTo(destination);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -866,7 +869,7 @@ public class ExtensionMethodsTest
         DestinationClass? destination = null;
 
         // Act
-        var act = () => source.CopyPropertiesTo(destination!);
+        Func<bool> act = () => source.CopyPropertiesTo(destination!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -941,8 +944,8 @@ public class ExtensionMethodsTest
     public void ObjectExtensions_InheritsOrImplements_WithInheritance_ReturnsTrue()
     {
         // Arrange
-        var childType = typeof(DestinationClass);
-        var parentType = typeof(SourceClass);
+        Type childType = typeof(DestinationClass);
+        Type parentType = typeof(SourceClass);
 
         // Act
         var result = childType.InheritsOrImplements(parentType);
@@ -956,3 +959,4 @@ public class ExtensionMethodsTest
     #endregion
 }
 
+#pragma warning restore CS8604

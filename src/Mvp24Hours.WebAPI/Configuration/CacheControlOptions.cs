@@ -27,12 +27,12 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets the dictionary of route-specific Cache-Control policies.
         /// Key is the route pattern (e.g., "/api/users/*"), value is the policy.
         /// </summary>
-        public Dictionary<string, CacheControlPolicy> RoutePolicies { get; set; } = new Dictionary<string, CacheControlPolicy>();
+        public Dictionary<string, CacheControlPolicy> RoutePolicies { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the list of paths to exclude from Cache-Control header setting.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new HashSet<string>();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
     }
 
     /// <summary>

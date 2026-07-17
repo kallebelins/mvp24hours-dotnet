@@ -26,10 +26,10 @@ namespace Mvp24Hours.Application.MySql.Test.Setup
     {
         public static IServiceProvider Initialize(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServicesAsync();
+            ServiceProvider serviceProvider = ConfigureServicesAsync();
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Application.MySql.Test.Setup
         public static void Cleanup(IServiceProvider serviceProvider)
         {
             // ensure database drop
-            var db = serviceProvider?.GetService<DataContext>();
+            DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
             if (db != null)
             {
                 db.Database.EnsureDeleted();
@@ -83,7 +83,7 @@ namespace Mvp24Hours.Application.MySql.Test.Setup
 
         private static async Task LoadDataAsync(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             List<Customer> customers = [];
             for (int i = 1; i <= 10; i++)
             {

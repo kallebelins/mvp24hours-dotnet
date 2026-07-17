@@ -67,12 +67,12 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                     if (string.IsNullOrWhiteSpace(tag))
                         continue;
 
-                    var keysSet = _tagToKeys.GetOrAdd(tag, _ => new HashSet<string>());
+                    HashSet<string> keysSet = _tagToKeys.GetOrAdd(tag, _ => []);
                     keysSet.Add(key);
                 }
 
                 // Add tags to key's set
-                var tagsSet = _keyToTags.GetOrAdd(key, _ => new HashSet<string>());
+                HashSet<string> tagsSet = _keyToTags.GetOrAdd(key, _ => []);
                 foreach (var tag in tags)
                 {
                     if (!string.IsNullOrWhiteSpace(tag))
@@ -93,12 +93,12 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             lock (_lock)
             {
                 // Get tags for this key
-                if (_keyToTags.TryRemove(key, out var tags))
+                if (_keyToTags.TryRemove(key, out HashSet<string>? tags))
                 {
                     // Remove key from each tag's set
                     foreach (var tag in tags)
                     {
-                        if (_tagToKeys.TryGetValue(tag, out var keysSet))
+                        if (_tagToKeys.TryGetValue(tag, out HashSet<string>? keysSet))
                         {
                             keysSet.Remove(key);
 
@@ -124,7 +124,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             lock (_lock)
             {
-                if (_tagToKeys.TryGetValue(tag, out var keysSet))
+                if (_tagToKeys.TryGetValue(tag, out HashSet<string>? keysSet))
                 {
                     return Task.FromResult<IEnumerable<string>>(keysSet.ToArray());
                 }
@@ -141,7 +141,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             lock (_lock)
             {
-                if (_keyToTags.TryGetValue(key, out var tagsSet))
+                if (_keyToTags.TryGetValue(key, out HashSet<string>? tagsSet))
                 {
                     return Task.FromResult<IEnumerable<string>>(tagsSet.ToArray());
                 }
@@ -158,12 +158,12 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             lock (_lock)
             {
-                if (_tagToKeys.TryRemove(tag, out var keysSet))
+                if (_tagToKeys.TryRemove(tag, out HashSet<string>? keysSet))
                 {
                     // Remove tag from each key's tag set
                     foreach (var key in keysSet)
                     {
-                        if (_keyToTags.TryGetValue(key, out var tags))
+                        if (_keyToTags.TryGetValue(key, out HashSet<string>? tags))
                         {
                             tags.Remove(tag);
 

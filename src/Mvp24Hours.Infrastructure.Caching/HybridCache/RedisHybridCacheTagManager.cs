@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             try
             {
-                var transaction = _database.CreateTransaction();
+                ITransaction transaction = _database.CreateTransaction();
 
                 foreach (var tag in tags.Where(t => !string.IsNullOrWhiteSpace(t)))
                 {
@@ -144,14 +144,14 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             try
             {
                 // Get all tags for this key
-                var tags = await _database.SetMembersAsync(keyTagsKey);
+                RedisValue[] tags = await _database.SetMembersAsync(keyTagsKey);
 
                 if (tags.Length > 0)
                 {
-                    var transaction = _database.CreateTransaction();
+                    ITransaction transaction = _database.CreateTransaction();
 
                     // Remove key from each tag's set
-                    foreach (var tag in tags)
+                    foreach (RedisValue tag in tags)
                     {
                         var tagKey = GetTagKey(tag.ToString());
                         _ = transaction.SetRemoveAsync(tagKey, fullKey);
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             try
             {
                 var tagKey = GetTagKey(tag);
-                var members = await _database.SetMembersAsync(tagKey);
+                RedisValue[] members = await _database.SetMembersAsync(tagKey);
 
                 var keys = members
                     .Where(m => m.HasValue)
@@ -208,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             try
             {
-                var members = await _database.SetMembersAsync(keyTagsKey);
+                RedisValue[] members = await _database.SetMembersAsync(keyTagsKey);
 
                 var tags = members
                     .Where(m => m.HasValue)
@@ -235,14 +235,14 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 var tagKey = GetTagKey(tag);
 
                 // Get all keys for this tag before deleting
-                var keys = await _database.SetMembersAsync(tagKey);
+                RedisValue[] keys = await _database.SetMembersAsync(tagKey);
 
                 if (keys.Length > 0)
                 {
-                    var transaction = _database.CreateTransaction();
+                    ITransaction transaction = _database.CreateTransaction();
 
                     // Remove tag from each key's tag set
-                    foreach (var keyValue in keys)
+                    foreach (RedisValue keyValue in keys)
                     {
                         if (!keyValue.HasValue) continue;
 
@@ -287,14 +287,14 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 var stats = new HybridCacheTagStatistics();
 
                 // Get invalidation count
-                var invalidations = _database.StringGet(InvalidationsKey);
+                RedisValue invalidations = _database.StringGet(InvalidationsKey);
                 if (invalidations.HasValue && long.TryParse(invalidations.ToString(), out var count))
                 {
                     stats.TagInvalidations = count;
                 }
 
                 // Scan for all tag keys to count tags and associations
-                var server = _redis.GetServer(_redis.GetEndPoints().First());
+                IServer server = _redis.GetServer(_redis.GetEndPoints().First());
                 var tagKeys = server.Keys(pattern: $"{_options.KeyPrefix}{TagPrefix}*", pageSize: 1000).ToList();
 
                 stats.TotalTags = tagKeys.Count;
@@ -303,7 +303,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 var keysPerTag = new Dictionary<string, int>();
                 var totalAssociations = 0;
 
-                foreach (var tagKey in tagKeys.Take(100)) // Sample first 100 tags
+                foreach (RedisKey tagKey in tagKeys.Take(100)) // Sample first 100 tags
                 {
                     var keyCount = (int)_database.SetLength(tagKey);
                     var tagName = tagKey.ToString().Replace($"{_options.KeyPrefix}{TagPrefix}", "");
@@ -328,11 +328,11 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
         {
             try
             {
-                var server = _redis.GetServer(_redis.GetEndPoints().First());
+                IServer server = _redis.GetServer(_redis.GetEndPoints().First());
 
                 // Get all tag-related keys
-                var tagKeys = server.Keys(pattern: $"{_options.KeyPrefix}{TagPrefix}*", pageSize: 1000).ToArray();
-                var keyTagsKeys = server.Keys(pattern: $"{_options.KeyPrefix}{KeyTagsPrefix}*", pageSize: 1000).ToArray();
+                RedisKey[] tagKeys = server.Keys(pattern: $"{_options.KeyPrefix}{TagPrefix}*", pageSize: 1000).ToArray();
+                RedisKey[] keyTagsKeys = server.Keys(pattern: $"{_options.KeyPrefix}{KeyTagsPrefix}*", pageSize: 1000).ToArray();
 
                 if (tagKeys.Length > 0)
                 {

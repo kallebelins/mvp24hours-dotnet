@@ -140,7 +140,7 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
         IEnumerable<TItem> items,
         CancellationToken cancellationToken = default)
     {
-        foreach (var item in items)
+        foreach (TItem? item in items)
         {
             await ProduceAsync(item, cancellationToken);
         }
@@ -155,7 +155,7 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
         IAsyncEnumerable<TItem> items,
         CancellationToken cancellationToken = default)
     {
-        await foreach (var item in items.WithCancellation(cancellationToken))
+        await foreach (TItem? item in items.WithCancellation(cancellationToken))
         {
             await ProduceAsync(item, cancellationToken);
         }
@@ -216,7 +216,7 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
 
         try
         {
-            await foreach (var item in _channel.Reader.ReadAllAsync(cancellationToken))
+            await foreach (TItem? item in _channel.Reader.ReadAllAsync(cancellationToken))
             {
                 try
                 {
@@ -389,11 +389,11 @@ public sealed class ProducerConsumer<TInput, TOutput> : IAsyncDisposable
 
     private async Task ConsumeAsync(CancellationToken cancellationToken)
     {
-        await foreach (var item in _inputChannel.Reader.ReadAllAsync(cancellationToken))
+        await foreach (TInput? item in _inputChannel.Reader.ReadAllAsync(cancellationToken))
         {
             try
             {
-                var result = await _processor(item, cancellationToken);
+                TOutput? result = await _processor(item, cancellationToken);
                 await _outputChannel.Writer.WriteAsync(result, cancellationToken);
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)

@@ -88,7 +88,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             ArgumentNullException.ThrowIfNull(tenantId);
 
             // Try to get existing connection
-            if (_connections.TryGetValue(tenantId, out var entry) && entry.Connection.IsOpen)
+            if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen)
             {
                 entry.LastAccessed = DateTimeOffset.UtcNow;
                 return entry.Connection;
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
         /// <inheritdoc />
         public IModel GetOrCreateChannel(string tenantId)
         {
-            var connection = GetOrCreateConnection(tenantId);
+            IConnection connection = GetOrCreateConnection(tenantId);
             return connection.CreateModel();
         }
 
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             ArgumentNullException.ThrowIfNull(tenantId);
 
             // Check static configuration first
-            if (_options.Tenants.TryGetValue(tenantId, out var tenantConfig) &&
+            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? tenantConfig) &&
                 !string.IsNullOrEmpty(tenantConfig.VirtualHost))
             {
                 return tenantConfig.VirtualHost;
@@ -124,13 +124,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
         /// <inheritdoc />
         public bool HasConnection(string tenantId)
         {
-            return _connections.TryGetValue(tenantId, out var entry) && entry.Connection.IsOpen;
+            return _connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen;
         }
 
         /// <inheritdoc />
         public void CloseConnection(string tenantId)
         {
-            if (_connections.TryRemove(tenantId, out var entry))
+            if (_connections.TryRemove(tenantId, out TenantConnectionEntry? entry))
             {
                 try
                 {
@@ -161,7 +161,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             try
             {
                 // Double-check after acquiring lock
-                if (_connections.TryGetValue(tenantId, out var existing) && existing.Connection.IsOpen)
+                if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? existing) && existing.Connection.IsOpen)
                 {
                     existing.LastAccessed = DateTimeOffset.UtcNow;
                     return existing.Connection;
@@ -175,13 +175,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                 }
 
                 // Get tenant configuration
-                var config = GetTenantConfiguration(tenantId);
+                TenantRabbitMQConfiguration? config = GetTenantConfiguration(tenantId);
 
                 // Create connection factory
-                var factory = CreateConnectionFactory(tenantId, config);
+                ConnectionFactory factory = CreateConnectionFactory(tenantId, config);
 
                 // Apply retry policy and create connection
-                var connection = CreateConnectionWithRetry(factory, tenantId);
+                IConnection connection = CreateConnectionWithRetry(factory, tenantId);
 
                 // Add to pool
                 var entry = new TenantConnectionEntry
@@ -213,13 +213,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             // Try async resolver if available
             if (_resolver != null)
             {
-                var config = _resolver.ResolveAsync(tenantId).GetAwaiter().GetResult();
+                TenantRabbitMQConfiguration? config = _resolver.ResolveAsync(tenantId).GetAwaiter().GetResult();
                 if (config != null)
                     return config;
             }
 
             // Check static configuration
-            if (_options.Tenants.TryGetValue(tenantId, out var staticConfig))
+            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
             {
                 return new TenantRabbitMQConfiguration
                 {
@@ -261,7 +261,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             else if (_defaultConnectionOptions.Configuration != null)
             {
                 // Use default configuration
-                var defaultConfig = _defaultConnectionOptions.Configuration;
+                RabbitMQConnection defaultConfig = _defaultConnectionOptions.Configuration;
                 factory = new ConnectionFactory
                 {
                     HostName = defaultConfig.HostName,
@@ -297,7 +297,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private IConnection CreateConnectionWithRetry(ConnectionFactory factory, string tenantId)
         {
-            var policy = Policy
+            RetryPolicy policy = Policy
                 .Handle<SocketException>()
                 .Or<BrokerUnreachableException>()
                 .WaitAndRetry(
@@ -332,10 +332,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
         private void CleanupIdleConnections(object? state)
         {
-            var now = DateTimeOffset.UtcNow;
-            var threshold = now - _options.IdleConnectionTimeout;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTimeOffset threshold = now - _options.IdleConnectionTimeout;
 
-            foreach (var kvp in _connections)
+            foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
             {
                 if (kvp.Value.LastAccessed < threshold && !kvp.Value.Connection.IsOpen)
                 {
@@ -349,7 +349,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             TenantConnectionEntry? oldest = null;
             string? oldestTenantId = null;
 
-            foreach (var kvp in _connections)
+            foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
             {
                 if (oldest == null || kvp.Value.LastAccessed < oldest.LastAccessed)
                 {

@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Synchronization
     public class InMemoryCacheSynchronizer : ICacheSynchronizer
     {
         private readonly ILogger<InMemoryCacheSynchronizer>? _logger;
-        private readonly ConcurrentBag<Func<string, CancellationToken, Task>> _subscribers = new();
+        private readonly ConcurrentBag<Func<string, CancellationToken, Task>> _subscribers = [];
         private readonly object _lock = new object();
 
         /// <summary>
@@ -62,11 +62,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Synchronization
             lock (_lock)
             {
                 var tasks = new List<Task>();
-                foreach (var subscriber in _subscribers)
+                foreach (Func<string, CancellationToken, Task> subscriber in _subscribers)
                 {
                     try
                     {
-                        var task = subscriber(key, cancellationToken);
+                        Task task = subscriber(key, cancellationToken);
                         tasks.Add(task);
                     }
                     catch (Exception ex)
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Synchronization
             if (keys == null || keys.Length == 0)
                 return;
 
-            var tasks = keys.Select(key => PublishInvalidationAsync(key, cancellationToken));
+            IEnumerable<Task> tasks = keys.Select(key => PublishInvalidationAsync(key, cancellationToken));
             await Task.WhenAll(tasks);
         }
 

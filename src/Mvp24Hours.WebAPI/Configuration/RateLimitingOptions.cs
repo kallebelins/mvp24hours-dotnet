@@ -151,12 +151,12 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets paths that this policy applies to (supports wildcards).
         /// Empty list means all paths.
         /// </summary>
-        public List<string> AppliedPaths { get; set; } = new();
+        public List<string> AppliedPaths { get; set; } = [];
 
         /// <summary>
         /// Gets or sets paths excluded from this policy (supports wildcards).
         /// </summary>
-        public List<string> ExcludedPaths { get; set; } = new();
+        public List<string> ExcludedPaths { get; set; } = [];
     }
 
     /// <summary>
@@ -265,40 +265,40 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets globally excluded paths from rate limiting (supports wildcards).
         /// </summary>
-        public List<string> GlobalExcludedPaths { get; set; } = new()
-        {
+        public List<string> GlobalExcludedPaths { get; set; } =
+        [
             "/health",
             "/health/*",
             "/swagger",
             "/swagger/*"
-        };
+        ];
 
         /// <summary>
         /// Gets or sets the configured rate limiting policies.
         /// </summary>
-        public Dictionary<string, RateLimitPolicy> Policies { get; set; } = new();
+        public Dictionary<string, RateLimitPolicy> Policies { get; set; } = [];
 
         /// <summary>
         /// Gets or sets endpoint-specific policy assignments.
         /// Key: endpoint path pattern, Value: policy name.
         /// </summary>
-        public Dictionary<string, string> EndpointPolicies { get; set; } = new();
+        public Dictionary<string, string> EndpointPolicies { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whitelisted IP addresses that bypass rate limiting.
         /// Supports CIDR notation.
         /// </summary>
-        public List<string> WhitelistedIps { get; set; } = new();
+        public List<string> WhitelistedIps { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whitelisted API keys that bypass rate limiting.
         /// </summary>
-        public List<string> WhitelistedApiKeys { get; set; } = new();
+        public List<string> WhitelistedApiKeys { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whitelisted user IDs that bypass rate limiting.
         /// </summary>
-        public List<string> WhitelistedUserIds { get; set; } = new();
+        public List<string> WhitelistedUserIds { get; set; } = [];
 
         /// <summary>
         /// Creates a default policy with the given settings.

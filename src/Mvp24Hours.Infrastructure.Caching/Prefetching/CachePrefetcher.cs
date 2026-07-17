@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Prefetching
             try
             {
                 // Check if already cached
-                var cached = await _cacheProvider.GetAsync<T>(key, cancellationToken);
+                T? cached = await _cacheProvider.GetAsync<T>(key, cancellationToken);
                 if (cached != null)
                 {
                     _logger?.LogDebug("Prefetch skipped - value already cached for key: {Key}", key);
@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Prefetching
 
                 // Load and cache the value
                 _logger?.LogDebug("Prefetching value for key: {Key}", key);
-                var value = await valueFactory(cancellationToken);
+                T value = await valueFactory(cancellationToken);
                 if (value != null)
                 {
                     await _cacheProvider.SetAsync(key, value, options, cancellationToken);
@@ -98,12 +98,12 @@ namespace Mvp24Hours.Infrastructure.Caching.Prefetching
                 requests.Count, maxConcurrency);
 
             using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
-            var tasks = requests.Select(async request =>
+            IEnumerable<Task> tasks = requests.Select(async request =>
             {
                 await semaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var requestOptions = request.Options ?? options;
+                    CacheEntryOptions? requestOptions = request.Options ?? options;
                     await PrefetchAsync(request.Key, request.ValueFactory, requestOptions, cancellationToken);
                 }
                 finally

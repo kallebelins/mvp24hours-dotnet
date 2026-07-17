@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
                 throw new ArgumentNullException(nameof(messages));
 
             var count = 0;
-            foreach (var message in messages)
+            foreach (TransactionalOutboxMessage message in messages)
             {
                 _messages.TryAdd(message.Id, message);
                 count++;
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             var pending = _messages.Values
                 .Where(m => m.Status == TransactionalOutboxStatus.Pending ||
@@ -125,7 +125,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         /// <inheritdoc />
         public Task MarkAsPublishedAsync(Guid messageId, CancellationToken cancellationToken = default)
         {
-            if (_messages.TryGetValue(messageId, out var message))
+            if (_messages.TryGetValue(messageId, out TransactionalOutboxMessage? message))
             {
                 message.Status = TransactionalOutboxStatus.Published;
                 message.PublishedAt = DateTime.UtcNow;
@@ -140,7 +140,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         /// <inheritdoc />
         public Task MarkAsFailedAsync(Guid messageId, string error, CancellationToken cancellationToken = default)
         {
-            if (_messages.TryGetValue(messageId, out var message))
+            if (_messages.TryGetValue(messageId, out TransactionalOutboxMessage? message))
             {
                 message.RetryCount++;
                 message.LastError = error;
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
                 .Select(m => m.Id)
                 .ToList();
 
-            foreach (var id in toRemove)
+            foreach (Guid id in toRemove)
             {
                 _messages.TryRemove(id, out _);
             }
@@ -242,7 +242,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         /// <returns>The message if found, null otherwise.</returns>
         public TransactionalOutboxMessage? GetById(Guid messageId)
         {
-            _messages.TryGetValue(messageId, out var message);
+            _messages.TryGetValue(messageId, out TransactionalOutboxMessage? message);
             return message;
         }
     }

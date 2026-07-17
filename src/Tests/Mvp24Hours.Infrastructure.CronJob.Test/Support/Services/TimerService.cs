@@ -14,7 +14,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.Services
         /// <summary>
         /// Gets the list of recorded execution times.
         /// </summary>
-        public List<TimeSpan> Counters { get; } = new();
+        public List<TimeSpan> Counters { get; } = [];
 
         /// <summary>
         /// Starts the internal stopwatch.

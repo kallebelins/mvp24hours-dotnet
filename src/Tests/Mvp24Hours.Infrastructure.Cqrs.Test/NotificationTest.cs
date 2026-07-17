@@ -90,7 +90,7 @@ public class NotificationTest
         }
 
         // Act
-        foreach (var notification in notifications)
+        foreach (OrderCreatedNotification notification in notifications)
         {
             await _mediator.PublishAsync(notification);
         }
@@ -113,7 +113,7 @@ public class NotificationTest
         OrderCreatedEmailHandler.HandledNotifications.Clear();
         OrderCreatedAuditHandler.HandledNotifications.Clear();
 
-        var publisher = _serviceProvider.GetRequiredService<IPublisher>();
+        IPublisher publisher = _serviceProvider.GetRequiredService<IPublisher>();
         var notification = new OrderCreatedNotification
         {
             OrderId = 999,

@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         /// Tables to exclude from validation.
         /// Useful for tables managed by other systems.
         /// </summary>
-        public ICollection<string> ExcludedTables { get; set; } = new List<string>();
+        public ICollection<string> ExcludedTables { get; set; } = [];
 
         /// <summary>
         /// When true, logs detailed validation progress.

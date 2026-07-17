@@ -42,9 +42,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableRetry = true,
@@ -99,9 +99,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: TestCronJobFactory.CreateRetryConfig<TestResilientCronJob>(maxAttempts: 3));
 
         var job = new TestResilientCronJob(
@@ -142,9 +142,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableRetry = true,
@@ -203,9 +203,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableRetry = true,
@@ -258,9 +258,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableRetry = true,
@@ -317,9 +317,9 @@ public class RetryResilienceTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 EnableRetry = true,

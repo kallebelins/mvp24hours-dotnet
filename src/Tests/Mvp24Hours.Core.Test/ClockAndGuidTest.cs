@@ -20,14 +20,14 @@ public class ClockAndGuidTest
     public void SystemClock_UtcNow_ReturnsCurrentUtcTime()
     {
         // Arrange
-        var clock = SystemClock.Instance;
-        var before = DateTime.UtcNow;
+        SystemClock clock = SystemClock.Instance;
+        DateTime before = DateTime.UtcNow;
 
         // Act
-        var result = clock.UtcNow;
+        DateTime result = clock.UtcNow;
 
         // Assert
-        var after = DateTime.UtcNow;
+        DateTime after = DateTime.UtcNow;
         result.Should().BeOnOrAfter(before);
         result.Should().BeOnOrBefore(after);
     }
@@ -36,14 +36,14 @@ public class ClockAndGuidTest
     public void SystemClock_Now_ReturnsCurrentLocalTime()
     {
         // Arrange
-        var clock = SystemClock.Instance;
-        var before = DateTime.Now;
+        SystemClock clock = SystemClock.Instance;
+        DateTime before = DateTime.Now;
 
         // Act
-        var result = clock.Now;
+        DateTime result = clock.Now;
 
         // Assert
-        var after = DateTime.Now;
+        DateTime after = DateTime.Now;
         result.Should().BeOnOrAfter(before);
         result.Should().BeOnOrBefore(after);
     }
@@ -52,10 +52,10 @@ public class ClockAndGuidTest
     public void SystemClock_UtcToday_ReturnsCurrentUtcDate()
     {
         // Arrange
-        var clock = SystemClock.Instance;
+        SystemClock clock = SystemClock.Instance;
 
         // Act
-        var result = clock.UtcToday;
+        DateTime result = clock.UtcToday;
 
         // Assert
         result.Should().Be(DateTime.UtcNow.Date);
@@ -68,10 +68,10 @@ public class ClockAndGuidTest
     public void SystemClock_Today_ReturnsCurrentLocalDate()
     {
         // Arrange
-        var clock = SystemClock.Instance;
+        SystemClock clock = SystemClock.Instance;
 
         // Act
-        var result = clock.Today;
+        DateTime result = clock.Today;
 
         // Assert
         result.Should().Be(DateTime.Today);
@@ -81,14 +81,14 @@ public class ClockAndGuidTest
     public void SystemClock_UtcNowOffset_ReturnsCurrentUtcOffset()
     {
         // Arrange
-        var clock = SystemClock.Instance;
-        var before = DateTimeOffset.UtcNow;
+        SystemClock clock = SystemClock.Instance;
+        DateTimeOffset before = DateTimeOffset.UtcNow;
 
         // Act
-        var result = clock.UtcNowOffset;
+        DateTimeOffset result = clock.UtcNowOffset;
 
         // Assert
-        var after = DateTimeOffset.UtcNow;
+        DateTimeOffset after = DateTimeOffset.UtcNow;
         result.Should().BeOnOrAfter(before);
         result.Should().BeOnOrBefore(after);
         result.Offset.Should().Be(TimeSpan.Zero);
@@ -98,8 +98,8 @@ public class ClockAndGuidTest
     public void SystemClock_Instance_ReturnsSingletonInstance()
     {
         // Act
-        var instance1 = SystemClock.Instance;
-        var instance2 = SystemClock.Instance;
+        SystemClock instance1 = SystemClock.Instance;
+        SystemClock instance2 = SystemClock.Instance;
 
         // Assert
         instance1.Should().BeSameAs(instance2);
@@ -126,13 +126,13 @@ public class ClockAndGuidTest
     public void TestClock_DefaultCreation_SetsCurrentTime()
     {
         // Arrange
-        var before = DateTime.UtcNow;
+        DateTime before = DateTime.UtcNow;
 
         // Act
         var clock = new TestClock();
 
         // Assert
-        var after = DateTime.UtcNow;
+        DateTime after = DateTime.UtcNow;
         clock.UtcNow.Should().BeOnOrAfter(before);
         clock.UtcNow.Should().BeOnOrBefore(after);
     }
@@ -258,7 +258,7 @@ public class ClockAndGuidTest
         var clock = new TestClock(initialTime);
 
         // Act
-        var result = clock.UtcToday;
+        DateTime result = clock.UtcToday;
 
         // Assert
         result.Should().Be(new DateTime(2024, 6, 15, 0, 0, 0, DateTimeKind.Utc));
@@ -272,7 +272,7 @@ public class ClockAndGuidTest
         var clock = new TestClock(initialTime);
 
         // Act
-        var result = clock.UtcNowOffset;
+        DateTimeOffset result = clock.UtcNowOffset;
 
         // Assert
         result.UtcDateTime.Should().Be(initialTime);
@@ -287,7 +287,7 @@ public class ClockAndGuidTest
     public void StandardGuidGenerator_NewGuid_ReturnsUniqueGuids()
     {
         // Arrange
-        var generator = StandardGuidGenerator.Instance;
+        StandardGuidGenerator generator = StandardGuidGenerator.Instance;
         var guids = new HashSet<Guid>();
 
         // Act
@@ -304,10 +304,10 @@ public class ClockAndGuidTest
     public void StandardGuidGenerator_NewGuid_ReturnsNonEmptyGuids()
     {
         // Arrange
-        var generator = StandardGuidGenerator.Instance;
+        StandardGuidGenerator generator = StandardGuidGenerator.Instance;
 
         // Act
-        var guid = generator.NewGuid();
+        Guid guid = generator.NewGuid();
 
         // Assert
         guid.Should().NotBe(Guid.Empty);
@@ -317,8 +317,8 @@ public class ClockAndGuidTest
     public void StandardGuidGenerator_Instance_ReturnsSingletonInstance()
     {
         // Act
-        var instance1 = StandardGuidGenerator.Instance;
-        var instance2 = StandardGuidGenerator.Instance;
+        StandardGuidGenerator instance1 = StandardGuidGenerator.Instance;
+        StandardGuidGenerator instance2 = StandardGuidGenerator.Instance;
 
         // Assert
         instance1.Should().BeSameAs(instance2);
@@ -350,10 +350,10 @@ public class ClockAndGuidTest
     public void SequentialGuidGenerator_SqlServer_ReturnsNonEmptyGuids()
     {
         // Arrange
-        var generator = SequentialGuidGenerator.SqlServer;
+        SequentialGuidGenerator generator = SequentialGuidGenerator.SqlServer;
 
         // Act
-        var guid = generator.NewGuid();
+        Guid guid = generator.NewGuid();
 
         // Assert
         guid.Should().NotBe(Guid.Empty);
@@ -363,10 +363,10 @@ public class ClockAndGuidTest
     public void SequentialGuidGenerator_PostgreSql_ReturnsNonEmptyGuids()
     {
         // Arrange
-        var generator = SequentialGuidGenerator.PostgreSql;
+        SequentialGuidGenerator generator = SequentialGuidGenerator.PostgreSql;
 
         // Act
-        var guid = generator.NewGuid();
+        Guid guid = generator.NewGuid();
 
         // Assert
         guid.Should().NotBe(Guid.Empty);
@@ -376,10 +376,10 @@ public class ClockAndGuidTest
     public void SequentialGuidGenerator_MySql_ReturnsNonEmptyGuids()
     {
         // Arrange
-        var generator = SequentialGuidGenerator.MySql;
+        SequentialGuidGenerator generator = SequentialGuidGenerator.MySql;
 
         // Act
-        var guid = generator.NewGuid();
+        Guid guid = generator.NewGuid();
 
         // Assert
         guid.Should().NotBe(Guid.Empty);
@@ -389,10 +389,10 @@ public class ClockAndGuidTest
     public void SequentialGuidGenerator_Binary_ReturnsNonEmptyGuids()
     {
         // Arrange
-        var generator = SequentialGuidGenerator.Binary;
+        SequentialGuidGenerator generator = SequentialGuidGenerator.Binary;
 
         // Act
-        var guid = generator.NewGuid();
+        Guid guid = generator.NewGuid();
 
         // Assert
         guid.Should().NotBe(Guid.Empty);
@@ -402,9 +402,9 @@ public class ClockAndGuidTest
     public void SequentialGuidGenerator_StaticMethod_ReturnsSequentialGuids()
     {
         // Act
-        var guid1 = SequentialGuidGenerator.NewSequentialGuid();
+        Guid guid1 = SequentialGuidGenerator.NewSequentialGuid();
         Thread.Sleep(1);
-        var guid2 = SequentialGuidGenerator.NewSequentialGuid();
+        Guid guid2 = SequentialGuidGenerator.NewSequentialGuid();
 
         // Assert
         guid1.Should().NotBe(guid2);
@@ -421,9 +421,9 @@ public class ClockAndGuidTest
         var generator = new DeterministicGuidGenerator();
 
         // Act
-        var first = generator.NewGuid();
-        var second = generator.NewGuid();
-        var third = generator.NewGuid();
+        Guid first = generator.NewGuid();
+        Guid second = generator.NewGuid();
+        Guid third = generator.NewGuid();
 
         // Assert
         first.Should().NotBe(second);
@@ -438,8 +438,8 @@ public class ClockAndGuidTest
         var generator2 = new DeterministicGuidGenerator();
 
         // Act
-        var first1 = generator1.NewGuid();
-        var first2 = generator2.NewGuid();
+        Guid first1 = generator1.NewGuid();
+        Guid first2 = generator2.NewGuid();
 
         // Assert
         first1.Should().Be(first2);
@@ -469,7 +469,7 @@ public class ClockAndGuidTest
 
         // Act
         generator.NewGuid(); // Consume the only GUID
-        var act = () => generator.NewGuid();
+        Func<Guid> act = () => generator.NewGuid();
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -487,7 +487,7 @@ public class ClockAndGuidTest
 
         // Act
         generator.AddGuids(guid2);
-        var result = generator.NewGuid();
+        Guid result = generator.NewGuid();
 
         // Assert
         result.Should().Be(guid2);
@@ -515,11 +515,11 @@ public class ClockAndGuidTest
 
         // Act
         generator.Reset();
-        var result = generator.NewGuid();
+        Guid result = generator.NewGuid();
 
         // Assert - After reset, should start from 1 again
         var generator2 = new DeterministicGuidGenerator();
-        var expected = generator2.NewGuid();
+        Guid expected = generator2.NewGuid();
         result.Should().Be(expected);
     }
 
@@ -527,9 +527,9 @@ public class ClockAndGuidTest
     public void DeterministicGuidGenerator_FromNumber_CreatesGuidFromNumber()
     {
         // Act
-        var guid1 = DeterministicGuidGenerator.FromNumber(1);
-        var guid2 = DeterministicGuidGenerator.FromNumber(2);
-        var guid100 = DeterministicGuidGenerator.FromNumber(100);
+        Guid guid1 = DeterministicGuidGenerator.FromNumber(1);
+        Guid guid2 = DeterministicGuidGenerator.FromNumber(2);
+        Guid guid100 = DeterministicGuidGenerator.FromNumber(100);
 
         // Assert
         guid1.Should().NotBe(guid2);
@@ -541,8 +541,8 @@ public class ClockAndGuidTest
     public void DeterministicGuidGenerator_FromNumber_SameNumberReturnsSameGuid()
     {
         // Act
-        var guid1 = DeterministicGuidGenerator.FromNumber(42);
-        var guid2 = DeterministicGuidGenerator.FromNumber(42);
+        Guid guid1 = DeterministicGuidGenerator.FromNumber(42);
+        Guid guid2 = DeterministicGuidGenerator.FromNumber(42);
 
         // Assert
         guid1.Should().Be(guid2);
@@ -552,9 +552,9 @@ public class ClockAndGuidTest
     public void DeterministicGuidGenerator_FromSeed_CreatesDeterministicGuid()
     {
         // Act
-        var guid1 = DeterministicGuidGenerator.FromSeed("test-seed");
-        var guid2 = DeterministicGuidGenerator.FromSeed("test-seed");
-        var guid3 = DeterministicGuidGenerator.FromSeed("different-seed");
+        Guid guid1 = DeterministicGuidGenerator.FromSeed("test-seed");
+        Guid guid2 = DeterministicGuidGenerator.FromSeed("test-seed");
+        Guid guid3 = DeterministicGuidGenerator.FromSeed("different-seed");
 
         // Assert
         guid1.Should().Be(guid2);
@@ -565,7 +565,7 @@ public class ClockAndGuidTest
     public void DeterministicGuidGenerator_FromSeed_WithNull_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => DeterministicGuidGenerator.FromSeed(null!);
+        Func<Guid> act = () => DeterministicGuidGenerator.FromSeed(null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -575,7 +575,7 @@ public class ClockAndGuidTest
     public void DeterministicGuidGenerator_FromSeed_WithEmpty_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => DeterministicGuidGenerator.FromSeed(string.Empty);
+        Func<Guid> act = () => DeterministicGuidGenerator.FromSeed(string.Empty);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -592,8 +592,8 @@ public class ClockAndGuidTest
         var initialTime = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var clock = new TestClock(initialTime);
         var expirationDays = 30;
-        var createdAt = clock.UtcNow;
-        var expiresAt = createdAt.AddDays(expirationDays);
+        DateTime createdAt = clock.UtcNow;
+        DateTime expiresAt = createdAt.AddDays(expirationDays);
 
         // Act - Advance time past expiration
         clock.AdvanceDays(31);
@@ -610,7 +610,7 @@ public class ClockAndGuidTest
         var generator = new DeterministicGuidGenerator(expectedId);
 
         // Act
-        var generatedId = generator.NewGuid();
+        Guid generatedId = generator.NewGuid();
 
         // Assert
         generatedId.Should().Be(expectedId);

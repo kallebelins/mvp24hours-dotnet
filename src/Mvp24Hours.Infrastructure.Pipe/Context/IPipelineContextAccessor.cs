@@ -83,7 +83,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             get => _contextCurrent.Value?.Context;
             set
             {
-                var holder = _contextCurrent.Value;
+                ContextHolder? holder = _contextCurrent.Value;
                 if (holder != null)
                 {
                     // Clear current context trapped in the AsyncLocal
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         /// <inheritdoc />
         public IDisposable BeginScope(IPipelineContext context)
         {
-            var previousContext = Context;
+            IPipelineContext? previousContext = Context;
             Context = context;
             return new ContextScope(this, previousContext);
         }

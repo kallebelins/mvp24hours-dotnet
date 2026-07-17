@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
             // Load from IConfiguration if provided
             if (configuration != null)
             {
-                var infrastructureSection = configuration.GetSection("Infrastructure");
+                IConfigurationSection infrastructureSection = configuration.GetSection("Infrastructure");
                 if (infrastructureSection.Exists())
                 {
                     infrastructureSection.Bind(options);
@@ -354,7 +354,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
             // Register email service if configured
             if (options.Email != null)
             {
-                var emailOptions = options.Email;
+                EmailOptions emailOptions = options.Email;
                 services.AddEmailService(opts =>
                 {
                     CopyEmailOptions(opts, emailOptions);
@@ -364,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
             // Register SMS service if configured
             if (options.Sms != null)
             {
-                var smsOptions = options.Sms;
+                SmsOptions smsOptions = options.Sms;
                 services.AddSmsService(opts =>
                 {
                     CopySmsOptions(opts, smsOptions);
@@ -374,7 +374,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
             // Register file storage if configured
             if (options.FileStorage != null)
             {
-                var fileStorageOptions = options.FileStorage;
+                FileStorageOptions fileStorageOptions = options.FileStorage;
                 services.AddFileStorage(opts =>
                 {
                     CopyFileStorageOptions(opts, fileStorageOptions);

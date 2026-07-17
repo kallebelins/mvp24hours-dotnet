@@ -28,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Scheduling
                 throw new ArgumentNullException(nameof(expression));
             }
 
-            var format = DetectFormat(expression);
+            CronExpressionFormat format = DetectFormat(expression);
             return Parse(expression, format);
         }
 
@@ -47,7 +47,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Scheduling
                 throw new ArgumentNullException(nameof(expression));
             }
 
-            var cronosFormat = format == CronExpressionFormat.WithSeconds
+            CronFormat cronosFormat = format == CronExpressionFormat.WithSeconds
                 ? CronFormat.IncludeSeconds
                 : CronFormat.Standard;
 
@@ -156,9 +156,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Scheduling
             DateTimeOffset? from = null,
             TimeZoneInfo? timeZone = null)
         {
-            var parsed = Parse(expression);
-            var fromTime = from ?? DateTimeOffset.UtcNow;
-            var zone = timeZone ?? TimeZoneInfo.Utc;
+            CronExpression parsed = Parse(expression);
+            DateTimeOffset fromTime = from ?? DateTimeOffset.UtcNow;
+            TimeZoneInfo zone = timeZone ?? TimeZoneInfo.Utc;
 
             return parsed.GetNextOccurrence(fromTime, zone);
         }
@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Scheduling
                 return "Run once immediately";
             }
 
-            var format = DetectFormat(expression);
+            CronExpressionFormat format = DetectFormat(expression);
             var fields = expression.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             return format == CronExpressionFormat.WithSeconds

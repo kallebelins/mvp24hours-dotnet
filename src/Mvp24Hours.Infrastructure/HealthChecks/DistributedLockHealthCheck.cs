@@ -12,6 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
 using Mvp24Hours.Infrastructure.DistributedLocking.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {
@@ -114,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 };
 
                 var acquisitionStopwatch = Stopwatch.StartNew();
-                var acquisitionResult = await distributedLock.TryAcquireAsync(
+                LockAcquisitionResult acquisitionResult = await distributedLock.TryAcquireAsync(
                     testResourceName,
                     lockOptions,
                     cancellationToken);

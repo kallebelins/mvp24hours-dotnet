@@ -43,7 +43,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         public static void SimulateFailureOnNextConsume<TException>(this IInMemoryBus bus, string message = "Simulated failure")
             where TException : Exception
         {
-            var exception = (TException?)Activator.CreateInstance(typeof(TException), message)
+            TException exception = (TException?)Activator.CreateInstance(typeof(TException), message)
                 ?? throw new InvalidOperationException($"Could not create exception of type {typeof(TException).Name}");
             bus.SimulateFailure(exception);
         }
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <returns>The published message.</returns>
         public static IPublishedMessage<TMessage> AssertSinglePublished<TMessage>(this IInMemoryBus bus) where TMessage : class
         {
-            var messages = bus.GetPublishedMessages<TMessage>();
+            IReadOnlyList<IPublishedMessage<TMessage>> messages = bus.GetPublishedMessages<TMessage>();
             if (messages.Count == 0)
             {
                 throw new InvalidOperationException($"Expected exactly one message of type {typeof(TMessage).Name} to be published, but none were published.");
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <returns>The consumed message.</returns>
         public static IConsumedMessage<TMessage> AssertSingleConsumed<TMessage>(this IInMemoryBus bus) where TMessage : class
         {
-            var messages = bus.GetConsumedMessages<TMessage>();
+            IReadOnlyList<IConsumedMessage<TMessage>> messages = bus.GetConsumedMessages<TMessage>();
             if (messages.Count == 0)
             {
                 throw new InvalidOperationException($"Expected exactly one message of type {typeof(TMessage).Name} to be consumed, but none were consumed.");
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         /// <param name="bus">The in-memory bus.</param>
         public static void AssertAllConsumedSuccessfully<TMessage>(this IInMemoryBus bus) where TMessage : class
         {
-            var messages = bus.GetConsumedMessages<TMessage>();
+            IReadOnlyList<IConsumedMessage<TMessage>> messages = bus.GetConsumedMessages<TMessage>();
             var failed = messages.Where(m => !m.IsSuccess).ToList();
 
             if (failed.Count > 0)

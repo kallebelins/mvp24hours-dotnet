@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 public class InMemoryEventStore : IEventStoreWithSubscription
 {
     private readonly ConcurrentDictionary<Guid, List<StoredEvent>> _eventStreams = new();
-    private readonly List<StoredEvent> _allEvents = new();
+    private readonly List<StoredEvent> _allEvents = [];
     private readonly IEventSerializer _serializer;
     private readonly object _lock = new();
     private long _globalPosition;
@@ -82,10 +82,10 @@ public class InMemoryEventStore : IEventStoreWithSubscription
                     $"Aggregate {aggregateId}: expected version {expectedVersion}, but found {currentVersion}");
             }
 
-            var stream = _eventStreams.GetOrAdd(aggregateId, _ => new List<StoredEvent>());
+            List<StoredEvent> stream = _eventStreams.GetOrAdd(aggregateId, _ => []);
             var version = currentVersion;
 
-            foreach (var @event in eventList)
+            foreach (CoreDomainEvent? @event in eventList)
             {
                 version++;
                 _globalPosition++;
@@ -118,7 +118,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
     {
         lock (_lock)
         {
-            if (!_eventStreams.TryGetValue(aggregateId, out var stream))
+            if (!_eventStreams.TryGetValue(aggregateId, out List<StoredEvent>? stream))
             {
                 return Task.FromResult<IReadOnlyList<CoreDomainEvent>>(Array.Empty<CoreDomainEvent>());
             }
@@ -148,7 +148,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         lock (_lock)
         {
             return Task.FromResult(
-                _eventStreams.TryGetValue(aggregateId, out var stream) && stream.Count > 0);
+                _eventStreams.TryGetValue(aggregateId, out List<StoredEvent>? stream) && stream.Count > 0);
         }
     }
 
@@ -171,7 +171,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
                     .ToArray();
             }
 
-            foreach (var @event in newEvents)
+            foreach (StoredEvent @event in newEvents)
             {
                 yield return @event;
                 position = @event.GlobalPosition;
@@ -190,7 +190,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         long fromPosition,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (var @event in SubscribeFromPositionAsync(fromPosition, cancellationToken))
+        await foreach (StoredEvent @event in SubscribeFromPositionAsync(fromPosition, cancellationToken))
         {
             if (@event.AggregateType == aggregateType)
             {
@@ -244,7 +244,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
 
     private long GetCurrentVersionInternal(Guid aggregateId)
     {
-        if (!_eventStreams.TryGetValue(aggregateId, out var stream) || stream.Count == 0)
+        if (!_eventStreams.TryGetValue(aggregateId, out List<StoredEvent>? stream) || stream.Count == 0)
         {
             return 0;
         }

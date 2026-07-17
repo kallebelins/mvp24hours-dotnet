@@ -23,8 +23,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
     public class InMemoryBus : IInMemoryBus
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ConcurrentBag<IPublishedMessage> _publishedMessages = new();
-        private readonly ConcurrentBag<IConsumedMessage> _consumedMessages = new();
+        private readonly ConcurrentBag<IPublishedMessage> _publishedMessages = [];
+        private readonly ConcurrentBag<IConsumedMessage> _consumedMessages = [];
         private readonly ConcurrentDictionary<Type, List<Type>> _consumerRegistry = new();
         private readonly object _lock = new();
 
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         public IReadOnlyList<IConsumedMessage<TMessage>> GetConsumedMessages<TMessage>() where TMessage : class
         {
             var result = new List<IConsumedMessage<TMessage>>();
-            foreach (var m in _consumedMessages)
+            foreach (IConsumedMessage m in _consumedMessages)
             {
                 if (m is IConsumedMessage<TMessage> typed)
                 {
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         public IEnumerable<string> PublishBatch(IEnumerable<(object Message, string RoutingKey)> messages)
         {
             var results = new List<string>();
-            foreach (var (message, routingKey) in messages)
+            foreach ((object? message, string? routingKey) in messages)
             {
                 var messageId = PublishInternal(message, routingKey, null, null, null, null, isBatch: true);
                 results.Add(messageId);
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                 // Check for simulated failures first
                 if (_simulatedFailure != null)
                 {
-                    var failure = _simulatedFailure;
+                    Exception failure = _simulatedFailure;
                     _simulatedFailure = null;
                     throw failure;
                 }
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                 // Check for simulated timeout
                 if (_simulatedTimeout.HasValue)
                 {
-                    var timeout = _simulatedTimeout.Value;
+                    TimeSpan timeout = _simulatedTimeout.Value;
                     _simulatedTimeout = null;
                     await Task.Delay(timeout, cancellationToken);
                     throw new TimeoutException($"Simulated timeout after {timeout.TotalMilliseconds}ms");
@@ -186,22 +186,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                 // Check for simulated delay
                 if (_simulatedDelay.HasValue)
                 {
-                    var delay = _simulatedDelay.Value;
+                    TimeSpan delay = _simulatedDelay.Value;
                     _simulatedDelay = null;
                     await Task.Delay(delay, cancellationToken);
                 }
 
                 // Build context
-                var builder = new TestConsumeContextBuilder<TMessage>()
+                TestConsumeContextBuilder<TMessage> builder = new TestConsumeContextBuilder<TMessage>()
                     .WithMessageId(messageId)
                     .WithServiceProvider(_serviceProvider);
 
                 configureContext(builder);
-                var context = builder.Build(message);
+                TestConsumeContext<TMessage> context = builder.Build(message);
 
                 // Find and invoke consumers
-                var messageType = typeof(TMessage);
-                var consumerInterface = typeof(IMessageConsumer<TMessage>);
+                Type messageType = typeof(TMessage);
+                Type consumerInterface = typeof(IMessageConsumer<TMessage>);
 
                 // Try to resolve consumers from DI
                 var consumers = _serviceProvider.GetServices<IMessageConsumer<TMessage>>().ToList();
@@ -213,9 +213,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                     return ConsumeResult.Success(messageId, stopwatch.Elapsed);
                 }
 
-                foreach (var consumer in consumers)
+                foreach (IMessageConsumer<TMessage>? consumer in consumers)
                 {
-                    var consumerType = consumer.GetType();
+                    Type consumerType = consumer.GetType();
 
                     try
                     {
@@ -282,15 +282,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         /// <inheritdoc />
         public void Register(Type consumerType)
         {
-            var interfaces = consumerType.GetInterfaces()
+            IEnumerable<Type> interfaces = consumerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-            foreach (var iface in interfaces)
+            foreach (Type? iface in interfaces)
             {
-                var messageType = iface.GetGenericArguments()[0];
+                Type messageType = iface.GetGenericArguments()[0];
                 _consumerRegistry.AddOrUpdate(
                     messageType,
-                    _ => new List<Type> { consumerType },
+                    _ => [consumerType],
                     (_, list) => { list.Add(consumerType); return list; });
             }
         }
@@ -304,7 +304,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         /// <inheritdoc />
         public void Unregister(Type consumerType)
         {
-            foreach (var kvp in _consumerRegistry)
+            foreach (KeyValuePair<Type, List<Type>> kvp in _consumerRegistry)
             {
                 kvp.Value.RemoveAll(t => t == consumerType);
             }

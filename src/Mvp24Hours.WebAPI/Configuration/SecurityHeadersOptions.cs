@@ -249,7 +249,7 @@ public class SecurityHeadersOptions
     /// <summary>
     /// Gets or sets additional custom headers to add to responses.
     /// </summary>
-    public Dictionary<string, string> CustomHeaders { get; set; } = new();
+    public Dictionary<string, string> CustomHeaders { get; set; } = [];
 
     /// <summary>
     /// Gets or sets headers to remove from responses.

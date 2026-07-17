@@ -47,7 +47,7 @@ namespace Mvp24Hours.Core.Extensions.Functional
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            foreach (var item in source)
+            foreach (T? item in source)
             {
                 return Maybe<T>.Some(item);
             }
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Core.Extensions.Functional
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            foreach (var item in source)
+            foreach (T? item in source)
             {
                 if (predicate(item))
                 {
@@ -80,13 +80,13 @@ namespace Mvp24Hours.Core.Extensions.Functional
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            using var enumerator = source.GetEnumerator();
+            using IEnumerator<T> enumerator = source.GetEnumerator();
             if (!enumerator.MoveNext())
             {
                 return Maybe<T>.None;
             }
 
-            var result = enumerator.Current;
+            T? result = enumerator.Current;
             if (enumerator.MoveNext())
             {
                 throw new InvalidOperationException("Sequence contains more than one element.");
@@ -107,8 +107,8 @@ namespace Mvp24Hours.Core.Extensions.Functional
                 return list.Count > 0 ? Maybe<T>.Some(list[list.Count - 1]) : Maybe<T>.None;
             }
 
-            var result = Maybe<T>.None;
-            foreach (var item in source)
+            Maybe<T> result = Maybe<T>.None;
+            foreach (T? item in source)
             {
                 result = Maybe<T>.Some(item);
             }
@@ -122,7 +122,7 @@ namespace Mvp24Hours.Core.Extensions.Functional
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            foreach (var maybe in source)
+            foreach (Maybe<T> maybe in source)
             {
                 if (maybe.HasValue)
                 {
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Core.Extensions.Functional
         {
             if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
 
-            return dictionary.TryGetValue(key, out var value)
+            return dictionary.TryGetValue(key, out TValue? value)
                 ? Maybe<TValue>.Some(value)
                 : Maybe<TValue>.None;
         }
@@ -229,7 +229,7 @@ namespace Mvp24Hours.Core.Extensions.Functional
                 return Maybe<TResult>.None;
             }
 
-            var result = await selector(maybe.Value);
+            TResult? result = await selector(maybe.Value);
             return Maybe<TResult>.Some(result);
         }
 

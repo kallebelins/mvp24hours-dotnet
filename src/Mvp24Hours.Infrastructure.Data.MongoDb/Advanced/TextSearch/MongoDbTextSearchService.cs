@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
             var indexKeys = new BsonDocument();
             var weights = new BsonDocument();
 
-            foreach (var kvp in fieldWeights)
+            foreach (KeyValuePair<string, int> kvp in fieldWeights)
             {
                 indexKeys.Add(kvp.Key, "text");
                 weights.Add(kvp.Key, kvp.Value);
@@ -166,20 +166,20 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
 
             options ??= new MongoDbTextSearchOptions();
 
-            var textSearch = CreateTextSearchFilter(searchText, options);
-            var combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
+            FilterDefinition<TDocument> textSearch = CreateTextSearchFilter(searchText, options);
+            FilterDefinition<TDocument> combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
                 ? Builders<TDocument>.Filter.And(textSearch, filter)
                 : textSearch;
 
-            var findFluent = _collection.Find(combinedFilter);
+            IFindFluent<TDocument, TDocument> findFluent = _collection.Find(combinedFilter);
 
             if (options.IncludeScore)
             {
-                var projection = Builders<TDocument>.Projection
+                ProjectionDefinition<TDocument> projection = Builders<TDocument>.Projection
                     .MetaTextScore("score")
                     .Include(d => d);
 
-                var pipeline = _collection.Aggregate()
+                IAggregateFluent<BsonDocument> pipeline = _collection.Aggregate()
                     .Match(combinedFilter)
                     .Project(new BsonDocument
                     {
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
                     pipeline = pipeline.Limit(options.Limit.Value);
                 }
 
-                var results = await pipeline.ToListAsync(cancellationToken);
+                List<BsonDocument> results = await pipeline.ToListAsync(cancellationToken);
 
                 return results.Select(r => new TextSearchResult<TDocument>
                 {
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
                     findFluent = findFluent.Limit(options.Limit.Value);
                 }
 
-                var documents = await findFluent.ToListAsync(cancellationToken);
+                List<TDocument> documents = await findFluent.ToListAsync(cancellationToken);
 
                 return documents.Select(d => new TextSearchResult<TDocument>
                 {
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
             MongoDbTextSearchOptions? options = null,
             CancellationToken cancellationToken = default)
         {
-            var filterDefinition = Builders<TDocument>.Filter.Where(filter);
+            FilterDefinition<TDocument> filterDefinition = Builders<TDocument>.Filter.Where(filter);
             return await SearchAsync(searchText, filterDefinition, options, cancellationToken);
         }
 
@@ -302,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
             }
 
             options ??= new MongoDbTextSearchOptions();
-            var textSearch = CreateTextSearchFilter(searchText, options);
+            FilterDefinition<TDocument> textSearch = CreateTextSearchFilter(searchText, options);
 
             return await _collection.CountDocumentsAsync(textSearch, cancellationToken: cancellationToken);
         }
@@ -312,13 +312,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         {
             var indexes = new List<BsonDocument>();
 
-            using var cursor = await _collection.Indexes.ListAsync(cancellationToken);
+            using IAsyncCursor<BsonDocument> cursor = await _collection.Indexes.ListAsync(cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var index in cursor.Current)
+                foreach (BsonDocument? index in cursor.Current)
                 {
-                    var key = index["key"].AsBsonDocument;
+                    BsonDocument key = index["key"].AsBsonDocument;
                     if (key.Elements.Any(e => e.Value.AsString == "text"))
                     {
                         indexes.Add(index);
@@ -332,9 +332,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <inheritdoc/>
         public async Task DropTextIndexesAsync(CancellationToken cancellationToken = default)
         {
-            var textIndexes = await GetTextIndexesAsync(cancellationToken);
+            IList<BsonDocument> textIndexes = await GetTextIndexesAsync(cancellationToken);
 
-            foreach (var index in textIndexes)
+            foreach (BsonDocument index in textIndexes)
             {
                 var indexName = index["name"].AsString;
                 await _collection.Indexes.DropOneAsync(indexName, cancellationToken);

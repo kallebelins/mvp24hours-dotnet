@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (!repositories.ContainsKey(typeof(T)))
             {
-                var repo = serviceProvider.GetService<IRepositoryAsync<T>>()
+                IRepositoryAsync<T> repo = serviceProvider.GetService<IRepositoryAsync<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 repositories.Add(typeof(T), repo);
             }

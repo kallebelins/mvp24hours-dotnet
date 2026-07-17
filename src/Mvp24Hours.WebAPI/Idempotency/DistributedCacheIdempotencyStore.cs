@@ -90,7 +90,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 var existingJson = await _cache.GetStringAsync(dataKey, cancellationToken);
                 if (!string.IsNullOrEmpty(existingJson))
                 {
-                    var existing = JsonSerializer.Deserialize<IdempotencyRecord>(existingJson, _jsonOptions);
+                    IdempotencyRecord? existing = JsonSerializer.Deserialize<IdempotencyRecord>(existingJson, _jsonOptions);
                     if (existing != null && !existing.IsExpired)
                     {
                         _logger?.LogDebug(
@@ -128,7 +128,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 await _cache.SetStringAsync(lockKey, lockValue, lockOptions, cancellationToken);
 
                 // Create the processing record
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 var record = new IdempotencyRecord
                 {
                     Key = key,
@@ -245,7 +245,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                     var existingJson = await _cache.GetStringAsync(dataKey, cancellationToken);
                     if (!string.IsNullOrEmpty(existingJson))
                     {
-                        var existing = JsonSerializer.Deserialize<IdempotencyRecord>(existingJson, _jsonOptions);
+                        IdempotencyRecord? existing = JsonSerializer.Deserialize<IdempotencyRecord>(existingJson, _jsonOptions);
                         if (existing != null)
                         {
                             var record = new IdempotencyRecord
@@ -296,7 +296,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 var json = await _cache.GetStringAsync(dataKey, cancellationToken);
                 if (!string.IsNullOrEmpty(json))
                 {
-                    var record = JsonSerializer.Deserialize<IdempotencyRecord>(json, _jsonOptions);
+                    IdempotencyRecord? record = JsonSerializer.Deserialize<IdempotencyRecord>(json, _jsonOptions);
                     if (record != null && !record.IsExpired)
                     {
                         return record;
@@ -341,7 +341,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
             string key,
             CancellationToken cancellationToken = default)
         {
-            var record = await GetAsync(key, cancellationToken);
+            IdempotencyRecord? record = await GetAsync(key, cancellationToken);
             return record != null;
         }
 

@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
         private static Func<Guid, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(Guid) },
@@ -52,8 +52,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a Guid parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(Guid), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(Guid), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<Guid, TId>>(body, parameter).Compile();
         }
     }
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
         private static Func<int, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(int) },
@@ -99,8 +99,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts an int parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(int), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(int), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<int, TId>>(body, parameter).Compile();
         }
     }
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
         private static Func<long, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(long) },
@@ -146,8 +146,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a long parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(long), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(long), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<long, TId>>(body, parameter).Compile();
         }
     }
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
         private static Func<string, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(string) },
@@ -193,8 +193,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a string parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(string), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(string), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<string, TId>>(body, parameter).Compile();
         }
     }
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 
         private static Func<TValue, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(TValue) },
@@ -242,8 +242,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a {typeof(TValue).Name} parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(TValue), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(TValue), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<TValue, TId>>(body, parameter).Compile();
         }
     }

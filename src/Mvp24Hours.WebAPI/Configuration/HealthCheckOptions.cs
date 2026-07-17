@@ -78,19 +78,19 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets tags to include in the overall health check.
         /// If empty, all health checks are included.
         /// </summary>
-        public HashSet<string> HealthTags { get; set; } = new HashSet<string>();
+        public HashSet<string> HealthTags { get; set; } = [];
 
         /// <summary>
         /// Gets or sets tags to include in the readiness check.
         /// Default includes "ready" tag.
         /// </summary>
-        public HashSet<string> ReadinessTags { get; set; } = new HashSet<string> { "ready" };
+        public HashSet<string> ReadinessTags { get; set; } = ["ready"];
 
         /// <summary>
         /// Gets or sets tags to include in the liveness check.
         /// Default includes "live" tag.
         /// </summary>
-        public HashSet<string> LivenessTags { get; set; } = new HashSet<string> { "live" };
+        public HashSet<string> LivenessTags { get; set; } = ["live"];
 
         /// <summary>
         /// Gets or sets whether to allow anonymous access to health check endpoints.

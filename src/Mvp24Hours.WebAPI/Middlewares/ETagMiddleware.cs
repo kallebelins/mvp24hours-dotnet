@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Middlewares
@@ -79,7 +80,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 if (!string.IsNullOrEmpty(ifNoneMatch))
                 {
                     // Store original body stream
-                    var originalBodyStream = context.Response.Body;
+                    Stream originalBodyStream = context.Response.Body;
                     using var responseBody = new MemoryStream();
                     context.Response.Body = responseBody;
 
@@ -113,8 +114,8 @@ namespace Mvp24Hours.WebAPI.Middlewares
             // Handle If-Modified-Since (GET/HEAD requests)
             if (_options.SupportIfModifiedSince && (method == "GET" || method == "HEAD"))
             {
-                var ifModifiedSince = context.Request.Headers.IfModifiedSince;
-                if (ifModifiedSince.Count > 0 && DateTime.TryParse(ifModifiedSince.ToString(), out var modifiedSince))
+                StringValues ifModifiedSince = context.Request.Headers.IfModifiedSince;
+                if (ifModifiedSince.Count > 0 && DateTime.TryParse(ifModifiedSince.ToString(), out DateTime modifiedSince))
                 {
                     // This would typically check against the resource's last modified date
                     // For now, we'll let the request proceed and let the application set Last-Modified header

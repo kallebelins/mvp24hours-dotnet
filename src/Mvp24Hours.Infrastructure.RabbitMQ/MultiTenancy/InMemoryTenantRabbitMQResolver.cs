@@ -50,13 +50,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             }
 
             // Check dynamic configurations first
-            if (_configurations.TryGetValue(tenantId, out var config))
+            if (_configurations.TryGetValue(tenantId, out TenantRabbitMQConfiguration? config))
             {
                 return Task.FromResult<TenantRabbitMQConfiguration?>(config);
             }
 
             // Check static configuration from options
-            if (_options.Tenants.TryGetValue(tenantId, out var staticConfig))
+            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
             {
                 return Task.FromResult<TenantRabbitMQConfiguration?>(new TenantRabbitMQConfiguration
                 {

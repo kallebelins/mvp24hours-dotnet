@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
@@ -63,21 +64,21 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
             if (options.AutoRegisterConsumers)
             {
                 // Auto-register consumers from specified assemblies
-                foreach (var assembly in options.ConsumerAssemblies)
+                foreach (Assembly assembly in options.ConsumerAssemblies)
                 {
-                    var consumerTypes = assembly.GetTypes()
+                    IEnumerable<Type> consumerTypes = assembly.GetTypes()
                         .Where(t => !t.IsAbstract && !t.IsInterface)
                         .Where(t => t.GetInterfaces().Any(i =>
                             i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
 
-                    foreach (var consumerType in consumerTypes)
+                    foreach (Type? consumerType in consumerTypes)
                     {
                         services.AddScoped(consumerType);
 
-                        var interfaces = consumerType.GetInterfaces()
+                        IEnumerable<Type> interfaces = consumerType.GetInterfaces()
                             .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-                        foreach (var iface in interfaces)
+                        foreach (Type? iface in interfaces)
                         {
                             services.AddScoped(iface, consumerType);
                         }
@@ -102,7 +103,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
                 .Where(d => d.ServiceType == typeof(IMvpRabbitMQClient))
                 .ToList();
 
-            foreach (var descriptor in descriptors)
+            foreach (ServiceDescriptor? descriptor in descriptors)
             {
                 services.Remove(descriptor);
             }
@@ -122,13 +123,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
         public static IServiceCollection AddTestConsumer<TConsumer>(this IServiceCollection services)
             where TConsumer : class
         {
-            var consumerType = typeof(TConsumer);
+            Type consumerType = typeof(TConsumer);
             services.AddScoped(consumerType);
 
-            var interfaces = consumerType.GetInterfaces()
+            IEnumerable<Type> interfaces = consumerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-            foreach (var iface in interfaces)
+            foreach (Type? iface in interfaces)
             {
                 services.AddScoped(iface, consumerType);
             }
@@ -145,13 +146,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
         public static IServiceCollection AddTestRequestHandler<THandler>(this IServiceCollection services)
             where THandler : class
         {
-            var handlerType = typeof(THandler);
+            Type handlerType = typeof(THandler);
             services.AddScoped(handlerType);
 
-            var interfaces = handlerType.GetInterfaces()
+            IEnumerable<Type> interfaces = handlerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
 
-            foreach (var iface in interfaces)
+            foreach (Type? iface in interfaces)
             {
                 services.AddScoped(iface, handlerType);
             }
@@ -173,7 +174,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
         /// <summary>
         /// Gets or sets the assemblies to scan for consumers.
         /// </summary>
-        public List<System.Reflection.Assembly> ConsumerAssemblies { get; set; } = new();
+        public List<System.Reflection.Assembly> ConsumerAssemblies { get; set; } = [];
 
         /// <summary>
         /// Adds an assembly to scan for consumers.

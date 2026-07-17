@@ -83,7 +83,7 @@ namespace Mvp24Hours.Patterns.Test
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
-            var classB = mapper.Map<TestBClass>(classA);
+            TestBClass classB = mapper.Map<TestBClass>(classA);
             Assert.True(classB != null && classB.MyProperty1 == 1);
         }
 
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Patterns.Test
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
-            var classB = mapper.Map<TestIgnoreClass>(classA);
+            TestIgnoreClass classB = mapper.Map<TestIgnoreClass>(classA);
             Assert.True(classB != null && classB.MyProperty1 == 0);
         }
 
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Patterns.Test
             IMapper mapper = mapperConfig.CreateMapper();
 
             var classA = new TestAClass { MyProperty1 = 1 };
-            var classB = mapper.Map<TestPropertyClass>(classA);
+            TestPropertyClass classB = mapper.Map<TestPropertyClass>(classA);
             Assert.True(classB != null && classB.MyPropertyX == 1);
         }
 
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Patterns.Test
 
             var classA = new TestAClass { MyProperty1 = 1 };
             var classC = new TestCClass { MyProperty2 = 2 };
-            var classD = mapper.MapMerge<TestDClass>(classA, classC);
+            TestDClass? classD = mapper.MapMerge<TestDClass>(classA, classC);
             Assert.True(classD != null && classD.MyProperty1 == 1 && classD.MyProperty2 == 2);
         }
     }

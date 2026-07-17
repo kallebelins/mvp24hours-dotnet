@@ -108,24 +108,24 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     Connection.TryConnect();
                 }
 
-                using var channel = Connection.CreateModel();
+                using IModel channel = Connection.CreateModel();
                 _metrics?.IncrementChannelCreations();
 
                 ExchangeDeclare(channel, Options);
                 channel.ConfirmSelect();
 
-                var batch = channel.CreateBasicPublishBatch();
+                IBasicPublishBatch batch = channel.CreateBasicPublishBatch();
                 var messageIds = new List<string>();
 
-                foreach (var (msg, rk) in messages)
+                foreach ((object? msg, string? rk) in messages)
                 {
                     var tokenDefault = Guid.NewGuid().ToString();
                     messageIds.Add(tokenDefault);
 
-                    var bsEvent = msg.ToBusinessEvent(tokenDefault: tokenDefault);
+                    IBusinessEvent bsEvent = msg.ToBusinessEvent(tokenDefault: tokenDefault);
                     var body = Encoding.UTF8.GetBytes(bsEvent.ToSerialize(JsonHelper.JsonBusinessEventSettings()));
 
-                    var properties = channel.CreateBasicProperties();
+                    IBasicProperties properties = channel.CreateBasicProperties();
                     properties.DeliveryMode = 2;
                     properties.ContentType = "application/json";
                     properties.CorrelationId = tokenDefault;
@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     Connection.TryConnect();
                 }
 
-                var policy = RetryPolicy.Handle<BrokerUnreachableException>()
+                RetryPolicy policy = RetryPolicy.Handle<BrokerUnreachableException>()
                     .Or<SocketException>()
                     .WaitAndRetry(Connection.Options.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
@@ -211,17 +211,17 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                             tokenDefault, time.TotalSeconds);
                     });
 
-                using (var channel = Connection.CreateModel())
+                using (IModel channel = Connection.CreateModel())
                 {
                     _metrics?.IncrementChannelCreations();
                     ExchangeDeclare(channel, Options);
 
-                    var bsEvent = message.ToBusinessEvent(tokenDefault: tokenDefault);
+                    IBusinessEvent bsEvent = message.ToBusinessEvent(tokenDefault: tokenDefault);
                     var body = Encoding.UTF8.GetBytes(bsEvent.ToSerialize(JsonHelper.JsonBusinessEventSettings()));
 
                     policy.Execute(() =>
                     {
-                        var properties = channel.CreateBasicProperties();
+                        IBasicProperties properties = channel.CreateBasicProperties();
                         properties.DeliveryMode = 2;
                         properties.ContentType = "application/json";
                         properties.CorrelationId = tokenDefault;
@@ -247,7 +247,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                             if (Options.HeadersExchange.DefaultMessageHeaders != null)
                             {
-                                foreach (var h in Options.HeadersExchange.DefaultMessageHeaders)
+                                foreach (KeyValuePair<string, object> h in Options.HeadersExchange.DefaultMessageHeaders)
                                 {
                                     properties.Headers[h.Key] = h.Value;
                                 }
@@ -255,7 +255,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                             if (headers != null)
                             {
-                                foreach (var h in headers)
+                                foreach (KeyValuePair<string, object> h in headers)
                                 {
                                     properties.Headers[h.Key] = h.Value;
                                 }
@@ -343,11 +343,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     }
                 }
 
-                foreach (var item in _consumers)
+                foreach (Type item in _consumers)
                 {
-                    var consumer = GetService(item);
+                    IMvpRabbitMQConsumer consumer = GetService(item);
                     if (consumer == null) continue;
-                    var channel = CreateConsumerChannel(QueueBind, consumer.RoutingKey, consumer.QueueName);
+                    IModel channel = CreateConsumerChannel(QueueBind, consumer.RoutingKey, consumer.QueueName);
 
                     // dead letter
                     if (Options.DeadLetter != null)
@@ -481,7 +481,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             if (channelCtx == null || optionsCtx == null) return;
 
-            var arguments = optionsCtx.QueueArguments ?? new Dictionary<string, object>();
+            Dictionary<string, object> arguments = optionsCtx.QueueArguments ?? [];
 
             // Priority queue support
             if (Options.PriorityQueue.Enabled)
@@ -515,7 +515,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             _logger?.LogDebug(
                 "Queue setting. Queue={Queue}, Durable={Durable}, Exclusive={Exclusive}, AutoDelete={AutoDelete}",
                 queueName ?? optionsCtx.QueueName ?? string.Empty, optionsCtx.Durable, optionsCtx.Exclusive, optionsCtx.AutoDelete);
-            var result = channelCtx.QueueDeclare(
+            QueueDeclareOk result = channelCtx.QueueDeclare(
                 queue: queueName ?? optionsCtx.QueueName ?? string.Empty,
                 durable: optionsCtx.Durable,
                 exclusive: optionsCtx.Exclusive,

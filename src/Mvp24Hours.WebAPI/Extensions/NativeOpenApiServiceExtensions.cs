@@ -129,7 +129,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             });
 
             // Configure additional version documents
-            foreach (var version in options.AdditionalVersions)
+            foreach (OpenApiVersionConfig version in options.AdditionalVersions)
             {
                 var versionOptions = new NativeOpenApiOptions
                 {

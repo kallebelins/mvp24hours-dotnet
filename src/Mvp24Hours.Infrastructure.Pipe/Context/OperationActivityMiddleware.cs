@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         /// <inheritdoc />
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken)
         {
-            var context = _contextAccessor.Context;
+            IPipelineContext? context = _contextAccessor.Context;
 
             if (context == null || !_options.EnableOperationTracing)
             {
@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         private string GetCurrentOperationName(IPipelineMessage message)
         {
             // Try to get operation name from context metadata
-            var context = _contextAccessor.Context;
+            IPipelineContext? context = _contextAccessor.Context;
             if (context != null)
             {
                 var operationName = context.GetMetadata<string>("__CurrentOperationName");

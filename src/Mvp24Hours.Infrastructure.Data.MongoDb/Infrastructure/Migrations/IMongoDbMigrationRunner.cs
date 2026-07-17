@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
         /// <summary>
         /// Gets or sets the details of each migration executed.
         /// </summary>
-        public List<MigrationStepResult> Steps { get; set; } = new();
+        public List<MigrationStepResult> Steps { get; set; } = [];
 
         /// <summary>
         /// Creates a successful migration result.

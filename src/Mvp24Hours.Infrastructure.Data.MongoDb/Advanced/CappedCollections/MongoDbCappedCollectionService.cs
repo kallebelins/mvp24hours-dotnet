@@ -154,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
             CancellationToken cancellationToken = default)
         {
             // Use natural order descending to get most recent documents
-            var result = await _collection
+            List<TDocument> result = await _collection
                 .Find(FilterDefinition<TDocument>.Empty)
                 .Sort(new BsonDocument("$natural", -1))
                 .Limit(count)
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
             CancellationToken cancellationToken = default)
         {
             // Use natural order ascending to get oldest documents
-            var result = await _collection
+            List<TDocument> result = await _collection
                 .Find(FilterDefinition<TDocument>.Empty)
                 .Sort(new BsonDocument("$natural", 1))
                 .Limit(count)
@@ -196,14 +196,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
 
             _logger?.LogInformation("Started tailing capped collection '{CollectionName}'.", _collectionName);
 
-            using var cursor = await _collection.FindAsync(
+            using IAsyncCursor<TDocument> cursor = await _collection.FindAsync(
                 FilterDefinition<TDocument>.Empty,
                 options,
                 cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (TDocument? document in cursor.Current)
                 {
                     try
                     {
@@ -228,7 +228,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            var filter = Builders<TDocument>.Filter.Gt("_id", lastId);
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Gt("_id", lastId);
 
             var options = new FindOptions<TDocument>
             {
@@ -239,11 +239,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
             _logger?.LogInformation("Started tailing capped collection '{CollectionName}' from ID {LastId}.",
                 _collectionName, lastId);
 
-            using var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            using IAsyncCursor<TDocument> cursor = await _collection.FindAsync(filter, options, cancellationToken);
 
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var document in cursor.Current)
+                foreach (TDocument? document in cursor.Current)
                 {
                     try
                     {
@@ -260,7 +260,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
         /// <inheritdoc/>
         public async Task<bool> IsCappedAsync(CancellationToken cancellationToken = default)
         {
-            var stats = await GetStatsAsync(cancellationToken);
+            CappedCollectionStats stats = await GetStatsAsync(cancellationToken);
             return stats.IsCapped;
         }
 
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
         public async Task<CappedCollectionStats> GetStatsAsync(CancellationToken cancellationToken = default)
         {
             var command = new BsonDocument("collStats", _collectionName);
-            var result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+            BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             return new CappedCollectionStats
             {

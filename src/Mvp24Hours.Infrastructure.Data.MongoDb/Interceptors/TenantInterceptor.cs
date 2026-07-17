@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -173,17 +174,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
         private void SetGenericTenantId<T>(T entity) where T : class, IEntityBase
         {
-            var entityType = entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
                 {
-                    var property = entityType.GetProperty("TenantId");
+                    PropertyInfo? property = entityType.GetProperty("TenantId");
                     if (property != null && property.CanWrite)
                     {
-                        var tenantIdType = property.PropertyType;
+                        Type tenantIdType = property.PropertyType;
                         var currentTenantId = _tenantProvider?.TenantId;
 
                         if (string.IsNullOrEmpty(currentTenantId))

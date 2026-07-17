@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
 
                 // Send request
                 var body = _serializer.Serialize(request);
-                var properties = _channel!.CreateBasicProperties();
+                IBasicProperties properties = _channel!.CreateBasicProperties();
                 properties.CorrelationId = correlationId;
                 properties.ReplyTo = _replyQueueName;
                 properties.MessageId = correlationId;
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
 
                 try
                 {
-                    var response = await tcs.Task.WaitAsync(cts.Token);
+                    TResponse response = await tcs.Task.WaitAsync(cts.Token);
                     stopwatch.Stop();
 
                     _logger?.LogInformation(
@@ -152,7 +152,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
             _channel = _connection.CreateModel();
 
             // Declare reply queue (exclusive, auto-delete)
-            var queueDeclare = _channel.QueueDeclare(
+            QueueDeclareOk queueDeclare = _channel.QueueDeclare(
                 queue: string.Empty,
                 durable: false,
                 exclusive: true,
@@ -182,12 +182,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
             if (string.IsNullOrEmpty(correlationId))
                 return;
 
-            if (!_pendingRequests.TryRemove(correlationId, out var tcs))
+            if (!_pendingRequests.TryRemove(correlationId, out TaskCompletionSource<TResponse>? tcs))
                 return;
 
             try
             {
-                var response = _serializer.Deserialize<TResponse>(e.Body.ToArray());
+                TResponse? response = _serializer.Deserialize<TResponse>(e.Body.ToArray());
                 if (response != null)
                 {
                     tcs.TrySetResult(response);
@@ -223,7 +223,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse
             if (disposing)
             {
                 // Cancel all pending requests
-                foreach (var kvp in _pendingRequests)
+                foreach (KeyValuePair<string, TaskCompletionSource<TResponse>> kvp in _pendingRequests)
                 {
                     kvp.Value.TrySetCanceled();
                 }

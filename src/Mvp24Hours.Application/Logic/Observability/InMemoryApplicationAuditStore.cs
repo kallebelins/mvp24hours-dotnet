@@ -131,10 +131,10 @@ public sealed class InMemoryApplicationAuditStore : IApplicationAuditStore
 
     private void CleanupOldEntries()
     {
-        var cutoff = DateTimeOffset.UtcNow - _retentionPeriod;
+        DateTimeOffset cutoff = DateTimeOffset.UtcNow - _retentionPeriod;
         var oldEntries = _entries.Where(e => e.Value.Timestamp < cutoff).ToList();
 
-        foreach (var entry in oldEntries)
+        foreach (KeyValuePair<string, ApplicationAuditEntry> entry in oldEntries)
         {
             _entries.TryRemove(entry.Key, out _);
         }
@@ -147,7 +147,7 @@ public sealed class InMemoryApplicationAuditStore : IApplicationAuditStore
                 .Take(_entries.Count - _maxEntries + 1000)
                 .ToList();
 
-            foreach (var entry in toRemove)
+            foreach (KeyValuePair<string, ApplicationAuditEntry> entry in toRemove)
             {
                 _entries.TryRemove(entry.Key, out _);
             }

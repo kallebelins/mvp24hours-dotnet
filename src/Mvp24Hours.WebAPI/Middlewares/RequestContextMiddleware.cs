@@ -128,7 +128,7 @@ public class RequestContextMiddleware
     private string ExtractOrGenerateCorrelationId(HttpContext context)
     {
         // Try to get from header
-        if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeader, out var correlationId)
+        if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeader, out Microsoft.Extensions.Primitives.StringValues correlationId)
             && !string.IsNullOrWhiteSpace(correlationId))
         {
             return correlationId.ToString();
@@ -137,7 +137,7 @@ public class RequestContextMiddleware
         // Try alternative headers
         foreach (var header in _options.AlternativeCorrelationHeaders)
         {
-            if (context.Request.Headers.TryGetValue(header, out var altCorrelationId)
+            if (context.Request.Headers.TryGetValue(header, out Microsoft.Extensions.Primitives.StringValues altCorrelationId)
                 && !string.IsNullOrWhiteSpace(altCorrelationId))
             {
                 return altCorrelationId.ToString();
@@ -150,7 +150,7 @@ public class RequestContextMiddleware
 
     private string? ExtractCausationId(HttpContext context)
     {
-        if (context.Request.Headers.TryGetValue(_options.CausationIdHeader, out var causationId)
+        if (context.Request.Headers.TryGetValue(_options.CausationIdHeader, out Microsoft.Extensions.Primitives.StringValues causationId)
             && !string.IsNullOrWhiteSpace(causationId))
         {
             return causationId.ToString();
@@ -166,7 +166,7 @@ public class RequestContextMiddleware
 
     private string? GetUserId(HttpContext context)
     {
-        var user = context.User;
+        ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
             return null;
 
@@ -178,7 +178,7 @@ public class RequestContextMiddleware
     private string? GetTenantId(HttpContext context)
     {
         // Check header first
-        if (context.Request.Headers.TryGetValue(_options.TenantIdHeader, out var tenantHeader)
+        if (context.Request.Headers.TryGetValue(_options.TenantIdHeader, out Microsoft.Extensions.Primitives.StringValues tenantHeader)
             && !string.IsNullOrWhiteSpace(tenantHeader))
         {
             return tenantHeader.ToString();

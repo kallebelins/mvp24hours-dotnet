@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             try
             {
                 // Execute before interceptors in order
-                foreach (var interceptor in _interceptors)
+                foreach (IMongoDbInterceptor interceptor in _interceptors)
                 {
                     await interceptor.OnBeforeInsertAsync(entity, cancellationToken);
                 }
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 await operation();
 
                 // Execute after interceptors in reverse order
-                foreach (var interceptor in _interceptors.Reverse())
+                foreach (IMongoDbInterceptor? interceptor in _interceptors.Reverse())
                 {
                     await interceptor.OnAfterInsertAsync(entity, cancellationToken);
                 }
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
             try
             {
                 // Execute before interceptors in order
-                foreach (var interceptor in _interceptors)
+                foreach (IMongoDbInterceptor interceptor in _interceptors)
                 {
                     await interceptor.OnBeforeUpdateAsync(entity, cancellationToken);
                 }
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 await operation();
 
                 // Execute after interceptors in reverse order
-                foreach (var interceptor in _interceptors.Reverse())
+                foreach (IMongoDbInterceptor? interceptor in _interceptors.Reverse())
                 {
                     await interceptor.OnAfterUpdateAsync(entity, cancellationToken);
                 }
@@ -160,9 +160,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 var shouldProceed = true;
 
                 // Execute before interceptors and collect results
-                foreach (var interceptor in _interceptors)
+                foreach (IMongoDbInterceptor interceptor in _interceptors)
                 {
-                    var result = await interceptor.OnBeforeDeleteAsync(entity, cancellationToken);
+                    DeleteInterceptionResult result = await interceptor.OnBeforeDeleteAsync(entity, cancellationToken);
 
                     if (result.Suppress)
                     {
@@ -190,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                     }
 
                     // Execute after interceptors in reverse order
-                    foreach (var interceptor in _interceptors.Reverse())
+                    foreach (IMongoDbInterceptor? interceptor in _interceptors.Reverse())
                     {
                         await interceptor.OnAfterDeleteAsync(entity, wasSoftDeleted, cancellationToken);
                     }

@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             Func<IConsumeFilterContext<TMessage>, CancellationToken, Task> finalAction,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var filters = GetConsumeFilters<TMessage>();
+            List<IConsumeFilter<TMessage>> filters = GetConsumeFilters<TMessage>();
 
             if (!filters.Any())
             {
@@ -57,8 +57,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 
             for (int i = filters.Count - 1; i >= 0; i--)
             {
-                var filter = filters[i];
-                var next = pipeline;
+                IConsumeFilter<TMessage> filter = filters[i];
+                ConsumeFilterDelegate<TMessage> next = pipeline;
 
                 pipeline = async (ctx, ct) =>
                 {
@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             Func<IPublishFilterContext<TMessage>, CancellationToken, Task> finalAction,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var filters = GetPublishFilters<TMessage>();
+            List<IPublishFilter<TMessage>> filters = GetPublishFilters<TMessage>();
 
             if (!filters.Any())
             {
@@ -97,8 +97,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 
             for (int i = filters.Count - 1; i >= 0; i--)
             {
-                var filter = filters[i];
-                var next = pipeline;
+                IPublishFilter<TMessage> filter = filters[i];
+                PublishFilterDelegate<TMessage> next = pipeline;
 
                 pipeline = async (ctx, ct) =>
                 {
@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             Func<ISendFilterContext<TMessage>, CancellationToken, Task> finalAction,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var filters = GetSendFilters<TMessage>();
+            List<ISendFilter<TMessage>> filters = GetSendFilters<TMessage>();
 
             if (!filters.Any())
             {
@@ -137,8 +137,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 
             for (int i = filters.Count - 1; i >= 0; i--)
             {
-                var filter = filters[i];
-                var next = pipeline;
+                ISendFilter<TMessage> filter = filters[i];
+                SendFilterDelegate<TMessage> next = pipeline;
 
                 pipeline = async (ctx, ct) =>
                 {
@@ -157,22 +157,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             var filters = new List<IConsumeFilter<TMessage>>();
 
             // Get global consume filters
-            var globalFilters = _serviceProvider.GetServices<IConsumeFilter>();
-            foreach (var globalFilter in globalFilters)
+            IEnumerable<IConsumeFilter> globalFilters = _serviceProvider.GetServices<IConsumeFilter>();
+            foreach (IConsumeFilter globalFilter in globalFilters)
             {
                 filters.Add(new GlobalConsumeFilterAdapter<TMessage>(globalFilter));
             }
 
             // Get message-specific consume filters
-            var specificFilters = _serviceProvider.GetServices<IConsumeFilter<TMessage>>();
+            IEnumerable<IConsumeFilter<TMessage>> specificFilters = _serviceProvider.GetServices<IConsumeFilter<TMessage>>();
             filters.AddRange(specificFilters);
 
             // Get filters from options
-            foreach (var filterType in _options.ConsumeFilters)
+            foreach (Type filterType in _options.ConsumeFilters)
             {
                 if (typeof(IConsumeFilter<TMessage>).IsAssignableFrom(filterType))
                 {
-                    var filter = (IConsumeFilter<TMessage>?)_serviceProvider.GetService(filterType)
+                    IConsumeFilter<TMessage>? filter = (IConsumeFilter<TMessage>?)_serviceProvider.GetService(filterType)
                         ?? (IConsumeFilter<TMessage>?)Activator.CreateInstance(filterType);
                     if (filter != null)
                     {
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                 }
                 else if (typeof(IConsumeFilter).IsAssignableFrom(filterType))
                 {
-                    var globalFilter = (IConsumeFilter?)_serviceProvider.GetService(filterType)
+                    IConsumeFilter? globalFilter = (IConsumeFilter?)_serviceProvider.GetService(filterType)
                         ?? (IConsumeFilter?)Activator.CreateInstance(filterType);
                     if (globalFilter != null)
                     {
@@ -198,22 +198,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             var filters = new List<IPublishFilter<TMessage>>();
 
             // Get global publish filters
-            var globalFilters = _serviceProvider.GetServices<IPublishFilter>();
-            foreach (var globalFilter in globalFilters)
+            IEnumerable<IPublishFilter> globalFilters = _serviceProvider.GetServices<IPublishFilter>();
+            foreach (IPublishFilter globalFilter in globalFilters)
             {
                 filters.Add(new GlobalPublishFilterAdapter<TMessage>(globalFilter));
             }
 
             // Get message-specific publish filters
-            var specificFilters = _serviceProvider.GetServices<IPublishFilter<TMessage>>();
+            IEnumerable<IPublishFilter<TMessage>> specificFilters = _serviceProvider.GetServices<IPublishFilter<TMessage>>();
             filters.AddRange(specificFilters);
 
             // Get filters from options
-            foreach (var filterType in _options.PublishFilters)
+            foreach (Type filterType in _options.PublishFilters)
             {
                 if (typeof(IPublishFilter<TMessage>).IsAssignableFrom(filterType))
                 {
-                    var filter = (IPublishFilter<TMessage>?)_serviceProvider.GetService(filterType)
+                    IPublishFilter<TMessage>? filter = (IPublishFilter<TMessage>?)_serviceProvider.GetService(filterType)
                         ?? (IPublishFilter<TMessage>?)Activator.CreateInstance(filterType);
                     if (filter != null)
                     {
@@ -222,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                 }
                 else if (typeof(IPublishFilter).IsAssignableFrom(filterType))
                 {
-                    var globalFilter = (IPublishFilter?)_serviceProvider.GetService(filterType)
+                    IPublishFilter? globalFilter = (IPublishFilter?)_serviceProvider.GetService(filterType)
                         ?? (IPublishFilter?)Activator.CreateInstance(filterType);
                     if (globalFilter != null)
                     {
@@ -239,22 +239,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             var filters = new List<ISendFilter<TMessage>>();
 
             // Get global send filters
-            var globalFilters = _serviceProvider.GetServices<ISendFilter>();
-            foreach (var globalFilter in globalFilters)
+            IEnumerable<ISendFilter> globalFilters = _serviceProvider.GetServices<ISendFilter>();
+            foreach (ISendFilter globalFilter in globalFilters)
             {
                 filters.Add(new GlobalSendFilterAdapter<TMessage>(globalFilter));
             }
 
             // Get message-specific send filters
-            var specificFilters = _serviceProvider.GetServices<ISendFilter<TMessage>>();
+            IEnumerable<ISendFilter<TMessage>> specificFilters = _serviceProvider.GetServices<ISendFilter<TMessage>>();
             filters.AddRange(specificFilters);
 
             // Get filters from options
-            foreach (var filterType in _options.SendFilters)
+            foreach (Type filterType in _options.SendFilters)
             {
                 if (typeof(ISendFilter<TMessage>).IsAssignableFrom(filterType))
                 {
-                    var filter = (ISendFilter<TMessage>?)_serviceProvider.GetService(filterType)
+                    ISendFilter<TMessage>? filter = (ISendFilter<TMessage>?)_serviceProvider.GetService(filterType)
                         ?? (ISendFilter<TMessage>?)Activator.CreateInstance(filterType);
                     if (filter != null)
                     {
@@ -263,7 +263,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                 }
                 else if (typeof(ISendFilter).IsAssignableFrom(filterType))
                 {
-                    var globalFilter = (ISendFilter?)_serviceProvider.GetService(filterType)
+                    ISendFilter? globalFilter = (ISendFilter?)_serviceProvider.GetService(filterType)
                         ?? (ISendFilter?)Activator.CreateInstance(filterType);
                     if (globalFilter != null)
                     {

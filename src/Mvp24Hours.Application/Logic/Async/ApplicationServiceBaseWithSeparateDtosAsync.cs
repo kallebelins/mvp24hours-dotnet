@@ -201,8 +201,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-separatedtos-listasync");
-            var entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -230,8 +230,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-separatedtos-getbyasync");
-            var entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -245,8 +245,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-separatedtos-getbyidasync");
-            var entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
-            var dto = MapToDto(entity);
+            TEntity? entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
+            TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }
 
@@ -260,17 +260,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-addasync");
 
             // Validate create DTO if validator is available
-            var dtoErrors = dto.TryValidate(_createDtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_createDtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<TDto>();
             }
 
             // Map create DTO to Entity
-            var entity = MapCreateDtoToEntity(dto);
+            TEntity entity = MapCreateDtoToEntity(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -280,7 +280,7 @@ namespace Mvp24Hours.Application.Logic
             await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
             // Return the created entity as read DTO
-            var resultDto = MapToDto(entity);
+            TDto resultDto = MapToDto(entity);
             return resultDto.ToBusiness();
         }
 
@@ -296,20 +296,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TCreateDto dto in dtos)
             {
                 // Validate create DTO if validator is available
-                var dtoErrors = dto.TryValidate(_createDtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_createDtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map create DTO to Entity
-                var entity = MapCreateDtoToEntity(dto);
+                TEntity entity = MapCreateDtoToEntity(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -332,14 +332,14 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-modifyasync");
 
             // Validate update DTO if validator is available
-            var dtoErrors = dto.TryValidate(_updateDtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_updateDtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<TDto>();
             }
 
             // Get existing entity
-            var existingEntity = await _repository.GetByIdAsync(id, cancellationToken: cancellationToken);
+            TEntity? existingEntity = await _repository.GetByIdAsync(id, cancellationToken: cancellationToken);
             if (existingEntity == null)
             {
                 return BusinessResult.Failure<TDto>("Entity not found", "NotFound");
@@ -349,7 +349,7 @@ namespace Mvp24Hours.Application.Logic
             MapUpdateDtoToEntity(dto, existingEntity);
 
             // Validate Entity if validator is available
-            var entityErrors = existingEntity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = existingEntity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -359,7 +359,7 @@ namespace Mvp24Hours.Application.Logic
             await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
             // Return the updated entity as read DTO
-            var resultDto = MapToDto(existingEntity);
+            TDto resultDto = MapToDto(existingEntity);
             return resultDto.ToBusiness();
         }
 
@@ -369,7 +369,7 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-patchasync");
 
             // Get existing entity
-            var existingEntity = await _repository.GetByIdAsync(id, cancellationToken: cancellationToken);
+            TEntity? existingEntity = await _repository.GetByIdAsync(id, cancellationToken: cancellationToken);
             if (existingEntity == null)
             {
                 return BusinessResult.Failure<TDto>("Entity not found", "NotFound");
@@ -379,7 +379,7 @@ namespace Mvp24Hours.Application.Logic
             ApplyPatchToEntity(dto, existingEntity);
 
             // Validate Entity if validator is available (after patch)
-            var entityErrors = existingEntity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = existingEntity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -389,7 +389,7 @@ namespace Mvp24Hours.Application.Logic
             await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
             // Return the updated entity as read DTO
-            var resultDto = MapToDto(existingEntity);
+            TDto resultDto = MapToDto(existingEntity);
             return resultDto.ToBusiness();
         }
 
@@ -472,10 +472,10 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="entity">The existing entity to update.</param>
         protected virtual void ApplyPatchToEntity(TUpdateDto dto, TEntity entity)
         {
-            var dtoType = typeof(TUpdateDto);
-            var entityType = typeof(TEntity);
+            Type dtoType = typeof(TUpdateDto);
+            Type entityType = typeof(TEntity);
 
-            foreach (var dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (PropertyInfo dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (!dtoProperty.CanRead)
                     continue;
@@ -487,7 +487,7 @@ namespace Mvp24Hours.Application.Logic
                     continue;
 
                 // Find matching property in entity
-                var entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo? entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
                 if (entityProperty == null || !entityProperty.CanWrite)
                     continue;
 

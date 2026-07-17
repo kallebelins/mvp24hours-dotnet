@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
             var tempPipeline = new Pipeline(_provider);
             configure(tempPipeline);
 
-            var operations = tempPipeline.GetOperations();
+            List<IOperation> operations = tempPipeline.GetOperations();
             if (operations.Count > 0)
             {
                 _branchOperation.AddCase(key, condition, operations.ToArray());
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
             var tempPipeline = new Pipeline(_provider);
             configure(tempPipeline);
 
-            var operations = tempPipeline.GetOperations();
+            List<IOperation> operations = tempPipeline.GetOperations();
             if (operations.Count > 0)
             {
                 _branchOperation.SetDefault(operations.ToArray());
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
             var tempPipeline = new PipelineAsync(_provider);
             configure(tempPipeline);
 
-            var operations = tempPipeline.GetOperations();
+            List<IOperationAsync> operations = tempPipeline.GetOperations();
             if (operations.Count > 0)
             {
                 _branchOperation.AddCase(key, condition, operations.ToArray());
@@ -124,7 +124,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
             var tempPipeline = new PipelineAsync(_provider);
             configure(tempPipeline);
 
-            var operations = tempPipeline.GetOperations();
+            List<IOperationAsync> operations = tempPipeline.GetOperations();
             if (operations.Count > 0)
             {
                 _branchOperation.SetDefault(operations.ToArray());

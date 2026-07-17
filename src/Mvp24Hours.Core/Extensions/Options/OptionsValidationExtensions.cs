@@ -70,7 +70,7 @@ public static class OptionsValidationExtensions
         bool validateOnStart = true)
         where TOptions : class
     {
-        var builder = services.AddOptions<TOptions>()
+        OptionsBuilder<TOptions> builder = services.AddOptions<TOptions>()
             .Bind(configurationSection)
             .ValidateDataAnnotations();
 
@@ -109,11 +109,11 @@ public static class OptionsValidationExtensions
         services.TryAddSingleton<TValidator>();
         services.TryAddSingleton<IValidateOptions<TOptions>>(sp =>
         {
-            var validator = sp.GetRequiredService<TValidator>();
+            TValidator validator = sp.GetRequiredService<TValidator>();
             return new OptionsValidatorAdapter<TOptions, TValidator>(validator);
         });
 
-        var builder = services.AddOptions<TOptions>()
+        OptionsBuilder<TOptions> builder = services.AddOptions<TOptions>()
             .Bind(configurationSection)
             .ValidateDataAnnotations();
 
@@ -151,7 +151,7 @@ public static class OptionsValidationExtensions
         bool validateOnStart = true)
         where TOptions : class
     {
-        var builder = services.AddOptions<TOptions>()
+        OptionsBuilder<TOptions> builder = services.AddOptions<TOptions>()
             .Bind(configurationSection)
             .ValidateDataAnnotations()
             .Validate(validate, failureMessage);
@@ -180,11 +180,11 @@ public static class OptionsValidationExtensions
         bool validateOnStart = true)
         where TOptions : class
     {
-        var builder = services.AddOptions<TOptions>()
+        OptionsBuilder<TOptions> builder = services.AddOptions<TOptions>()
             .Bind(configurationSection)
             .ValidateDataAnnotations();
 
-        foreach (var (validate, failureMessage) in validations)
+        foreach ((Func<TOptions, bool>? validate, string? failureMessage) in validations)
         {
             builder.Validate(validate, failureMessage);
         }
@@ -329,7 +329,7 @@ public static class OptionsValidationExtensions
         services.TryAddSingleton<TValidator>();
         services.TryAddSingleton<IValidateOptions<TOptions>>(sp =>
         {
-            var validator = sp.GetRequiredService<TValidator>();
+            TValidator validator = sp.GetRequiredService<TValidator>();
             return new OptionsValidatorAdapter<TOptions, TValidator>(validator);
         });
         return services;
@@ -346,27 +346,27 @@ public static class OptionsValidationExtensions
         this IServiceCollection services,
         Assembly assembly)
     {
-        var validatorTypes = assembly.GetTypes()
+        IEnumerable<Type> validatorTypes = assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface)
             .Where(t => t.GetInterfaces()
                 .Any(i => i.IsGenericType &&
                          i.GetGenericTypeDefinition() == typeof(IOptionsValidator<>)));
 
-        foreach (var validatorType in validatorTypes)
+        foreach (Type? validatorType in validatorTypes)
         {
-            var optionsInterface = validatorType.GetInterfaces()
+            Type optionsInterface = validatorType.GetInterfaces()
                 .First(i => i.IsGenericType &&
                            i.GetGenericTypeDefinition() == typeof(IOptionsValidator<>));
 
-            var optionsType = optionsInterface.GetGenericArguments()[0];
+            Type optionsType = optionsInterface.GetGenericArguments()[0];
 
             // Register validator
             services.TryAddSingleton(validatorType);
 
             // Create and register adapter
-            var adapterType = typeof(OptionsValidatorAdapter<,>)
+            Type adapterType = typeof(OptionsValidatorAdapter<,>)
                 .MakeGenericType(optionsType, validatorType);
-            var validateOptionsType = typeof(IValidateOptions<>)
+            Type validateOptionsType = typeof(IValidateOptions<>)
                 .MakeGenericType(optionsType);
 
             services.TryAddSingleton(validateOptionsType, sp =>
@@ -452,7 +452,7 @@ internal sealed class OptionsValidatorAdapter<TOptions, TValidator> : IValidateO
             return ValidateOptionsResult.Fail($"{typeof(TOptions).Name} cannot be null.");
         }
 
-        var result = _validator.Validate(options);
+        OptionsValidationResult result = _validator.Validate(options);
 
         return result.Succeeded
             ? ValidateOptionsResult.Success

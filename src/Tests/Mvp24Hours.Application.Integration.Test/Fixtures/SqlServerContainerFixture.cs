@@ -68,8 +68,8 @@ public class SqlServerContainerFixture : IAsyncLifetime
         _serviceProvider = services.BuildServiceProvider();
 
         // Ensure database is created
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
         await dbContext.Database.EnsureCreatedAsync();
     }
 
@@ -91,8 +91,8 @@ public class SqlServerContainerFixture : IAsyncLifetime
     /// </summary>
     public async Task ClearDatabaseAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
         // Remove all entities (order matters for foreign keys)
         dbContext.Products.RemoveRange(dbContext.Products);

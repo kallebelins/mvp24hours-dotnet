@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -59,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         public async Task<IReadOnlyList<string>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("MigrationService getting pending migrations for {DbContext}", typeof(TContext).Name);
-            var pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            IEnumerable<string> pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
             return pending.ToList();
         }
 
@@ -67,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         public async Task<IReadOnlyList<string>> GetAppliedMigrationsAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("MigrationService getting applied migrations for {DbContext}", typeof(TContext).Name);
-            var applied = await _dbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+            IEnumerable<string> applied = await _dbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
             return applied.ToList();
         }
 
@@ -84,12 +85,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         {
             _logger.LogDebug("MigrationService starting migration for {DbContext}", typeof(TContext).Name);
 
-            var startedAt = DateTime.UtcNow;
+            DateTime startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                var pendingMigrations = await GetPendingMigrationsAsync(cancellationToken);
+                IReadOnlyList<string> pendingMigrations = await GetPendingMigrationsAsync(cancellationToken);
 
                 if (pendingMigrations.Count == 0)
                 {
@@ -138,12 +139,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
             _logger.LogDebug("MigrationService migrating to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
 
-            var startedAt = DateTime.UtcNow;
+            DateTime startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                var allMigrations = await GetAllMigrationsAsync(cancellationToken);
+                IReadOnlyList<string> allMigrations = await GetAllMigrationsAsync(cancellationToken);
                 if (!allMigrations.Contains(targetMigration))
                 {
                     throw new InvalidOperationException($"Migration '{targetMigration}' not found");
@@ -154,12 +155,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                     typeof(TContext).Name,
                     targetMigration);
 
-                var migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
+                IMigrator migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
                 await migrator.MigrateAsync(targetMigration, cancellationToken);
 
                 stopwatch.Stop();
 
-                var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
+                IReadOnlyList<string> appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
 
                 _logger.LogInformation(
                     "Successfully migrated {DbContext} to {TargetMigration} in {Duration}ms",
@@ -187,12 +188,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
             _logger.LogDebug("MigrationService rolling back to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
 
-            var startedAt = DateTime.UtcNow;
+            DateTime startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
+                IReadOnlyList<string> appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
 
                 if (!appliedMigrations.Contains(targetMigration))
                 {
@@ -212,7 +213,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                     targetMigration,
                     string.Join(", ", migrationsToRollback));
 
-                var migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
+                IMigrator migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
                 await migrator.MigrateAsync(targetMigration, cancellationToken);
 
                 stopwatch.Stop();
@@ -240,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         {
             _logger.LogDebug("MigrationService rolling back last migration for {DbContext}", typeof(TContext).Name);
 
-            var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
+            IReadOnlyList<string> appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
 
             if (appliedMigrations.Count < 2)
             {
@@ -296,7 +297,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public async Task<bool> HasPendingMigrationsAsync(CancellationToken cancellationToken = default)
         {
-            var pending = await GetPendingMigrationsAsync(cancellationToken);
+            IReadOnlyList<string> pending = await GetPendingMigrationsAsync(cancellationToken);
             return pending.Count > 0;
         }
 
@@ -313,9 +314,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
             try
             {
                 // Get the model from DbContext
-                var model = _dbContext.Model;
+                IModel model = _dbContext.Model;
 
-                foreach (var entityType in model.GetEntityTypes())
+                foreach (IEntityType entityType in model.GetEntityTypes())
                 {
                     // Basic validation - check if entity is configured correctly
                     if (entityType.GetTableName() == null)
@@ -373,7 +374,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                 toMigration ?? "(latest)",
                 typeof(TContext).Name);
 
-            var migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
+            IMigrator migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();
             var script = migrator.GenerateScript(fromMigration, toMigration);
 
             _logger.LogInformation(

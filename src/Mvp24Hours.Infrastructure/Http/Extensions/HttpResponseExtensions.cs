@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
                 yield break;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var buffer = new byte[bufferSize];
             int bytesRead;
 

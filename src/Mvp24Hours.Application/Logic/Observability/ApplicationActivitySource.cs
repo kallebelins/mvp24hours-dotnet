@@ -113,7 +113,7 @@ public static class ApplicationActivitySource
     /// <returns>An Activity if listeners are registered, null otherwise.</returns>
     public static Activity? StartQueryActivity(string serviceName, string operationName, string? entityType = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -137,7 +137,7 @@ public static class ApplicationActivitySource
     /// <returns>An Activity if listeners are registered, null otherwise.</returns>
     public static Activity? StartCommandActivity(string serviceName, string operationName, string? entityType = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -161,7 +161,7 @@ public static class ApplicationActivitySource
     /// <returns>An Activity if listeners are registered, null otherwise.</returns>
     public static Activity? StartSpecificationActivity(string serviceName, string specificationName, string? entityType = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Specification, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Specification, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -289,7 +289,7 @@ public static class ApplicationActivitySource
             return;
 
         var activityTags = new ActivityTagsCollection();
-        foreach (var (key, value) in tags)
+        foreach ((string? key, object? value) in tags)
         {
             if (value != null)
                 activityTags.Add(key, value);

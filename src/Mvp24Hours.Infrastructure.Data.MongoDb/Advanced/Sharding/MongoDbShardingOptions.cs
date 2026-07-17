@@ -36,7 +36,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// The shard key is a field or combination of fields that MongoDB uses
         /// to distribute documents across shards.
         /// </remarks>
-        public List<ShardKeyField> ShardKeyFields { get; set; } = new();
+        public List<ShardKeyField> ShardKeyFields { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use a hashed shard key.

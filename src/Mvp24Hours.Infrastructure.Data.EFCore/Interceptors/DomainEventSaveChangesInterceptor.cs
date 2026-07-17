@@ -199,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 else
                 {
                     // Clear events even without dispatcher
-                    foreach (var (entity, _) in _pendingEvents)
+                    foreach ((IHasDomainEvents? entity, List<IDomainEvent> _) in _pendingEvents)
                     {
                         entity.ClearDomainEvents();
                     }
@@ -228,7 +228,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 else
                 {
                     // Clear events even without dispatcher
-                    foreach (var (entity, _) in _pendingEvents)
+                    foreach ((IHasDomainEvents? entity, List<IDomainEvent> _) in _pendingEvents)
                     {
                         entity.ClearDomainEvents();
                     }

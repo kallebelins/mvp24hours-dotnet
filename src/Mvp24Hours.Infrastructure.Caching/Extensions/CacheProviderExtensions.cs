@@ -49,16 +49,16 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
                 return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
             });
 
             // Register cache provider
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var memoryCache = sp.GetRequiredService<IMemoryCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
                 return new MemoryCacheProvider(memoryCache, serializer, logger);
             });
 
@@ -93,16 +93,16 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
                 return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
             });
 
             // Register cache provider
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var distributedCache = sp.GetRequiredService<IDistributedCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+                IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                 return new DistributedCacheProvider(distributedCache, serializer, logger);
             });
 
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
                 return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
             });
 
@@ -146,18 +146,18 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             services.AddSingleton<ICacheProvider>(sp =>
             {
                 // Try distributed cache first
-                var distributedCache = sp.GetService<IDistributedCache>();
+                IDistributedCache? distributedCache = sp.GetService<IDistributedCache>();
                 if (distributedCache != null)
                 {
-                    var serializer = sp.GetRequiredService<ICacheSerializer>();
-                    var logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+                    ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                    ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                     return new DistributedCacheProvider(distributedCache, serializer, logger);
                 }
 
                 // Fallback to memory cache
-                var memoryCache = sp.GetRequiredService<IMemoryCache>();
-                var memSerializer = sp.GetRequiredService<ICacheSerializer>();
-                var memLogger = sp.GetService<ILogger<MemoryCacheProvider>>();
+                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+                ICacheSerializer memSerializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<MemoryCacheProvider>? memLogger = sp.GetService<ILogger<MemoryCacheProvider>>();
                 return new MemoryCacheProvider(memoryCache, memSerializer, memLogger);
             });
 
@@ -192,16 +192,16 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
                 return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
             });
 
             // Register cache provider
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var memoryCache = sp.GetRequiredService<IMemoryCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
                 return new MemoryCacheProvider(memoryCache, serializer, logger);
             });
 
@@ -236,16 +236,16 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
                 return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
             });
 
             // Register cache provider
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var distributedCache = sp.GetRequiredService<IDistributedCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+                IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                 return new DistributedCacheProvider(distributedCache, serializer, logger);
             });
 

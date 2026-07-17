@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
         {
             // Check if the current operation supports retry
-            var retryableOperation = GetRetryableOperation(message);
+            IRetryableOperation? retryableOperation = GetRetryableOperation(message);
 
             if (_defaultOptions.MaxRetryAttempts <= 0 && retryableOperation == null)
             {
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 return;
             }
 
-            var options = GetEffectiveOptions(retryableOperation);
+            RetryOptions options = GetEffectiveOptions(retryableOperation);
             var attemptNumber = 0;
             var lastException = default(Exception);
 
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     }
 
                     // Calculate delay
-                    var delay = CalculateDelay(options, retryableOperation, attemptNumber);
+                    TimeSpan delay = CalculateDelay(options, retryableOperation, attemptNumber);
 
                     _logger?.LogWarning(
                         ex,
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             if (retryable != null)
             {
-                var baseDelay = retryable.InitialRetryDelay;
+                TimeSpan baseDelay = retryable.InitialRetryDelay;
                 var delay = TimeSpan.FromTicks((long)(baseDelay.Ticks * Math.Pow(retryable.BackoffMultiplier, attemptNumber - 1)));
 
                 if (retryable.MaxRetryDelay.HasValue && delay > retryable.MaxRetryDelay.Value)

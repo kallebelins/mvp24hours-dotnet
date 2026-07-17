@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Data;
@@ -138,7 +139,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public Task<IList<TEntity>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         var result = ApplyCriteria(query, criteria).ToList();
         return Task.FromResult<IList<TEntity>>(result);
     }
@@ -146,7 +147,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public Task<bool> GetByAnyAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -157,7 +158,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public Task<int> GetByCountAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -174,7 +175,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public Task<IList<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -192,7 +193,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public Task<TEntity?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
-        var entity = _entities.FirstOrDefault(e => Equals(_keySelector(e), id));
+        TEntity? entity = _entities.FirstOrDefault(e => Equals(_keySelector(e), id));
         return Task.FromResult(entity);
     }
 
@@ -264,7 +265,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _pendingAdds.Add(entity);
             }
@@ -287,7 +288,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _pendingModifies.Add(entity);
             }
@@ -310,7 +311,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _pendingRemoves.Add(entity);
             }
@@ -321,7 +322,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <inheritdoc />
     public async Task RemoveByIdAsync(object id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id, cancellationToken);
+        TEntity? entity = await GetByIdAsync(id, cancellationToken);
         if (entity != null)
         {
             await RemoveAsync(entity, cancellationToken);
@@ -354,7 +355,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
         var changeCount = 0;
 
         // Process adds
-        foreach (var entity in _pendingAdds)
+        foreach (TEntity entity in _pendingAdds)
         {
             _entities.Add(entity);
             changeCount++;
@@ -362,7 +363,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
         _pendingAdds.Clear();
 
         // Process modifies
-        foreach (var modifiedEntity in _pendingModifies)
+        foreach (TEntity modifiedEntity in _pendingModifies)
         {
             var key = _keySelector(modifiedEntity);
             var existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
@@ -375,10 +376,10 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
         _pendingModifies.Clear();
 
         // Process removes
-        foreach (var entity in _pendingRemoves)
+        foreach (TEntity entity in _pendingRemoves)
         {
             var key = _keySelector(entity);
-            var existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
+            TEntity? existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
             if (existingEntity != null)
             {
                 _entities.Remove(existingEntity);
@@ -442,15 +443,15 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
                 var isDescending = parts.Length > 1 &&
                     parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
 
-                var parameter = Expression.Parameter(typeof(TEntity), "e");
-                var property = Expression.PropertyOrField(parameter, propertyName);
-                var lambda = Expression.Lambda(property, parameter);
+                ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "e");
+                MemberExpression property = Expression.PropertyOrField(parameter, propertyName);
+                LambdaExpression lambda = Expression.Lambda(property, parameter);
 
                 var methodName = isFirst
                     ? (isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy))
                     : (isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy));
 
-                var method = typeof(Queryable).GetMethods()
+                MethodInfo method = typeof(Queryable).GetMethods()
                     .First(m => m.Name == methodName && m.GetParameters().Length == 2)
                     .MakeGenericMethod(typeof(TEntity), property.Type);
 

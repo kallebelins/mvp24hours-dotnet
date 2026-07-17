@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                 Exception = exception,
                 CorrelationId = correlationId,
                 CausationId = causationId,
-                Headers = headers != null ? new Dictionary<string, object>(headers) : new Dictionary<string, object>(),
+                Headers = headers != null ? new Dictionary<string, object>(headers) : [],
                 RedeliveryCount = redeliveryCount,
                 Redelivered = redeliveryCount > 0,
                 ConsumedAt = DateTimeOffset.UtcNow

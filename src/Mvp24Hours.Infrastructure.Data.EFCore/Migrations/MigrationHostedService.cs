@@ -60,8 +60,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
+                using IServiceScope scope = _serviceProvider.CreateScope();
+                IMigrationService migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
 
                 // Check for pending migrations
                 var hasPending = await migrationService.HasPendingMigrationsAsync(cancellationToken);
@@ -72,7 +72,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                     return;
                 }
 
-                var pendingMigrations = await migrationService.GetPendingMigrationsAsync(cancellationToken);
+                IReadOnlyList<string> pendingMigrations = await migrationService.GetPendingMigrationsAsync(cancellationToken);
 
                 if (_options.LogPendingMigrations)
                 {
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
                 if (attempt < _options.MaxRetryAttempts)
                 {
-                    var delay = _options.UseExponentialBackoff
+                    TimeSpan delay = _options.UseExponentialBackoff
                         ? TimeSpan.FromTicks(_options.RetryDelay.Ticks * (long)Math.Pow(2, attempt - 1))
                         : _options.RetryDelay;
 
@@ -192,12 +192,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
         private async Task RunDataSeedersAsync(CancellationToken cancellationToken)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using IServiceScope scope = _serviceProvider.CreateScope();
 
             // Try to resolve IDataSeeder instances
-            var seeders = scope.ServiceProvider.GetServices<IDataSeeder>();
+            IEnumerable<IDataSeeder> seeders = scope.ServiceProvider.GetServices<IDataSeeder>();
 
-            foreach (var seeder in seeders)
+            foreach (IDataSeeder seeder in seeders)
             {
                 try
                 {
@@ -287,7 +287,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
             IEnumerable<T> entities,
             CancellationToken cancellationToken = default) where T : class
         {
-            var dbSet = DbContext.Set<T>();
+            DbSet<T> dbSet = DbContext.Set<T>();
 
             if (!await dbSet.AnyAsync(cancellationToken))
             {

@@ -76,12 +76,12 @@ public class CacheHealthCheck : IHealthCheck
     {
         var testKey = $"{_options.TestKeyPrefix}{Guid.NewGuid():N}";
         var testValue = "health_check_test_value";
-        var startTime = DateTime.UtcNow;
+        DateTime startTime = DateTime.UtcNow;
 
         try
         {
             // Test 1: Write operation
-            var setStartTime = DateTime.UtcNow;
+            DateTime setStartTime = DateTime.UtcNow;
             await _cacheProvider.SetStringAsync(testKey, testValue, cancellationToken: cancellationToken);
             var setDuration = (DateTime.UtcNow - setStartTime).TotalMilliseconds;
 
@@ -93,7 +93,7 @@ public class CacheHealthCheck : IHealthCheck
             }
 
             // Test 2: Read operation
-            var getStartTime = DateTime.UtcNow;
+            DateTime getStartTime = DateTime.UtcNow;
             var retrievedValue = await _cacheProvider.GetStringAsync(testKey, cancellationToken);
             var getDuration = (DateTime.UtcNow - getStartTime).TotalMilliseconds;
 
@@ -114,7 +114,7 @@ public class CacheHealthCheck : IHealthCheck
             }
 
             // Test 3: Delete operation
-            var removeStartTime = DateTime.UtcNow;
+            DateTime removeStartTime = DateTime.UtcNow;
             await _cacheProvider.RemoveAsync(testKey, cancellationToken);
             var removeDuration = (DateTime.UtcNow - removeStartTime).TotalMilliseconds;
 

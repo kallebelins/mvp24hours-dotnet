@@ -107,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            var id = await _bucket.UploadFromStreamAsync(filename, stream, options, cancellationToken);
+            ObjectId id = await _bucket.UploadFromStreamAsync(filename, stream, options, cancellationToken);
 
             _logger?.LogDebug("File '{Filename}' uploaded to GridFS with ID: {FileId}", filename, id);
 
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
                 throw new ArgumentException("Bytes cannot be null or empty.", nameof(bytes));
             }
 
-            var id = await _bucket.UploadFromBytesAsync(filename, bytes, options, cancellationToken);
+            ObjectId id = await _bucket.UploadFromBytesAsync(filename, bytes, options, cancellationToken);
 
             _logger?.LogDebug("File '{Filename}' ({Size} bytes) uploaded to GridFS with ID: {FileId}",
                 filename, bytes.Length, id);
@@ -146,7 +146,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
                 throw new FileNotFoundException("File not found.", filePath);
             }
 
-            await using var stream = File.OpenRead(filePath);
+            await using FileStream stream = File.OpenRead(filePath);
             return await UploadAsync(filename ?? Path.GetFileName(filePath), stream, options, cancellationToken);
         }
 
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
                 Directory.CreateDirectory(directory);
             }
 
-            await using var stream = File.Create(filePath);
+            await using FileStream stream = File.Create(filePath);
             await DownloadAsync(id, stream, options, cancellationToken);
         }
 
@@ -214,17 +214,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <inheritdoc/>
         public async Task<GridFSFileInfo> GetFileInfoAsync(ObjectId id, CancellationToken cancellationToken = default)
         {
-            var filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Id, id);
-            var cursor = await _bucket.FindAsync(filter, cancellationToken: cancellationToken);
+            FilterDefinition<GridFSFileInfo> filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Id, id);
+            IAsyncCursor<GridFSFileInfo> cursor = await _bucket.FindAsync(filter, cancellationToken: cancellationToken);
             return await cursor.FirstOrDefaultAsync(cancellationToken);
         }
 
         /// <inheritdoc/>
         public async Task<GridFSFileInfo> GetFileInfoByNameAsync(string filename, CancellationToken cancellationToken = default)
         {
-            var filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, filename);
+            FilterDefinition<GridFSFileInfo> filter = Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, filename);
             var options = new GridFSFindOptions { Sort = Builders<GridFSFileInfo>.Sort.Descending(x => x.UploadDateTime), Limit = 1 };
-            var cursor = await _bucket.FindAsync(filter, options, cancellationToken);
+            IAsyncCursor<GridFSFileInfo> cursor = await _bucket.FindAsync(filter, options, cancellationToken);
             return await cursor.FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -242,11 +242,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
                 Sort = Builders<GridFSFileInfo>.Sort.Descending(x => x.UploadDateTime)
             };
 
-            var filterDefinition = filter != null
+            FilterDefinition<GridFSFileInfo> filterDefinition = filter != null
                 ? new BsonDocumentFilterDefinition<GridFSFileInfo>(filter)
                 : FilterDefinition<GridFSFileInfo>.Empty;
 
-            var cursor = await _bucket.FindAsync(filterDefinition, findOptions, cancellationToken);
+            IAsyncCursor<GridFSFileInfo> cursor = await _bucket.FindAsync(filterDefinition, findOptions, cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -255,8 +255,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
             string filenamePattern,
             CancellationToken cancellationToken = default)
         {
-            var filter = Builders<GridFSFileInfo>.Filter.Regex(x => x.Filename, new BsonRegularExpression(filenamePattern, "i"));
-            var cursor = await _bucket.FindAsync(filter, cancellationToken: cancellationToken);
+            FilterDefinition<GridFSFileInfo> filter = Builders<GridFSFileInfo>.Filter.Regex(x => x.Filename, new BsonRegularExpression(filenamePattern, "i"));
+            IAsyncCursor<GridFSFileInfo> cursor = await _bucket.FindAsync(filter, cancellationToken: cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -279,14 +279,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <inheritdoc/>
         public async Task<bool> ExistsAsync(ObjectId id, CancellationToken cancellationToken = default)
         {
-            var fileInfo = await GetFileInfoAsync(id, cancellationToken);
+            GridFSFileInfo fileInfo = await GetFileInfoAsync(id, cancellationToken);
             return fileInfo != null;
         }
 
         /// <inheritdoc/>
         public async Task<bool> ExistsByNameAsync(string filename, CancellationToken cancellationToken = default)
         {
-            var fileInfo = await GetFileInfoByNameAsync(filename, cancellationToken);
+            GridFSFileInfo fileInfo = await GetFileInfoByNameAsync(filename, cancellationToken);
             return fileInfo != null;
         }
 
@@ -301,9 +301,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS
         /// <inheritdoc/>
         public async Task<long> GetTotalSizeAsync(CancellationToken cancellationToken = default)
         {
-            var files = await ListFilesAsync(cancellationToken: cancellationToken);
+            IList<GridFSFileInfo> files = await ListFilesAsync(cancellationToken: cancellationToken);
             long totalSize = 0;
-            foreach (var file in files)
+            foreach (GridFSFileInfo file in files)
             {
                 totalSize += file.Length;
             }

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.HealthChecks
 {
@@ -38,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.HealthChecks
                 if (_connection.IsConnected)
                 {
                     // Try to create a model to verify the connection is working
-                    using var channel = _connection.CreateModel();
+                    using IModel channel = _connection.CreateModel();
 
                     var data = new Dictionary<string, object>
                     {

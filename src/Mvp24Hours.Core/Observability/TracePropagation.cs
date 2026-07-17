@@ -161,7 +161,7 @@ public static class TracePropagation
         if (string.IsNullOrEmpty(traceparent))
             return null;
 
-        var context = ParseTraceparent(traceparent);
+        TraceContext? context = ParseTraceparent(traceparent);
         if (context == null)
             return null;
 
@@ -197,7 +197,7 @@ public static class TracePropagation
         if (string.IsNullOrEmpty(traceparent))
             return null;
 
-        var context = ParseTraceparent(traceparent);
+        TraceContext? context = ParseTraceparent(traceparent);
         if (context == null)
             return null;
 
@@ -260,7 +260,7 @@ public static class TracePropagation
     {
         var parentContext = context.ToActivityContext();
 
-        var activity = source.StartActivity(
+        Activity? activity = source.StartActivity(
             name,
             kind,
             parentContext);
@@ -270,7 +270,7 @@ public static class TracePropagation
             // Restore baggage
             if (context.Baggage != null)
             {
-                foreach (var item in context.Baggage)
+                foreach (KeyValuePair<string, string> item in context.Baggage)
                 {
                     activity.SetBaggage(item.Key, item.Value);
                 }
@@ -349,7 +349,7 @@ public static class TracePropagation
             return value;
 
         // Try case-insensitive search
-        foreach (var header in headers)
+        foreach (KeyValuePair<string, string?> header in headers)
         {
             if (string.Equals(header.Key, key, StringComparison.OrdinalIgnoreCase))
                 return header.Value;

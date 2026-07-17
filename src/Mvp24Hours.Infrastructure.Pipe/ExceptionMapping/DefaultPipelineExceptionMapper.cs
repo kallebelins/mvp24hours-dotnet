@@ -18,7 +18,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.ExceptionMapping
     /// </summary>
     public class DefaultPipelineExceptionMapper : IPipelineExceptionMapper
     {
-        private readonly List<ExceptionMappingRule> _rules = new();
+        private readonly List<ExceptionMappingRule> _rules = [];
         private Func<Exception, IEnumerable<IMessageResult>>? _defaultMapper;
         private Func<Exception, bool>? _defaultShouldFail;
         private Func<Exception, bool>? _defaultShouldPropagate;
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.ExceptionMapping
         /// <inheritdoc />
         public IEnumerable<IMessageResult> Map(Exception exception)
         {
-            var rule = FindRule(exception);
+            ExceptionMappingRule? rule = FindRule(exception);
             if (rule != null)
             {
                 return rule.Mapper(exception);
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.ExceptionMapping
         /// <inheritdoc />
         public bool ShouldFail(Exception exception)
         {
-            var rule = FindRule(exception);
+            ExceptionMappingRule? rule = FindRule(exception);
             if (rule != null)
             {
                 return rule.ShouldFail;
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.ExceptionMapping
         /// <inheritdoc />
         public bool ShouldPropagate(Exception exception)
         {
-            var rule = FindRule(exception);
+            ExceptionMappingRule? rule = FindRule(exception);
             if (rule != null)
             {
                 return rule.ShouldPropagate;
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.ExceptionMapping
         private static int GetTypeHierarchyDepth(Type type)
         {
             int depth = 0;
-            var current = type;
+            Type? current = type;
             while (current != null)
             {
                 depth++;

@@ -32,7 +32,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
         {
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
-            document.Security ??= new List<OpenApiSecurityRequirement>();
+            document.Security ??= [];
 
             switch (_options.AuthenticationScheme)
             {
@@ -66,7 +66,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
         private void AddBearerSecurityScheme(OpenApiDocument document)
         {
-            var scheme = _options.BearerSecurityScheme ?? new OpenApiBearerSecurityScheme();
+            OpenApiBearerSecurityScheme scheme = _options.BearerSecurityScheme ?? new OpenApiBearerSecurityScheme();
 
             document.Components!.SecuritySchemes!["Bearer"] = new OpenApiSecurityScheme
             {
@@ -95,7 +95,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
         private void AddApiKeySecurityScheme(OpenApiDocument document)
         {
-            var scheme = _options.ApiKeySecurityScheme ?? new OpenApiApiKeySecurityScheme();
+            OpenApiApiKeySecurityScheme scheme = _options.ApiKeySecurityScheme ?? new OpenApiApiKeySecurityScheme();
 
             document.Components!.SecuritySchemes!["ApiKey"] = new OpenApiSecurityScheme
             {

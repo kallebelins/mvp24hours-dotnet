@@ -148,7 +148,7 @@ namespace Mvp24Hours.Application.Extensions
             ServiceLifetime lifetime = ServiceLifetime.Scoped)
             where TImplementation : class
         {
-            var implementationType = typeof(TImplementation);
+            Type implementationType = typeof(TImplementation);
 
             // Check if it's a generic type definition
             if (implementationType.IsGenericTypeDefinition)
@@ -162,8 +162,8 @@ namespace Mvp24Hours.Application.Extensions
             else
             {
                 // Register as closed generic - extract the entity type
-                var interfaces = implementationType.GetInterfaces();
-                foreach (var @interface in interfaces)
+                Type[] interfaces = implementationType.GetInterfaces();
+                foreach (Type @interface in interfaces)
                 {
                     if (@interface.IsGenericType &&
                         @interface.GetGenericTypeDefinition() == typeof(ISpecificationEvaluator<>))

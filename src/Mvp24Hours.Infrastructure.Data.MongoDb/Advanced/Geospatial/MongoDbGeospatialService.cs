@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 throw new ArgumentException("Location field is required.", nameof(locationField));
             }
 
-            var indexKeys = Builders<TDocument>.IndexKeys.Geo2DSphere(locationField);
+            IndexKeysDefinition<TDocument> indexKeys = Builders<TDocument>.IndexKeys.Geo2DSphere(locationField);
             var indexName = await _collection.Indexes.CreateOneAsync(
                 new CreateIndexModel<TDocument>(indexKeys),
                 cancellationToken: cancellationToken);
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
         {
             var indexKeysDocument = new BsonDocument { { locationField, "2dsphere" } };
 
-            foreach (var field in additionalFields)
+            foreach (KeyValuePair<string, int> field in additionalFields)
             {
                 indexKeysDocument.Add(field.Key, field.Value);
             }
@@ -136,24 +136,24 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
         {
             ValidateLocation(point);
 
-            var nearFilter = Builders<TDocument>.Filter.NearSphere(
+            FilterDefinition<TDocument> nearFilter = Builders<TDocument>.Filter.NearSphere(
                 locationField,
                 point.Longitude,
                 point.Latitude,
                 maxDistanceMeters);
 
-            var combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
+            FilterDefinition<TDocument> combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
                 ? Builders<TDocument>.Filter.And(nearFilter, filter)
                 : nearFilter;
 
-            var findFluent = _collection.Find(combinedFilter);
+            IFindFluent<TDocument, TDocument> findFluent = _collection.Find(combinedFilter);
 
             if (limit.HasValue)
             {
                 findFluent = findFluent.Limit(limit.Value);
             }
 
-            var result = await findFluent.ToListAsync(cancellationToken);
+            List<TDocument> result = await findFluent.ToListAsync(cancellationToken);
 
             return result;
         }
@@ -183,12 +183,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 pipeline.Add(new BsonDocument("$limit", limit.Value));
             }
 
-            var results = await _collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken)
+            List<BsonDocument> results = await _collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken);
 
             var geoNearResults = new List<GeoNearResult<TDocument>>();
 
-            foreach (var result in results)
+            foreach (BsonDocument? result in results)
             {
                 var distance = result["distance"].AsDouble;
                 result.Remove("distance");
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 new BsonDocument(locationField, new BsonDocument("$geoWithin",
                     new BsonDocument("$geometry", polygon.ToBsonDocument()))));
 
-            var result = await _collection.Find(filter).ToListAsync(cancellationToken);
+            List<TDocument> result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
             return result;
         }
@@ -236,13 +236,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
             const double EarthRadiusMeters = 6371000;
             var radiusRadians = radiusMeters / EarthRadiusMeters;
 
-            var filter = Builders<TDocument>.Filter.GeoWithinCenterSphere(
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.GeoWithinCenterSphere(
                 locationField,
                 center.Longitude,
                 center.Latitude,
                 radiusRadians);
 
-            var result = await _collection.Find(filter).ToListAsync(cancellationToken);
+            List<TDocument> result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
             return result;
         }
@@ -257,14 +257,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
             ValidateLocation(southWest);
             ValidateLocation(northEast);
 
-            var filter = Builders<TDocument>.Filter.GeoWithinBox(
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.GeoWithinBox(
                 locationField,
                 southWest.Longitude,
                 southWest.Latitude,
                 northEast.Longitude,
                 northEast.Latitude);
 
-            var result = await _collection.Find(filter).ToListAsync(cancellationToken);
+            List<TDocument> result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
             return result;
         }
@@ -284,7 +284,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
                 new BsonDocument(locationField, new BsonDocument("$geoIntersects",
                     new BsonDocument("$geometry", polygon.ToBsonDocument()))));
 
-            var result = await _collection.Find(filter).ToListAsync(cancellationToken);
+            List<TDocument> result = await _collection.Find(filter).ToListAsync(cancellationToken);
 
             return result;
         }
@@ -301,7 +301,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
             const double EarthRadiusMeters = 6371000;
             var radiusRadians = radiusMeters / EarthRadiusMeters;
 
-            var filter = Builders<TDocument>.Filter.GeoWithinCenterSphere(
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.GeoWithinCenterSphere(
                 locationField,
                 center.Longitude,
                 center.Latitude,

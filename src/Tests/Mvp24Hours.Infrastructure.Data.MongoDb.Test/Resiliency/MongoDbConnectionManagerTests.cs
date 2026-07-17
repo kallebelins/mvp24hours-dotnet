@@ -25,7 +25,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Start_Not_Connected()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Act & Assert
@@ -36,7 +36,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Track_Connection_Established()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Act
@@ -51,7 +51,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Track_Connection_Lost()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
         manager.OnConnectionEstablished();
 
@@ -67,7 +67,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Successfully_Reconnect()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
         var attemptCount = 0;
 
@@ -89,7 +89,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Fail_After_Max_Reconnect_Attempts()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.MaxReconnectAttempts = 3;
         var manager = new MongoDbConnectionManager(options);
         var attemptCount = 0;
@@ -111,7 +111,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Not_Reconnect_When_Disabled()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.EnableAutoReconnect = false;
         var manager = new MongoDbConnectionManager(options);
         var attemptCount = 0;
@@ -133,7 +133,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Track_Reconnect_Attempts()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.MaxReconnectAttempts = 3;
         var manager = new MongoDbConnectionManager(options);
 
@@ -152,7 +152,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Raise_ConnectionStateChanged_Event_On_Connect()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
         ConnectionStateChangedEventArgs? eventArgs = null;
         manager.ConnectionStateChanged += (sender, args) => eventArgs = args;
@@ -170,7 +170,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Raise_ConnectionStateChanged_Event_On_Disconnect()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
         manager.OnConnectionEstablished();
 
@@ -191,7 +191,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Raise_ReconnectAttempt_Events()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.MaxReconnectAttempts = 2;
         var manager = new MongoDbConnectionManager(options);
         var attempts = new List<int>();
@@ -212,7 +212,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Not_Raise_Event_If_Already_Connected()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
         manager.OnConnectionEstablished();
 
@@ -230,7 +230,7 @@ public class MongoDbConnectionManagerTests
     public void Should_Not_Raise_Event_If_Already_Disconnected()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         var eventCount = 0;
@@ -247,7 +247,7 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Reset_Reconnect_Attempts_On_Success()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Simulate some failed reconnect attempts
@@ -271,13 +271,13 @@ public class MongoDbConnectionManagerTests
     public async Task Should_Respect_Cancellation_Token()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.ReconnectDelayMilliseconds = 1000;
         var manager = new MongoDbConnectionManager(options);
         using var cts = new CancellationTokenSource();
 
         // Act
-        var task = manager.TryReconnectAsync(async ct =>
+        Task<bool> task = manager.TryReconnectAsync(async ct =>
         {
             await Task.Delay(10000, ct);
             return true;
@@ -295,11 +295,11 @@ public class MongoDbConnectionManagerTests
     public void Should_Dispose_Properly()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Act & Assert - Should not throw
-        var action = () => manager.Dispose();
+        Action action = () => manager.Dispose();
         action.Should().NotThrow();
     }
 
@@ -307,11 +307,11 @@ public class MongoDbConnectionManagerTests
     public void Should_Handle_Multiple_Dispose_Calls()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
         // Act & Assert - Should not throw on multiple dispose
-        var action = () =>
+        Action action = () =>
         {
             manager.Dispose();
             manager.Dispose();

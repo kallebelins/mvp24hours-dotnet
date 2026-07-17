@@ -83,11 +83,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
             var validationContext = new ValidationContext<T>(input);
             var validationResults = new List<ValidationResult>();
 
-            foreach (var validator in _validators)
+            foreach (IValidator<T> validator in _validators)
             {
                 try
                 {
-                    var result = await validator.ValidateAsync(validationContext, cancellationToken);
+                    ValidationResult result = await validator.ValidateAsync(validationContext, cancellationToken);
                     validationResults.Add(result);
                 }
                 catch (Exception ex)
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
                 return OperationResult<T>.Success(input);
             }
 
-            var messages = ConvertToMessages(failures);
+            List<IMessageResult> messages = ConvertToMessages(failures);
 
             _logger?.LogWarning(
                 "Validation failed for type {TypeName} with {ErrorCount} error(s): {Errors}",
@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
                 throw new ArgumentNullException(nameof(input));
             }
 
-            var data = input.GetContent<T>(_tokenAlias);
+            T? data = input.GetContent<T>(_tokenAlias);
             if (data == null)
             {
                 _logger?.LogWarning("No data found with token alias {TokenAlias} for validation", _tokenAlias);
@@ -227,11 +227,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
             var validationContext = new ValidationContext<T>(data);
             var failures = new List<ValidationFailure>();
 
-            foreach (var validator in _validators)
+            foreach (IValidator<T> validator in _validators)
             {
                 try
                 {
-                    var result = await validator.ValidateAsync(validationContext);
+                    ValidationResult result = await validator.ValidateAsync(validationContext);
                     failures.AddRange(result.Errors);
                 }
                 catch (Exception ex)
@@ -249,9 +249,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
 
             if (failures.Count > 0)
             {
-                foreach (var failure in failures)
+                foreach (ValidationFailure failure in failures)
                 {
-                    var messageType = GetMessageType(failure.Severity);
+                    MessageType messageType = GetMessageType(failure.Severity);
                     input.Messages.Add(new MessageResult(
                         failure.PropertyName ?? failure.ErrorCode ?? "Validation",
                         failure.ErrorMessage,

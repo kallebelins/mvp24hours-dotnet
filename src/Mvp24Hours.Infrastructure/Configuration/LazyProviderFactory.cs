@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
             if (!enableLazyInit)
             {
                 // Eager initialization - create immediately
-                var instance = factory(serviceProvider);
+                TService instance = factory(serviceProvider);
                 return () => instance;
             }
 
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Configuration
                     typeof(TService),
                     serviceProvider =>
                     {
-                        var lazyFactory = CreateLazyFactory(serviceProvider, factory, true);
+                        Func<TService> lazyFactory = CreateLazyFactory(serviceProvider, factory, true);
                         return lazyFactory();
                     },
                     lifetime));

@@ -110,7 +110,7 @@ namespace Mvp24Hours.Extensions
         {
             parent = ResolveGenericTypeDefinition(parent);
 
-            var currentChild = child.IsGenericType
+            Type? currentChild = child.IsGenericType
                                    ? child.GetGenericTypeDefinition()
                                    : child;
 
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Extensions
             return child.GetInterfaces()
                 .AnySafe(childInterface =>
                 {
-                    var currentInterface = childInterface.IsGenericType
+                    Type currentInterface = childInterface.IsGenericType
                         ? childInterface.GetGenericTypeDefinition()
                         : childInterface;
 

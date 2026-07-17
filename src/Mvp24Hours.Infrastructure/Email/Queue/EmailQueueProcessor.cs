@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
             // Get next item from queue (if InMemoryEmailQueue)
             if (_emailQueue is InMemoryEmailQueue inMemoryQueue)
             {
-                var item = inMemoryQueue.GetNextItem();
+                IEmailQueueItem? item = inMemoryQueue.GetNextItem();
                 if (item == null)
                 {
                     return; // No items to process
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
             CancellationToken cancellationToken)
         {
             var queueItemId = item.QueueItemId;
-            var message = item.Message;
+            EmailMessage message = item.Message;
 
             if (message == null)
             {
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
             try
             {
                 // Send email
-                var result = await _emailService.SendAsync(message, cancellationToken);
+                EmailSendResult result = await _emailService.SendAsync(message, cancellationToken);
 
                 if (result.Success)
                 {

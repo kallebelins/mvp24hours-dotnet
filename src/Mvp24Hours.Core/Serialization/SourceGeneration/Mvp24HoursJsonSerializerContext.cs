@@ -134,8 +134,8 @@ public partial class Mvp24HoursJsonSerializerContext : JsonSerializerContext
     /// <returns>Configured JsonSerializerOptions.</returns>
     public static JsonSerializerOptions CreateOptionsWithConverters(params JsonConverter[] additionalConverters)
     {
-        var options = CreateOptions();
-        foreach (var converter in additionalConverters)
+        JsonSerializerOptions options = CreateOptions();
+        foreach (JsonConverter converter in additionalConverters)
         {
             options.Converters.Add(converter);
         }

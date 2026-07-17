@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
+using Mvp24Hours.Infrastructure.DistributedLocking.Metrics;
 using Mvp24Hours.Infrastructure.DistributedLocking.Providers;
 using StackExchange.Redis;
 
@@ -51,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
             // Register factory
             services.AddSingleton<IDistributedLockFactory>(serviceProvider =>
             {
-                var providers = builder.BuildProviders(serviceProvider);
+                Dictionary<string, IDistributedLock> providers = builder.BuildProviders(serviceProvider);
                 return new DistributedLockFactory(providers, builder.DefaultProviderName);
             });
 
@@ -70,8 +71,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
         {
             builder.RegisterProvider(name, serviceProvider =>
             {
-                var logger = serviceProvider.GetService<ILogger<InMemoryDistributedLockProvider>>();
-                var metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+                ILogger<InMemoryDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<InMemoryDistributedLockProvider>>();
+                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
                 return new InMemoryDistributedLockProvider(logger, metrics);
             });
 
@@ -95,8 +96,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
 
             builder.RegisterProvider(name, serviceProvider =>
             {
-                var logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
-                var metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+                ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
+                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
                 return new RedisDistributedLockProvider(redisConnection, logger, metrics);
             });
 
@@ -120,8 +121,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
 
             builder.RegisterProvider(name, serviceProvider =>
             {
-                var logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
-                var metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+                ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
+                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
                 return new RedisDistributedLockProvider(redisConnections, logger, metrics);
             });
 
@@ -149,8 +150,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
 
             builder.RegisterProvider(name, serviceProvider =>
             {
-                var logger = serviceProvider.GetService<ILogger<SqlServerDistributedLockProvider>>();
-                var metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+                ILogger<SqlServerDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<SqlServerDistributedLockProvider>>();
+                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
                 return new SqlServerDistributedLockProvider(connectionString, logger, metrics, lockOwner, lockMode);
             });
 
@@ -176,8 +177,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
 
             builder.RegisterProvider(name, serviceProvider =>
             {
-                var logger = serviceProvider.GetService<ILogger<PostgreSqlDistributedLockProvider>>();
-                var metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+                ILogger<PostgreSqlDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<PostgreSqlDistributedLockProvider>>();
+                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
                 return new PostgreSqlDistributedLockProvider(connectionString, logger, metrics, useSharedLock);
             });
 
@@ -227,7 +228,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
     /// </summary>
     internal class DistributedLockingBuilder : IDistributedLockingBuilder
     {
-        private readonly Dictionary<string, Func<IServiceProvider, IDistributedLock>> _providerFactories = new();
+        private readonly Dictionary<string, Func<IServiceProvider, IDistributedLock>> _providerFactories = [];
 
         public IServiceCollection Services { get; }
         public string? DefaultProviderName { get; set; }
@@ -252,9 +253,9 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
         {
             var providers = new Dictionary<string, IDistributedLock>();
 
-            foreach (var (name, factory) in _providerFactories)
+            foreach ((string? name, Func<IServiceProvider, IDistributedLock>? factory) in _providerFactories)
             {
-                var provider = factory(serviceProvider);
+                IDistributedLock provider = factory(serviceProvider);
                 providers[name] = provider;
             }
 

@@ -94,14 +94,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
                 throw new ArgumentNullException(nameof(sourceFactory));
 
             // Try to get from cache
-            var cached = await cache.GetAsync<T>(key, cancellationToken);
+            T? cached = await cache.GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
             }
 
             // Cache miss or failure - load from source
-            var value = await sourceFactory(cancellationToken);
+            T? value = await sourceFactory(cancellationToken);
             if (value != null)
             {
                 // Try to store in cache (don't fail if this fails)
@@ -154,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             try
             {
-                var cached = await cache.GetAsync<T>(key, cancellationToken);
+                T? cached = await cache.GetAsync<T>(key, cancellationToken);
                 return cached ?? defaultValue;
             }
             catch
@@ -210,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
                 throw new ArgumentNullException(nameof(defaultValue));
 
             // Try to get from cache
-            var cached = await cache.GetAsync<T>(key, cancellationToken);
+            T? cached = await cache.GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             // Cache miss - try to load from source
             try
             {
-                var value = await sourceFactory(cancellationToken);
+                T value = await sourceFactory(cancellationToken);
                 if (value != null)
                 {
                     // Try to store in cache
@@ -272,9 +272,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             services.AddSingleton(Options.Create(options));
             services.AddSingleton<ResilientCacheProvider>(sp =>
             {
-                var baseProvider = sp.GetRequiredService<ICacheProvider>();
-                var opts = sp.GetService<IOptions<CacheResilienceOptions>>()?.Value ?? new CacheResilienceOptions();
-                var logger = sp.GetService<ILogger<ResilientCacheProvider>>();
+                ICacheProvider baseProvider = sp.GetRequiredService<ICacheProvider>();
+                CacheResilienceOptions opts = sp.GetService<IOptions<CacheResilienceOptions>>()?.Value ?? new CacheResilienceOptions();
+                ILogger<ResilientCacheProvider>? logger = sp.GetService<ILogger<ResilientCacheProvider>>();
                 return new ResilientCacheProvider(baseProvider, opts, logger);
             });
 

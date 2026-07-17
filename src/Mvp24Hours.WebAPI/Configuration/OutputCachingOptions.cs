@@ -55,13 +55,13 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the dictionary of named cache policies.
         /// </summary>
-        public Dictionary<string, OutputCachePolicyOptions> Policies { get; set; } = new();
+        public Dictionary<string, OutputCachePolicyOptions> Policies { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the list of paths to exclude from output caching.
         /// Supports wildcards: /api/admin/* excludes all admin endpoints.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use distributed cache (Redis) for output caching.
@@ -121,7 +121,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets the status codes that can be cached.
         /// Default is 200 (OK) only.
         /// </summary>
-        public HashSet<int> CacheableStatusCodes { get; set; } = new() { 200 };
+        public HashSet<int> CacheableStatusCodes { get; set; } = [200];
 
         /// <summary>
         /// Adds a named policy with the specified configuration.
@@ -223,18 +223,18 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets the tags for cache invalidation.
         /// Tags allow selective cache eviction: cache.EvictByTagAsync("products").
         /// </summary>
-        public HashSet<string> Tags { get; set; } = new();
+        public HashSet<string> Tags { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the headers to vary the cache by.
         /// Different header values result in different cache entries.
         /// </summary>
-        public HashSet<string> VaryByHeader { get; set; } = new();
+        public HashSet<string> VaryByHeader { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the query string keys to vary the cache by.
         /// </summary>
-        public HashSet<string> VaryByQueryKeys { get; set; } = new();
+        public HashSet<string> VaryByQueryKeys { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to vary by all query string keys.
@@ -245,12 +245,12 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets custom values to vary the cache by.
         /// Can be used for user-specific caching (e.g., user ID, tenant ID).
         /// </summary>
-        public HashSet<string> VaryByValues { get; set; } = new();
+        public HashSet<string> VaryByValues { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the route parameters to vary the cache by.
         /// </summary>
-        public HashSet<string> VaryByRouteValue { get; set; } = new();
+        public HashSet<string> VaryByRouteValue { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to lock during cache population to prevent stampede.

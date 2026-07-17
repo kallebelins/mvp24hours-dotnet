@@ -6,6 +6,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Extensions
@@ -159,8 +160,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Extensions
             services.TryAddSingleton<IOutboxPublisher>(sp =>
             {
                 // Get the hosted service instance
-                var hostedServices = sp.GetServices<Microsoft.Extensions.Hosting.IHostedService>();
-                foreach (var service in hostedServices)
+                IEnumerable<IHostedService> hostedServices = sp.GetServices<Microsoft.Extensions.Hosting.IHostedService>();
+                foreach (IHostedService service in hostedServices)
                 {
                     if (service is OutboxPublisher publisher)
                     {

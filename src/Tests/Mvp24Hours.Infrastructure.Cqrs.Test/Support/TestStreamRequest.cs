@@ -45,7 +45,7 @@ public class GetItemsStreamHandler : IStreamRequestHandler<GetItemsStreamRequest
 /// </summary>
 public class GetNamesStreamRequest : IStreamRequest<string>
 {
-    public List<string> Names { get; set; } = new();
+    public List<string> Names { get; set; } = [];
 }
 
 /// <summary>

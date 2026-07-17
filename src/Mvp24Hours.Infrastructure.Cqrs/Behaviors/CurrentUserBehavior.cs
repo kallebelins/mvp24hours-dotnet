@@ -109,7 +109,7 @@ public sealed class CurrentUserBehavior<TRequest, TResponse> : IPipelineBehavior
         CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
-        var previousUser = _currentUserAccessor.User;
+        ICurrentUser? previousUser = _currentUserAccessor.User;
 
         try
         {

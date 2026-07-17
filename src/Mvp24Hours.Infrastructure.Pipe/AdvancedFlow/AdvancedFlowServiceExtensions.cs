@@ -142,7 +142,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow
         /// <inheritdoc/>
         public System.Threading.Tasks.Task<SagaPersistedState<TContext>?> LoadStateAsync(string sagaId, System.Threading.CancellationToken cancellationToken = default)
         {
-            _states.TryGetValue(sagaId, out var state);
+            _states.TryGetValue(sagaId, out SagaPersistedState<TContext>? state);
             return System.Threading.Tasks.Task.FromResult(state);
         }
 

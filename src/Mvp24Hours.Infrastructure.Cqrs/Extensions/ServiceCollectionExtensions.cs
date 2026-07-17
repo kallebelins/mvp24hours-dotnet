@@ -71,7 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
         // Register handlers from specified assemblies
-        foreach (var assembly in options.AssembliesToScan)
+        foreach (Assembly assembly in options.AssembliesToScan)
         {
             services.RegisterHandlersFromAssembly(assembly);
         }
@@ -226,7 +226,7 @@ public static class ServiceCollectionExtensions
     {
         return services.AddMvpMediator(options =>
         {
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
                 options.RegisterHandlersFromAssembly(assembly);
             }
@@ -242,31 +242,31 @@ public static class ServiceCollectionExtensions
             .Where(t => t is { IsClass: true, IsAbstract: false })
             .ToList();
 
-        foreach (var type in handlerTypes)
+        foreach (IExceptionHandlerBase? type in handlerTypes)
         {
             // Register IMediatorRequestHandler<,>
-            var requestHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<IExceptionHandlerBase> requestHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMediatorRequestHandler<,>));
 
-            foreach (var @interface in requestHandlerInterfaces)
+            foreach (IExceptionHandlerBase? @interface in requestHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }
 
             // Register IMediatorNotificationHandler<>
-            var notificationHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<IExceptionHandlerBase> notificationHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMediatorNotificationHandler<>));
 
-            foreach (var @interface in notificationHandlerInterfaces)
+            foreach (IExceptionHandlerBase? @interface in notificationHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }
 
             // Register IStreamRequestHandler<,>
-            var streamHandlerInterfaces = type.GetInterfaces()
+            IEnumerable<IExceptionHandlerBase> streamHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamRequestHandler<,>));
 
-            foreach (var @interface in streamHandlerInterfaces)
+            foreach (IExceptionHandlerBase? @interface in streamHandlerInterfaces)
             {
                 services.AddTransient(@interface, type);
             }
@@ -307,7 +307,7 @@ public static class ServiceCollectionExtensions
 [Serializable]
 public sealed class MediatorOptions
 {
-    internal List<Assembly> AssembliesToScan { get; } = new();
+    internal List<Assembly> AssembliesToScan { get; } = [];
 
     #region [ Behavior Registration ]
 
@@ -1000,13 +1000,13 @@ public static class MediatorExtensibilityExtensions
         where TInterface : class
         where TDecorator : class, TInterface
     {
-        var wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
+        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
         if (wrappedDescriptor == null)
         {
             throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
         }
 
-        var objectFactory = ActivatorUtilities.CreateFactory(
+        ObjectFactory objectFactory = ActivatorUtilities.CreateFactory(
             typeof(TDecorator),
             new[] { typeof(TInterface) });
 

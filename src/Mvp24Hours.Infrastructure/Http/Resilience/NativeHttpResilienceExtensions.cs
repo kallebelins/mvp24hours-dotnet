@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             ArgumentNullException.ThrowIfNull(services);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-            var builder = services.AddHttpClient(name);
+            IHttpClientBuilder builder = services.AddHttpClient(name);
 
             if (configureClient != null)
             {
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             ArgumentNullException.ThrowIfNull(configureClient);
             ArgumentNullException.ThrowIfNull(configureResilience);
 
-            var builder = services.AddHttpClient(name);
+            IHttpClientBuilder builder = services.AddHttpClient(name);
             builder.ConfigureHttpClient(configureClient);
             builder.AddStandardResilienceHandler(configureResilience);
 
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             ArgumentNullException.ThrowIfNull(configureClient);
             ArgumentNullException.ThrowIfNull(configurePipeline);
 
-            var builder = services.AddHttpClient(name);
+            IHttpClientBuilder builder = services.AddHttpClient(name);
             builder.ConfigureHttpClient(configureClient);
             builder.AddResilienceHandler(pipelineName, configurePipeline);
 
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
         {
             ArgumentNullException.ThrowIfNull(services);
 
-            var builder = services.AddHttpClient<TClient>();
+            IHttpClientBuilder builder = services.AddHttpClient<TClient>();
 
             if (configureClient != null)
             {
@@ -226,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             ArgumentNullException.ThrowIfNull(configureClient);
             ArgumentNullException.ThrowIfNull(configureResilience);
 
-            var builder = services.AddHttpClient<TClient>();
+            IHttpClientBuilder builder = services.AddHttpClient<TClient>();
             builder.ConfigureHttpClient(configureClient);
             builder.AddStandardResilienceHandler(configureResilience);
 
@@ -254,7 +254,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             ArgumentNullException.ThrowIfNull(configureClient);
             ArgumentNullException.ThrowIfNull(configurePipeline);
 
-            var builder = services.AddHttpClient<TClient>();
+            IHttpClientBuilder builder = services.AddHttpClient<TClient>();
             builder.ConfigureHttpClient(configureClient);
             builder.AddResilienceHandler(pipelineName, configurePipeline);
 

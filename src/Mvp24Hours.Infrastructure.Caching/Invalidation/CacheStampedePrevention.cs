@@ -50,8 +50,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             if (factory == null)
                 throw new ArgumentNullException(nameof(factory));
 
-            var timeoutValue = timeout ?? _defaultTimeout;
-            var semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+            TimeSpan timeoutValue = timeout ?? _defaultTimeout;
+            SemaphoreSlim semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
 
             // Try to acquire the lock
             var lockAcquired = false;
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 }
 
                 // Check if there's already a pending task for this key
-                if (_pendingTasks.TryGetValue(key, out var pendingTask))
+                if (_pendingTasks.TryGetValue(key, out TaskCompletionSource<object?>? pendingTask))
                 {
                     // Wait for the pending task to complete
                     try
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 try
                 {
                     // Execute the factory function
-                    var result = await factory(cancellationToken);
+                    T? result = await factory(cancellationToken);
                     tcs.SetResult(result);
                     return result;
                 }

@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using MongoDB.Bson;
+using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
@@ -70,7 +71,7 @@ public class MongoDbTestingTests
         using var provider = new MongoDbInMemoryProvider();
 
         // Act
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
 
         // Assert
         Assert.NotNull(collection);
@@ -82,12 +83,12 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         var customer = new TestCustomer { Name = "Test Customer" };
 
         // Act
         collection.InsertOne(customer);
-        var found = collection.FindById(customer.Id);
+        TestCustomer? found = collection.FindById(customer.Id);
 
         // Assert
         Assert.NotNull(found);
@@ -99,8 +100,8 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
-        var customers = new[]
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
+        TestCustomer[] customers = new[]
         {
             new TestCustomer { Name = "Customer 1" },
             new TestCustomer { Name = "Customer 2" },
@@ -119,14 +120,14 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         var customer = new TestCustomer { Name = "Original Name" };
         collection.InsertOne(customer);
 
         // Act
         customer.Name = "Updated Name";
         var replaced = collection.ReplaceOne(customer);
-        var found = collection.FindById(customer.Id);
+        TestCustomer? found = collection.FindById(customer.Id);
 
         // Assert
         Assert.True(replaced);
@@ -139,13 +140,13 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         var customer = new TestCustomer { Name = "To Delete" };
         collection.InsertOne(customer);
 
         // Act
         var deleted = collection.DeleteOne(customer);
-        var found = collection.FindById(customer.Id);
+        TestCustomer? found = collection.FindById(customer.Id);
 
         // Assert
         Assert.True(deleted);
@@ -157,7 +158,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         collection.InsertMany(new[]
         {
             new TestCustomer { Name = "Active 1", Active = true },
@@ -166,7 +167,7 @@ public class MongoDbTestingTests
         });
 
         // Act
-        var activeCustomers = collection.Find(c => c.Active);
+        IList<TestCustomer> activeCustomers = collection.Find(c => c.Active);
 
         // Assert
         Assert.Equal(2, activeCustomers.Count);
@@ -177,7 +178,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         collection.InsertMany(new[]
         {
             new TestCustomer { Active = true },
@@ -199,7 +200,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
-        var collection = provider.GetCollection<TestCustomer>();
+        InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
         collection.InsertMany(new[]
         {
             new TestCustomer(),
@@ -258,7 +259,7 @@ public class MongoDbTestingTests
         customer.Name = "Modified";
         repository.Modify(customer);
         var changes = repository.CommitChanges();
-        var found = repository.GetById(customer.Id);
+        TestCustomer? found = repository.GetById(customer.Id);
 
         // Assert
         Assert.Equal(1, changes);
@@ -297,7 +298,7 @@ public class MongoDbTestingTests
         });
 
         // Act
-        var activeCustomers = repository.GetBy(c => c.Active);
+        IList<TestCustomer> activeCustomers = repository.GetBy(c => c.Active);
 
         // Assert
         Assert.Equal(2, activeCustomers.Count);
@@ -398,7 +399,7 @@ public class MongoDbTestingTests
         repository.SeedData(new[] { customer });
 
         // Act
-        var found = await repository.GetByIdAsync(customer.Id);
+        TestCustomer? found = await repository.GetByIdAsync(customer.Id);
 
         // Assert
         Assert.NotNull(found);
@@ -417,7 +418,7 @@ public class MongoDbTestingTests
         });
 
         // Act
-        var list = await repository.ListAsync();
+        IList<TestCustomer> list = await repository.ListAsync();
 
         // Assert
         Assert.Equal(2, list.Count);
@@ -435,7 +436,7 @@ public class MongoDbTestingTests
         });
 
         // Act
-        var activeCustomers = await repository.GetByAsync(c => c.Active);
+        IList<TestCustomer> activeCustomers = await repository.GetByAsync(c => c.Active);
 
         // Assert
         Assert.Single(activeCustomers);
@@ -453,7 +454,7 @@ public class MongoDbTestingTests
         using var unitOfWork = new MongoUnitOfWorkFake();
 
         // Act
-        var repository = unitOfWork.GetRepository<TestCustomer>();
+        IRepository<TestCustomer> repository = unitOfWork.GetRepository<TestCustomer>();
 
         // Assert
         Assert.NotNull(repository);
@@ -464,7 +465,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var unitOfWork = new MongoUnitOfWorkFake();
-        var repository = unitOfWork.GetRepository<TestCustomer>();
+        IRepository<TestCustomer> repository = unitOfWork.GetRepository<TestCustomer>();
         repository.Add(new TestCustomer { Name = "Test" });
 
         // Act
@@ -479,7 +480,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var unitOfWork = new MongoUnitOfWorkFake();
-        var repository = unitOfWork.GetRepository<TestCustomer>();
+        IRepository<TestCustomer> repository = unitOfWork.GetRepository<TestCustomer>();
         repository.Add(new TestCustomer { Name = "Test" });
 
         // Act
@@ -501,7 +502,7 @@ public class MongoDbTestingTests
         using var unitOfWork = new MongoUnitOfWorkFakeAsync();
 
         // Act
-        var repository = unitOfWork.GetRepository<TestCustomer>();
+        IRepositoryAsync<TestCustomer> repository = unitOfWork.GetRepository<TestCustomer>();
 
         // Assert
         Assert.NotNull(repository);
@@ -513,7 +514,7 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var unitOfWork = new MongoUnitOfWorkFakeAsync();
-        var repository = unitOfWork.GetRepository<TestCustomer>();
+        IRepositoryAsync<TestCustomer> repository = unitOfWork.GetRepository<TestCustomer>();
         await repository.AddAsync(new TestCustomer { Name = "Test" });
 
         // Act

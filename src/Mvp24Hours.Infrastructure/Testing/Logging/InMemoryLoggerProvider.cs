@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
     public sealed class InMemoryLoggerProvider : ILoggerProvider
     {
         private readonly ConcurrentDictionary<string, InMemoryCategoryLogger> _loggers = new();
-        private readonly ConcurrentBag<CategorizedLogEntry> _allLogs = new();
+        private readonly ConcurrentBag<CategorizedLogEntry> _allLogs = [];
         private LogLevel _minimumLevel = LogLevel.Trace;
         private bool _disposed;
 
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
             set
             {
                 _minimumLevel = value;
-                foreach (var logger in _loggers.Values)
+                foreach (InMemoryCategoryLogger logger in _loggers.Values)
                 {
                     logger.MinimumLevel = value;
                 }
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
         public void Clear()
         {
             _allLogs.Clear();
-            foreach (var logger in _loggers.Values)
+            foreach (InMemoryCategoryLogger logger in _loggers.Values)
             {
                 logger.Clear();
             }
@@ -298,7 +298,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
                     return;
 
                 var message = formatter(state, exception);
-                var currentScopes = _scopes.ToArray().Reverse();
+                IEnumerable<object?> currentScopes = _scopes.ToArray().Reverse();
                 var entry = new CategorizedLogEntry(
                     _categoryName,
                     logLevel,

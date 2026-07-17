@@ -154,7 +154,7 @@ namespace Mvp24Hours.Application.Logic.Pagination
             Guard.Against.Null(mapper, nameof(mapper));
 
             var mappedItems = new List<TResult>(Items.Count);
-            foreach (var item in Items)
+            foreach (T? item in Items)
             {
                 mappedItems.Add(mapper(item));
             }
@@ -328,7 +328,7 @@ namespace Mvp24Hours.Application.Logic.Pagination
             try
             {
                 var json = Encoding.UTF8.GetString(Convert.FromBase64String(cursorString));
-                var fields = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
+                Dictionary<string, object?>? fields = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
                 return fields != null ? new CompositeCursor(fields) : null;
             }
             catch

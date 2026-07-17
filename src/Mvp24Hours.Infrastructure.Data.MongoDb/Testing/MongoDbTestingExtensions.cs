@@ -235,7 +235,7 @@ public static class MongoDbTestingExtensions
         services.AddSingleton(options);
         services.AddSingleton(sp =>
         {
-            var opts = sp.GetRequiredService<MongoDbInMemoryOptions>();
+            MongoDbInMemoryOptions opts = sp.GetRequiredService<MongoDbInMemoryOptions>();
             return new MongoDbContextFactory(opts, contextFactory);
         });
 

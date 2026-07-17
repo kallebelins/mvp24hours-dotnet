@@ -58,12 +58,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
         /// <summary>
         /// Gets the default TimeZoneInfo based on <see cref="DefaultTimeZone"/>.
         /// </summary>
-        public TimeZoneInfo? DefaultTimeZoneInfo
-        {
-            get => string.IsNullOrWhiteSpace(DefaultTimeZone)
+        public TimeZoneInfo? DefaultTimeZoneInfo => string.IsNullOrWhiteSpace(DefaultTimeZone)
                 ? null
                 : TimeZoneInfo.FindSystemTimeZoneById(DefaultTimeZone);
-        }
 
         /// <summary>
         /// Gets or sets whether all jobs are enabled by default.

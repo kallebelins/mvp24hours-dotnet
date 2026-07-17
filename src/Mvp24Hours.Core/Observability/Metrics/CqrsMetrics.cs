@@ -94,7 +94,7 @@ public sealed class CqrsMetrics
     /// </summary>
     public CqrsMetrics()
     {
-        var meter = Mvp24HoursMeters.Cqrs.Meter;
+        Meter meter = Mvp24HoursMeters.Cqrs.Meter;
 
         // Commands
         _commandsTotal = meter.CreateCounter<long>(
@@ -544,7 +544,7 @@ public sealed class CqrsMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             var durationMs = elapsed.TotalMilliseconds;
 
             switch (_kind)
@@ -597,7 +597,7 @@ public sealed class CqrsMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordBehavior(_behaviorName, elapsed.TotalMilliseconds, Succeeded);
         }
     }

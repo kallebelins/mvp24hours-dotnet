@@ -165,7 +165,7 @@ public class CompositeMongoDataSeeder : IMongoDataSeeder
     /// <inheritdoc />
     public void Seed(Mvp24HoursContext context)
     {
-        foreach (var seeder in _seeders)
+        foreach (IMongoDataSeeder seeder in _seeders)
         {
             seeder.Seed(context);
         }

@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <returns>A no-op migration result.</returns>
         public static MigrationResult NoMigrationsNeeded()
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             return new MigrationResult
             {
                 Success = true,

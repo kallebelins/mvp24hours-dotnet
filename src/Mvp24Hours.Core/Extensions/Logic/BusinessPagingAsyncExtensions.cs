@@ -28,7 +28,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingCriteria> ToPagingCriteriaAsync(this Task<PagingCriteriaRequest> requestAsync, int? limit = null, int? offset = null, IList<string>? orderBy = null, IList<string>? navigation = null)
         {
-            var request = await requestAsync;
+            PagingCriteriaRequest? request = await requestAsync;
             return new PagingCriteria(
                 limit ?? request?.Limit ?? 0,
                 offset ?? request?.Offset ?? 0,
@@ -42,7 +42,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingCriteriaExpression<T>> ToPagingCriteriaExpressionAsync<T>(this Task<PagingCriteriaRequest> requestAsync, int? limit = null, int? offset = null)
         {
-            var request = await requestAsync;
+            PagingCriteriaRequest? request = await requestAsync;
             return new PagingCriteriaExpression<T>(
                 limit ?? request?.Limit ?? 0,
                 offset ?? request?.Offset ?? 0,
@@ -56,7 +56,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingCriteria> NewCriteriaAsync(this Task<IPagingCriteria> criteriaAsync, int? limit = null, int? offset = null, IList<string>? orderBy = null, IList<string>? navigation = null)
         {
-            var criteria = await criteriaAsync;
+            IPagingCriteria? criteria = await criteriaAsync;
             return new PagingCriteria(
                 limit ?? criteria?.Limit ?? 0,
                 offset ?? criteria?.Offset ?? 0,
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingCriteriaExpression<T>> NewCriteriaExpressionAsync<T>(this Task<IPagingCriteria> criteriaAsync, int? limit = null, int? offset = null)
         {
-            var criteria = await criteriaAsync;
+            IPagingCriteria? criteria = await criteriaAsync;
             return new PagingCriteriaExpression<T>(
                 limit ?? criteria?.Limit ?? 0,
                 offset ?? criteria?.Offset ?? 0,
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Extensions
                 page,
                 summary,
                 value,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Extensions
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: value,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -142,12 +142,12 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingResult<T>> ToBusinessPagingAsync<T>(this Task<IList<IMessageResult>> messageResultAsync, string? tokenDefault = null)
         {
-            var messageResult = await messageResultAsync;
+            IList<IMessageResult> messageResult = await messageResultAsync;
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: default,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingResult<T>> ToBusinessPagingAsync<T>(this Task<IMessageResult> messageResultAsync, string? tokenDefault = null)
         {
-            var messageResult = await messageResultAsync;
+            IMessageResult messageResult = await messageResultAsync;
             return new PagingResult<T>(
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
@@ -185,10 +185,10 @@ namespace Mvp24Hours.Extensions
             var totalCount = await repository.GetByCountAsync(clause);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
-            var items = await repository.GetByAsync(clause, effectiveCriteria);
+            IPagingCriteria effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            IList<TEntity> items = await repository.GetByAsync(clause, effectiveCriteria);
 
-            var result = items.ToBusinessPaging(
+            IPagingResult<IList<TEntity>> result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),
                 new SummaryResult(totalCount, totalPages)
             );
@@ -214,10 +214,10 @@ namespace Mvp24Hours.Extensions
             var totalCount = await repository.ListCountAsync();
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
-            var items = await repository.ListAsync(effectiveCriteria);
+            IPagingCriteria effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            IList<TEntity> items = await repository.ListAsync(effectiveCriteria);
 
-            var result = items.ToBusinessPaging(
+            IPagingResult<IList<TEntity>> result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),
                 new SummaryResult(totalCount, totalPages)
             );

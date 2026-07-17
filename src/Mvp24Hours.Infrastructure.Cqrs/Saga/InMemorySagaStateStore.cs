@@ -76,17 +76,17 @@ public class InMemorySagaStateStore : ISagaStateStore
     /// <inheritdoc />
     public Task<SagaState?> GetAsync(Guid sagaId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_states.TryGetValue(sagaId, out var state) ? Clone(state) : null);
+        return Task.FromResult(_states.TryGetValue(sagaId, out SagaState? state) ? Clone(state) : null);
     }
 
     /// <inheritdoc />
     public Task<SagaState<TData>?> GetAsync<TData>(Guid sagaId, CancellationToken cancellationToken = default)
         where TData : class
     {
-        if (!_states.TryGetValue(sagaId, out var state))
+        if (!_states.TryGetValue(sagaId, out SagaState? state))
             return Task.FromResult<SagaState<TData>?>(null);
 
-        var data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
+        TData? data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
         if (data == null)
             return Task.FromResult<SagaState<TData>?>(null);
 
@@ -119,7 +119,7 @@ public class InMemorySagaStateStore : ISagaStateStore
     /// <inheritdoc />
     public Task UpdateAsync(Guid sagaId, Action<SagaState> update, CancellationToken cancellationToken = default)
     {
-        if (_states.TryGetValue(sagaId, out var state))
+        if (_states.TryGetValue(sagaId, out SagaState? state))
         {
             update(state);
             state.LastUpdatedAt = DateTime.UtcNow;
@@ -132,10 +132,10 @@ public class InMemorySagaStateStore : ISagaStateStore
     public Task UpdateAsync<TData>(Guid sagaId, Action<SagaState<TData>> update, CancellationToken cancellationToken = default)
         where TData : class
     {
-        if (!_states.TryGetValue(sagaId, out var state))
+        if (!_states.TryGetValue(sagaId, out SagaState? state))
             return Task.CompletedTask;
 
-        var data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
+        TData? data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
         if (data == null)
             return Task.CompletedTask;
 
@@ -210,7 +210,7 @@ public class InMemorySagaStateStore : ISagaStateStore
     /// <inheritdoc />
     public Task<IReadOnlyList<SagaState>> GetTimedOutSagasAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
         var result = _states.Values
             .Where(s => s.Status == SagaStatus.Running &&
                         s.TimeoutSeconds.HasValue &&
@@ -224,7 +224,7 @@ public class InMemorySagaStateStore : ISagaStateStore
     /// <inheritdoc />
     public Task<IReadOnlyList<SagaState>> GetReadyForRetryAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
         var result = _states.Values
             .Where(s => s.Status == SagaStatus.Suspended &&
                         s.NextRetryAt.HasValue &&
@@ -239,7 +239,7 @@ public class InMemorySagaStateStore : ISagaStateStore
     /// <inheritdoc />
     public Task<IReadOnlyList<SagaState>> GetExpiredAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
         var result = _states.Values
             .Where(s => s.ExpiresAt.HasValue && now > s.ExpiresAt.Value)
             .Select(Clone)
@@ -257,7 +257,7 @@ public class InMemorySagaStateStore : ISagaStateStore
             .Select(s => s.SagaId)
             .ToList();
 
-        foreach (var id in toRemove)
+        foreach (Guid id in toRemove)
         {
             _states.TryRemove(id, out _);
         }

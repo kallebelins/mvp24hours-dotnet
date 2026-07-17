@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
 {
@@ -47,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
         {
             var spanName = "Pipeline.Operation";
 
-            using var activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
 
             if (activity == null)
             {
@@ -120,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
             // Add custom tags from options
             if (_options.CustomTags != null)
             {
-                foreach (var tag in _options.CustomTags)
+                foreach (KeyValuePair<string, object> tag in _options.CustomTags)
                 {
                     activity.SetTag(tag.Key, tag.Value);
                 }
@@ -149,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
                 return null;
 
             var errors = new List<string>();
-            foreach (var msg in message.Messages)
+            foreach (IMessageResult msg in message.Messages)
             {
                 if (msg.Type == Core.Enums.MessageType.Error)
                 {
@@ -191,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
         {
             var spanName = "Pipeline.Operation";
 
-            using var activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
 
             if (activity == null)
             {

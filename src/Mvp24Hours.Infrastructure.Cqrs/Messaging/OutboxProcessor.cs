@@ -98,11 +98,11 @@ public sealed class OutboxProcessor : BackgroundService
 
     private async Task ProcessPendingMessagesAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = _serviceProvider.CreateScope();
 
-        var outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
-        var publisher = scope.ServiceProvider.GetService<IIntegrationEventPublisher>();
-        var deadLetterStore = scope.ServiceProvider.GetService<IDeadLetterStore>();
+        IIntegrationEventOutbox? outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
+        IIntegrationEventPublisher? publisher = scope.ServiceProvider.GetService<IIntegrationEventPublisher>();
+        IDeadLetterStore? deadLetterStore = scope.ServiceProvider.GetService<IDeadLetterStore>();
 
         if (outbox == null)
         {
@@ -110,7 +110,7 @@ public sealed class OutboxProcessor : BackgroundService
             return;
         }
 
-        var messages = await outbox.GetPendingAsync(_options.BatchSize, stoppingToken);
+        IReadOnlyList<OutboxMessage> messages = await outbox.GetPendingAsync(_options.BatchSize, stoppingToken);
 
         if (messages.Count == 0)
         {
@@ -119,7 +119,7 @@ public sealed class OutboxProcessor : BackgroundService
 
         _logger?.LogDebug("[Outbox] Processing {Count} pending messages", messages.Count);
 
-        foreach (var message in messages)
+        foreach (OutboxMessage message in messages)
         {
             if (stoppingToken.IsCancellationRequested)
             {
@@ -176,7 +176,7 @@ public sealed class OutboxProcessor : BackgroundService
                 await outbox.MarkAsFailedAsync(message.Id, ex.Message, stoppingToken);
 
                 // Apply exponential backoff delay for next retry
-                var delay = CalculateBackoffDelay(message.RetryCount);
+                TimeSpan delay = CalculateBackoffDelay(message.RetryCount);
                 _logger?.LogDebug(
                     "[Outbox] Message {MessageId} will be retried after {Delay}",
                     message.Id,
@@ -278,12 +278,12 @@ public sealed class OutboxCleanupService : BackgroundService
             {
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
+                    using IServiceScope scope = _serviceProvider.CreateScope();
+                    IIntegrationEventOutbox? outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
 
                     if (outbox != null)
                     {
-                        var cutoffDate = DateTime.UtcNow.AddDays(-_options.OutboxRetentionDays);
+                        DateTime cutoffDate = DateTime.UtcNow.AddDays(-_options.OutboxRetentionDays);
                         var deletedCount = await outbox.CleanupAsync(cutoffDate, stoppingToken);
 
                         if (deletedCount > 0)

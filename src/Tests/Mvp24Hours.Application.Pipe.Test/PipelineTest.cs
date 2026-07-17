@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
@@ -77,7 +78,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             });
 
             // define param
-            var message = "Parameter received.".ToMessage();
+            IPipelineMessage message = "Parameter received.".ToMessage();
 
             pipeline.Execute(message);
 
@@ -111,7 +112,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             });
 
             // define attachment for message 
-            var message = "Parameter received.".ToMessage();
+            IPipelineMessage message = "Parameter received.".ToMessage();
 
             pipeline.Execute(message);
 
@@ -150,9 +151,9 @@ namespace Mvp24Hours.Application.Pipe.Test
                 }
             });
             pipeline.Execute();
-            var result1 = pipeline.GetMessage();
+            IPipelineMessage result1 = pipeline.GetMessage();
             pipeline.Execute("Parameter received.".ToMessage());
-            var result2 = pipeline.GetMessage();
+            IPipelineMessage result2 = pipeline.GetMessage();
 
             // assert
             Assert.True(result1 != null && result2 != null);
@@ -305,9 +306,9 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             pipeline.Execute();
 
-            var message = pipeline.GetMessage();
+            IPipelineMessage message = pipeline.GetMessage();
 
-            foreach (var item in message.Messages)
+            foreach (IMessageResult item in message.Messages)
             {
                 Trace.WriteLine(item.Message);
             }
@@ -577,7 +578,7 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // operations
             pipeline.Execute();
-            var pipelineMessage = pipeline.GetMessage();
+            IPipelineMessage pipelineMessage = pipeline.GetMessage();
 
             // assert
             Assert.True(pipelineMessage.IsFaulty);
@@ -734,8 +735,8 @@ namespace Mvp24Hours.Application.Pipe.Test
             Assert.Equal(input.DynamicContents.person_CC_CVV, input.GetContent<string>("person_CC_CVV"));
             Assert.Equal(input.DynamicContents.person_CC_ExpirationDate, input.GetContent<string>("person_CC_ExpirationDate"));
 
-            var personExpected = input.GetContent<Person>("Person");
-            var personActual = input.DynamicContents.Person;
+            Person personExpected = input.GetContent<Person>("Person");
+            dynamic personActual = input.DynamicContents.Person;
 
             Assert.Equal(personExpected.Name, personActual.Name);
             Assert.Equal(personExpected.CC.Number, personActual.CC.Number);
@@ -763,7 +764,7 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             try
             {
-                var person = input.DynamicContents.PersonNotExist;
+                dynamic person = input.DynamicContents.PersonNotExist;
             }
             catch (ArgumentOutOfRangeException ex)
             {

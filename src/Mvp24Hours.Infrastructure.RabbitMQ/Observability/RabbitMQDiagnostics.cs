@@ -379,8 +379,8 @@ public class QueueStats
 public class RabbitMQDiagnostics : IRabbitMQDiagnostics
 {
     private readonly IRabbitMQMetrics? _metrics;
-    private readonly List<ConsumerInfo> _consumers = new();
-    private readonly List<ErrorInfo> _errorHistory = new();
+    private readonly List<ConsumerInfo> _consumers = [];
+    private readonly List<ErrorInfo> _errorHistory = [];
     private readonly object _errorLock = new();
     private readonly int _maxErrorHistory;
 
@@ -401,8 +401,8 @@ public class RabbitMQDiagnostics : IRabbitMQDiagnostics
     /// <inheritdoc />
     public Task<RabbitMQHealthStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        var metrics = _metrics?.GetSnapshot();
-        var connectionStatus = _connectionInfo?.Status ?? ConnectionStatus.Unknown;
+        RabbitMQMetricsSnapshot? metrics = _metrics?.GetSnapshot();
+        ConnectionStatus connectionStatus = _connectionInfo?.Status ?? ConnectionStatus.Unknown;
         var isHealthy = connectionStatus == ConnectionStatus.Connected;
 
         ErrorInfo? lastError;

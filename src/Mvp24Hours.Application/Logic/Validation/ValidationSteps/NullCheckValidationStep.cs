@@ -35,14 +35,14 @@ namespace Mvp24Hours.Application.Logic.Validation
         public ValidationServiceResult Execute(T instance, ValidationStepContext context)
         {
             var errors = new List<IMessageResult>();
-            var type = typeof(T);
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            Type type = typeof(T);
+            IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead);
 
-            foreach (var property in properties)
+            foreach (PropertyInfo? property in properties)
             {
                 // Check for [Required] attribute
-                var requiredAttr = property.GetCustomAttribute<RequiredAttribute>();
+                RequiredAttribute? requiredAttr = property.GetCustomAttribute<RequiredAttribute>();
                 if (requiredAttr == null)
                 {
                     continue;

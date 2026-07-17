@@ -115,7 +115,7 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
                 var insertedCount = 0;
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Extensions
                     BypassDocumentValidation = options.BypassDocumentValidation
                 };
 
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
                 long modifiedCount = 0;
@@ -254,19 +254,19 @@ namespace Mvp24Hours.Extensions
                     BypassDocumentValidation = options.BypassDocumentValidation
                 };
 
-                var compiledKeySelector = keySelector.Compile();
+                Func<TEntity, object> compiledKeySelector = keySelector.Compile();
 
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var batchList = batch.ToList();
                     var writeModels = new List<WriteModel<TEntity>>();
 
-                    foreach (var entity in batchList)
+                    foreach (TEntity? entity in batchList)
                     {
                         var keyValue = compiledKeySelector(entity);
-                        var filter = Builders<TEntity>.Filter.Eq(keySelector, keyValue);
+                        FilterDefinition<TEntity> filter = Builders<TEntity>.Filter.Eq(keySelector, keyValue);
                         writeModels.Add(new ReplaceOneModel<TEntity>(filter, entity));
                     }
 
@@ -382,7 +382,7 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
                 var totalCount = entities.Count;
                 var processedCount = 0;
                 long deletedCount = 0;
@@ -393,19 +393,19 @@ namespace Mvp24Hours.Extensions
                     BypassDocumentValidation = options.BypassDocumentValidation
                 };
 
-                var compiledKeySelector = keySelector.Compile();
+                Func<TEntity, object> compiledKeySelector = keySelector.Compile();
 
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<TEntity> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var batchList = batch.ToList();
                     var writeModels = new List<WriteModel<TEntity>>();
 
-                    foreach (var entity in batchList)
+                    foreach (TEntity? entity in batchList)
                     {
                         var keyValue = compiledKeySelector(entity);
-                        var filter = Builders<TEntity>.Filter.Eq(keySelector, keyValue);
+                        FilterDefinition<TEntity> filter = Builders<TEntity>.Filter.Eq(keySelector, keyValue);
                         writeModels.Add(new DeleteOneModel<TEntity>(filter));
                     }
 
@@ -502,8 +502,8 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
-                var filterDefinition = Builders<TEntity>.Filter.Where(filter);
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
+                FilterDefinition<TEntity> filterDefinition = Builders<TEntity>.Filter.Where(filter);
 
                 UpdateResult result;
                 if (context.Session != null)
@@ -573,8 +573,8 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
-                var filterDefinition = Builders<TEntity>.Filter.Where(filter);
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
+                FilterDefinition<TEntity> filterDefinition = Builders<TEntity>.Filter.Where(filter);
 
                 DeleteResult result;
                 if (context.Session != null)
@@ -646,7 +646,7 @@ namespace Mvp24Hours.Extensions
 
             try
             {
-                var collection = context.Set<TEntity>();
+                IMongoCollection<TEntity> collection = context.Set<TEntity>();
 
                 var bulkWriteOptions = new BulkWriteOptions
                 {
@@ -690,7 +690,7 @@ namespace Mvp24Hours.Extensions
                 _logger?.LogWarning(ex, "BulkWriteAsync partially failed: {ErrorCount} errors",
                     ex.WriteErrors?.Count ?? 0);
 
-                var result = ex.Result;
+                BulkWriteResult<TEntity> result = ex.Result;
                 if (!options.IsOrdered && result != null)
                 {
                     return MongoDbBulkOperationResult.Success(
@@ -722,7 +722,7 @@ namespace Mvp24Hours.Extensions
 
         private static IEnumerable<IEnumerable<TItem>> Batch<TItem>(IEnumerable<TItem> source, int batchSize)
         {
-            using var enumerator = source.GetEnumerator();
+            using IEnumerator<TItem> enumerator = source.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 yield return YieldBatchElements(enumerator, batchSize - 1);

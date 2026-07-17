@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var context = message.GetPipelineContext();
+            IPipelineContext? context = message.GetPipelineContext();
             if (context != null)
             {
                 return context;
@@ -180,7 +180,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var parentContext = message.GetPipelineContext();
+            IPipelineContext? parentContext = message.GetPipelineContext();
             if (parentContext != null)
             {
                 return parentContext.CreateChildContext();

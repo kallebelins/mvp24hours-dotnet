@@ -181,12 +181,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets command counts by type.
         /// </summary>
-        public Dictionary<string, long> CommandCounts { get; set; } = new();
+        public Dictionary<string, long> CommandCounts { get; set; } = [];
 
         /// <summary>
         /// Gets or sets error counts by type.
         /// </summary>
-        public Dictionary<string, long> ErrorCounts { get; set; } = new();
+        public Dictionary<string, long> ErrorCounts { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the latest connection pool stats.
@@ -196,17 +196,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets average command duration by type.
         /// </summary>
-        public Dictionary<string, double> AverageDurationMs { get; set; } = new();
+        public Dictionary<string, double> AverageDurationMs { get; set; } = [];
 
         /// <summary>
         /// Gets or sets p95 command duration by type.
         /// </summary>
-        public Dictionary<string, double> P95DurationMs { get; set; } = new();
+        public Dictionary<string, double> P95DurationMs { get; set; } = [];
 
         /// <summary>
         /// Gets or sets p99 command duration by type.
         /// </summary>
-        public Dictionary<string, double> P99DurationMs { get; set; } = new();
+        public Dictionary<string, double> P99DurationMs { get; set; } = [];
 
         /// <summary>
         /// Gets the error rate (failed / total).

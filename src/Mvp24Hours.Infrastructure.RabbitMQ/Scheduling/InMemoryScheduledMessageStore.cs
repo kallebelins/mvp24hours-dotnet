@@ -42,7 +42,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public Task<ScheduledMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            _messages.TryGetValue(id, out var message);
+            _messages.TryGetValue(id, out ScheduledMessage? message);
             return Task.FromResult(message);
         }
 
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 return _messages.Values
                     .Where(m => (m.Status == ScheduledMessageStatus.Pending || m.Status == ScheduledMessageStatus.Active)
                         && (m.IsRecurring ? m.NextExecutionTime <= now : m.ScheduledTime <= now))
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
-                if (_messages.TryGetValue(id, out var message))
+                if (_messages.TryGetValue(id, out ScheduledMessage? message))
                 {
                     if (message.Status == ScheduledMessageStatus.Processing)
                     {
@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public Task MarkAsCompletedAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            if (_messages.TryGetValue(id, out var message))
+            if (_messages.TryGetValue(id, out ScheduledMessage? message))
             {
                 message.Status = ScheduledMessageStatus.Completed;
                 message.ProcessedAt = DateTimeOffset.UtcNow;
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public Task MarkAsFailedAsync(Guid id, string error, CancellationToken cancellationToken = default)
         {
-            if (_messages.TryGetValue(id, out var message))
+            if (_messages.TryGetValue(id, out ScheduledMessage? message))
             {
                 message.Status = ScheduledMessageStatus.Failed;
                 message.LastError = error;
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 .ToList();
 
             var removed = 0;
-            foreach (var id in toRemove)
+            foreach (Guid id in toRemove)
             {
                 if (_messages.TryRemove(id, out _))
                 {

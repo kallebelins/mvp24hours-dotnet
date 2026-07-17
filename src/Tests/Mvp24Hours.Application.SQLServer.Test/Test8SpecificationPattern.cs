@@ -88,7 +88,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var customer = new Customer { Name = "Test Customer", Active = true };
             var activeSpec = new ActiveCustomerSpecification();
             var nameSpec = new CustomerByNameSpecification("Test");
-            var combinedSpec = activeSpec & nameSpec;
+            Specification<Customer> combinedSpec = activeSpec & nameSpec;
 
             // act
             var result = combinedSpec.IsSatisfiedBy(customer);
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var customer = new Customer { Name = "Other Customer", Active = true };
             var activeSpec = new ActiveCustomerSpecification();
             var nameSpec = new CustomerByNameSpecification("Test");
-            var combinedSpec = activeSpec & nameSpec;
+            Specification<Customer> combinedSpec = activeSpec & nameSpec;
 
             // act
             var result = combinedSpec.IsSatisfiedBy(customer);
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var customer = new Customer { Name = "Other Customer", Active = true };
             var activeSpec = new ActiveCustomerSpecification();
             var nameSpec = new CustomerByNameSpecification("Test");
-            var combinedSpec = activeSpec | nameSpec;
+            Specification<Customer> combinedSpec = activeSpec | nameSpec;
 
             // act
             var result = combinedSpec.IsSatisfiedBy(customer);
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             var customer = new Customer { Name = "Test Customer", Active = false };
             var activeSpec = new ActiveCustomerSpecification();
-            var notActiveSpec = !activeSpec;
+            Specification<Customer> notActiveSpec = !activeSpec;
 
             // act
             var result = notActiveSpec.IsSatisfiedBy(customer);
@@ -194,13 +194,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void SpecificationEvaluator_GetQuery_AppliesFilter()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
-            var allCustomers = repository.List();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
+            IList<Customer> allCustomers = repository.List();
             var spec = new ActiveCustomerSpecification();
 
             // act
-            var query = allCustomers.AsQueryable();
-            var evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
+            IQueryable<Customer> query = allCustomers.AsQueryable();
+            IQueryable<Customer> evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
             var filteredCustomers = evaluatedQuery.ToList();
 
             // assert
@@ -211,13 +211,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void SpecificationEvaluator_GetQuery_AppliesOrdering()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
-            var allCustomers = repository.List();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
+            IList<Customer> allCustomers = repository.List();
             var spec = new ActiveCustomerSpecification(); // Has OrderBy(Name)
 
             // act
-            var query = allCustomers.AsQueryable();
-            var evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
+            IQueryable<Customer> query = allCustomers.AsQueryable();
+            IQueryable<Customer> evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
             var orderedCustomers = evaluatedQuery.ToList();
 
             // assert
@@ -233,13 +233,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void SpecificationEvaluator_GetQuery_AppliesPagination()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
-            var allCustomers = repository.List();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
+            IList<Customer> allCustomers = repository.List();
             var spec = new PaginatedActiveCustomerSpecification(skip: 2, take: 3);
 
             // act
-            var query = allCustomers.AsQueryable();
-            var evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
+            IQueryable<Customer> query = allCustomers.AsQueryable();
+            IQueryable<Customer> evaluatedQuery = SpecificationEvaluator<Customer>.Default.GetQuery(query, spec);
             var pagedCustomers = evaluatedQuery.ToList();
 
             // assert
@@ -254,13 +254,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void Repository_WithSpecification_FiltersCorrectly()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
             var spec = new ActiveCustomerSpecification();
 
             // act
-            var allCustomers = repository.List();
-            var filtered = allCustomers.AsQueryable();
-            var query = SpecificationEvaluator.GetQuery(filtered, spec);
+            IList<Customer> allCustomers = repository.List();
+            IQueryable<Customer> filtered = allCustomers.AsQueryable();
+            IQueryable<Customer> query = SpecificationEvaluator.GetQuery(filtered, spec);
             var result = query.ToList();
 
             // assert
@@ -272,13 +272,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void Repository_WithNameSpecification_FiltersCorrectly()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
             var spec = new CustomerByNameSpecification("Test");
 
             // act
-            var allCustomers = repository.List();
-            var filtered = allCustomers.AsQueryable();
-            var query = SpecificationEvaluator.GetQuery(filtered, spec);
+            IList<Customer> allCustomers = repository.List();
+            IQueryable<Customer> filtered = allCustomers.AsQueryable();
+            IQueryable<Customer> query = SpecificationEvaluator.GetQuery(filtered, spec);
             var result = query.ToList();
 
             // assert
@@ -289,15 +289,15 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void Repository_WithComposedSpecification_FiltersCorrectly()
         {
             // arrange
-            var repository = serviceProvider.GetService<IRepository<Customer>>();
+            IRepository<Customer>? repository = serviceProvider.GetRequiredService<IRepository<Customer>>();
             var activeSpec = new ActiveCustomerSpecification();
             var nameSpec = new CustomerByNameSpecification("Test");
-            var combinedSpec = activeSpec & nameSpec;
+            Specification<Customer> combinedSpec = activeSpec & nameSpec;
 
             // act
-            var allCustomers = repository.List();
-            var filtered = allCustomers.AsQueryable();
-            var query = SpecificationEvaluator.GetQuery(filtered, combinedSpec);
+            IList<Customer> allCustomers = repository.List();
+            IQueryable<Customer> filtered = allCustomers.AsQueryable();
+            IQueryable<Customer> query = SpecificationEvaluator.GetQuery(filtered, combinedSpec);
             var result = query.ToList();
 
             // assert
@@ -328,7 +328,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var premiumSpec = Specification<Customer>.Create(c => c.Name.Contains("Premium"));
 
             // Complex: (Active AND Test) OR Premium
-            var complexSpec = (activeSpec & testSpec) | premiumSpec;
+            Specification<Customer> complexSpec = (activeSpec & testSpec) | premiumSpec;
 
             // act & assert
             Assert.True(complexSpec.IsSatisfiedBy(customer1)); // Active AND Test (also Premium)
@@ -342,7 +342,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             var customer = new Customer { Name = "Test", Active = true };
             var activeSpec = new ActiveCustomerSpecification();
-            var doubleNegated = !(!activeSpec);
+            Specification<Customer> doubleNegated = !(!activeSpec);
 
             // act
             var result = doubleNegated.IsSatisfiedBy(customer);

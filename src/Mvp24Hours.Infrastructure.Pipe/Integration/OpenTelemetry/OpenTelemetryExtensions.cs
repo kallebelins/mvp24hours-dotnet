@@ -53,16 +53,16 @@ namespace Mvp24Hours.Extensions
             // Register async middleware
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
-                var logger = sp.GetService<ILogger<OpenTelemetryMiddleware>>();
-                var opts = sp.GetService<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
+                ILogger<OpenTelemetryMiddleware>? logger = sp.GetService<ILogger<OpenTelemetryMiddleware>>();
+                OpenTelemetryOptions opts = sp.GetService<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
                 return new OpenTelemetryMiddleware(logger, opts);
             });
 
             // Register sync middleware
             services.AddSingleton<IPipelineMiddlewareSync>(sp =>
             {
-                var logger = sp.GetService<ILogger<OpenTelemetryMiddlewareSync>>();
-                var opts = sp.GetService<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
+                ILogger<OpenTelemetryMiddlewareSync>? logger = sp.GetService<ILogger<OpenTelemetryMiddlewareSync>>();
+                OpenTelemetryOptions opts = sp.GetService<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
                 return new OpenTelemetryMiddlewareSync(logger, opts);
             });
 

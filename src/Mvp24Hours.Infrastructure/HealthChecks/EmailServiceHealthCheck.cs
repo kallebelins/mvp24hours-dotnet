@@ -12,6 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Email.Contract;
 using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Email.Results;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {
@@ -96,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                     data["testEmailRecipient"] = testMessage.To[0];
 
                     var sendStopwatch = Stopwatch.StartNew();
-                    var sendResult = await _emailService.SendAsync(testMessage, cts.Token);
+                    EmailSendResult sendResult = await _emailService.SendAsync(testMessage, cts.Token);
                     sendStopwatch.Stop();
 
                     stopwatch.Stop();

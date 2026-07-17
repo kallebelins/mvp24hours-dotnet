@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
             if (command == null) throw new ArgumentNullException(nameof(command));
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var commandType = typeof(TCommand);
+            Type commandType = typeof(TCommand);
             var entry = new ScheduledCommandEntry
             {
                 CommandType = $"{commandType.FullName}, {commandType.Assembly.GetName().Name}",
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         {
             if (string.IsNullOrEmpty(commandId)) return false;
 
-            var entry = await _store.GetByIdAsync(commandId, cancellationToken);
+            ScheduledCommandEntry? entry = await _store.GetByIdAsync(commandId, cancellationToken);
             if (entry == null)
             {
                 _logger.LogWarning("Scheduled command {CommandId} not found for cancellation", commandId);
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         {
             if (string.IsNullOrEmpty(commandId)) return false;
 
-            var entry = await _store.GetByIdAsync(commandId, cancellationToken);
+            ScheduledCommandEntry? entry = await _store.GetByIdAsync(commandId, cancellationToken);
             if (entry == null)
             {
                 _logger.LogWarning("Scheduled command {CommandId} not found for rescheduling", commandId);
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
                 return false;
             }
 
-            var oldScheduledAt = entry.ScheduledAt;
+            DateTime oldScheduledAt = entry.ScheduledAt;
             entry.ScheduledAt = newScheduledAt;
             entry.Status = ScheduledCommandStatus.Pending;
             entry.NextRetryAt = null;
@@ -185,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
         {
             if (string.IsNullOrEmpty(commandId)) return false;
 
-            var entry = await _store.GetByIdAsync(commandId, cancellationToken);
+            ScheduledCommandEntry? entry = await _store.GetByIdAsync(commandId, cancellationToken);
             if (entry == null)
             {
                 _logger.LogWarning("Scheduled command {CommandId} not found for retry", commandId);

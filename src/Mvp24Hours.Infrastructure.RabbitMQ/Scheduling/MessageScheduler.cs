@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 throw new ArgumentException("Delay must be positive.", nameof(delay));
             }
 
-            var scheduledTime = DateTimeOffset.UtcNow.Add(delay);
+            DateTimeOffset scheduledTime = DateTimeOffset.UtcNow.Add(delay);
             return ScheduleMessageAsync(
                 scheduledTime,
                 message,
@@ -142,7 +142,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                     nameof(interval));
             }
 
-            var firstExecution = startTime ?? DateTimeOffset.UtcNow.Add(interval);
+            DateTimeOffset firstExecution = startTime ?? DateTimeOffset.UtcNow.Add(interval);
 
             var scheduledMessage = new ScheduledMessage
             {
@@ -187,7 +187,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 throw new ArgumentException("Invalid CRON expression.", nameof(cronExpression));
             }
 
-            var nextExecution = CronExpressionHelper.GetNextOccurrence(cronExpression, null, timeZone);
+            DateTimeOffset? nextExecution = CronExpressionHelper.GetNextOccurrence(cronExpression, null, timeZone);
             if (!nextExecution.HasValue)
             {
                 throw new ArgumentException("Could not calculate next execution time from CRON expression.", nameof(cronExpression));
@@ -226,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             Guid scheduledMessageId,
             CancellationToken cancellationToken = default)
         {
-            var message = await _store.GetByIdAsync(scheduledMessageId, cancellationToken);
+            ScheduledMessage? message = await _store.GetByIdAsync(scheduledMessageId, cancellationToken);
             if (message == null)
             {
                 return false;
@@ -253,7 +253,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             Guid recurringMessageId,
             CancellationToken cancellationToken = default)
         {
-            var message = await _store.GetByIdAsync(recurringMessageId, cancellationToken);
+            ScheduledMessage? message = await _store.GetByIdAsync(recurringMessageId, cancellationToken);
             if (message == null || !message.IsRecurring)
             {
                 return false;
@@ -277,7 +277,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             Guid recurringMessageId,
             CancellationToken cancellationToken = default)
         {
-            var message = await _store.GetByIdAsync(recurringMessageId, cancellationToken);
+            ScheduledMessage? message = await _store.GetByIdAsync(recurringMessageId, cancellationToken);
             if (message == null || !message.IsRecurring)
             {
                 return false;
@@ -291,7 +291,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             // Recalculate next execution time
             if (message.RecurringSchedule!.Type == RecurringScheduleType.Cron)
             {
-                var nextExecution = CronExpressionHelper.GetNextOccurrence(
+                DateTimeOffset? nextExecution = CronExpressionHelper.GetNextOccurrence(
                     message.RecurringSchedule.CronExpression!,
                     null,
                     message.RecurringSchedule.TimeZone);
@@ -350,10 +350,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <returns>The number of messages processed.</returns>
         public async Task<int> ProcessDueMessagesAsync(CancellationToken cancellationToken = default)
         {
-            var dueMessages = await _store.GetDueMessagesAsync(_options.BatchSize, cancellationToken);
+            IEnumerable<ScheduledMessage> dueMessages = await _store.GetDueMessagesAsync(_options.BatchSize, cancellationToken);
             var processed = 0;
 
-            foreach (var message in dueMessages)
+            foreach (ScheduledMessage message in dueMessages)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -394,7 +394,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         private async Task PublishMessageAsync(ScheduledMessage message, CancellationToken cancellationToken)
         {
             // Prepare headers
-            var headers = message.Headers ?? new Dictionary<string, object>();
+            Dictionary<string, object> headers = message.Headers ?? [];
             headers["x-scheduled-message-id"] = message.Id.ToString();
             headers["x-scheduled-time"] = message.ScheduledTime.ToString("O");
             headers["x-message-type"] = message.MessageType;
@@ -478,7 +478,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             // Calculate next execution time
             if (message.RecurringSchedule.Type == RecurringScheduleType.Cron)
             {
-                var nextExecution = CronExpressionHelper.GetNextOccurrence(
+                DateTimeOffset? nextExecution = CronExpressionHelper.GetNextOccurrence(
                     message.RecurringSchedule.CronExpression!,
                     DateTimeOffset.UtcNow,
                     message.RecurringSchedule.TimeZone);

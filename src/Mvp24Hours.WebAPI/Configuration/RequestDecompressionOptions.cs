@@ -26,17 +26,17 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of content encodings supported for decompression.
         /// </summary>
-        public HashSet<string> SupportedEncodings { get; set; } = new HashSet<string>
-        {
+        public HashSet<string> SupportedEncodings { get; set; } =
+        [
             "gzip",
             "deflate",
             "br" // Brotli
-        };
+        ];
 
         /// <summary>
         /// Gets or sets the list of paths to exclude from decompression.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new HashSet<string>();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
     }
 }
 

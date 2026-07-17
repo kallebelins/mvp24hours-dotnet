@@ -187,7 +187,7 @@ public class ProjectionRebuildService : IProjectionRebuildService
 {
     private readonly IProjectionManager _projectionManager;
     private readonly ILogger<ProjectionRebuildService> _logger;
-    private readonly Dictionary<string, RebuildStatus> _rebuildStatuses = new();
+    private readonly Dictionary<string, RebuildStatus> _rebuildStatuses = [];
     private readonly object _lock = new();
 
     /// <summary>
@@ -264,7 +264,7 @@ public class ProjectionRebuildService : IProjectionRebuildService
     {
         lock (_lock)
         {
-            _rebuildStatuses.TryGetValue(projectionName, out var status);
+            _rebuildStatuses.TryGetValue(projectionName, out RebuildStatus? status);
             return status;
         }
     }

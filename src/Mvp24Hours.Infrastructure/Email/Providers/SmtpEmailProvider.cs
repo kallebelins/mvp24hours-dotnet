@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.Email.Contract;
 using Mvp24Hours.Infrastructure.Email.Models;
 using Mvp24Hours.Infrastructure.Email.Options;
 using Mvp24Hours.Infrastructure.Email.Results;
@@ -77,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             _logger = logger;
 
             // Validate SMTP options
-            var validationErrors = _smtpOptions.Validate();
+            IList<string> validationErrors = _smtpOptions.Validate();
             if (validationErrors.Count > 0)
             {
                 var errorMessage = string.Join("; ", validationErrors);
@@ -97,8 +98,8 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         {
             try
             {
-                using var smtpClient = CreateSmtpClient();
-                using var mailMessage = CreateMailMessage(message);
+                using SmtpClient smtpClient = CreateSmtpClient();
+                using MailMessage mailMessage = CreateMailMessage(message);
 
                 // Send email
                 await smtpClient.SendMailAsync(mailMessage);
@@ -274,9 +275,9 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             // Add Attachments
             if (message.Attachments != null)
             {
-                foreach (var attachment in message.Attachments)
+                foreach (IEmailAttachment attachment in message.Attachments)
                 {
-                    var mailAttachment = CreateAttachment(attachment);
+                    Attachment mailAttachment = CreateAttachment(attachment);
                     if (attachment.IsInline && !string.IsNullOrWhiteSpace(attachment.ContentId))
                     {
                         mailAttachment.ContentId = attachment.ContentId;
@@ -287,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             }
 
             // Add Custom Headers
-            foreach (var header in message.Headers)
+            foreach (KeyValuePair<string, string> header in message.Headers)
             {
                 if (!string.IsNullOrWhiteSpace(header.Key) && !string.IsNullOrWhiteSpace(header.Value))
                 {

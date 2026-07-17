@@ -69,7 +69,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 return;
             }
 
-            var timeout = GetTimeoutForRequest(context);
+            TimeSpan timeout = GetTimeoutForRequest(context);
             if (timeout == TimeSpan.Zero || timeout == Timeout.InfiniteTimeSpan)
             {
                 await _next(context);
@@ -77,7 +77,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             using var cts = new CancellationTokenSource(timeout);
-            var originalCancellationToken = context.RequestAborted;
+            CancellationToken originalCancellationToken = context.RequestAborted;
 
             try
             {
@@ -126,7 +126,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             var method = context.Request.Method.ToUpperInvariant();
 
             // Check endpoint-specific timeout
-            foreach (var (pattern, timeout) in _options.EndpointTimeouts)
+            foreach ((string? pattern, TimeSpan timeout) in _options.EndpointTimeouts)
             {
                 if (path.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) ||
                     MatchesPattern(path, pattern))
@@ -136,7 +136,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Check method-specific timeout
-            if (_options.MethodTimeouts.TryGetValue(method, out var methodTimeout))
+            if (_options.MethodTimeouts.TryGetValue(method, out TimeSpan methodTimeout))
             {
                 return methodTimeout;
             }

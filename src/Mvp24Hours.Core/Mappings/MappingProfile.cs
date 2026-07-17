@@ -21,7 +21,7 @@ namespace Mvp24Hours.Core.Mappings
         {
             ApplyMappingsFromAssembly(assembly);
 
-            foreach (var assemblyName in assembly.GetReferencedAssemblies())
+            foreach (AssemblyName assemblyName in assembly.GetReferencedAssemblies())
             {
                 Assembly assemblyLoaded = Assembly.Load(assemblyName);
                 ApplyMappingsFromAssembly(assemblyLoaded);
@@ -34,10 +34,10 @@ namespace Mvp24Hours.Core.Mappings
                 .Where(t => t.GetInterfaces().AnySafe(i => i == typeof(IMapFrom)))
                 .ToList();
 
-            foreach (var type in types)
+            foreach (Type? type in types)
             {
                 var instance = Activator.CreateInstance(type);
-                var methodInfo = type.GetMethod("Mapping");
+                MethodInfo? methodInfo = type.GetMethod("Mapping");
                 methodInfo?.Invoke(instance, new object[] { this });
             }
         }

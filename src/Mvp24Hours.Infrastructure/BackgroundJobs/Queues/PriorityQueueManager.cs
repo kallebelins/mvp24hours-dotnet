@@ -28,7 +28,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
     /// </remarks>
     internal class PriorityQueueManager
     {
-        private readonly Dictionary<string, Dictionary<JobPriority, Queue<QueuedJob>>> _queues = new();
+        private readonly Dictionary<string, Dictionary<JobPriority, Queue<QueuedJob>>> _queues = [];
         private readonly object _lock = new();
 
         /// <summary>
@@ -48,13 +48,13 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
 
             lock (_lock)
             {
-                if (!_queues.TryGetValue(normalizedQueueName, out var priorityQueues))
+                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
                 {
-                    priorityQueues = new Dictionary<JobPriority, Queue<QueuedJob>>();
+                    priorityQueues = [];
                     _queues[normalizedQueueName] = priorityQueues;
                 }
 
-                if (!priorityQueues.TryGetValue(priority, out var queue))
+                if (!priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue))
                 {
                     queue = new Queue<QueuedJob>();
                     priorityQueues[priority] = queue;
@@ -75,17 +75,17 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
 
             lock (_lock)
             {
-                if (!_queues.TryGetValue(normalizedQueueName, out var priorityQueues))
+                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
                 {
                     return null;
                 }
 
                 // Try to dequeue from highest priority first
-                var priorities = new[] { JobPriority.Critical, JobPriority.High, JobPriority.Normal, JobPriority.Low };
+                JobPriority[] priorities = new[] { JobPriority.Critical, JobPriority.High, JobPriority.Normal, JobPriority.Low };
 
-                foreach (var priority in priorities)
+                foreach (JobPriority priority in priorities)
                 {
-                    if (priorityQueues.TryGetValue(priority, out var queue) && queue.Count > 0)
+                    if (priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue) && queue.Count > 0)
                     {
                         return queue.Dequeue();
                     }
@@ -107,14 +107,14 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
 
             lock (_lock)
             {
-                if (!_queues.TryGetValue(normalizedQueueName, out var priorityQueues))
+                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
                 {
                     return 0;
                 }
 
                 if (priority.HasValue)
                 {
-                    if (priorityQueues.TryGetValue(priority.Value, out var queue))
+                    if (priorityQueues.TryGetValue(priority.Value, out Queue<QueuedJob>? queue))
                     {
                         return queue.Count;
                     }
@@ -151,9 +151,9 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
 
             lock (_lock)
             {
-                if (_queues.TryGetValue(normalizedQueueName, out var priorityQueues))
+                if (_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
                 {
-                    foreach (var queue in priorityQueues.Values)
+                    foreach (Queue<QueuedJob> queue in priorityQueues.Values)
                     {
                         queue.Clear();
                     }
@@ -182,15 +182,15 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
             {
                 var stats = new Dictionary<string, QueueStats>();
 
-                foreach (var kvp in _queues)
+                foreach (KeyValuePair<string, Dictionary<JobPriority, Queue<QueuedJob>>> kvp in _queues)
                 {
                     var queueStats = new QueueStats
                     {
                         QueueName = kvp.Key,
-                        CriticalCount = kvp.Value.TryGetValue(JobPriority.Critical, out var cq) ? cq.Count : 0,
-                        HighCount = kvp.Value.TryGetValue(JobPriority.High, out var hq) ? hq.Count : 0,
-                        NormalCount = kvp.Value.TryGetValue(JobPriority.Normal, out var nq) ? nq.Count : 0,
-                        LowCount = kvp.Value.TryGetValue(JobPriority.Low, out var lq) ? lq.Count : 0
+                        CriticalCount = kvp.Value.TryGetValue(JobPriority.Critical, out Queue<QueuedJob>? cq) ? cq.Count : 0,
+                        HighCount = kvp.Value.TryGetValue(JobPriority.High, out Queue<QueuedJob>? hq) ? hq.Count : 0,
+                        NormalCount = kvp.Value.TryGetValue(JobPriority.Normal, out Queue<QueuedJob>? nq) ? nq.Count : 0,
+                        LowCount = kvp.Value.TryGetValue(JobPriority.Low, out Queue<QueuedJob>? lq) ? lq.Count : 0
                     };
 
                     queueStats.TotalCount = queueStats.CriticalCount + queueStats.HighCount +

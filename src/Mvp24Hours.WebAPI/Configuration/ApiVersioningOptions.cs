@@ -59,12 +59,12 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of supported API versions.
         /// </summary>
-        public List<ApiVersion> SupportedApiVersions { get; set; } = new List<ApiVersion>();
+        public List<ApiVersion> SupportedApiVersions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the list of deprecated API versions.
         /// </summary>
-        public List<ApiVersion> DeprecatedApiVersions { get; set; } = new List<ApiVersion>();
+        public List<ApiVersion> DeprecatedApiVersions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the versioning strategy mode.

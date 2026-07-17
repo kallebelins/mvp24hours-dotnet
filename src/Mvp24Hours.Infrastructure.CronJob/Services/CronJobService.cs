@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// <inheritdoc />
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            using var activity = CronJobActivitySource.StartStartActivity(_jobName, _cronExpressionString);
+            using Activity? activity = CronJobActivitySource.StartStartActivity(_jobName, _cronExpressionString);
 
             CronJobLoggerMessages.LogJobStarting(_logger, _jobName, _cronExpressionString, _timeZoneInfo?.Id);
             _metrics?.RecordJobStarted(_jobName, _cronExpressionString);
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         protected virtual async Task ExecuteOnce(CancellationToken cancellationToken)
         {
             var stopwatch = Stopwatch.StartNew();
-            using var activity = CronJobActivitySource.StartExecuteActivity(
+            using Activity? activity = CronJobActivitySource.StartExecuteActivity(
                 _jobName,
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
@@ -204,7 +204,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    var nextOccurrence = GetNextOccurrence();
+                    DateTimeOffset? nextOccurrence = GetNextOccurrence();
 
                     if (!nextOccurrence.HasValue)
                     {
@@ -212,7 +212,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         break;
                     }
 
-                    var delay = nextOccurrence.Value - _timeProvider.GetUtcNow();
+                    TimeSpan delay = nextOccurrence.Value - _timeProvider.GetUtcNow();
 
                     if (delay <= TimeSpan.Zero)
                     {
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         continue;
                     }
 
-                    using var scheduleActivity = CronJobActivitySource.StartScheduleActivity(
+                    using Activity? scheduleActivity = CronJobActivitySource.StartScheduleActivity(
                         _jobName,
                         _cronExpressionString,
                         nextOccurrence.Value);
@@ -264,7 +264,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var remaining = until - _timeProvider.GetUtcNow();
+                    TimeSpan remaining = until - _timeProvider.GetUtcNow();
 
                     if (remaining <= TimeSpan.Zero)
                     {
@@ -272,7 +272,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     }
 
                     // Use smaller intervals for better cancellation responsiveness
-                    var waitTime = remaining > TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
+                    TimeSpan waitTime = remaining > TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
                         ? TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
                         : remaining;
 
@@ -305,7 +305,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private async Task ExecuteScheduledWorkAsync(CancellationToken cancellationToken)
         {
             var stopwatch = Stopwatch.StartNew();
-            using var activity = CronJobActivitySource.StartExecuteActivity(
+            using Activity? activity = CronJobActivitySource.StartExecuteActivity(
                 _jobName,
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
@@ -362,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// <inheritdoc />
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            using var activity = CronJobActivitySource.StartStopActivity(_jobName);
+            using Activity? activity = CronJobActivitySource.StartStopActivity(_jobName);
 
             activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
             CronJobLoggerMessages.LogJobStopping(_logger, _jobName, _executionCount);

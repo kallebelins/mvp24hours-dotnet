@@ -42,9 +42,9 @@ namespace Mvp24Hours.WebAPI.Binders
                 throw new ArgumentNullException(nameof(bindingContext));
             }
 
-            var modelType = bindingContext.ModelType;
+            Type modelType = bindingContext.ModelType;
             var modelName = bindingContext.ModelName;
-            var valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
+            ValueProviderResult valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
 
             if (valueProviderResult == ValueProviderResult.None)
             {
@@ -70,7 +70,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Get the underlying value type (Guid, int, long, string)
-            var valueType = GetEntityIdValueType(modelType);
+            Type? valueType = GetEntityIdValueType(modelType);
             if (valueType == null)
             {
                 bindingContext.ModelState.TryAddModelError(
@@ -102,7 +102,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Find constructor that accepts the underlying value type
-            var constructor = modelType.GetConstructor(new[] { valueType });
+            ConstructorInfo? constructor = modelType.GetConstructor(new[] { valueType });
             if (constructor == null)
             {
                 bindingContext.ModelState.TryAddModelError(
@@ -133,12 +133,12 @@ namespace Mvp24Hours.WebAPI.Binders
                 return false;
 
             // Check if it's EntityId<TSelf, TValue> or a derived type
-            var baseType = type.BaseType;
+            Type? baseType = type.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (baseType.IsGenericType)
                 {
-                    var genericTypeDefinition = baseType.GetGenericTypeDefinition();
+                    Type genericTypeDefinition = baseType.GetGenericTypeDefinition();
                     if (genericTypeDefinition == typeof(EntityId<,>))
                     {
                         return true;
@@ -152,15 +152,15 @@ namespace Mvp24Hours.WebAPI.Binders
 
         private static Type? GetEntityIdValueType(Type entityIdType)
         {
-            var baseType = entityIdType.BaseType;
+            Type? baseType = entityIdType.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (baseType.IsGenericType)
                 {
-                    var genericTypeDefinition = baseType.GetGenericTypeDefinition();
+                    Type genericTypeDefinition = baseType.GetGenericTypeDefinition();
                     if (genericTypeDefinition == typeof(EntityId<,>))
                     {
-                        var genericArguments = baseType.GetGenericArguments();
+                        Type[] genericArguments = baseType.GetGenericArguments();
                         if (genericArguments.Length == 2)
                         {
                             // The second generic argument is the value type

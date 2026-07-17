@@ -22,13 +22,13 @@ public class SagaTest
     public class OrderSagaData
     {
         public Guid OrderId { get; set; } = Guid.NewGuid();
-        public List<string> Items { get; set; } = new();
+        public List<string> Items { get; set; } = [];
         public decimal TotalAmount { get; set; }
         public Guid? ReservationId { get; set; }
         public Guid? PaymentId { get; set; }
         public string? TrackingNumber { get; set; }
-        public List<string> ExecutedSteps { get; set; } = new();
-        public List<string> CompensatedSteps { get; set; } = new();
+        public List<string> ExecutedSteps { get; set; } = [];
+        public List<string> CompensatedSteps { get; set; } = [];
     }
 
     [Trait("Category", "Unit")]
@@ -195,16 +195,16 @@ public class SagaTest
     public async Task Saga_ExecutesAllSteps_Successfully()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var saga = provider.GetRequiredService<TestOrderSaga>();
+        IServiceProvider provider = CreateServiceProvider();
+        TestOrderSaga saga = provider.GetRequiredService<TestOrderSaga>();
         var data = new OrderSagaData
         {
-            Items = new List<string> { "Item1", "Item2" },
+            Items = ["Item1", "Item2"],
             TotalAmount = 100.00m
         };
 
         // Act
-        var result = await saga.StartAsync(data);
+        SagaResult result = await saga.StartAsync(data);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -222,12 +222,12 @@ public class SagaTest
     public async Task Saga_CompensatesOnFailure()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var saga = provider.GetRequiredService<FailingSaga>();
+        IServiceProvider provider = CreateServiceProvider();
+        FailingSaga saga = provider.GetRequiredService<FailingSaga>();
         var data = new OrderSagaData();
 
         // Act
-        var result = await saga.StartAsync(data);
+        SagaResult result = await saga.StartAsync(data);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -242,12 +242,12 @@ public class SagaTest
     public async Task Saga_PartiallyCompensates_WhenCompensationFails()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var saga = provider.GetRequiredService<PartialCompensationSaga>();
+        IServiceProvider provider = CreateServiceProvider();
+        PartialCompensationSaga saga = provider.GetRequiredService<PartialCompensationSaga>();
         var data = new OrderSagaData();
 
         // Act
-        var result = await saga.StartAsync(data);
+        SagaResult result = await saga.StartAsync(data);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -258,8 +258,8 @@ public class SagaTest
     public async Task Saga_ThrowsOnDoubleStart()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var saga = provider.GetRequiredService<TestOrderSaga>();
+        IServiceProvider provider = CreateServiceProvider();
+        TestOrderSaga saga = provider.GetRequiredService<TestOrderSaga>();
         var data = new OrderSagaData();
         await saga.StartAsync(data);
 
@@ -271,8 +271,8 @@ public class SagaTest
     public async Task Saga_StepsExecuteInOrder()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var saga = provider.GetRequiredService<TestOrderSaga>();
+        IServiceProvider provider = CreateServiceProvider();
+        TestOrderSaga saga = provider.GetRequiredService<TestOrderSaga>();
         var data = new OrderSagaData();
 
         // Act
@@ -306,7 +306,7 @@ public class SagaTest
 
         // Act
         await store.SaveAsync(state);
-        var retrieved = await store.GetAsync<OrderSagaData>(state.SagaId);
+        SagaState<OrderSagaData>? retrieved = await store.GetAsync<OrderSagaData>(state.SagaId);
 
         // Assert
         Assert.NotNull(retrieved);
@@ -340,7 +340,7 @@ public class SagaTest
         });
 
         // Assert
-        var updated = await store.GetAsync<OrderSagaData>(sagaId);
+        SagaState<OrderSagaData>? updated = await store.GetAsync<OrderSagaData>(sagaId);
         Assert.NotNull(updated);
         Assert.Equal(SagaStatus.Completed, updated.Status);
         Assert.NotNull(updated.CompletedAt);
@@ -375,7 +375,7 @@ public class SagaTest
         });
 
         // Act
-        var running = await store.GetByStatusAsync(SagaStatus.Running);
+        IReadOnlyList<SagaState> running = await store.GetByStatusAsync(SagaStatus.Running);
 
         // Assert
         Assert.Equal(2, running.Count);
@@ -397,7 +397,7 @@ public class SagaTest
 
         // Act
         await store.DeleteAsync(sagaId);
-        var retrieved = await store.GetAsync(sagaId);
+        SagaState? retrieved = await store.GetAsync(sagaId);
 
         // Assert
         Assert.Null(retrieved);
@@ -408,7 +408,7 @@ public class SagaTest
     {
         // Arrange
         var store = new InMemorySagaStateStore();
-        var oldDate = DateTime.UtcNow.AddDays(-10);
+        DateTime oldDate = DateTime.UtcNow.AddDays(-10);
 
         await store.SaveAsync(new SagaState
         {
@@ -434,13 +434,13 @@ public class SagaTest
     public async Task Orchestrator_ExecutesSaga()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        using var scope = provider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
         var data = new OrderSagaData { TotalAmount = 200m };
 
         // Act
-        var result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
+        SagaResult<OrderSagaData> result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -454,15 +454,15 @@ public class SagaTest
     public async Task Orchestrator_PersistsState()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        using var scope = provider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
-        var stateStore = provider.GetRequiredService<ISagaStateStore>();
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        ISagaStateStore stateStore = provider.GetRequiredService<ISagaStateStore>();
         var data = new OrderSagaData { TotalAmount = 300m };
 
         // Act
-        var result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
-        var state = await stateStore.GetAsync(result.SagaId);
+        SagaResult<OrderSagaData> result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
+        SagaState? state = await stateStore.GetAsync(result.SagaId);
 
         // Assert
         Assert.NotNull(state);
@@ -473,14 +473,14 @@ public class SagaTest
     public async Task Orchestrator_GetsStatus()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        using var scope = provider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
         var data = new OrderSagaData();
-        var result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
+        SagaResult<OrderSagaData> result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data);
 
         // Act
-        var status = await orchestrator.GetStatusAsync(result.SagaId);
+        SagaState? status = await orchestrator.GetStatusAsync(result.SagaId);
 
         // Assert
         Assert.NotNull(status);
@@ -491,9 +491,9 @@ public class SagaTest
     public async Task Orchestrator_HandlesExecutionOptions()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        using var scope = provider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
         var data = new OrderSagaData();
         var options = new SagaExecutionOptions
         {
@@ -507,9 +507,9 @@ public class SagaTest
         };
 
         // Act
-        var result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data, options);
-        var stateStore = provider.GetRequiredService<ISagaStateStore>();
-        var state = await stateStore.GetAsync<OrderSagaData>(result.SagaId);
+        SagaResult<OrderSagaData> result = await orchestrator.ExecuteAsync<TestOrderSaga, OrderSagaData>(data, options);
+        ISagaStateStore stateStore = provider.GetRequiredService<ISagaStateStore>();
+        SagaState<OrderSagaData>? state = await stateStore.GetAsync<OrderSagaData>(result.SagaId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -521,13 +521,13 @@ public class SagaTest
     public async Task Orchestrator_HandlesFailedSaga()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        using var scope = provider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        IServiceProvider provider = CreateServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
         var data = new OrderSagaData();
 
         // Act
-        var result = await orchestrator.ExecuteAsync<FailingSaga, OrderSagaData>(data);
+        SagaResult<OrderSagaData> result = await orchestrator.ExecuteAsync<FailingSaga, OrderSagaData>(data);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -544,8 +544,8 @@ public class SagaTest
     public async Task SagaStep_ExecutesSuccessfully()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var step = provider.GetRequiredService<ReserveStockStep>();
+        IServiceProvider provider = CreateServiceProvider();
+        ReserveStockStep step = provider.GetRequiredService<ReserveStockStep>();
         var data = new OrderSagaData();
 
         // Act
@@ -560,8 +560,8 @@ public class SagaTest
     public async Task SagaStep_CompensatesSuccessfully()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var step = provider.GetRequiredService<ReserveStockStep>();
+        IServiceProvider provider = CreateServiceProvider();
+        ReserveStockStep step = provider.GetRequiredService<ReserveStockStep>();
         var data = new OrderSagaData { ReservationId = Guid.NewGuid() };
 
         // Act
@@ -576,8 +576,8 @@ public class SagaTest
     public void SagaStep_HasCorrectMetadata()
     {
         // Arrange
-        var provider = CreateServiceProvider();
-        var step = provider.GetRequiredService<ProcessPaymentStep>();
+        IServiceProvider provider = CreateServiceProvider();
+        ProcessPaymentStep step = provider.GetRequiredService<ProcessPaymentStep>();
 
         // Assert
         Assert.Equal("ProcessPayment", step.Name);
@@ -791,11 +791,11 @@ public class SagaTest
             options.DisableBackgroundService();
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        Assert.NotNull(provider.GetService<ISagaStateStore>());
-        Assert.NotNull(provider.GetService<ISagaOrchestrator>());
+        Assert.NotNull(provider.GetRequiredService<ISagaStateStore>());
+        Assert.NotNull(provider.GetRequiredService<ISagaOrchestrator>());
     }
 
     [Fact, Priority(71)]
@@ -812,10 +812,10 @@ public class SagaTest
             options.DisableBackgroundService();
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        Assert.NotNull(provider.GetService<TestOrderSaga>());
+        Assert.NotNull(provider.GetRequiredService<TestOrderSaga>());
     }
 
     #endregion

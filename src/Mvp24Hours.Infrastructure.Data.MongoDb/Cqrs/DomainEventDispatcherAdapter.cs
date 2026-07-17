@@ -121,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs
             {
                 await _dispatchFunc(allEvents, cancellationToken);
 
-                foreach (var entity in entitiesList)
+                foreach (IHasDomainEvents? entity in entitiesList)
                 {
                     entity.ClearDomainEvents();
                 }

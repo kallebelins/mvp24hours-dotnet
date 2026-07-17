@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             }
 
             // Get timeout from request options or use default
-            var timeout = GetRequestTimeout(request);
+            TimeSpan timeout = GetRequestTimeout(request);
 
             if (timeout == Timeout.InfiniteTimeSpan || timeout == TimeSpan.Zero)
             {
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
         {
 #if NET5_0_OR_GREATER
             if (request.Options.TryGetValue(
-                new HttpRequestOptionsKey<TimeSpan>(TimeoutPropertyKey), out var timeout))
+                new HttpRequestOptionsKey<TimeSpan>(TimeoutPropertyKey), out TimeSpan timeout))
             {
                 return timeout;
             }

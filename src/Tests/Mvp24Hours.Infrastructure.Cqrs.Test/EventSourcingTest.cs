@@ -187,7 +187,7 @@ public class EventSourcingTest
         var stream = new EventStream(orderId, "TestOrder", events, 3);
 
         // Act
-        var eventsAfter1 = stream.GetEventsAfterVersion(1);
+        IReadOnlyList<CoreDomainEvent> eventsAfter1 = stream.GetEventsAfterVersion(1);
 
         // Assert
         Assert.Equal(2, eventsAfter1.Count);
@@ -203,14 +203,14 @@ public class EventSourcingTest
         // Arrange
         var store = new InMemoryEventStore();
         var aggregateId = Guid.NewGuid();
-        var events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
+        OrderCreatedEvent[] events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
 
         // Act
         await store.AppendEventsAsync(aggregateId, events, 0);
 
         // Assert
         Assert.Equal(1, store.Count);
-        var storedEvents = await store.GetEventsAsync(aggregateId);
+        IReadOnlyList<CoreDomainEvent> storedEvents = await store.GetEventsAsync(aggregateId);
         Assert.Single(storedEvents);
     }
 
@@ -220,7 +220,7 @@ public class EventSourcingTest
         // Arrange
         var store = new InMemoryEventStore();
         var aggregateId = Guid.NewGuid();
-        var events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
+        OrderCreatedEvent[] events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
         await store.AppendEventsAsync(aggregateId, events, 0);
 
         // Act & Assert
@@ -279,8 +279,8 @@ public class EventSourcingTest
         await store.AppendEventsAsync(aggregateId, new[] { new OrderPaidEvent { OrderId = aggregateId } }, 2);
 
         // Act
-        var allEvents = await store.GetEventsAsync(aggregateId, 0);
-        var eventsFromVersion2 = await store.GetEventsAsync(aggregateId, 2);
+        IReadOnlyList<CoreDomainEvent> allEvents = await store.GetEventsAsync(aggregateId, 0);
+        IReadOnlyList<CoreDomainEvent> eventsFromVersion2 = await store.GetEventsAsync(aggregateId, 2);
 
         // Assert
         Assert.Equal(3, allEvents.Count);
@@ -306,7 +306,7 @@ public class EventSourcingTest
 
         // Assert
         Assert.Empty(order.UncommittedEvents); // Should be cleared after save
-        var storedEvents = await store.GetEventsAsync(order.Id);
+        IReadOnlyList<CoreDomainEvent> storedEvents = await store.GetEventsAsync(order.Id);
         Assert.Equal(2, storedEvents.Count);
     }
 
@@ -321,7 +321,7 @@ public class EventSourcingTest
         await repository.SaveAsync(order);
 
         // Act
-        var loadedOrder = await repository.GetByIdAsync(order.Id);
+        TestOrder? loadedOrder = await repository.GetByIdAsync(order.Id);
 
         // Assert
         Assert.NotNull(loadedOrder);
@@ -339,7 +339,7 @@ public class EventSourcingTest
         var repository = new EventStoreRepository<TestOrder>(store);
 
         // Act
-        var order = await repository.GetByIdAsync(Guid.NewGuid());
+        TestOrder? order = await repository.GetByIdAsync(Guid.NewGuid());
 
         // Assert
         Assert.Null(order);
@@ -371,12 +371,12 @@ public class EventSourcingTest
         await repository.SaveAsync(order);
 
         // Reload, modify, and save again
-        var loadedOrder = await repository.GetByIdAsync(order.Id);
+        TestOrder? loadedOrder = await repository.GetByIdAsync(order.Id);
         loadedOrder!.AddItem(Guid.NewGuid(), "Product 1", 1, 10.00m);
         await repository.SaveAsync(loadedOrder);
 
         // Reload again
-        var reloadedOrder = await repository.GetByIdAsync(order.Id);
+        TestOrder? reloadedOrder = await repository.GetByIdAsync(order.Id);
 
         // Assert
         Assert.Equal(2, reloadedOrder!.Version);
@@ -406,7 +406,7 @@ public class EventSourcingTest
         await store.SaveSnapshotAsync(snapshot);
 
         // Assert
-        var loaded = await store.GetLatestSnapshotAsync(aggregateId);
+        Snapshot? loaded = await store.GetLatestSnapshotAsync(aggregateId);
         Assert.NotNull(loaded);
         Assert.Equal(10, loaded.Version);
     }
@@ -437,8 +437,8 @@ public class EventSourcingTest
         });
 
         // Act
-        var snapshotAt7 = await store.GetSnapshotAtVersionAsync(aggregateId, 7);
-        var snapshotAt15 = await store.GetSnapshotAtVersionAsync(aggregateId, 15);
+        Snapshot? snapshotAt7 = await store.GetSnapshotAtVersionAsync(aggregateId, 7);
+        Snapshot? snapshotAt15 = await store.GetSnapshotAtVersionAsync(aggregateId, 15);
 
         // Assert
         Assert.NotNull(snapshotAt7);
@@ -471,7 +471,7 @@ public class EventSourcingTest
     public void NeverSnapshotStrategy_ShouldAlwaysReturnFalse()
     {
         // Arrange
-        var strategy = NeverSnapshotStrategy.Instance;
+        NeverSnapshotStrategy strategy = NeverSnapshotStrategy.Instance;
         var order = TestOrder.Create("test@example.com");
         for (int i = 0; i < 100; i++)
         {
@@ -486,7 +486,7 @@ public class EventSourcingTest
     public void AlwaysSnapshotStrategy_ShouldReturnTrueWhenVersionIncreased()
     {
         // Arrange
-        var strategy = AlwaysSnapshotStrategy.Instance;
+        AlwaysSnapshotStrategy strategy = AlwaysSnapshotStrategy.Instance;
         var order = TestOrder.Create("test@example.com");
 
         // Act & Assert
@@ -512,12 +512,12 @@ public class EventSourcingTest
 
         // Act
         var json = serializer.Serialize(original);
-        var deserialized = serializer.Deserialize(
+        CoreDomainEvent deserialized = serializer.Deserialize(
             typeof(OrderCreatedEvent).AssemblyQualifiedName!,
             json);
 
         // Assert
-        var result = Assert.IsType<OrderCreatedEvent>(deserialized);
+        OrderCreatedEvent result = Assert.IsType<OrderCreatedEvent>(deserialized);
         Assert.Equal(original.OrderId, result.OrderId);
         Assert.Equal(original.CustomerEmail, result.CustomerEmail);
         Assert.Equal(original.TotalAmount, result.TotalAmount);
@@ -531,7 +531,7 @@ public class EventSourcingTest
         resolver.Register<OrderCreatedEvent>("order.created");
 
         // Act
-        var type = resolver.Resolve("order.created");
+        Type? type = resolver.Resolve("order.created");
         var name = resolver.GetTypeName(typeof(OrderCreatedEvent));
 
         // Assert

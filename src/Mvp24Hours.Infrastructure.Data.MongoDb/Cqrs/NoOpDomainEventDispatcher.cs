@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs
                 totalEvents,
                 entitiesList.Count);
 
-            foreach (var entity in entitiesList)
+            foreach (IHasDomainEvents? entity in entitiesList)
             {
                 entity.ClearDomainEvents();
             }

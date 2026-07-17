@@ -66,7 +66,7 @@ namespace Mvp24Hours.WebAPI.Filters
             }
 
             // Perform content negotiation
-            var negotiationResult = _negotiator.Negotiate(context.HttpContext);
+            ContentNegotiationResult negotiationResult = _negotiator.Negotiate(context.HttpContext);
 
             // Handle negotiation failure (406 Not Acceptable)
             if (!negotiationResult.Success)
@@ -90,7 +90,7 @@ namespace Mvp24Hours.WebAPI.Filters
                 return;
             }
 
-            var formatter = negotiationResult.Formatter!;
+            IContentFormatter formatter = negotiationResult.Formatter!;
 
             // Store the formatter in HttpContext for downstream use
             context.HttpContext.Items["ContentFormatter"] = formatter;
@@ -120,7 +120,7 @@ namespace Mvp24Hours.WebAPI.Filters
             ResultExecutionDelegate next)
         {
             var value = objectResult.Value;
-            var response = context.HttpContext.Response;
+            HttpResponse response = context.HttpContext.Response;
 
             // Handle ProblemDetails specially
             if (value is ProblemDetails problemDetails && formatter is IProblemDetailsFormatter pdFormatter)
@@ -177,9 +177,9 @@ namespace Mvp24Hours.WebAPI.Filters
                 return;
             }
 
-            var acceptedTypes = AcceptHeaderNegotiator.ParseAcceptHeader(acceptHeader);
+            List<MediaTypeEntry> acceptedTypes = AcceptHeaderNegotiator.ParseAcceptHeader(acceptHeader);
 
-            foreach (var accepted in acceptedTypes)
+            foreach (MediaTypeEntry accepted in acceptedTypes)
             {
                 foreach (var acceptable in _acceptableMediaTypes)
                 {

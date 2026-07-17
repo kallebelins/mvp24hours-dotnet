@@ -8,6 +8,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Query;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
@@ -81,7 +83,7 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(tenantProvider));
             }
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
                 // Check if entity implements ITenantEntity (string TenantId)
                 if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
@@ -89,7 +91,7 @@ namespace Mvp24Hours.Extensions
                     ApplyTenantFilter(modelBuilder, entityType.ClrType, tenantProvider);
                 }
                 // Check for generic ITenantEntity<T>
-                else if (ImplementsGenericTenantEntity(entityType.ClrType, out var tenantIdType) && tenantIdType != null)
+                else if (ImplementsGenericTenantEntity(entityType.ClrType, out Type? tenantIdType) && tenantIdType != null)
                 {
                     ApplyGenericTenantFilter(modelBuilder, entityType.ClrType, tenantIdType, tenantProvider);
                 }
@@ -140,9 +142,9 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(tenantProvider));
             }
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
-                var clrType = entityType.ClrType;
+                Type clrType = entityType.ClrType;
                 var isTenant = typeof(ITenantEntity).IsAssignableFrom(clrType);
                 var isSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(clrType);
 
@@ -177,11 +179,11 @@ namespace Mvp24Hours.Extensions
             bool isRequired = true,
             bool createIndex = true)
         {
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
                 {
-                    var entityBuilder = modelBuilder.Entity(entityType.ClrType);
+                    EntityTypeBuilder entityBuilder = modelBuilder.Entity(entityType.ClrType);
 
                     entityBuilder.Property(nameof(ITenantEntity.TenantId))
                         .HasMaxLength(maxLength)
@@ -206,24 +208,24 @@ namespace Mvp24Hours.Extensions
             ITenantProvider tenantProvider)
         {
             // Build expression: e => e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
-            var parameter = Expression.Parameter(entityType, "e");
-            var tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+            ParameterExpression parameter = Expression.Parameter(entityType, "e");
+            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
 
             // Access tenantProvider.TenantId at runtime
-            var tenantProviderConstant = Expression.Constant(tenantProvider);
-            var currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+            ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+            MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
 
             // e.TenantId == tenantProvider.TenantId
-            var equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
+            BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
 
             // tenantProvider.TenantId == null (bypass filter when no tenant set)
-            var nullConstant = Expression.Constant(null, typeof(string));
-            var tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
+            ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+            BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
 
             // Combine: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
-            var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+            BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
 
-            var lambda = Expression.Lambda(combinedExpression, parameter);
+            LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
 
@@ -236,68 +238,68 @@ namespace Mvp24Hours.Extensions
             // For generic tenant entities, we create a dynamic filter
             // This is more complex as we need to handle different TenantId types
 
-            var parameter = Expression.Parameter(entityType, "e");
-            var tenantIdProperty = Expression.Property(parameter, "TenantId");
+            ParameterExpression parameter = Expression.Parameter(entityType, "e");
+            MemberExpression tenantIdProperty = Expression.Property(parameter, "TenantId");
 
             if (tenantIdType == typeof(string))
             {
                 // Same as non-generic case
-                var tenantProviderConstant = Expression.Constant(tenantProvider);
-                var currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-                var equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
-                var nullConstant = Expression.Constant(null, typeof(string));
-                var tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
-                var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                var lambda = Expression.Lambda(combinedExpression, parameter);
+                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+                MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+                BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
+                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+                BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
+                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
             }
             else if (tenantIdType == typeof(Guid))
             {
                 // For Guid tenant IDs, use EF.Property for comparison
-                var methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
+                Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
 
                 // Create method to convert string to Guid at runtime
-                var tenantProviderConstant = Expression.Constant(tenantProvider);
-                var currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+                MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
 
                 // Convert string to Guid using Guid.Parse wrapped in a null check
-                var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
+                MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
                     nameof(ParseGuidOrDefault),
                     BindingFlags.NonPublic | BindingFlags.Static)
                     ?? throw new InvalidOperationException("ParseGuidOrDefault method not found.");
-                var parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
+                MethodCallExpression parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
 
-                var equalExpression = Expression.Equal(methodCall, parsedGuid);
+                BinaryExpression equalExpression = Expression.Equal(methodCall, parsedGuid);
 
                 // Check if tenant string is null
-                var nullConstant = Expression.Constant(null, typeof(string));
-                var tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
+                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+                BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
 
-                var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                var lambda = Expression.Lambda(combinedExpression, parameter);
+                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
             }
             else if (tenantIdType == typeof(int))
             {
                 // For int tenant IDs
-                var methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
+                Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
 
-                var tenantProviderConstant = Expression.Constant(tenantProvider);
-                var currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+                MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
 
-                var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
+                MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
                     nameof(ParseIntOrDefault),
                     BindingFlags.NonPublic | BindingFlags.Static)
                     ?? throw new InvalidOperationException("ParseIntOrDefault method not found.");
-                var parsedInt = Expression.Call(parseMethod, currentTenantIdString);
+                MethodCallExpression parsedInt = Expression.Call(parseMethod, currentTenantIdString);
 
-                var equalExpression = Expression.Equal(methodCall, parsedInt);
+                BinaryExpression equalExpression = Expression.Equal(methodCall, parsedInt);
 
-                var nullConstant = Expression.Constant(null, typeof(string));
-                var tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
+                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+                BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
 
-                var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                var lambda = Expression.Lambda(combinedExpression, parameter);
+                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
             }
         }
@@ -307,36 +309,36 @@ namespace Mvp24Hours.Extensions
             Type entityType,
             ITenantProvider tenantProvider)
         {
-            var parameter = Expression.Parameter(entityType, "e");
+            ParameterExpression parameter = Expression.Parameter(entityType, "e");
 
             // Tenant filter: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
-            var tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
-            var tenantProviderConstant = Expression.Constant(tenantProvider);
-            var currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-            var tenantEqual = Expression.Equal(tenantIdProperty, currentTenantId);
-            var nullConstant = Expression.Constant(null, typeof(string));
-            var tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
-            var tenantFilter = Expression.OrElse(tenantEqual, tenantIsNull);
+            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+            ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+            MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+            BinaryExpression tenantEqual = Expression.Equal(tenantIdProperty, currentTenantId);
+            ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+            BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
+            BinaryExpression tenantFilter = Expression.OrElse(tenantEqual, tenantIsNull);
 
             // Soft delete filter: !e.IsDeleted
-            var isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-            var falseConstant = Expression.Constant(false);
-            var softDeleteFilter = Expression.Equal(isDeletedProperty, falseConstant);
+            MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            ConstantExpression falseConstant = Expression.Constant(false);
+            BinaryExpression softDeleteFilter = Expression.Equal(isDeletedProperty, falseConstant);
 
             // Combine: tenantFilter && softDeleteFilter
-            var combinedFilter = Expression.AndAlso(tenantFilter, softDeleteFilter);
+            BinaryExpression combinedFilter = Expression.AndAlso(tenantFilter, softDeleteFilter);
 
-            var lambda = Expression.Lambda(combinedFilter, parameter);
+            LambdaExpression lambda = Expression.Lambda(combinedFilter, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
 
         private static void ApplySoftDeleteFilter(ModelBuilder modelBuilder, Type entityType)
         {
-            var parameter = Expression.Parameter(entityType, "e");
-            var isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-            var falseConstant = Expression.Constant(false);
-            var filter = Expression.Equal(isDeletedProperty, falseConstant);
-            var lambda = Expression.Lambda(filter, parameter);
+            ParameterExpression parameter = Expression.Parameter(entityType, "e");
+            MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            ConstantExpression falseConstant = Expression.Constant(false);
+            BinaryExpression filter = Expression.Equal(isDeletedProperty, falseConstant);
+            LambdaExpression lambda = Expression.Lambda(filter, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
 
@@ -344,7 +346,7 @@ namespace Mvp24Hours.Extensions
         {
             tenantIdType = null;
 
-            foreach (var iface in type.GetInterfaces())
+            foreach (Type iface in type.GetInterfaces())
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
                 {
@@ -362,7 +364,7 @@ namespace Mvp24Hours.Extensions
             string propertyName,
             ParameterExpression parameter)
         {
-            var efPropertyMethod = typeof(EF)
+            MethodInfo efPropertyMethod = typeof(EF)
                 .GetMethod(nameof(EF.Property))
                 ?.MakeGenericMethod(propertyType)
                 ?? throw new InvalidOperationException("EF.Property method not found.");
@@ -376,7 +378,7 @@ namespace Mvp24Hours.Extensions
         private static Guid ParseGuidOrDefault(string? value)
         {
             if (string.IsNullOrEmpty(value)) return Guid.Empty;
-            return Guid.TryParse(value, out var result) ? result : Guid.Empty;
+            return Guid.TryParse(value, out Guid result) ? result : Guid.Empty;
         }
 
         private static int ParseIntOrDefault(string? value)

@@ -9,6 +9,8 @@ using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.WebAPI.Configuration;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
@@ -91,7 +93,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
             // Check for custom mapper first
             if (_options.CustomMapper != null)
             {
-                var customResult = _options.CustomMapper(exception, context);
+                ProblemDetails? customResult = _options.CustomMapper(exception, context);
                 if (customResult != null)
                 {
                     return customResult;
@@ -99,7 +101,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
             }
 
             var statusCode = GetStatusCode(exception);
-            var (title, type) = GetTitleAndType(exception);
+            (string? title, string? type) = GetTitleAndType(exception);
 
             var problemDetails = new ProblemDetails
             {
@@ -159,14 +161,14 @@ namespace Mvp24Hours.WebAPI.Exceptions
             }
 
             // Check custom mappings from options
-            var exceptionType = exception.GetType();
-            if (_options.ExceptionMappings.TryGetValue(exceptionType, out var customStatusCode))
+            Type exceptionType = exception.GetType();
+            if (_options.ExceptionMappings.TryGetValue(exceptionType, out HttpStatusCode customStatusCode))
             {
                 return (int)customStatusCode;
             }
 
             // Check default mappings (including base types)
-            foreach (var mapping in _defaultMappings)
+            foreach (KeyValuePair<Type, (HttpStatusCode StatusCode, string Title, string Type)> mapping in _defaultMappings)
             {
                 if (mapping.Key.IsAssignableFrom(exceptionType))
                 {
@@ -182,10 +184,10 @@ namespace Mvp24Hours.WebAPI.Exceptions
 
         private (string Title, string Type) GetTitleAndType(Exception exception)
         {
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
 
             // Check default mappings
-            foreach (var mapping in _defaultMappings)
+            foreach (KeyValuePair<Type, (HttpStatusCode StatusCode, string Title, string Type)> mapping in _defaultMappings)
             {
                 if (mapping.Key.IsAssignableFrom(exceptionType))
                 {
@@ -242,7 +244,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
                     if (validationEx.ValidationErrors != null && validationEx.ValidationErrors.Count > 0)
                     {
                         var errors = new List<object>();
-                        foreach (var error in validationEx.ValidationErrors)
+                        foreach (IMessageResult error in validationEx.ValidationErrors)
                         {
                             errors.Add(new
                             {
@@ -319,7 +321,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
         private string? GetCorrelationId(HttpContext context)
         {
             // Try to get from header
-            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out var headerValue))
+            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out StringValues headerValue))
             {
                 return headerValue.ToString();
             }

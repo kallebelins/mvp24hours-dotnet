@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository GetByAny started");
             try
             {
-                var query = this.dbEntities.AsQueryable();
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository GetByCount started");
             try
             {
-                var query = this.dbEntities.AsQueryable();
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository GetBy started");
             try
             {
-                var query = this.dbEntities.AsQueryable();
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities?.AnySafe() == true)
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Add(entity);
                     }
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     return;
                 }
 
-                var entityDb = dbContext.Set<T>().Find(GetKeyFilter(entity)).FirstOrDefault()
+                T entityDb = dbContext.Set<T>().Find(GetKeyFilter(entity)).FirstOrDefault()
                     ?? throw new InvalidOperationException("Key value not found.");
 
                 // properties that can not be changed
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities?.AnySafe() == true)
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Modify(entity);
                     }
@@ -259,7 +259,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             {
                 if (entities?.AnySafe() == true)
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Remove(entity);
                     }
@@ -273,7 +273,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB repository RemoveById started: Id={Id}", id);
             try
             {
-                var entity = this.GetById(id);
+                T? entity = this.GetById(id);
                 if (entity == null)
                 {
                     return;

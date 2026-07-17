@@ -104,7 +104,7 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
         if (!_options.Enabled)
             return;
 
-        var tags = CreateTags(serviceName, operationName, operationType);
+        KeyValuePair<string, object?>[] tags = CreateTags(serviceName, operationName, operationType);
         _operationsTotal.Add(1, tags);
         _operationsActive.Add(1, tags);
 
@@ -119,7 +119,7 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
         if (!_options.Enabled)
             return;
 
-        var tags = CreateTags(serviceName, operationName, operationType);
+        KeyValuePair<string, object?>[] tags = CreateTags(serviceName, operationName, operationType);
         _operationsSuccess.Add(1, tags);
         _operationsActive.Add(-1, tags);
         _operationDuration.Record(durationMs, tags);
@@ -135,7 +135,7 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
         if (!_options.Enabled)
             return;
 
-        var tags = CreateTagsWithError(serviceName, operationName, operationType, exceptionType);
+        KeyValuePair<string, object?>[] tags = CreateTagsWithError(serviceName, operationName, operationType, exceptionType);
         _operationsFailure.Add(1, tags);
         _operationsActive.Add(-1, CreateTags(serviceName, operationName, operationType));
         _operationDuration.Record(durationMs, tags);

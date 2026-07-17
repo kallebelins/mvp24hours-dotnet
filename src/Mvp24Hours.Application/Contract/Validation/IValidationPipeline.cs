@@ -170,7 +170,7 @@ namespace Mvp24Hours.Application.Contract.Validation
         {
             Options = options ?? ValidationOptions.Default;
             State = new Dictionary<string, object>();
-            AccumulatedErrors = new List<IMessageResult>();
+            AccumulatedErrors = [];
             ServiceProvider = serviceProvider;
         }
 

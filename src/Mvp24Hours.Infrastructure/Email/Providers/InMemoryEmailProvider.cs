@@ -63,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         public InMemoryEmailProvider(IOptions<EmailOptions> options)
             : base(options)
         {
-            _sentEmails = new List<EmailMessage>();
+            _sentEmails = [];
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         public InMemoryEmailProvider(EmailOptions options)
             : base(options)
         {
-            _sentEmails = new List<EmailMessage>();
+            _sentEmails = [];
         }
 
         /// <summary>

@@ -185,7 +185,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate and map create DTOs to entities
-                var mappingResult = await ValidateAndMapCreateDtosAsync(dtos, cancellationToken);
+                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapCreateDtosAsync(dtos, cancellationToken);
                 if (!mappingResult.HasData() || mappingResult.Data == null)
                 {
                     stopwatch.Stop();
@@ -194,10 +194,10 @@ namespace Mvp24Hours.Application.Logic
                         stopwatch.Elapsed).ToBusiness();
                 }
 
-                var entities = mappingResult.Data;
+                IList<TEntity> entities = mappingResult.Data;
 
                 // Execute bulk insert using base class
-                var result = await base.BulkAddAsync(entities, options, cancellationToken);
+                IBusinessResult<BulkOperationResult> result = await base.BulkAddAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate and map update DTOs to entities
-                var mappingResult = await ValidateAndMapUpdateDtosAsync(dtos, cancellationToken);
+                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapUpdateDtosAsync(dtos, cancellationToken);
                 if (!mappingResult.HasData() || mappingResult.Data == null)
                 {
                     stopwatch.Stop();
@@ -252,10 +252,10 @@ namespace Mvp24Hours.Application.Logic
                         stopwatch.Elapsed).ToBusiness();
                 }
 
-                var entities = mappingResult.Data;
+                IList<TEntity> entities = mappingResult.Data;
 
                 // Execute bulk update using base class
-                var result = await base.BulkModifyAsync(entities, options, cancellationToken);
+                IBusinessResult<BulkOperationResult> result = await base.BulkModifyAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -317,14 +317,14 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>(dtos.Count);
 
-            foreach (var dto in dtos)
+            foreach (TCreateDto dto in dtos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // Validate create DTO if validator is available
                 if (_createDtoValidator != null)
                 {
-                    var dtoErrors = dto.TryValidate(_createDtoValidator);
+                    IList<IMessageResult> dtoErrors = dto.TryValidate(_createDtoValidator);
                     if (dtoErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validatecreatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
@@ -334,12 +334,12 @@ namespace Mvp24Hours.Application.Logic
                 }
 
                 // Map create DTO to Entity
-                var entity = MapCreateDtoToEntity(dto);
+                TEntity entity = MapCreateDtoToEntity(dto);
 
                 // Validate Entity if validator is available
                 if (_entityValidator != null)
                 {
-                    var entityErrors = entity.TryValidate(_entityValidator);
+                    IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                     if (entityErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
@@ -372,14 +372,14 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>(dtos.Count);
 
-            foreach (var dto in dtos)
+            foreach (TUpdateDto dto in dtos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // Validate update DTO if validator is available
                 if (_updateDtoValidator != null)
                 {
-                    var dtoErrors = dto.TryValidate(_updateDtoValidator);
+                    IList<IMessageResult> dtoErrors = dto.TryValidate(_updateDtoValidator);
                     if (dtoErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateupdatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
@@ -389,12 +389,12 @@ namespace Mvp24Hours.Application.Logic
                 }
 
                 // Map update DTO to Entity
-                var entity = MapUpdateDtoToEntity(dto);
+                TEntity entity = MapUpdateDtoToEntity(dto);
 
                 // Validate Entity if validator is available
                 if (_entityValidator != null)
                 {
-                    var entityErrors = entity.TryValidate(_entityValidator);
+                    IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                     if (entityErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandserviceseparatedtosasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",

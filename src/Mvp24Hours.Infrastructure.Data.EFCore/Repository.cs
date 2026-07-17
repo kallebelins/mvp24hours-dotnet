@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
@@ -34,7 +36,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: ListAny started");
             try
             {
-                using var scope = CreateTransactionScope(true);
+                using TransactionScope? scope = CreateTransactionScope(true);
                 var result = GetQuery(null, true).Any();
                 if (scope != null)
                 {
@@ -51,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: ListCount started");
             try
             {
-                using var scope = CreateTransactionScope(true);
+                using TransactionScope? scope = CreateTransactionScope(true);
                 var result = GetQuery(null, true).Count();
                 if (scope != null)
                 {
@@ -73,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: List started");
             try
             {
-                using var scope = CreateTransactionScope();
+                using TransactionScope? scope = CreateTransactionScope();
                 var result = GetQuery(criteria).ToList();
                 if (scope != null)
                 {
@@ -90,8 +92,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: GetByAny started");
             try
             {
-                using var scope = CreateTransactionScope(true);
-                var query = this.dbEntities.AsQueryable();
+                using TransactionScope? scope = CreateTransactionScope(true);
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -112,8 +114,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: GetByCount started");
             try
             {
-                using var scope = CreateTransactionScope(true);
-                var query = this.dbEntities.AsQueryable();
+                using TransactionScope? scope = CreateTransactionScope(true);
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -139,8 +141,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: GetBy started");
             try
             {
-                using var scope = CreateTransactionScope();
-                var query = this.dbEntities.AsQueryable();
+                using TransactionScope? scope = CreateTransactionScope();
+                IQueryable<T> query = this.dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -166,8 +168,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: GetById started");
             try
             {
-                using var scope = CreateTransactionScope();
-                var result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefault();
+                using TransactionScope? scope = CreateTransactionScope();
+                T? result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).SingleOrDefault();
                 if (scope != null)
                 {
                     scope.Complete();
@@ -201,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: LoadRelation (collection) started");
             try
             {
-                var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+                IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
                 if (clause != null)
                 {
@@ -223,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: LoadRelationSortByAscending started");
             try
             {
-                var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+                IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
                 if (clause != null)
                 {
@@ -250,7 +252,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: LoadRelationSortByDescending started");
             try
             {
-                var query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
+                IQueryable<TProperty> query = this.dbContext.Entry(entity).Collection(propertyExpression).Query();
 
                 if (clause != null)
                 {
@@ -286,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     return;
                 }
 
-                var entry = this.dbContext.Entry(entity);
+                EntityEntry<T> entry = this.dbContext.Entry(entity);
                 if (entry.State != EntityState.Detached)
                 {
                     entry.State = EntityState.Added;
@@ -306,7 +308,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Add(entity);
                     }
@@ -353,7 +355,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Modify(entity);
                     }
@@ -403,7 +405,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             {
                 if (entities.AnySafe())
                 {
-                    foreach (var entity in entities)
+                    foreach (T entity in entities)
                     {
                         this.Remove(entity);
                     }
@@ -417,7 +419,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: RemoveById started");
             try
             {
-                var entity = this.GetById(id);
+                T entity = this.GetById(id);
                 if (entity == null)
                 {
                     return;
@@ -457,7 +459,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     return;
                 }
 
-                var entry = this.dbContext.Entry(entity);
+                EntityEntry<T> entry = this.dbContext.Entry(entity);
                 if (entry.State != EntityState.Deleted)
                 {
                     entry.State = EntityState.Deleted;

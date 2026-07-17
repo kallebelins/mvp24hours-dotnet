@@ -202,7 +202,7 @@ namespace Mvp24Hours.Core.Infrastructure.Security
 
                 aes.IV = iv;
 
-                using (var encryptor = aes.CreateEncryptor())
+                using (ICryptoTransform encryptor = aes.CreateEncryptor())
                 using (var ms = new MemoryStream())
                 {
                     // Prepend IV to ciphertext for randomized encryption
@@ -262,7 +262,7 @@ namespace Mvp24Hours.Core.Infrastructure.Security
                     Array.Copy(encryptedData, 16, cipherText, 0, cipherText.Length);
                 }
 
-                using (var decryptor = aes.CreateDecryptor())
+                using (ICryptoTransform decryptor = aes.CreateDecryptor())
                 using (var ms = new MemoryStream(cipherText))
                 using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
                 using (var output = new MemoryStream())

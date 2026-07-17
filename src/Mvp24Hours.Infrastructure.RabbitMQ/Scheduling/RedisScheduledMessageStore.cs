@@ -113,17 +113,17 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
             var result = new List<ScheduledMessage>();
 
-            foreach (var id in _messageIndex.Keys.Take(batchSize * 10)) // Check more than batch size
+            foreach (Guid id in _messageIndex.Keys.Take(batchSize * 10)) // Check more than batch size
             {
                 if (result.Count >= batchSize)
                 {
                     break;
                 }
 
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message == null)
                 {
                     _messageIndex.TryRemove(id, out _);
@@ -147,9 +147,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             var result = new List<ScheduledMessage>();
 
-            foreach (var id in _messageIndex.Keys)
+            foreach (Guid id in _messageIndex.Keys)
             {
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message?.Status == ScheduledMessageStatus.Pending)
                 {
                     result.Add(message);
@@ -164,9 +164,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             var result = new List<ScheduledMessage>();
 
-            foreach (var id in _messageIndex.Keys)
+            foreach (Guid id in _messageIndex.Keys)
             {
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message?.IsRecurring == true && message.Status == ScheduledMessageStatus.Active)
                 {
                     result.Add(message);
@@ -183,9 +183,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             var result = new List<ScheduledMessage>();
 
-            foreach (var id in _messageIndex.Keys)
+            foreach (Guid id in _messageIndex.Keys)
             {
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message?.Status == status)
                 {
                     result.Add(message);
@@ -208,7 +208,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public async Task<bool> MarkAsProcessingAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var message = await GetByIdAsync(id, cancellationToken);
+            ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
             if (message == null || message.Status == ScheduledMessageStatus.Processing)
             {
                 return false;
@@ -222,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public async Task MarkAsCompletedAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var message = await GetByIdAsync(id, cancellationToken);
+            ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
             if (message != null)
             {
                 message.Status = ScheduledMessageStatus.Completed;
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         /// <inheritdoc />
         public async Task MarkAsFailedAsync(Guid id, string error, CancellationToken cancellationToken = default)
         {
-            var message = await GetByIdAsync(id, cancellationToken);
+            ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
             if (message != null)
             {
                 message.Status = ScheduledMessageStatus.Failed;
@@ -251,9 +251,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             var removed = 0;
 
-            foreach (var id in _messageIndex.Keys.ToList())
+            foreach (Guid id in _messageIndex.Keys.ToList())
             {
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message == null)
                 {
                     _messageIndex.TryRemove(id, out _);
@@ -282,9 +282,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 result[status] = 0;
             }
 
-            foreach (var id in _messageIndex.Keys)
+            foreach (Guid id in _messageIndex.Keys)
             {
-                var message = await GetByIdAsync(id, cancellationToken);
+                ScheduledMessage? message = await GetByIdAsync(id, cancellationToken);
                 if (message != null)
                 {
                     result[message.Status]++;
@@ -298,9 +298,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
         {
             // Get current index
             var indexJson = await _cache.GetStringAsync(INDEX_KEY, cancellationToken);
-            var index = string.IsNullOrEmpty(indexJson)
-                ? new HashSet<Guid>()
-                : JsonSerializer.Deserialize<HashSet<Guid>>(indexJson, _jsonOptions) ?? new HashSet<Guid>();
+            HashSet<Guid> index = string.IsNullOrEmpty(indexJson)
+                ? []
+                : JsonSerializer.Deserialize<HashSet<Guid>>(indexJson, _jsonOptions) ?? [];
 
             if (add)
             {
@@ -323,10 +323,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             var indexJson = await _cache.GetStringAsync(INDEX_KEY, cancellationToken);
             if (!string.IsNullOrEmpty(indexJson))
             {
-                var index = JsonSerializer.Deserialize<HashSet<Guid>>(indexJson, _jsonOptions);
+                HashSet<Guid>? index = JsonSerializer.Deserialize<HashSet<Guid>>(indexJson, _jsonOptions);
                 if (index != null)
                 {
-                    foreach (var id in index)
+                    foreach (Guid id in index)
                     {
                         _messageIndex.TryAdd(id, true);
                     }

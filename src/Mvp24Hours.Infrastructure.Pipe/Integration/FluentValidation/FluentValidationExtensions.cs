@@ -50,9 +50,9 @@ namespace Mvp24Hours.Extensions
         {
             services.AddTransient<ITypedOperationAsync<T, T>>(sp =>
             {
-                var validators = sp.GetServices<IValidator<T>>();
-                var logger = sp.GetService<ILogger<FluentValidationOperation<T>>>();
-                var globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
+                IEnumerable<IValidator<T>> validators = sp.GetServices<IValidator<T>>();
+                ILogger<FluentValidationOperation<T>>? logger = sp.GetService<ILogger<FluentValidationOperation<T>>>();
+                FluentValidationOptions globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
 
                 var options = new FluentValidationOptions
                 {
@@ -88,9 +88,9 @@ namespace Mvp24Hours.Extensions
         {
             services.AddTransient<FluentValidationPipelineOperation<T>>(sp =>
             {
-                var validators = sp.GetServices<IValidator<T>>();
-                var logger = sp.GetService<ILogger<FluentValidationPipelineOperation<T>>>();
-                var globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
+                IEnumerable<IValidator<T>> validators = sp.GetServices<IValidator<T>>();
+                ILogger<FluentValidationPipelineOperation<T>>? logger = sp.GetService<ILogger<FluentValidationPipelineOperation<T>>>();
+                FluentValidationOptions globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
 
                 var options = new FluentValidationOptions
                 {
@@ -142,7 +142,7 @@ namespace Mvp24Hours.Extensions
             Func<InlineValidator<T>> validatorFactory,
             FluentValidationOptions? options = null)
         {
-            var validator = validatorFactory();
+            InlineValidator<T> validator = validatorFactory();
             var operation = new FluentValidationOperation<T>(new[] { validator }, null, options);
             pipeline.Add<T, T>(operation);
             return pipeline;

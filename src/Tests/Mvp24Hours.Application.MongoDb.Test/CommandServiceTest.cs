@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
 using Mvp24Hours.Application.MongoDb.Test.Support.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Testcontainers.MongoDb;
 using Xunit;
@@ -62,7 +63,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         public void CreateCustomer()
         {
             Setup();
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
             service.Add(new Customer
             {
@@ -72,7 +73,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
                 Active = true
             });
 
-            var result = service.GetById(oid);
+            IBusinessResult<Customer> result = service.GetById(oid);
 
             Assert.True(result.HasData());
         }
@@ -82,15 +83,15 @@ namespace Mvp24Hours.Application.MongoDb.Test
         {
             Setup();
             CreateCustomer();
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
-            var customer = service.GetById(oid).GetDataValue();
+            Customer? customer = service.GetById(oid).GetDataValue();
 
             customer.Name = "Test Updated";
 
             service.Modify(customer);
 
-            var boCustomer = service.GetById(oid);
+            IBusinessResult<Customer> boCustomer = service.GetById(oid);
 
             Assert.True(boCustomer != null && boCustomer.Data?.Name == "Test Updated");
         }
@@ -100,11 +101,11 @@ namespace Mvp24Hours.Application.MongoDb.Test
         {
             Setup();
             UpdateCustomer();
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
             service.RemoveById(oid);
 
-            var result = service.GetById(oid);
+            IBusinessResult<Customer> result = service.GetById(oid);
 
             Assert.False(result.HasData());
         }

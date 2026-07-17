@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 // Check if we should retry
                 if (context.RedeliveryCount < _options.MaxRetries)
                 {
-                    var retryDelay = CalculateRetryDelay(context.RedeliveryCount);
+                    TimeSpan retryDelay = CalculateRetryDelay(context.RedeliveryCount);
                     context.SetRetry(retryDelay);
 
                     LogRetry(messageType, messageId, context.RedeliveryCount + 1, _options.MaxRetries, retryDelay);
@@ -100,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             // Check if exception type is in the ignore list
             if (_options.ExceptionsToIgnore != null)
             {
-                foreach (var ignoreType in _options.ExceptionsToIgnore)
+                foreach (Type ignoreType in _options.ExceptionsToIgnore)
                 {
                     if (ignoreType.IsInstanceOfType(ex))
                         return false;
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             // Check if we should only handle specific exceptions
             if (_options.ExceptionsToHandle != null && _options.ExceptionsToHandle.Length > 0)
             {
-                foreach (var handleType in _options.ExceptionsToHandle)
+                foreach (Type handleType in _options.ExceptionsToHandle)
                 {
                     if (handleType.IsInstanceOfType(ex))
                         return true;

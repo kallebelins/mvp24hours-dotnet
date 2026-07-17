@@ -91,8 +91,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
 
         private async Task VerifyIndexesAsync(CancellationToken cancellationToken)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetService<Mvp24HoursContext>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            Mvp24HoursContext? context = scope.ServiceProvider.GetService<Mvp24HoursContext>();
 
             if (context == null)
             {
@@ -100,21 +100,21 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
                 return;
             }
 
-            var indexManager = scope.ServiceProvider.GetService<IMongoDbIndexManager>()
+            IMongoDbIndexManager indexManager = scope.ServiceProvider.GetService<IMongoDbIndexManager>()
                 ?? new MongoDbIndexManager();
 
             var verificationResults = new List<IndexVerificationResult>();
-            var assemblies = _options.AssembliesToScan ?? Array.Empty<Assembly>();
+            Assembly[] assemblies = _options.AssembliesToScan ?? Array.Empty<Assembly>();
 
             _logger?.LogInformation(
                 "Starting MongoDB index verification for {AssemblyCount} assemblies...",
                 assemblies.Length);
 
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
                 try
                 {
-                    var result = await VerifyAssemblyIndexesAsync(
+                    IndexVerificationResult result = await VerifyAssemblyIndexesAsync(
                         context.Database,
                         indexManager,
                         assembly,
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
 
             if (anyFailed && _options.FailOnVerificationError)
             {
-                var failedAssemblies = verificationResults
+                IEnumerable<string> failedAssemblies = verificationResults
                     .Where(r => !r.Success)
                     .Select(r => r.AssemblyName);
 
@@ -188,19 +188,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             try
             {
                 // Get entity types with index attributes
-                var entityTypes = GetIndexedEntityTypes(assembly);
+                List<Type> entityTypes = GetIndexedEntityTypes(assembly);
                 result.EntityCount = entityTypes.Count;
 
-                foreach (var entityType in entityTypes)
+                foreach (Type entityType in entityTypes)
                 {
                     var collectionName = GetCollectionName(entityType);
 
                     // Get expected indexes via reflection
-                    var expectedIndexes = GetExpectedIndexes(indexManager, entityType);
+                    List<string> expectedIndexes = GetExpectedIndexes(indexManager, entityType);
                     result.ExpectedIndexCount += expectedIndexes.Count;
 
                     // Get existing indexes
-                    var existingIndexes = await GetExistingIndexesAsync(
+                    List<string> existingIndexes = await GetExistingIndexesAsync(
                         database, collectionName, entityType, cancellationToken);
                     result.ExistingIndexCount += existingIndexes.Count;
 
@@ -267,7 +267,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             var hasClassAttr = type.GetCustomAttributes<Performance.Attributes.MongoCompoundIndexAttribute>().Any();
             if (hasClassAttr) return true;
 
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             return properties.Any(p =>
                 p.GetCustomAttribute<Performance.Attributes.MongoIndexAttribute>() != null ||
                 p.GetCustomAttribute<Performance.Attributes.MongoTtlIndexAttribute>() != null);
@@ -275,26 +275,26 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
 
         private static string GetCollectionName(Type type)
         {
-            var collectionAttr = type.GetCustomAttribute<BsonCollectionAttribute>();
+            BsonCollectionAttribute? collectionAttr = type.GetCustomAttribute<BsonCollectionAttribute>();
             return collectionAttr?.CollectionName ?? type.Name;
         }
 
         private static List<string> GetExpectedIndexes(IMongoDbIndexManager indexManager, Type entityType)
         {
             // Use reflection to call BuildIndexModels<T>
-            var method = typeof(IMongoDbIndexManager)
+            MethodInfo? method = typeof(IMongoDbIndexManager)
                 .GetMethod(nameof(IMongoDbIndexManager.BuildIndexModels))
                 ?.MakeGenericMethod(entityType);
 
             if (method == null)
             {
-                return new List<string>();
+                return [];
             }
 
             var result = method.Invoke(indexManager, null);
             if (result == null)
             {
-                return new List<string>();
+                return [];
             }
 
             // Extract index names from the result
@@ -305,9 +305,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             {
                 foreach (var item in enumerableResult)
                 {
-                    var optionsProp = item?.GetType().GetProperty("Options");
+                    PropertyInfo? optionsProp = item?.GetType().GetProperty("Options");
                     var options = optionsProp?.GetValue(item);
-                    var nameProp = options?.GetType().GetProperty("Name");
+                    PropertyInfo? nameProp = options?.GetType().GetProperty("Name");
                     var name = nameProp?.GetValue(options) as string;
 
                     if (!string.IsNullOrEmpty(name))
@@ -331,13 +331,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             try
             {
                 // Get collection as BsonDocument to avoid type constraints
-                var collection = database.GetCollection<BsonDocument>(collectionName);
-                var cursor = await collection.Indexes.ListAsync(cancellationToken);
-                var indexes = await cursor.ToListAsync(cancellationToken);
+                IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>(collectionName);
+                IAsyncCursor<BsonDocument> cursor = await collection.Indexes.ListAsync(cancellationToken);
+                List<BsonDocument> indexes = await cursor.ToListAsync(cancellationToken);
 
-                foreach (var index in indexes)
+                foreach (BsonDocument? index in indexes)
                 {
-                    if (index.TryGetValue("name", out var nameValue))
+                    if (index.TryGetValue("name", out BsonValue? nameValue))
                     {
                         indexNames.Add(nameValue.AsString);
                     }
@@ -366,7 +366,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             CancellationToken cancellationToken)
         {
             // Use reflection to call EnsureIndexesAsync<T>
-            var method = typeof(IMongoDbIndexManager)
+            MethodInfo? method = typeof(IMongoDbIndexManager)
                 .GetMethod(nameof(IMongoDbIndexManager.EnsureIndexesAsync))
                 ?.MakeGenericMethod(entityType);
 
@@ -376,7 +376,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure
             }
 
             // Get the collection with proper generic type
-            var getCollectionMethod = typeof(IMongoDatabase)
+            MethodInfo? getCollectionMethod = typeof(IMongoDatabase)
                 .GetMethod(nameof(IMongoDatabase.GetCollection), new[] { typeof(string), typeof(MongoCollectionSettings) })
                 ?.MakeGenericMethod(entityType);
 

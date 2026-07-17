@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
         /// <inheritdoc/>
         public async Task<int> GetCurrentVersionAsync(CancellationToken cancellationToken = default)
         {
-            var latest = await MigrationsCollection
+            MongoDbMigrationHistory latest = await MigrationsCollection
                 .Find(m => m.Status == MigrationStatus.Completed)
                 .SortByDescending(m => m.Version)
                 .Limit(1)
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
         /// <inheritdoc/>
         public async Task<MigrationResult> MigrateAsync(CancellationToken cancellationToken = default)
         {
-            var pendingMigrations = await GetPendingMigrationsAsync(cancellationToken);
+            IReadOnlyList<IMongoDbMigration> pendingMigrations = await GetPendingMigrationsAsync(cancellationToken);
 
             if (pendingMigrations.Count == 0)
             {
@@ -150,9 +150,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
                 .OrderBy(m => m.Version)
                 .ToList();
 
-            foreach (var migration in migrationsToApply)
+            foreach (IMongoDbMigration? migration in migrationsToApply)
             {
-                var stepResult = await ApplyMigrationAsync(migration, true, cancellationToken);
+                MigrationStepResult stepResult = await ApplyMigrationAsync(migration, true, cancellationToken);
                 result.Steps.Add(stepResult);
 
                 if (!stepResult.Success)
@@ -215,9 +215,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
                 .OrderByDescending(m => m.Version)
                 .ToList();
 
-            foreach (var migration in migrationsToRollback)
+            foreach (IMongoDbMigration? migration in migrationsToRollback)
             {
-                var stepResult = await ApplyMigrationAsync(migration, false, cancellationToken);
+                MigrationStepResult stepResult = await ApplyMigrationAsync(migration, false, cancellationToken);
                 result.Steps.Add(stepResult);
 
                 if (!stepResult.Success)
@@ -375,16 +375,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
         private List<IMongoDbMigration> DiscoverMigrations()
         {
             var migrations = new List<IMongoDbMigration>();
-            var assemblies = _options.MigrationAssemblies ?? Array.Empty<Assembly>();
+            Assembly[] assemblies = _options.MigrationAssemblies ?? Array.Empty<Assembly>();
 
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
                 var migrationTypes = assembly.GetTypes()
                     .Where(t => typeof(IMongoDbMigration).IsAssignableFrom(t))
                     .Where(t => t.IsClass && !t.IsAbstract)
                     .ToList();
 
-                foreach (var type in migrationTypes)
+                foreach (Type? type in migrationTypes)
                 {
                     try
                     {

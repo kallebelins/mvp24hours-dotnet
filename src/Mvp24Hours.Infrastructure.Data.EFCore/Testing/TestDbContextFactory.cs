@@ -163,8 +163,8 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <inheritdoc />
     public TContext CreateContext()
     {
-        var dbOptions = BuildDbContextOptions();
-        var context = CreateContextInstance(dbOptions);
+        DbContextOptions<TContext> dbOptions = BuildDbContextOptions();
+        TContext context = CreateContextInstance(dbOptions);
 
         _createdContexts.Add(context);
 
@@ -187,7 +187,7 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
         {
             if (_initialized) return;
 
-            using var context = CreateContext();
+            using TContext context = CreateContext();
 
             if (_options.UseMigrations)
             {
@@ -209,7 +209,7 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <inheritdoc />
     public async Task CleanupDatabaseAsync(CancellationToken cancellationToken = default)
     {
-        using var context = CreateContext();
+        using TContext context = CreateContext();
         await context.Database.EnsureDeletedAsync(cancellationToken);
         _initialized = false;
     }
@@ -272,7 +272,7 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
 
         if (disposing)
         {
-            foreach (var context in _createdContexts)
+            foreach (TContext context in _createdContexts)
             {
                 context.Dispose();
             }

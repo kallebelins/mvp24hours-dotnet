@@ -271,8 +271,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             object? parameters) where TResult : class
         {
             // Check if method has CacheableAttribute
-            var methodInfo = GetMethodInfo(methodName);
-            var cacheableAttr = methodInfo?.GetCustomAttribute<CacheableAttribute>();
+            MethodInfo? methodInfo = GetMethodInfo(methodName);
+            CacheableAttribute? cacheableAttr = methodInfo?.GetCustomAttribute<CacheableAttribute>();
 
             if (cacheableAttr == null && !_options.EnableCacheByDefault)
             {
@@ -286,7 +286,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
             try
             {
                 // Try to get from cache (synchronous cache access)
-                var cached = GetFromCache<TResult>(cacheKey).GetAwaiter().GetResult();
+                TResult? cached = GetFromCache<TResult>(cacheKey).GetAwaiter().GetResult();
                 if (cached != null)
                 {
                     _logger?.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
@@ -296,7 +296,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
                 _logger?.LogDebug("Cache miss for key: {CacheKey}", cacheKey);
 
                 // Execute and cache result
-                var result = execute();
+                TResult result = execute();
                 if (result != null)
                 {
                     var options = new CacheEntryOptions
@@ -373,8 +373,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
                 // Replace parameter placeholders
                 if (parameters != null)
                 {
-                    var props = parameters.GetType().GetProperties();
-                    foreach (var prop in props)
+                    PropertyInfo[] props = parameters.GetType().GetProperties();
+                    foreach (PropertyInfo prop in props)
                     {
                         var value = prop.GetValue(parameters);
                         key = key.Replace($"{{{prop.Name}}}", value?.ToString() ?? "");
@@ -433,7 +433,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
         {
             if (entities == null || entities.Count == 0) return;
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 InvalidateCacheForEntity(entity);
             }
@@ -498,14 +498,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Repository
         private object? GetEntityId(TEntity entity)
         {
             // Try to get EntityKey property
-            var entityKeyProp = typeof(TEntity).GetProperty("EntityKey");
+            PropertyInfo? entityKeyProp = typeof(TEntity).GetProperty("EntityKey");
             if (entityKeyProp != null)
             {
                 return entityKeyProp.GetValue(entity);
             }
 
             // Try to get Id property
-            var idProp = typeof(TEntity).GetProperty("Id");
+            PropertyInfo? idProp = typeof(TEntity).GetProperty("Id");
             if (idProp != null)
             {
                 return idProp.GetValue(entity);

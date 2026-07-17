@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -119,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 
             services.AddResiliencePipeline(name, (builder, context) =>
             {
-                var logger = context.ServiceProvider.GetService<ILoggerFactory>()
+                ILogger? logger = context.ServiceProvider.GetService<ILoggerFactory>()
                     ?.CreateLogger("Mvp24Hours.DbResilience");
 
                 // 1. Timeout (outermost)
@@ -248,7 +249,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
         {
             // Try to get error code via reflection or known properties
             // This handles SQL Server, PostgreSQL, MySQL etc.
-            var errorCodeProp = ex.GetType().GetProperty("Number") ??
+            PropertyInfo? errorCodeProp = ex.GetType().GetProperty("Number") ??
                                ex.GetType().GetProperty("ErrorCode");
 
             if (errorCodeProp != null)

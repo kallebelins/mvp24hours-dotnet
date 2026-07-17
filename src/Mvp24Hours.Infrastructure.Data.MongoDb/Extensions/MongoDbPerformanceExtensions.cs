@@ -121,9 +121,9 @@ namespace Mvp24Hours.Extensions
 
         protected override async Task ExecuteAsync(System.Threading.CancellationToken stoppingToken)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var indexManager = scope.ServiceProvider.GetService<IMongoDbIndexManager>();
-            var context = scope.ServiceProvider.GetService<Mvp24HoursContext>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IMongoDbIndexManager? indexManager = scope.ServiceProvider.GetService<IMongoDbIndexManager>();
+            Mvp24HoursContext? context = scope.ServiceProvider.GetService<Mvp24HoursContext>();
 
             if (indexManager != null && context != null)
             {

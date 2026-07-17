@@ -285,7 +285,7 @@ public class OpenTelemetryExporterOptions
     /// <summary>
     /// Gets or sets additional resource attributes.
     /// </summary>
-    public Dictionary<string, object> ResourceAttributes { get; set; } = new();
+    public Dictionary<string, object> ResourceAttributes { get; set; } = [];
 }
 
 /// <summary>
@@ -377,7 +377,7 @@ public class OtlpExporterOptions
     /// options.Otlp.Headers["x-api-key"] = "my-api-key";
     /// </code>
     /// </remarks>
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the delay in milliseconds between batch exports.
@@ -602,7 +602,7 @@ public static class Mvp24HoursOpenTelemetryIntegrationExtensions
             return string.Empty;
 
         var parts = new List<string>();
-        foreach (var header in options.Headers)
+        foreach (KeyValuePair<string, string> header in options.Headers)
         {
             parts.Add($"{header.Key}={header.Value}");
         }
@@ -634,7 +634,7 @@ public static class Mvp24HoursOpenTelemetryIntegrationExtensions
             attributes["service.instance.id"] = options.ServiceInstanceId;
 
         // Add custom attributes
-        foreach (var attr in options.ResourceAttributes)
+        foreach (KeyValuePair<string, object> attr in options.ResourceAttributes)
         {
             attributes[attr.Key] = attr.Value;
         }

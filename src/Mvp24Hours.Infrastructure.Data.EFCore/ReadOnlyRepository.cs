@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
@@ -48,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public bool ListAny()
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = GetQuery(null, true).Any();
             scope?.Complete();
             return result;
@@ -57,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public int ListCount()
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = GetQuery(null, true).Count();
             scope?.Complete();
             return result;
@@ -72,7 +74,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public IList<T> List(IPagingCriteria? criteria)
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
             var result = GetQuery(criteria).AsNoTracking().ToList();
             scope?.Complete();
             return result;
@@ -81,8 +83,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public bool GetByAny(Expression<Func<T, bool>> clause)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -95,8 +97,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public int GetByCount(Expression<Func<T, bool>> clause)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -115,8 +117,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public IList<T> GetBy(Expression<Func<T, bool>> clause, IPagingCriteria? criteria)
         {
-            using var scope = CreateTransactionScope();
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -135,8 +137,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public T? GetById(object id, IPagingCriteria? criteria)
         {
-            using var scope = CreateTransactionScope();
-            var result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefault();
+            using TransactionScope? scope = CreateTransactionScope();
+            T? result = GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefault();
             scope?.Complete();
             return result;
         }
@@ -156,7 +158,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelation<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -175,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelationSortByAscending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -199,7 +201,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelationSortByDescending<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -226,8 +228,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public bool AnyBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope(true);
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
             var result = query.Any();
             scope?.Complete();
             return result;
@@ -236,8 +238,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public int CountBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope(true);
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
             var result = query.Count();
             scope?.Complete();
             return result;
@@ -246,8 +248,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public IList<T> GetBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
             var result = query.AsNoTracking().ToList();
             scope?.Complete();
             return result;
@@ -256,9 +258,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public T? GetSingleBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-            var result = query.AsNoTracking().SingleOrDefault();
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            T? result = query.AsNoTracking().SingleOrDefault();
             scope?.Complete();
             return result;
         }
@@ -266,9 +268,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public T? GetFirstBySpecification<TSpec>(TSpec specification) where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-            var result = query.AsNoTracking().FirstOrDefault();
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            T? result = query.AsNoTracking().FirstOrDefault();
             scope?.Complete();
             return result;
         }
@@ -285,9 +287,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int pageSize,
             bool ascending = true) where TKey : struct
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             // Apply filter clause
             if (clause != null)
@@ -334,9 +336,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
 
             // Apply keyset condition
             if (lastKey.HasValue)
@@ -375,9 +377,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             int pageSize,
             bool ascending = true)
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             // Apply filter clause
             if (clause != null)
@@ -434,11 +436,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             TKey lastKey,
             bool ascending) where TKey : struct
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(keyProperty, lastKeyConstant)
                 : Expression.LessThan(keyProperty, lastKeyConstant);
 
@@ -455,16 +457,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             string lastKey,
             bool ascending)
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(string));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(string));
 
             // Use string.CompareTo for string comparison
-            var compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
-            var compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
-            var zero = Expression.Constant(0);
+            MethodInfo compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
+            MethodCallExpression compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
+            ConstantExpression zero = Expression.Constant(0);
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(compareCall, zero)
                 : Expression.LessThan(compareCall, zero);
 

@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
 
             _logger?.LogDebug("PriorityPipeline: Execute started with {OperationCount} operations", _operations.Count);
 
-            foreach (var prioritized in _operations)
+            foreach (PrioritizedOperation<IOperation> prioritized in _operations)
             {
                 try
                 {
@@ -214,7 +214,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
                 .OrderByDescending(x => x.Priority)
                 .ToList();
 
-            foreach (var op in allOperations)
+            foreach ((int Priority, string? Group, IOperation? SyncOp, IOperationAsync? AsyncOp) op in allOperations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -313,7 +313,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
         /// <returns>This pipeline for chaining.</returns>
         public PriorityPipeline AddInterceptors(params Action<IPipelineMessage>[] actions)
         {
-            foreach (var action in actions)
+            foreach (Action<IPipelineMessage> action in actions)
             {
                 Add(new InterceptorOperation(action), PriorityLevel.Highest);
             }

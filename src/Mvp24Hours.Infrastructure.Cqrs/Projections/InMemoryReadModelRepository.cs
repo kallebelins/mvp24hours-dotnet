@@ -65,7 +65,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         if (id == null) return Task.FromResult<T?>(null);
 
-        _store.TryGetValue(id, out var entity);
+        _store.TryGetValue(id, out T? entity);
         return Task.FromResult(entity);
     }
 
@@ -82,7 +82,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        var compiled = predicate.Compile();
+        Func<T, bool> compiled = predicate.Compile();
         var result = _store.Values.Where(compiled).ToList();
         return Task.FromResult<IReadOnlyList<T>>(result);
     }
@@ -94,7 +94,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         int take,
         CancellationToken cancellationToken = default)
     {
-        var compiled = predicate.Compile();
+        Func<T, bool> compiled = predicate.Compile();
         var result = _store.Values
             .Where(compiled)
             .Skip(skip)
@@ -108,8 +108,8 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        var compiled = predicate.Compile();
-        var result = _store.Values.FirstOrDefault(compiled);
+        Func<T, bool> compiled = predicate.Compile();
+        T? result = _store.Values.FirstOrDefault(compiled);
         return Task.FromResult(result);
     }
 
@@ -129,7 +129,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
             return Task.FromResult<long>(_store.Count);
         }
 
-        var compiled = predicate.Compile();
+        Func<T, bool> compiled = predicate.Compile();
         return Task.FromResult<long>(_store.Values.Count(compiled));
     }
 
@@ -138,7 +138,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        var compiled = predicate.Compile();
+        Func<T, bool> compiled = predicate.Compile();
         return Task.FromResult(_store.Values.Any(compiled));
     }
 
@@ -155,11 +155,11 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         bool descending = false,
         CancellationToken cancellationToken = default)
     {
-        var compiledPredicate = predicate.Compile();
-        var compiledOrderBy = orderBy.Compile();
+        Func<T, bool> compiledPredicate = predicate.Compile();
+        Func<T, TKey> compiledOrderBy = orderBy.Compile();
 
-        var filtered = _store.Values.Where(compiledPredicate);
-        var ordered = descending
+        IEnumerable<T> filtered = _store.Values.Where(compiledPredicate);
+        IOrderedEnumerable<T> ordered = descending
             ? filtered.OrderByDescending(compiledOrderBy)
             : filtered.OrderBy(compiledOrderBy);
 
@@ -175,11 +175,11 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         bool descending = false,
         CancellationToken cancellationToken = default)
     {
-        var compiledPredicate = predicate.Compile();
-        var compiledOrderBy = orderBy.Compile();
+        Func<T, bool> compiledPredicate = predicate.Compile();
+        Func<T, TKey> compiledOrderBy = orderBy.Compile();
 
-        var filtered = _store.Values.Where(compiledPredicate);
-        var ordered = descending
+        IEnumerable<T> filtered = _store.Values.Where(compiledPredicate);
+        IOrderedEnumerable<T> ordered = descending
             ? filtered.OrderByDescending(compiledOrderBy)
             : filtered.OrderBy(compiledOrderBy);
 
@@ -192,8 +192,8 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Expression<Func<T, TResult>> selector,
         CancellationToken cancellationToken = default)
     {
-        var compiledPredicate = predicate.Compile();
-        var compiledSelector = selector.Compile();
+        Func<T, bool> compiledPredicate = predicate.Compile();
+        Func<T, TResult> compiledSelector = selector.Compile();
 
         var result = _store.Values
             .Where(compiledPredicate)
@@ -262,7 +262,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        var compiled = predicate.Compile();
+        Func<T, bool> compiled = predicate.Compile();
         var toDelete = _store.Where(kvp => compiled(kvp.Value)).Select(kvp => kvp.Key).ToList();
 
         foreach (var key in toDelete)
@@ -289,7 +289,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        foreach (var entity in entities)
+        foreach (T entity in entities)
         {
             var key = _keySelector(entity);
             _store.TryAdd(key, entity);
@@ -303,7 +303,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        foreach (var entity in entities)
+        foreach (T entity in entities)
         {
             var key = _keySelector(entity);
             _store[key] = entity;
@@ -328,10 +328,10 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
 
     private static Func<T, object> CreateDefaultKeySelector()
     {
-        var type = typeof(T);
+        Type type = typeof(T);
 
         // Look for "Id" property
-        var idProperty = type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
+        PropertyInfo? idProperty = type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
 
         // Look for "{TypeName}Id" property
         if (idProperty == null)

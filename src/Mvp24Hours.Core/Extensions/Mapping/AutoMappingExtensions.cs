@@ -152,7 +152,7 @@ namespace Mvp24Hours.Extensions
 
             // Get the inital source and map it
             var initialSource = sources![0]!;
-            var mappingResult = Map<T>(mapper, initialSource);
+            T? mappingResult = Map<T>(mapper, initialSource);
 
             // Now map the remaining source objects
             if (sources.Length > 1 && mappingResult != null)
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Extensions
             }
 
             // Get the destination type
-            var destinationType = destination.GetType();
+            Type destinationType = destination.GetType();
 
             // Itereate through all of the sources...
             foreach (var source in sources)
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Extensions
                 }
 
                 // ... get the source type and map the source to the destination
-                var sourceType = source.GetType();
+                Type sourceType = source.GetType();
                 mapper.Map(source, destination, sourceType, destinationType);
             }
         }
@@ -203,8 +203,8 @@ namespace Mvp24Hours.Extensions
         private static T? Map<T>(IMapper mapper, object source) where T : class
         {
             // Get thr source and destination types
-            var destinationType = typeof(T);
-            var sourceType = source.GetType();
+            Type destinationType = typeof(T);
+            Type sourceType = source.GetType();
 
             // Get the destination using AutoMapper's Map
             var mappingResult = mapper.Map(source, sourceType, destinationType);

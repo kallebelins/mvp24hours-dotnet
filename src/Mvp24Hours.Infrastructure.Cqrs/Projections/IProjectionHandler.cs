@@ -213,7 +213,7 @@ public abstract class ReadModelProjectionHandler<TEvent, TReadModel> : Projectio
 public abstract class AggregatingProjectionHandler<TReadModel> : IMultiEventProjectionHandler
     where TReadModel : class
 {
-    private readonly List<Type> _handledTypes = new();
+    private readonly List<Type> _handledTypes = [];
 
     /// <summary>
     /// Gets the read model repository.

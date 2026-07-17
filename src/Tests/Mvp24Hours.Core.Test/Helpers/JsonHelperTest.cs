@@ -42,11 +42,11 @@ public class JsonHelperTest
         {
             Id = 1,
             Name = "Acme Corp",
-            Employees = new List<Person>
-            {
+            Employees =
+            [
                 new Person { Id = 1, Name = "John", Age = 30 },
                 new Person { Id = 2, Name = "Jane", Age = 25 }
-            }
+            ]
         };
 
         // Act
@@ -70,7 +70,7 @@ public class JsonHelperTest
         var json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
 
         // Act
-        var result = JsonHelper.Deserialize<Person>(json);
+        Person? result = JsonHelper.Deserialize<Person>(json);
 
         // Assert
         result.Should().NotBeNull();
@@ -86,7 +86,7 @@ public class JsonHelperTest
         var json = "{\"id\":1,\"name\":\"Acme Corp\",\"employees\":[{\"id\":1,\"name\":\"John\",\"age\":30}]}";
 
         // Act
-        var result = JsonHelper.Deserialize<Company>(json);
+        Company? result = JsonHelper.Deserialize<Company>(json);
 
         // Assert
         result.Should().NotBeNull();
@@ -101,7 +101,7 @@ public class JsonHelperTest
     {
         // Arrange
         var json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
-        var type = typeof(Person);
+        Type type = typeof(Person);
 
         // Act
         var result = JsonHelper.Deserialize(json, type);
@@ -124,7 +124,7 @@ public class JsonHelperTest
 
         // Act
         var json = JsonHelper.Serialize(original);
-        var deserialized = JsonHelper.Deserialize<Person>(json);
+        Person? deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
         deserialized.Should().NotBeNull();
@@ -141,17 +141,17 @@ public class JsonHelperTest
         {
             Id = 1,
             Name = "Tech Corp",
-            Employees = new List<Person>
-            {
+            Employees =
+            [
                 new Person { Id = 1, Name = "John", Age = 30 },
                 new Person { Id = 2, Name = "Jane", Age = 25 },
                 new Person { Id = 3, Name = "Bob", Age = 35 }
-            }
+            ]
         };
 
         // Act
         var json = JsonHelper.Serialize(original);
-        var deserialized = JsonHelper.Deserialize<Company>(json);
+        Company? deserialized = JsonHelper.Deserialize<Company>(json);
 
         // Assert
         deserialized.Should().NotBeNull();
@@ -191,7 +191,7 @@ public class JsonHelperTest
 
         // Act
         var json = JsonHelper.Serialize(obj);
-        var deserialized = JsonHelper.Deserialize<Person>(json);
+        Person? deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
         deserialized.Name.Should().Be("JosÃ© ä¸–ç•Œ ðŸŒ");
@@ -205,7 +205,7 @@ public class JsonHelperTest
 
         // Act
         var json = JsonHelper.Serialize(obj);
-        var deserialized = JsonHelper.Deserialize<Event>(json);
+        Event? deserialized = JsonHelper.Deserialize<Event>(json);
 
         // Assert
         deserialized.Should().NotBeNull();
@@ -222,7 +222,7 @@ public class JsonHelperTest
 
         // Act
         var json = JsonHelper.Serialize(obj);
-        var deserialized = JsonHelper.Deserialize<Order>(json);
+        Order? deserialized = JsonHelper.Deserialize<Order>(json);
 
         // Assert
         deserialized.Should().NotBeNull();
@@ -277,7 +277,7 @@ public class JsonHelperTest
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = JsonHelper.Deserialize<List<Person>>(json);
+        List<Person>? result = JsonHelper.Deserialize<List<Person>>(json);
         stopwatch.Stop();
 
         // Assert
@@ -300,7 +300,7 @@ public class JsonHelperTest
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public List<Person> Employees { get; set; } = new();
+        public List<Person> Employees { get; set; } = [];
     }
 
     private class Event

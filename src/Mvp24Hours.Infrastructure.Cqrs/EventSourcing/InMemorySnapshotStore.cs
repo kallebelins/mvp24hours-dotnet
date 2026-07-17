@@ -31,7 +31,7 @@ public class InMemorySnapshotStore : ISnapshotStore
 
         lock (_lock)
         {
-            var snapshots = _snapshots.GetOrAdd(snapshot.AggregateId, _ => new List<Snapshot>());
+            List<Snapshot> snapshots = _snapshots.GetOrAdd(snapshot.AggregateId, _ => []);
             snapshots.Add(new Snapshot
             {
                 Id = snapshot.Id == Guid.Empty ? Guid.NewGuid() : snapshot.Id,
@@ -51,11 +51,11 @@ public class InMemorySnapshotStore : ISnapshotStore
     /// <inheritdoc />
     public Task<Snapshot?> GetLatestSnapshotAsync(Guid aggregateId, CancellationToken cancellationToken = default)
     {
-        if (_snapshots.TryGetValue(aggregateId, out var snapshots))
+        if (_snapshots.TryGetValue(aggregateId, out List<Snapshot>? snapshots))
         {
             lock (_lock)
             {
-                var latest = snapshots.OrderByDescending(s => s.Version).FirstOrDefault();
+                Snapshot? latest = snapshots.OrderByDescending(s => s.Version).FirstOrDefault();
                 return Task.FromResult(latest);
             }
         }
@@ -66,11 +66,11 @@ public class InMemorySnapshotStore : ISnapshotStore
     /// <inheritdoc />
     public Task<Snapshot?> GetSnapshotAtVersionAsync(Guid aggregateId, long maxVersion, CancellationToken cancellationToken = default)
     {
-        if (_snapshots.TryGetValue(aggregateId, out var snapshots))
+        if (_snapshots.TryGetValue(aggregateId, out List<Snapshot>? snapshots))
         {
             lock (_lock)
             {
-                var snapshot = snapshots
+                Snapshot? snapshot = snapshots
                     .Where(s => s.Version <= maxVersion)
                     .OrderByDescending(s => s.Version)
                     .FirstOrDefault();
@@ -91,7 +91,7 @@ public class InMemorySnapshotStore : ISnapshotStore
     /// <inheritdoc />
     public Task DeleteSnapshotsBeforeVersionAsync(Guid aggregateId, long beforeVersion, CancellationToken cancellationToken = default)
     {
-        if (_snapshots.TryGetValue(aggregateId, out var snapshots))
+        if (_snapshots.TryGetValue(aggregateId, out List<Snapshot>? snapshots))
         {
             lock (_lock)
             {

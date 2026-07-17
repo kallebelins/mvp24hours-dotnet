@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Email.Options
         /// unless overridden in the individual email message.
         /// </para>
         /// </remarks>
-        public IList<string> DefaultCategories { get; set; } = new List<string>();
+        public IList<string> DefaultCategories { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to enable click tracking by default.

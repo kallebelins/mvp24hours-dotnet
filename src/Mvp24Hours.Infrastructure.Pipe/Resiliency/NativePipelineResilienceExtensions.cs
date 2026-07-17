@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             // Register the resilience pipeline
             services.AddResiliencePipeline("pipeline", (builder, context) =>
             {
-                var logger = context.ServiceProvider.GetService<ILoggerFactory>()
+                ILogger? logger = context.ServiceProvider.GetService<ILoggerFactory>()
                     ?.CreateLogger("Mvp24Hours.PipelineResilience");
 
                 ConfigurePipeline(builder, options, logger);
@@ -216,7 +216,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             // Use exception type list if provided
             if (options.RetryableExceptionTypes is { Count: > 0 })
             {
-                foreach (var type in options.RetryableExceptionTypes)
+                foreach (Type type in options.RetryableExceptionTypes)
                 {
                     if (type.IsInstanceOfType(ex))
                     {
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             // Use exception type list if provided
             if (options.CircuitBreakerExceptionTypes is { Count: > 0 })
             {
-                foreach (var type in options.CircuitBreakerExceptionTypes)
+                foreach (Type type in options.CircuitBreakerExceptionTypes)
                 {
                     if (type.IsInstanceOfType(ex))
                     {

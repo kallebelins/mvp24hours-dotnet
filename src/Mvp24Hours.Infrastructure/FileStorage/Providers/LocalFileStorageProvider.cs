@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     Path.GetExtension(filePath),
                     new MemoryStream(content));
 
-                var validationResult = await _validator.ValidateAsync(validationContext, cancellationToken);
+                ValidationResult validationResult = await _validator.ValidateAsync(validationContext, cancellationToken);
                 if (!validationResult.IsValid)
                 {
                     return FileUploadResult.Failed($"File validation failed: {string.Join("; ", validationResult.Errors)}");
@@ -512,7 +512,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                 yield break;
             }
 
-            var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            SearchOption searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
             var files = Directory.GetFiles(fullPath, "*", searchOption);
 
             foreach (var file in files)

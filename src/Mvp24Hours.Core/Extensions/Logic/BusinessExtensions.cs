@@ -27,7 +27,7 @@ namespace Mvp24Hours.Extensions
                 return new BusinessResult<T>(
                     token: message.Token ?? tokenDefault,
                     data: key.HasValue() ? message.GetContent<T>(key!) : message.GetContent<T>()!,
-                    messages: new ReadOnlyCollection<IMessageResult>(message.Messages ?? new List<IMessageResult>())
+                    messages: new ReadOnlyCollection<IMessageResult>(message.Messages ?? [])
                 );
             }
             return new BusinessResult<T>(token: tokenDefault);
@@ -42,9 +42,9 @@ namespace Mvp24Hours.Extensions
             {
                 if (messageResult != null)
                 {
-                    return ToBusiness<T>(default!, new List<IMessageResult> { messageResult }, defaultMessage, tokenDefault);
+                    return ToBusiness<T>(default!, [messageResult], defaultMessage, tokenDefault);
                 }
-                return ToBusiness<T>(default!, messageResult: new List<IMessageResult>(), defaultMessage: defaultMessage, tokenDefault: tokenDefault);
+                return ToBusiness<T>(default!, messageResult: [], defaultMessage: defaultMessage, tokenDefault: tokenDefault);
             }
             return new BusinessResult<T>(token: tokenDefault);
         }

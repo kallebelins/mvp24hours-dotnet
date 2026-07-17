@@ -71,7 +71,7 @@ public class OrderItem
 public class TestOrder : AggregateRoot<Guid>, IAggregate
 #pragma warning restore CS0618
 {
-    private readonly List<OrderItem> _items = new();
+    private readonly List<OrderItem> _items = [];
 
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }
@@ -196,12 +196,12 @@ public class OrderSnapshot
     public string CustomerEmail { get; set; } = string.Empty;
     public OrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
-    public List<OrderItem> Items { get; set; } = new();
+    public List<OrderItem> Items { get; set; } = [];
 }
 
 public class TestOrderWithSnapshot : SnapshotAggregateRoot<OrderSnapshot>
 {
-    private readonly List<OrderItem> _items = new();
+    private readonly List<OrderItem> _items = [];
 
     public string CustomerEmail { get; private set; } = string.Empty;
     public OrderStatus Status { get; private set; }

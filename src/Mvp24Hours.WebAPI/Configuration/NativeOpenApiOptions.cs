@@ -128,7 +128,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <remarks>
         /// If empty and <see cref="IncludeServerInfo"/> is true, the current request URL will be used.
         /// </remarks>
-        public List<OpenApiServerInfo> Servers { get; set; } = new();
+        public List<OpenApiServerInfo> Servers { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the authentication scheme configuration.
@@ -151,7 +151,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <remarks>
         /// Each entry creates a separate OpenAPI document for that version.
         /// </remarks>
-        public List<OpenApiVersionConfig> AdditionalVersions { get; set; } = new();
+        public List<OpenApiVersionConfig> AdditionalVersions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the path to XML comments file for documentation enrichment.
@@ -161,7 +161,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets custom tags for grouping operations.
         /// </summary>
-        public List<OpenApiTagInfo> Tags { get; set; } = new();
+        public List<OpenApiTagInfo> Tags { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to show operation IDs in the document.
@@ -244,7 +244,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets server variables for templated URLs.
         /// </summary>
-        public Dictionary<string, OpenApiServerVariable> Variables { get; set; } = new();
+        public Dictionary<string, OpenApiServerVariable> Variables { get; set; } = [];
     }
 
     /// <summary>
@@ -265,7 +265,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the enumeration of possible values.
         /// </summary>
-        public List<string> Enum { get; set; } = new();
+        public List<string> Enum { get; set; } = [];
     }
 
     /// <summary>

@@ -69,7 +69,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Determine which policy to apply
-            var policy = GetPolicyForRequest(context);
+            CacheControlPolicy? policy = GetPolicyForRequest(context);
             if (policy == null)
             {
                 await _next(context);
@@ -103,7 +103,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             var path = context.Request.Path.Value ?? string.Empty;
 
             // Check route-specific policies
-            foreach (var (pattern, policy) in _options.RoutePolicies)
+            foreach ((string? pattern, CacheControlPolicy? policy) in _options.RoutePolicies)
             {
                 if (path.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) ||
                     MatchesPattern(path, pattern))

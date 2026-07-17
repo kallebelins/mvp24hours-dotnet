@@ -96,7 +96,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <remarks>
         /// Maps exception types to HTTP status codes.
         /// </remarks>
-        public Dictionary<Type, HttpStatusCode> ExceptionMappings { get; set; } = new();
+        public Dictionary<Type, HttpStatusCode> ExceptionMappings { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use RFC 7807 content type (application/problem+json).

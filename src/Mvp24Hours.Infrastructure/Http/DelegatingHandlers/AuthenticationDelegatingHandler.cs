@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             }
             else if (_options.ApiKeyLocation == ApiKeyLocation.QueryString)
             {
-                var uri = request.RequestUri!;
+                Uri uri = request.RequestUri!;
                 var separator = string.IsNullOrWhiteSpace(uri.Query) ? "?" : "&";
                 var paramName = string.IsNullOrWhiteSpace(_options.ApiKeyQueryParamName)
                     ? "api_key"

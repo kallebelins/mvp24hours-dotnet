@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -90,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 return Task.FromResult(DeleteInterceptionResult.Proceed());
             }
 
-            var now = GetCurrentTime();
+            DateTime now = GetCurrentTime();
             var currentUser = GetCurrentUser();
 
             ApplySoftDelete(entity, now, currentUser);
@@ -122,8 +123,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
                 return true;
 
             // Check for generic ISoftDeletable<T>
-            var entityType = entity.GetType();
-            foreach (var iface in entityType.GetInterfaces())
+            Type entityType = entity.GetType();
+            foreach (Type iface in entityType.GetInterfaces())
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ISoftDeletable<>))
                     return true;
@@ -164,20 +165,20 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         private static void TrySetSoftDeleteProperty<T>(T entity, string propertyName, object value, Type genericInterfaceType)
             where T : class
         {
-            var entityType = entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == genericInterfaceType)
                 {
-                    var property = entityType.GetProperty(propertyName);
+                    PropertyInfo? property = entityType.GetProperty(propertyName);
                     if (property != null && property.CanWrite)
                     {
                         try
                         {
-                            var targetType = property.PropertyType;
-                            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                            Type targetType = property.PropertyType;
+                            Type underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
                             if (value != null && value.GetType() == underlyingType)
                             {

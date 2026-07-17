@@ -456,8 +456,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
     /// </summary>
     public class PipelineObserverManager : IPipelineObserverManager
     {
-        private readonly List<IPipelineObserver> _observers = new();
-        private readonly List<IPipelineObserverSync> _syncObservers = new();
+        private readonly List<IPipelineObserver> _observers = [];
+        private readonly List<IPipelineObserverSync> _syncObservers = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -522,13 +522,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnPipelineStart(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnPipelineStartAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -547,13 +547,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnPipelineComplete(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnPipelineCompleteAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -572,13 +572,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnOperationStart(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnOperationStartAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -597,13 +597,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnOperationEnd(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnOperationEndAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -622,13 +622,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnOperationFailure(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnOperationFailureAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -647,13 +647,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnRollbackStart(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnRollbackStartAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }
@@ -672,13 +672,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 syncObservers = new List<IPipelineObserverSync>(_syncObservers);
             }
 
-            foreach (var observer in syncObservers)
+            foreach (IPipelineObserverSync observer in syncObservers)
             {
                 try { observer.OnRollbackComplete(eventArgs); }
                 catch { /* Observers should not break pipeline */ }
             }
 
-            foreach (var observer in observers)
+            foreach (IPipelineObserver observer in observers)
             {
                 try { await observer.OnRollbackCompleteAsync(eventArgs, cancellationToken); }
                 catch { /* Observers should not break pipeline */ }

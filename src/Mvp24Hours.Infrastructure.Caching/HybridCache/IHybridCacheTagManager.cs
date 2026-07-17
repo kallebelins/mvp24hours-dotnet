@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
         /// <summary>
         /// Gets or sets detailed statistics per tag.
         /// </summary>
-        public Dictionary<string, int> KeysPerTag { get; set; } = new();
+        public Dictionary<string, int> KeysPerTag { get; set; } = [];
     }
 }
 

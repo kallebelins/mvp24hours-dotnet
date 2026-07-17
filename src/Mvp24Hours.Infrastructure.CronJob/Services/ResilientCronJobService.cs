@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         {
             _shutdownCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            using var activity = CronJobActivitySource.StartStartActivity(_jobName, _cronExpressionString);
+            using Activity? activity = CronJobActivitySource.StartStartActivity(_jobName, _cronExpressionString);
             activity?.SetTag("resilience.retry_enabled", _resilienceConfig.EnableRetry);
             activity?.SetTag("resilience.circuit_breaker_enabled", _resilienceConfig.EnableCircuitBreaker);
             activity?.SetTag("resilience.prevent_overlapping", _resilienceConfig.PreventOverlapping);
@@ -214,7 +214,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         /// <inheritdoc />
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            using var activity = CronJobActivitySource.StartStopActivity(_jobName);
+            using Activity? activity = CronJobActivitySource.StartStopActivity(_jobName);
             activity?.SetTag(CronJobActivitySource.Tags.ExecutionCount, _executionCount);
             activity?.SetTag("resilience.retry_count", _retryCount);
             activity?.SetTag("resilience.skipped_count", _skippedCount);
@@ -282,7 +282,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    var nextOccurrence = GetNextOccurrence();
+                    DateTimeOffset? nextOccurrence = GetNextOccurrence();
 
                     if (!nextOccurrence.HasValue)
                     {
@@ -290,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         break;
                     }
 
-                    var delay = nextOccurrence.Value - _timeProvider.GetUtcNow();
+                    TimeSpan delay = nextOccurrence.Value - _timeProvider.GetUtcNow();
 
                     if (delay <= TimeSpan.Zero)
                     {
@@ -298,7 +298,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                         continue;
                     }
 
-                    using var scheduleActivity = CronJobActivitySource.StartScheduleActivity(
+                    using Activity? scheduleActivity = CronJobActivitySource.StartScheduleActivity(
                         _jobName,
                         _cronExpressionString,
                         nextOccurrence.Value);
@@ -371,7 +371,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
 
             try
             {
-                await using var _ = lockHandle;
+                await using ICronJobLockHandle? _ = lockHandle;
                 await ExecuteScheduledWorkAsync(cancellationToken);
             }
             catch (Exception)
@@ -387,7 +387,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
         private async Task ExecuteScheduledWorkAsync(CancellationToken cancellationToken)
         {
             var stopwatch = Stopwatch.StartNew();
-            using var activity = CronJobActivitySource.StartExecuteActivity(
+            using Activity? activity = CronJobActivitySource.StartExecuteActivity(
                 _jobName,
                 _cronExpressionString,
                 _timeZoneInfo?.Id);
@@ -398,15 +398,15 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             _metrics?.IncrementActiveJob(_jobName);
 
             // Create execution timeout token if configured
-            using var timeoutCts = _resilienceConfig.ExecutionTimeout.HasValue
+            using CancellationTokenSource? timeoutCts = _resilienceConfig.ExecutionTimeout.HasValue
                 ? new CancellationTokenSource(_resilienceConfig.ExecutionTimeout.Value)
                 : null;
 
-            using var linkedCts = timeoutCts != null
+            using CancellationTokenSource? linkedCts = timeoutCts != null
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token)
                 : null;
 
-            var effectiveToken = _resilienceConfig.PropagateCancellation
+            CancellationToken effectiveToken = _resilienceConfig.PropagateCancellation
                 ? (linkedCts?.Token ?? cancellationToken)
                 : cancellationToken;
 
@@ -435,7 +435,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     // Record success for circuit breaker
                     if (_resilienceConfig.EnableCircuitBreaker)
                     {
-                        var previousState = _circuitBreaker.GetState(_jobName);
+                        CircuitBreakerState previousState = _circuitBreaker.GetState(_jobName);
                         _circuitBreaker.RecordSuccess(
                             _jobName,
                             _resilienceConfig.CircuitBreakerSuccessThreshold,
@@ -472,7 +472,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 // Record failure for circuit breaker
                 if (_resilienceConfig.EnableCircuitBreaker)
                 {
-                    var previousState = _circuitBreaker.GetState(_jobName);
+                    CircuitBreakerState previousState = _circuitBreaker.GetState(_jobName);
                     _circuitBreaker.RecordFailure(
                         _jobName,
                         _resilienceConfig.CircuitBreakerFailureThreshold,
@@ -532,7 +532,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                     }
 
                     // Calculate delay with exponential backoff and jitter
-                    var delay = CalculateRetryDelay(attempt);
+                    TimeSpan delay = CalculateRetryDelay(attempt);
 
                     Interlocked.Increment(ref _retryCount);
                     _metrics?.RecordRetryAttempt(_jobName, attempt, _resilienceConfig.MaxRetryAttempts + 1, delay.TotalMilliseconds);
@@ -601,14 +601,14 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var remaining = until - _timeProvider.GetUtcNow();
+                    TimeSpan remaining = until - _timeProvider.GetUtcNow();
 
                     if (remaining <= TimeSpan.Zero)
                     {
                         return true;
                     }
 
-                    var waitTime = remaining > TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
+                    TimeSpan waitTime = remaining > TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
                         ? TimeSpan.FromMilliseconds(MaxTimerPeriodMs)
                         : remaining;
 

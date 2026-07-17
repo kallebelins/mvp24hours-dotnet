@@ -16,7 +16,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 public class MockUnitOfWorkAsync : IUnitOfWorkAsync
 {
     private bool _disposed;
-    private readonly List<string> _operationsLog = new();
+    private readonly List<string> _operationsLog = [];
 
     public List<string> OperationsLog => _operationsLog;
     public int SaveChangesCallCount { get; private set; }

@@ -197,8 +197,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-separatedtos-list");
-            var entities = _repository.List(criteria);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = _repository.List(criteria);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -226,8 +226,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-separatedtos-getby");
-            var entities = _repository.GetBy(clause, criteria);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = _repository.GetBy(clause, criteria);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -241,8 +241,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-separatedtos-getbyid");
-            var entity = _repository.GetById(id, criteria);
-            var dto = MapToDto(entity);
+            TEntity? entity = _repository.GetById(id, criteria);
+            TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }
 
@@ -256,17 +256,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-add");
 
             // Validate create DTO if validator is available
-            var dtoErrors = dto.TryValidate(_createDtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_createDtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<TDto>();
             }
 
             // Map create DTO to Entity
-            var entity = MapCreateDtoToEntity(dto);
+            TEntity entity = MapCreateDtoToEntity(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -276,7 +276,7 @@ namespace Mvp24Hours.Application.Logic
             _unitOfWork.SaveChanges();
 
             // Return the created entity as read DTO
-            var resultDto = MapToDto(entity);
+            TDto resultDto = MapToDto(entity);
             return resultDto.ToBusiness();
         }
 
@@ -292,20 +292,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TCreateDto dto in dtos)
             {
                 // Validate create DTO if validator is available
-                var dtoErrors = dto.TryValidate(_createDtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_createDtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map create DTO to Entity
-                var entity = MapCreateDtoToEntity(dto);
+                TEntity entity = MapCreateDtoToEntity(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -314,7 +314,7 @@ namespace Mvp24Hours.Application.Logic
                 entities.Add(entity);
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Add(entity);
             }
@@ -332,14 +332,14 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-modify");
 
             // Validate update DTO if validator is available
-            var dtoErrors = dto.TryValidate(_updateDtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_updateDtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<TDto>();
             }
 
             // Get existing entity
-            var existingEntity = _repository.GetById(id);
+            TEntity? existingEntity = _repository.GetById(id);
             if (existingEntity == null)
             {
                 return BusinessResult.Failure<TDto>("Entity not found", "NotFound");
@@ -349,7 +349,7 @@ namespace Mvp24Hours.Application.Logic
             MapUpdateDtoToEntity(dto, existingEntity);
 
             // Validate Entity if validator is available
-            var entityErrors = existingEntity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = existingEntity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -359,7 +359,7 @@ namespace Mvp24Hours.Application.Logic
             _unitOfWork.SaveChanges();
 
             // Return the updated entity as read DTO
-            var resultDto = MapToDto(existingEntity);
+            TDto resultDto = MapToDto(existingEntity);
             return resultDto.ToBusiness();
         }
 
@@ -369,7 +369,7 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-separatedtos-patch");
 
             // Get existing entity
-            var existingEntity = _repository.GetById(id);
+            TEntity? existingEntity = _repository.GetById(id);
             if (existingEntity == null)
             {
                 return BusinessResult.Failure<TDto>("Entity not found", "NotFound");
@@ -379,7 +379,7 @@ namespace Mvp24Hours.Application.Logic
             ApplyPatchToEntity(dto, existingEntity);
 
             // Validate Entity if validator is available (after patch)
-            var entityErrors = existingEntity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = existingEntity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<TDto>();
@@ -389,7 +389,7 @@ namespace Mvp24Hours.Application.Logic
             _unitOfWork.SaveChanges();
 
             // Return the updated entity as read DTO
-            var resultDto = MapToDto(existingEntity);
+            TDto resultDto = MapToDto(existingEntity);
             return resultDto.ToBusiness();
         }
 
@@ -476,10 +476,10 @@ namespace Mvp24Hours.Application.Logic
         /// <param name="entity">The existing entity to update.</param>
         protected virtual void ApplyPatchToEntity(TUpdateDto dto, TEntity entity)
         {
-            var dtoType = typeof(TUpdateDto);
-            var entityType = typeof(TEntity);
+            Type dtoType = typeof(TUpdateDto);
+            Type entityType = typeof(TEntity);
 
-            foreach (var dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (PropertyInfo dtoProperty in dtoType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (!dtoProperty.CanRead)
                     continue;
@@ -491,7 +491,7 @@ namespace Mvp24Hours.Application.Logic
                     continue;
 
                 // Find matching property in entity
-                var entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo? entityProperty = entityType.GetProperty(dtoProperty.Name, BindingFlags.Public | BindingFlags.Instance);
                 if (entityProperty == null || !entityProperty.CanWrite)
                     continue;
 

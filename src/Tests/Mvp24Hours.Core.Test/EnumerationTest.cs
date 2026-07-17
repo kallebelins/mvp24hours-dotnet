@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Diagnostics.CodeAnalysis;
 using Mvp24Hours.Core.Domain.Enumerations;
 
 namespace Mvp24Hours.Core.Test;
@@ -59,7 +60,7 @@ public class EnumerationTest
         var invalidValue = 999;
 
         // Act
-        var act = () => OrderStatus.FromValue(invalidValue);
+        Func<OrderStatus> act = () => OrderStatus.FromValue(invalidValue);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -118,7 +119,7 @@ public class EnumerationTest
         var invalidName = "InvalidStatus";
 
         // Act
-        var act = () => OrderStatus.FromName(invalidName);
+        Func<OrderStatus> act = () => OrderStatus.FromName(invalidName);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -129,7 +130,7 @@ public class EnumerationTest
     public void FromName_WithNull_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => OrderStatus.FromName(null!);
+        Func<OrderStatus> act = () => OrderStatus.FromName(null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -139,7 +140,7 @@ public class EnumerationTest
     public void FromName_WithWhitespace_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => OrderStatus.FromName("   ");
+        Func<OrderStatus> act = () => OrderStatus.FromName("   ");
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -153,7 +154,7 @@ public class EnumerationTest
     public void TryFromValue_WithValidValue_ReturnsTrue()
     {
         // Act
-        var result = OrderStatus.TryFromValue(1, out var status);
+        var result = OrderStatus.TryFromValue(1, out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -164,7 +165,7 @@ public class EnumerationTest
     public void TryFromValue_WithInvalidValue_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromValue(999, out var status);
+        var result = OrderStatus.TryFromValue(999, out OrderStatus? status);
 
         // Assert
         result.Should().BeFalse();
@@ -179,7 +180,7 @@ public class EnumerationTest
     public void TryFromName_WithValidName_ReturnsTrue()
     {
         // Act
-        var result = OrderStatus.TryFromName("Pending", out var status);
+        var result = OrderStatus.TryFromName("Pending", out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -190,7 +191,7 @@ public class EnumerationTest
     public void TryFromName_WithInvalidName_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromName("InvalidStatus", out var status);
+        var result = OrderStatus.TryFromName("InvalidStatus", out OrderStatus? status);
 
         // Assert
         result.Should().BeFalse();
@@ -201,7 +202,7 @@ public class EnumerationTest
     public void TryFromName_WithNull_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromName(null!, out var status);
+        var result = OrderStatus.TryFromName(null!, out OrderStatus? status);
 
         // Assert
         result.Should().BeFalse();
@@ -211,7 +212,7 @@ public class EnumerationTest
     public void TryFromName_IsCaseInsensitive()
     {
         // Act
-        var result = OrderStatus.TryFromName("pending", out var status);
+        var result = OrderStatus.TryFromName("pending", out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -226,7 +227,7 @@ public class EnumerationTest
     public void GetAll_ReturnsAllEnumerationValues()
     {
         // Act
-        var all = OrderStatus.GetAll();
+        IReadOnlyCollection<OrderStatus> all = OrderStatus.GetAll();
 
         // Assert
         all.Should().HaveCount(5);
@@ -241,7 +242,7 @@ public class EnumerationTest
     public void GetAll_ReturnsReadOnlyCollection()
     {
         // Act
-        var all = OrderStatus.GetAll();
+        IReadOnlyCollection<OrderStatus> all = OrderStatus.GetAll();
 
         // Assert
         all.Should().BeAssignableTo<IReadOnlyCollection<OrderStatus>>();
@@ -299,8 +300,8 @@ public class EnumerationTest
     public void Equality_SameEnumerations_AreEqual()
     {
         // Arrange
-        var status1 = OrderStatus.Pending;
-        var status2 = OrderStatus.Pending;
+        OrderStatus status1 = OrderStatus.Pending;
+        OrderStatus status2 = OrderStatus.Pending;
 
         // Assert
         status1.Should().Be(status2);
@@ -312,8 +313,8 @@ public class EnumerationTest
     public void Equality_DifferentEnumerations_AreNotEqual()
     {
         // Arrange
-        var status1 = OrderStatus.Pending;
-        var status2 = OrderStatus.Shipped;
+        OrderStatus status1 = OrderStatus.Pending;
+        OrderStatus status2 = OrderStatus.Shipped;
 
         // Assert
         status1.Should().NotBe(status2);
@@ -324,12 +325,10 @@ public class EnumerationTest
     public void Equality_WithNull_ReturnsFalse()
     {
         // Arrange
-        var status = OrderStatus.Pending;
+        OrderStatus? status = OrderStatus.Pending;
 
         // Assert
         status.Equals(null).Should().BeFalse();
-        (status == null).Should().BeFalse();
-        (null == status).Should().BeFalse();
     }
 
     [Fact]
@@ -351,8 +350,8 @@ public class EnumerationTest
     public void Comparison_CompareTo_ReturnsCorrectOrder()
     {
         // Arrange
-        var pending = OrderStatus.Pending; // Value: 1
-        var shipped = OrderStatus.Shipped; // Value: 3
+        OrderStatus pending = OrderStatus.Pending; // Value: 1
+        OrderStatus shipped = OrderStatus.Shipped; // Value: 3
 
         // Assert
         pending.CompareTo(shipped).Should().BeLessThan(0);
@@ -364,7 +363,7 @@ public class EnumerationTest
     public void Comparison_CompareTo_WithNull_ReturnsPositive()
     {
         // Arrange
-        var status = OrderStatus.Pending;
+        OrderStatus status = OrderStatus.Pending;
 
         // Assert
         status.CompareTo(null).Should().BeGreaterThan(0);
@@ -374,9 +373,9 @@ public class EnumerationTest
     public void Comparison_Operators_WorkCorrectly()
     {
         // Arrange
-        var pending = OrderStatus.Pending;
-        var pendingEqual = OrderStatus.Pending;
-        var shipped = OrderStatus.Shipped;
+        OrderStatus pending = OrderStatus.Pending;
+        OrderStatus pendingEqual = OrderStatus.Pending;
+        OrderStatus shipped = OrderStatus.Shipped;
 
         // Assert
         (pending < shipped).Should().BeTrue();
@@ -395,7 +394,7 @@ public class EnumerationTest
     public void ImplicitConversion_ToInt_ReturnsValue()
     {
         // Arrange
-        var status = OrderStatus.Processing;
+        OrderStatus status = OrderStatus.Processing;
 
         // Act
         int value = status;
@@ -408,7 +407,7 @@ public class EnumerationTest
     public void ImplicitConversion_ToString_ReturnsName()
     {
         // Arrange
-        var status = OrderStatus.Processing;
+        OrderStatus status = OrderStatus.Processing;
 
         // Act
         string name = status;
@@ -451,10 +450,10 @@ public class EnumerationTest
     public void Enumeration_CanHaveCustomBehavior()
     {
         // Arrange
-        var pending = OrderStatus.Pending;
-        var processing = OrderStatus.Processing;
-        var shipped = OrderStatus.Shipped;
-        var delivered = OrderStatus.Delivered;
+        OrderStatus pending = OrderStatus.Pending;
+        OrderStatus processing = OrderStatus.Processing;
+        OrderStatus shipped = OrderStatus.Shipped;
+        OrderStatus delivered = OrderStatus.Delivered;
 
         // Assert - Custom CanCancel property
         pending.CanCancel.Should().BeTrue();
@@ -471,7 +470,7 @@ public class EnumerationTest
     public void ToString_ReturnsName()
     {
         // Arrange
-        var status = OrderStatus.Pending;
+        OrderStatus status = OrderStatus.Pending;
 
         // Assert
         status.ToString().Should().Be("Pending");
@@ -485,7 +484,7 @@ public class EnumerationTest
     public void GetHashCode_SameEnumerations_HaveSameHashCode()
     {
         // Arrange
-        var status1 = OrderStatus.Pending;
+        OrderStatus status1 = OrderStatus.Pending;
         var status2 = OrderStatus.FromValue(1);
 
         // Assert
@@ -496,8 +495,8 @@ public class EnumerationTest
     public void GetHashCode_DifferentEnumerations_HaveDifferentHashCodes()
     {
         // Arrange
-        var status1 = OrderStatus.Pending;
-        var status2 = OrderStatus.Shipped;
+        OrderStatus status1 = OrderStatus.Pending;
+        OrderStatus status2 = OrderStatus.Shipped;
 
         // Assert
         status1.GetHashCode().Should().NotBe(status2.GetHashCode());

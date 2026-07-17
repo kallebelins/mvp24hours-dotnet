@@ -823,14 +823,14 @@ namespace Mvp24Hours.WebAPI.Extensions
         {
             builder.UseSwagger();
 
-            var apiVersionDescriptionProvider = builder.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
+            IApiVersionDescriptionProvider apiVersionDescriptionProvider = builder.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
 
             builder.UseSwaggerUI(options =>
             {
                 options.RoutePrefix = swaggerRoutePrefix;
 
                 // Add endpoint for each API version
-                foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions.OrderByDescending(d => d.ApiVersion))
+                foreach (ApiVersionDescription? description in apiVersionDescriptionProvider.ApiVersionDescriptions.OrderByDescending(d => d.ApiVersion))
                 {
                     var versionInfo = description.IsDeprecated
                         ? $"{description.GroupName} (Deprecated)"
@@ -885,12 +885,12 @@ namespace Mvp24Hours.WebAPI.Extensions
             string apiTitle,
             string reDocRoutePrefix = "redoc")
         {
-            var apiVersionDescriptionProvider = builder.ApplicationServices.GetService<IApiVersionDescriptionProvider>();
+            IApiVersionDescriptionProvider? apiVersionDescriptionProvider = builder.ApplicationServices.GetService<IApiVersionDescriptionProvider>();
 
             if (apiVersionDescriptionProvider != null)
             {
                 // Use the latest non-deprecated version, or the latest version if all are deprecated
-                var latestVersion = apiVersionDescriptionProvider.ApiVersionDescriptions
+                ApiVersionDescription? latestVersion = apiVersionDescriptionProvider.ApiVersionDescriptions
                     .OrderByDescending(d => d.ApiVersion)
                     .FirstOrDefault();
 
@@ -1178,7 +1178,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         {
             ArgumentNullException.ThrowIfNull(builder);
 
-            var options = builder.ApplicationServices.GetService<Microsoft.Extensions.Options.IOptions<Configuration.HealthCheckOptions>>()?.Value
+            Configuration.HealthCheckOptions options = builder.ApplicationServices.GetService<Microsoft.Extensions.Options.IOptions<Configuration.HealthCheckOptions>>()?.Value
                 ?? new Configuration.HealthCheckOptions();
 
             var healthCheckOptions = new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

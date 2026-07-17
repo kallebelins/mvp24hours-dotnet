@@ -17,7 +17,7 @@ namespace Mvp24Hours.Application.Redis.Test.Setup
     {
         public static IServiceProvider Initialize()
         {
-            var services = new ServiceCollection()
+            IServiceCollection services = new ServiceCollection()
                 .AddSingleton(ConfigurationHelper.AppSettings);
 
             // caching

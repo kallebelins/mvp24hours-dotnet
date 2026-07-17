@@ -46,7 +46,7 @@ public class FunctionalPatternsTest
     public void Maybe_None_HasNoValue()
     {
         // Act
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Assert
         maybe.HasValue.Should().BeFalse();
@@ -57,10 +57,10 @@ public class FunctionalPatternsTest
     public void Maybe_None_AccessingValue_ThrowsInvalidOperationException()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var act = () => maybe.Value;
+        Func<int> act = () => maybe.Value;
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -113,7 +113,7 @@ public class FunctionalPatternsTest
     public void Maybe_ValueOr_WithNone_ReturnsDefault()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
         var result = maybe.ValueOr(100);
@@ -126,7 +126,7 @@ public class FunctionalPatternsTest
     public void Maybe_ValueOrFactory_WithNone_CallsFactory()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
         var factoryCalled = false;
 
         // Act
@@ -171,7 +171,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.Map(x => x * 2);
+        Maybe<int> result = maybe.Map(x => x * 2);
 
         // Assert
         result.HasValue.Should().BeTrue();
@@ -182,10 +182,10 @@ public class FunctionalPatternsTest
     public void Maybe_Map_WithNone_ReturnsNone()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.Map(x => x * 2);
+        Maybe<int> result = maybe.Map(x => x * 2);
 
         // Assert
         result.HasNoValue.Should().BeTrue();
@@ -198,7 +198,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(10);
 
         // Act
-        var result = maybe
+        Maybe<string> result = maybe
             .Map(x => x * 2)
             .Map(x => x + 5)
             .Map(x => x.ToString());
@@ -219,7 +219,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.Bind(x => Maybe<string>.Some($"Value: {x}"));
+        Maybe<string> result = maybe.Bind(x => Maybe<string>.Some($"Value: {x}"));
 
         // Assert
         result.HasValue.Should().BeTrue();
@@ -230,10 +230,10 @@ public class FunctionalPatternsTest
     public void Maybe_Bind_WithNone_ReturnsNone()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.Bind(x => Maybe<string>.Some($"Value: {x}"));
+        Maybe<string> result = maybe.Bind(x => Maybe<string>.Some($"Value: {x}"));
 
         // Assert
         result.HasNoValue.Should().BeTrue();
@@ -246,7 +246,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.Bind(x => Maybe<string>.None);
+        Maybe<string> result = maybe.Bind(x => Maybe<string>.None);
 
         // Assert
         result.HasNoValue.Should().BeTrue();
@@ -276,7 +276,7 @@ public class FunctionalPatternsTest
     public void Maybe_Match_WithNone_ExecutesNoneFunction()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
         var result = maybe.Match(
@@ -311,7 +311,7 @@ public class FunctionalPatternsTest
     public void Maybe_Match_Action_WithNone_ExecutesNoneAction()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
         var someExecuted = false;
         var noneExecuted = false;
 
@@ -337,7 +337,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.Where(x => x > 10);
+        Maybe<int> result = maybe.Where(x => x > 10);
 
         // Assert
         result.HasValue.Should().BeTrue();
@@ -351,7 +351,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(5);
 
         // Act
-        var result = maybe.Where(x => x > 10);
+        Maybe<int> result = maybe.Where(x => x > 10);
 
         // Assert
         result.HasNoValue.Should().BeTrue();
@@ -361,10 +361,10 @@ public class FunctionalPatternsTest
     public void Maybe_Where_WithNone_ReturnsNone()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.Where(x => x > 10);
+        Maybe<int> result = maybe.Where(x => x > 10);
 
         // Assert
         result.HasNoValue.Should().BeTrue();
@@ -383,7 +383,7 @@ public class FunctionalPatternsTest
         var capturedValue = 0;
 
         // Act
-        var result = maybe.Tap(x =>
+        Maybe<int> result = maybe.Tap(x =>
         {
             actionExecuted = true;
             capturedValue = x;
@@ -399,11 +399,11 @@ public class FunctionalPatternsTest
     public void Maybe_Tap_WithNone_DoesNotExecuteAction()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
         var actionExecuted = false;
 
         // Act
-        var result = maybe.Tap(_ => actionExecuted = true);
+        Maybe<int> result = maybe.Tap(_ => actionExecuted = true);
 
         // Assert
         actionExecuted.Should().BeFalse();
@@ -443,8 +443,8 @@ public class FunctionalPatternsTest
     public void Maybe_Equality_BothNone_AreEqual()
     {
         // Arrange
-        var maybe1 = Maybe<int>.None;
-        var maybe2 = Maybe<int>.None;
+        Maybe<int> maybe1 = Maybe<int>.None;
+        Maybe<int> maybe2 = Maybe<int>.None;
 
         // Assert
         maybe1.Should().Be(maybe2);
@@ -456,7 +456,7 @@ public class FunctionalPatternsTest
     {
         // Arrange
         var some = Maybe<int>.Some(42);
-        var none = Maybe<int>.None;
+        Maybe<int> none = Maybe<int>.None;
 
         // Assert
         some.Should().NotBe(none);
@@ -486,7 +486,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Error");
 
         // Act
-        var act = () => either.RightValue;
+        Func<int> act = () => either.RightValue;
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -516,7 +516,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var act = () => either.LeftValue;
+        Func<string> act = () => either.LeftValue;
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -589,7 +589,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.Map(x => x * 2);
+        Either<string, int> result = either.Map(x => x * 2);
 
         // Assert
         result.IsRight.Should().BeTrue();
@@ -603,7 +603,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Error");
 
         // Act
-        var result = either.Map(x => x * 2);
+        Either<string, int> result = either.Map(x => x * 2);
 
         // Assert
         result.IsLeft.Should().BeTrue();
@@ -621,7 +621,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("error");
 
         // Act
-        var result = either.MapLeft(e => e.ToUpperInvariant());
+        Either<string, int> result = either.MapLeft(e => e.ToUpperInvariant());
 
         // Assert
         result.IsLeft.Should().BeTrue();
@@ -635,7 +635,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.MapLeft(e => e.ToUpperInvariant());
+        Either<string, int> result = either.MapLeft(e => e.ToUpperInvariant());
 
         // Assert
         result.IsRight.Should().BeTrue();
@@ -653,7 +653,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.Bind(x =>
+        Either<string, string> result = either.Bind(x =>
             x > 0
                 ? Either<string, string>.Right($"Positive: {x}")
                 : Either<string, string>.Left("Not positive")
@@ -671,7 +671,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Original error");
 
         // Act
-        var result = either.Bind(x => Either<string, string>.Right($"Value: {x}"));
+        Either<string, string> result = either.Bind(x => Either<string, string>.Right($"Value: {x}"));
 
         // Assert
         result.IsLeft.Should().BeTrue();
@@ -847,7 +847,7 @@ public class FunctionalPatternsTest
     public void Maybe_ToString_WithNone_ReturnsNoneRepresentation()
     {
         // Arrange
-        var maybe = Maybe<int>.None;
+        Maybe<int> maybe = Maybe<int>.None;
 
         // Act
         var result = maybe.ToString();

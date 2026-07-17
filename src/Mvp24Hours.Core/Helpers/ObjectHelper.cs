@@ -35,9 +35,9 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static dynamic? ConvertToDynamic(object obj)
+        public static dynamic ConvertToDynamic(object obj)
         {
-            var json = obj.ToSerialize();
+            string json = obj?.ToSerialize() ?? "{}";
             return json.ToDeserialize<ExpandoObject>();
         }
     }

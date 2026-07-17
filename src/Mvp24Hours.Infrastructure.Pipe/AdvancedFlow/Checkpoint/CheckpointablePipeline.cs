@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         {
             _logger?.LogDebug("CheckpointablePipeline: Resume started. ExecutionId: {ExecutionId}", pipelineExecutionId);
 
-            var checkpoint = await _checkpointStore.GetLatestCheckpointAsync(pipelineExecutionId, cancellationToken);
+            PipelineCheckpoint? checkpoint = await _checkpointStore.GetLatestCheckpointAsync(pipelineExecutionId, cancellationToken);
 
             if (checkpoint == null)
             {
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
             // Check expiration
             if (_options.CheckpointExpiration.HasValue)
             {
-                var age = DateTime.UtcNow - checkpoint.CreatedAt;
+                TimeSpan age = DateTime.UtcNow - checkpoint.CreatedAt;
                 if (age > _options.CheckpointExpiration.Value)
                 {
                     await _checkpointStore.UpdateCheckpointStatusAsync(checkpoint.CheckpointId, CheckpointStatus.Expired, cancellationToken: cancellationToken);
@@ -186,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
         /// </summary>
         public async Task<bool> PauseAsync(string pipelineExecutionId, CancellationToken cancellationToken = default)
         {
-            var checkpoint = await _checkpointStore.GetLatestCheckpointAsync(pipelineExecutionId, cancellationToken);
+            PipelineCheckpoint? checkpoint = await _checkpointStore.GetLatestCheckpointAsync(pipelineExecutionId, cancellationToken);
             if (checkpoint != null && checkpoint.Status == CheckpointStatus.Running)
             {
                 await _checkpointStore.UpdateCheckpointStatusAsync(checkpoint.CheckpointId, CheckpointStatus.Paused, cancellationToken: cancellationToken);
@@ -205,7 +205,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
             var stepResults = new List<CheckpointableStepResult>();
             string? failedStepId = null;
             string? errorMessage = null;
-            var currentState = state;
+            TState currentState = state;
             string? correlationId = null;
 
             _logger?.LogDebug("CheckpointablePipeline: Execute started. ExecutionId: {ExecutionId}, StartIndex: {StartIndex}, TotalSteps: {TotalSteps}",
@@ -217,8 +217,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Checkpoint
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var step = _steps[i];
-                    var stepStartedAt = DateTime.UtcNow;
+                    CheckpointableStep<TState> step = _steps[i];
+                    DateTime stepStartedAt = DateTime.UtcNow;
                     var stepStopwatch = Stopwatch.StartNew();
 
                     // Create checkpoint before step (if enabled)

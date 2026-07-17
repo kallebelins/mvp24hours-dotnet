@@ -72,7 +72,7 @@ public static class EndpointGroupExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
 
-        var group = endpoints.MapGroup(prefix);
+        RouteGroupBuilder group = endpoints.MapGroup(prefix);
         configure?.Invoke(group);
         return group;
     }
@@ -113,7 +113,7 @@ public static class EndpointGroupExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
 
-        var group = endpoints.MapGroup(prefix)
+        RouteGroupBuilder group = endpoints.MapGroup(prefix)
             .WithTags(tag);
 
         if (requireAuthorization)
@@ -161,7 +161,7 @@ public static class EndpointGroupExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
 
-        var group = endpoints.MapMvpApiGroup(prefix, tag, requireAuthorization);
+        RouteGroupBuilder group = endpoints.MapMvpApiGroup(prefix, tag, requireAuthorization);
         return group;
     }
 
@@ -202,7 +202,7 @@ public static class EndpointGroupExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
 
-        var group = endpoints.MapMvpApiGroup(prefix, tag, requireAuthorization);
+        RouteGroupBuilder group = endpoints.MapMvpApiGroup(prefix, tag, requireAuthorization);
         return group;
     }
 }

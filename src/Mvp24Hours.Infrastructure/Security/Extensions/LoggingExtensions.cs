@@ -343,7 +343,7 @@ namespace Mvp24Hours.Infrastructure.Security.Extensions
                 return;
             }
 
-            var maskedData = SensitiveDataMasker.MaskDictionary(data, sensitiveKeys);
+            IDictionary<string, string?> maskedData = SensitiveDataMasker.MaskDictionary(data, sensitiveKeys);
             logger.Log(logLevel, message, maskedData);
         }
 

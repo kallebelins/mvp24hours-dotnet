@@ -28,7 +28,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -44,7 +44,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -60,7 +60,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -76,7 +76,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -92,7 +92,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(spec, expression);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec, expression);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -103,7 +103,7 @@ public class SpecificationCombinatorsTest
     public void AndAll_AllSpecificationsSatisfied_ShouldReturnTrue()
     {
         // Arrange
-        var specs = new[]
+        Specification<TestEntity>[] specs = new[]
         {
             Specification<TestEntity>.Create(e => e.Value > 5),
             Specification<TestEntity>.Create(e => e.Name.Length > 2),
@@ -112,7 +112,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.AndAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.AndAll(specs);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -123,7 +123,7 @@ public class SpecificationCombinatorsTest
     public void AndAll_OneSpecificationNotSatisfied_ShouldReturnFalse()
     {
         // Arrange
-        var specs = new[]
+        Specification<TestEntity>[] specs = new[]
         {
             Specification<TestEntity>.Create(e => e.Value > 5),
             Specification<TestEntity>.Create(e => e.Name.Length > 10), // Not satisfied
@@ -132,7 +132,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.AndAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.AndAll(specs);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -143,10 +143,10 @@ public class SpecificationCombinatorsTest
     public void AndAll_EmptyCollection_ShouldReturnAll()
     {
         // Arrange
-        var specs = Array.Empty<Specification<TestEntity>>();
+        Specification<TestEntity>[] specs = Array.Empty<Specification<TestEntity>>();
 
         // Act
-        var combinedSpec = SpecificationCombinators.AndAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.AndAll(specs);
         var result = combinedSpec.IsSatisfiedBy(new TestEntity());
 
         // Assert
@@ -166,7 +166,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -182,7 +182,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -198,7 +198,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -214,7 +214,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(spec1, spec2);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -230,7 +230,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(spec, expression);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(spec, expression);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -241,7 +241,7 @@ public class SpecificationCombinatorsTest
     public void OrAll_AnySpecificationSatisfied_ShouldReturnTrue()
     {
         // Arrange
-        var specs = new[]
+        Specification<TestEntity>[] specs = new[]
         {
             Specification<TestEntity>.Create(e => e.Value > 100), // Not satisfied
             Specification<TestEntity>.Create(e => e.Name == "WrongName"), // Not satisfied
@@ -250,7 +250,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.OrAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.OrAll(specs);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -261,7 +261,7 @@ public class SpecificationCombinatorsTest
     public void OrAll_NoSpecificationSatisfied_ShouldReturnFalse()
     {
         // Arrange
-        var specs = new[]
+        Specification<TestEntity>[] specs = new[]
         {
             Specification<TestEntity>.Create(e => e.Value > 100),
             Specification<TestEntity>.Create(e => e.Name == "WrongName"),
@@ -270,7 +270,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.OrAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.OrAll(specs);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -281,10 +281,10 @@ public class SpecificationCombinatorsTest
     public void OrAll_EmptyCollection_ShouldReturnNone()
     {
         // Arrange
-        var specs = Array.Empty<Specification<TestEntity>>();
+        Specification<TestEntity>[] specs = Array.Empty<Specification<TestEntity>>();
 
         // Act
-        var combinedSpec = SpecificationCombinators.OrAll(specs);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.OrAll(specs);
         var result = combinedSpec.IsSatisfiedBy(new TestEntity());
 
         // Assert
@@ -303,7 +303,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var notSpec = SpecificationCombinators.Not(spec);
+        Specification<TestEntity> notSpec = SpecificationCombinators.Not(spec);
         var result = notSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -318,7 +318,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var notSpec = SpecificationCombinators.Not(spec);
+        Specification<TestEntity> notSpec = SpecificationCombinators.Not(spec);
         var result = notSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -333,7 +333,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test" };
 
         // Act
-        var notSpec = SpecificationCombinators.Not(expression);
+        Specification<TestEntity> notSpec = SpecificationCombinators.Not(expression);
         var result = notSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -357,7 +357,7 @@ public class SpecificationCombinatorsTest
         var entity3 = new TestEntity { Value = 3, Name = "Other", IsActive = true };  // Neither part true
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(
             SpecificationCombinators.And(greaterThan5, startsWithT),
             SpecificationCombinators.Not(isActive)
         );
@@ -378,7 +378,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(
             SpecificationCombinators.And(spec1, spec2),
             spec3
         );
@@ -398,7 +398,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10, Name = "Test", IsActive = true };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(
             SpecificationCombinators.Or(spec1, spec2),
             spec3
         );
@@ -418,11 +418,11 @@ public class SpecificationCombinatorsTest
         // Arrange
         var spec1 = Specification<TestEntity>.Create(e => e.Value > 5);
         var spec2 = Specification<TestEntity>.Create(e => e.IsActive);
-        var combinedSpec = SpecificationCombinators.And(spec1, spec2);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(spec1, spec2);
 
         // Act
-        var expression = combinedSpec.IsSatisfiedByExpression;
-        var compiled = expression.Compile();
+        Expression<Func<TestEntity, bool>> expression = combinedSpec.IsSatisfiedByExpression;
+        Func<TestEntity, bool> compiled = expression.Compile();
 
         var entity1 = new TestEntity { Value = 10, IsActive = true };
         var entity2 = new TestEntity { Value = 10, IsActive = false };
@@ -463,7 +463,7 @@ public class SpecificationCombinatorsTest
         Expression<Func<TestEntity, bool>> expression = e => e.Value > 5;
 
         // Act
-        var spec = SpecificationCombinators.FromExpression(expression);
+        Specification<TestEntity> spec = SpecificationCombinators.FromExpression(expression);
         var entity = new TestEntity { Value = 10 };
 
         // Assert
@@ -474,7 +474,7 @@ public class SpecificationCombinatorsTest
     public void All_ShouldCreateSpecificationThatMatchesEverything()
     {
         // Act
-        var allSpec = SpecificationCombinators.All<TestEntity>();
+        Specification<TestEntity> allSpec = SpecificationCombinators.All<TestEntity>();
 
         // Assert
         allSpec.IsSatisfiedBy(new TestEntity { Value = 0 }).Should().BeTrue();
@@ -486,7 +486,7 @@ public class SpecificationCombinatorsTest
     public void None_ShouldCreateSpecificationThatMatchesNothing()
     {
         // Act
-        var noneSpec = SpecificationCombinators.None<TestEntity>();
+        Specification<TestEntity> noneSpec = SpecificationCombinators.None<TestEntity>();
 
         // Assert
         noneSpec.IsSatisfiedBy(new TestEntity { Value = 0 }).Should().BeFalse();
@@ -498,12 +498,12 @@ public class SpecificationCombinatorsTest
     public void All_AndWithOther_ShouldReturnOther()
     {
         // Arrange
-        var allSpec = SpecificationCombinators.All<TestEntity>();
+        Specification<TestEntity> allSpec = SpecificationCombinators.All<TestEntity>();
         var otherSpec = Specification<TestEntity>.Create(e => e.Value > 5);
         var entity = new TestEntity { Value = 3 };
 
         // Act
-        var combinedSpec = SpecificationCombinators.And(allSpec, otherSpec);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.And(allSpec, otherSpec);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -514,12 +514,12 @@ public class SpecificationCombinatorsTest
     public void None_OrWithOther_ShouldReturnOther()
     {
         // Arrange
-        var noneSpec = SpecificationCombinators.None<TestEntity>();
+        Specification<TestEntity> noneSpec = SpecificationCombinators.None<TestEntity>();
         var otherSpec = Specification<TestEntity>.Create(e => e.Value > 5);
         var entity = new TestEntity { Value = 10 };
 
         // Act
-        var combinedSpec = SpecificationCombinators.Or(noneSpec, otherSpec);
+        Specification<TestEntity> combinedSpec = SpecificationCombinators.Or(noneSpec, otherSpec);
         var result = combinedSpec.IsSatisfiedBy(entity);
 
         // Assert
@@ -538,7 +538,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 5 };
 
         // Act
-        var result = SpecificationCombinators.If(true, spec);
+        Specification<TestEntity> result = SpecificationCombinators.If(true, spec);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeFalse();
@@ -552,7 +552,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 5 };
 
         // Act
-        var result = SpecificationCombinators.If(false, spec);
+        Specification<TestEntity> result = SpecificationCombinators.If(false, spec);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeTrue(); // All() always returns true
@@ -566,7 +566,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 5 };
 
         // Act
-        var result = SpecificationCombinators.If(true, expression);
+        Specification<TestEntity> result = SpecificationCombinators.If(true, expression);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeFalse();
@@ -580,7 +580,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 5 };
 
         // Act
-        var result = SpecificationCombinators.If(false, expression);
+        Specification<TestEntity> result = SpecificationCombinators.If(false, expression);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeTrue();
@@ -595,7 +595,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10 };
 
         // Act
-        var result = SpecificationCombinators.IfElse(true, ifTrueSpec, ifFalseSpec);
+        Specification<TestEntity> result = SpecificationCombinators.IfElse(true, ifTrueSpec, ifFalseSpec);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeTrue();
@@ -610,7 +610,7 @@ public class SpecificationCombinatorsTest
         var entity = new TestEntity { Value = 10 };
 
         // Act
-        var result = SpecificationCombinators.IfElse(false, ifTrueSpec, ifFalseSpec);
+        Specification<TestEntity> result = SpecificationCombinators.IfElse(false, ifTrueSpec, ifFalseSpec);
 
         // Assert
         result.IsSatisfiedBy(entity).Should().BeTrue();
@@ -627,7 +627,7 @@ public class SpecificationCombinatorsTest
         var spec = Specification<TestEntity>.Create(e => e.Value > 5);
 
         // Act & Assert
-        var act = () => SpecificationCombinators.And<TestEntity>(null!, spec);
+        Func<Specification<TestEntity>> act = () => SpecificationCombinators.And<TestEntity>(null!, spec);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -638,7 +638,7 @@ public class SpecificationCombinatorsTest
         var spec = Specification<TestEntity>.Create(e => e.Value > 5);
 
         // Act & Assert
-        var act = () => SpecificationCombinators.And(spec, (Specification<TestEntity>)null!);
+        Func<Specification<TestEntity>> act = () => SpecificationCombinators.And(spec, (Specification<TestEntity>)null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -649,7 +649,7 @@ public class SpecificationCombinatorsTest
         var spec = Specification<TestEntity>.Create(e => e.Value > 5);
 
         // Act & Assert
-        var act = () => SpecificationCombinators.Or<TestEntity>(null!, spec);
+        Func<Specification<TestEntity>> act = () => SpecificationCombinators.Or<TestEntity>(null!, spec);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -657,7 +657,7 @@ public class SpecificationCombinatorsTest
     public void Not_WithNull_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => SpecificationCombinators.Not<TestEntity>((Specification<TestEntity>)null!);
+        Func<Specification<TestEntity>> act = () => SpecificationCombinators.Not<TestEntity>((Specification<TestEntity>)null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -665,7 +665,7 @@ public class SpecificationCombinatorsTest
     public void FromExpression_WithNull_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => SpecificationCombinators.FromExpression<TestEntity>(null!);
+        Func<Specification<TestEntity>> act = () => SpecificationCombinators.FromExpression<TestEntity>(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 

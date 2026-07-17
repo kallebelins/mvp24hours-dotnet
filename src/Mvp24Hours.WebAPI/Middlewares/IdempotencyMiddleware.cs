@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Idempotency;
 
@@ -108,7 +109,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Generate or extract idempotency key
-            var keyResult = await keyGenerator.GenerateKeyAsync(context);
+            IdempotencyKeyResult keyResult = await keyGenerator.GenerateKeyAsync(context);
 
             // Check if key is required but missing
             if (!keyResult.HasKey)
@@ -135,7 +136,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Try to acquire lock
-            var lockResult = await store.TryAcquireLockAsync(
+            IdempotencyLockResult lockResult = await store.TryAcquireLockAsync(
                 key,
                 context.Request.Path.Value ?? "/",
                 context.Request.Method,
@@ -211,7 +212,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             string key)
         {
             // Capture the original response body
-            var originalBodyStream = context.Response.Body;
+            Stream originalBodyStream = context.Response.Body;
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
@@ -412,7 +413,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
         private static string? SerializeHeaders(IHeaderDictionary headers)
         {
             var headerDict = new Dictionary<string, string[]>();
-            foreach (var header in headers)
+            foreach (KeyValuePair<string, StringValues> header in headers)
             {
                 // Skip certain headers that shouldn't be cached
                 if (header.Key.StartsWith("X-", StringComparison.OrdinalIgnoreCase) ||
@@ -434,10 +435,10 @@ namespace Mvp24Hours.WebAPI.Middlewares
         {
             try
             {
-                var cachedHeaders = JsonSerializer.Deserialize<Dictionary<string, string[]>>(headersJson, JsonOptions);
+                Dictionary<string, string[]>? cachedHeaders = JsonSerializer.Deserialize<Dictionary<string, string[]>>(headersJson, JsonOptions);
                 if (cachedHeaders != null)
                 {
-                    foreach (var header in cachedHeaders)
+                    foreach (KeyValuePair<string, string[]> header in cachedHeaders)
                     {
                         // Don't overwrite existing headers
                         if (!headers.ContainsKey(header.Key))

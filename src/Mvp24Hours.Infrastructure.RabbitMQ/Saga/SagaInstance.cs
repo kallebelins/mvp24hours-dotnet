@@ -64,22 +64,22 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         /// <summary>
         /// Gets or sets the list of errors that occurred during the saga.
         /// </summary>
-        public List<string> Errors { get; set; } = new();
+        public List<string> Errors { get; set; } = [];
 
         /// <summary>
         /// Gets or sets custom metadata for the saga.
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; } = new();
+        public Dictionary<string, string> Metadata { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the list of scheduled timeout IDs.
         /// </summary>
-        public List<Guid> ScheduledTimeouts { get; set; } = new();
+        public List<Guid> ScheduledTimeouts { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the history of state transitions.
         /// </summary>
-        public List<SagaStateTransition> StateHistory { get; set; } = new();
+        public List<SagaStateTransition> StateHistory { get; set; } = [];
 
         /// <summary>
         /// Gets whether the saga is completed.

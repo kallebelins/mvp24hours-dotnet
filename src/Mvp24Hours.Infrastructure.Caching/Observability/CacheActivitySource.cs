@@ -344,7 +344,7 @@ public static class CacheActivitySource
         string? provider = null,
         string? level = null)
     {
-        var activity = Source.StartActivity(operationName, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(operationName, ActivityKind.Internal);
 
         if (activity == null)
             return null;

@@ -150,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Contract
         /// <summary>
         /// Gets or sets additional metadata about the subsystem.
         /// </summary>
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public Dictionary<string, object> Metadata { get; set; } = [];
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Contract
         /// <summary>
         /// Gets or sets additional context about the error.
         /// </summary>
-        public Dictionary<string, object> Context { get; set; } = new();
+        public Dictionary<string, object> Context { get; set; } = [];
     }
 }
 

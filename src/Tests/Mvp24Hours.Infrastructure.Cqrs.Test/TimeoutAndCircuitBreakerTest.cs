@@ -29,8 +29,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterTimeoutBehavior = true;
             options.DefaultTimeoutMilliseconds = 5000; // 5 second default
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new FastTimeoutCommand();
 
         // Act
@@ -51,12 +51,12 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(SlowTimeoutCommand).Assembly);
             options.RegisterTimeoutBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new SlowTimeoutCommand { DelayMs = 500 }; // Slower than the 100ms timeout
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<RequestTimeoutException>(() =>
+        RequestTimeoutException ex = await Assert.ThrowsAsync<RequestTimeoutException>(() =>
             mediator.SendAsync(command));
 
         Assert.Equal("SlowTimeoutCommand", ex.RequestName);
@@ -75,8 +75,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterTimeoutBehavior = true;
             // No default timeout set (0)
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new NoTimeoutCommand { DelayMs = 200 };
 
         // Act
@@ -120,8 +120,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(CircuitBreakerTestCommand).Assembly);
             options.RegisterCircuitBreakerBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new CircuitBreakerTestCommand { ShouldFail = false };
 
         // Act
@@ -130,7 +130,7 @@ public class TimeoutAndCircuitBreakerTest
         // Assert
         Assert.Equal("Success", result);
 
-        var metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
+        CircuitBreakerMetrics? metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
         Assert.NotNull(metrics);
         Assert.Equal(CircuitState.Closed, metrics.State);
         Assert.Equal(1, metrics.SuccessCount);
@@ -149,8 +149,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(CircuitBreakerTestCommand).Assembly);
             options.RegisterCircuitBreakerBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         // Act - Cause 2 failures (threshold is 3)
         for (int i = 0; i < 2; i++)
@@ -166,7 +166,7 @@ public class TimeoutAndCircuitBreakerTest
         }
 
         // Assert - Circuit should still be closed
-        var metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
+        CircuitBreakerMetrics? metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
         Assert.NotNull(metrics);
         Assert.Equal(CircuitState.Closed, metrics.State);
         Assert.Equal(2, metrics.FailureCount);
@@ -185,8 +185,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(CircuitBreakerTestCommand).Assembly);
             options.RegisterCircuitBreakerBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         // First, make enough requests to meet minimum throughput
         for (int i = 0; i < 5; i++)
@@ -208,7 +208,7 @@ public class TimeoutAndCircuitBreakerTest
         }
 
         // Assert - Circuit should be open
-        var metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
+        CircuitBreakerMetrics? metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
         Assert.NotNull(metrics);
         Assert.Equal(CircuitState.Open, metrics.State);
     }
@@ -226,8 +226,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(CircuitBreakerTestCommand).Assembly);
             options.RegisterCircuitBreakerBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         // Trip the circuit
         for (int i = 0; i < 5; i++)
@@ -244,7 +244,7 @@ public class TimeoutAndCircuitBreakerTest
         }
 
         // Act & Assert - Next request should be rejected immediately
-        var ex = await Assert.ThrowsAsync<CircuitBreakerOpenException>(() =>
+        CircuitBreakerOpenException ex = await Assert.ThrowsAsync<CircuitBreakerOpenException>(() =>
             mediator.SendAsync(new CircuitBreakerTestCommand { ShouldFail = false }));
 
         Assert.Equal("test-circuit", ex.CircuitKey);
@@ -268,13 +268,13 @@ public class TimeoutAndCircuitBreakerTest
     public void CircuitBreakerPolicy_ShouldHavePresets()
     {
         // Assert
-        var relaxed = CircuitBreakerPolicy.Relaxed;
+        CircuitBreakerPolicy relaxed = CircuitBreakerPolicy.Relaxed;
         Assert.Equal(10, relaxed.FailureThreshold);
         Assert.Equal(60, relaxed.SamplingDurationSeconds);
         Assert.Equal(20, relaxed.MinimumThroughput);
         Assert.Equal(30, relaxed.DurationOfBreakSeconds);
 
-        var aggressive = CircuitBreakerPolicy.Aggressive;
+        CircuitBreakerPolicy aggressive = CircuitBreakerPolicy.Aggressive;
         Assert.Equal(3, aggressive.FailureThreshold);
         Assert.Equal(15, aggressive.SamplingDurationSeconds);
         Assert.Equal(5, aggressive.MinimumThroughput);
@@ -292,8 +292,8 @@ public class TimeoutAndCircuitBreakerTest
             options.RegisterHandlersFromAssembly(typeof(NonProtectedCommand).Assembly);
             options.RegisterCircuitBreakerBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         // Act - Should not use circuit breaker
         var result = await mediator.SendAsync(new NonProtectedCommand());

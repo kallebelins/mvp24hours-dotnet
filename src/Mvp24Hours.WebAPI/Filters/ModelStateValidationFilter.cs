@@ -8,7 +8,9 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
 
@@ -66,7 +68,7 @@ namespace Mvp24Hours.WebAPI.Filters
 
                 foreach (var key in context.ModelState.Keys)
                 {
-                    var state = context.ModelState[key];
+                    ModelStateEntry? state = context.ModelState[key];
                     if (state?.Errors != null && state.Errors.Count > 0)
                     {
                         errors[key] = state.Errors
@@ -127,7 +129,7 @@ namespace Mvp24Hours.WebAPI.Filters
 
         private string? GetCorrelationId(HttpContext context)
         {
-            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out var headerValue))
+            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out StringValues headerValue))
             {
                 return headerValue.ToString();
             }

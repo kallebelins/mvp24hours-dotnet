@@ -91,7 +91,7 @@ namespace Mvp24Hours.Extensions
             // Register IClock adapter that wraps TimeProvider
             services.TryAddSingleton<IClock>(sp =>
             {
-                var tp = sp.GetRequiredService<TimeProvider>();
+                TimeProvider tp = sp.GetRequiredService<TimeProvider>();
                 return new TimeProviderAdapter(tp);
             });
 
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Extensions
             // Register TimeProvider adapter that wraps IClock
             services.TryAddSingleton<TimeProvider>(sp =>
             {
-                var c = sp.GetRequiredService<IClock>();
+                IClock c = sp.GetRequiredService<IClock>();
                 return new ClockAdapter(c);
             });
 

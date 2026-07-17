@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
@@ -68,7 +69,7 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
             _logger?.LogDebug(ex, "Exception caught, attempting to find handler for {ExceptionType}", ex.GetType().Name);
 
             // Try to handle the exception
-            var result = await TryHandleExceptionAsync(request, ex, cancellationToken);
+            ExceptionHandlingResult<TResponse> result = await TryHandleExceptionAsync(request, ex, cancellationToken);
 
             if (result.IsHandled)
             {
@@ -92,13 +93,13 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var exceptionType = exception.GetType();
+        Type exceptionType = exception.GetType();
 
         // Try to find type-specific handlers, walking up the exception hierarchy
-        var currentType = exceptionType;
+        Type? currentType = exceptionType;
         while (currentType != null && currentType != typeof(object))
         {
-            var result = await TryHandleWithTypeAsync(request, exception, currentType, cancellationToken);
+            ExceptionHandlingResult<TResponse> result = await TryHandleWithTypeAsync(request, exception, currentType, cancellationToken);
             if (result.IsHandled || result.ShouldRethrow)
             {
                 return result;
@@ -118,12 +119,12 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
         CancellationToken cancellationToken)
     {
         // Build the handler type: IExceptionHandler<TRequest, TResponse, TException>
-        var handlerType = typeof(IExceptionHandler<,,>).MakeGenericType(
+        Type handlerType = typeof(IExceptionHandler<,,>).MakeGenericType(
             typeof(TRequest),
             typeof(TResponse),
             exceptionType);
 
-        var handlers = _serviceProvider.GetServices(handlerType);
+        IEnumerable<object?> handlers = _serviceProvider.GetServices(handlerType);
 
         foreach (var handler in handlers)
         {
@@ -135,7 +136,7 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
             try
             {
                 // Use reflection to call HandleAsync
-                var handleMethod = handlerType.GetMethod("HandleAsync");
+                MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
                 if (handleMethod is null) continue;
 
                 var task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
@@ -144,13 +145,13 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
                 await (Task)task;
 
                 // Get the result using reflection
-                var resultProperty = task.GetType().GetProperty("Result");
+                PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
                 if (resultProperty is null) continue;
 
                 var resultValue = resultProperty.GetValue(task);
                 if (resultValue is not null)
                 {
-                    var result = ConvertToTypedResult(resultValue);
+                    ExceptionHandlingResult<TResponse> result = ConvertToTypedResult(resultValue);
                     if (result.IsHandled || result.ShouldRethrow)
                     {
                         return result;
@@ -175,11 +176,11 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
         CancellationToken cancellationToken)
     {
         // Build the global handler type: IExceptionHandlerGlobal<TException>
-        var currentType = exceptionType;
+        Type? currentType = exceptionType;
         while (currentType != null && currentType != typeof(object))
         {
-            var handlerType = typeof(IExceptionHandlerGlobal<>).MakeGenericType(currentType);
-            var handlers = _serviceProvider.GetServices(handlerType);
+            Type handlerType = typeof(IExceptionHandlerGlobal<>).MakeGenericType(currentType);
+            IEnumerable<object?> handlers = _serviceProvider.GetServices(handlerType);
 
             foreach (var handler in handlers)
             {
@@ -191,7 +192,7 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
                 try
                 {
                     // Use reflection to call HandleAsync
-                    var handleMethod = handlerType.GetMethod("HandleAsync");
+                    MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
                     if (handleMethod is null) continue;
 
                     var task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
@@ -200,13 +201,13 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
                     await (Task)task;
 
                     // Get the result using reflection
-                    var resultProperty = task.GetType().GetProperty("Result");
+                    PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
                     if (resultProperty is null) continue;
 
                     var resultValue = resultProperty.GetValue(task);
                     if (resultValue is not null)
                     {
-                        var result = ConvertFromGlobalResult(resultValue);
+                        ExceptionHandlingResult<TResponse> result = ConvertFromGlobalResult(resultValue);
                         if (result.IsHandled || result.ShouldRethrow)
                         {
                             return result;
@@ -229,11 +230,11 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
 
     private static ExceptionHandlingResult<TResponse> ConvertToTypedResult(object resultValue)
     {
-        var resultType = resultValue.GetType();
+        Type resultType = resultValue.GetType();
 
-        var isHandledProp = resultType.GetProperty("IsHandled");
-        var responseProp = resultType.GetProperty("Response");
-        var exceptionProp = resultType.GetProperty("ExceptionToRethrow");
+        PropertyInfo? isHandledProp = resultType.GetProperty("IsHandled");
+        PropertyInfo? responseProp = resultType.GetProperty("Response");
+        PropertyInfo? exceptionProp = resultType.GetProperty("ExceptionToRethrow");
 
         var isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
         var response = responseProp?.GetValue(resultValue);
@@ -254,11 +255,11 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
 
     private static ExceptionHandlingResult<TResponse> ConvertFromGlobalResult(object resultValue)
     {
-        var resultType = resultValue.GetType();
+        Type resultType = resultValue.GetType();
 
-        var isHandledProp = resultType.GetProperty("IsHandled");
-        var responseProp = resultType.GetProperty("Response");
-        var exceptionProp = resultType.GetProperty("ExceptionToRethrow");
+        PropertyInfo? isHandledProp = resultType.GetProperty("IsHandled");
+        PropertyInfo? responseProp = resultType.GetProperty("Response");
+        PropertyInfo? exceptionProp = resultType.GetProperty("ExceptionToRethrow");
 
         var isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
         var response = responseProp?.GetValue(resultValue);

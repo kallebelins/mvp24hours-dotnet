@@ -46,7 +46,7 @@ public class MultiTenancyTest
     public void TenantContext_Empty_ShouldHaveNoTenant()
     {
         // Arrange
-        var tenant = TenantContext.Empty;
+        TenantContext tenant = TenantContext.Empty;
 
         // Assert
         Assert.Null(tenant.TenantId);
@@ -125,7 +125,7 @@ public class MultiTenancyTest
         store.AddOrUpdate(tenant);
 
         // Act
-        var retrieved = await store.GetByIdAsync("tenant-1");
+        ITenantContext? retrieved = await store.GetByIdAsync("tenant-1");
 
         // Assert
         Assert.NotNull(retrieved);
@@ -142,7 +142,7 @@ public class MultiTenancyTest
         store.AddOrUpdate(tenant);
 
         // Act
-        var retrieved = await store.GetByNameAsync("Tenant One");
+        ITenantContext? retrieved = await store.GetByNameAsync("Tenant One");
 
         // Assert
         Assert.NotNull(retrieved);
@@ -156,7 +156,7 @@ public class MultiTenancyTest
         var store = new InMemoryTenantStore();
 
         // Act
-        var retrieved = await store.GetByIdAsync("non-existent");
+        ITenantContext? retrieved = await store.GetByIdAsync("non-existent");
 
         // Assert
         Assert.Null(retrieved);
@@ -243,7 +243,7 @@ public class MultiTenancyTest
     public void FilterByTenant_ShouldFilterQueryable()
     {
         // Arrange
-        var entities = new List<TenantEntity>
+        IQueryable<TenantEntity> entities = new List<TenantEntity>
         {
             new() { Id = 1, Name = "Entity 1", TenantId = "tenant-1" },
             new() { Id = 2, Name = "Entity 2", TenantId = "tenant-2" },
@@ -262,7 +262,7 @@ public class MultiTenancyTest
     public void FilterByTenant_ShouldReturnEmptyWhenNoTenant()
     {
         // Arrange
-        var entities = new List<TenantEntity>
+        IQueryable<TenantEntity> entities = new List<TenantEntity>
         {
             new() { Id = 1, Name = "Entity 1", TenantId = "tenant-1" }
         }.AsQueryable();
@@ -278,7 +278,7 @@ public class MultiTenancyTest
     public void FilterByTenant_WithTenantContext_ShouldFilter()
     {
         // Arrange
-        var entities = new List<TenantEntity>
+        IQueryable<TenantEntity> entities = new List<TenantEntity>
         {
             new() { Id = 1, Name = "Entity 1", TenantId = "tenant-1" },
             new() { Id = 2, Name = "Entity 2", TenantId = "tenant-2" }
@@ -348,7 +348,7 @@ public class MultiTenancyTest
     public void CurrentUser_Anonymous_ShouldNotBeAuthenticated()
     {
         // Arrange
-        var user = CurrentUser.Anonymous;
+        CurrentUser user = CurrentUser.Anonymous;
 
         // Assert
         Assert.Null(user.Id);
@@ -401,9 +401,9 @@ public class MultiTenancyTest
             options.RegisterTenantBehavior = true;
         });
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
-        var accessor = sp.GetRequiredService<ITenantContextAccessor>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
+        ITenantContextAccessor accessor = sp.GetRequiredService<ITenantContextAccessor>();
         var command = new TenantTestCommand { Name = "Test" };
 
         // Act
@@ -427,8 +427,8 @@ public class MultiTenancyTest
             options.RegisterTenantBehavior = true;
         });
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TenantRequiredTestCommand { Name = "Test" };
 
         // Act & Assert
@@ -453,8 +453,8 @@ public class MultiTenancyTest
             options.RegisterTenantBehavior = true;
         });
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TenantAwareTestCommand
         {
             Name = "Test",
@@ -486,8 +486,8 @@ public class MultiTenancyTest
             options.RegisterCurrentUserBehavior = true;
         });
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new UserTestCommand();
 
         // Act
@@ -511,8 +511,8 @@ public class MultiTenancyTest
             options.RegisterCurrentUserBehavior = true;
         });
 
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new UserRequiredTestCommand();
 
         // Act & Assert
@@ -534,12 +534,12 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
             options.WithMultiTenancy();
         });
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Assert
-        Assert.NotNull(sp.GetService<ITenantContextAccessor>());
-        Assert.NotNull(sp.GetService<ICurrentUserAccessor>());
-        Assert.NotNull(sp.GetService<ITenantFilter>());
+        Assert.NotNull(sp.GetRequiredService<ITenantContextAccessor>());
+        Assert.NotNull(sp.GetRequiredService<ICurrentUserAccessor>());
+        Assert.NotNull(sp.GetRequiredService<ITenantFilter>());
     }
 
     #endregion

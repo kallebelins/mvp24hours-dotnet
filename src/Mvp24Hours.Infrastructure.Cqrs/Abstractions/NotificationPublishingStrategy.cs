@@ -77,7 +77,7 @@ public sealed class SequentialNotificationPublisher : INotificationPublisher
         CancellationToken cancellationToken)
         where TNotification : IMediatorNotification
     {
-        foreach (var handler in handlers)
+        foreach (IMediatorNotificationHandler<TNotification> handler in handlers)
         {
             await handler.Handle(notification, cancellationToken);
         }
@@ -96,7 +96,7 @@ public sealed class ParallelNotificationPublisher : INotificationPublisher
         CancellationToken cancellationToken)
         where TNotification : IMediatorNotification
     {
-        var tasks = handlers.Select(handler => handler.Handle(notification, cancellationToken));
+        IEnumerable<Task> tasks = handlers.Select(handler => handler.Handle(notification, cancellationToken));
         await Task.WhenAll(tasks);
     }
 }
@@ -124,7 +124,7 @@ public sealed class ParallelNoWaitNotificationPublisher : INotificationPublisher
         CancellationToken cancellationToken)
         where TNotification : IMediatorNotification
     {
-        foreach (var handler in handlers)
+        foreach (IMediatorNotificationHandler<TNotification> handler in handlers)
         {
             // Fire and forget - don't await
             _ = ExecuteSafeAsync(handler, notification, cancellationToken);
@@ -168,7 +168,7 @@ public sealed class SequentialContinueOnExceptionPublisher : INotificationPublis
     {
         var exceptions = new List<Exception>();
 
-        foreach (var handler in handlers)
+        foreach (IMediatorNotificationHandler<TNotification> handler in handlers)
         {
             try
             {

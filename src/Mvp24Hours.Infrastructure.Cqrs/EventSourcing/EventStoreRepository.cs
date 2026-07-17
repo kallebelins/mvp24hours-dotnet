@@ -4,6 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
+
 namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
 /// <summary>
@@ -125,7 +127,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         if (_snapshotStore != null && typeof(TAggregate).GetInterfaces()
             .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISnapshotAggregate<>)))
         {
-            var snapshot = await _snapshotStore.GetLatestSnapshotAsync(id, cancellationToken);
+            Snapshot? snapshot = await _snapshotStore.GetLatestSnapshotAsync(id, cancellationToken);
             if (snapshot != null)
             {
                 aggregate = RestoreFromSnapshot(snapshot);
@@ -137,7 +139,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         }
 
         // Load events (all or from snapshot version)
-        var events = await _eventStore.GetEventsAsync(id, fromVersion, cancellationToken);
+        IReadOnlyList<Core.Contract.Domain.Entity.IDomainEvent> events = await _eventStore.GetEventsAsync(id, fromVersion, cancellationToken);
 
         if (!events.Any() && aggregate == null)
         {
@@ -165,7 +167,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
 
         if (_snapshotStore != null)
         {
-            var snapshot = await _snapshotStore.GetSnapshotAtVersionAsync(id, version, cancellationToken);
+            Snapshot? snapshot = await _snapshotStore.GetSnapshotAtVersionAsync(id, version, cancellationToken);
             if (snapshot != null)
             {
                 aggregate = RestoreFromSnapshot(snapshot);
@@ -177,7 +179,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         }
 
         // Load events up to version
-        var events = await _eventStore.GetEventsAsync(id, fromVersion, cancellationToken);
+        IReadOnlyList<Core.Contract.Domain.Entity.IDomainEvent> events = await _eventStore.GetEventsAsync(id, fromVersion, cancellationToken);
         var eventsToApply = events.Take((int)(version - fromVersion)).ToList();
 
         if (!eventsToApply.Any() && aggregate == null)
@@ -200,7 +202,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
     {
         ArgumentNullException.ThrowIfNull(aggregate);
 
-        var uncommittedEvents = aggregate.UncommittedEvents;
+        IReadOnlyCollection<Core.Contract.Domain.Entity.IDomainEvent> uncommittedEvents = aggregate.UncommittedEvents;
 
         if (!uncommittedEvents.Any())
         {
@@ -245,7 +247,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
             return 0;
         }
 
-        var snapshot = await _snapshotStore.GetLatestSnapshotAsync(aggregateId, cancellationToken);
+        Snapshot? snapshot = await _snapshotStore.GetLatestSnapshotAsync(aggregateId, cancellationToken);
         return snapshot?.Version ?? 0;
     }
 
@@ -257,7 +259,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         }
 
         // Check if aggregate supports snapshots
-        var snapshotInterface = typeof(TAggregate).GetInterfaces()
+        Type? snapshotInterface = typeof(TAggregate).GetInterfaces()
             .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISnapshotAggregate<>));
 
         if (snapshotInterface == null)
@@ -265,7 +267,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
             return;
         }
 
-        var createSnapshotMethod = typeof(TAggregate).GetMethod("CreateSnapshot");
+        MethodInfo? createSnapshotMethod = typeof(TAggregate).GetMethod("CreateSnapshot");
         if (createSnapshotMethod == null)
         {
             return;
@@ -298,7 +300,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
     {
         try
         {
-            var snapshotInterface = typeof(TAggregate).GetInterfaces()
+            Type? snapshotInterface = typeof(TAggregate).GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISnapshotAggregate<>));
 
             if (snapshotInterface == null)
@@ -321,7 +323,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
             }
 
             var aggregate = new TAggregate();
-            var restoreMethod = typeof(TAggregate).GetMethod("RestoreFromSnapshot");
+            MethodInfo? restoreMethod = typeof(TAggregate).GetMethod("RestoreFromSnapshot");
             restoreMethod?.Invoke(aggregate, new[] { snapshotData, snapshot.Version });
 
             return aggregate;

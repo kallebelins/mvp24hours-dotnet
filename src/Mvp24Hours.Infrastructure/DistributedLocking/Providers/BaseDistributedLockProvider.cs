@@ -107,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             ArgumentException.ThrowIfNullOrWhiteSpace(resource);
 
             options ??= DistributedLockOptions.Default;
-            var attemptedAt = DateTimeOffset.UtcNow;
+            DateTimeOffset attemptedAt = DateTimeOffset.UtcNow;
             var lockId = Guid.NewGuid().ToString("N");
             var stopwatch = Stopwatch.StartNew();
 
@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
 
                 while (!timeoutCts.Token.IsCancellationRequested)
                 {
-                    var (success, acquiredLockId, expiresAt, fencedToken) = await TryAcquireLockCoreAsync(
+                    (bool success, string? acquiredLockId, DateTimeOffset expiresAt, long? fencedToken) = await TryAcquireLockCoreAsync(
                         resource,
                         lockId,
                         options.LockDuration,
@@ -127,8 +127,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
                     if (success)
                     {
                         stopwatch.Stop();
-                        var lockHandle = CreateLockHandle(resource, acquiredLockId, expiresAt, fencedToken, options);
-                        var completedAt = DateTimeOffset.UtcNow;
+                        ILockHandle lockHandle = CreateLockHandle(resource, acquiredLockId, expiresAt, fencedToken, options);
+                        DateTimeOffset completedAt = DateTimeOffset.UtcNow;
 
                         // Record successful acquisition
                         _metrics?.RecordAcquisition(resource, true, stopwatch.Elapsed);

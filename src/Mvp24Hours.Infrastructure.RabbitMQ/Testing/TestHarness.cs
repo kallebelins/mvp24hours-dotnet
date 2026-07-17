@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         {
             var services = new ServiceCollection();
             configureServices(services);
-            var serviceProvider = services.BuildServiceProvider();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
             return new TestHarness(serviceProvider);
         }
 
@@ -93,11 +93,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             TimeSpan? timeout = null,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
             var messageId = await PublishAsync(message, cancellationToken: cancellationToken);
 
             // Consume the message
-            var result = await _bus.ConsumeAsync(message, builder =>
+            ConsumeResult result = await _bus.ConsumeAsync(message, builder =>
             {
                 builder.WithMessageId(messageId);
             }, cancellationToken);
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             }
 
             // Return the consumed message
-            var consumed = _bus.GetConsumedMessages<TMessage>()
+            IConsumedMessage<TMessage>? consumed = _bus.GetConsumedMessages<TMessage>()
                 .FirstOrDefault(m => m.MessageId == messageId);
 
             if (consumed == null)
@@ -127,9 +127,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             where TRequest : class
             where TResponse : class
         {
-            var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
 
-            var requestClient = _serviceProvider.GetService<IRequestClient<TRequest, TResponse>>();
+            IRequestClient<TRequest, TResponse>? requestClient = _serviceProvider.GetService<IRequestClient<TRequest, TResponse>>();
             if (requestClient != null)
             {
                 return await requestClient.GetResponseAsync(request, effectiveTimeout, cancellationToken);
@@ -148,14 +148,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                 throw new InvalidOperationException($"No request handler found for {typeof(TRequest).Name} -> {typeof(TResponse).Name}");
             }
 
-            var handler = handlers.First();
+            IRequestHandler<TRequest, TResponse> handler = handlers.First();
 
-            var context = new TestConsumeContextBuilder<TRequest>()
+            TestConsumeContext<TRequest> context = new TestConsumeContextBuilder<TRequest>()
                 .WithCorrelationId(correlationId)
                 .WithServiceProvider(_serviceProvider)
                 .Build(request);
 
-            var response = await handler.HandleAsync(context, cts.Token);
+            TResponse response = await handler.HandleAsync(context, cts.Token);
 
             return new Response<TResponse>
             {
@@ -178,15 +178,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             Func<TMessage, bool>? predicate = null,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
-            var deadline = DateTime.UtcNow.Add(effectiveTimeout);
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+            DateTime deadline = DateTime.UtcNow.Add(effectiveTimeout);
 
             while (DateTime.UtcNow < deadline)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var messages = _bus.GetPublishedMessages<TMessage>();
-                var match = predicate == null
+                IReadOnlyList<IPublishedMessage<TMessage>> messages = _bus.GetPublishedMessages<TMessage>();
+                IPublishedMessage<TMessage>? match = predicate == null
                     ? messages.FirstOrDefault()
                     : messages.FirstOrDefault(m => predicate(m.Message));
 
@@ -205,15 +205,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             Func<TMessage, bool>? predicate = null,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
-            var deadline = DateTime.UtcNow.Add(effectiveTimeout);
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+            DateTime deadline = DateTime.UtcNow.Add(effectiveTimeout);
 
             while (DateTime.UtcNow < deadline)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var messages = _bus.GetConsumedMessages<TMessage>();
-                var match = predicate == null
+                IReadOnlyList<IConsumedMessage<TMessage>> messages = _bus.GetConsumedMessages<TMessage>();
+                IConsumedMessage<TMessage>? match = predicate == null
                     ? messages.FirstOrDefault()
                     : messages.FirstOrDefault(m => predicate(m.Message));
 
@@ -273,7 +273,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly InMemoryBus _bus;
-        private readonly List<IConsumedMessage> _consumed = new();
+        private readonly List<IConsumedMessage> _consumed = [];
         private TConsumer? _consumer;
 
         /// <summary>
@@ -312,11 +312,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             Action<TestConsumeContextBuilder<TMessage>> configureContext,
             CancellationToken cancellationToken = default) where TMessage : class
         {
-            var result = await _bus.ConsumeAsync(message, configureContext, cancellationToken);
+            ConsumeResult result = await _bus.ConsumeAsync(message, configureContext, cancellationToken);
 
             // Track consumed messages for this harness
-            var consumedMessages = _bus.GetConsumedMessages<TMessage>();
-            foreach (var consumed in consumedMessages)
+            IReadOnlyList<IConsumedMessage<TMessage>> consumedMessages = _bus.GetConsumedMessages<TMessage>();
+            foreach (IConsumedMessage<TMessage> consumed in consumedMessages)
             {
                 if (!_consumed.Any(c => c.MessageId == consumed.MessageId))
                 {

@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             IAsyncEnumerable<TInput> inputs,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await foreach (var input in inputs.WithCancellation(cancellationToken))
+            await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
             {
                 TOutput output;
                 try
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             IAsyncEnumerable<T> inputs,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await foreach (var input in inputs.WithCancellation(cancellationToken))
+            await foreach (T? input in inputs.WithCancellation(cancellationToken))
             {
                 bool shouldInclude;
                 try
@@ -163,13 +163,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var batch = new List<T>(_batchSize);
-            var lastYieldTime = DateTime.UtcNow;
+            DateTime lastYieldTime = DateTime.UtcNow;
 
-            await foreach (var input in inputs.WithCancellation(cancellationToken))
+            await foreach (T? input in inputs.WithCancellation(cancellationToken))
             {
                 batch.Add(input);
 
-                var elapsed = DateTime.UtcNow - lastYieldTime;
+                TimeSpan elapsed = DateTime.UtcNow - lastYieldTime;
                 var shouldYield = batch.Count >= _batchSize || elapsed >= _timeout;
 
                 if (shouldYield && batch.Count > 0)
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             IAsyncEnumerable<TInput> inputs,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await foreach (var input in inputs.WithCancellation(cancellationToken))
+            await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
             {
                 IAsyncEnumerable<TOutput> innerStream;
                 try
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
                     continue;
                 }
 
-                await foreach (var output in innerStream.WithCancellation(cancellationToken))
+                await foreach (TOutput? output in innerStream.WithCancellation(cancellationToken))
                 {
                     yield return output;
                 }

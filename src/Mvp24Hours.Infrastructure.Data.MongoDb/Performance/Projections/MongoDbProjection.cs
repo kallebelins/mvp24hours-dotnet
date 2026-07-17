@@ -194,8 +194,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
     /// <typeparam name="TDestination">The destination/projected type.</typeparam>
     public class MongoDbProjectionOptions<TSource, TDestination>
     {
-        private readonly List<string> _includeFields = new();
-        private readonly List<string> _excludeFields = new();
+        private readonly List<string> _includeFields = [];
+        private readonly List<string> _excludeFields = [];
         private Expression<Func<TSource, TDestination>> _projectionExpression;
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
         public MongoDbProjectionOptions<TSource, TDestination> Include(
             params Expression<Func<TSource, object>>[] fields)
         {
-            foreach (var field in fields)
+            foreach (Expression<Func<TSource, object>> field in fields)
             {
                 _includeFields.Add(GetFieldName(field));
             }
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
         public MongoDbProjectionOptions<TSource, TDestination> Exclude(
             params Expression<Func<TSource, object>>[] fields)
         {
-            foreach (var field in fields)
+            foreach (Expression<Func<TSource, object>> field in fields)
             {
                 _excludeFields.Add(GetFieldName(field));
             }
@@ -255,9 +255,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
                 .Where(p => destProperties.Contains(p.Name))
                 .ToList();
 
-            foreach (var prop in sourceProperties)
+            foreach (PropertyInfo? prop in sourceProperties)
             {
-                var bsonElement = prop.GetCustomAttribute<BsonElementAttribute>();
+                BsonElementAttribute? bsonElement = prop.GetCustomAttribute<BsonElementAttribute>();
                 var fieldName = bsonElement?.ElementName ?? prop.Name;
                 _includeFields.Add(fieldName);
             }
@@ -319,7 +319,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
 
             if (memberExpression?.Member is PropertyInfo propertyInfo)
             {
-                var bsonElement = propertyInfo.GetCustomAttribute<BsonElementAttribute>();
+                BsonElementAttribute? bsonElement = propertyInfo.GetCustomAttribute<BsonElementAttribute>();
                 return bsonElement?.ElementName ?? propertyInfo.Name;
             }
 

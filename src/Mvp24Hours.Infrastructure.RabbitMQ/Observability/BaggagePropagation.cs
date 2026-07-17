@@ -109,7 +109,7 @@ public static class BaggagePropagation
 
         // Inject baggage as W3C Baggage format
         var baggageItems = new List<string>();
-        foreach (var kvp in activity.Baggage)
+        foreach (KeyValuePair<string, string?> kvp in activity.Baggage)
         {
             if (!string.IsNullOrEmpty(kvp.Key) && !string.IsNullOrEmpty(kvp.Value))
             {
@@ -158,7 +158,7 @@ public static class BaggagePropagation
             headers[Keys.Timestamp] = context.Timestamp.Value.ToString("O");
 
         // Also inject into current activity baggage if available
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         if (activity != null)
         {
             if (!string.IsNullOrEmpty(context.CorrelationId))
@@ -185,7 +185,7 @@ public static class BaggagePropagation
         {
             var traceparent = GetHeaderStringValue(traceparentObj);
             if (!string.IsNullOrEmpty(traceparent) &&
-                ActivityContext.TryParse(traceparent, null, out var activityContext))
+                ActivityContext.TryParse(traceparent, null, out ActivityContext activityContext))
             {
                 return activityContext;
             }
@@ -229,7 +229,7 @@ public static class BaggagePropagation
         if (headers.TryGetValue(Keys.Timestamp, out var timestamp))
         {
             var timestampStr = GetHeaderStringValue(timestamp);
-            if (DateTimeOffset.TryParse(timestampStr, out var dto))
+            if (DateTimeOffset.TryParse(timestampStr, out DateTimeOffset dto))
                 context.Timestamp = dto;
         }
 
@@ -254,7 +254,7 @@ public static class BaggagePropagation
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
         if (activity == null) return;
 
         if (!string.IsNullOrEmpty(context.CorrelationId))
@@ -280,11 +280,11 @@ public static class BaggagePropagation
     public static BaggageContext CreateFromCurrentActivity()
     {
         var context = new BaggageContext();
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
 
         if (activity == null) return context;
 
-        foreach (var kvp in activity.Baggage)
+        foreach (KeyValuePair<string, string?> kvp in activity.Baggage)
         {
             switch (kvp.Key)
             {

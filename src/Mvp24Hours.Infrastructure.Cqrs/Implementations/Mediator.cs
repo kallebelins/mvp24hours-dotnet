@@ -43,11 +43,11 @@ public sealed class Mediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var requestType = request.GetType();
-        var responseType = typeof(TResponse);
+        Type requestType = request.GetType();
+        Type responseType = typeof(TResponse);
 
         // Create the wrapper for the specific request type
-        var wrapperType = typeof(RequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
+        Type wrapperType = typeof(RequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
         var wrapper = (RequestHandlerWrapperBase<TResponse>)Activator.CreateInstance(wrapperType)!;
 
         return await wrapper.Handle(request, _serviceProvider, cancellationToken);
@@ -59,10 +59,10 @@ public sealed class Mediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var notificationType = notification.GetType();
+        Type notificationType = notification.GetType();
 
         // Create the wrapper for the specific notification type
-        var wrapperType = typeof(NotificationHandlerWrapper<>).MakeGenericType(notificationType);
+        Type wrapperType = typeof(NotificationHandlerWrapper<>).MakeGenericType(notificationType);
         var wrapper = (NotificationHandlerWrapperBase)Activator.CreateInstance(wrapperType)!;
 
         await wrapper.Handle(notification, _serviceProvider, cancellationToken);
@@ -75,14 +75,14 @@ public sealed class Mediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var requestType = request.GetType();
-        var responseType = typeof(TResponse);
+        Type requestType = request.GetType();
+        Type responseType = typeof(TResponse);
 
         // Create the wrapper for the specific stream request type
-        var wrapperType = typeof(StreamRequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
+        Type wrapperType = typeof(StreamRequestHandlerWrapper<,>).MakeGenericType(requestType, responseType);
         var wrapper = (StreamRequestHandlerWrapperBase<TResponse>)Activator.CreateInstance(wrapperType)!;
 
-        await foreach (var item in wrapper.Handle(request, _serviceProvider, cancellationToken).WithCancellation(cancellationToken))
+        await foreach (TResponse? item in wrapper.Handle(request, _serviceProvider, cancellationToken).WithCancellation(cancellationToken))
         {
             yield return item;
         }
@@ -116,23 +116,23 @@ internal sealed class RequestHandlerWrapper<TRequest, TResponse> : RequestHandle
         var typedRequest = (TRequest)request;
 
         // Resolve the handler
-        var handler = serviceProvider.GetService(typeof(IMediatorRequestHandler<TRequest, TResponse>)) as IMediatorRequestHandler<TRequest, TResponse>
+        IMediatorRequestHandler<TRequest, TResponse> handler = serviceProvider.GetService(typeof(IMediatorRequestHandler<TRequest, TResponse>)) as IMediatorRequestHandler<TRequest, TResponse>
             ?? throw new InvalidOperationException(
                 $"Handler not found for type '{typeof(TRequest).Name}'. " +
                 $"Make sure an IMediatorRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}> is registered in the DI container.");
 
         // Resolve the pipeline behaviors
-        var behaviors = serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>()?.ToList()
-            ?? new List<IPipelineBehavior<TRequest, TResponse>>();
+        List<IPipelineBehavior<TRequest, TResponse>> behaviors = serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>()?.ToList()
+            ?? [];
 
         // Create the final delegate that invokes the handler
         RequestHandlerDelegate<TResponse> handlerDelegate = () => handler.Handle(typedRequest, cancellationToken);
 
         // Build the pipeline of behaviors from back to front
         // The last behavior added will be the first to execute
-        foreach (var behavior in behaviors.AsEnumerable().Reverse())
+        foreach (IPipelineBehavior<TRequest, TResponse>? behavior in behaviors.AsEnumerable().Reverse())
         {
-            var next = handlerDelegate;
+            RequestHandlerDelegate<TResponse> next = handlerDelegate;
             handlerDelegate = () => behavior.Handle(typedRequest, next, cancellationToken);
         }
 
@@ -164,8 +164,8 @@ internal sealed class NotificationHandlerWrapper<TNotification> : NotificationHa
         var typedNotification = (TNotification)notification;
 
         // Resolve all handlers for this notification
-        var handlers = serviceProvider.GetServices<IMediatorNotificationHandler<TNotification>>()?.ToList()
-            ?? new List<IMediatorNotificationHandler<TNotification>>();
+        List<IMediatorNotificationHandler<TNotification>> handlers = serviceProvider.GetServices<IMediatorNotificationHandler<TNotification>>()?.ToList()
+            ?? [];
 
         if (handlers.Count == 0)
         {
@@ -176,7 +176,7 @@ internal sealed class NotificationHandlerWrapper<TNotification> : NotificationHa
         // Execute all handlers sequentially by default
         // Sequential execution maintains order and simplifies debugging
         // A configuration option could allow parallel execution
-        foreach (var handler in handlers)
+        foreach (IMediatorNotificationHandler<TNotification>? handler in handlers)
         {
             await handler.Handle(typedNotification, cancellationToken);
         }
@@ -208,7 +208,7 @@ internal sealed class StreamRequestHandlerWrapper<TRequest, TResponse> : StreamR
         var typedRequest = (TRequest)request;
 
         // Resolve the handler
-        var handler = serviceProvider.GetService(typeof(IStreamRequestHandler<TRequest, TResponse>)) as IStreamRequestHandler<TRequest, TResponse>
+        IStreamRequestHandler<TRequest, TResponse> handler = serviceProvider.GetService(typeof(IStreamRequestHandler<TRequest, TResponse>)) as IStreamRequestHandler<TRequest, TResponse>
             ?? throw new InvalidOperationException(
                 $"Stream handler not found for type '{typeof(TRequest).Name}'. " +
                 $"Make sure an IStreamRequestHandler<{typeof(TRequest).Name}, {typeof(TResponse).Name}> is registered in the DI container.");

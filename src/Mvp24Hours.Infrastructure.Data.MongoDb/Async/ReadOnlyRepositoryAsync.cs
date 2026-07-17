@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -231,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async AnyBySpecificationAsync operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IQueryable<T>)query).AnyAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async AnyBySpecificationAsync operation completed."); }
@@ -244,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async CountBySpecificationAsync operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IQueryable<T>)query).CountAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async CountBySpecificationAsync operation completed."); }
@@ -257,7 +258,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetBySpecificationAsync operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IQueryable<T>)query).ToListAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetBySpecificationAsync operation completed."); }
@@ -270,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetSingleBySpecificationAsync operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IQueryable<T>)query).SingleOrDefaultAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetSingleBySpecificationAsync operation completed."); }
@@ -283,7 +284,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetFirstBySpecificationAsync operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return await ((IQueryable<T>)query).FirstOrDefaultAsync(cancellationToken);
             }
             finally { _logger?.LogDebug("MongoDB read-only repository async GetFirstBySpecificationAsync operation completed."); }
@@ -325,7 +326,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
-                var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
+                List<T> items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
 
                 var hasMore = items.Count > pageSize;
                 if (hasMore)
@@ -356,7 +357,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository async GetByKeysetPaginationAsync with specification operation started.");
             try
             {
-                var baseQuery = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> baseQuery = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 IQueryable<T> query = (IQueryable<T>)baseQuery;
 
                 // Apply keyset condition
@@ -371,7 +372,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
-                var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
+                List<T> items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
 
                 var hasMore = items.Count > pageSize;
                 if (hasMore)
@@ -420,7 +421,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     : (IQueryable<T>)query.OrderByDescending(keySelector);
 
                 // Fetch one extra item to determine if there are more pages
-                var items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
+                List<T> items = await query.Take(pageSize + 1).ToListAsync(cancellationToken);
 
                 var hasMore = items.Count > pageSize;
                 if (hasMore)
@@ -458,11 +459,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             TKey lastKey,
             bool ascending) where TKey : struct
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(keyProperty, lastKeyConstant)
                 : Expression.LessThan(keyProperty, lastKeyConstant);
 
@@ -479,16 +480,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             string lastKey,
             bool ascending)
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(string));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(string));
 
             // Use string.CompareTo for string comparison
-            var compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
-            var compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
-            var zero = Expression.Constant(0);
+            MethodInfo compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
+            MethodCallExpression compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
+            ConstantExpression zero = Expression.Constant(0);
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(compareCall, zero)
                 : Expression.LessThan(compareCall, zero);
 

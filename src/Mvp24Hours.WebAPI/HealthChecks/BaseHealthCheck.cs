@@ -76,15 +76,15 @@ namespace Mvp24Hours.WebAPI.HealthChecks
             CancellationToken cancellationToken = default)
         {
             var checkName = context.Registration.Name;
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
 
             try
             {
                 _logger.LogDebug("Starting health check: {CheckName}", checkName);
 
-                var result = await CheckHealthAsyncCore(context, cancellationToken);
+                HealthCheckResult result = await CheckHealthAsyncCore(context, cancellationToken);
 
-                var duration = DateTimeOffset.UtcNow - startTime;
+                TimeSpan duration = DateTimeOffset.UtcNow - startTime;
                 _logger.LogDebug(
                     "Health check completed: {CheckName}, Status: {Status}, Duration: {Duration}ms",
                     checkName,
@@ -118,7 +118,7 @@ namespace Mvp24Hours.WebAPI.HealthChecks
             }
             catch (Exception ex)
             {
-                var duration = DateTimeOffset.UtcNow - startTime;
+                TimeSpan duration = DateTimeOffset.UtcNow - startTime;
                 _logger.LogError(
                     ex,
                     "Health check failed with exception: {CheckName}, Duration: {Duration}ms",
@@ -162,7 +162,7 @@ namespace Mvp24Hours.WebAPI.HealthChecks
 
             if (additionalData != null)
             {
-                foreach (var kvp in additionalData)
+                foreach (KeyValuePair<string, object> kvp in additionalData)
                 {
                     data[kvp.Key] = kvp.Value;
                 }

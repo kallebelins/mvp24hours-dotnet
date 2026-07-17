@@ -10,11 +10,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Exceptions;
 
@@ -54,21 +56,21 @@ public class NativeValidationEndpointFilter<TRequest> : IEndpointFilter
     /// </summary>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var request = context.Arguments.OfType<TRequest>().FirstOrDefault();
+        TRequest? request = context.Arguments.OfType<TRequest>().FirstOrDefault();
 
         if (request is null)
         {
             return await next(context);
         }
 
-        var validator = context.HttpContext.RequestServices.GetService<IValidator<TRequest>>();
+        IValidator<TRequest>? validator = context.HttpContext.RequestServices.GetService<IValidator<TRequest>>();
 
         if (validator is null)
         {
             return await next(context);
         }
 
-        var validationResult = await validator.ValidateAsync(request, CancellationToken.None);
+        ValidationResult validationResult = await validator.ValidateAsync(request, CancellationToken.None);
 
         if (!validationResult.IsValid)
         {
@@ -167,8 +169,8 @@ public class ExceptionHandlingEndpointFilterFactory : IEndpointFilter
         }
         catch (Exception ex)
         {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ExceptionHandlingEndpointFilterFactory>>();
-            var env = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+            ILogger<ExceptionHandlingEndpointFilterFactory> logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ExceptionHandlingEndpointFilterFactory>>();
+            IHostEnvironment? env = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Hosting.IHostEnvironment>();
             var includeDetails = env?.EnvironmentName == "Development";
 
             logger.LogError(ex, "Exception caught in endpoint filter: {ExceptionType} - {Message}",
@@ -206,8 +208,8 @@ public class LoggingEndpointFilter : IEndpointFilter
     /// </summary>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<LoggingEndpointFilter>>();
-        var request = context.HttpContext.Request;
+        ILogger<LoggingEndpointFilter> logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<LoggingEndpointFilter>>();
+        HttpRequest request = context.HttpContext.Request;
         var stopwatch = Stopwatch.StartNew();
 
         logger.LogInformation(
@@ -295,7 +297,7 @@ public class CorrelationIdEndpointFilter : IEndpointFilter
 public class IdempotencyEndpointFilter : IEndpointFilter
 {
     private const string IdempotencyKeyHeader = "Idempotency-Key";
-    private static readonly Dictionary<string, (object? Result, DateTimeOffset ExpiresAt)> _cache = new();
+    private static readonly Dictionary<string, (object? Result, DateTimeOffset ExpiresAt)> _cache = [];
     private static readonly TimeSpan DefaultExpiration = TimeSpan.FromHours(24);
 
     /// <summary>
@@ -322,7 +324,7 @@ public class IdempotencyEndpointFilter : IEndpointFilter
             }
 
             // Check if we have a cached response
-            if (_cache.TryGetValue(idempotencyKey, out var cached))
+            if (_cache.TryGetValue(idempotencyKey, out (object? Result, DateTimeOffset ExpiresAt) cached))
             {
                 context.HttpContext.Response.Headers["X-Idempotency-Replay"] = "true";
                 return cached.Result;

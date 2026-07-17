@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
         /// Gets or sets the HTTP status codes that should trigger fallback.
         /// Default includes: 408, 429, 500, 502, 503, 504.
         /// </summary>
-        public List<int> FallbackStatusCodes { get; set; } = new() { 408, 429, 500, 502, 503, 504 };
+        public List<int> FallbackStatusCodes { get; set; } = [408, 429, 500, 502, 503, 504];
 
         /// <summary>
         /// Gets or sets whether to fallback on timeout exceptions. Default is true.
@@ -108,14 +108,14 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
 
             if (!_options.Enabled)
             {
-                var request = requestFactory();
+                HttpRequestMessage request = requestFactory();
                 return await sendAsync(request, cancellationToken);
             }
 
             return await _pipeline.ExecuteAsync(
                 async (ct) =>
                 {
-                    var request = requestFactory();
+                    HttpRequestMessage request = requestFactory();
                     return await sendAsync(request, ct);
                 },
                 cancellationToken);

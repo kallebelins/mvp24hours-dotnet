@@ -169,7 +169,7 @@ public class CompositeDataSeeder<TContext> : IDataSeeder<TContext>
     /// <inheritdoc />
     public void Seed(TContext context)
     {
-        foreach (var seeder in _seeders)
+        foreach (IDataSeeder<TContext> seeder in _seeders)
         {
             seeder.Seed(context);
         }

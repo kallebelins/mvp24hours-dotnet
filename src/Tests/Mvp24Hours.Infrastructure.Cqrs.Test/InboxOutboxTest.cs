@@ -77,7 +77,7 @@ public class InboxOutboxTest
         await store.MarkAsProcessedAsync(messageId, messageType);
 
         // Act
-        var message = await store.GetByIdAsync(messageId);
+        InboxMessage? message = await store.GetByIdAsync(messageId);
 
         // Assert
         Assert.NotNull(message);
@@ -107,13 +107,13 @@ public class InboxOutboxTest
     {
         // Arrange
         var store = new InMemoryInboxStore();
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
 
         await store.MarkAsProcessedAsync(Guid.NewGuid(), "Event1");
         await store.MarkAsProcessedAsync(Guid.NewGuid(), "Event2");
 
         // Act
-        var messages = await store.GetByTimeRangeAsync(
+        IReadOnlyList<InboxMessage> messages = await store.GetByTimeRangeAsync(
             now.AddMinutes(-1),
             now.AddMinutes(1));
 
@@ -136,7 +136,7 @@ public class InboxOutboxTest
         await store.AddAsync(@event);
 
         // Assert
-        var pending = await store.GetPendingAsync();
+        IReadOnlyList<OutboxMessage> pending = await store.GetPendingAsync();
         Assert.Single(pending);
     }
 
@@ -147,14 +147,14 @@ public class InboxOutboxTest
         var store = new InMemoryIntegrationEventOutbox();
         var @event = new TestIntegrationEvent { OrderId = 123 };
         await store.AddAsync(@event);
-        var pending = await store.GetPendingAsync();
-        var messageId = pending.First().Id;
+        IReadOnlyList<OutboxMessage> pending = await store.GetPendingAsync();
+        Guid messageId = pending.First().Id;
 
         // Act
         await store.MarkAsPublishedAsync(messageId);
 
         // Assert
-        var remainingPending = await store.GetPendingAsync();
+        IReadOnlyList<OutboxMessage> remainingPending = await store.GetPendingAsync();
         Assert.Empty(remainingPending);
     }
 
@@ -165,14 +165,14 @@ public class InboxOutboxTest
         var store = new InMemoryIntegrationEventOutbox();
         var @event = new TestIntegrationEvent { OrderId = 123 };
         await store.AddAsync(@event);
-        var pending = await store.GetPendingAsync();
-        var messageId = pending.First().Id;
+        IReadOnlyList<OutboxMessage> pending = await store.GetPendingAsync();
+        Guid messageId = pending.First().Id;
 
         // Act
         await store.MarkAsFailedAsync(messageId, "Test error");
 
         // Assert
-        var stillPending = await store.GetPendingAsync();
+        IReadOnlyList<OutboxMessage> stillPending = await store.GetPendingAsync();
         Assert.Single(stillPending);
         Assert.Equal(1, stillPending.First().RetryCount);
     }
@@ -184,8 +184,8 @@ public class InboxOutboxTest
         var store = new InMemoryIntegrationEventOutbox();
         var @event = new TestIntegrationEvent { OrderId = 123 };
         await store.AddAsync(@event);
-        var pending = await store.GetPendingAsync();
-        var messageId = pending.First().Id;
+        IReadOnlyList<OutboxMessage> pending = await store.GetPendingAsync();
+        Guid messageId = pending.First().Id;
 
         // Act - Fail 3 times (default max retries)
         await store.MarkAsFailedAsync(messageId, "Error 1");
@@ -193,7 +193,7 @@ public class InboxOutboxTest
         await store.MarkAsFailedAsync(messageId, "Error 3");
 
         // Assert
-        var stillPending = await store.GetPendingAsync();
+        IReadOnlyList<OutboxMessage> stillPending = await store.GetPendingAsync();
         Assert.Empty(stillPending); // Should be in dead letter, not pending
     }
 
@@ -241,7 +241,7 @@ public class InboxOutboxTest
         });
 
         // Act
-        var messages = await store.GetAllAsync();
+        IReadOnlyList<DeadLetterMessage> messages = await store.GetAllAsync();
 
         // Assert
         Assert.Equal(2, messages.Count);
@@ -264,7 +264,7 @@ public class InboxOutboxTest
         await store.MarkAsResolvedAsync(message.Id, "Manually fixed");
 
         // Assert
-        var retrieved = await store.GetByIdAsync(message.Id);
+        DeadLetterMessage? retrieved = await store.GetByIdAsync(message.Id);
         Assert.NotNull(retrieved);
         Assert.Equal(DeadLetterStatus.Resolved, retrieved.Status);
         Assert.Equal("Manually fixed", retrieved.Resolution);
@@ -311,7 +311,7 @@ public class InboxOutboxTest
         });
 
         // Act
-        var orderEvents = await store.GetByEventTypeAsync("OrderEvent");
+        IReadOnlyList<DeadLetterMessage> orderEvents = await store.GetByEventTypeAsync("OrderEvent");
 
         // Assert
         Assert.Single(orderEvents);
@@ -403,11 +403,11 @@ public class InboxOutboxTest
 
         // Act
         services.AddMvpInbox();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var inboxStore = provider.GetService<IInboxStore>();
-        var inboxProcessor = provider.GetService<IInboxProcessor>();
+        IInboxStore? inboxStore = provider.GetRequiredService<IInboxStore>();
+        IInboxProcessor? inboxProcessor = provider.GetRequiredService<IInboxProcessor>();
 
         Assert.NotNull(inboxStore);
         Assert.NotNull(inboxProcessor);
@@ -422,11 +422,11 @@ public class InboxOutboxTest
 
         // Act
         services.AddMvpOutbox();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var outbox = provider.GetService<IIntegrationEventOutbox>();
-        var dlq = provider.GetService<IDeadLetterStore>();
+        IIntegrationEventOutbox? outbox = provider.GetRequiredService<IIntegrationEventOutbox>();
+        IDeadLetterStore? dlq = provider.GetRequiredService<IDeadLetterStore>();
 
         Assert.NotNull(outbox);
         Assert.NotNull(dlq);
@@ -441,13 +441,13 @@ public class InboxOutboxTest
 
         // Act
         services.AddMvpInboxOutbox();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        Assert.NotNull(provider.GetService<IInboxStore>());
-        Assert.NotNull(provider.GetService<IIntegrationEventOutbox>());
-        Assert.NotNull(provider.GetService<IDeadLetterStore>());
-        Assert.NotNull(provider.GetService<IInboxProcessor>());
+        Assert.NotNull(provider.GetRequiredService<IInboxStore>());
+        Assert.NotNull(provider.GetRequiredService<IIntegrationEventOutbox>());
+        Assert.NotNull(provider.GetRequiredService<IDeadLetterStore>());
+        Assert.NotNull(provider.GetRequiredService<IInboxProcessor>());
     }
 
     #endregion

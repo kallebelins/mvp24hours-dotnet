@@ -121,7 +121,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             else
             {
                 // Create new transaction
-                await using var scope = scopeFactory.Create();
+                await using ITransactionScope scope = scopeFactory.Create();
                 await scope.ExecuteAsync(action, cancellationToken);
             }
         }
@@ -151,8 +151,8 @@ namespace Mvp24Hours.Application.Logic.Transaction
             else
             {
                 // Create new transaction
-                await using var scope = scopeFactory.Create();
-                var (result, _) = await scope.ExecuteAsync(func, cancellationToken);
+                await using ITransactionScope scope = scopeFactory.Create();
+                (TResult? result, int _) = await scope.ExecuteAsync(func, cancellationToken);
                 return result;
             }
         }

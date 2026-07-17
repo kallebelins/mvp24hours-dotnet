@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.RateLimiting
@@ -184,10 +185,10 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 return apiKey;
 
             // Check query string
-            if (context.Request.Query.TryGetValue("api_key", out var queryApiKey))
+            if (context.Request.Query.TryGetValue("api_key", out StringValues queryApiKey))
                 return queryApiKey.FirstOrDefault();
 
-            if (context.Request.Query.TryGetValue("apikey", out var queryApiKey2))
+            if (context.Request.Query.TryGetValue("apikey", out StringValues queryApiKey2))
                 return queryApiKey2.FirstOrDefault();
 
             return null;

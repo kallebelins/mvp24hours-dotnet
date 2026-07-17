@@ -92,7 +92,7 @@ public class RequestTelemetryMiddleware
         var correlationId = GetOrCreateCorrelationId(context);
 
         // Start activity for tracing
-        using var activity = _options.EnableTracing
+        using Activity? activity = _options.EnableTracing
             ? WebApiActivitySource.StartHttpRequestActivity(method, path, correlationId)
             : null;
 
@@ -179,7 +179,7 @@ public class RequestTelemetryMiddleware
         activity.SetTag(WebApiActivitySource.TagNames.HttpHost, context.Request.Host.Value);
 
         // Custom tags
-        foreach (var tag in _options.CustomTags)
+        foreach (KeyValuePair<string, string> tag in _options.CustomTags)
         {
             activity.SetTag(tag.Key, tag.Value);
         }
@@ -302,7 +302,7 @@ public class RequestTelemetryMiddleware
     private static string GetNormalizedPath(HttpContext context)
     {
         // Try to get route pattern for better metric cardinality
-        var endpoint = context.GetEndpoint();
+        Endpoint? endpoint = context.GetEndpoint();
         if (endpoint != null)
         {
             var routePattern = endpoint.Metadata
@@ -326,7 +326,7 @@ public class RequestTelemetryMiddleware
 
     private string? GetUserId(HttpContext context)
     {
-        var user = context.User;
+        ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
             return null;
 

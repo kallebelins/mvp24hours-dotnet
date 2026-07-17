@@ -61,7 +61,7 @@ public sealed class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior
     {
         var stopwatch = Stopwatch.StartNew();
 
-        var response = await next();
+        TResponse? response = await next();
 
         stopwatch.Stop();
 

@@ -29,7 +29,7 @@ public record OrderPlacedEvent(int OrderId, decimal Amount) : MediatorDomainEven
 /// </summary>
 public class UserRegisteredEventHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
-    public static List<string> HandledEvents { get; } = new();
+    public static List<string> HandledEvents { get; } = [];
 
     public Task Handle(UserRegisteredEvent notification, CancellationToken cancellationToken)
     {
@@ -43,7 +43,7 @@ public class UserRegisteredEventHandler : IMediatorDomainEventHandler<UserRegist
 /// </summary>
 public class WelcomeEmailHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
-    public static List<string> HandledEvents { get; } = new();
+    public static List<string> HandledEvents { get; } = [];
 
     public Task Handle(UserRegisteredEvent notification, CancellationToken cancellationToken)
     {
@@ -57,7 +57,7 @@ public class WelcomeEmailHandler : IMediatorDomainEventHandler<UserRegisteredEve
 /// </summary>
 public class OrderPlacedEventHandler : IMediatorDomainEventHandler<OrderPlacedEvent>
 {
-    public static List<string> HandledEvents { get; } = new();
+    public static List<string> HandledEvents { get; } = [];
 
     public Task Handle(OrderPlacedEvent notification, CancellationToken cancellationToken)
     {
@@ -71,7 +71,7 @@ public class OrderPlacedEventHandler : IMediatorDomainEventHandler<OrderPlacedEv
 /// </summary>
 public class TestAggregate : CoreHasDomainEvents
 {
-    private readonly List<CoreDomainEvent> _domainEvents = new();
+    private readonly List<CoreDomainEvent> _domainEvents = [];
 
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

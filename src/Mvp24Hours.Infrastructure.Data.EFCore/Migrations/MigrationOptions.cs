@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// Exception types that should trigger a retry.
         /// By default, includes common transient database exceptions.
         /// </summary>
-        public ICollection<Type> RetryableExceptions { get; set; } = new List<Type>();
+        public ICollection<Type> RetryableExceptions { get; set; } = [];
 
         #endregion
 

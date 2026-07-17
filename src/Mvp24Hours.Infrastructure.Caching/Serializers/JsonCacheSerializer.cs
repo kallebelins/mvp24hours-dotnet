@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Serializers
             try
             {
                 var json = Encoding.UTF8.GetString(bytes);
-                var value = JsonSerializer.Deserialize<T>(json, _options);
+                T? value = JsonSerializer.Deserialize<T>(json, _options);
                 return Task.FromResult(value);
             }
             catch (Exception ex)
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Serializers
 
             try
             {
-                var result = JsonSerializer.Deserialize<T>(value, _options);
+                T? result = JsonSerializer.Deserialize<T>(value, _options);
                 return Task.FromResult(result);
             }
             catch (Exception ex)

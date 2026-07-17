@@ -46,33 +46,25 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             _logger = logger;
 
             // Build retryable exceptions set
-            _retryableExceptions = new HashSet<Type>
-            {
+            _retryableExceptions =
+            [
                 typeof(MongoConnectionException),
                 typeof(MongoNotPrimaryException),
                 typeof(MongoNodeIsRecoveringException),
                 typeof(TimeoutException),
-                typeof(MongoIncompatibleDriverException)
-            };
-
-            foreach (var type in _options.AdditionalRetryableExceptions)
-            {
-                _retryableExceptions.Add(type);
-            }
+                typeof(MongoIncompatibleDriverException),
+                .. _options.AdditionalRetryableExceptions,
+            ];
 
             // Build non-retryable exceptions set
-            _nonRetryableExceptions = new HashSet<Type>
-            {
+            _nonRetryableExceptions =
+            [
                 typeof(MongoDuplicateKeyException),
                 typeof(MongoWriteException),
                 typeof(MongoCommandException),
-                typeof(MongoBulkWriteException<>).GetGenericTypeDefinition()
-            };
-
-            foreach (var type in _options.NonRetryableExceptions)
-            {
-                _nonRetryableExceptions.Add(type);
-            }
+                typeof(MongoBulkWriteException<>).GetGenericTypeDefinition(),
+                .. _options.NonRetryableExceptions,
+            ];
         }
 
         /// <summary>
@@ -92,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                 return await operation(cancellationToken);
             }
 
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
             Exception? lastException = null;
             var attempt = 0;
 
@@ -136,12 +128,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                         break;
                     }
 
-                    var delay = CalculateDelay(attempt);
+                    TimeSpan delay = CalculateDelay(attempt);
                     await Task.Delay(delay, cancellationToken);
                 }
             }
 
-            var totalDuration = DateTimeOffset.UtcNow - startTime;
+            TimeSpan totalDuration = DateTimeOffset.UtcNow - startTime;
 
             if (_options.LogRetryAttempts)
             {
@@ -185,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             if (currentAttempt >= _options.RetryCount)
                 return false;
 
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
 
             // Check if explicitly non-retryable
             if (_nonRetryableExceptions.Contains(exceptionType))
@@ -196,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                 return true;
 
             // Check base types for retryable
-            foreach (var retryableType in _retryableExceptions)
+            foreach (Type retryableType in _retryableExceptions)
             {
                 if (retryableType.IsAssignableFrom(exceptionType))
                     return true;
@@ -263,7 +255,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             if (exception is MongoWriteConcernException writeConcernEx)
             {
                 // WriteConcernResult may contain error information
-                var result = writeConcernEx.WriteConcernResult;
+                WriteConcernResult result = writeConcernEx.WriteConcernResult;
                 if (result != null && result.Response != null && result.Response.Contains("code"))
                 {
                     var code = result.Response["code"].AsInt32;

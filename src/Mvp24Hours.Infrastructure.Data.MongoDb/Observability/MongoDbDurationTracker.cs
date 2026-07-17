@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
@@ -71,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (!_options.EnableDurationTracking)
                 return;
 
-            var existingConfigurator = settings.ClusterConfigurator;
+            Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
 
             settings.ClusterConfigurator = builder =>
             {
@@ -94,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandSucceeded(CommandSucceededEvent e)
         {
-            if (!_pending.TryRemove(e.RequestId, out var info))
+            if (!_pending.TryRemove(e.RequestId, out (string CommandName, string Collection, Stopwatch Watch) info))
                 return;
 
             info.Watch.Stop();
@@ -103,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandFailed(CommandFailedEvent e)
         {
-            if (!_pending.TryRemove(e.RequestId, out var info))
+            if (!_pending.TryRemove(e.RequestId, out (string CommandName, string Collection, Stopwatch Watch) info))
                 return;
 
             info.Watch.Stop();
@@ -119,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="success">Whether the command succeeded.</param>
         public void RecordDuration(string commandName, string collectionName, TimeSpan duration, bool success)
         {
-            var bucket = _commandBuckets.GetOrAdd(commandName, _ => new DurationBucket(
+            DurationBucket bucket = _commandBuckets.GetOrAdd(commandName, _ => new DurationBucket(
                 _options.DurationHistogramBuckets,
                 _options.DurationAggregationWindow));
 
@@ -136,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <returns>The duration statistics, or null if no data.</returns>
         public DurationStatistics? GetStatistics(string commandName)
         {
-            if (!_commandBuckets.TryGetValue(commandName, out var bucket))
+            if (!_commandBuckets.TryGetValue(commandName, out DurationBucket? bucket))
                 return null;
 
             return bucket.GetStatistics(commandName);
@@ -177,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void TryCleanup()
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             if (now - _lastCleanup < _options.DurationAggregationWindow)
                 return;
 
@@ -188,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
                 _lastCleanup = now;
 
-                foreach (var bucket in _commandBuckets.Values)
+                foreach (DurationBucket bucket in _commandBuckets.Values)
                 {
                     bucket.Cleanup(_options.DurationAggregationWindow);
                 }
@@ -208,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             if (collectionCommands.Contains(commandName) && command.Contains(commandName))
             {
-                var value = command[commandName];
+                BsonValue value = command[commandName];
                 if (value.IsString)
                     return value.AsString;
             }
@@ -272,8 +274,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             public void Cleanup(TimeSpan window)
             {
-                var cutoff = DateTime.UtcNow - window;
-                while (_samples.TryPeek(out var sample) && sample.Timestamp < cutoff)
+                DateTime cutoff = DateTime.UtcNow - window;
+                while (_samples.TryPeek(out DurationSample sample) && sample.Timestamp < cutoff)
                 {
                     _samples.TryDequeue(out _);
                 }
@@ -281,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             public DurationStatistics? GetStatistics(string commandName)
             {
-                var samples = _samples.ToArray();
+                DurationSample[] samples = _samples.ToArray();
                 if (samples.Length == 0)
                     return new DurationStatistics { CommandName = commandName };
 
@@ -304,7 +306,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             public CommandSummary GetSummary()
             {
-                var samples = _samples.ToArray();
+                DurationSample[] samples = _samples.ToArray();
                 var durations = samples.Select(s => s.DurationMs).ToArray();
 
                 return new CommandSummary
@@ -382,7 +384,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets execution counts per collection.
         /// </summary>
-        public Dictionary<string, long> CollectionCounts { get; set; } = new();
+        public Dictionary<string, long> CollectionCounts { get; set; } = [];
 
         /// <summary>
         /// Gets the success rate (0.0 to 1.0).

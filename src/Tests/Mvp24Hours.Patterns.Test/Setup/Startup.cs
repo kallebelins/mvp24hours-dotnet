@@ -102,10 +102,10 @@ namespace Mvp24Hours.Patterns.Test.Setup
 
         public static IServiceProvider InitializeHttp()
         {
-            var server = GetMockServer();
+            WireMockServer server = GetMockServer();
             var baseUrl = server.Url;
 
-            var services = new ServiceCollection()
+            IServiceCollection services = new ServiceCollection()
                             .AddSingleton(ConfigurationHelper.AppSettings);
 
             services.AddHttpClient("jsonUrl", client =>

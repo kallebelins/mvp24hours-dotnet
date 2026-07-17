@@ -62,7 +62,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
         _logger = logger;
         _coreMetrics = coreMetrics;
 
-        var meter = Mvp24HoursMeters.CronJob.Meter;
+        Meter meter = Mvp24HoursMeters.CronJob.Meter;
 
         _skippedTotal = meter.CreateCounter<long>(
             "mvp24hours.cronjob.skipped_total",
@@ -90,7 +90,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     {
         _coreMetrics?.RecordExecution(jobName, durationMs, success);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.TotalExecutions++;
         state.LastExecutionTime = DateTimeOffset.UtcNow;
         state.LastExecutionDurationMs = durationMs;
@@ -111,7 +111,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     {
         RecordExecution(jobName, durationMs, success: false, executionCount);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.LastErrorMessage = exception.Message;
         state.LastErrorType = exception.GetType().Name;
 
@@ -124,7 +124,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     /// <inheritdoc />
     public void RecordJobStarted(string jobName, string? cronExpression)
     {
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.IsRunning = true;
         state.StartTime = DateTimeOffset.UtcNow;
         state.CronExpression = cronExpression;
@@ -139,7 +139,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     /// <inheritdoc />
     public void RecordJobStopped(string jobName, long totalExecutions)
     {
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.IsRunning = false;
         state.StopTime = DateTimeOffset.UtcNow;
 
@@ -161,7 +161,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
 
         _skippedTotal.Add(1, tags);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.TotalSkipped++;
         state.LastSkipReason = reason;
 
@@ -183,7 +183,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
         _retriesTotal.Add(1, tags);
         _retryDelayMs.Record(delayMs, tags);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.TotalRetries++;
 
         _logger?.LogWarning(
@@ -203,7 +203,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
 
         _circuitBreakerChanges.Add(1, tags);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.CircuitBreakerState = newState;
 
         _logger?.LogWarning(
@@ -216,7 +216,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     {
         _coreMetrics?.IncrementActive(jobName);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.IsActive = true;
     }
 
@@ -225,14 +225,14 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     {
         _coreMetrics?.DecrementActive(jobName);
 
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.IsActive = false;
     }
 
     /// <inheritdoc />
     public void RecordNextScheduledExecution(string jobName, DateTimeOffset nextExecution)
     {
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.NextScheduledExecution = nextExecution;
 
         _logger?.LogDebug(
@@ -243,7 +243,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     /// <inheritdoc />
     public void RecordLastExecution(string jobName, DateTimeOffset lastExecution)
     {
-        var state = GetOrCreateState(jobName);
+        CronJobState state = GetOrCreateState(jobName);
         state.LastExecutionTime = lastExecution;
     }
 
@@ -254,7 +254,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
     /// <returns>The job state, or null if not found.</returns>
     public CronJobState? GetJobState(string jobName)
     {
-        return _jobStates.TryGetValue(jobName, out var state) ? state : null;
+        return _jobStates.TryGetValue(jobName, out CronJobState? state) ? state : null;
     }
 
     /// <summary>

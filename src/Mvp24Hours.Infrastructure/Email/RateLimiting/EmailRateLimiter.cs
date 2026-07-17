@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
                 switch (_options.Strategy)
                 {
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
 
             try
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
                 switch (_options.Strategy)
                 {
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
             _semaphore.Wait();
             try
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 CleanupOldTimestamps(now);
 
                 return Math.Max(0, _options.MaxRequestsPerWindow - _requestTimestamps.Count);
@@ -161,9 +161,9 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
                     return TimeSpan.Zero;
                 }
 
-                var oldestTimestamp = _requestTimestamps.Peek();
-                var windowEnd = oldestTimestamp.Add(_options.WindowSize);
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset oldestTimestamp = _requestTimestamps.Peek();
+                DateTimeOffset windowEnd = oldestTimestamp.Add(_options.WindowSize);
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
                 if (windowEnd > now)
                 {
@@ -184,8 +184,8 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
 
             while (_requestTimestamps.Count >= _options.MaxRequestsPerWindow)
             {
-                var oldestTimestamp = _requestTimestamps.Peek();
-                var waitTime = oldestTimestamp.Add(_options.WindowSize) - now;
+                DateTimeOffset oldestTimestamp = _requestTimestamps.Peek();
+                TimeSpan waitTime = oldestTimestamp.Add(_options.WindowSize) - now;
 
                 if (waitTime > TimeSpan.Zero)
                 {
@@ -206,8 +206,8 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
 
             while (_requestTimestamps.Count >= _options.MaxRequestsPerWindow)
             {
-                var oldestTimestamp = _requestTimestamps.Peek();
-                var waitTime = oldestTimestamp.Add(_options.WindowSize) - now;
+                DateTimeOffset oldestTimestamp = _requestTimestamps.Peek();
+                TimeSpan waitTime = oldestTimestamp.Add(_options.WindowSize) - now;
 
                 if (waitTime > TimeSpan.Zero)
                 {
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
 
         private void CleanupOldTimestamps(DateTimeOffset now)
         {
-            var windowStart = now.Subtract(_options.WindowSize);
+            DateTimeOffset windowStart = now.Subtract(_options.WindowSize);
             while (_requestTimestamps.Count > 0 && _requestTimestamps.Peek() < windowStart)
             {
                 _requestTimestamps.Dequeue();
@@ -280,7 +280,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
 
         private void RefillTokens(DateTimeOffset now)
         {
-            var elapsed = now - _lastRefillTime;
+            TimeSpan elapsed = now - _lastRefillTime;
             var tokensToAdd = (int)(elapsed.TotalMilliseconds / (_options.WindowSize.TotalMilliseconds / _options.MaxRequestsPerWindow));
 
             if (tokensToAdd > 0)

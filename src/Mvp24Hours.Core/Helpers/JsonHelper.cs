@@ -19,7 +19,7 @@ namespace Mvp24Hours.Helpers
             JsonDefaultSettings = new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = new List<JsonConverter> { new StringEnumConverter() },
+                Converters = [new StringEnumConverter()],
                 DateFormatHandling = DateFormatHandling.MicrosoftDateFormat,
                 DateFormatString = "yyyy-MM-dd",
                 NullValueHandling = NullValueHandling.Ignore,
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Helpers
         /// </summary>
         public static JsonSerializerSettings JsonPagingResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
         {
-            var settings = jsonSerializerSettings ?? JsonDefaultSettings;
+            JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IPagingResult<T>, PagingResult<T>>());
             settings.Converters.Add(new ValueObjectConverter<IPageResult, PageResult>());
             settings.Converters.Add(new ValueObjectConverter<ISummaryResult, SummaryResult>());
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Helpers
         /// </summary>
         public static JsonSerializerSettings JsonBusinessResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
         {
-            var settings = jsonSerializerSettings ?? JsonDefaultSettings;
+            JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IBusinessResult<T>, BusinessResult<T>>());
             settings.Converters.Add(new ValueObjectConverter<ISummaryResult, SummaryResult>());
             settings.Converters.Add(new ValueObjectConverter<IMessageResult, MessageResult>());
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Helpers
         /// </summary>
         public static JsonSerializerSettings JsonBusinessEventSettings(JsonSerializerSettings? jsonSerializerSettings = null)
         {
-            var settings = jsonSerializerSettings ?? JsonDefaultSettings;
+            JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
             settings.Converters.Add(new ValueObjectConverter<IBusinessEvent, BusinessEvent>());
             return settings;
         }

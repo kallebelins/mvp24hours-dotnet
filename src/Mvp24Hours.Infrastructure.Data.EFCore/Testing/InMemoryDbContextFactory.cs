@@ -108,8 +108,8 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     /// </remarks>
     public TContext CreateContext()
     {
-        var dbOptions = BuildDbContextOptions();
-        var context = CreateContextInstance(dbOptions);
+        DbContextOptions<TContext> dbOptions = BuildDbContextOptions();
+        TContext context = CreateContextInstance(dbOptions);
 
         _createdContexts.Add(context);
 
@@ -128,7 +128,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     /// <returns>A new DbContext instance with EnsureCreated called.</returns>
     public TContext CreateContextWithDatabase()
     {
-        var context = CreateContext();
+        TContext context = CreateContext();
         context.Database.EnsureCreated();
         return context;
     }
@@ -147,7 +147,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     public TContext CreateContextWithData<TSeeder>()
         where TSeeder : IDataSeeder<TContext>, new()
     {
-        var context = CreateContextWithDatabase();
+        TContext context = CreateContextWithDatabase();
         var seeder = new TSeeder();
         seeder.Seed(context);
         context.SaveChanges();
@@ -163,7 +163,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seeder);
 
-        var context = CreateContextWithDatabase();
+        TContext context = CreateContextWithDatabase();
         seeder.Seed(context);
         context.SaveChanges();
         return context;
@@ -189,7 +189,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seedAction);
 
-        var context = CreateContextWithDatabase();
+        TContext context = CreateContextWithDatabase();
         seedAction(context);
         context.SaveChanges();
         return context;
@@ -272,7 +272,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
 
         if (disposing)
         {
-            while (_createdContexts.TryTake(out var context))
+            while (_createdContexts.TryTake(out TContext? context))
             {
                 context.Dispose();
             }

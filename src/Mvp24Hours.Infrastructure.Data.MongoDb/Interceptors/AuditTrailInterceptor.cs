@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <inheritdoc />
         public override Task OnAfterDeleteAsync<T>(T entity, bool wasSoftDeleted, CancellationToken cancellationToken = default)
         {
-            var operation = wasSoftDeleted ? AuditOperation.SoftDelete : AuditOperation.Delete;
+            AuditOperation operation = wasSoftDeleted ? AuditOperation.SoftDelete : AuditOperation.Delete;
             LogAuditEntry(operation, entity);
             return Task.CompletedTask;
         }

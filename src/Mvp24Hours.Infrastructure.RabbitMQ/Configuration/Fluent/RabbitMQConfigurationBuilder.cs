@@ -77,9 +77,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _configuration = new RabbitMQBusConfiguration();
-            _consumerTypes = new List<Type>();
-            _requestClients = new List<(Type, Type, Action<RequestClientOptions>?)>();
-            _deferredRegistrations = new List<Action<IServiceCollection>>();
+            _consumerTypes = [];
+            _requestClients = [];
+            _deferredRegistrations = [];
         }
 
         /// <summary>
@@ -253,19 +253,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <returns>The builder for chaining.</returns>
         public RabbitMQConfigurationBuilder AddConsumersFromAssembly(Assembly assembly)
         {
-            var consumerTypes = assembly.GetExportedTypes()
+            IEnumerable<Type> consumerTypes = assembly.GetExportedTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface)
                 .Where(t => t.GetInterfaces().Any(i =>
                     typeof(IMvpRabbitMQConsumer).IsAssignableFrom(i) ||
                     (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>))));
 
-            foreach (var consumerType in consumerTypes)
+            foreach (Type? consumerType in consumerTypes)
             {
                 _consumerTypes.Add(consumerType);
                 _services.AddScoped(consumerType);
 
                 // Also register as IMessageConsumer<T> if applicable
-                var messageConsumerInterface = consumerType.GetInterfaces()
+                Type? messageConsumerInterface = consumerType.GetInterfaces()
                     .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
                 if (messageConsumerInterface != null)
@@ -710,7 +710,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             }
 
             // Register consumer configurations
-            foreach (var (consumerType, config) in _configuration.ConsumerConfigurations)
+            foreach ((Type? consumerType, ConsumerConfiguration? config) in _configuration.ConsumerConfigurations)
             {
                 _services.AddSingleton(new ConsumerConfigurationRegistration(consumerType, config));
             }
@@ -722,7 +722,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
                 var client = new MvpRabbitMQClient(sp);
 
                 // Register all consumer types
-                foreach (var consumerType in _consumerTypes)
+                foreach (Type consumerType in _consumerTypes)
                 {
                     client.Register(consumerType);
                 }
@@ -731,13 +731,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             });
 
             // Register request clients
-            foreach (var (requestType, responseType, configure) in _requestClients)
+            foreach ((Type? requestType, Type? responseType, Action<RequestClientOptions>? configure) in _requestClients)
             {
                 RegisterRequestClient(requestType, responseType, configure);
             }
 
             // Run deferred registrations (outbox, saga, filters, etc.)
-            foreach (var registration in _deferredRegistrations)
+            foreach (Action<IServiceCollection> registration in _deferredRegistrations)
             {
                 registration(_services);
             }
@@ -754,13 +754,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
 
         private void RegisterRequestClient(Type requestType, Type responseType, Action<RequestClientOptions>? configure)
         {
-            var requestClientType = typeof(IRequestClient<,>).MakeGenericType(requestType, responseType);
-            var implementationType = typeof(RequestResponse.RequestClient<,>).MakeGenericType(requestType, responseType);
+            Type requestClientType = typeof(IRequestClient<,>).MakeGenericType(requestType, responseType);
+            Type implementationType = typeof(RequestResponse.RequestClient<,>).MakeGenericType(requestType, responseType);
 
             _services.AddScoped(requestClientType, sp =>
             {
-                var connection = sp.GetRequiredService<IMvpRabbitMQConnection>();
-                var serializer = sp.GetRequiredService<IMessageSerializer>();
+                IMvpRabbitMQConnection connection = sp.GetRequiredService<IMvpRabbitMQConnection>();
+                IMessageSerializer serializer = sp.GetRequiredService<IMessageSerializer>();
 
                 var options = new RequestClientOptions();
                 configure?.Invoke(options);

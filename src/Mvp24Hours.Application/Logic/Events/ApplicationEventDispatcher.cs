@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,7 +81,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
     {
         ArgumentNullException.ThrowIfNull(@event);
 
-        var eventType = typeof(TEvent);
+        Type eventType = typeof(TEvent);
 
         _logger?.LogDebug(
             "[ApplicationEvents] Dispatching {EventType} (Id: {EventId})",
@@ -98,7 +99,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
         }
 
         // Resolve handlers
-        var handlerType = typeof(IApplicationEventHandler<>).MakeGenericType(eventType);
+        Type handlerType = typeof(IApplicationEventHandler<>).MakeGenericType(eventType);
         var handlers = _serviceProvider.GetServices(handlerType).ToList();
 
         if (handlers.Count == 0)
@@ -152,13 +153,13 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
             "[ApplicationEvents] Dispatching {EventCount} events",
             eventsList.Count);
 
-        foreach (var @event in eventsList)
+        foreach (IApplicationEvent? @event in eventsList)
         {
             // Use reflection to call the generic method
-            var method = typeof(ApplicationEventDispatcher)
+            MethodInfo? method = typeof(ApplicationEventDispatcher)
                 .GetMethod(nameof(DispatchAsync), [typeof(IApplicationEvent), typeof(CancellationToken)]);
 
-            var genericMethod = method?.MakeGenericMethod(@event.GetType());
+            MethodInfo? genericMethod = method?.MakeGenericMethod(@event.GetType());
 
             if (genericMethod != null)
             {
@@ -234,7 +235,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
         {
             // Limit parallelism
             using var semaphore = new SemaphoreSlim(_options.MaxDegreeOfParallelism);
-            var throttledTasks = tasks.Select(async task =>
+            IEnumerable<Task> throttledTasks = tasks.Select(async task =>
             {
                 await semaphore.WaitAsync(cancellationToken);
                 try
@@ -302,13 +303,13 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
                 if (publisher != null)
                 {
                     // Create a wrapper notification and publish
-                    var wrapperType = typeof(ApplicationEventNotification<>).MakeGenericType(typeof(TEvent));
+                    Type wrapperType = typeof(ApplicationEventNotification<>).MakeGenericType(typeof(TEvent));
                     var wrapper = Activator.CreateInstance(wrapperType, @event);
 
-                    var publishMethod = publisherType.GetMethod("Publish");
+                    MethodInfo? publishMethod = publisherType.GetMethod("Publish");
                     if (publishMethod != null && wrapper != null)
                     {
-                        var genericPublish = publishMethod.MakeGenericMethod(wrapperType);
+                        MethodInfo genericPublish = publishMethod.MakeGenericMethod(wrapperType);
                         var task = genericPublish.Invoke(publisher, [wrapper, cancellationToken]) as Task;
                         if (task != null)
                         {

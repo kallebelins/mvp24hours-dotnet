@@ -223,7 +223,7 @@ namespace Mvp24Hours.Application.Logic.Pagination
         /// <returns>The encoded composite cursor string.</returns>
         public static string EncodeCompositeCursor(params (string key, object? value)[] fields)
         {
-            var dict = fields.ToDictionary(f => f.key, f => f.value);
+            Dictionary<string, object?> dict = fields.ToDictionary(f => f.key, f => f.value);
             return EncodeCursor(dict);
         }
 

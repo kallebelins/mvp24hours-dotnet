@@ -81,14 +81,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
             try
             {
-                using var connection = _connectionFactory(_connectionString);
+                using DbConnection connection = _connectionFactory(_connectionString);
                 await connection.OpenAsync(cancellationToken);
 
                 data["database"] = connection.Database;
                 data["serverVersion"] = connection.ServerVersion;
 
                 // Execute basic health query
-                using (var command = connection.CreateCommand())
+                using (DbCommand command = connection.CreateCommand())
                 {
                     command.CommandText = _options.HealthQuery;
                     command.CommandTimeout = _options.QueryTimeoutSeconds;
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 // Check connection usage if enabled
                 if (_options.CheckConnectionUsage)
                 {
-                    var (current, max) = await GetConnectionUsageAsync(connection, cancellationToken);
+                    (int current, int max) = await GetConnectionUsageAsync(connection, cancellationToken);
                     data["currentConnections"] = current;
                     data["maxConnections"] = max;
                     data["connectionUsagePercent"] = max > 0 ? Math.Round((double)current / max * 100, 2) : 0;
@@ -197,13 +197,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private static async Task<(int Current, int Max)> GetConnectionUsageAsync(DbConnection connection, CancellationToken cancellationToken)
         {
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = @"
                 SELECT 
                     (SELECT count(*) FROM pg_stat_activity) as current_connections,
                     (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') as max_connections";
 
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
             if (await reader.ReadAsync(cancellationToken))
             {
                 return (reader.GetInt32(0), reader.GetInt32(1));
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private static async Task<long?> GetReplicationLagAsync(DbConnection connection, CancellationToken cancellationToken)
         {
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = @"
                 SELECT CASE WHEN pg_is_in_recovery() THEN
                     COALESCE(pg_wal_lsn_diff(pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn()), 0)
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private static async Task<long> GetDatabaseSizeAsync(DbConnection connection, CancellationToken cancellationToken)
         {
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = "SELECT pg_database_size(current_database())";
 
             var result = await command.ExecuteScalarAsync(cancellationToken);
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private static async Task<int> GetBlockedLocksCountAsync(DbConnection connection, CancellationToken cancellationToken)
         {
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = @"
                 SELECT COUNT(*)
                 FROM pg_locks bl

@@ -49,7 +49,7 @@ public class MediatorTest
         var query = new GetUserQuery { UserId = 1 };
 
         // Act
-        var result = await _mediator.SendAsync(query);
+        UserDto? result = await _mediator.SendAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -64,7 +64,7 @@ public class MediatorTest
         var query = new GetUserQuery { UserId = 999 };
 
         // Act
-        var result = await _mediator.SendAsync(query);
+        UserDto? result = await _mediator.SendAsync(query);
 
         // Assert
         Assert.Null(result);
@@ -78,7 +78,7 @@ public class MediatorTest
         var command = new TestVoidCommand { Action = "Test Action" };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        Unit result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.Equal(Unit.Value, result);
@@ -100,8 +100,8 @@ public class MediatorTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(); // No assembly scanning
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         var command = new TestCommand { Name = "Test", Value = 1 };
 
@@ -118,7 +118,7 @@ public class MediatorTest
         var command = new SlowCommand { DelayMs = 5000 };
 
         // Act
-        var task = _mediator.SendAsync(command, cts.Token);
+        Task<string> task = _mediator.SendAsync(command, cts.Token);
         cts.Cancel();
 
         // Assert
@@ -132,7 +132,7 @@ public class MediatorTest
         var command = new FailingCommand { Message = "Custom error" };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
         Assert.Equal("Custom error", ex.Message);
     }
@@ -141,7 +141,7 @@ public class MediatorTest
     public async Task ISender_ShouldBeResolvable()
     {
         // Arrange
-        var sender = _serviceProvider.GetRequiredService<ISender>();
+        ISender sender = _serviceProvider.GetRequiredService<ISender>();
         var command = new TestCommand { Name = "Sender Test", Value = 100 };
 
         // Act
@@ -156,7 +156,7 @@ public class MediatorTest
     public async Task IPublisher_ShouldBeResolvable()
     {
         // Arrange
-        var publisher = _serviceProvider.GetRequiredService<IPublisher>();
+        IPublisher publisher = _serviceProvider.GetRequiredService<IPublisher>();
 
         // Act - Should not throw
         await publisher.PublishAsync(new OrderCreatedNotification
@@ -177,7 +177,7 @@ public class MediatorTest
         var query = new GetAllUsersQuery();
 
         // Act
-        var result = await _mediator.SendAsync(query);
+        List<UserDto> result = await _mediator.SendAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -191,7 +191,7 @@ public class MediatorTest
         var query = new GetAllUsersQuery { Limit = 2 };
 
         // Act
-        var result = await _mediator.SendAsync(query);
+        List<UserDto> result = await _mediator.SendAsync(query);
 
         // Assert
         Assert.NotNull(result);

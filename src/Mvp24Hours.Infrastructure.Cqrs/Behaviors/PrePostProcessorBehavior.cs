@@ -60,16 +60,16 @@ public class PrePostProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<T
         CancellationToken cancellationToken)
     {
         // Execute global pre-processors
-        var globalPreProcessors = _serviceProvider.GetServices<IPreProcessorGlobal>() ?? [];
-        foreach (var processor in globalPreProcessors)
+        IEnumerable<IPreProcessorGlobal> globalPreProcessors = _serviceProvider.GetServices<IPreProcessorGlobal>() ?? [];
+        foreach (IPreProcessorGlobal processor in globalPreProcessors)
         {
             _logger?.LogDebug("Executing global pre-processor {ProcessorType}", processor.GetType().Name);
             await processor.ProcessAsync(request, cancellationToken);
         }
 
         // Execute type-specific pre-processors
-        var preProcessors = _serviceProvider.GetServices<IPreProcessor<TRequest>>() ?? [];
-        foreach (var processor in preProcessors)
+        IEnumerable<IPreProcessor<TRequest>> preProcessors = _serviceProvider.GetServices<IPreProcessor<TRequest>>() ?? [];
+        foreach (IPreProcessor<TRequest> processor in preProcessors)
         {
             _logger?.LogDebug("Executing pre-processor {ProcessorType} for {RequestType}",
                 processor.GetType().Name, typeof(TRequest).Name);
@@ -77,11 +77,11 @@ public class PrePostProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<T
         }
 
         // Execute the handler (and rest of the pipeline)
-        var response = await next();
+        TResponse? response = await next();
 
         // Execute type-specific post-processors
-        var postProcessors = _serviceProvider.GetServices<IPostProcessor<TRequest, TResponse>>() ?? [];
-        foreach (var processor in postProcessors)
+        IEnumerable<IPostProcessor<TRequest, TResponse>> postProcessors = _serviceProvider.GetServices<IPostProcessor<TRequest, TResponse>>() ?? [];
+        foreach (IPostProcessor<TRequest, TResponse> processor in postProcessors)
         {
             _logger?.LogDebug("Executing post-processor {ProcessorType} for {RequestType}",
                 processor.GetType().Name, typeof(TRequest).Name);
@@ -89,8 +89,8 @@ public class PrePostProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<T
         }
 
         // Execute global post-processors
-        var globalPostProcessors = _serviceProvider.GetServices<IPostProcessorGlobal>() ?? [];
-        foreach (var processor in globalPostProcessors)
+        IEnumerable<IPostProcessorGlobal> globalPostProcessors = _serviceProvider.GetServices<IPostProcessorGlobal>() ?? [];
+        foreach (IPostProcessorGlobal processor in globalPostProcessors)
         {
             _logger?.LogDebug("Executing global post-processor {ProcessorType}", processor.GetType().Name);
             await processor.ProcessAsync(request, response, cancellationToken);

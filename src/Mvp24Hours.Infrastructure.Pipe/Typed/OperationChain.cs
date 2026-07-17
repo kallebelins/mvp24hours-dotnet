@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 try
                 {
                     var typedInput = (TOutput?)input;
-                    var result = transform(typedInput!);
+                    TNext? result = transform(typedInput!);
                     return OperationResult<object>.Success(result!);
                 }
                 catch (Exception ex)
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 try
                 {
                     var typedInput = (TOutput?)input;
-                    var result = transform(typedInput!);
+                    IOperationResult<TNext> result = transform(typedInput!);
                     return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
                 }
                 catch (Exception ex)
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             newChain._syncOperations.Add(input =>
             {
                 var typedInput = (TOutput?)input;
-                var result = operation.Execute(typedInput!);
+                IOperationResult<TNext> result = operation.Execute(typedInput!);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 try
                 {
                     var typedInput = (TOutput?)input;
-                    var result = await transform(typedInput!, ct);
+                    TNext? result = await transform(typedInput!, ct);
                     return OperationResult<object>.Success(result!);
                 }
                 catch (Exception ex)
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             newChain._asyncOperations.Add(async (input, ct) =>
             {
                 var typedInput = (TOutput?)input;
-                var result = await operation.ExecuteAsync(typedInput!, ct);
+                IOperationResult<TNext> result = await operation.ExecuteAsync(typedInput!, ct);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
                 if (condition(typedInput!))
                 {
-                    var branchChain = thenChain(OperationChain.Start<TOutput>());
+                    OperationChain<TOutput, TOutput> branchChain = thenChain(OperationChain.Start<TOutput>());
                     return branchChain.ExecuteInternal(typedInput!);
                 }
 
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 throw new InvalidOperationException("This chain contains async operations. Use FinallyAsync instead.");
             }
 
-            var result = ExecuteInternal(input);
+            IOperationResult<object> result = ExecuteInternal(input);
 
             if (result.IsFailure)
             {
@@ -266,7 +266,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         /// <returns>The final result of the chain.</returns>
         public async Task<IOperationResult<TOutput>> FinallyAsync(TInput input, CancellationToken cancellationToken = default)
         {
-            var result = await ExecuteInternalAsync(input, cancellationToken);
+            IOperationResult<object> result = await ExecuteInternalAsync(input, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -286,9 +286,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             object? currentValue = input;
             var allMessages = new List<Core.Contract.ValueObjects.Logic.IMessageResult>();
 
-            foreach (var operation in _syncOperations)
+            foreach (Func<object?, IOperationResult<object>> operation in _syncOperations)
             {
-                var result = operation(currentValue);
+                IOperationResult<object> result = operation(currentValue);
                 allMessages.AddRange(result.Messages);
 
                 if (result.IsFailure)
@@ -308,9 +308,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             var allMessages = new List<Core.Contract.ValueObjects.Logic.IMessageResult>();
 
             // Execute sync operations first
-            foreach (var operation in _syncOperations)
+            foreach (Func<object?, IOperationResult<object>> operation in _syncOperations)
             {
-                var result = operation(currentValue);
+                IOperationResult<object> result = operation(currentValue);
                 allMessages.AddRange(result.Messages);
 
                 if (result.IsFailure)
@@ -322,11 +322,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             }
 
             // Then execute async operations
-            foreach (var operation in _asyncOperations)
+            foreach (Func<object?, CancellationToken, Task<IOperationResult<object>>> operation in _asyncOperations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = await operation(currentValue, cancellationToken);
+                IOperationResult<object> result = await operation(currentValue, cancellationToken);
                 allMessages.AddRange(result.Messages);
 
                 if (result.IsFailure)

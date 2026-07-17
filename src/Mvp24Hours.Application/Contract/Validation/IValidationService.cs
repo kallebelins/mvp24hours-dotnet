@@ -128,7 +128,7 @@ namespace Mvp24Hours.Application.Contract.Validation
         /// <summary>
         /// Gets or sets the collection of validation errors.
         /// </summary>
-        public IList<IMessageResult> Errors { get; set; } = new List<IMessageResult>();
+        public IList<IMessageResult> Errors { get; set; } = [];
 
         /// <summary>
         /// Creates a successful validation result.
@@ -149,7 +149,7 @@ namespace Mvp24Hours.Application.Contract.Validation
             return new ValidationServiceResult
             {
                 IsValid = false,
-                Errors = errors ?? new List<IMessageResult>()
+                Errors = errors ?? []
             };
         }
 
@@ -164,13 +164,13 @@ namespace Mvp24Hours.Application.Contract.Validation
             return new ValidationServiceResult
             {
                 IsValid = false,
-                Errors = new List<IMessageResult>
-                {
+                Errors =
+                [
                     new Core.ValueObjects.Logic.MessageResult(
                         propertyName,
                         errorMessage,
                         Core.Enums.MessageType.Error)
-                }
+                ]
             };
         }
     }

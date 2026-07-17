@@ -7,7 +7,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
+using MongoDB.Driver.Core.Servers;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 {
@@ -100,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             // Configure event subscribers for monitoring
             if (_options.EnableServerMonitoring)
             {
-                var existingConfigurator = settings.ClusterConfigurator;
+                Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
                 settings.ClusterConfigurator = builder =>
                 {
                     // Invoke existing configurator if any
@@ -144,7 +146,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
             try
             {
-                var startTime = DateTimeOffset.UtcNow;
+                DateTimeOffset startTime = DateTimeOffset.UtcNow;
 
                 for (int attempt = 1; attempt <= _options.MaxReconnectAttempts; attempt++)
                 {
@@ -173,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
                     if (attempt < _options.MaxReconnectAttempts)
                     {
-                        var delay = CalculateReconnectDelay(attempt);
+                        TimeSpan delay = CalculateReconnectDelay(attempt);
                         await Task.Delay(delay, cancellationToken);
                     }
                 }
@@ -288,8 +290,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
         private void OnServerDescriptionChanged(ServerDescriptionChangedEvent e)
         {
-            var newDesc = e.NewDescription;
-            var oldDesc = e.OldDescription;
+            ServerDescription? newDesc = e.NewDescription;
+            ServerDescription? oldDesc = e.OldDescription;
 
             // Check for failover events
             if (oldDesc?.Type == MongoDB.Driver.Core.Servers.ServerType.ReplicaSetPrimary &&

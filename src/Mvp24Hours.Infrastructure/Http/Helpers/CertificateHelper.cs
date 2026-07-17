@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             using var store = new X509Store(storeName, storeLocation);
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(
+            X509Certificate2Collection certificates = store.Certificates.Find(
                 X509FindType.FindByThumbprint,
                 thumbprint,
                 validOnly: false);
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             using var store = new X509Store(storeName, storeLocation);
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(
+            X509Certificate2Collection certificates = store.Certificates.Find(
                 X509FindType.FindBySubjectName,
                 subjectName,
                 validOnly: false);
@@ -201,7 +201,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
 
             // Return the certificate with the latest NotAfter date
             X509Certificate2? latestCert = null;
-            foreach (var cert in certificates)
+            foreach (X509Certificate2 cert in certificates)
             {
                 if (latestCert == null || cert.NotAfter > latestCert.NotAfter)
                 {
@@ -224,7 +224,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
                 return false;
             }
 
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             return now >= certificate.NotBefore && now <= certificate.NotAfter;
         }
 
@@ -240,7 +240,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
                 throw new InvalidOperationException("Certificate is null.");
             }
 
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             if (now < certificate.NotBefore)
             {

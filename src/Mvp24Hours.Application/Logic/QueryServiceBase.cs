@@ -234,7 +234,7 @@ namespace Mvp24Hours.Application.Logic
 
             if (specification == null)
             {
-                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+                return ((IList<TEntity>)[]).ToBusiness();
             }
 
             // Try to use repository's specification method if available
@@ -265,8 +265,8 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take single
-            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
-            var entity = result?.SingleOrDefault();
+            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
+            TEntity? entity = result?.SingleOrDefault();
             return entity.ToBusiness();
         }
 
@@ -288,8 +288,8 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take first
-            var result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
-            var entity = result?.FirstOrDefault();
+            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
+            TEntity? entity = result?.FirstOrDefault();
             return entity.ToBusiness();
         }
 

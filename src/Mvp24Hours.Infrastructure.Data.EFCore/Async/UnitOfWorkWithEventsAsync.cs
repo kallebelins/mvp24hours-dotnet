@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
@@ -176,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                 _logger?.LogDebug("EFCore UnitOfWorkWithEventsAsync rolling back {EntryCount} changed entries", changedEntries.Count);
 
-                foreach (var entry in changedEntries)
+                foreach (EntityEntry? entry in changedEntries)
                 {
                     switch (entry.State)
                     {
@@ -249,7 +250,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                         allEvents.Count);
 
                     // Clear events even without dispatcher to prevent memory leaks
-                    foreach (var entity in entitiesWithEvents)
+                    foreach (IHasDomainEvents? entity in entitiesWithEvents)
                     {
                         entity.ClearDomainEvents();
                     }

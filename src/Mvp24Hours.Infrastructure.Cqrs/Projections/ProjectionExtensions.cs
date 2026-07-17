@@ -7,6 +7,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
@@ -45,15 +46,15 @@ public static class ProjectionExtensions
         // Register projection manager
         services.AddSingleton<IProjectionManager>(sp =>
         {
-            var eventStore = sp.GetRequiredService<IEventStoreWithSubscription>();
-            var serializer = sp.GetRequiredService<IEventSerializer>();
-            var positionStore = sp.GetRequiredService<IProjectionPositionStore>();
-            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ProjectionManager>>();
+            IEventStoreWithSubscription eventStore = sp.GetRequiredService<IEventStoreWithSubscription>();
+            IEventSerializer serializer = sp.GetRequiredService<IEventSerializer>();
+            IProjectionPositionStore positionStore = sp.GetRequiredService<IProjectionPositionStore>();
+            ILogger<ProjectionManager> logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ProjectionManager>>();
 
             var manager = new ProjectionManager(eventStore, serializer, sp, positionStore, logger);
 
             // Register projections from options
-            foreach (var registration in options.Registrations)
+            foreach (ProjectionOptions.ProjectionRegistration registration in options.Registrations)
             {
                 manager.RegisterProjection(registration.Name, registration.HandlerTypes.ToArray());
             }
@@ -65,21 +66,21 @@ public static class ProjectionExtensions
         services.TryAddSingleton<IProjectionRebuildService, ProjectionRebuildService>();
 
         // Register handlers from assemblies
-        foreach (var assembly in options.AssembliesToScan)
+        foreach (Assembly assembly in options.AssembliesToScan)
         {
             services.RegisterProjectionHandlersFromAssembly(assembly);
         }
 
         // Register specific handlers
-        foreach (var handlerType in options.HandlerTypes)
+        foreach (Type handlerType in options.HandlerTypes)
         {
             services.RegisterProjectionHandler(handlerType);
         }
 
         // Register read model repositories
-        foreach (var (modelType, repositoryType) in options.RepositoryRegistrations)
+        foreach ((Type? modelType, Type? repositoryType) in options.RepositoryRegistrations)
         {
-            var repoInterfaceType = typeof(IReadModelRepository<>).MakeGenericType(modelType);
+            Type repoInterfaceType = typeof(IReadModelRepository<>).MakeGenericType(modelType);
             services.TryAddScoped(repoInterfaceType, repositoryType);
         }
 
@@ -144,7 +145,7 @@ public static class ProjectionExtensions
             .Where(IsProjectionHandler)
             .ToList();
 
-        foreach (var handlerType in handlerTypes)
+        foreach (Type? handlerType in handlerTypes)
         {
             services.RegisterProjectionHandler(handlerType);
         }
@@ -178,10 +179,10 @@ public static class ProjectionExtensions
         services.TryAddTransient(handlerType);
 
         // Register all implemented projection handler interfaces
-        var interfaces = handlerType.GetInterfaces()
+        IEnumerable<Type> interfaces = handlerType.GetInterfaces()
             .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IProjectionHandler<>));
 
-        foreach (var @interface in interfaces)
+        foreach (Type? @interface in interfaces)
         {
             services.AddTransient(@interface, handlerType);
         }
@@ -208,10 +209,10 @@ public static class ProjectionExtensions
 /// </summary>
 public class ProjectionOptions
 {
-    internal List<ProjectionRegistration> Registrations { get; } = new();
-    internal List<Assembly> AssembliesToScan { get; } = new();
-    internal List<Type> HandlerTypes { get; } = new();
-    internal List<(Type ModelType, Type RepositoryType)> RepositoryRegistrations { get; } = new();
+    internal List<ProjectionRegistration> Registrations { get; } = [];
+    internal List<Assembly> AssembliesToScan { get; } = [];
+    internal List<Type> HandlerTypes { get; } = [];
+    internal List<(Type ModelType, Type RepositoryType)> RepositoryRegistrations { get; } = [];
 
     /// <summary>
     /// Registers a projection with its handlers.
@@ -291,7 +292,7 @@ public class ProjectionOptions
     internal class ProjectionRegistration
     {
         public string Name { get; set; } = string.Empty;
-        public List<Type> HandlerTypes { get; set; } = new();
+        public List<Type> HandlerTypes { get; set; } = [];
     }
 }
 

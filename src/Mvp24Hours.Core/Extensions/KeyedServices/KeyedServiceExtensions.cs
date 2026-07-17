@@ -336,7 +336,7 @@ public static class KeyedServiceExtensions
         bool useDefaultIfNotFound)
         where TService : class
     {
-        var service = provider.GetKeyedService<TService>(serviceKey);
+        TService? service = provider.GetKeyedService<TService>(serviceKey);
         if (service != null)
             return service;
 
@@ -475,7 +475,7 @@ public static class KeyedServiceExtensions
         where TService : class
     {
         var tenantKey = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
-        var service = provider.GetKeyedService<TService>(tenantKey);
+        TService? service = provider.GetKeyedService<TService>(tenantKey);
 
         return service ?? provider.GetRequiredKeyedService<TService>(defaultKey);
     }
@@ -499,13 +499,13 @@ public static class KeyedServiceExtensions
         if (assembly == null)
             throw new ArgumentNullException(nameof(assembly));
 
-        var typesWithAttribute = assembly.GetTypes()
+        IEnumerable<Type> typesWithAttribute = assembly.GetTypes()
             .Where(t => t.GetCustomAttribute<KeyedServiceAttribute>() != null && !t.IsAbstract);
 
-        foreach (var type in typesWithAttribute)
+        foreach (Type? type in typesWithAttribute)
         {
-            var attribute = type.GetCustomAttribute<KeyedServiceAttribute>()!;
-            var serviceType = attribute.ServiceType ?? type.GetInterfaces().FirstOrDefault() ?? type;
+            KeyedServiceAttribute attribute = type.GetCustomAttribute<KeyedServiceAttribute>()!;
+            Type serviceType = attribute.ServiceType ?? type.GetInterfaces().FirstOrDefault() ?? type;
 
             var descriptor = new ServiceDescriptor(
                 serviceType,
@@ -552,7 +552,7 @@ public static class KeyedServiceExtensions
         where TImplementation : class, TService
     {
         // Remove existing
-        var existing = services.FirstOrDefault(d =>
+        ServiceDescriptor? existing = services.FirstOrDefault(d =>
             d.ServiceType == typeof(TService) &&
             d.IsKeyedService &&
             Equals(d.ServiceKey, serviceKey));
@@ -583,7 +583,7 @@ public static class KeyedServiceExtensions
         object serviceKey)
         where TService : class
     {
-        var existing = services.FirstOrDefault(d =>
+        ServiceDescriptor? existing = services.FirstOrDefault(d =>
             d.ServiceType == typeof(TService) &&
             d.IsKeyedService &&
             Equals(d.ServiceKey, serviceKey));
@@ -605,7 +605,7 @@ public class KeyedServiceConfiguration<TService>
     where TService : class
 {
     private readonly IServiceCollection _services;
-    private readonly List<(object Key, Type Implementation, ServiceLifetime Lifetime, Func<IServiceProvider, object?, TService>? Factory)> _registrations = new();
+    private readonly List<(object Key, Type Implementation, ServiceLifetime Lifetime, Func<IServiceProvider, object?, TService>? Factory)> _registrations = [];
     private object? _defaultKey;
 
     internal KeyedServiceConfiguration(IServiceCollection services)
@@ -658,7 +658,7 @@ public class KeyedServiceConfiguration<TService>
 
     internal void Build()
     {
-        foreach (var (key, implementation, lifetime, factory) in _registrations)
+        foreach ((object? key, Type? implementation, ServiceLifetime lifetime, Func<IServiceProvider, object?, TService>? factory) in _registrations)
         {
             if (factory != null)
             {

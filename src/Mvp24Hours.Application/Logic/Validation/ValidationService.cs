@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -70,7 +72,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // FluentValidation
             if (_options.UseFluentValidation && _fluentValidators.Any())
             {
-                var fluentErrors = ValidateWithFluentValidation(instance, options);
+                IList<IMessageResult> fluentErrors = ValidateWithFluentValidation(instance, options);
                 errors.AddRange(fluentErrors);
 
                 if (options.StopOnFirstError && errors.Any())
@@ -82,7 +84,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // DataAnnotations
             if (_options.UseDataAnnotations)
             {
-                var annotationErrors = ValidateWithDataAnnotations(instance, options);
+                IList<IMessageResult> annotationErrors = ValidateWithDataAnnotations(instance, options);
                 errors.AddRange(annotationErrors);
 
                 if (options.StopOnFirstError && errors.Any())
@@ -94,7 +96,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Cascade validation for nested objects
             if (options.ValidateNestedObjects && _options.UseCascadeValidation)
             {
-                var nestedErrors = ValidateNestedObjects(instance, options, 0, string.Empty);
+                IList<IMessageResult> nestedErrors = ValidateNestedObjects(instance, options, 0, string.Empty);
                 errors.AddRange(nestedErrors);
             }
 
@@ -129,7 +131,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // FluentValidation async
             if (_options.UseFluentValidation && _fluentValidators.Any())
             {
-                var fluentErrors = await ValidateWithFluentValidationAsync(instance, options, cancellationToken);
+                IList<IMessageResult> fluentErrors = await ValidateWithFluentValidationAsync(instance, options, cancellationToken);
                 errors.AddRange(fluentErrors);
 
                 if (options.StopOnFirstError && errors.Any())
@@ -141,7 +143,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // DataAnnotations (sync, no async version)
             if (_options.UseDataAnnotations)
             {
-                var annotationErrors = ValidateWithDataAnnotations(instance, options);
+                IList<IMessageResult> annotationErrors = ValidateWithDataAnnotations(instance, options);
                 errors.AddRange(annotationErrors);
 
                 if (options.StopOnFirstError && errors.Any())
@@ -153,7 +155,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Cascade validation for nested objects
             if (options.ValidateNestedObjects && _options.UseCascadeValidation)
             {
-                var nestedErrors = await ValidateNestedObjectsAsync(instance, options, 0, string.Empty, cancellationToken);
+                IList<IMessageResult> nestedErrors = await ValidateNestedObjectsAsync(instance, options, 0, string.Empty, cancellationToken);
                 errors.AddRange(nestedErrors);
             }
 
@@ -180,12 +182,12 @@ namespace Mvp24Hours.Application.Logic.Validation
             var errors = new List<IMessageResult>();
             var index = 0;
 
-            foreach (var instance in instances)
+            foreach (T instance in instances)
             {
-                var result = Validate(instance);
+                ValidationServiceResult result = Validate(instance);
                 if (!result.IsValid)
                 {
-                    foreach (var error in result.Errors)
+                    foreach (IMessageResult error in result.Errors)
                     {
                         errors.Add(new MessageResult(
                             $"[{index}].{error.Key}",
@@ -214,14 +216,14 @@ namespace Mvp24Hours.Application.Logic.Validation
             var errors = new List<IMessageResult>();
             var index = 0;
 
-            foreach (var instance in instances)
+            foreach (T instance in instances)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = await ValidateAsync(instance, cancellationToken);
+                ValidationServiceResult result = await ValidateAsync(instance, cancellationToken);
                 if (!result.IsValid)
                 {
-                    foreach (var error in result.Errors)
+                    foreach (IMessageResult error in result.Errors)
                     {
                         errors.Add(new MessageResult(
                             $"[{index}].{error.Key}",
@@ -240,7 +242,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public void ValidateAndThrow(T instance)
         {
-            var result = Validate(instance);
+            ValidationServiceResult result = Validate(instance);
             if (!result.IsValid)
             {
                 throw new Core.Exceptions.ValidationException(
@@ -253,7 +255,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public async Task ValidateAndThrowAsync(T instance, CancellationToken cancellationToken = default)
         {
-            var result = await ValidateAsync(instance, cancellationToken);
+            ValidationServiceResult result = await ValidateAsync(instance, cancellationToken);
             if (!result.IsValid)
             {
                 throw new Core.Exceptions.ValidationException(
@@ -302,12 +304,12 @@ namespace Mvp24Hours.Application.Logic.Validation
             var errors = new List<IMessageResult>();
             var context = new ValidationContext<T>(instance);
 
-            foreach (var validator in _fluentValidators)
+            foreach (IValidator<T> validator in _fluentValidators)
             {
-                var result = validator.Validate(context);
+                FluentValidation.Results.ValidationResult result = validator.Validate(context);
                 if (!result.IsValid)
                 {
-                    foreach (var failure in result.Errors)
+                    foreach (ValidationFailure? failure in result.Errors)
                     {
                         errors.Add(new MessageResult(
                             failure.PropertyName ?? failure.ErrorCode,
@@ -333,12 +335,12 @@ namespace Mvp24Hours.Application.Logic.Validation
             var errors = new List<IMessageResult>();
             var context = new ValidationContext<T>(instance);
 
-            foreach (var validator in _fluentValidators)
+            foreach (IValidator<T> validator in _fluentValidators)
             {
-                var result = await validator.ValidateAsync(context, cancellationToken);
+                FluentValidation.Results.ValidationResult result = await validator.ValidateAsync(context, cancellationToken);
                 if (!result.IsValid)
                 {
-                    foreach (var failure in result.Errors)
+                    foreach (ValidationFailure? failure in result.Errors)
                     {
                         errors.Add(new MessageResult(
                             failure.PropertyName ?? failure.ErrorCode,
@@ -364,7 +366,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
             if (!Validator.TryValidateObject(instance, validationContext, validationResults, true))
             {
-                foreach (var result in validationResults)
+                foreach (System.ComponentModel.DataAnnotations.ValidationResult result in validationResults)
                 {
                     var propertyName = result.MemberNames.Any()
                         ? string.Join(", ", result.MemberNames)
@@ -398,11 +400,11 @@ namespace Mvp24Hours.Application.Logic.Validation
                 return errors;
             }
 
-            var type = instance.GetType();
-            var properties = type.GetProperties()
+            Type type = instance.GetType();
+            IEnumerable<PropertyInfo> properties = type.GetProperties()
                 .Where(p => p.CanRead && !IsSimpleType(p.PropertyType));
 
-            foreach (var property in properties)
+            foreach (PropertyInfo? property in properties)
             {
                 var value = property.GetValue(instance);
                 if (value == null)
@@ -441,7 +443,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         if (item != null && !IsSimpleType(item.GetType()))
                         {
                             var itemPath = $"{newPath}[{index}]";
-                            var itemErrors = ValidateObjectDynamic(item, options, currentDepth + 1, itemPath);
+                            IList<IMessageResult> itemErrors = ValidateObjectDynamic(item, options, currentDepth + 1, itemPath);
                             errors.AddRange(itemErrors);
 
                             if (options.StopOnFirstError && errors.Any())
@@ -454,7 +456,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                 }
                 else
                 {
-                    var nestedErrors = ValidateObjectDynamic(value, options, currentDepth + 1, newPath);
+                    IList<IMessageResult> nestedErrors = ValidateObjectDynamic(value, options, currentDepth + 1, newPath);
                     errors.AddRange(nestedErrors);
 
                     if (options.StopOnFirstError && errors.Any())
@@ -481,11 +483,11 @@ namespace Mvp24Hours.Application.Logic.Validation
                 return errors;
             }
 
-            var type = instance.GetType();
-            var properties = type.GetProperties()
+            Type type = instance.GetType();
+            IEnumerable<PropertyInfo> properties = type.GetProperties()
                 .Where(p => p.CanRead && !IsSimpleType(p.PropertyType));
 
-            foreach (var property in properties)
+            foreach (PropertyInfo? property in properties)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -526,7 +528,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         if (item != null && !IsSimpleType(item.GetType()))
                         {
                             var itemPath = $"{newPath}[{index}]";
-                            var itemErrors = await ValidateObjectDynamicAsync(item, options, currentDepth + 1, itemPath, cancellationToken);
+                            IList<IMessageResult> itemErrors = await ValidateObjectDynamicAsync(item, options, currentDepth + 1, itemPath, cancellationToken);
                             errors.AddRange(itemErrors);
 
                             if (options.StopOnFirstError && errors.Any())
@@ -539,7 +541,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                 }
                 else
                 {
-                    var nestedErrors = await ValidateObjectDynamicAsync(value, options, currentDepth + 1, newPath, cancellationToken);
+                    IList<IMessageResult> nestedErrors = await ValidateObjectDynamicAsync(value, options, currentDepth + 1, newPath, cancellationToken);
                     errors.AddRange(nestedErrors);
 
                     if (options.StopOnFirstError && errors.Any())
@@ -568,7 +570,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
                 if (!Validator.TryValidateObject(instance, validationContext, validationResults, true))
                 {
-                    foreach (var result in validationResults)
+                    foreach (System.ComponentModel.DataAnnotations.ValidationResult result in validationResults)
                     {
                         var propertyName = result.MemberNames.Any()
                             ? string.Join(", ", result.MemberNames)
@@ -589,18 +591,18 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Try to resolve FluentValidator from DI
             if (_options.UseFluentValidation && _serviceProvider != null)
             {
-                var validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
+                Type validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
                 var validator = _serviceProvider.GetService(validatorType);
 
                 if (validator != null)
                 {
-                    var validateMethod = validatorType.GetMethod("Validate", new[] { instance.GetType() });
+                    MethodInfo? validateMethod = validatorType.GetMethod("Validate", new[] { instance.GetType() });
                     if (validateMethod != null)
                     {
                         var result = validateMethod.Invoke(validator, new[] { instance }) as FluentValidation.Results.ValidationResult;
                         if (result != null && !result.IsValid)
                         {
-                            foreach (var failure in result.Errors)
+                            foreach (ValidationFailure? failure in result.Errors)
                             {
                                 var fullPath = options.IncludePropertyPath
                                     ? $"{path}.{failure.PropertyName}"
@@ -617,7 +619,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             // Continue validating nested objects
-            var nestedErrors = ValidateNestedObjects(instance, options, depth, path);
+            IList<IMessageResult> nestedErrors = ValidateNestedObjects(instance, options, depth, path);
             errors.AddRange(nestedErrors);
 
             return errors;
@@ -640,7 +642,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
                 if (!Validator.TryValidateObject(instance, validationContext, validationResults, true))
                 {
-                    foreach (var result in validationResults)
+                    foreach (System.ComponentModel.DataAnnotations.ValidationResult result in validationResults)
                     {
                         var propertyName = result.MemberNames.Any()
                             ? string.Join(", ", result.MemberNames)
@@ -661,13 +663,13 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Try to resolve FluentValidator from DI
             if (_options.UseFluentValidation && _serviceProvider != null)
             {
-                var validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
+                Type validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
                 var validator = _serviceProvider.GetService(validatorType);
 
                 if (validator != null)
                 {
                     // Use reflection to call ValidateAsync
-                    var validateMethod = validatorType.GetMethod("ValidateAsync",
+                    MethodInfo? validateMethod = validatorType.GetMethod("ValidateAsync",
                         new[] { instance.GetType(), typeof(CancellationToken) });
 
                     if (validateMethod != null)
@@ -676,12 +678,12 @@ namespace Mvp24Hours.Application.Logic.Validation
                         if (task != null)
                         {
                             await task;
-                            var resultProperty = task.GetType().GetProperty("Result");
+                            PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
                             var result = resultProperty?.GetValue(task) as FluentValidation.Results.ValidationResult;
 
                             if (result != null && !result.IsValid)
                             {
-                                foreach (var failure in result.Errors)
+                                foreach (ValidationFailure? failure in result.Errors)
                                 {
                                     var fullPath = options.IncludePropertyPath
                                         ? $"{path}.{failure.PropertyName}"
@@ -699,7 +701,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             // Continue validating nested objects
-            var nestedErrors = await ValidateNestedObjectsAsync(instance, options, depth, path, cancellationToken);
+            IList<IMessageResult> nestedErrors = await ValidateNestedObjectsAsync(instance, options, depth, path, cancellationToken);
             errors.AddRange(nestedErrors);
 
             return errors;
@@ -707,7 +709,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
         private static bool IsSimpleType(Type type)
         {
-            var underlyingType = Nullable.GetUnderlyingType(type);
+            Type? underlyingType = Nullable.GetUnderlyingType(type);
             type = underlyingType ?? type;
 
             return type.IsPrimitive ||

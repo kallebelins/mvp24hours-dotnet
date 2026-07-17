@@ -278,10 +278,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
         private static Expression<Func<T, bool>> CreateKeyPredicate<T, TKey>(string propertyName, TKey value)
         {
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var property = Expression.Property(parameter, propertyName);
-            var constant = Expression.Constant(value, typeof(TKey));
-            var equals = Expression.Equal(property, constant);
+            ParameterExpression parameter = Expression.Parameter(typeof(T), "e");
+            MemberExpression property = Expression.Property(parameter, propertyName);
+            ConstantExpression constant = Expression.Constant(value, typeof(TKey));
+            BinaryExpression equals = Expression.Equal(property, constant);
 
             return Expression.Lambda<Func<T, bool>>(equals, parameter);
         }

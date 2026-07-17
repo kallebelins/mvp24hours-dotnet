@@ -204,7 +204,7 @@ public sealed class IdempotencyBehavior<TRequest, TResponse> : IPipelineBehavior
                     requestName,
                     idempotencyKey);
 
-                var cachedResponse = JsonSerializer.Deserialize<TResponse>(cachedValue, _jsonOptions);
+                TResponse? cachedResponse = JsonSerializer.Deserialize<TResponse>(cachedValue, _jsonOptions);
                 if (cachedResponse != null)
                 {
                     return cachedResponse;
@@ -227,14 +227,14 @@ public sealed class IdempotencyBehavior<TRequest, TResponse> : IPipelineBehavior
             idempotencyKey);
 
         // Execute the handler
-        var response = await next();
+        TResponse? response = await next();
 
         // Cache the response
         try
         {
             if (response != null)
             {
-                var duration = idempotent.IdempotencyDuration ?? _defaultDuration;
+                TimeSpan duration = idempotent.IdempotencyDuration ?? _defaultDuration;
                 var serialized = JsonSerializer.Serialize(response, _jsonOptions);
 
                 var options = new DistributedCacheEntryOptions

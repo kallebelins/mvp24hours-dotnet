@@ -125,7 +125,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-listasync-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.ListAsync(cancellationToken);
+                    IBusinessResult<IList<TEntity>> result = await base.ListAsync(cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-listasync-paged-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.ListAsync(criteria, cancellationToken);
+                    IBusinessResult<IList<TEntity>> result = await base.ListAsync(criteria, cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-listanyasync-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.ListAnyAsync(cancellationToken);
+                    IBusinessResult<bool> result = await base.ListAnyAsync(cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-listcountasync-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.ListCountAsync(cancellationToken);
+                    IBusinessResult<int> result = await base.ListCountAsync(cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-getbyidasync-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.GetByIdAsync(id, cancellationToken);
+                    IBusinessResult<TEntity> result = await base.GetByIdAsync(id, cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-getbyidasync-paged-cache-miss CacheKey={CacheKey}", cacheKey);
-                    var result = await base.GetByIdAsync(id, criteria, cancellationToken);
+                    IBusinessResult<TEntity> result = await base.GetByIdAsync(id, criteria, cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -311,7 +311,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// </summary>
         protected virtual string GenerateCacheKey(string operation, params object?[] parameters)
         {
-            var entityType = typeof(TEntity);
+            Type entityType = typeof(TEntity);
             var keyParts = new List<string>
             {
                 entityType.Name,
@@ -334,7 +334,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// </summary>
         protected virtual string GenerateCacheKeyFromExpression(string operation, Expression expression)
         {
-            var entityType = typeof(TEntity);
+            Type entityType = typeof(TEntity);
             var expressionHash = expression.ToString().GetHashCode().ToString("X8");
             return $"{entityType.Name}:{operation}:{expressionHash}";
         }

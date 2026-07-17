@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -54,12 +55,12 @@ namespace Mvp24Hours.Helpers
             var result = new List<string>();
             foreach (var obj in objs)
             {
-                var props = obj
+                IEnumerable<PropertyInfo> props = obj
                     .GetType()
                     .GetProperties()
                     .Where(p => p.GetValue(obj, null) != null);
 
-                foreach (var p in props)
+                foreach (PropertyInfo? p in props)
                 {
                     var value = p.GetValue(obj, null);
                     if (value is ICollection enumerable)
@@ -203,7 +204,7 @@ namespace Mvp24Hours.Helpers
 
                 if (headers != null && headers.AnyOrNotNull())
                 {
-                    foreach (var keyValue in headers)
+                    foreach (KeyValuePair<string, string> keyValue in headers)
                     {
                         client.Headers.Add(keyValue.Key.ToString(), keyValue.Value.ToString());
                     }
@@ -231,8 +232,8 @@ namespace Mvp24Hours.Helpers
 
                     if (bytes == null)
                     {
-                        using var response = client.GetResponse();
-                        using var content = response.GetResponseStream();
+                        using WebResponse response = client.GetResponse();
+                        using Stream content = response.GetResponseStream();
                         using var reader = new StreamReader(content!, EncodingRequest);
                         var result = await reader.ReadToEndAsync();
                         _logger?.LogDebug("Successfully received response from {Url}", url);
@@ -240,7 +241,7 @@ namespace Mvp24Hours.Helpers
                     }
                     else
                     {
-                        using var reqstream = client.GetRequestStream();
+                        using Stream reqstream = client.GetRequestStream();
                         reqstream.Write(bytes, 0, bytes.Length);
                         var httpResponse = (HttpWebResponse)client.GetResponse();
                         using var streamReader = new StreamReader(httpResponse.GetResponseStream()!, EncodingRequest);
@@ -254,7 +255,7 @@ namespace Mvp24Hours.Helpers
                     _logger?.LogError(we, "Error executing {Method} request to {Url}: {ErrorMessage}", method, url, we.Message);
                     if (we.Response != null)
                     {
-                        using var stream = we.Response.GetResponseStream();
+                        using Stream stream = we.Response.GetResponseStream();
                         using var reader = new StreamReader(stream!);
                         return reader.ReadToEnd();
                     }

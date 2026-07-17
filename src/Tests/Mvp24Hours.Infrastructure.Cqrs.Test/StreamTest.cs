@@ -23,7 +23,7 @@ public class StreamTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(GetItemsStreamRequest).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
         _mediator = sp.GetRequiredService<IMediator>();
         _streamSender = sp.GetRequiredService<IStreamSender>();
     }
@@ -91,7 +91,7 @@ public class StreamTest
         // Arrange
         var request = new GetNamesStreamRequest
         {
-            Names = new List<string> { "Alice", "Bob", "Charlie" }
+            Names = ["Alice", "Bob", "Charlie"]
         };
         var results = new List<string>();
 
@@ -156,7 +156,7 @@ public class StreamTest
         // Verify there were delays between items
         for (int i = 1; i < timestamps.Count; i++)
         {
-            var diff = timestamps[i] - timestamps[i - 1];
+            TimeSpan diff = timestamps[i] - timestamps[i - 1];
             Assert.True(diff.TotalMilliseconds >= 5, "Items should be received with delays");
         }
     }
@@ -165,7 +165,7 @@ public class StreamTest
     public async Task CreateStream_WithEmptyNames_ShouldReturnEmpty()
     {
         // Arrange
-        var request = new GetNamesStreamRequest { Names = new List<string>() };
+        var request = new GetNamesStreamRequest { Names = [] };
         var count = 0;
 
         // Act

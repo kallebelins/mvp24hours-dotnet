@@ -236,7 +236,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                         allEvents.Count);
 
                     // Clear events even without dispatcher to prevent memory leaks
-                    foreach (var entity in entitiesWithEvents)
+                    foreach (IHasDomainEvents? entity in entitiesWithEvents)
                     {
                         entity.ClearDomainEvents();
                     }
@@ -304,7 +304,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <param name="entities">The entities to track.</param>
         public void TrackEntities<T>(IEnumerable<T> entities) where T : class
         {
-            foreach (var entity in entities)
+            foreach (T entity in entities)
             {
                 TrackEntity(entity);
             }

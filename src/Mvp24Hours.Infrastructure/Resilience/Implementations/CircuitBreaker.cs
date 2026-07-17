@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
 
             try
             {
-                var result = await operation(context, cancellationToken);
+                TResult? result = await operation(context, cancellationToken);
                 RecordSuccess();
                 return result;
             }
@@ -164,10 +164,10 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
 
         private void UpdateState()
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             // Clean old operations outside sampling window
-            while (_recentOperations.TryPeek(out var op) &&
+            while (_recentOperations.TryPeek(out OperationResult? op) &&
                 now - op.Timestamp > _options.SamplingDuration)
             {
                 _recentOperations.TryDequeue(out _);
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
                 if (totalOperations >= _options.MinimumThroughput)
                 {
                     var failures = 0;
-                    foreach (var op in _recentOperations)
+                    foreach (OperationResult op in _recentOperations)
                     {
                         if (!op.Success)
                         {
@@ -239,7 +239,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Implementations
             if (_state == CircuitBreakerState.HalfOpen)
             {
                 // If recent operation succeeded, close the circuit
-                if (_recentOperations.TryPeek(out var lastOp) && lastOp.Success)
+                if (_recentOperations.TryPeek(out OperationResult? lastOp) && lastOp.Success)
                 {
                     _state = CircuitBreakerState.Closed;
                     _consecutiveFailures = 0;

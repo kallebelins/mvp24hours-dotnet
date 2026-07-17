@@ -96,10 +96,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors
             }
 
             // Get effective options
-            var options = resilientRequest?.ResilienceOptions ?? _defaultOptions;
+            NativeCqrsResilienceOptions options = resilientRequest?.ResilienceOptions ?? _defaultOptions;
 
             // Build or get the pipeline
-            var pipeline = GetOrBuildPipeline(options, typeof(TRequest).Name);
+            ResiliencePipeline<TResponse> pipeline = GetOrBuildPipeline(options, typeof(TRequest).Name);
 
             _logger?.LogDebug(
                 "Executing request {RequestType} with native resilience",
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors
             // Use exception type list if provided
             if (options.RetryableExceptionTypes is { Count: > 0 })
             {
-                foreach (var type in options.RetryableExceptionTypes)
+                foreach (Type type in options.RetryableExceptionTypes)
                 {
                     if (type.IsInstanceOfType(ex))
                     {

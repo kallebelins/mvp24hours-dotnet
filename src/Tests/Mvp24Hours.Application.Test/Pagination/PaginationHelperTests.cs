@@ -276,7 +276,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void GeneratePageNumbers_ForMiddlePage_ShouldIncludeWindowAndEdges()
         {
             // Act
-            var pages = PaginationHelper.GeneratePageNumbers(5, 10, 2);
+            IReadOnlyList<int> pages = PaginationHelper.GeneratePageNumbers(5, 10, 2);
 
             // Assert
             // Expected: [1, -1, 3, 4, 5, 6, 7, -1, 10]
@@ -292,7 +292,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void GeneratePageNumbers_ForFirstPage_ShouldNotHavePreviousEllipsis()
         {
             // Act
-            var pages = PaginationHelper.GeneratePageNumbers(1, 10, 2);
+            IReadOnlyList<int> pages = PaginationHelper.GeneratePageNumbers(1, 10, 2);
 
             // Assert
             pages[0].Should().Be(1);  // No ellipsis before first
@@ -302,7 +302,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void GeneratePageNumbers_ForLastPage_ShouldNotHaveNextEllipsis()
         {
             // Act
-            var pages = PaginationHelper.GeneratePageNumbers(10, 10, 2);
+            IReadOnlyList<int> pages = PaginationHelper.GeneratePageNumbers(10, 10, 2);
 
             // Assert
             pages[^1].Should().Be(10);  // No ellipsis after last
@@ -312,7 +312,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void GeneratePageNumbers_WithZeroPages_ShouldReturnEmpty()
         {
             // Act
-            var pages = PaginationHelper.GeneratePageNumbers(1, 0, 2);
+            IReadOnlyList<int> pages = PaginationHelper.GeneratePageNumbers(1, 0, 2);
 
             // Assert
             pages.Should().BeEmpty();
@@ -387,7 +387,7 @@ namespace Mvp24Hours.Application.Test.Pagination
             var criteria = new PagingCriteria(limit: 25, offset: 50);
 
             // Act
-            var metadata = PaginationHelper.FromCriteria(criteria, totalCount: 200);
+            PaginationMetadata metadata = PaginationHelper.FromCriteria(criteria, totalCount: 200);
 
             // Assert
             metadata.CurrentPage.Should().Be(3);  // offset 50 / limit 25 + 1 = 3

@@ -52,7 +52,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             }
 
             // Find the applicable policy
-            var policy = FindApplicablePolicy(context);
+            RateLimitPolicy? policy = FindApplicablePolicy(context);
             if (policy == null)
             {
                 return RateLimitPartition.GetNoLimiter<string>("no-policy");
@@ -114,9 +114,9 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             var path = context.Request.Path.Value ?? "/";
 
             // Check endpoint-specific policies
-            foreach (var (pattern, policyName) in _options.EndpointPolicies)
+            foreach ((string? pattern, string? policyName) in _options.EndpointPolicies)
             {
-                if (MatchesPath(path, pattern) && _options.Policies.TryGetValue(policyName, out var policy))
+                if (MatchesPath(path, pattern) && _options.Policies.TryGetValue(policyName, out RateLimitPolicy? policy))
                 {
                     // Check if path is excluded from this policy
                     if (!policy.ExcludedPaths.Any(excluded => MatchesPath(path, excluded)))
@@ -127,7 +127,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             }
 
             // Check policies with applied paths
-            foreach (var (name, policy) in _options.Policies)
+            foreach ((string? name, RateLimitPolicy? policy) in _options.Policies)
             {
                 if (policy.AppliedPaths.Count > 0)
                 {
@@ -140,7 +140,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             }
 
             // Return default policy
-            if (_options.Policies.TryGetValue(_options.DefaultPolicyName, out var defaultPolicy))
+            if (_options.Policies.TryGetValue(_options.DefaultPolicyName, out RateLimitPolicy? defaultPolicy))
             {
                 if (!defaultPolicy.ExcludedPaths.Any(excluded => MatchesPath(path, excluded)))
                 {
@@ -235,7 +235,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 return true;
 
             // Convert pattern to regex and cache
-            var regex = _pathPatternCache.GetOrAdd(pattern, p =>
+            Regex regex = _pathPatternCache.GetOrAdd(pattern, p =>
             {
                 var regexPattern = "^" + Regex.Escape(p)
                     .Replace("\\*\\*", ".*")
@@ -251,7 +251,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
         /// </summary>
         private bool IsWhitelistedIp(string clientIp)
         {
-            if (!IPAddress.TryParse(clientIp, out var ipAddress))
+            if (!IPAddress.TryParse(clientIp, out IPAddress? ipAddress))
                 return false;
 
             foreach (var whitelistEntry in _options.WhitelistedIps)
@@ -265,7 +265,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 else
                 {
                     // Exact IP match
-                    if (IPAddress.TryParse(whitelistEntry, out var whitelistIp) &&
+                    if (IPAddress.TryParse(whitelistEntry, out IPAddress? whitelistIp) &&
                         ipAddress.Equals(whitelistIp))
                         return true;
                 }
@@ -282,7 +282,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             try
             {
                 var parts = cidr.Split('/');
-                if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out var networkAddress) ||
+                if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out IPAddress? networkAddress) ||
                     !int.TryParse(parts[1], out var prefixLength))
                     return false;
 

@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
         {
-            var context = _contextAccessor?.Context;
+            IPipelineContext? context = _contextAccessor?.Context;
             var correlationId = context?.CorrelationId ?? message.Token ?? Guid.NewGuid().ToString("N");
             var operationId = Guid.NewGuid().ToString("N")[..8];
 
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             var startMemory = _options.TrackMemory ? GC.GetTotalMemory(false) : 0;
 
             // Create logging scope with context
-            using var scope = _logger.BeginScope(new
+            using IDisposable? scope = _logger.BeginScope(new
             {
                 CorrelationId = correlationId,
                 CausationId = context?.CausationId,
@@ -192,14 +192,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public void Execute(IPipelineMessage message, Action next)
         {
-            var context = _contextAccessor?.Context;
+            IPipelineContext? context = _contextAccessor?.Context;
             var correlationId = context?.CorrelationId ?? message.Token ?? Guid.NewGuid().ToString("N");
             var operationId = Guid.NewGuid().ToString("N")[..8];
 
             var stopwatch = Stopwatch.StartNew();
             var startMemory = _options.TrackMemory ? GC.GetTotalMemory(false) : 0;
 
-            using var scope = _logger.BeginScope(new
+            using IDisposable? scope = _logger.BeginScope(new
             {
                 CorrelationId = correlationId,
                 CausationId = context?.CausationId,

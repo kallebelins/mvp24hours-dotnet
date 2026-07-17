@@ -55,9 +55,9 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             {
                 // Get current state from cache
                 var stateBytes = await _cache.GetAsync(fullKey, cancellationToken);
-                var state = DeserializeState(stateBytes);
+                RateLimitState state = DeserializeState(stateBytes);
 
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
                 // Check if window has expired and reset if necessary
                 if (state.WindowStart.Add(window) <= now)
@@ -72,7 +72,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 // Check if limit exceeded
                 if (state.Count >= permitLimit)
                 {
-                    var retryAfter = state.WindowStart.Add(window) - now;
+                    TimeSpan retryAfter = state.WindowStart.Add(window) - now;
                     if (retryAfter < TimeSpan.Zero)
                         retryAfter = TimeSpan.Zero;
 
@@ -87,7 +87,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 state.Count++;
 
                 // Calculate expiry
-                var expiry = state.WindowStart.Add(window) - now;
+                TimeSpan expiry = state.WindowStart.Add(window) - now;
                 if (expiry <= TimeSpan.Zero)
                     expiry = window;
 
@@ -101,7 +101,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                     },
                     cancellationToken);
 
-                var timeToReset = state.WindowStart.Add(window) - now;
+                TimeSpan timeToReset = state.WindowStart.Add(window) - now;
                 return DistributedRateLimitResult.Success(state.Count, permitLimit, timeToReset);
             }
             catch (Exception ex)
@@ -133,7 +133,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 if (stateBytes == null)
                     return 0;
 
-                var state = DeserializeState(stateBytes);
+                RateLimitState state = DeserializeState(stateBytes);
                 return state.Count;
             }
             catch (Exception ex)
@@ -166,7 +166,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 if (stateBytes == null)
                     return null;
 
-                var state = DeserializeState(stateBytes);
+                RateLimitState state = DeserializeState(stateBytes);
                 // Note: Without knowing the window duration, we can only estimate
                 // This would require storing the window duration in the state
                 return _options.DefaultExpiry - (DateTimeOffset.UtcNow - state.WindowStart);
@@ -258,9 +258,9 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             TimeSpan window,
             CancellationToken cancellationToken = default)
         {
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            var entry = _entries.AddOrUpdate(
+            RateLimitEntry entry = _entries.AddOrUpdate(
                 key,
                 _ => new RateLimitEntry { Count = 1, WindowStart = now },
                 (_, existing) =>
@@ -281,7 +281,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                     return new RateLimitEntry { Count = existing.Count + 1, WindowStart = existing.WindowStart };
                 });
 
-            var timeToReset = entry.WindowStart.Add(window) - now;
+            TimeSpan timeToReset = entry.WindowStart.Add(window) - now;
             if (timeToReset < TimeSpan.Zero)
                 timeToReset = TimeSpan.Zero;
 
@@ -296,7 +296,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
         /// <inheritdoc />
         public Task<long> GetCurrentCountAsync(string key, CancellationToken cancellationToken = default)
         {
-            if (_entries.TryGetValue(key, out var entry))
+            if (_entries.TryGetValue(key, out RateLimitEntry? entry))
             {
                 return Task.FromResult(entry.Count);
             }

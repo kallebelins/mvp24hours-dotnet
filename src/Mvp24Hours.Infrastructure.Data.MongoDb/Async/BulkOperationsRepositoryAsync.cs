@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            var mongoOptions = ConvertToMongoOptions(options);
+            MongoDbBulkOperationOptions mongoOptions = ConvertToMongoOptions(options);
             return BulkInsertAsync(entities, mongoOptions, cancellationToken);
         }
 
@@ -151,7 +151,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 };
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            var mongoOptions = ConvertToMongoOptions(options);
+            MongoDbBulkOperationOptions mongoOptions = ConvertToMongoOptions(options);
             return BulkUpdateAsync(entities, mongoOptions, cancellationToken);
         }
 
@@ -268,16 +268,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 };
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var batchList = batch.ToList();
                     var writeModels = new List<WriteModel<T>>();
 
-                    foreach (var entity in batchList)
+                    foreach (T? entity in batchList)
                     {
-                        var filter = GetKeyFilter(entity);
+                        FilterDefinition<T> filter = GetKeyFilter(entity);
                         writeModels.Add(new ReplaceOneModel<T>(filter, entity));
                     }
 
@@ -356,7 +356,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
-            var mongoOptions = ConvertToMongoOptions(options);
+            MongoDbBulkOperationOptions mongoOptions = ConvertToMongoOptions(options);
             return BulkDeleteAsync(entities, mongoOptions, cancellationToken);
         }
 
@@ -392,16 +392,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 };
 
                 // Process in batches
-                foreach (var batch in Batch(entities, options.BatchSize))
+                foreach (IEnumerable<T> batch in Batch(entities, options.BatchSize))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var batchList = batch.ToList();
                     var writeModels = new List<WriteModel<T>>();
 
-                    foreach (var entity in batchList)
+                    foreach (T? entity in batchList)
                     {
-                        var filter = GetKeyFilter(entity);
+                        FilterDefinition<T> filter = GetKeyFilter(entity);
                         writeModels.Add(new DeleteOneModel<T>(filter));
                     }
 
@@ -482,8 +482,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
             try
             {
-                var filter = Builders<T>.Filter.Where(predicate);
-                var update = Builders<T>.Update.Set(property, value);
+                FilterDefinition<T> filter = Builders<T>.Filter.Where(predicate);
+                UpdateDefinition<T> update = Builders<T>.Update.Set(property, value);
 
                 UpdateResult result;
                 if (dbContext.Session != null)
@@ -539,17 +539,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 var ourSetters = new SetPropertyCalls<T>();
                 setPropertyCalls.Compile()(ourSetters);
 
-                var setters = ourSetters.Setters;
+                IReadOnlyList<SetPropertyCall> setters = ourSetters.Setters;
                 if (!setters.Any())
                 {
                     return 0;
                 }
 
-                var filter = Builders<T>.Filter.Where(predicate);
-                var updateBuilder = Builders<T>.Update;
+                FilterDefinition<T> filter = Builders<T>.Filter.Where(predicate);
+                UpdateDefinitionBuilder<T> updateBuilder = Builders<T>.Update;
                 var updates = new List<UpdateDefinition<T>>();
 
-                foreach (var setter in setters)
+                foreach (SetPropertyCall setter in setters)
                 {
                     // Get the property name from the expression
                     var propertyName = GetPropertyName(setter.Property);
@@ -558,7 +558,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     {
                         // For expression-based values, we need to use aggregation pipeline
                         // This is more complex in MongoDB - for now, compile and evaluate
-                        var compiledExpr = setter.ValueExpression.Compile();
+                        Delegate compiledExpr = setter.ValueExpression.Compile();
                         throw new NotSupportedException(
                             "Expression-based property setters are not supported in MongoDB bulk updates. " +
                             "Use constant values or the UpdateDefinition builder directly.");
@@ -566,12 +566,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     else
                     {
                         // Create Set update for constant value
-                        var setMethod = typeof(UpdateDefinitionBuilder<T>)
+                        MethodInfo setMethod = typeof(UpdateDefinitionBuilder<T>)
                             .GetMethods()
                             .First(m => m.Name == "Set" && m.GetParameters().Length == 2);
 
-                        var propertyType = GetPropertyTypeFromExpression(setter.Property);
-                        var genericSetMethod = setMethod.MakeGenericMethod(propertyType);
+                        Type propertyType = GetPropertyTypeFromExpression(setter.Property);
+                        MethodInfo genericSetMethod = setMethod.MakeGenericMethod(propertyType);
 
                         var updateDef = (UpdateDefinition<T>?)genericSetMethod.Invoke(
                             updateBuilder,
@@ -582,7 +582,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                     }
                 }
 
-                var combinedUpdate = updateBuilder.Combine(updates);
+                UpdateDefinition<T> combinedUpdate = updateBuilder.Combine(updates);
 
                 UpdateResult result;
                 if (dbContext.Session != null)
@@ -636,7 +636,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
             try
             {
-                var filter = Builders<T>.Filter.Where(predicate);
+                FilterDefinition<T> filter = Builders<T>.Filter.Where(predicate);
 
                 DeleteResult result;
                 if (dbContext.Session != null)
@@ -739,7 +739,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
                 _logger?.LogWarning(ex, "BulkWriteAsync partially failed: {ErrorCount} errors in {ElapsedMs}ms",
                     ex.WriteErrors?.Count ?? 0, stopwatch.ElapsedMilliseconds);
 
-                var result = ex.Result;
+                BulkWriteResult<T> result = ex.Result;
                 if (!options.IsOrdered && result != null)
                 {
                     return MongoDbBulkOperationResult.Success(
@@ -779,7 +779,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             if (filter == null) throw new ArgumentNullException(nameof(filter));
             if (update == null) throw new ArgumentNullException(nameof(update));
 
-            var filterDefinition = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDefinition = Builders<T>.Filter.Where(filter);
             return await UpdateManyAsync(filterDefinition, update, cancellationToken);
         }
 
@@ -844,7 +844,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (filter == null) throw new ArgumentNullException(nameof(filter));
 
-            var filterDefinition = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDefinition = Builders<T>.Filter.Where(filter);
             return await DeleteManyAsync(filterDefinition, cancellationToken);
         }
 
@@ -913,7 +913,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         private static IEnumerable<IEnumerable<TItem>> Batch<TItem>(IEnumerable<TItem> source, int batchSize)
         {
-            using var enumerator = source.GetEnumerator();
+            using IEnumerator<TItem> enumerator = source.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 yield return YieldBatchElements(enumerator, batchSize - 1);

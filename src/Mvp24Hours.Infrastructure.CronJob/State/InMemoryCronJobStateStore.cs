@@ -27,7 +27,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.State
         /// <inheritdoc />
         public Task<CronJobState?> GetStateAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            _states.TryGetValue(jobName, out var state);
+            _states.TryGetValue(jobName, out CronJobState? state);
             return Task.FromResult(state);
         }
 
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.State
         /// <inheritdoc />
         public Task<bool> IsPausedAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            if (_states.TryGetValue(jobName, out var state))
+            if (_states.TryGetValue(jobName, out CronJobState? state))
             {
                 return Task.FromResult(state.IsPaused);
             }

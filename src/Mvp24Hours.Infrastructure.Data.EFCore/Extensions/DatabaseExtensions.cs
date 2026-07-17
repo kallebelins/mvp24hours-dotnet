@@ -18,10 +18,10 @@ namespace Mvp24Hours.Extensions
                                     int? retry = 0) where TContext : Mvp24HoursContext
         {
             int retryForAvailability = retry.Value;
-            using (var scope = host.Services.CreateScope())
+            using (IServiceScope scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetService<TContext>();
+                IServiceProvider services = scope.ServiceProvider;
+                TContext? context = services.GetService<TContext>();
                 try
                 {
                     InvokeSeeder(seeder, context, services);
@@ -52,10 +52,10 @@ namespace Mvp24Hours.Extensions
                                         Action<TContext, IServiceProvider> seeder,
                                         string[] commandStrings) where TContext : Mvp24HoursContext
         {
-            using (var scope = host.Services.CreateScope())
+            using (IServiceScope scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetService<TContext>();
+                IServiceProvider services = scope.ServiceProvider;
+                TContext? context = services.GetService<TContext>();
                 try
                 {
                     InvokeSeederSQL(seeder, context, services, commandStrings);
@@ -103,10 +103,10 @@ namespace Mvp24Hours.Extensions
                             int? retry = 0) where TContext : Mvp24HoursContext
         {
             int retryForAvailability = retry.Value;
-            using (var scope = host.Services.CreateScope())
+            using (IServiceScope scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetService<TContext>();
+                IServiceProvider services = scope.ServiceProvider;
+                TContext? context = services.GetService<TContext>();
                 try
                 {
                     await InvokeSeederAsync(seeder, context, services);
@@ -137,10 +137,10 @@ namespace Mvp24Hours.Extensions
                                         Action<TContext, IServiceProvider> seeder,
                                         string[] commandStrings) where TContext : Mvp24HoursContext
         {
-            using (var scope = host.Services.CreateScope())
+            using (IServiceScope scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetService<TContext>();
+                IServiceProvider services = scope.ServiceProvider;
+                TContext? context = services.GetService<TContext>();
                 try
                 {
                     await InvokeSeederSQLAsync(seeder, context, services, commandStrings);

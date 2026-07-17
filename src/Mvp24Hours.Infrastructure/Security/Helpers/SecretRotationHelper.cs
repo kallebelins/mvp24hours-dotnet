@@ -50,14 +50,14 @@ namespace Mvp24Hours.Infrastructure.Security.Helpers
                 throw new ArgumentException("Secret name cannot be null or empty.", nameof(secretName));
             }
 
-            var lastRotation = await GetLastRotationDateAsync(secretName, cancellationToken);
+            DateTime? lastRotation = await GetLastRotationDateAsync(secretName, cancellationToken);
             if (lastRotation == null)
             {
                 // If we can't determine the last rotation date, assume it needs rotation
                 return true;
             }
 
-            var age = DateTime.UtcNow - lastRotation.Value;
+            TimeSpan age = DateTime.UtcNow - lastRotation.Value;
             return age > maxAge;
         }
 

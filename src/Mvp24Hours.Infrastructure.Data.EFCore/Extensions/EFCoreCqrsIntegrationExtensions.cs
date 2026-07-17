@@ -387,7 +387,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 
                 if (options.UseDomainEventInterceptor)
                 {
-                    var dispatcher = sp.GetService<IDomainEventDispatcherEFCore>();
+                    IDomainEventDispatcherEFCore? dispatcher = sp.GetService<IDomainEventDispatcherEFCore>();
                     builder.AddDomainEventInterceptor(dispatcher);
                 }
             }, lifetime);

@@ -5,11 +5,13 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -78,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                 // Step 2: Check pending migrations
                 if (_options.CheckPendingMigrations)
                 {
-                    var pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    IEnumerable<string> pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
                     pendingMigrations.AddRange(pending);
 
                     if (pendingMigrations.Count > 0)
@@ -116,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
 
                 stopwatch.Stop();
 
-                var result = CreateResult(issues, warnings, pendingMigrations, stopwatch.Elapsed, issues.Count == 0);
+                SchemaValidationResult result = CreateResult(issues, warnings, pendingMigrations, stopwatch.Elapsed, issues.Count == 0);
 
                 // Cache result
                 if (_options.CacheValidationResults)
@@ -177,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         /// <inheritdoc/>
         public ModelSummary GetModelSummary()
         {
-            var model = _dbContext.Model;
+            IModel model = _dbContext.Model;
             var entityTypes = model.GetEntityTypes().ToList();
             var tables = entityTypes
                 .Select(e => e.GetTableName())
@@ -207,10 +209,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
             List<string> warnings,
             CancellationToken cancellationToken)
         {
-            var model = _dbContext.Model;
-            var entityTypes = model.GetEntityTypes();
+            IModel model = _dbContext.Model;
+            IEnumerable<IEntityType> entityTypes = model.GetEntityTypes();
 
-            foreach (var entityType in entityTypes)
+            foreach (IEntityType entityType in entityTypes)
             {
                 var tableName = entityType.GetTableName();
                 var schema = entityType.GetSchema();
@@ -251,18 +253,18 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
             List<string> warnings,
             CancellationToken cancellationToken)
         {
-            var model = _dbContext.Model;
-            var entityTypes = model.GetEntityTypes();
+            IModel model = _dbContext.Model;
+            IEnumerable<IEntityType> entityTypes = model.GetEntityTypes();
 
-            foreach (var entityType in entityTypes)
+            foreach (IEntityType entityType in entityTypes)
             {
                 var tableName = entityType.GetTableName();
                 if (string.IsNullOrEmpty(tableName) || _options.ExcludedTables.Contains(tableName))
                     continue;
 
-                var properties = entityType.GetProperties();
+                IEnumerable<IProperty> properties = entityType.GetProperties();
 
-                foreach (var property in properties)
+                foreach (IProperty property in properties)
                 {
                     var columnName = property.GetColumnName();
                     if (string.IsNullOrEmpty(columnName))
@@ -294,14 +296,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
 
         private async Task<bool> CheckTableExistsAsync(string tableName, string? schema, CancellationToken cancellationToken)
         {
-            var connection = _dbContext.Database.GetDbConnection();
+            DbConnection connection = _dbContext.Database.GetDbConnection();
 
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);
             }
 
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandTimeout = (int)_options.ValidationTimeout.TotalSeconds;
 
             // SQL Server syntax - adjust for other databases
@@ -312,12 +314,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                     WHERE TABLE_SCHEMA = @Schema AND TABLE_NAME = @TableName
                 ) THEN 1 ELSE 0 END";
 
-            var schemaParam = command.CreateParameter();
+            DbParameter schemaParam = command.CreateParameter();
             schemaParam.ParameterName = "@Schema";
             schemaParam.Value = schemaFilter;
             command.Parameters.Add(schemaParam);
 
-            var tableParam = command.CreateParameter();
+            DbParameter tableParam = command.CreateParameter();
             tableParam.ParameterName = "@TableName";
             tableParam.Value = tableName;
             command.Parameters.Add(tableParam);
@@ -328,14 +330,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
 
         private async Task<bool> CheckColumnExistsAsync(string tableName, string columnName, CancellationToken cancellationToken)
         {
-            var connection = _dbContext.Database.GetDbConnection();
+            DbConnection connection = _dbContext.Database.GetDbConnection();
 
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);
             }
 
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandTimeout = (int)_options.ValidationTimeout.TotalSeconds;
 
             command.CommandText = @"
@@ -344,12 +346,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                     WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @ColumnName
                 ) THEN 1 ELSE 0 END";
 
-            var tableParam = command.CreateParameter();
+            DbParameter tableParam = command.CreateParameter();
             tableParam.ParameterName = "@TableName";
             tableParam.Value = tableName;
             command.Parameters.Add(tableParam);
 
-            var columnParam = command.CreateParameter();
+            DbParameter columnParam = command.CreateParameter();
             columnParam.ParameterName = "@ColumnName";
             columnParam.Value = columnName;
             command.Parameters.Add(columnParam);

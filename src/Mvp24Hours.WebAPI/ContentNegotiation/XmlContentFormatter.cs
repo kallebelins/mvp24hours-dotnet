@@ -32,7 +32,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
     {
         private readonly ContentNegotiationOptions _options;
         private readonly XmlWriterSettings _xmlSettings;
-        private readonly Dictionary<Type, XmlSerializer> _serializerCache = new();
+        private readonly Dictionary<Type, XmlSerializer> _serializerCache = [];
         private readonly object _cacheLock = new();
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             using var stringWriter = new StringWriter();
             using var xmlWriter = XmlWriter.Create(stringWriter, _xmlSettings);
 
-            var type = value.GetType();
+            Type type = value.GetType();
 
             if (_options.XmlOptions.UseDataContractSerializer)
             {
@@ -105,7 +105,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
             else
             {
-                var serializer = GetOrCreateSerializer(type);
+                XmlSerializer serializer = GetOrCreateSerializer(type);
                 serializer.Serialize(xmlWriter, value);
             }
 
@@ -123,12 +123,12 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
                 return;
             }
 
-            var xmlSettingsWithEncoding = _xmlSettings.Clone();
+            XmlWriterSettings xmlSettingsWithEncoding = _xmlSettings.Clone();
             xmlSettingsWithEncoding.Encoding = encoding;
 
             await using var xmlWriter = XmlWriter.Create(stream, xmlSettingsWithEncoding);
 
-            var type = value.GetType();
+            Type type = value.GetType();
 
             if (_options.XmlOptions.UseDataContractSerializer)
             {
@@ -137,7 +137,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
             else
             {
-                var serializer = GetOrCreateSerializer(type);
+                XmlSerializer serializer = GetOrCreateSerializer(type);
                 serializer.Serialize(xmlWriter, value);
             }
 
@@ -167,7 +167,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <inheritdoc />
         public async Task SerializeProblemDetailsAsync(Stream stream, ProblemDetails problemDetails, Encoding encoding, CancellationToken cancellationToken = default)
         {
-            var xmlSettingsWithEncoding = _xmlSettings.Clone();
+            XmlWriterSettings xmlSettingsWithEncoding = _xmlSettings.Clone();
             xmlSettingsWithEncoding.Encoding = encoding;
             xmlSettingsWithEncoding.Async = true;
 
@@ -221,7 +221,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
 
             // Write extensions
-            foreach (var extension in problemDetails.Extensions)
+            foreach (KeyValuePair<string, object?> extension in problemDetails.Extensions)
             {
                 if (extension.Value != null)
                 {
@@ -252,7 +252,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
             else if (value is IDictionary<string, object> dict)
             {
-                foreach (var kvp in dict)
+                foreach (KeyValuePair<string, object> kvp in dict)
                 {
                     WriteExtensionValue(writer, kvp.Key, kvp.Value);
                 }
@@ -269,7 +269,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         {
             lock (_cacheLock)
             {
-                if (_serializerCache.TryGetValue(type, out var serializer))
+                if (_serializerCache.TryGetValue(type, out XmlSerializer? serializer))
                 {
                     return serializer;
                 }
@@ -284,7 +284,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         {
             if (type.IsGenericType && typeof(IEnumerable).IsAssignableFrom(type))
             {
-                var elementType = type.GetGenericArguments()[0];
+                Type elementType = type.GetGenericArguments()[0];
                 var root = new XmlRootAttribute(_options.XmlOptions.CollectionRootName);
                 return new XmlSerializer(type, root);
             }

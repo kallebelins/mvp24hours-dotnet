@@ -6,6 +6,7 @@
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Fixtures;
 using Mvp24Hours.Application.Integration.Test.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
@@ -36,16 +37,16 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
 
     private async Task SeedTestDataAsync()
     {
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // Create categories
         var electronics = new Category { Name = "Electronics", Description = "Electronic devices", IsActive = true };
         var clothing = new Category { Name = "Clothing", Description = "Apparel", IsActive = true };
         var books = new Category { Name = "Books", Description = "Literature", IsActive = true };
 
-        await categoryService.AddAsync(new List<Category> { electronics, clothing, books });
+        await categoryService.AddAsync([electronics, clothing, books]);
 
         // Create 50 products for pagination testing
         var products = new List<Product>();
@@ -70,13 +71,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_FirstPage_ShouldReturnPagedResults()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(10, 0); // Page 1, 10 items
 
         // Act
-        var result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
+        IPagingResult<IList<Product>> result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
 
         // Assert
         result.Should().NotBeNull();
@@ -91,8 +92,8 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_SecondPage_ShouldReturnDifferentResults()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         // Note: In PagingCriteria, offset is PAGE INDEX (0-based), not record offset
         // So page 0 = first page, page 1 = second page, etc.
@@ -100,8 +101,8 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
         var secondPageCriteria = new PagingCriteria(10, 1); // Second page (10 items, page index 1)
 
         // Act
-        var firstPageResult = await productPagingService.ListWithPaginationAsync(firstPageCriteria);
-        var secondPageResult = await productPagingService.ListWithPaginationAsync(secondPageCriteria);
+        IPagingResult<IList<Product>> firstPageResult = await productPagingService.ListWithPaginationAsync(firstPageCriteria);
+        IPagingResult<IList<Product>> secondPageResult = await productPagingService.ListWithPaginationAsync(secondPageCriteria);
 
         // Assert
         firstPageResult.HasData().Should().BeTrue("First page should have data");
@@ -117,13 +118,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_WithDifferentPageSizes_ShouldRespectLimit()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         // Act
-        var result5 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(5, 0));
-        var result15 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(15, 0));
-        var result25 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(25, 0));
+        IPagingResult<IList<Product>> result5 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(5, 0));
+        IPagingResult<IList<Product>> result15 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(15, 0));
+        IPagingResult<IList<Product>> result25 = await productPagingService.ListWithPaginationAsync(new PagingCriteria(25, 0));
 
         // Assert
         result5.GetDataValue()!.Count.Should().Be(5);
@@ -139,13 +140,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByWithPaginationAsync_WithFilter_ShouldReturnFilteredPagedResults()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(10, 0);
 
         // Act
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.IsActive,
             pagingCriteria);
 
@@ -160,13 +161,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByWithPaginationAsync_WithPriceFilter_ShouldReturnCorrectProducts()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(100, 0);
 
         // Act
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.Price > 100m,
             pagingCriteria);
 
@@ -181,17 +182,17 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByWithPaginationAsync_WithCategoryFilter_ShouldReturnProductsFromCategory()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
-        var categoriesResult = await categoryService.GetByAsync(c => c.Name == "Electronics");
+        IBusinessResult<IList<Category>> categoriesResult = await categoryService.GetByAsync(c => c.Name == "Electronics");
         var electronicsId = categoriesResult.GetDataValue()!.First().Id;
 
         var pagingCriteria = new PagingCriteria(10, 0);
 
         // Act
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.CategoryId == electronicsId,
             pagingCriteria);
 
@@ -210,11 +211,11 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListCountAsync_ShouldReturnTotalCount()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         // Act
-        var result = await productPagingService.ListCountAsync();
+        IBusinessResult<int> result = await productPagingService.ListCountAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -226,12 +227,12 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByCountAsync_WithFilter_ShouldReturnFilteredCount()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         // Act
-        var activeCount = await productPagingService.GetByCountAsync(p => p.IsActive);
-        var inactiveCount = await productPagingService.GetByCountAsync(p => !p.IsActive);
+        IBusinessResult<int> activeCount = await productPagingService.GetByCountAsync(p => p.IsActive);
+        IBusinessResult<int> inactiveCount = await productPagingService.GetByCountAsync(p => !p.IsActive);
 
         // Assert
         activeCount.GetDataValue().Should().Be(40); // 50 - (50/5) = 40 active
@@ -246,13 +247,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_BeyondLastPage_ShouldReturnEmptyList()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(10, 1000); // Way beyond available data
 
         // Act
-        var result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
+        IPagingResult<IList<Product>> result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
 
         // Assert
         result.Should().NotBeNull();
@@ -264,11 +265,11 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_LastPartialPage_ShouldReturnRemainingItems()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         // First verify we have 50 items
-        var totalCount = await productPagingService.ListCountAsync();
+        IBusinessResult<int> totalCount = await productPagingService.ListCountAsync();
         totalCount.HasData().Should().BeTrue("Need test data to be seeded");
         totalCount.GetDataValue().Should().Be(50, "Should have 50 products for this test");
 
@@ -277,7 +278,7 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
         var pagingCriteria = new PagingCriteria(15, 3); // Page 4 (index 3), 15 items per page
 
         // Act
-        var result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
+        IPagingResult<IList<Product>> result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
 
         // Assert
         result.Should().NotBeNull();
@@ -290,13 +291,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task ListWithPaginationAsync_SingleItemPage_ShouldWork()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(1, 0);
 
         // Act
-        var result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
+        IPagingResult<IList<Product>> result = await productPagingService.ListWithPaginationAsync(pagingCriteria);
 
         // Assert
         result.Should().NotBeNull();
@@ -312,13 +313,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByWithPaginationAsync_ComplexFilter_ShouldReturnCorrectResults()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(100, 0);
 
         // Act - Products that are active, price between 50 and 150, and stock > 100
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.IsActive && p.Price >= 50m && p.Price <= 150m && p.StockQuantity > 100,
             pagingCriteria);
 
@@ -338,13 +339,13 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
     public async Task GetByWithPaginationAsync_ContainsFilter_ShouldWork()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        ProductPagingService productPagingService = scope.ServiceProvider.GetRequiredService<ProductPagingService>();
 
         var pagingCriteria = new PagingCriteria(100, 0);
 
         // Act
-        var result = await productPagingService.GetByWithPaginationAsync(
+        IPagingResult<IList<Product>> result = await productPagingService.GetByWithPaginationAsync(
             p => p.Name.Contains("01"), // Product 01, 010, etc.
             pagingCriteria);
 

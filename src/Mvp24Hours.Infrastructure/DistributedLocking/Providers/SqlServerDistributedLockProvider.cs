@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             CancellationToken cancellationToken)
         {
             // SQL Server locks don't have explicit expiration, but we track it for consistency
-            var expiresAt = DateTimeOffset.UtcNow.Add(duration);
+            DateTimeOffset expiresAt = DateTimeOffset.UtcNow.Add(duration);
 
             try
             {

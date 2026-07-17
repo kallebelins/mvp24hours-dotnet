@@ -88,13 +88,13 @@ namespace Mvp24Hours.WebAPI.Binders
                 data = context.Request.GetFromQueryString<T>() ?? new T();
 
                 // Validate using FluentValidation (if available) or DataAnnotations
-                var serviceProvider = context.RequestServices;
-                var fluentValidator = serviceProvider?.GetService<IValidator<T>>();
+                IServiceProvider serviceProvider = context.RequestServices;
+                IValidator<T>? fluentValidator = serviceProvider?.GetService<IValidator<T>>();
 
                 if (fluentValidator != null)
                 {
                     // Use FluentValidation
-                    var validationResult = fluentValidator.Validate(data);
+                    FluentValidation.Results.ValidationResult validationResult = fluentValidator.Validate(data);
                     if (!validationResult.IsValid)
                     {
                         validationErrors = validationResult.Errors

@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
-                var repository = serviceProvider.GetService<IRepository<T>>()
+                IRepository<T> repository = serviceProvider.GetService<IRepository<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 this.repositories.Add(typeof(T), repository);
             }

@@ -77,7 +77,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             var result = template;
 
-            foreach (var (key, value) in parameters)
+            foreach ((string? key, object? value) in parameters)
             {
                 var placeholder = $"{{{key}}}";
                 var replacement = value?.ToString() ?? "null";
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             for (var i = 0; i < parameterValues.Length && i < parameterInfos.Length; i++)
             {
-                var paramInfo = parameterInfos[i];
+                ParameterInfo paramInfo = parameterInfos[i];
                 var paramValue = parameterValues[i];
 
                 var valueStr = SerializeValue(paramValue);
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return "null";
             }
 
-            var type = value.GetType();
+            Type type = value.GetType();
 
             // Handle primitive types directly
             if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) ||

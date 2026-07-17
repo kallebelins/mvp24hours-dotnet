@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
             _logger?.LogInformation("Started watching collection '{CollectionName}' for changes.",
                 _collection.CollectionNamespace.CollectionName);
 
-            using var cursor = await _collection.WatchAsync(options, cancellationToken);
+            using IChangeStreamCursor<ChangeStreamDocument<TDocument>> cursor = await _collection.WatchAsync(options, cancellationToken);
 
             await ProcessCursorAsync(cursor, handler, cancellationToken);
         }
@@ -106,7 +106,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
 
             options ??= CreateDefaultOptions();
 
-            using var cursor = await _collection.WatchAsync(pipeline, options, cancellationToken);
+            using IChangeStreamCursor<ChangeStreamDocument<TDocument>> cursor = await _collection.WatchAsync(pipeline, options, cancellationToken);
 
             await ProcessCursorAsync(cursor, handler, cancellationToken);
         }
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
             }
 
             var operationTypeStrings = operationTypes.Select(GetOperationTypeString).ToList();
-            var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
+            PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
                 .Match(change => operationTypeStrings.Contains(change.OperationType.ToString().ToLower()));
 
             await WatchCollectionAsync(handler, pipeline, options, cancellationToken);
@@ -187,7 +187,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
+            PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
                 .Match(change => change.OperationType == ChangeStreamOperationType.Insert);
 
             await WatchCollectionAsync(async change =>
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
                     : ChangeStreamFullDocumentOption.Default
             };
 
-            var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
+            PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
                 .Match(change =>
                     change.OperationType == ChangeStreamOperationType.Update ||
                     change.OperationType == ChangeStreamOperationType.Replace);
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
+            PipelineDefinition<ChangeStreamDocument<TDocument>, ChangeStreamDocument<TDocument>> pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<TDocument>>()
                 .Match(change => change.OperationType == ChangeStreamOperationType.Delete);
 
             await WatchCollectionAsync(async change =>
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams
         {
             while (await cursor.MoveNextAsync(cancellationToken))
             {
-                foreach (var change in cursor.Current)
+                foreach (ChangeStreamDocument<TDocument> change in cursor.Current)
                 {
                     try
                     {

@@ -29,7 +29,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Execute_Successfully()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Act
@@ -47,7 +47,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Retry_And_Eventually_Succeed()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
         var executionCount = 0;
 
@@ -72,7 +72,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Throw_CircuitBreakerOpenException_When_Manually_Tripped()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Manually trip the circuit breaker
@@ -94,7 +94,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Return_Fallback_When_CircuitBreaker_Open()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Manually trip the circuit breaker
@@ -117,7 +117,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Return_Fallback_From_Factory()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Manually trip the circuit breaker
@@ -140,7 +140,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Execute_With_Custom_Timeout()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Act
@@ -160,7 +160,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Throw_Timeout_Exception_When_Exceeds_Timeout()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.EnableRetry = false; // Disable retry to make test faster
         var policy = new MongoDbResiliencyPolicy(options);
 
@@ -181,7 +181,7 @@ public class MongoDbResiliencyPolicyTests
     public void Should_Report_Circuit_State()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Act & Assert
@@ -192,11 +192,11 @@ public class MongoDbResiliencyPolicyTests
     public void Should_Provide_Metrics()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Act
-        var metrics = policy.Metrics;
+        ICircuitBreakerMetrics metrics = policy.Metrics;
 
         // Assert
         metrics.Should().NotBeNull();
@@ -208,7 +208,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Update_Metrics_On_Success()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
 
         // Act
@@ -226,7 +226,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Update_Metrics_On_Failure()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.EnableRetry = false;
         var policy = new MongoDbResiliencyPolicy(options);
 
@@ -249,7 +249,7 @@ public class MongoDbResiliencyPolicyTests
     public void Should_Manually_Reset_CircuitBreaker()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 1;
         options.CircuitBreakerMinimumThroughput = 1;
         var policy = new MongoDbResiliencyPolicy(options);
@@ -269,7 +269,7 @@ public class MongoDbResiliencyPolicyTests
     public void Should_Manually_Trip_CircuitBreaker()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
         policy.CircuitState.Should().Be(CircuitBreakerState.Closed);
 
@@ -284,7 +284,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Execute_Void_Operation()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
         var executed = false;
 
@@ -303,13 +303,13 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Respect_Cancellation_Token()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbResiliencyPolicy(options);
         using var cts = new CancellationTokenSource();
 
         // Act
         var executionStarted = new TaskCompletionSource<bool>();
-        var task = policy.ExecuteAsync(async ct =>
+        Task<string> task = policy.ExecuteAsync(async ct =>
         {
             executionStarted.SetResult(true);
             await Task.Delay(10000, ct);
@@ -330,7 +330,7 @@ public class MongoDbResiliencyPolicyTests
     public async Task Should_Track_Circuit_Breaker_Trips()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         options.CircuitBreakerDurationSeconds = 0; // Immediate transition

@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         private readonly IMongoCollection<T> _collection;
         private FilterDefinition<T> _filter = Builders<T>.Filter.Empty;
         private SortDefinition<T>? _sort;
-        private readonly List<(string FieldName, bool Descending)> _sortFields = new();
+        private readonly List<(string FieldName, bool Descending)> _sortFields = [];
         private ProjectionDefinition<T> _projection;
 
         private MongoDbKeysetPagination(IMongoCollection<T> collection)
@@ -157,9 +157,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             int pageSize = 20,
             CancellationToken cancellationToken = default)
         {
-            var options = BuildFindOptions(pageSize);
-            var cursor = await _collection.FindAsync(_filter, options, cancellationToken);
-            var items = await cursor.ToListAsync(cancellationToken);
+            FindOptions<T> options = BuildFindOptions(pageSize);
+            IAsyncCursor<T> cursor = await _collection.FindAsync(_filter, options, cancellationToken);
+            List<T> items = await cursor.ToListAsync(cancellationToken);
 
             return CreatePagedResult(items, pageSize);
         }
@@ -176,12 +176,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             int pageSize = 20,
             CancellationToken cancellationToken = default)
         {
-            var cursorFilter = BuildAfterCursorFilter(afterCursor);
-            var combinedFilter = Builders<T>.Filter.And(_filter, cursorFilter);
+            FilterDefinition<T> cursorFilter = BuildAfterCursorFilter(afterCursor);
+            FilterDefinition<T> combinedFilter = Builders<T>.Filter.And(_filter, cursorFilter);
 
-            var options = BuildFindOptions(pageSize);
-            var cursor = await _collection.FindAsync(combinedFilter, options, cancellationToken);
-            var items = await cursor.ToListAsync(cancellationToken);
+            FindOptions<T> options = BuildFindOptions(pageSize);
+            IAsyncCursor<T> cursor = await _collection.FindAsync(combinedFilter, options, cancellationToken);
+            List<T> items = await cursor.ToListAsync(cancellationToken);
 
             return CreatePagedResult(items, pageSize);
         }
@@ -198,11 +198,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             int pageSize = 20,
             CancellationToken cancellationToken = default)
         {
-            var cursorFilter = BuildBeforeCursorFilter(beforeCursor);
-            var combinedFilter = Builders<T>.Filter.And(_filter, cursorFilter);
+            FilterDefinition<T> cursorFilter = BuildBeforeCursorFilter(beforeCursor);
+            FilterDefinition<T> combinedFilter = Builders<T>.Filter.And(_filter, cursorFilter);
 
             // Reverse sort for backward pagination
-            var reversedSort = BuildReversedSort();
+            SortDefinition<T>? reversedSort = BuildReversedSort();
 
             var options = new FindOptions<T>
             {
@@ -211,8 +211,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
                 Projection = _projection
             };
 
-            var cursor = await _collection.FindAsync(combinedFilter, options, cancellationToken);
-            var items = await cursor.ToListAsync(cancellationToken);
+            IAsyncCursor<T> cursor = await _collection.FindAsync(combinedFilter, options, cancellationToken);
+            List<T> items = await cursor.ToListAsync(cancellationToken);
 
             // Reverse items back to correct order
             items.Reverse();
@@ -230,12 +230,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
                 return;
             }
 
-            var sortBuilder = Builders<T>.Sort;
+            SortDefinitionBuilder<T> sortBuilder = Builders<T>.Sort;
             SortDefinition<T>? sort = null;
 
-            foreach (var (fieldName, descending) in _sortFields)
+            foreach ((string? fieldName, bool descending) in _sortFields)
             {
-                var fieldSort = descending
+                SortDefinition<T> fieldSort = descending
                     ? sortBuilder.Descending(fieldName)
                     : sortBuilder.Ascending(fieldName);
 
@@ -247,13 +247,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
 
         private SortDefinition<T>? BuildReversedSort()
         {
-            var sortBuilder = Builders<T>.Sort;
+            SortDefinitionBuilder<T> sortBuilder = Builders<T>.Sort;
             SortDefinition<T>? sort = null;
 
-            foreach (var (fieldName, descending) in _sortFields)
+            foreach ((string? fieldName, bool descending) in _sortFields)
             {
                 // Reverse the sort direction
-                var fieldSort = descending
+                SortDefinition<T> fieldSort = descending
                     ? sortBuilder.Ascending(fieldName)
                     : sortBuilder.Descending(fieldName);
 
@@ -279,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
             // For (field1: desc, field2: asc) after cursor (v1, v2):
             // (field1 < v1) OR (field1 == v1 AND field2 > v2)
 
-            var filterBuilder = Builders<T>.Filter;
+            FilterDefinitionBuilder<T> filterBuilder = Builders<T>.Filter;
             var orFilters = new List<FilterDefinition<T>>();
 
             for (int i = 0; i < _sortFields.Count; i++)
@@ -289,18 +289,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
                 // Add equality filters for previous fields
                 for (int j = 0; j < i; j++)
                 {
-                    var (fieldName, _) = _sortFields[j];
-                    if (cursor.TryGetValue(fieldName, out var value))
+                    (string? fieldName, bool _) = _sortFields[j];
+                    if (cursor.TryGetValue(fieldName, out BsonValue? value))
                     {
                         andFilters.Add(filterBuilder.Eq(fieldName, value));
                     }
                 }
 
                 // Add comparison filter for current field
-                var (currentField, descending) = _sortFields[i];
-                if (cursor.TryGetValue(currentField, out var cursorValue))
+                (string? currentField, bool descending) = _sortFields[i];
+                if (cursor.TryGetValue(currentField, out BsonValue? cursorValue))
                 {
-                    var comparisonFilter = descending
+                    FilterDefinition<T> comparisonFilter = descending
                         ? filterBuilder.Lt(currentField, cursorValue)
                         : filterBuilder.Gt(currentField, cursorValue);
                     andFilters.Add(comparisonFilter);
@@ -318,7 +318,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         private FilterDefinition<T> BuildBeforeCursorFilter(Dictionary<string, BsonValue> cursor)
         {
             // Build compound filter for backward pagination (inverse of after filter)
-            var filterBuilder = Builders<T>.Filter;
+            FilterDefinitionBuilder<T> filterBuilder = Builders<T>.Filter;
             var orFilters = new List<FilterDefinition<T>>();
 
             for (int i = 0; i < _sortFields.Count; i++)
@@ -327,18 +327,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
 
                 for (int j = 0; j < i; j++)
                 {
-                    var (fieldName, _) = _sortFields[j];
-                    if (cursor.TryGetValue(fieldName, out var value))
+                    (string? fieldName, bool _) = _sortFields[j];
+                    if (cursor.TryGetValue(fieldName, out BsonValue? value))
                     {
                         andFilters.Add(filterBuilder.Eq(fieldName, value));
                     }
                 }
 
-                var (currentField, descending) = _sortFields[i];
-                if (cursor.TryGetValue(currentField, out var cursorValue))
+                (string? currentField, bool descending) = _sortFields[i];
+                if (cursor.TryGetValue(currentField, out BsonValue? cursorValue))
                 {
                     // Reverse comparison for backward pagination
-                    var comparisonFilter = descending
+                    FilterDefinition<T> comparisonFilter = descending
                         ? filterBuilder.Gt(currentField, cursorValue)
                         : filterBuilder.Lt(currentField, cursorValue);
                     andFilters.Add(comparisonFilter);
@@ -392,9 +392,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         private Dictionary<string, BsonValue> ExtractCursor(T item)
         {
             var cursor = new Dictionary<string, BsonValue>();
-            var document = item.ToBsonDocument();
+            BsonDocument document = item.ToBsonDocument();
 
-            foreach (var (fieldName, _) in _sortFields)
+            foreach ((string? fieldName, bool _) in _sortFields)
             {
                 if (document.Contains(fieldName))
                 {
@@ -428,7 +428,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         /// <summary>
         /// Gets or sets the items in this page.
         /// </summary>
-        public List<T> Items { get; set; } = new();
+        public List<T> Items { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether there is a next page.

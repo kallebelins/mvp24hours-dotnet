@@ -78,7 +78,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (RetryableExceptions == null || RetryableExceptions.Length == 0)
                 return true;
 
-            foreach (var type in RetryableExceptions)
+            foreach (Type type in RetryableExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;
@@ -210,7 +210,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
 
             if (UseJitter && JitterFactor > 0)
             {
-                var random = Random.Shared;
+                Random random = Random.Shared;
                 var jitterRange = delay.TotalMilliseconds * JitterFactor;
                 var jitter = (random.NextDouble() * 2 - 1) * jitterRange;
                 delay = TimeSpan.FromMilliseconds(Math.Max(0, delay.TotalMilliseconds + jitter));
@@ -236,7 +236,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (RetryableExceptions == null || RetryableExceptions.Length == 0)
                 return true;
 
-            foreach (var type in RetryableExceptions)
+            foreach (Type type in RetryableExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;

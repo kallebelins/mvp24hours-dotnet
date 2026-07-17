@@ -121,7 +121,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPreConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _consumeObservers)
+        foreach (IConsumeObserver observer in _consumeObservers)
         {
             try
             {
@@ -137,7 +137,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPostConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _consumeObservers)
+        foreach (IConsumeObserver observer in _consumeObservers)
         {
             try
             {
@@ -153,7 +153,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyConsumeFaultAsync(ConsumeObserverContext context, Exception exception, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _consumeObservers)
+        foreach (IConsumeObserver observer in _consumeObservers)
         {
             try
             {
@@ -169,7 +169,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPrePublishAsync(PublishObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _publishObservers)
+        foreach (IPublishObserver observer in _publishObservers)
         {
             try
             {
@@ -185,7 +185,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPostPublishAsync(PublishObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _publishObservers)
+        foreach (IPublishObserver observer in _publishObservers)
         {
             try
             {
@@ -201,7 +201,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPublishFaultAsync(PublishObserverContext context, Exception exception, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _publishObservers)
+        foreach (IPublishObserver observer in _publishObservers)
         {
             try
             {
@@ -217,7 +217,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPreSendAsync(SendObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _sendObservers)
+        foreach (ISendObserver observer in _sendObservers)
         {
             try
             {
@@ -233,7 +233,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyPostSendAsync(SendObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _sendObservers)
+        foreach (ISendObserver observer in _sendObservers)
         {
             try
             {
@@ -249,7 +249,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifySendFaultAsync(SendObserverContext context, Exception exception, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _sendObservers)
+        foreach (ISendObserver observer in _sendObservers)
         {
             try
             {
@@ -265,7 +265,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyConnectedAsync(ConnectionObserverContext context, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _connectionObservers)
+        foreach (IConnectionObserver observer in _connectionObservers)
         {
             try
             {
@@ -281,7 +281,7 @@ public class ObserverManager : IObserverManager
     /// <inheritdoc />
     public async Task NotifyDisconnectedAsync(ConnectionObserverContext context, string? reason, CancellationToken cancellationToken = default)
     {
-        foreach (var observer in _connectionObservers)
+        foreach (IConnectionObserver observer in _connectionObservers)
         {
             try
             {

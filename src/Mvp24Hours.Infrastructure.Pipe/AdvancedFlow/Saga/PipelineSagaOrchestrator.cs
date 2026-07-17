@@ -113,15 +113,15 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
             var completedSteps = new Stack<IPipelineSagaStep<TContext>>();
             string? failedStepId = null;
             string? errorMessage = null;
-            var state = SagaState.Running;
+            SagaState state = SagaState.Running;
 
             _logger?.LogDebug("PipelineSagaOrchestrator: Saga '{SagaId}' started with {StepCount} steps", _sagaId, _steps.Count);
 
-            using var sagaCts = _options.SagaTimeout.HasValue
+            using CancellationTokenSource? sagaCts = _options.SagaTimeout.HasValue
                 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
                 : null;
             sagaCts?.CancelAfter(_options.SagaTimeout!.Value);
-            var effectiveToken = sagaCts?.Token ?? cancellationToken;
+            CancellationToken effectiveToken = sagaCts?.Token ?? cancellationToken;
 
             try
             {
@@ -146,13 +146,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                 {
                     effectiveToken.ThrowIfCancellationRequested();
 
-                    var step = _steps[i];
-                    var stepStartedAt = DateTime.UtcNow;
+                    IPipelineSagaStep<TContext> step = _steps[i];
+                    DateTime stepStartedAt = DateTime.UtcNow;
                     var stepStopwatch = Stopwatch.StartNew();
 
                     _logger?.LogDebug("PipelineSagaOrchestrator: Step '{StepId}' started for saga '{SagaId}'", step.StepId, _sagaId);
 
-                    var result = await ExecuteStepWithRetryAsync(step, context, effectiveToken);
+                    SagaStepResult result = await ExecuteStepWithRetryAsync(step, context, effectiveToken);
 
                     stepStopwatch.Stop();
 
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
                     if (_options.EnableStatePersistence && _stateStore != null)
                     {
                         var completedStepIds = new List<string>();
-                        foreach (var s in completedSteps)
+                        foreach (IPipelineSagaStep<TContext> s in completedSteps)
                         {
                             completedStepIds.Add(s.StepId);
                         }
@@ -226,19 +226,19 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
 
                     var compensationSuccess = true;
 
-                    while (completedSteps.TryPop(out var stepToCompensate))
+                    while (completedSteps.TryPop(out IPipelineSagaStep<TContext>? stepToCompensate))
                     {
-                        var compStartedAt = DateTime.UtcNow;
+                        DateTime compStartedAt = DateTime.UtcNow;
                         var compStopwatch = Stopwatch.StartNew();
 
                         try
                         {
-                            using var compCts = _options.CompensationTimeout.HasValue
+                            using CancellationTokenSource? compCts = _options.CompensationTimeout.HasValue
                                 ? CancellationTokenSource.CreateLinkedTokenSource(effectiveToken)
                                 : null;
                             compCts?.CancelAfter(_options.CompensationTimeout!.Value);
 
-                            var compResult = await stepToCompensate.CompensateAsync(
+                            SagaStepResult compResult = await stepToCompensate.CompensateAsync(
                                 context,
                                 compCts?.Token ?? effectiveToken);
 
@@ -373,13 +373,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga
         {
             var retryCount = 0;
             var maxRetries = step.MaxRetries;
-            var retryDelay = step.RetryDelay;
+            TimeSpan retryDelay = step.RetryDelay;
 
             while (true)
             {
                 try
                 {
-                    using var stepCts = _options.StepTimeout.HasValue
+                    using CancellationTokenSource? stepCts = _options.StepTimeout.HasValue
                         ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
                         : null;
                     stepCts?.CancelAfter(_options.StepTimeout!.Value);

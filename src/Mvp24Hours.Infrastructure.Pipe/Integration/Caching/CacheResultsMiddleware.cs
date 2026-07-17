@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
         {
             try
             {
-                var cacheEntry = JsonSerializer.Deserialize<CacheEntry>(data, _jsonOptions);
+                CacheEntry? cacheEntry = JsonSerializer.Deserialize<CacheEntry>(data, _jsonOptions);
                 if (cacheEntry == null)
                     return false;
 

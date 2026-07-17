@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 
         private void LogPoolStatistics()
         {
-            var stats = _statistics.GetSnapshot();
+            PoolStatisticsSnapshot stats = _statistics.GetSnapshot();
             var hitRatio = stats.TotalRequests > 0
                 ? (double)stats.PoolHits / stats.TotalRequests * 100
                 : 0;

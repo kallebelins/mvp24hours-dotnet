@@ -33,7 +33,7 @@ namespace Mvp24Hours.Extensions
                 typeof(IStreamingPipeline<TInput, TOutput>),
                 sp =>
                 {
-                    var logger = sp.GetService<ILogger<StreamingPipeline<TInput, TOutput>>>();
+                    ILogger<StreamingPipeline<TInput, TOutput>>? logger = sp.GetService<ILogger<StreamingPipeline<TInput, TOutput>>>();
                     var pipeline = new StreamingPipeline<TInput, TOutput>(logger);
                     configure?.Invoke(pipeline);
                     return pipeline;

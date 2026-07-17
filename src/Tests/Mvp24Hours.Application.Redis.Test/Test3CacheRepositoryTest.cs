@@ -68,7 +68,7 @@ namespace Mvp24Hours.Application.Redis.Test
             };
             string content = customer.ToSerialize();
 
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.SetString(keyString, content);
             Assert.True(true);
         }
@@ -77,7 +77,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public void GetString()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.SetString(keyString, "Test");
             string content = repo.GetString(keyString);
             Assert.True(content.HasValue());
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public void RemoveString()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.Remove(keyString);
             string content = repo.GetString(keyString);
             Assert.True(string.IsNullOrEmpty(content));
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Application.Redis.Test
                 Name = "Test 1",
                 Active = true
             };
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.Set(keyObject, customer);
             Assert.True(true);
         }
@@ -113,9 +113,9 @@ namespace Mvp24Hours.Application.Redis.Test
         public void GetObject()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.Set(keyObject, new Customer { });
-            var customer = repo.Get(keyObject);
+            Customer? customer = repo.Get(keyObject);
             Assert.NotNull(customer);
         }
 
@@ -123,9 +123,9 @@ namespace Mvp24Hours.Application.Redis.Test
         public void RemoveObject()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCache<Customer>>();
+            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
             repo.Remove(keyObject);
-            var customer = repo.Get(keyObject);
+            Customer? customer = repo.Get(keyObject);
             Assert.Null(customer);
         }
     }

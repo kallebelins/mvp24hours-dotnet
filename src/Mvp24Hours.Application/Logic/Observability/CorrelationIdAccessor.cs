@@ -55,7 +55,7 @@ public sealed class CorrelationIdAccessor : ICorrelationIdContext
     /// <inheritdoc />
     public void SetCorrelationId(string correlationId)
     {
-        var holder = _correlationIdCurrent.Value;
+        CorrelationIdHolder? holder = _correlationIdCurrent.Value;
         if (holder != null)
         {
             holder.CorrelationId = correlationId;
@@ -69,7 +69,7 @@ public sealed class CorrelationIdAccessor : ICorrelationIdContext
     /// <inheritdoc />
     public void SetCausationId(string causationId)
     {
-        var holder = _correlationIdCurrent.Value;
+        CorrelationIdHolder? holder = _correlationIdCurrent.Value;
         if (holder != null)
         {
             holder.CausationId = causationId;
@@ -83,7 +83,7 @@ public sealed class CorrelationIdAccessor : ICorrelationIdContext
     /// <inheritdoc />
     public string EnsureCorrelationId()
     {
-        var holder = _correlationIdCurrent.Value;
+        CorrelationIdHolder? holder = _correlationIdCurrent.Value;
         if (holder == null)
         {
             holder = new CorrelationIdHolder { CorrelationId = Guid.NewGuid().ToString() };

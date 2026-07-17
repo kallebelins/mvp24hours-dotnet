@@ -15,7 +15,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs
     {
         public CustomerBasicLog()
         {
-            Contacts = new List<ContactBasicLog>();
+            Contacts = [];
         }
 
         [Required]

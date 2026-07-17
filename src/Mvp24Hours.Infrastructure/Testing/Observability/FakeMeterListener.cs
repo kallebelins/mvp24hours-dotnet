@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Observability
             Unit = unit;
             Value = value;
             Tags = tags?.ToDictionary(kv => kv.Key, kv => kv.Value)
-                ?? new Dictionary<string, object?>();
+                ?? [];
             Timestamp = DateTimeOffset.UtcNow;
         }
 
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Observability
     public sealed class FakeMeterListener : IDisposable
     {
         private readonly MeterListener _listener;
-        private readonly ConcurrentBag<RecordedMeasurement> _measurements = new();
+        private readonly ConcurrentBag<RecordedMeasurement> _measurements = [];
         private readonly string? _meterNameFilter;
         private bool _disposed;
 
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Observability
         private void OnMeasurement<T>(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state) where T : struct
         {
             var tagsList = new List<KeyValuePair<string, object?>>();
-            foreach (var tag in tags)
+            foreach (KeyValuePair<string, object?> tag in tags)
             {
                 tagsList.Add(tag);
             }

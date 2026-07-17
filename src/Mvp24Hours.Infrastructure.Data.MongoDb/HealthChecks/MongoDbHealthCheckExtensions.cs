@@ -79,8 +79,8 @@ namespace Mvp24Hours.Extensions
                 name,
                 sp =>
                 {
-                    var mongoOptions = sp.GetRequiredService<IOptions<MongoDbOptions>>();
-                    var healthCheckOptions = sp.GetService<IOptions<MongoDbHealthCheckOptions>>();
+                    IOptions<MongoDbOptions> mongoOptions = sp.GetRequiredService<IOptions<MongoDbOptions>>();
+                    IOptions<MongoDbHealthCheckOptions>? healthCheckOptions = sp.GetService<IOptions<MongoDbHealthCheckOptions>>();
                     return new MongoDbHealthCheck(mongoOptions, healthCheckOptions);
                 },
                 failureStatus,
@@ -198,8 +198,8 @@ namespace Mvp24Hours.Extensions
                 name,
                 sp =>
                 {
-                    var mongoOptions = sp.GetRequiredService<IOptions<MongoDbOptions>>();
-                    var healthCheckOptions = sp.GetService<IOptions<MongoDbReplicaSetHealthCheckOptions>>();
+                    IOptions<MongoDbOptions> mongoOptions = sp.GetRequiredService<IOptions<MongoDbOptions>>();
+                    IOptions<MongoDbReplicaSetHealthCheckOptions>? healthCheckOptions = sp.GetService<IOptions<MongoDbReplicaSetHealthCheckOptions>>();
                     return new MongoDbReplicaSetHealthCheck(mongoOptions, healthCheckOptions);
                 },
                 failureStatus,

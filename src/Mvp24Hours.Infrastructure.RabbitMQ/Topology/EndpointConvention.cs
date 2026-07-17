@@ -146,7 +146,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <returns>The endpoint info, or null if not mapped.</returns>
         public static EndpointInfo? GetEndpoint(Type messageType)
         {
-            _endpointMappings.TryGetValue(messageType, out var info);
+            _endpointMappings.TryGetValue(messageType, out EndpointInfo? info);
             return info;
         }
 
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <returns>The exchange name.</returns>
         public static string GetExchangeName(Type messageType)
         {
-            var info = GetEndpoint(messageType);
+            EndpointInfo? info = GetEndpoint(messageType);
             return info?.ExchangeName ?? _nameFormatter.FormatExchangeName(messageType);
         }
 
@@ -188,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <returns>The routing key.</returns>
         public static string GetRoutingKey(Type messageType)
         {
-            var info = GetEndpoint(messageType);
+            EndpointInfo? info = GetEndpoint(messageType);
             return info?.RoutingKey ?? _routingKeyConvention.GetRoutingKey(messageType);
         }
 
@@ -209,7 +209,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <returns>The queue name.</returns>
         public static string GetQueueName(Type messageType)
         {
-            var info = GetEndpoint(messageType);
+            EndpointInfo? info = GetEndpoint(messageType);
             return info?.QueueName ?? _nameFormatter.FormatQueueNameFromMessage(messageType);
         }
 

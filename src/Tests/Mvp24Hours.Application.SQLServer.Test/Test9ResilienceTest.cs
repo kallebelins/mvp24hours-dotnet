@@ -212,7 +212,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             circuitBreaker.RecordFailure();
 
             // Assert
-            var ex = Assert.Throws<CircuitBreakerOpenException>(() => circuitBreaker.EnsureCircuitClosed());
+            CircuitBreakerOpenException ex = Assert.Throws<CircuitBreakerOpenException>(() => circuitBreaker.EnsureCircuitClosed());
             Assert.True(ex.RetryAfter > TimeSpan.Zero);
         }
 
@@ -335,7 +335,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             stats.RecordHit(TimeSpan.FromMilliseconds(10));
 
             // Act
-            var snapshot = stats.GetSnapshot();
+            PoolStatisticsSnapshot snapshot = stats.GetSnapshot();
             stats.RecordHit(TimeSpan.FromMilliseconds(20)); // Modify after snapshot
 
             // Assert - Snapshot should not change
@@ -379,13 +379,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
                 options.CircuitBreakerFailureThreshold = 3;
             });
 
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var circuitBreaker = provider.GetService<DbContextCircuitBreaker>();
+            DbContextCircuitBreaker? circuitBreaker = provider.GetRequiredService<DbContextCircuitBreaker>();
             Assert.NotNull(circuitBreaker);
 
-            var options = provider.GetService<IOptions<EFCoreResilienceOptions>>();
+            IOptions<EFCoreResilienceOptions>? options = provider.GetRequiredService<IOptions<EFCoreResilienceOptions>>();
             Assert.NotNull(options);
             Assert.True(options.Value.EnableCircuitBreaker);
             Assert.Equal(3, options.Value.CircuitBreakerFailureThreshold);

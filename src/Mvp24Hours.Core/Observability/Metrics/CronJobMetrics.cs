@@ -42,7 +42,7 @@ public sealed class CronJobMetrics
     /// </summary>
     public CronJobMetrics()
     {
-        var meter = Mvp24HoursMeters.CronJob.Meter;
+        Meter meter = Mvp24HoursMeters.CronJob.Meter;
 
         _executionsTotal = meter.CreateCounter<long>(
             MetricNames.CronJobExecutionsTotal,
@@ -171,7 +171,7 @@ public sealed class CronJobMetrics
         public void Dispose()
         {
             _metrics.DecrementActive(_jobType);
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordExecution(_jobType, elapsed.TotalMilliseconds, Succeeded);
         }
     }

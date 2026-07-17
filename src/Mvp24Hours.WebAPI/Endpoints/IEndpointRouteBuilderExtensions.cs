@@ -106,7 +106,7 @@ public static class IEndpointRouteBuilderExtensions
 
         method ??= HttpMethod.Post;
 
-        var builder = endpoints.MapMethods(pattern, [method.Method], async (
+        RouteHandlerBuilder builder = endpoints.MapMethods(pattern, [method.Method], async (
             [FromBody] TCommand command,
             [FromServices] ISender sender,
             CancellationToken cancellationToken) =>
@@ -115,12 +115,12 @@ public static class IEndpointRouteBuilderExtensions
 
             try
             {
-                var response = await sender.SendAsync<TResponse>(command, cancellationToken);
+                TResponse? response = await sender.SendAsync<TResponse>(command, cancellationToken);
                 return Results.Ok(response);
             }
             catch (ValidationException ex)
             {
-                var errors = ConvertValidationErrors(ex.ValidationErrors);
+                IDictionary<string, string[]> errors = ConvertValidationErrors(ex.ValidationErrors);
                 return Results.ValidationProblem(errors);
             }
             catch (NotFoundException ex)
@@ -213,7 +213,7 @@ public static class IEndpointRouteBuilderExtensions
 
         method ??= HttpMethod.Post;
 
-        var builder = endpoints.MapMethods(pattern, [method.Method], async (
+        RouteHandlerBuilder builder = endpoints.MapMethods(pattern, [method.Method], async (
             [FromBody] TCommand command,
             [FromServices] ISender sender,
             CancellationToken cancellationToken) =>
@@ -222,12 +222,12 @@ public static class IEndpointRouteBuilderExtensions
 
             try
             {
-                var result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
+                IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
                 return result.ToTypedResult();
             }
             catch (ValidationException ex)
             {
-                var errors = ConvertValidationErrors(ex.ValidationErrors);
+                IDictionary<string, string[]> errors = ConvertValidationErrors(ex.ValidationErrors);
                 return Results.ValidationProblem(errors);
             }
             catch (NotFoundException ex)
@@ -320,7 +320,7 @@ public static class IEndpointRouteBuilderExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapGet(pattern, async (
+        RouteHandlerBuilder builder = endpoints.MapGet(pattern, async (
             [AsParameters] TQuery query,
             [FromServices] ISender sender,
             CancellationToken cancellationToken) =>
@@ -329,7 +329,7 @@ public static class IEndpointRouteBuilderExtensions
 
             try
             {
-                var response = await sender.SendAsync<TResponse>(query, cancellationToken);
+                TResponse? response = await sender.SendAsync<TResponse>(query, cancellationToken);
 
                 if (response is null)
                 {
@@ -344,7 +344,7 @@ public static class IEndpointRouteBuilderExtensions
             }
             catch (ValidationException ex)
             {
-                var errors = ConvertValidationErrors(ex.ValidationErrors);
+                IDictionary<string, string[]> errors = ConvertValidationErrors(ex.ValidationErrors);
                 return Results.ValidationProblem(errors);
             }
             catch (NotFoundException ex)
@@ -420,7 +420,7 @@ public static class IEndpointRouteBuilderExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapGet(pattern, async (
+        RouteHandlerBuilder builder = endpoints.MapGet(pattern, async (
             [AsParameters] TQuery query,
             [FromServices] ISender sender,
             CancellationToken cancellationToken) =>
@@ -429,12 +429,12 @@ public static class IEndpointRouteBuilderExtensions
 
             try
             {
-                var result = await sender.SendAsync<IBusinessResult<TResponse>>(query, cancellationToken);
+                IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(query, cancellationToken);
                 return result.ToTypedResult();
             }
             catch (ValidationException ex)
             {
-                var errors = ConvertValidationErrors(ex.ValidationErrors);
+                IDictionary<string, string[]> errors = ConvertValidationErrors(ex.ValidationErrors);
                 return Results.ValidationProblem(errors);
             }
             catch (NotFoundException ex)

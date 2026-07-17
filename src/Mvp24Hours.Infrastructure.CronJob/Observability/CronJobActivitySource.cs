@@ -166,7 +166,7 @@ public static class CronJobActivitySource
         string? cronExpression = null,
         string? timeZone = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Execute, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Execute, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -198,7 +198,7 @@ public static class CronJobActivitySource
         string cronExpression,
         DateTimeOffset? nextExecution = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Schedule, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Schedule, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -224,7 +224,7 @@ public static class CronJobActivitySource
         string jobName,
         string? cronExpression = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Start, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Start, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -246,7 +246,7 @@ public static class CronJobActivitySource
     /// <returns>The started activity, or null if not sampled.</returns>
     public static Activity? StartStopActivity(string jobName)
     {
-        var activity = Source.StartActivity(ActivityNames.Stop, ActivityKind.Internal);
+        Activity? activity = Source.StartActivity(ActivityNames.Stop, ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -274,7 +274,7 @@ public static class CronJobActivitySource
         int maxAttempts,
         double delayMs)
     {
-        var activity = Source.StartActivity($"{ActivityNames.Execute}.Retry", ActivityKind.Internal);
+        Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.Retry", ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -299,7 +299,7 @@ public static class CronJobActivitySource
         string previousState,
         string newState)
     {
-        var activity = Source.StartActivity($"{ActivityNames.Execute}.CircuitBreakerStateChange", ActivityKind.Internal);
+        Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.CircuitBreakerStateChange", ActivityKind.Internal);
 
         if (activity == null)
             return null;
@@ -321,7 +321,7 @@ public static class CronJobActivitySource
         string jobName,
         string reason)
     {
-        var activity = Source.StartActivity($"{ActivityNames.Execute}.Skipped", ActivityKind.Internal);
+        Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.Skipped", ActivityKind.Internal);
 
         if (activity == null)
             return null;

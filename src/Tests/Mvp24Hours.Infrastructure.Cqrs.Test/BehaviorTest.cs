@@ -27,8 +27,8 @@ public class BehaviorTest
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
             options.RegisterLoggingBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "LogTest", Value = 1 };
 
         // Act
@@ -51,8 +51,8 @@ public class BehaviorTest
             options.RegisterPerformanceBehavior = true;
             options.PerformanceThresholdMilliseconds = 50; // Low threshold for testing
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new SlowCommand { DelayMs = 100 }; // Slower than threshold
 
         // Act
@@ -73,12 +73,12 @@ public class BehaviorTest
             options.RegisterHandlersFromAssembly(typeof(FailingCommand).Assembly);
             options.RegisterUnhandledExceptionBehavior = true;
         });
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new FailingCommand { Message = "Behavior test exception" };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mediator.SendAsync(command));
         Assert.Equal("Behavior test exception", ex.Message);
     }
@@ -95,8 +95,8 @@ public class BehaviorTest
             options.RegisterValidationBehavior = true;
         });
         services.AddTransient<IValidator<CreateUserCommand>, CreateUserCommandValidator>();
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         var validCommand = new CreateUserCommand
         {
@@ -124,8 +124,8 @@ public class BehaviorTest
             options.RegisterValidationBehavior = true;
         });
         services.AddTransient<IValidator<CreateUserCommand>, CreateUserCommandValidator>();
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
 
         var invalidCommand = new CreateUserCommand
         {
@@ -135,7 +135,7 @@ public class BehaviorTest
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<Mvp24Hours.Core.Exceptions.ValidationException>(() =>
+        Core.Exceptions.ValidationException ex = await Assert.ThrowsAsync<Mvp24Hours.Core.Exceptions.ValidationException>(() =>
             mediator.SendAsync(invalidCommand));
 
         Assert.True(ex.ValidationErrors?.Count > 0);
@@ -153,8 +153,8 @@ public class BehaviorTest
             options.RegisterValidationBehavior = true;
         });
         // No validator registered for TestCommand
-        var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+        ServiceProvider sp = services.BuildServiceProvider();
+        IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "NoValidator", Value = 1 };
 
         // Act - Should not throw
@@ -175,7 +175,7 @@ public class BehaviorTest
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
             options.WithDefaultBehaviors();
         });
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act
         var behaviors = sp.GetServices<IPipelineBehavior<TestCommand, string>>().ToList();
@@ -203,8 +203,8 @@ public class BehaviorTest
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
             new TrackingBehavior<TestCommand, string>("Second", executionOrder));
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "Order Test", Value = 1 };
 
         // Act
@@ -233,8 +233,8 @@ public class BehaviorTest
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
             new ShortCircuitBehavior<TestCommand, string>("Short-circuited!"));
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "Should not reach", Value = 1 };
 
         // Act
@@ -263,7 +263,7 @@ internal class TrackingBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         _tracker.Add($"{_name}-Before");
-        var response = await next();
+        TResponse? response = await next();
         _tracker.Add($"{_name}-After");
         return response;
     }

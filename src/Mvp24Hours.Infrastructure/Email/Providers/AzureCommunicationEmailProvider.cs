@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             _logger = logger;
 
             // Validate Azure options
-            var validationErrors = _azureOptions.Validate();
+            IList<string> validationErrors = _azureOptions.Validate();
             if (validationErrors.Count > 0)
             {
                 var errorMessage = string.Join("; ", validationErrors);
@@ -107,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         {
             try
             {
-                using var httpClient = _httpClientFactory.CreateClient();
+                using HttpClient httpClient = _httpClientFactory.CreateClient();
 
                 // Azure Communication Services uses HMAC-SHA256 authentication
                 var requestUri = $"{_endpoint}/emails:send?api-version=2023-03-31";
@@ -130,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 httpClient.DefaultRequestHeaders.Add("Authorization", $"HMAC-SHA256 SignedHeaders=x-ms-date;host;Signature={signature}");
                 httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
 
-                var response = await httpClient.PostAsync("/emails:send?api-version=2023-03-31", httpContent, cancellationToken);
+                HttpResponseMessage response = await httpClient.PostAsync("/emails:send?api-version=2023-03-31", httpContent, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
 
                     // Extract message ID from response
                     string? messageId = null;
-                    if (responseJson.RootElement.TryGetProperty("messageId", out var messageIdElement))
+                    if (responseJson.RootElement.TryGetProperty("messageId", out JsonElement messageIdElement))
                     {
                         messageId = messageIdElement.GetString();
                     }
@@ -248,7 +248,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         /// <returns>An Azure Communication Services request object.</returns>
         private object CreateAzureCommunicationRequest(EmailMessage message)
         {
-            var from = ParseEmailAddress(message.From ?? _azureOptions.DefaultFrom ?? Options.DefaultFrom ?? string.Empty);
+            EmailAddressInfo from = ParseEmailAddress(message.From ?? _azureOptions.DefaultFrom ?? Options.DefaultFrom ?? string.Empty);
 
             var recipients = new
             {
@@ -350,7 +350,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             var contentBytes = attachment.Content;
             if (contentBytes == null)
             {
-                using var stream = attachment.GetContentStream();
+                using Stream? stream = attachment.GetContentStream();
                 if (stream == null)
                 {
                     throw new InvalidOperationException($"Cannot get content for attachment '{attachment.FileName}'.");

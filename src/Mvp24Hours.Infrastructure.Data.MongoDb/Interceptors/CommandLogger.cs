@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <inheritdoc />
         public override Task OnAfterInsertAsync<T>(T entity, CancellationToken cancellationToken = default)
         {
-            var duration = StopTiming(GetTimingKey("Insert", entity));
+            TimeSpan duration = StopTiming(GetTimingKey("Insert", entity));
             LogOperationEnd("Insert", entity, duration);
             return Task.CompletedTask;
         }
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <inheritdoc />
         public override Task OnAfterUpdateAsync<T>(T entity, CancellationToken cancellationToken = default)
         {
-            var duration = StopTiming(GetTimingKey("Update", entity));
+            TimeSpan duration = StopTiming(GetTimingKey("Update", entity));
             LogOperationEnd("Update", entity, duration);
             return Task.CompletedTask;
         }
@@ -130,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         public override Task OnAfterDeleteAsync<T>(T entity, bool wasSoftDeleted, CancellationToken cancellationToken = default)
         {
             var operationType = wasSoftDeleted ? "SoftDelete" : "Delete";
-            var duration = StopTiming(GetTimingKey("Delete", entity));
+            TimeSpan duration = StopTiming(GetTimingKey("Delete", entity));
             LogOperationEnd(operationType, entity, duration);
             return Task.CompletedTask;
         }
@@ -150,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
 
         private static TimeSpan StopTiming(string key)
         {
-            if (_operationTimers.TryRemove(key, out var stopwatch))
+            if (_operationTimers.TryRemove(key, out Stopwatch? stopwatch))
             {
                 stopwatch.Stop();
                 return stopwatch.Elapsed;

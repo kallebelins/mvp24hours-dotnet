@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Diagnostics;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -69,9 +70,9 @@ public sealed class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     {
         var requestName = typeof(TRequest).Name;
         var requestType = GetRequestType();
-        var context = _contextAccessor?.Context;
+        IRequestContext? context = _contextAccessor?.Context;
 
-        using var activity = MediatorActivitySource.StartRequestActivity(requestName, requestType, context);
+        using Activity? activity = MediatorActivitySource.StartRequestActivity(requestName, requestType, context);
 
         if (activity == null)
         {
@@ -81,7 +82,7 @@ public sealed class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
         try
         {
-            var response = await next();
+            TResponse? response = await next();
 
             MediatorActivitySource.SetSuccess(activity);
 
@@ -96,7 +97,7 @@ public sealed class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
     private static string GetRequestType()
     {
-        var requestType = typeof(TRequest);
+        Type requestType = typeof(TRequest);
 
         if (requestType.GetInterfaces().Any(i =>
             i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IMediatorCommand")))

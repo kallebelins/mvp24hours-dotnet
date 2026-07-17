@@ -165,8 +165,8 @@ namespace Mvp24Hours.Infrastructure.Resilience.Helpers
                 {
                     lastException = ex;
 
-                    var baseDelay = CalculateBaseDelay(attempt, options);
-                    var delay = ApplyJitter(baseDelay, jitterStrategy, options, random);
+                    TimeSpan baseDelay = CalculateBaseDelay(attempt, options);
+                    TimeSpan delay = ApplyJitter(baseDelay, jitterStrategy, options, random);
 
                     logger?.LogWarning(
                         ex,
@@ -226,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Helpers
             RetryOptions options,
             Random random)
         {
-            var delay = jitterStrategy switch
+            TimeSpan delay = jitterStrategy switch
             {
                 JitterStrategy.Full => TimeSpan.FromMilliseconds(
                     baseDelay.TotalMilliseconds * random.NextDouble()),

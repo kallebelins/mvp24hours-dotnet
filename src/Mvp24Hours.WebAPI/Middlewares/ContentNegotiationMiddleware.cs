@@ -68,7 +68,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Perform content negotiation early
-            var negotiationResult = negotiator.Negotiate(context);
+            ContentNegotiationResult negotiationResult = negotiator.Negotiate(context);
 
             // Handle 406 Not Acceptable
             if (!negotiationResult.Success)
@@ -196,7 +196,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 if (!string.IsNullOrEmpty(originalContentType) && !contentTypeMatches)
                 {
                     // Capture the response for transformation
-                    var originalBody = context.Response.Body;
+                    Stream originalBody = context.Response.Body;
                     using var newBody = new MemoryStream();
                     context.Response.Body = newBody;
 

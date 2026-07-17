@@ -16,6 +16,7 @@ using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
@@ -121,21 +122,21 @@ public class InputSanitizationMiddleware
         // Validate query strings
         if (_options.SanitizeQueryStrings)
         {
-            var queryThreats = ValidateQueryString(context);
+            List<ThreatDetection> queryThreats = ValidateQueryString(context);
             detectedThreats.AddRange(queryThreats);
         }
 
         // Validate headers
         if (_options.SanitizeHeaders)
         {
-            var headerThreats = ValidateHeaders(context);
+            List<ThreatDetection> headerThreats = ValidateHeaders(context);
             detectedThreats.AddRange(headerThreats);
         }
 
         // Validate request body for applicable content types
         if (_options.SanitizeRequestBody && HasSanitizableBody(context))
         {
-            var bodyThreats = await ValidateRequestBody(context);
+            List<ThreatDetection> bodyThreats = await ValidateRequestBody(context);
             detectedThreats.AddRange(bodyThreats);
         }
 
@@ -163,7 +164,7 @@ public class InputSanitizationMiddleware
     {
         var threats = new List<ThreatDetection>();
 
-        foreach (var param in context.Request.Query)
+        foreach (KeyValuePair<string, StringValues> param in context.Request.Query)
         {
             if (_options.ExcludedQueryParameters.Contains(param.Key))
                 continue;
@@ -174,7 +175,7 @@ public class InputSanitizationMiddleware
                     continue;
 
                 var decodedValue = HttpUtility.UrlDecode(value);
-                var paramThreats = DetectThreats(decodedValue, $"QueryString[{param.Key}]");
+                List<ThreatDetection> paramThreats = DetectThreats(decodedValue, $"QueryString[{param.Key}]");
                 threats.AddRange(paramThreats);
             }
         }
@@ -186,7 +187,7 @@ public class InputSanitizationMiddleware
     {
         var threats = new List<ThreatDetection>();
 
-        foreach (var header in context.Request.Headers)
+        foreach (KeyValuePair<string, StringValues> header in context.Request.Headers)
         {
             if (_options.ExcludedHeaders.Contains(header.Key))
                 continue;
@@ -196,7 +197,7 @@ public class InputSanitizationMiddleware
                 if (string.IsNullOrEmpty(value) || value.Length > _options.MaxInputLengthToScan)
                     continue;
 
-                var headerThreats = DetectThreats(value, $"Header[{header.Key}]");
+                List<ThreatDetection> headerThreats = DetectThreats(value, $"Header[{header.Key}]");
                 threats.AddRange(headerThreats);
             }
         }
@@ -234,19 +235,19 @@ public class InputSanitizationMiddleware
             {
                 try
                 {
-                    var jsonThreats = ValidateJsonBody(body);
+                    List<ThreatDetection> jsonThreats = ValidateJsonBody(body);
                     threats.AddRange(jsonThreats);
                 }
                 catch (JsonException)
                 {
                     // If JSON parsing fails, validate as plain text
-                    var bodyThreats = DetectThreats(body, "RequestBody");
+                    List<ThreatDetection> bodyThreats = DetectThreats(body, "RequestBody");
                     threats.AddRange(bodyThreats);
                 }
             }
             else
             {
-                var bodyThreats = DetectThreats(body, "RequestBody");
+                List<ThreatDetection> bodyThreats = DetectThreats(body, "RequestBody");
                 threats.AddRange(bodyThreats);
             }
         }
@@ -280,7 +281,7 @@ public class InputSanitizationMiddleware
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                foreach (var property in element.EnumerateObject())
+                foreach (JsonProperty property in element.EnumerateObject())
                 {
                     var propertyPath = $"{path}.{property.Name}";
 
@@ -294,7 +295,7 @@ public class InputSanitizationMiddleware
 
             case JsonValueKind.Array:
                 int index = 0;
-                foreach (var item in element.EnumerateArray())
+                foreach (JsonElement item in element.EnumerateArray())
                 {
                     ValidateJsonElement(item, $"{path}[{index}]", threats);
                     index++;
@@ -305,7 +306,7 @@ public class InputSanitizationMiddleware
                 var value = element.GetString();
                 if (!string.IsNullOrEmpty(value) && value.Length <= _options.MaxInputLengthToScan)
                 {
-                    var elementThreats = DetectThreats(value, $"JSON{path}");
+                    List<ThreatDetection> elementThreats = DetectThreats(value, $"JSON{path}");
                     threats.AddRange(elementThreats);
                 }
                 break;
@@ -342,7 +343,7 @@ public class InputSanitizationMiddleware
         }
 
         // Check custom patterns
-        foreach (var pattern in _options.CustomPatterns)
+        foreach (KeyValuePair<string, string> pattern in _options.CustomPatterns)
         {
             if (Regex.IsMatch(input, pattern.Value, RegexOptions.IgnoreCase))
             {
@@ -355,7 +356,7 @@ public class InputSanitizationMiddleware
 
     private void LogThreats(HttpContext context, List<ThreatDetection> threats)
     {
-        foreach (var threat in threats)
+        foreach (ThreatDetection threat in threats)
         {
             if (_options.IncludeSuspiciousInputInLog)
             {

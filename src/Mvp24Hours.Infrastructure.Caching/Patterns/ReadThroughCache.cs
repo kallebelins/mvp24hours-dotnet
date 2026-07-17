@@ -74,7 +74,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             try
             {
                 // Try to get from cache first
-                var cached = await _cache.GetAsync<T>(key, cancellationToken);
+                T? cached = await _cache.GetAsync<T>(key, cancellationToken);
                 if (cached != null)
                 {
                     _logger?.LogDebug("Cache HIT for key: {Key}", key);
@@ -84,11 +84,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 _logger?.LogDebug("Cache MISS for key: {Key}, loading from source", key);
 
                 // Cache miss - load from source
-                var value = await _loadFromSource(key, cancellationToken);
+                T? value = await _loadFromSource(key, cancellationToken);
                 if (value != null)
                 {
                     // Determine cache options
-                    var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
+                    CacheEntryOptions options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
 
                     // Store in cache
                     await _cache.SetAsync(key, value, options, cancellationToken);

@@ -99,10 +99,10 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 return;
             }
 
-            var originalBodyStream = context.Request.Body;
+            Stream originalBodyStream = context.Request.Body;
             try
             {
-                using var decompressedStream = CreateDecompressionStream(originalBodyStream, encoding);
+                using Stream? decompressedStream = CreateDecompressionStream(originalBodyStream, encoding);
                 if (decompressedStream == null)
                 {
                     await _next(context);

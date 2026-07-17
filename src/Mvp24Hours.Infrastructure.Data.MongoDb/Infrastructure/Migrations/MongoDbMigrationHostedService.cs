@@ -78,15 +78,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
 
         private async Task RunMigrationsAsync(CancellationToken cancellationToken)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using IServiceScope scope = _serviceProvider.CreateScope();
 
             try
             {
-                var runner = scope.ServiceProvider.GetRequiredService<IMongoDbMigrationRunner>();
+                IMongoDbMigrationRunner runner = scope.ServiceProvider.GetRequiredService<IMongoDbMigrationRunner>();
 
                 _logger?.LogInformation("Running MongoDB migrations on startup...");
 
-                var result = await runner.MigrateAsync(cancellationToken);
+                MigrationResult result = await runner.MigrateAsync(cancellationToken);
 
                 if (result.Success)
                 {

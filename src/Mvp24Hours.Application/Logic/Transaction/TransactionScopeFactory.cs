@@ -50,32 +50,32 @@ namespace Mvp24Hours.Application.Logic.Transaction
         /// <inheritdoc />
         public ITransactionScope Create()
         {
-            var unitOfWork = _serviceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            var logger = _loggerFactory?.CreateLogger<TransactionScope>();
+            IUnitOfWorkAsync unitOfWork = _serviceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            ILogger<TransactionScope>? logger = _loggerFactory?.CreateLogger<TransactionScope>();
             return new TransactionScope(unitOfWork, logger);
         }
 
         /// <inheritdoc />
         public ITransactionScope Create<TUnitOfWork>() where TUnitOfWork : class, IUnitOfWorkAsync
         {
-            var unitOfWork = _serviceProvider.GetRequiredService<TUnitOfWork>();
-            var logger = _loggerFactory?.CreateLogger<TransactionScope>();
+            TUnitOfWork unitOfWork = _serviceProvider.GetRequiredService<TUnitOfWork>();
+            ILogger<TransactionScope>? logger = _loggerFactory?.CreateLogger<TransactionScope>();
             return new TransactionScope(unitOfWork, logger);
         }
 
         /// <inheritdoc />
         public ITransactionScopeSync CreateSync()
         {
-            var unitOfWork = _serviceProvider.GetRequiredService<IUnitOfWork>();
-            var logger = _loggerFactory?.CreateLogger<TransactionScopeSync>();
+            IUnitOfWork unitOfWork = _serviceProvider.GetRequiredService<IUnitOfWork>();
+            ILogger<TransactionScopeSync>? logger = _loggerFactory?.CreateLogger<TransactionScopeSync>();
             return new TransactionScopeSync(unitOfWork, logger);
         }
 
         /// <inheritdoc />
         public ITransactionScopeSync CreateSync<TUnitOfWork>() where TUnitOfWork : class, IUnitOfWork
         {
-            var unitOfWork = _serviceProvider.GetRequiredService<TUnitOfWork>();
-            var logger = _loggerFactory?.CreateLogger<TransactionScopeSync>();
+            TUnitOfWork unitOfWork = _serviceProvider.GetRequiredService<TUnitOfWork>();
+            ILogger<TransactionScopeSync>? logger = _loggerFactory?.CreateLogger<TransactionScopeSync>();
             return new TransactionScopeSync(unitOfWork, logger);
         }
     }

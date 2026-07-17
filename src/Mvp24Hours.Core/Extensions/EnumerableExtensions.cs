@@ -130,19 +130,19 @@ namespace Mvp24Hours.Extensions
 
         public static async Task<TSource?> FirstOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
         {
-            var list = await task ?? [];
+            IEnumerable<TSource> list = await task ?? [];
             return predicate == null ? list.FirstOrDefault() : list.FirstOrDefault(predicate);
         }
 
         public static async Task<TSource?> LastOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
         {
-            var list = await task ?? [];
+            IEnumerable<TSource> list = await task ?? [];
             return predicate == null ? list.LastOrDefault() : list.LastOrDefault(predicate);
         }
 
         public static async Task<TSource?> ElementAtOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, int index)
         {
-            var list = await task ?? [];
+            IEnumerable<TSource> list = await task ?? [];
             return list.ElementAtOrDefault(index);
         }
     }

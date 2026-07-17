@@ -102,9 +102,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
                 throw new ArgumentException("TimeField is required for time series collections.", nameof(options));
             }
 
-            var granularity = ConvertGranularity(options.Granularity);
+            MongoDB.Driver.TimeSeriesGranularity? granularity = ConvertGranularity(options.Granularity);
 
-            var timeSeriesOptions = !string.IsNullOrWhiteSpace(options.MetaField)
+            MongoDB.Driver.TimeSeriesOptions timeSeriesOptions = !string.IsNullOrWhiteSpace(options.MetaField)
                 ? new MongoDB.Driver.TimeSeriesOptions(options.TimeField, options.MetaField, granularity)
                 : new MongoDB.Driver.TimeSeriesOptions(options.TimeField);
 
@@ -158,15 +158,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             FilterDefinition<TDocument> filter,
             CancellationToken cancellationToken = default)
         {
-            var timeFilter = Builders<TDocument>.Filter.And(
+            FilterDefinition<TDocument> timeFilter = Builders<TDocument>.Filter.And(
                 Builders<TDocument>.Filter.Gte(_timeField, start),
                 Builders<TDocument>.Filter.Lt(_timeField, end));
 
-            var combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
+            FilterDefinition<TDocument> combinedFilter = filter != null && filter != FilterDefinition<TDocument>.Empty
                 ? Builders<TDocument>.Filter.And(timeFilter, filter)
                 : timeFilter;
 
-            var result = await _collection
+            List<TDocument> result = await _collection
                 .Find(combinedFilter)
                 .Sort(new BsonDocumentSortDefinition<TDocument>(new BsonDocument(_timeField, 1)))
                 .ToListAsync(cancellationToken);
@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             CancellationToken cancellationToken = default)
         {
             var windowSizeMs = (long)windowSize.TotalMilliseconds;
-            var aggregationOperator = GetAggregationOperator(aggregationType, aggregationField);
+            BsonDocument aggregationOperator = GetAggregationOperator(aggregationType, aggregationField);
 
             var pipeline = new BsonDocument[]
             {
@@ -226,11 +226,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
                 })
             };
 
-            var results = await _collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken)
+            List<BsonDocument> results = await _collection.Aggregate<BsonDocument>(pipeline, cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken);
 
             var aggregations = new List<TimeWindowAggregation>();
-            foreach (var result in results)
+            foreach (BsonDocument? result in results)
             {
                 aggregations.Add(new TimeWindowAggregation
                 {
@@ -265,7 +265,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
                 throw new InvalidOperationException("MetaField is not configured for this time series service.");
             }
 
-            var filter = Builders<TDocument>.Filter.Eq(_metaField, metaFieldValue);
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Eq(_metaField, metaFieldValue);
 
             return await _collection
                 .Find(filter)
@@ -279,8 +279,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             DateTime olderThan,
             CancellationToken cancellationToken = default)
         {
-            var filter = Builders<TDocument>.Filter.Lt(_timeField, olderThan);
-            var result = await _collection.DeleteManyAsync(filter, cancellationToken);
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Lt(_timeField, olderThan);
+            DeleteResult result = await _collection.DeleteManyAsync(filter, cancellationToken);
 
             _logger?.LogInformation("Deleted {Count} measurements older than {OlderThan}.",
                 result.DeletedCount, olderThan);

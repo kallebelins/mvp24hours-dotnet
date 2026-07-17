@@ -65,7 +65,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = operation();
+                T? result = operation();
                 return BusinessResultWithStatus.Success(result);
             }
             catch (Exception ex)
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = operation();
+                T? result = operation();
                 return BusinessResultWithStatus.Success(result);
             }
             catch (Exception ex)
@@ -137,8 +137,8 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var data = operation();
-                var mappedResult = resultMapper(data);
+                T? data = operation();
+                TResult? mappedResult = resultMapper(data);
                 return BusinessResultWithStatus.Success(mappedResult);
             }
             catch (Exception ex)
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = operation();
+                T? result = operation();
                 if (result == null)
                 {
                     return BusinessResultWithStatus.NotFound<T>(notFoundMessage);
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = await operation();
+                T? result = await operation();
                 return BusinessResultWithStatus.Success(result);
             }
             catch (Exception ex)
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = await operation();
+                T? result = await operation();
                 return BusinessResultWithStatus.Success(result);
             }
             catch (Exception ex)
@@ -265,8 +265,8 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var data = await operation();
-                var mappedResult = resultMapper(data);
+                T? data = await operation();
+                TResult? mappedResult = resultMapper(data);
                 return BusinessResultWithStatus.Success(mappedResult);
             }
             catch (Exception ex)
@@ -290,7 +290,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var result = await operation();
+                T? result = await operation();
                 if (result == null)
                 {
                     return BusinessResultWithStatus.NotFound<T>(notFoundMessage);
@@ -319,8 +319,8 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             try
             {
-                var data = await operation();
-                var mappedResult = await resultMapper(data);
+                T? data = await operation();
+                TResult? mappedResult = await resultMapper(data);
                 return BusinessResultWithStatus.Success(mappedResult);
             }
             catch (Exception ex)
@@ -344,7 +344,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
             var message = customMessage ?? ex.Message;
             var errorCode = mapper.GetErrorCode(ex);
-            var statusCode = mapper.GetStatusCode(ex);
+            ResultStatusCode statusCode = mapper.GetStatusCode(ex);
 
             logger.LogError(
                 ex,

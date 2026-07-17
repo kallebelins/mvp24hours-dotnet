@@ -155,7 +155,7 @@ public static class AspireServiceDefaults
     /// </summary>
     private static void ConfigureHealthChecks(IServiceCollection services, AspireOptions options)
     {
-        var healthChecksBuilder = services.AddHealthChecks();
+        IHealthChecksBuilder healthChecksBuilder = services.AddHealthChecks();
 
         // Add default self health check
         healthChecksBuilder.AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });

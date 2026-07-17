@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             if (message == null)
                 throw new ArgumentNullException(nameof(message));
 
-            var messageType = typeof(TMessage);
+            Type messageType = typeof(TMessage);
             var outboxMessage = new TransactionalOutboxMessage
             {
                 Id = Guid.NewGuid(),
@@ -121,9 +121,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 
             var messageIds = new List<Guid>();
 
-            foreach (var message in messages)
+            foreach (TMessage message in messages)
             {
-                var id = await PublishAsync(message, routingKey, cancellationToken);
+                Guid id = await PublishAsync(message, routingKey, cancellationToken);
                 messageIds.Add(id);
             }
 
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         /// <returns>Number of messages flushed to the outbox.</returns>
         public async Task<int> FlushToOutboxAsync(CancellationToken cancellationToken = default)
         {
-            var pending = _pendingMessages.Value;
+            List<TransactionalOutboxMessage>? pending = _pendingMessages.Value;
             if (pending == null || pending.Count == 0)
             {
                 return 0;
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 
         private void EnsurePendingList()
         {
-            _pendingMessages.Value ??= new List<TransactionalOutboxMessage>();
+            _pendingMessages.Value ??= [];
         }
 
         private static string? GetCorrelationId(IDictionary<string, object> headers)

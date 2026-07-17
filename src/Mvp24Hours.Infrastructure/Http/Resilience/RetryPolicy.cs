@@ -77,7 +77,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
 
             if (!_options.Enabled)
             {
-                var request = requestFactory();
+                HttpRequestMessage request = requestFactory();
                 return sendAsync(request, cancellationToken);
             }
 
@@ -92,7 +92,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
                 {
                     var reqFactory = (Func<HttpRequestMessage>)ctx["RequestFactory"];
                     var send = (Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>)ctx["SendAsync"];
-                    var request = reqFactory();
+                    HttpRequestMessage request = reqFactory();
                     return await send(request, ct);
                 },
                 context,
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
 
         private AsyncRetryPolicy<HttpResponseMessage> CreatePolicy()
         {
-            var policyBuilder = HttpPolicyExtensions
+            PolicyBuilder<HttpResponseMessage> policyBuilder = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>();
 
@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             // Check for Retry-After header
             if (outcome?.Result?.Headers.RetryAfter?.Delta.HasValue == true)
             {
-                var retryAfter = outcome.Result.Headers.RetryAfter.Delta.Value;
+                TimeSpan retryAfter = outcome.Result.Headers.RetryAfter.Delta.Value;
                 if (retryAfter <= _options.MaxDelay)
                 {
                     _logger?.LogDebug(
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
                 }
             }
 
-            var delay = _options.BackoffType switch
+            TimeSpan delay = _options.BackoffType switch
             {
                 BackoffType.Constant => _options.InitialDelay,
                 BackoffType.Linear => TimeSpan.FromMilliseconds(

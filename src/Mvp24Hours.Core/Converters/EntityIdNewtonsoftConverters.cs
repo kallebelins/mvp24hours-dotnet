@@ -47,7 +47,7 @@ namespace Mvp24Hours.Core.Converters
             if (reader.TokenType == JsonToken.String)
             {
                 var stringValue = reader.Value?.ToString();
-                if (Guid.TryParse(stringValue, out var guid))
+                if (Guid.TryParse(stringValue, out Guid guid))
                 {
                     return _createInstance(guid);
                 }
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Core.Converters
 
         private static Func<Guid, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(Guid) },
@@ -83,8 +83,8 @@ namespace Mvp24Hours.Core.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a Guid parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(Guid), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(Guid), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<Guid, TId>>(body, parameter).Compile();
         }
     }
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Core.Converters
 
         private static Func<int, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(int) },
@@ -150,8 +150,8 @@ namespace Mvp24Hours.Core.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts an int parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(int), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(int), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<int, TId>>(body, parameter).Compile();
         }
     }
@@ -205,7 +205,7 @@ namespace Mvp24Hours.Core.Converters
 
         private static Func<long, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(long) },
@@ -217,8 +217,8 @@ namespace Mvp24Hours.Core.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a long parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(long), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(long), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<long, TId>>(body, parameter).Compile();
         }
     }
@@ -264,7 +264,7 @@ namespace Mvp24Hours.Core.Converters
 
         private static Func<string, TId> CreateFactory()
         {
-            var ctor = typeof(TId).GetConstructor(
+            ConstructorInfo? ctor = typeof(TId).GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { typeof(string) },
@@ -276,8 +276,8 @@ namespace Mvp24Hours.Core.Converters
                     $"Type {typeof(TId).Name} must have a constructor that accepts a string parameter.");
             }
 
-            var parameter = Expression.Parameter(typeof(string), "value");
-            var body = Expression.New(ctor, parameter);
+            ParameterExpression parameter = Expression.Parameter(typeof(string), "value");
+            NewExpression body = Expression.New(ctor, parameter);
             return Expression.Lambda<Func<string, TId>>(body, parameter).Compile();
         }
     }
@@ -327,7 +327,7 @@ namespace Mvp24Hours.Core.Converters
                 if (reader.TokenType == JsonToken.String)
                 {
                     var stringValue = reader.Value?.ToString();
-                    if (Guid.TryParse(stringValue, out var guid))
+                    if (Guid.TryParse(stringValue, out Guid guid))
                     {
                         return CreateInstance(objectType, guid);
                     }
@@ -375,8 +375,8 @@ namespace Mvp24Hours.Core.Converters
                 return;
             }
 
-            var type = value.GetType();
-            var valueProperty = GetValueProperty(type);
+            Type type = value.GetType();
+            PropertyInfo? valueProperty = GetValueProperty(type);
             var underlyingValue = valueProperty?.GetValue(value);
 
             if (underlyingValue == null)
@@ -408,8 +408,8 @@ namespace Mvp24Hours.Core.Converters
         private static object CreateInstance(Type type, object? value)
         {
             ArgumentNullException.ThrowIfNull(value);
-            var valueType = value.GetType();
-            var ctor = type.GetConstructor(
+            Type valueType = value.GetType();
+            ConstructorInfo? ctor = type.GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { valueType },

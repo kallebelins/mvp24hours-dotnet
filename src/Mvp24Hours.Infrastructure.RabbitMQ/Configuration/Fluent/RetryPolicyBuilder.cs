@@ -242,7 +242,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <summary>
         /// Gets or sets the custom intervals for custom interval retry.
         /// </summary>
-        public List<TimeSpan> Intervals { get; set; } = new();
+        public List<TimeSpan> Intervals { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether jitter is enabled.
@@ -257,12 +257,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <summary>
         /// Gets the exception types to handle (retry for these).
         /// </summary>
-        public HashSet<Type> HandledExceptions { get; } = new();
+        public HashSet<Type> HandledExceptions { get; } = [];
 
         /// <summary>
         /// Gets the exception types to ignore (don't retry for these).
         /// </summary>
-        public HashSet<Type> IgnoredExceptions { get; } = new();
+        public HashSet<Type> IgnoredExceptions { get; } = [];
 
         /// <summary>
         /// Calculates the delay for a given retry attempt.
@@ -309,12 +309,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <returns>True if the exception should be retried.</returns>
         public bool ShouldRetry(Exception exception)
         {
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
 
             // If we have ignored exceptions and this is one, don't retry
             if (IgnoredExceptions.Count > 0)
             {
-                foreach (var ignored in IgnoredExceptions)
+                foreach (Type ignored in IgnoredExceptions)
                 {
                     if (ignored.IsAssignableFrom(exceptionType))
                         return false;
@@ -324,7 +324,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             // If we have handled exceptions specified, only retry for those
             if (HandledExceptions.Count > 0)
             {
-                foreach (var handled in HandledExceptions)
+                foreach (Type handled in HandledExceptions)
                 {
                     if (handled.IsAssignableFrom(exceptionType))
                         return true;

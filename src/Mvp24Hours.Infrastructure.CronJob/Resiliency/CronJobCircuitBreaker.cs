@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
 
-            if (!_circuits.TryGetValue(jobName, out var circuit))
+            if (!_circuits.TryGetValue(jobName, out CircuitState? circuit))
             {
                 return CircuitBreakerState.Closed;
             }
@@ -76,8 +76,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
 
-            var circuit = _circuits.GetOrAdd(jobName, _ => new CircuitState(_timeProvider));
-            var effectiveState = GetEffectiveState(circuit);
+            CircuitState circuit = _circuits.GetOrAdd(jobName, _ => new CircuitState(_timeProvider));
+            CircuitBreakerState effectiveState = GetEffectiveState(circuit);
 
             switch (effectiveState)
             {
@@ -118,12 +118,12 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
 
-            if (!_circuits.TryGetValue(jobName, out var circuit))
+            if (!_circuits.TryGetValue(jobName, out CircuitState? circuit))
             {
                 return;
             }
 
-            var previousState = GetEffectiveState(circuit);
+            CircuitBreakerState previousState = GetEffectiveState(circuit);
 
             switch (previousState)
             {
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                     if (circuit.HalfOpenSuccessCount >= successThreshold)
                     {
                         TransitionToClosed(circuit);
-                        var newState = CircuitBreakerState.Closed;
+                        CircuitBreakerState newState = CircuitBreakerState.Closed;
                         onStateChange?.Invoke(previousState, newState);
                     }
                     break;
@@ -161,8 +161,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
 
-            var circuit = _circuits.GetOrAdd(jobName, _ => new CircuitState(_timeProvider));
-            var previousState = GetEffectiveState(circuit);
+            CircuitState circuit = _circuits.GetOrAdd(jobName, _ => new CircuitState(_timeProvider));
+            CircuitBreakerState previousState = GetEffectiveState(circuit);
 
             switch (previousState)
             {
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                     if (circuit.FailureCount >= failureThreshold)
                     {
                         TransitionToOpen(circuit, duration);
-                        var newState = CircuitBreakerState.Open;
+                        CircuitBreakerState newState = CircuitBreakerState.Open;
                         onStateChange?.Invoke(previousState, newState);
                     }
                     break;
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                     circuit.ReleaseTestExecution();
                     // Any failure in half-open immediately opens the circuit
                     TransitionToOpen(circuit, duration);
-                    var openState = CircuitBreakerState.Open;
+                    CircuitBreakerState openState = CircuitBreakerState.Open;
                     onStateChange?.Invoke(previousState, openState);
                     break;
             }
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <returns>The circuit breaker metrics, or null if no circuit exists.</returns>
         public CircuitBreakerMetrics? GetMetrics(string jobName)
         {
-            if (!_circuits.TryGetValue(jobName, out var circuit))
+            if (!_circuits.TryGetValue(jobName, out CircuitState? circuit))
             {
                 return null;
             }
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                 return false;
             }
 
-            var elapsed = _timeProvider.GetUtcNow() - circuit.OpenedAt.Value;
+            TimeSpan elapsed = _timeProvider.GetUtcNow() - circuit.OpenedAt.Value;
             return elapsed >= duration;
         }
 
@@ -285,7 +285,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
 
             public void RecordFailure()
             {
-                var now = _timeProvider.GetUtcNow();
+                DateTimeOffset now = _timeProvider.GetUtcNow();
                 _failures.Enqueue(now);
                 LastFailureTime = now;
             }
@@ -298,8 +298,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
 
             public void CleanOldFailures(TimeSpan samplingDuration)
             {
-                var cutoff = _timeProvider.GetUtcNow() - samplingDuration;
-                while (_failures.TryPeek(out var oldest) && oldest < cutoff)
+                DateTimeOffset cutoff = _timeProvider.GetUtcNow() - samplingDuration;
+                while (_failures.TryPeek(out DateTimeOffset oldest) && oldest < cutoff)
                 {
                     _failures.TryDequeue(out _);
                 }

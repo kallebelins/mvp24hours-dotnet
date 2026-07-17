@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!_items.TryGetValue(queueItemId, out var item))
+            if (!_items.TryGetValue(queueItemId, out EmailQueueItem? item))
             {
                 throw new InvalidOperationException($"Queue item '{queueItemId}' not found.");
             }
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!_items.TryGetValue(queueItemId, out var item))
+            if (!_items.TryGetValue(queueItemId, out EmailQueueItem? item))
             {
                 throw new InvalidOperationException($"Queue item '{queueItemId}' not found.");
             }
@@ -153,8 +153,8 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
         /// </summary>
         internal IEmailQueueItem? GetNextItem()
         {
-            var now = DateTimeOffset.UtcNow;
-            var availableItems = _items.Values
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            EmailQueueItem? availableItems = _items.Values
                 .Where(item => item.Status == EmailQueueStatus.Queued ||
                               (item.Status == EmailQueueStatus.Scheduled && item.ScheduledSendTime <= now))
                 .OrderByDescending(item => item.Priority)
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
         /// </summary>
         internal void MarkAsSending(string queueItemId)
         {
-            if (_items.TryGetValue(queueItemId, out var item))
+            if (_items.TryGetValue(queueItemId, out EmailQueueItem? item))
             {
                 item.Status = EmailQueueStatus.Sending;
                 item.AttemptCount++;
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
         /// </summary>
         internal void MarkAsSent(string queueItemId, string? messageId = null)
         {
-            if (_items.TryGetValue(queueItemId, out var item))
+            if (_items.TryGetValue(queueItemId, out EmailQueueItem? item))
             {
                 item.Status = EmailQueueStatus.Sent;
                 item.SentAt = DateTimeOffset.UtcNow;
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.Email.Queue
         /// </summary>
         internal void MarkAsFailed(string queueItemId, string error)
         {
-            if (_items.TryGetValue(queueItemId, out var item))
+            if (_items.TryGetValue(queueItemId, out EmailQueueItem? item))
             {
                 item.Status = EmailQueueStatus.Failed;
                 item.LastError = error;

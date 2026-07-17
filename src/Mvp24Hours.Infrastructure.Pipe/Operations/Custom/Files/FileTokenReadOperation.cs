@@ -22,7 +22,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files
         {
             if (FilePath.HasValue())
             {
-                var dto = FileLogHelper.ReadLogToken<T>(input.Token, typeof(T).Name.ToLower(), FilePath);
+                T? dto = FileLogHelper.ReadLogToken<T>(input.Token, typeof(T).Name.ToLower(), FilePath);
                 if (dto != null)
                 {
                     input.AddContent(dto);

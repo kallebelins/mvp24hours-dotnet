@@ -6,6 +6,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Saga;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Extensions
@@ -69,8 +70,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Extensions
             // Register the consumer
             services.AddScoped<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>(sp =>
             {
-                var adapter = sp.GetRequiredService<CqrsSagaAdapter<TData, TSaga>>();
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>>();
+                CqrsSagaAdapter<TData, TSaga> adapter = sp.GetRequiredService<CqrsSagaAdapter<TData, TSaga>>();
+                ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>>();
                 return new CqrsSagaMessageConsumer<TData, TSaga, TMessage>(
                     adapter, dataFactory, correlationIdExtractor, logger);
             });

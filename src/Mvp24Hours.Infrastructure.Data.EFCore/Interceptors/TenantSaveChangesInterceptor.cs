@@ -121,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 return;
             }
 
-            foreach (var entry in context.ChangeTracker.Entries())
+            foreach (EntityEntry entry in context.ChangeTracker.Entries())
             {
                 if (entry.Entity is ITenantEntity tenantEntity)
                 {
@@ -181,14 +181,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private void TryProcessGenericTenantEntity(EntityEntry entry, string currentTenantId)
         {
-            var entityType = entry.Entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entry.Entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
                 {
-                    var tenantIdProperty = entry.Property("TenantId");
+                    PropertyEntry tenantIdProperty = entry.Property("TenantId");
                     if (tenantIdProperty == null) continue;
 
                     switch (entry.State)
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                                     tenantIdProperty.CurrentValue = currentTenantId;
                                 }
                                 else if (iface.GetGenericArguments()[0] == typeof(Guid) &&
-                                         Guid.TryParse(currentTenantId, out var guidTenantId))
+                                         Guid.TryParse(currentTenantId, out Guid guidTenantId))
                                 {
                                     tenantIdProperty.CurrentValue = guidTenantId;
                                 }
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         private static bool IsDefaultValue(object value)
         {
             if (value == null) return true;
-            var type = value.GetType();
+            Type type = value.GetType();
             if (type.IsValueType)
             {
                 return value.Equals(Activator.CreateInstance(type));

@@ -26,11 +26,11 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
         var adapter = new TimeProviderAdapter(timeProvider);
 
         // Act
-        var result = adapter.UtcNow;
+        DateTime result = adapter.UtcNow;
 
         // Assert
         result.Should().Be(fixedTime.UtcDateTime);
@@ -41,11 +41,11 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
         var adapter = new TimeProviderAdapter(timeProvider);
 
         // Act
-        var result = adapter.UtcNowOffset;
+        DateTimeOffset result = adapter.UtcNowOffset;
 
         // Assert
         result.Should().Be(fixedTime);
@@ -56,11 +56,11 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
         var adapter = new TimeProviderAdapter(timeProvider);
 
         // Act
-        var result = adapter.UtcToday;
+        DateTime result = adapter.UtcToday;
 
         // Assert
         result.Should().Be(new DateTime(2024, 6, 15));
@@ -73,9 +73,9 @@ public class TimeProviderTest
     public void TimeProviderAdapter_System_UsesSystemTimeProvider()
     {
         // Arrange & Act
-        var before = DateTime.UtcNow;
-        var result = TimeProviderAdapter.System.UtcNow;
-        var after = DateTime.UtcNow;
+        DateTime before = DateTime.UtcNow;
+        DateTime result = TimeProviderAdapter.System.UtcNow;
+        DateTime after = DateTime.UtcNow;
 
         // Assert
         result.Should().BeOnOrAfter(before);
@@ -87,12 +87,12 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero); // UTC noon
-        var timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
         var easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
         var adapter = new TimeProviderAdapter(timeProvider, easternZone);
 
         // Act
-        var localTime = adapter.Now;
+        DateTime localTime = adapter.Now;
 
         // Assert
         // Eastern Daylight Time is UTC-4 in June
@@ -111,7 +111,7 @@ public class TimeProviderTest
         var adapter = new ClockAdapter(testClock);
 
         // Act
-        var result = adapter.GetUtcNow();
+        DateTimeOffset result = adapter.GetUtcNow();
 
         // Assert
         result.Should().Be(new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero));
@@ -125,9 +125,9 @@ public class TimeProviderTest
         var adapter = new ClockAdapter(testClock);
 
         // Act
-        var before = adapter.GetUtcNow();
+        DateTimeOffset before = adapter.GetUtcNow();
         testClock.AdvanceBy(TimeSpan.FromHours(1));
-        var after = adapter.GetUtcNow();
+        DateTimeOffset after = adapter.GetUtcNow();
 
         // Assert
         before.Hour.Should().Be(10);
@@ -143,7 +143,7 @@ public class TimeProviderTest
         var adapter = new ClockAdapter(testClock, easternZone);
 
         // Act
-        var result = adapter.LocalTimeZone;
+        TimeZoneInfo result = adapter.LocalTimeZone;
 
         // Assert
         result.Should().Be(easternZone);
@@ -161,11 +161,11 @@ public class TimeProviderTest
 
         // Act
         services.AddTimeProvider();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var timeProvider = provider.GetService<TimeProvider>();
-        var clock = provider.GetService<IClock>();
+        TimeProvider? timeProvider = provider.GetRequiredService<TimeProvider>();
+        IClock? clock = provider.GetRequiredService<IClock>();
 
         timeProvider.Should().NotBeNull();
         timeProvider.Should().Be(TimeProvider.System);
@@ -179,15 +179,15 @@ public class TimeProviderTest
         // Arrange
         var services = new ServiceCollection();
         var fixedTime = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var customProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider customProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
 
         // Act
         services.AddTimeProvider(customProvider);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var timeProvider = provider.GetRequiredService<TimeProvider>();
-        var clock = provider.GetRequiredService<IClock>();
+        TimeProvider timeProvider = provider.GetRequiredService<TimeProvider>();
+        IClock clock = provider.GetRequiredService<IClock>();
 
         timeProvider.GetUtcNow().Should().Be(fixedTime);
         clock.UtcNow.Should().Be(fixedTime.UtcDateTime);
@@ -202,11 +202,11 @@ public class TimeProviderTest
 
         // Act
         services.AddClock(testClock);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var clock = provider.GetService<IClock>();
-        var timeProvider = provider.GetService<TimeProvider>();
+        IClock? clock = provider.GetRequiredService<IClock>();
+        TimeProvider? timeProvider = provider.GetRequiredService<TimeProvider>();
 
         clock.Should().Be(testClock);
         timeProvider.Should().NotBeNull();
@@ -221,10 +221,10 @@ public class TimeProviderTest
 
         // Act
         services.AddSystemClock();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var clock = provider.GetRequiredService<IClock>();
+        IClock clock = provider.GetRequiredService<IClock>();
         clock.Should().Be(SystemClock.Instance);
     }
 
@@ -236,14 +236,14 @@ public class TimeProviderTest
         services.AddTimeProvider(); // Register system time
 
         var fixedTime = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var customProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider customProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
 
         // Act
         services.ReplaceTimeProvider(customProvider);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var timeProvider = provider.GetRequiredService<TimeProvider>();
+        TimeProvider timeProvider = provider.GetRequiredService<TimeProvider>();
         timeProvider.GetUtcNow().Should().Be(fixedTime);
     }
 
@@ -258,10 +258,10 @@ public class TimeProviderTest
 
         // Act
         services.ReplaceClock(testClock);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var clock = provider.GetRequiredService<IClock>();
+        IClock clock = provider.GetRequiredService<IClock>();
         clock.UtcNow.Should().Be(testClock.UtcNow);
     }
 
@@ -276,7 +276,7 @@ public class TimeProviderTest
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero);
 
         // Act
-        var provider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider provider = FakeTimeProviderHelper.FixedAt(fixedTime);
 
         // Assert
         provider.GetUtcNow().Should().Be(fixedTime);
@@ -286,7 +286,7 @@ public class TimeProviderTest
     public void FakeTimeProviderHelper_FixedAt_WithDateTimeParams_CreatesFixedTimeProvider()
     {
         // Act
-        var provider = FakeTimeProviderHelper.FixedAt(2024, 6, 15, 10, 30, 0);
+        TimeProvider provider = FakeTimeProviderHelper.FixedAt(2024, 6, 15, 10, 30, 0);
 
         // Assert
         provider.GetUtcNow().Should().Be(new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero));
@@ -299,7 +299,7 @@ public class TimeProviderTest
         var testClock = new TestClock(new DateTime(2024, 6, 15, 10, 0, 0, DateTimeKind.Utc));
 
         // Act
-        var timeProvider = FakeTimeProviderHelper.FromClock(testClock);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FromClock(testClock);
 
         // Assert
         timeProvider.GetUtcNow().UtcDateTime.Should().Be(testClock.UtcNow);
@@ -310,10 +310,10 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 0, 0, TimeSpan.Zero);
-        var timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider timeProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
 
         // Act
-        var clock = FakeTimeProviderHelper.ToClock(timeProvider);
+        IClock clock = FakeTimeProviderHelper.ToClock(timeProvider);
 
         // Assert
         clock.UtcNow.Should().Be(fixedTime.UtcDateTime);
@@ -328,7 +328,7 @@ public class TimeProviderTest
     {
         // Arrange
         var fixedTime = new DateTimeOffset(2024, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var originalProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
+        TimeProvider originalProvider = FakeTimeProviderHelper.FixedAt(fixedTime);
 
         // Act: TimeProvider -> IClock -> TimeProvider
         var clock = new TimeProviderAdapter(originalProvider);
@@ -360,9 +360,9 @@ public class TimeProviderTest
         var timeProvider = new ClockAdapter(testClock);
 
         // Act
-        var before = timeProvider.GetUtcNow();
+        DateTimeOffset before = timeProvider.GetUtcNow();
         testClock.AdvanceBy(TimeSpan.FromHours(2));
-        var after = timeProvider.GetUtcNow();
+        DateTimeOffset after = timeProvider.GetUtcNow();
 
         // Assert
         before.Hour.Should().Be(10);
@@ -378,7 +378,7 @@ public class TimeProviderTest
     public void TimeProviderAdapter_NullTimeProvider_ThrowsArgumentNullException()
     {
         // Act & Assert
-        var action = () => new TimeProviderAdapter(null!);
+        Func<TimeProviderAdapter> action = () => new TimeProviderAdapter(null!);
         action.Should().Throw<ArgumentNullException>().WithParameterName("timeProvider");
     }
 
@@ -386,7 +386,7 @@ public class TimeProviderTest
     public void ClockAdapter_NullClock_ThrowsArgumentNullException()
     {
         // Act & Assert
-        var action = () => new ClockAdapter(null!);
+        Func<ClockAdapter> action = () => new ClockAdapter(null!);
         action.Should().Throw<ArgumentNullException>().WithParameterName("clock");
     }
 
@@ -397,7 +397,7 @@ public class TimeProviderTest
         var services = new ServiceCollection();
 
         // Act & Assert
-        var action = () => services.AddTimeProvider(null!);
+        Func<IServiceCollection> action = () => services.AddTimeProvider(null!);
         action.Should().Throw<ArgumentNullException>().WithParameterName("timeProvider");
     }
 
@@ -408,7 +408,7 @@ public class TimeProviderTest
         var services = new ServiceCollection();
 
         // Act & Assert
-        var action = () => services.AddClock(null!);
+        Func<IServiceCollection> action = () => services.AddClock(null!);
         action.Should().Throw<ArgumentNullException>().WithParameterName("clock");
     }
 

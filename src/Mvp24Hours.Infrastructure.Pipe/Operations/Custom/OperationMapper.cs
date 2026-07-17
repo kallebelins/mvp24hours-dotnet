@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
 
         public override void Execute(IPipelineMessage input)
         {
-            var result = Mapper(input);
+            T? result = Mapper(input);
             if (result != null)
             {
                 if (string.IsNullOrEmpty(ContentKey))
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
             else if (input.HasContent<T>())
                 content = input.GetContent<T>();
 
-            var result = Mapper(content!);
+            U? result = Mapper(content!);
             if (result != null)
             {
                 if (string.IsNullOrEmpty(ContentKey))

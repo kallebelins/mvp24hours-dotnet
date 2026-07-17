@@ -29,7 +29,7 @@ public sealed record CurrentUser : ICurrentUser
         Name = name;
         Email = email;
         IsAuthenticated = isAuthenticated;
-        Roles = roles?.ToList() ?? new List<string>();
+        Roles = roles?.ToList() ?? [];
         Claims = claims ?? new Dictionary<string, string?>();
     }
 
@@ -94,7 +94,7 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
         get => _userHolder.Value?.User;
         set
         {
-            var holder = _userHolder.Value;
+            UserHolder? holder = _userHolder.Value;
             if (holder != null)
             {
                 holder.User = null;

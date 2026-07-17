@@ -45,9 +45,9 @@ namespace Mvp24Hours.WebAPI.Configuration
         public void Configure(SwaggerGenOptions options)
         {
             // Configure each API version
-            foreach (var description in _provider.ApiVersionDescriptions)
+            foreach (ApiVersionDescription description in _provider.ApiVersionDescriptions)
             {
-                var versionInfo = _swaggerOptions.Versions.FirstOrDefault(v =>
+                SwaggerVersionInfo versionInfo = _swaggerOptions.Versions.FirstOrDefault(v =>
                     v.Version == description.ApiVersion.ToString() ||
                     v.Version == description.GroupName)
                     ?? new SwaggerVersionInfo

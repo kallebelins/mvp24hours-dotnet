@@ -36,7 +36,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             IServiceProvider? serviceProvider = null,
             ILogger<ValidationPipeline<T>>? logger = null)
         {
-            _steps = (steps?.OrderBy(s => s.Order).ToList()) ?? new List<IValidationStep<T>>();
+            _steps = (steps?.OrderBy(s => s.Order).ToList()) ?? [];
             _serviceProvider = serviceProvider;
             _logger = logger;
         }
@@ -63,7 +63,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             var context = new ValidationStepContext(options, _serviceProvider);
             var allErrors = new List<IMessageResult>();
 
-            foreach (var step in _steps.Where(s => s.IsEnabled))
+            foreach (IValidationStep<T>? step in _steps.Where(s => s.IsEnabled))
             {
                 if (!step.ShouldExecute(instance, context))
                 {
@@ -75,13 +75,13 @@ namespace Mvp24Hours.Application.Logic.Validation
                 _logger?.LogDebug("Executing validation step {StepName} for type {TypeName}",
                     step.Name, typeof(T).Name);
 
-                var result = step.Execute(instance, context);
+                ValidationServiceResult result = step.Execute(instance, context);
 
                 if (!result.IsValid)
                 {
                     allErrors.AddRange(result.Errors);
                     context.AccumulatedErrors.Clear();
-                    foreach (var error in allErrors)
+                    foreach (IMessageResult error in allErrors)
                     {
                         context.AccumulatedErrors.Add(error);
                     }
@@ -133,7 +133,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             var context = new ValidationStepContext(options, _serviceProvider);
             var allErrors = new List<IMessageResult>();
 
-            foreach (var step in _steps.Where(s => s.IsEnabled))
+            foreach (IValidationStep<T>? step in _steps.Where(s => s.IsEnabled))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -147,13 +147,13 @@ namespace Mvp24Hours.Application.Logic.Validation
                 _logger?.LogDebug("Executing validation step {StepName} for type {TypeName}",
                     step.Name, typeof(T).Name);
 
-                var result = await step.ExecuteAsync(instance, context, cancellationToken);
+                ValidationServiceResult result = await step.ExecuteAsync(instance, context, cancellationToken);
 
                 if (!result.IsValid)
                 {
                     allErrors.AddRange(result.Errors);
                     context.AccumulatedErrors.Clear();
-                    foreach (var error in allErrors)
+                    foreach (IMessageResult error in allErrors)
                     {
                         context.AccumulatedErrors.Add(error);
                     }
@@ -214,7 +214,7 @@ namespace Mvp24Hours.Application.Logic.Validation
     /// <typeparam name="T">The type to validate.</typeparam>
     public class ValidationPipelineBuilder<T> : IValidationPipelineBuilder<T> where T : class
     {
-        private readonly List<IValidationStep<T>> _steps = new();
+        private readonly List<IValidationStep<T>> _steps = [];
         private readonly IServiceProvider? _serviceProvider;
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         /// <inheritdoc/>
         public IValidationPipelineBuilder<T> UseFluentValidation()
         {
-            var step = _serviceProvider != null
+            FluentValidationStep<T>? step = _serviceProvider != null
                 ? _serviceProvider.GetService(typeof(FluentValidationStep<T>)) as FluentValidationStep<T>
                 : null;
 

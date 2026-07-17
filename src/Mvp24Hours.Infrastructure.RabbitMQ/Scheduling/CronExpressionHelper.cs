@@ -37,23 +37,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
             }
 
             var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
-            var now = fromTime ?? DateTimeOffset.UtcNow;
-            var localNow = TimeZoneInfo.ConvertTime(now, tz);
+            DateTimeOffset now = fromTime ?? DateTimeOffset.UtcNow;
+            DateTimeOffset localNow = TimeZoneInfo.ConvertTime(now, tz);
 
-            var minutes = ParseField(parts[0], 0, 59);
-            var hours = ParseField(parts[1], 0, 23);
-            var daysOfMonth = ParseField(parts[2], 1, 31);
-            var months = ParseField(parts[3], 1, 12);
-            var daysOfWeek = ParseField(parts[4], 0, 6);
+            HashSet<int> minutes = ParseField(parts[0], 0, 59);
+            HashSet<int> hours = ParseField(parts[1], 0, 23);
+            HashSet<int> daysOfMonth = ParseField(parts[2], 1, 31);
+            HashSet<int> months = ParseField(parts[3], 1, 12);
+            HashSet<int> daysOfWeek = ParseField(parts[4], 0, 6);
 
             // Start searching from the next minute
-            var candidate = new DateTimeOffset(
+            DateTimeOffset candidate = new DateTimeOffset(
                 localNow.Year, localNow.Month, localNow.Day,
                 localNow.Hour, localNow.Minute, 0,
                 localNow.Offset).AddMinutes(1);
 
             // Search up to 4 years ahead
-            var maxDate = candidate.AddYears(4);
+            DateTimeOffset maxDate = candidate.AddYears(4);
 
             while (candidate < maxDate)
             {
@@ -160,7 +160,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
                 {
                     // Step values: */5, 0-30/5
                     var stepParts = part.Split('/');
-                    var range = ParseRange(stepParts[0], min, max);
+                    IEnumerable<int> range = ParseRange(stepParts[0], min, max);
                     var step = int.Parse(stepParts[1], CultureInfo.InvariantCulture);
 
                     var rangeMin = range.Min();

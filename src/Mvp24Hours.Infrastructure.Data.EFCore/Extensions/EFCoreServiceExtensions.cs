@@ -202,7 +202,7 @@ namespace Mvp24Hours.Extensions
 
             services.AddScoped(sp =>
             {
-                var tenantProvider = sp.GetRequiredService<ITenantProvider>();
+                ITenantProvider tenantProvider = sp.GetRequiredService<ITenantProvider>();
                 return new TenantSaveChangesInterceptor(tenantProvider, options);
             });
 

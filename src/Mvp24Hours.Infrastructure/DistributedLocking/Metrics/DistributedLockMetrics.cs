@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Metrics
         /// <param name="waitTime">The time spent waiting for the lock.</param>
         public void RecordAcquisition(string resource, bool success, TimeSpan waitTime)
         {
-            var metrics = _resourceMetrics.GetOrAdd(resource, _ => new LockMetrics());
+            LockMetrics metrics = _resourceMetrics.GetOrAdd(resource, _ => new LockMetrics());
             metrics.RecordAcquisition(success, waitTime);
         }
 
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Metrics
         /// <param name="resource">The resource identifier.</param>
         public void RecordRelease(string resource)
         {
-            if (_resourceMetrics.TryGetValue(resource, out var metrics))
+            if (_resourceMetrics.TryGetValue(resource, out LockMetrics? metrics))
             {
                 metrics.RecordRelease();
             }
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Metrics
         /// <returns>Lock metrics for the resource, or null if no metrics exist.</returns>
         public LockResourceMetrics? GetMetrics(string resource)
         {
-            if (_resourceMetrics.TryGetValue(resource, out var metrics))
+            if (_resourceMetrics.TryGetValue(resource, out LockMetrics? metrics))
             {
                 return metrics.GetSnapshot();
             }
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Metrics
         {
             var result = new System.Collections.Generic.Dictionary<string, LockResourceMetrics>();
 
-            foreach (var (resource, metrics) in _resourceMetrics)
+            foreach ((string? resource, LockMetrics? metrics) in _resourceMetrics)
             {
                 result[resource] = metrics.GetSnapshot();
             }
@@ -149,7 +149,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Metrics
             {
                 lock (_lock)
                 {
-                    var avgWaitTime = _totalAttempts > 0
+                    TimeSpan avgWaitTime = _totalAttempts > 0
                         ? TimeSpan.FromTicks(_totalWaitTimeTicks / _totalAttempts)
                         : TimeSpan.Zero;
 

@@ -84,7 +84,7 @@ public sealed class InMemoryInboxStore : IInboxStore
     /// <inheritdoc />
     public Task<InboxMessage?> GetByIdAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
-        _messages.TryGetValue(messageId, out var message);
+        _messages.TryGetValue(messageId, out InboxMessage? message);
         return Task.FromResult(message);
     }
 
@@ -110,7 +110,7 @@ public sealed class InMemoryInboxStore : IInboxStore
             .Select(m => m.Id)
             .ToList();
 
-        foreach (var id in toRemove)
+        foreach (Guid id in toRemove)
         {
             _messages.TryRemove(id, out _);
         }

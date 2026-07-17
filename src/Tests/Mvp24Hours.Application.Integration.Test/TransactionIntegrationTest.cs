@@ -3,10 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Microsoft.EntityFrameworkCore.Storage;
 using Mvp24Hours.Application.Integration.Test.Data;
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Fixtures;
 using Mvp24Hours.Application.Integration.Test.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Integration.Test;
@@ -34,13 +36,13 @@ public class TransactionIntegrationTest : IAsyncLifetime
     public async Task Transaction_RollbackOnError_ShouldNotPersist()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        using IServiceScope scope = _fixture.CreateScope();
+        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
         var initialCount = await dbContext.Categories.CountAsync();
 
         // Act - Try to add and then throw exception within transaction
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
             var category = new Category
@@ -69,13 +71,13 @@ public class TransactionIntegrationTest : IAsyncLifetime
     public async Task Transaction_CommitOnSuccess_ShouldPersist()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        using IServiceScope scope = _fixture.CreateScope();
+        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
         var initialCount = await dbContext.Categories.CountAsync();
 
         // Act
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
             var category = new Category
@@ -103,11 +105,11 @@ public class TransactionIntegrationTest : IAsyncLifetime
     public async Task Transaction_NestedOperations_ShouldWorkCorrectly()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        using IServiceScope scope = _fixture.CreateScope();
+        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
         // Act
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
             // Add category
@@ -132,7 +134,7 @@ public class TransactionIntegrationTest : IAsyncLifetime
             await transaction.CommitAsync();
 
             // Verify
-            var savedCategory = await dbContext.Categories
+            Category? savedCategory = await dbContext.Categories
                 .Include(c => c.Products)
                 .FirstOrDefaultAsync(c => c.Name == "Nested Transaction Category");
 
@@ -154,29 +156,29 @@ public class TransactionIntegrationTest : IAsyncLifetime
     public async Task ConcurrentOperations_ShouldHandleIsolation()
     {
         // Arrange
-        using var scope1 = _fixture.CreateScope();
-        using var scope2 = _fixture.CreateScope();
+        using IServiceScope scope1 = _fixture.CreateScope();
+        using IServiceScope scope2 = _fixture.CreateScope();
 
-        var service1 = scope1.ServiceProvider.GetRequiredService<CategoryService>();
-        var service2 = scope2.ServiceProvider.GetRequiredService<CategoryService>();
+        CategoryService service1 = scope1.ServiceProvider.GetRequiredService<CategoryService>();
+        CategoryService service2 = scope2.ServiceProvider.GetRequiredService<CategoryService>();
 
         // Act - Add categories concurrently
-        var task1 = service1.AddAsync(new Category { Name = "Concurrent 1", IsActive = true });
-        var task2 = service2.AddAsync(new Category { Name = "Concurrent 2", IsActive = true });
+        Task<IBusinessResult<int>> task1 = service1.AddAsync(new Category { Name = "Concurrent 1", IsActive = true });
+        Task<IBusinessResult<int>> task2 = service2.AddAsync(new Category { Name = "Concurrent 2", IsActive = true });
 
         await Task.WhenAll(task1, task2);
 
         // Assert
-        var result1 = await task1;
-        var result2 = await task2;
+        IBusinessResult<int> result1 = await task1;
+        IBusinessResult<int> result2 = await task2;
 
         result1.HasErrors.Should().BeFalse();
         result2.HasErrors.Should().BeFalse();
 
         // Verify both were saved
-        using var verifyScope = _fixture.CreateScope();
-        var verifyService = verifyScope.ServiceProvider.GetRequiredService<CategoryService>();
-        var allResult = await verifyService.GetByAsync(c => c.Name.StartsWith("Concurrent"));
+        using IServiceScope verifyScope = _fixture.CreateScope();
+        CategoryService verifyService = verifyScope.ServiceProvider.GetRequiredService<CategoryService>();
+        IBusinessResult<IList<Category>> allResult = await verifyService.GetByAsync(c => c.Name.StartsWith("Concurrent"));
         allResult.GetDataValue()!.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 

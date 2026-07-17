@@ -36,7 +36,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             CancellationToken cancellationToken = default) where T : class
         {
             serializer ??= new JsonHttpClientSerializer();
-            var response = await client.GetAsync(requestUri, cancellationToken);
+            HttpResponseMessage response = await client.GetAsync(requestUri, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<T>(serializer, cancellationToken);
         }
@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             CancellationToken cancellationToken = default) where T : class
         {
             serializer ??= new JsonHttpClientSerializer();
-            var response = await client.GetAsync(requestUri, cancellationToken);
+            HttpResponseMessage response = await client.GetAsync(requestUri, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri.ToString());
             return await response.ReadAsAsync<T>(serializer, cancellationToken);
         }
@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
-            var response = await client.PostAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PostAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
-            var response = await client.PostAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PostAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri.ToString());
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
-            var response = await client.PutAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PutAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -153,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
-            var response = await client.PutAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PutAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri.ToString());
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -174,7 +174,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             CancellationToken cancellationToken = default) where T : class
         {
             serializer ??= new JsonHttpClientSerializer();
-            var response = await client.DeleteAsync(requestUri, cancellationToken);
+            HttpResponseMessage response = await client.DeleteAsync(requestUri, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<T>(serializer, cancellationToken);
         }
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             CancellationToken cancellationToken = default) where T : class
         {
             serializer ??= new JsonHttpClientSerializer();
-            var response = await client.DeleteAsync(requestUri, cancellationToken);
+            HttpResponseMessage response = await client.DeleteAsync(requestUri, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri.ToString());
             return await response.ReadAsAsync<T>(serializer, cancellationToken);
         }
@@ -220,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUri) { Content = content };
-            var response = await client.SendAsync(request, cancellationToken);
+            HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -245,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             serializer ??= new JsonHttpClientSerializer();
             HttpContent? content = value != null ? serializer.Serialize(value) : null;
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUri) { Content = content };
-            var response = await client.SendAsync(request, cancellationToken);
+            HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri.ToString());
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -264,7 +264,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             int bufferSize = 8192,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            HttpResponseMessage response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
 
             if (response.Content == null)
@@ -272,7 +272,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
                 yield break;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var buffer = new byte[bufferSize];
             int bytesRead;
 
@@ -333,7 +333,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             serializer ??= new JsonHttpClientSerializer();
             var content = new StreamContent(stream);
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-            var response = await client.PostAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PostAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }
@@ -367,7 +367,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
                 await outputStream.FlushAsync(cancellationToken);
             });
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-            var response = await client.PostAsync(requestUri, content, cancellationToken);
+            HttpResponseMessage response = await client.PostAsync(requestUri, content, cancellationToken);
             await response.EnsureSuccessStatusCodeAsync(requestUri);
             return await response.ReadAsAsync<TResponse>(serializer, cancellationToken);
         }

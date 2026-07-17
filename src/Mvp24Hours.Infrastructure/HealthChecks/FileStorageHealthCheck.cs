@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
+using Mvp24Hours.Infrastructure.FileStorage.Results;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {
@@ -85,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
 
                 // Step 1: Upload test file
                 var uploadStopwatch = Stopwatch.StartNew();
-                var uploadResult = await _fileStorage.UploadAsync(
+                FileUploadResult uploadResult = await _fileStorage.UploadAsync(
                     testFilePath,
                     testContent,
                     "text/plain",
@@ -141,7 +142,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
 
                 // Step 3: Download and verify content
                 var downloadStopwatch = Stopwatch.StartNew();
-                var downloadResult = await _fileStorage.DownloadAsync(testFilePath, cts.Token);
+                FileDownloadResult downloadResult = await _fileStorage.DownloadAsync(testFilePath, cts.Token);
                 downloadStopwatch.Stop();
                 data["downloadTimeMs"] = downloadStopwatch.ElapsedMilliseconds;
 

@@ -6,6 +6,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
@@ -83,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 #pragma warning disable CS0618 // Intentional: RetryPipelineMiddleware is kept for backward compatibility.
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<RetryPipelineMiddleware>>();
+                ILogger<RetryPipelineMiddleware>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<RetryPipelineMiddleware>>();
                 return new RetryPipelineMiddleware(options, logger);
             });
 #pragma warning restore CS0618
@@ -107,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 #pragma warning disable CS0618 // Intentional: CircuitBreakerPipelineMiddleware is kept for backward compatibility.
             services.AddSingleton<CircuitBreakerPipelineMiddleware>(sp =>
             {
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<CircuitBreakerPipelineMiddleware>>();
+                ILogger<CircuitBreakerPipelineMiddleware>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<CircuitBreakerPipelineMiddleware>>();
                 return new CircuitBreakerPipelineMiddleware(options, logger);
             });
             services.AddSingleton<IPipelineMiddleware>(sp => sp.GetRequiredService<CircuitBreakerPipelineMiddleware>());
@@ -131,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             services.TryAddSingleton(options);
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<FallbackPipelineMiddleware>>();
+                ILogger<FallbackPipelineMiddleware>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<FallbackPipelineMiddleware>>();
                 return new FallbackPipelineMiddleware(options, logger);
             });
 
@@ -153,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             services.TryAddSingleton(options);
             services.AddSingleton<BulkheadPipelineMiddleware>(sp =>
             {
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<BulkheadPipelineMiddleware>>();
+                ILogger<BulkheadPipelineMiddleware>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<BulkheadPipelineMiddleware>>();
                 return new BulkheadPipelineMiddleware(options, logger);
             });
             services.AddSingleton<IPipelineMiddleware>(sp => sp.GetRequiredService<BulkheadPipelineMiddleware>());
@@ -191,8 +192,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
-                var store = sp.GetRequiredService<IDeadLetterStore>();
-                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<DeadLetterPipelineMiddleware>>();
+                IDeadLetterStore store = sp.GetRequiredService<IDeadLetterStore>();
+                ILogger<DeadLetterPipelineMiddleware>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<DeadLetterPipelineMiddleware>>();
                 return new DeadLetterPipelineMiddleware(store, options, logger);
             });
 

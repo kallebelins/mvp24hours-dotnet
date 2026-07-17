@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Middlewares;
 
@@ -77,7 +78,7 @@ public class CorrelationIdHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var httpContext = _httpContextAccessor.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor.HttpContext;
 
         if (httpContext != null && _options.PropagateToOutgoingRequests)
         {
@@ -115,7 +116,7 @@ public class CorrelationIdHandler : DelegatingHandler
     private void PropagateW3CTraceContext(HttpRequestMessage request, HttpContext httpContext)
     {
         // Check for existing traceparent header in incoming request
-        if (httpContext.Request.Headers.TryGetValue(_options.TraceParentHeader, out var traceParent)
+        if (httpContext.Request.Headers.TryGetValue(_options.TraceParentHeader, out StringValues traceParent)
             && !string.IsNullOrWhiteSpace(traceParent)
             && !request.Headers.Contains(_options.TraceParentHeader))
         {
@@ -123,7 +124,7 @@ public class CorrelationIdHandler : DelegatingHandler
         }
 
         // Check for existing tracestate header
-        if (httpContext.Request.Headers.TryGetValue(_options.TraceStateHeader, out var traceState)
+        if (httpContext.Request.Headers.TryGetValue(_options.TraceStateHeader, out StringValues traceState)
             && !string.IsNullOrWhiteSpace(traceState)
             && !request.Headers.Contains(_options.TraceStateHeader))
         {
@@ -165,7 +166,7 @@ public class CorrelationIdPropagatingHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var context = _contextProvider.GetCurrentContext();
+        CorrelationContext? context = _contextProvider.GetCurrentContext();
 
         if (context != null && _options.PropagateToOutgoingRequests)
         {

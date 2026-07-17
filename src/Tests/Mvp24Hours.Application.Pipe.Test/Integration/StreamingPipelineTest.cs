@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.Streaming;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using Xunit;
@@ -31,7 +32,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
 
             // Act
             var results = new List<int>();
-            await foreach (var result in pipeline.ExecuteStreamAsync(inputs))
+            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
             {
                 if (result.IsSuccess)
                 {
@@ -62,7 +63,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
 
             // Act
             var results = new List<int>();
-            await foreach (var result in pipeline.ExecuteStreamAsync(inputs))
+            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
             {
                 if (result.IsSuccess)
                 {
@@ -100,7 +101,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             // Act
             var results = new List<int>();
             var errorCount = 0;
-            await foreach (var result in pipeline.ExecuteStreamAsync(inputs))
+            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
             {
                 if (result.IsSuccess)
                 {
@@ -138,7 +139,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             // Act
             var successCount = 0;
             var failureCount = 0;
-            await foreach (var result in pipeline.ExecuteStreamAsync(inputs))
+            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
             {
                 if (result.IsSuccess)
                 {
@@ -160,7 +161,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         {
             // Arrange
             var filter = new FilterStreamingOperation<int>(x => x % 2 == 0);
-            var inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6 });
+            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6 });
 
             // Act
             var results = new List<int>();
@@ -184,7 +185,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
                     return $"Value: {input}";
                 });
 
-            var inputs = ToAsyncEnumerable(new[] { 1, 2, 3 });
+            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3 });
 
             // Act
             var results = new List<string>();
@@ -202,11 +203,11 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
         {
             // Arrange
             var batch = new BatchStreamingOperation<int>(3);
-            var inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6, 7 });
+            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6, 7 });
 
             // Act
             var results = new List<IReadOnlyList<int>>();
-            await foreach (var b in batch.ProcessStreamAsync(inputs))
+            await foreach (IReadOnlyList<int> b in batch.ProcessStreamAsync(inputs))
             {
                 results.Add(b);
             }
@@ -220,7 +221,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
 
         private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> source)
         {
-            foreach (var item in source)
+            foreach (T? item in source)
             {
                 yield return item;
                 await Task.CompletedTask;

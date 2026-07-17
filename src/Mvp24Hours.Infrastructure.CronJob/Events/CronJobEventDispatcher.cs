@@ -73,9 +73,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchStartingAsync(ICronJobContext context, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobStartingHandler>();
+            IEnumerable<ICronJobStartingHandler> handlers = GetOrderedHandlers<ICronJobStartingHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobStartingHandler handler in handlers)
             {
                 try
                 {
@@ -92,9 +92,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchCompletedAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobCompletedHandler>();
+            IEnumerable<ICronJobCompletedHandler> handlers = GetOrderedHandlers<ICronJobCompletedHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobCompletedHandler handler in handlers)
             {
                 try
                 {
@@ -111,9 +111,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchFailedAsync(ICronJobContext context, Exception exception, TimeSpan duration, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobFailedHandler>();
+            IEnumerable<ICronJobFailedHandler> handlers = GetOrderedHandlers<ICronJobFailedHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobFailedHandler handler in handlers)
             {
                 try
                 {
@@ -130,9 +130,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchCancelledAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobCancelledHandler>();
+            IEnumerable<ICronJobCancelledHandler> handlers = GetOrderedHandlers<ICronJobCancelledHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobCancelledHandler handler in handlers)
             {
                 try
                 {
@@ -149,9 +149,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchRetryAsync(ICronJobContext context, Exception exception, TimeSpan delay, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobRetryHandler>();
+            IEnumerable<ICronJobRetryHandler> handlers = GetOrderedHandlers<ICronJobRetryHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobRetryHandler handler in handlers)
             {
                 try
                 {
@@ -168,9 +168,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Events
         /// <inheritdoc />
         public async Task DispatchSkippedAsync(string jobName, SkipReason reason, CancellationToken cancellationToken)
         {
-            var handlers = GetOrderedHandlers<ICronJobSkippedHandler>();
+            IEnumerable<ICronJobSkippedHandler> handlers = GetOrderedHandlers<ICronJobSkippedHandler>();
 
-            foreach (var handler in handlers)
+            foreach (ICronJobSkippedHandler handler in handlers)
             {
                 try
                 {

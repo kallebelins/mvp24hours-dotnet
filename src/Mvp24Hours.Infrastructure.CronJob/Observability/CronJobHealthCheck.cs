@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -81,7 +82,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
                     "CronJob metrics service not available. Health check skipped."));
             }
 
-            var jobStates = _metricsService.GetAllJobStates();
+            ConcurrentDictionary<string, CronJobState> jobStates = _metricsService.GetAllJobStates();
 
             if (jobStates.IsEmpty)
             {
@@ -101,7 +102,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
                 ["check_time"] = DateTimeOffset.UtcNow.ToString("O")
             };
 
-            foreach (var (jobName, state) in jobStates)
+            foreach ((string? jobName, CronJobState? state) in jobStates)
             {
                 var jobData = new Dictionary<string, object>
                 {
@@ -138,7 +139,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
                 data[jobName] = jobData;
 
                 // Check for unhealthy conditions
-                var status = EvaluateJobHealth(state);
+                HealthStatus status = EvaluateJobHealth(state);
 
                 if (status == HealthStatus.Unhealthy)
                 {
@@ -268,7 +269,7 @@ public sealed class CronJobHealthCheckOptions
     /// <summary>
     /// Gets or sets the list of critical job names that cause unhealthy status on any failure.
     /// </summary>
-    public HashSet<string> CriticalJobs { get; set; } = new();
+    public HashSet<string> CriticalJobs { get; set; } = [];
 
     /// <summary>
     /// Gets or sets whether to ignore stopped jobs in health evaluation.

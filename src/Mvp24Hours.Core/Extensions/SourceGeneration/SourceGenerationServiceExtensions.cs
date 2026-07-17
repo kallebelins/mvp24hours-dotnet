@@ -52,7 +52,7 @@ public static class SourceGenerationServiceExtensions
     /// </example>
     public static IServiceCollection AddMvp24HoursJsonSourceGeneration(this IServiceCollection services)
     {
-        var options = Mvp24HoursJsonSerializerContext.CreateOptions();
+        JsonSerializerOptions options = Mvp24HoursJsonSerializerContext.CreateOptions();
 
         // Add EntityId converter factory for strongly-typed IDs
         options.Converters.Add(new EntityIdJsonConverterFactory());
@@ -83,7 +83,7 @@ public static class SourceGenerationServiceExtensions
         this IServiceCollection services,
         Action<JsonSerializerOptions> configure)
     {
-        var options = Mvp24HoursJsonSerializerContext.CreateOptions();
+        JsonSerializerOptions options = Mvp24HoursJsonSerializerContext.CreateOptions();
         options.Converters.Add(new EntityIdJsonConverterFactory());
 
         configure(options);
@@ -188,7 +188,7 @@ public static class SourceGenerationServiceExtensions
             // Add source-generated contexts
             options.JsonSerializerOptions.TypeInfoResolverChain.Add(Mvp24HoursJsonSerializerContext.Default);
 
-            foreach (var context in additionalContexts)
+            foreach (JsonSerializerContext context in additionalContexts)
             {
                 options.JsonSerializerOptions.TypeInfoResolverChain.Add(context);
             }

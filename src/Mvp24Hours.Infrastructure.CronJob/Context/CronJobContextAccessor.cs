@@ -33,7 +33,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Context
             get => _contextCurrent.Value?.Context;
             internal set
             {
-                var holder = _contextCurrent.Value;
+                CronJobContextHolder? holder = _contextCurrent.Value;
                 if (holder != null)
                 {
                     holder.Context = null;
@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Context
         /// </summary>
         internal static void SetContext(ICronJobContext? context)
         {
-            var holder = _contextCurrent.Value;
+            CronJobContextHolder? holder = _contextCurrent.Value;
             if (holder != null)
             {
                 holder.Context = null;
@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Context
         /// </summary>
         internal static void ClearContext()
         {
-            var holder = _contextCurrent.Value;
+            CronJobContextHolder? holder = _contextCurrent.Value;
             if (holder != null)
             {
                 holder.Context = null;

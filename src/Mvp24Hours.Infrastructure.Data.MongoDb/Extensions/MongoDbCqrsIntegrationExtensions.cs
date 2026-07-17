@@ -102,8 +102,8 @@ namespace Mvp24Hours.Extensions
 
             services.AddScoped<IDomainEventDispatcherMongoDb>(sp =>
             {
-                var dispatchFunc = dispatchFuncFactory(sp);
-                var logger = sp.GetService<ILogger<DomainEventDispatcherAdapter>>();
+                Func<IEnumerable<IDomainEvent>, CancellationToken, Task> dispatchFunc = dispatchFuncFactory(sp);
+                ILogger<DomainEventDispatcherAdapter>? logger = sp.GetService<ILogger<DomainEventDispatcherAdapter>>();
                 return new DomainEventDispatcherAdapter(dispatchFunc, logger);
             });
 
@@ -141,8 +141,8 @@ namespace Mvp24Hours.Extensions
             services.AddScoped<IDomainEventDispatcherMongoDb>(sp =>
             {
                 // Try to resolve IDomainEventDispatcher from CQRS module
-                var cqrsDispatcher = sp.GetService<Infrastructure.Cqrs.Abstractions.IDomainEventDispatcher>();
-                var logger = sp.GetService<ILogger<CqrsDomainEventDispatcherBridge>>();
+                Infrastructure.Cqrs.Abstractions.IDomainEventDispatcher? cqrsDispatcher = sp.GetService<Infrastructure.Cqrs.Abstractions.IDomainEventDispatcher>();
+                ILogger<CqrsDomainEventDispatcherBridge>? logger = sp.GetService<ILogger<CqrsDomainEventDispatcherBridge>>();
 
                 if (cqrsDispatcher == null)
                 {
@@ -365,8 +365,8 @@ namespace Mvp24Hours.Extensions
             // Register the dispatcher that writes to outbox instead of dispatching directly
             services.AddScoped<IDomainEventDispatcherMongoDb>(sp =>
             {
-                var outbox = sp.GetService<Infrastructure.Cqrs.Abstractions.IIntegrationEventOutbox>();
-                var logger = sp.GetService<ILogger<DomainEventDispatcherAdapter>>();
+                Infrastructure.Cqrs.Abstractions.IIntegrationEventOutbox? outbox = sp.GetService<Infrastructure.Cqrs.Abstractions.IIntegrationEventOutbox>();
+                ILogger<DomainEventDispatcherAdapter>? logger = sp.GetService<ILogger<DomainEventDispatcherAdapter>>();
 
                 if (outbox == null)
                 {
@@ -379,7 +379,7 @@ namespace Mvp24Hours.Extensions
                 return new DomainEventDispatcherAdapter(
                     async (events, ct) =>
                     {
-                        foreach (var evt in events)
+                        foreach (IDomainEvent evt in events)
                         {
                             // Convert domain event to integration event for outbox
                             var integrationEvent = new OutboxDomainEventWrapper(evt);

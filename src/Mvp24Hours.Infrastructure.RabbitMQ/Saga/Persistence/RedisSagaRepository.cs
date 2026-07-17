@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             var json = JsonSerializer.Serialize(instance, _jsonOptions);
 
             // Set appropriate expiration based on state
-            var expiration = instance.IsCompleted || instance.IsFaulted
+            TimeSpan expiration = instance.IsCompleted || instance.IsFaulted
                 ? _options.CompletedExpiration
                 : _options.DefaultExpiration;
 
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         public async Task<bool> DeleteAsync(Guid correlationId, CancellationToken cancellationToken = default)
         {
             var key = KeyPrefix + correlationId;
-            var instance = await FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
 
             if (instance == null)
             {
@@ -201,12 +201,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
                 return Array.Empty<SagaInstance<TData>>();
             }
 
-            var ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? new List<Guid>();
+            List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
             var results = new List<SagaInstance<TData>>();
 
-            foreach (var id in ids)
+            foreach (Guid id in ids)
             {
-                var instance = await FindAsync(id, cancellationToken);
+                SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
                 if (instance != null && instance.CurrentState == state)
                 {
                     results.Add(instance);
@@ -228,13 +228,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
                 return Array.Empty<SagaInstance<TData>>();
             }
 
-            var ids = JsonSerializer.Deserialize<List<Guid>>(indexJson, _jsonOptions) ?? new List<Guid>();
-            var threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
+            List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(indexJson, _jsonOptions) ?? [];
+            DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
             var results = new List<SagaInstance<TData>>();
 
-            foreach (var id in ids)
+            foreach (Guid id in ids)
             {
-                var instance = await FindAsync(id, cancellationToken);
+                SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
                 if (instance != null && instance.IsActive && instance.LastUpdatedAt < threshold)
                 {
                     results.Add(instance);
@@ -254,16 +254,16 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         /// <inheritdoc />
         public async Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(olderThan);
-            var completed = await FindByStateAsync("Completed", cancellationToken);
-            var faulted = await FindByStateAsync("Faulted", cancellationToken);
+            DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
+            IReadOnlyList<SagaInstance<TData>> completed = await FindByStateAsync("Completed", cancellationToken);
+            IReadOnlyList<SagaInstance<TData>> faulted = await FindByStateAsync("Faulted", cancellationToken);
 
             var toCleanup = completed.Concat(faulted)
                 .Where(s => s.LastUpdatedAt < threshold)
                 .ToList();
 
             var cleaned = 0;
-            foreach (var instance in toCleanup)
+            foreach (SagaInstance<TData>? instance in toCleanup)
             {
                 if (await DeleteAsync(instance.CorrelationId, cancellationToken))
                 {
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             Action<SagaInstance<TData>> update,
             CancellationToken cancellationToken = default)
         {
-            var instance = await FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
             if (instance == null)
             {
                 return false;
@@ -301,7 +301,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 
         private async Task<string?> GetPreviousStateAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            var instance = await FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
             return instance?.CurrentState;
         }
 
@@ -309,9 +309,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         {
             var indexKey = StateIndexKey(state);
             var idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
-            var ids = string.IsNullOrEmpty(idsJson)
-                ? new List<Guid>()
-                : JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? new List<Guid>();
+            List<Guid> ids = string.IsNullOrEmpty(idsJson)
+                ? []
+                : JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
 
             if (!ids.Contains(correlationId))
             {
@@ -321,9 +321,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 
             // Also maintain main index
             var mainIndexJson = await _cache.GetStringAsync(IndexKey, cancellationToken);
-            var mainIds = string.IsNullOrEmpty(mainIndexJson)
-                ? new List<Guid>()
-                : JsonSerializer.Deserialize<List<Guid>>(mainIndexJson, _jsonOptions) ?? new List<Guid>();
+            List<Guid> mainIds = string.IsNullOrEmpty(mainIndexJson)
+                ? []
+                : JsonSerializer.Deserialize<List<Guid>>(mainIndexJson, _jsonOptions) ?? [];
 
             if (!mainIds.Contains(correlationId))
             {
@@ -344,7 +344,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 
             if (!string.IsNullOrEmpty(idsJson))
             {
-                var ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? new List<Guid>();
+                List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
                 if (ids.Remove(correlationId))
                 {
                     await _cache.SetStringAsync(indexKey, JsonSerializer.Serialize(ids, _jsonOptions), cancellationToken);

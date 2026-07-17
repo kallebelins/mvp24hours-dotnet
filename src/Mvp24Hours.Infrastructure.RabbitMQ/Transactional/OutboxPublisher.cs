@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
         /// <inheritdoc />
         public async Task<int> PublishPendingAsync(int batchSize = 100, CancellationToken cancellationToken = default)
         {
-            var messages = await _outbox.GetPendingAsync(batchSize, cancellationToken);
+            IReadOnlyList<TransactionalOutboxMessage> messages = await _outbox.GetPendingAsync(batchSize, cancellationToken);
 
             if (messages.Count == 0)
             {
@@ -131,7 +131,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 
             int published = 0;
 
-            foreach (var message in messages)
+            foreach (TransactionalOutboxMessage message in messages)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
@@ -190,10 +190,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
             var headers = new Dictionary<string, object>();
             if (!string.IsNullOrEmpty(message.Headers))
             {
-                var deserializedHeaders = JsonSerializer.Deserialize<Dictionary<string, object>>(message.Headers, _jsonOptions);
+                Dictionary<string, object>? deserializedHeaders = JsonSerializer.Deserialize<Dictionary<string, object>>(message.Headers, _jsonOptions);
                 if (deserializedHeaders != null)
                 {
-                    foreach (var header in deserializedHeaders)
+                    foreach (KeyValuePair<string, object> header in deserializedHeaders)
                     {
                         headers[header.Key] = header.Value;
                     }

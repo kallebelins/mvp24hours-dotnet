@@ -124,7 +124,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            var errors = logger.GetLogsAtOrAbove(LogLevel.Error);
+            IReadOnlyList<LogEntry> errors = logger.GetLogsAtOrAbove(LogLevel.Error);
             if (errors.Any())
             {
                 var errorLogs = FormatLogs(errors);
@@ -142,7 +142,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            var warnings = logger.GetLogsAtOrAbove(LogLevel.Warning);
+            IReadOnlyList<LogEntry> warnings = logger.GetLogsAtOrAbove(LogLevel.Warning);
             if (warnings.Any())
             {
                 var warningLogs = FormatLogs(warnings);
@@ -266,7 +266,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
 
             if (provider.HasErrors())
             {
-                var errors = provider.GetLogs(l => l.LogLevel >= LogLevel.Error);
+                IReadOnlyList<CategorizedLogEntry> errors = provider.GetLogs(l => l.LogLevel >= LogLevel.Error);
                 var errorLogs = FormatLogs(errors);
                 throw new AssertionException(
                     $"Expected no errors to be logged, but found {errors.Count}:\n{errorLogs}");
@@ -284,7 +284,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
 
             if (provider.HasWarnings())
             {
-                var warnings = provider.GetLogs(l => l.LogLevel >= LogLevel.Warning);
+                IReadOnlyList<CategorizedLogEntry> warnings = provider.GetLogs(l => l.LogLevel >= LogLevel.Warning);
                 var warningLogs = FormatLogs(warnings);
                 throw new AssertionException(
                     $"Expected no warnings or errors to be logged, but found {warnings.Count}:\n{warningLogs}");
@@ -317,7 +317,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
 
         private static string FormatLogs(IEnumerable<LogEntry> logs)
         {
-            var entries = logs.Take(20).Select(l => $"  {l}");
+            IEnumerable<string> entries = logs.Take(20).Select(l => $"  {l}");
             var result = string.Join("\n", entries);
 
             var count = logs.Count();

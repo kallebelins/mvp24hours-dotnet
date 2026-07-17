@@ -83,7 +83,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             var jobId = Guid.NewGuid().ToString();
             var jobType = typeof(TJob).FullName ?? typeof(TJob).Name;
             var serializedArgs = JsonSerializer.Serialize(args);
-            var mergedOptions = MergeOptions(options);
+            JobOptions mergedOptions = MergeOptions(options);
 
             var jobInfo = new JobInfo
             {
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
         {
             var jobId = Guid.NewGuid().ToString();
             var jobType = typeof(TJob).FullName ?? typeof(TJob).Name;
-            var mergedOptions = MergeOptions(options);
+            JobOptions mergedOptions = MergeOptions(options);
 
             var jobInfo = new JobInfo
             {
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Delay must be greater than zero.", nameof(delay));
             }
 
-            var scheduledTime = DateTimeOffset.UtcNow.Add(delay);
+            DateTimeOffset scheduledTime = DateTimeOffset.UtcNow.Add(delay);
             return ScheduleAsync<TJob, TArgs>(args, scheduledTime, options, cancellationToken);
         }
 
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Delay must be greater than zero.", nameof(delay));
             }
 
-            var scheduledTime = DateTimeOffset.UtcNow.Add(delay);
+            DateTimeOffset scheduledTime = DateTimeOffset.UtcNow.Add(delay);
             return ScheduleAsync<TJob>(scheduledTime, options, cancellationToken);
         }
 
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             var jobId = Guid.NewGuid().ToString();
             var jobType = typeof(TJob).FullName ?? typeof(TJob).Name;
             var serializedArgs = JsonSerializer.Serialize(args);
-            var mergedOptions = MergeOptions(options);
+            JobOptions mergedOptions = MergeOptions(options);
 
             var jobInfo = new JobInfo
             {
@@ -216,7 +216,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             _logger?.LogDebug("Scheduled job {JobId} of type {JobType} for {ScheduledTime}", jobId, jobType, scheduledTime);
 
             // Schedule execution
-            var delay = scheduledTime - DateTimeOffset.UtcNow;
+            TimeSpan delay = scheduledTime - DateTimeOffset.UtcNow;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(delay, cancellationToken);
@@ -240,7 +240,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             var jobId = Guid.NewGuid().ToString();
             var jobType = typeof(TJob).FullName ?? typeof(TJob).Name;
-            var mergedOptions = MergeOptions(options);
+            JobOptions mergedOptions = MergeOptions(options);
 
             var jobInfo = new JobInfo
             {
@@ -258,7 +258,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             _logger?.LogDebug("Scheduled job {JobId} of type {JobType} for {ScheduledTime}", jobId, jobType, scheduledTime);
 
             // Schedule execution
-            var delay = scheduledTime - DateTimeOffset.UtcNow;
+            TimeSpan delay = scheduledTime - DateTimeOffset.UtcNow;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(delay, cancellationToken);
@@ -318,11 +318,11 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             }
 
             var continuationJobId = Guid.NewGuid().ToString();
-            var continuation = continuationOptions ?? new ContinuationOptions();
+            ContinuationOptions continuation = continuationOptions ?? new ContinuationOptions();
 
             if (!_continuations.ContainsKey(parentJobId))
             {
-                _continuations[parentJobId] = new List<string>();
+                _continuations[parentJobId] = [];
             }
 
             _continuations[parentJobId].Add(continuationJobId);
@@ -332,7 +332,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             {
                 await WaitForJobCompletionAsync(parentJobId, continuation.MaxWaitTime ?? TimeSpan.FromHours(24), cancellationToken);
 
-                var parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
+                JobStatus? parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
                 if (ShouldExecuteContinuation(parentStatus, continuation))
                 {
                     await EnqueueAsync<TJob, TArgs>(args, continuation.JobOptions, cancellationToken);
@@ -355,11 +355,11 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             }
 
             var continuationJobId = Guid.NewGuid().ToString();
-            var continuation = continuationOptions ?? new ContinuationOptions();
+            ContinuationOptions continuation = continuationOptions ?? new ContinuationOptions();
 
             if (!_continuations.ContainsKey(parentJobId))
             {
-                _continuations[parentJobId] = new List<string>();
+                _continuations[parentJobId] = [];
             }
 
             _continuations[parentJobId].Add(continuationJobId);
@@ -369,7 +369,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             {
                 await WaitForJobCompletionAsync(parentJobId, continuation.MaxWaitTime ?? TimeSpan.FromHours(24), cancellationToken);
 
-                var parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
+                JobStatus? parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
                 if (ShouldExecuteContinuation(parentStatus, continuation))
                 {
                     await EnqueueAsync<TJob>(continuation.JobOptions, cancellationToken);
@@ -420,7 +420,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Batch ID cannot be null or empty.", nameof(batchId));
             }
 
-            if (_batches.TryGetValue(batchId, out var batchInfo))
+            if (_batches.TryGetValue(batchId, out BatchInfo? batchInfo))
             {
                 return Task.FromResult<BatchStatus?>(batchInfo.Status);
             }
@@ -438,7 +438,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Batch ID cannot be null or empty.", nameof(batchId));
             }
 
-            if (_batches.TryGetValue(batchId, out var batchInfo))
+            if (_batches.TryGetValue(batchId, out BatchInfo? batchInfo))
             {
                 batchInfo.Status = BatchStatus.Cancelled;
                 batchInfo.CompletedAt = DateTimeOffset.UtcNow;
@@ -478,7 +478,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             if (!_parentChildJobs.ContainsKey(parentJobId))
             {
-                _parentChildJobs[parentJobId] = new List<string>();
+                _parentChildJobs[parentJobId] = [];
             }
 
             _parentChildJobs[parentJobId].Add(childJobId);
@@ -502,7 +502,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             if (!_parentChildJobs.ContainsKey(parentJobId))
             {
-                _parentChildJobs[parentJobId] = new List<string>();
+                _parentChildJobs[parentJobId] = [];
             }
 
             _parentChildJobs[parentJobId].Add(childJobId);
@@ -520,7 +520,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Parent job ID cannot be null or empty.", nameof(parentJobId));
             }
 
-            if (_parentChildJobs.TryGetValue(parentJobId, out var childJobIds))
+            if (_parentChildJobs.TryGetValue(parentJobId, out List<string>? childJobIds))
             {
                 return Task.WhenAll(childJobIds.Select(async childId =>
                 {
@@ -543,11 +543,11 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             var result = new Dictionary<string, JobStatus?>();
 
-            if (_parentChildJobs.TryGetValue(parentJobId, out var childJobIds))
+            if (_parentChildJobs.TryGetValue(parentJobId, out List<string>? childJobIds))
             {
                 foreach (var childId in childJobIds)
                 {
-                    if (_jobs.TryGetValue(childId, out var jobInfo))
+                    if (_jobs.TryGetValue(childId, out JobInfo? jobInfo))
                     {
                         result[childId] = jobInfo.Status;
                     }
@@ -573,7 +573,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             var cancelledCount = 0;
 
-            if (_parentChildJobs.TryGetValue(parentJobId, out var childJobIds))
+            if (_parentChildJobs.TryGetValue(parentJobId, out List<string>? childJobIds))
             {
                 foreach (var childId in childJobIds)
                 {
@@ -597,7 +597,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));
             }
 
-            if (_jobs.TryGetValue(jobId, out var jobInfo))
+            if (_jobs.TryGetValue(jobId, out JobInfo? jobInfo))
             {
                 if (jobInfo.Status == JobStatus.Scheduled || jobInfo.Status == JobStatus.Running)
                 {
@@ -621,7 +621,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));
             }
 
-            if (_jobs.TryGetValue(jobId, out var jobInfo))
+            if (_jobs.TryGetValue(jobId, out JobInfo? jobInfo))
             {
                 return Task.FromResult<JobStatus?>(jobInfo.Status);
             }
@@ -633,7 +633,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             where TJob : class, IBackgroundJob<TArgs>
             where TArgs : class
         {
-            if (!_jobs.TryGetValue(jobId, out var jobInfo))
+            if (!_jobs.TryGetValue(jobId, out JobInfo? jobInfo))
             {
                 return;
             }
@@ -655,18 +655,18 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var job = scope.ServiceProvider.GetRequiredService<TJob>();
+                    using IServiceScope scope = _serviceProvider.CreateScope();
+                    TJob job = scope.ServiceProvider.GetRequiredService<TJob>();
 
-                    var args = JsonSerializer.Deserialize<TArgs>(jobInfo.SerializedArgs);
+                    TArgs? args = JsonSerializer.Deserialize<TArgs>(jobInfo.SerializedArgs);
                     if (args == null)
                     {
                         throw new InvalidOperationException($"Failed to deserialize arguments for job {jobId}");
                     }
 
-                    var metadata = jobInfo.Options.Metadata != null
+                    Dictionary<string, string> metadata = jobInfo.Options.Metadata != null
                         ? new Dictionary<string, string>(jobInfo.Options.Metadata)
-                        : new Dictionary<string, string>();
+                        : [];
                     var context = new JobContext(
                         jobId,
                         jobInfo.AttemptNumber,
@@ -676,9 +676,9 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                         jobInfo.JobType,
                         jobInfo.Options.Queue);
 
-                    var startTime = DateTimeOffset.UtcNow;
+                    DateTimeOffset startTime = DateTimeOffset.UtcNow;
                     await job.ExecuteAsync(args, context, cancellationToken);
-                    var duration = DateTimeOffset.UtcNow - startTime;
+                    TimeSpan duration = DateTimeOffset.UtcNow - startTime;
 
                     jobInfo.Status = JobStatus.Completed;
                     jobInfo.CompletedAt = DateTimeOffset.UtcNow;
@@ -687,7 +687,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     _logger?.LogDebug("Job {JobId} completed successfully in {Duration}", jobId, duration);
 
                     // Check for continuations
-                    if (_continuations.TryGetValue(jobId, out var continuationIds))
+                    if (_continuations.TryGetValue(jobId, out List<string>? continuationIds))
                     {
                         // Continuations are handled by ContinueWithAsync
                     }
@@ -706,7 +706,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     if (jobInfo.AttemptNumber < jobInfo.Options.MaxRetryAttempts)
                     {
                         jobInfo.Status = JobStatus.Retrying;
-                        var delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
+                        TimeSpan delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
 
                         _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}",
                             jobId, jobInfo.AttemptNumber, delay);
@@ -736,7 +736,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
         private async Task ExecuteJobAsync<TJob>(string jobId, CancellationToken cancellationToken)
             where TJob : class, IBackgroundJob
         {
-            if (!_jobs.TryGetValue(jobId, out var jobInfo))
+            if (!_jobs.TryGetValue(jobId, out JobInfo? jobInfo))
             {
                 return;
             }
@@ -758,12 +758,12 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var job = scope.ServiceProvider.GetRequiredService<TJob>();
+                    using IServiceScope scope = _serviceProvider.CreateScope();
+                    TJob job = scope.ServiceProvider.GetRequiredService<TJob>();
 
-                    var metadata = jobInfo.Options.Metadata != null
+                    Dictionary<string, string> metadata = jobInfo.Options.Metadata != null
                         ? new Dictionary<string, string>(jobInfo.Options.Metadata)
-                        : new Dictionary<string, string>();
+                        : [];
                     var context = new JobContext(
                         jobId,
                         jobInfo.AttemptNumber,
@@ -773,9 +773,9 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                         jobInfo.JobType,
                         jobInfo.Options.Queue);
 
-                    var startTime = DateTimeOffset.UtcNow;
+                    DateTimeOffset startTime = DateTimeOffset.UtcNow;
                     await job.ExecuteAsync(context, cancellationToken);
-                    var duration = DateTimeOffset.UtcNow - startTime;
+                    TimeSpan duration = DateTimeOffset.UtcNow - startTime;
 
                     jobInfo.Status = JobStatus.Completed;
                     jobInfo.CompletedAt = DateTimeOffset.UtcNow;
@@ -797,7 +797,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     if (jobInfo.AttemptNumber < jobInfo.Options.MaxRetryAttempts)
                     {
                         jobInfo.Status = JobStatus.Retrying;
-                        var delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
+                        TimeSpan delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
 
                         _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}",
                             jobId, jobInfo.AttemptNumber, delay);
@@ -826,7 +826,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
         private async Task ExecuteBatchAsync(string batchId, IJobBatch batch, CancellationToken cancellationToken)
         {
-            if (!_batches.TryGetValue(batchId, out var batchInfo))
+            if (!_batches.TryGetValue(batchId, out BatchInfo? batchInfo))
             {
                 return;
             }
@@ -836,7 +836,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
             try
             {
-                var tasks = batch.Jobs.Select(async job =>
+                IEnumerable<Task> tasks = batch.Jobs.Select(async job =>
                 {
                     // Simplified batch execution - in production, respect ExecutionMode and dependencies
                     var jobId = job.JobId;
@@ -859,7 +859,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
         private async Task WaitForJobCompletionAsync(string jobId, TimeSpan maxWaitTime, CancellationToken cancellationToken)
         {
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
 
             while (DateTimeOffset.UtcNow - startTime < maxWaitTime)
             {
@@ -868,7 +868,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     break;
                 }
 
-                if (_jobs.TryGetValue(jobId, out var jobInfo))
+                if (_jobs.TryGetValue(jobId, out JobInfo? jobInfo))
                 {
                     if (jobInfo.Status == JobStatus.Completed ||
                         jobInfo.Status == JobStatus.Failed ||
@@ -942,7 +942,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             public string BatchId { get; set; } = string.Empty;
             public string? Name { get; set; }
             public BatchOptions Options { get; set; } = new BatchOptions();
-            public List<string> Jobs { get; set; } = new();
+            public List<string> Jobs { get; set; } = [];
             public BatchStatus Status { get; set; }
             public DateTimeOffset CreatedAt { get; set; }
             public DateTimeOffset? StartedAt { get; set; }

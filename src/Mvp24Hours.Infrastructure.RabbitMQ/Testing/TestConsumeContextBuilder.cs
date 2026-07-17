@@ -22,7 +22,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         private string? _exchange;
         private string? _routingKey;
         private string? _queueName;
-        private readonly Dictionary<string, object> _headers = new();
+        private readonly Dictionary<string, object> _headers = [];
         private int _redeliveryCount;
         private DateTimeOffset? _sentAt;
         private CancellationToken _cancellationToken;
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         /// </summary>
         public TestConsumeContextBuilder<TMessage> WithHeaders(IDictionary<string, object> headers)
         {
-            foreach (var header in headers)
+            foreach (KeyValuePair<string, object> header in headers)
             {
                 _headers[header.Key] = header.Value;
             }
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         /// <returns>A configured test consume context.</returns>
         public TestConsumeContext<TMessage> Build(TMessage message)
         {
-            var serviceProvider = _serviceProvider ?? CreateDefaultServiceProvider();
+            IServiceProvider serviceProvider = _serviceProvider ?? CreateDefaultServiceProvider();
 
             return new TestConsumeContext<TMessage>(
                 message,

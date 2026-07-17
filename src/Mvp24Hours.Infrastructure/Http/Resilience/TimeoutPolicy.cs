@@ -81,14 +81,14 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
 
             if (!_options.Enabled)
             {
-                var request = requestFactory();
+                HttpRequestMessage request = requestFactory();
                 return sendAsync(request, cancellationToken);
             }
 
             return _policy.ExecuteAsync(
                 async (ct) =>
                 {
-                    var request = requestFactory();
+                    HttpRequestMessage request = requestFactory();
                     return await sendAsync(request, ct);
                 },
                 cancellationToken);

@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration
         /// <summary>
         /// Gets or sets static tenant configurations (for scenarios without dynamic resolution).
         /// </summary>
-        public Dictionary<string, TenantRabbitMQConnectionConfig> Tenants { get; set; } = new();
+        public Dictionary<string, TenantRabbitMQConnectionConfig> Tenants { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use separate dead letter queues per tenant. Default is true.

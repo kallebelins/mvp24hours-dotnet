@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
     {
         private readonly FileStorageOptions _options;
         private readonly IFileValidator? _validator;
-        private readonly Dictionary<string, FileEntry> _files = new();
+        private readonly Dictionary<string, FileEntry> _files = [];
         private readonly object _lock = new();
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     Path.GetExtension(filePath),
                     new MemoryStream(content));
 
-                var validationResult = await _validator.ValidateAsync(validationContext, cancellationToken);
+                ValidationResult validationResult = await _validator.ValidateAsync(validationContext, cancellationToken);
                 if (!validationResult.IsValid)
                 {
                     return FileUploadResult.Failed($"File validation failed: {string.Join("; ", validationResult.Errors)}");
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     return FileUploadResult.Failed($"File already exists: {filePath}");
                 }
 
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 var fileEntry = new FileEntry
                 {
                     Content = (byte[])content.Clone(),
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     CreatedAt = _files.ContainsKey(filePath) ? _files[filePath].CreatedAt : now,
                     ModifiedAt = now,
                     ETag = Guid.NewGuid().ToString("N"),
-                    Metadata = metadata != null ? new Dictionary<string, string>(metadata) : new Dictionary<string, string>()
+                    Metadata = metadata != null ? new Dictionary<string, string>(metadata) : []
                 };
 
                 _files[filePath] = fileEntry;
@@ -231,7 +231,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(filePath, out var fileEntry))
+                if (!_files.TryGetValue(filePath, out FileEntry? fileEntry))
                 {
                     return Task.FromResult(FileDownloadResult.NotFound(filePath));
                 }
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(filePath, out var fileEntry))
+                if (!_files.TryGetValue(filePath, out FileEntry? fileEntry))
                 {
                     return Task.FromResult(FileDownloadResult.NotFound(filePath));
                 }
@@ -389,7 +389,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(filePath, out var fileEntry))
+                if (!_files.TryGetValue(filePath, out FileEntry? fileEntry))
                 {
                     return Task.FromResult<IFileMetadata?>(null);
                 }
@@ -429,7 +429,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                     .ToList();
             }
 
-            foreach (var kvp in matchingFiles)
+            foreach (KeyValuePair<string, FileEntry> kvp in matchingFiles)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -437,7 +437,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
                 }
 
                 var filePath = kvp.Key;
-                var fileEntry = kvp.Value;
+                FileEntry fileEntry = kvp.Value;
 
                 // Check if recursive or direct child
                 if (!recursive)
@@ -484,7 +484,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(sourcePath, out var sourceEntry))
+                if (!_files.TryGetValue(sourcePath, out FileEntry? sourceEntry))
                 {
                     return Task.FromResult(false);
                 }
@@ -525,7 +525,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 
             lock (_lock)
             {
-                if (!_files.TryGetValue(sourcePath, out var sourceEntry))
+                if (!_files.TryGetValue(sourcePath, out FileEntry? sourceEntry))
                 {
                     return Task.FromResult(false);
                 }
@@ -572,7 +572,7 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Providers
             public DateTimeOffset CreatedAt { get; set; }
             public DateTimeOffset ModifiedAt { get; set; }
             public string ETag { get; set; } = string.Empty;
-            public Dictionary<string, string> Metadata { get; set; } = new();
+            public Dictionary<string, string> Metadata { get; set; } = [];
         }
     }
 }

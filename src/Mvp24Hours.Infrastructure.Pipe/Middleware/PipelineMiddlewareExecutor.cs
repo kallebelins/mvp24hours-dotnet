@@ -46,8 +46,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             // Build middleware chain from inside out
             for (int i = orderedMiddlewares.Count - 1; i >= 0; i--)
             {
-                var middleware = orderedMiddlewares[i];
-                var currentNext = next;
+                IPipelineMiddleware middleware = orderedMiddlewares[i];
+                Func<Task> currentNext = next;
                 next = () => ExecuteMiddlewareAsync(middleware, message, currentNext, cancellationToken, logger);
             }
 
@@ -98,8 +98,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             // Build middleware chain from inside out
             for (int i = orderedMiddlewares.Count - 1; i >= 0; i--)
             {
-                var middleware = orderedMiddlewares[i];
-                var currentNext = next;
+                IPipelineMiddlewareSync middleware = orderedMiddlewares[i];
+                Action currentNext = next;
                 next = () => ExecuteMiddleware(middleware, message, currentNext, logger);
             }
 

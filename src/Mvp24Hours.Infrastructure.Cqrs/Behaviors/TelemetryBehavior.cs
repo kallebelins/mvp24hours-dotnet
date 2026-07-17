@@ -58,7 +58,7 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
     {
         var requestName = typeof(TRequest).Name;
         var requestType = GetRequestType();
-        var context = _contextAccessor?.Context;
+        IRequestContext? context = _contextAccessor?.Context;
 
         // Emit start event
         _logger.LogDebug(
@@ -75,7 +75,7 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
 
         try
         {
-            var response = await next();
+            TResponse? response = await next();
             stopwatch.Stop();
 
             // Emit success event
@@ -116,7 +116,7 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
 
     private static string GetRequestType()
     {
-        var requestType = typeof(TRequest);
+        Type requestType = typeof(TRequest);
 
         if (requestType.GetInterfaces().Any(i =>
             i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IMediatorCommand")))

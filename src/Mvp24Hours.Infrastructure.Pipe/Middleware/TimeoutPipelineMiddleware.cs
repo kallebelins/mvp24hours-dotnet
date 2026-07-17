@@ -64,10 +64,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             try
             {
                 // Create a task that completes when next() completes or timeout occurs
-                var nextTask = next();
+                Task nextTask = next();
                 var timeoutTask = Task.Delay(Timeout.Infinite, timeoutCts.Token);
 
-                var completedTask = await Task.WhenAny(nextTask, timeoutTask);
+                Task completedTask = await Task.WhenAny(nextTask, timeoutTask);
 
                 if (completedTask == timeoutTask && timeoutCts.IsCancellationRequested)
                 {

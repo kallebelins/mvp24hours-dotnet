@@ -54,14 +54,14 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkInsert_ShouldInsertAllEntities()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
 
-            var customers = GenerateCustomers(100);
+            List<Customer> customers = GenerateCustomers(100);
 
             // Act
-            var result = await repository.BulkInsertAsync(customers);
+            BulkOperationResult result = await repository.BulkInsertAsync(customers);
             await unitOfWork.SaveChangesAsync();
 
             // Assert
@@ -74,10 +74,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkInsert_WithOptions_ShouldReportProgress()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
 
-            var customers = GenerateCustomers(50);
+            List<Customer> customers = GenerateCustomers(50);
             var progressReported = new List<(int processed, int total)>();
 
             var options = new BulkOperationOptions
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             };
 
             // Act
-            var result = await repository.BulkInsertAsync(customers, options);
+            BulkOperationResult result = await repository.BulkInsertAsync(customers, options);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -99,13 +99,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkInsert_WithEmptyList_ShouldReturnSuccessWithZeroRows()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
 
             var customers = new List<Customer>();
 
             // Act
-            var result = await repository.BulkInsertAsync(customers);
+            BulkOperationResult result = await repository.BulkInsertAsync(customers);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -120,26 +120,26 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkUpdate_ShouldUpdateAllEntities()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
 
             // First insert some data
-            var customers = GenerateCustomers(20);
+            List<Customer> customers = GenerateCustomers(20);
             await repository.BulkInsertAsync(customers);
             await unitOfWork.SaveChangesAsync();
 
             // Get the inserted customers
-            var insertedCustomers = await repository.ListAsync();
+            IList<Customer> insertedCustomers = await repository.ListAsync();
 
             // Modify them
-            foreach (var customer in insertedCustomers)
+            foreach (Customer customer in insertedCustomers)
             {
                 customer.Name = $"Updated_{customer.Name}";
             }
 
             // Act
-            var result = await repository.BulkUpdateAsync(insertedCustomers.ToList());
+            BulkOperationResult result = await repository.BulkUpdateAsync(insertedCustomers.ToList());
             await unitOfWork.SaveChangesAsync();
 
             // Assert
@@ -150,13 +150,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkUpdate_WithEmptyList_ShouldReturnSuccessWithZeroRows()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
 
             var customers = new List<Customer>();
 
             // Act
-            var result = await repository.BulkUpdateAsync(customers);
+            BulkOperationResult result = await repository.BulkUpdateAsync(customers);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -171,20 +171,20 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkDelete_ShouldDeleteAllEntities()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
 
             // First insert some data
-            var customers = GenerateCustomers(15);
+            List<Customer> customers = GenerateCustomers(15);
             await repository.BulkInsertAsync(customers);
             await unitOfWork.SaveChangesAsync();
 
             // Get the inserted customers
-            var insertedCustomers = await repository.ListAsync();
+            IList<Customer> insertedCustomers = await repository.ListAsync();
 
             // Act
-            var result = await repository.BulkDeleteAsync(insertedCustomers.ToList());
+            BulkOperationResult result = await repository.BulkDeleteAsync(insertedCustomers.ToList());
             await unitOfWork.SaveChangesAsync();
 
             // Assert
@@ -195,13 +195,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task BulkDelete_WithEmptyList_ShouldReturnSuccessWithZeroRows()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
 
             var customers = new List<Customer>();
 
             // Act
-            var result = await repository.BulkDeleteAsync(customers);
+            BulkOperationResult result = await repository.BulkDeleteAsync(customers);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -222,12 +222,12 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task ExecuteUpdate_SingleProperty_ShouldUpdateMatchingEntities()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
 
             // Insert test data with some active and some inactive
-            var customers = GenerateCustomers(30);
+            List<Customer> customers = GenerateCustomers(30);
             for (int i = 0; i < customers.Count; i++)
             {
                 customers[i].Active = i % 2 == 0; // Half active, half inactive
@@ -254,12 +254,12 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task ExecuteDelete_ShouldDeleteMatchingEntities()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
 
             // Insert test data
-            var customers = GenerateCustomers(25);
+            List<Customer> customers = GenerateCustomers(25);
             for (int i = 0; i < customers.Count; i++)
             {
                 customers[i].Active = i < 10; // First 10 active, rest inactive
@@ -279,8 +279,8 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task ExecuteDelete_WithNoMatches_ShouldReturnZero()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            IBulkOperationsRepositoryAsync<Customer> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
 
             // Act - Try to delete with impossible condition
             var rowsAffected = await repository.ExecuteDeleteAsync(c => c.Name == "NonExistentName12345");
@@ -297,13 +297,13 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task DbContextExtension_BulkInsert_ShouldWork()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            DbContext dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
 
-            var customers = GenerateCustomers(10);
+            List<Customer> customers = GenerateCustomers(10);
 
             // Act
-            var result = await dbContext.BulkInsertAsync(customers);
+            BulkOperationResult result = await dbContext.BulkInsertAsync(customers);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -314,11 +314,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public async Task DbContextExtension_ExecuteDelete_ShouldWork()
         {
             // Arrange
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            DbContext dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
 
             // Insert test data first
-            var customers = GenerateCustomers(5);
+            List<Customer> customers = GenerateCustomers(5);
             await dbContext.BulkInsertAsync(customers);
             await dbContext.SaveChangesAsync();
 

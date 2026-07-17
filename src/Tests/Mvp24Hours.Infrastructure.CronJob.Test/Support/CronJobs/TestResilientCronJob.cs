@@ -41,7 +41,7 @@ public class TestResilientCronJob : ResilientCronJobService<TestResilientCronJob
         : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
     {
         _workAction = workAction;
-        _tracker = serviceProvider.GetService<ExecutionTracker>();
+        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
     }
 
     public override async Task DoWork(CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ public class FailingCronJob : ResilientCronJobService<FailingCronJob>
         : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
     {
         _failUntilAttempt = failUntilAttempt;
-        _tracker = serviceProvider.GetService<ExecutionTracker>();
+        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
     }
 
     public override Task DoWork(CancellationToken cancellationToken)
@@ -137,7 +137,7 @@ public class SlowCronJob : ResilientCronJobService<SlowCronJob>
         : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
     {
         _executionDuration = executionDuration ?? TimeSpan.FromSeconds(5);
-        _tracker = serviceProvider.GetService<ExecutionTracker>();
+        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
     }
 
     public override async Task DoWork(CancellationToken cancellationToken)

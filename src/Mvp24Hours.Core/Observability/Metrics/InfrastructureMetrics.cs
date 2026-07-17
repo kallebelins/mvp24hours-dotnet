@@ -83,7 +83,7 @@ public sealed class InfrastructureMetrics
     /// </summary>
     public InfrastructureMetrics()
     {
-        var meter = Mvp24HoursMeters.Infrastructure.Meter;
+        Meter meter = Mvp24HoursMeters.Infrastructure.Meter;
 
         // HTTP Client
         _httpClientRequestsTotal = meter.CreateCounter<long>(
@@ -440,7 +440,7 @@ public sealed class InfrastructureMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordHttpClientRequest(_method, _host, StatusCode, elapsed.TotalMilliseconds);
         }
     }
@@ -464,7 +464,7 @@ public sealed class InfrastructureMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordLockRelease(_lockName, elapsed.TotalMilliseconds);
         }
     }
@@ -504,7 +504,7 @@ public sealed class InfrastructureMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordBackgroundJob(_jobType, elapsed.TotalMilliseconds, Succeeded);
         }
     }

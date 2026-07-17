@@ -48,11 +48,11 @@ namespace Mvp24Hours.Infrastructure.Observability
         {
             var healthStatus = new Dictionary<string, SubsystemHealth>();
 
-            foreach (var provider in _providers)
+            foreach (ISubsystemDiagnosticsProvider provider in _providers)
             {
                 try
                 {
-                    var diagnostics = await provider.GetDiagnosticsAsync(cancellationToken);
+                    SubsystemDiagnostics diagnostics = await provider.GetDiagnosticsAsync(cancellationToken);
                     healthStatus[diagnostics.SubsystemName] = diagnostics.Health;
                 }
                 catch (Exception ex)
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Observability
                 throw new ArgumentException("Subsystem name cannot be null or empty.", nameof(subsystemName));
             }
 
-            var provider = _providers.FirstOrDefault(p =>
+            ISubsystemDiagnosticsProvider? provider = _providers.FirstOrDefault(p =>
                 string.Equals(p.SubsystemName, subsystemName, StringComparison.OrdinalIgnoreCase));
 
             if (provider == null)
@@ -105,12 +105,12 @@ namespace Mvp24Hours.Infrastructure.Observability
         {
             var aggregatedMetrics = new Dictionary<string, object>();
 
-            foreach (var provider in _providers)
+            foreach (ISubsystemDiagnosticsProvider provider in _providers)
             {
                 try
                 {
-                    var metrics = await provider.GetMetricsAsync(cancellationToken);
-                    foreach (var (key, value) in metrics)
+                    Dictionary<string, object> metrics = await provider.GetMetricsAsync(cancellationToken);
+                    foreach ((string? key, object? value) in metrics)
                     {
                         var metricKey = $"{provider.SubsystemName}.{key}";
                         aggregatedMetrics[metricKey] = value;
@@ -132,11 +132,11 @@ namespace Mvp24Hours.Infrastructure.Observability
         {
             var errors = new Dictionary<string, IReadOnlyList<ErrorInfo>>();
 
-            foreach (var provider in _providers)
+            foreach (ISubsystemDiagnosticsProvider provider in _providers)
             {
                 try
                 {
-                    var subsystemErrors = await provider.GetRecentErrorsAsync(maxErrors, cancellationToken);
+                    IReadOnlyList<ErrorInfo> subsystemErrors = await provider.GetRecentErrorsAsync(maxErrors, cancellationToken);
                     if (subsystemErrors.Count > 0)
                     {
                         errors[provider.SubsystemName] = subsystemErrors;

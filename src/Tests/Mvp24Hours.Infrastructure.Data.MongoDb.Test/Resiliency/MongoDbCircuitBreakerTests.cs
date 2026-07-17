@@ -23,7 +23,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Start_In_Closed_State()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act & Assert
@@ -34,7 +34,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Allow_Requests_When_Closed()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act
@@ -48,7 +48,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Open_Circuit_After_Failure_Threshold()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 3;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -67,7 +67,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Not_Open_Circuit_Before_Failure_Threshold()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 5;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -86,7 +86,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Reject_Requests_When_Open()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -106,7 +106,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Track_Rejected_Count()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -128,7 +128,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Increment_Success_Count()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act
@@ -144,7 +144,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Increment_Failure_Count()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act
@@ -161,7 +161,7 @@ public class MongoDbCircuitBreakerTests
         // Test that after reset, failures can re-open the circuit
 
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -187,7 +187,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Manually_Trip_Circuit()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
         circuitBreaker.State.Should().Be(CircuitBreakerState.Closed);
 
@@ -202,7 +202,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Manually_Reset_Circuit()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -223,7 +223,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Track_Circuit_Trip_Count()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         var circuitBreaker = new MongoDbCircuitBreaker(options);
@@ -246,14 +246,14 @@ public class MongoDbCircuitBreakerTests
     public void Should_Track_Last_Success_Time()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
-        var beforeSuccess = DateTimeOffset.UtcNow;
+        DateTimeOffset beforeSuccess = DateTimeOffset.UtcNow;
 
         // Act
         Thread.Sleep(10);
         circuitBreaker.RecordSuccess();
-        var afterSuccess = DateTimeOffset.UtcNow;
+        DateTimeOffset afterSuccess = DateTimeOffset.UtcNow;
 
         // Assert
         circuitBreaker.LastSuccessTime.Should().NotBeNull();
@@ -265,14 +265,14 @@ public class MongoDbCircuitBreakerTests
     public void Should_Track_Last_Failure_Time()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
-        var beforeFailure = DateTimeOffset.UtcNow;
+        DateTimeOffset beforeFailure = DateTimeOffset.UtcNow;
 
         // Act
         Thread.Sleep(10);
         circuitBreaker.RecordFailure(new Exception("Test failure"));
-        var afterFailure = DateTimeOffset.UtcNow;
+        DateTimeOffset afterFailure = DateTimeOffset.UtcNow;
 
         // Assert
         circuitBreaker.LastFailureTime.Should().NotBeNull();
@@ -284,7 +284,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Calculate_Failure_Rate()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act - 3 successes, 2 failures = 40% failure rate
@@ -302,7 +302,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Reset_All_Metrics()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Record some activity
@@ -325,7 +325,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Get_Remaining_Open_Duration()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
         options.CircuitBreakerMinimumThroughput = 1;
         options.CircuitBreakerDurationSeconds = 10;
@@ -336,7 +336,7 @@ public class MongoDbCircuitBreakerTests
         circuitBreaker.RecordFailure(new Exception("Failure 2"));
 
         // Act
-        var remaining = circuitBreaker.GetRemainingOpenDuration();
+        TimeSpan? remaining = circuitBreaker.GetRemainingOpenDuration();
 
         // Assert
         remaining.Should().NotBeNull();
@@ -348,11 +348,11 @@ public class MongoDbCircuitBreakerTests
     public void Should_Return_Null_Duration_When_Not_Open()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act
-        var remaining = circuitBreaker.GetRemainingOpenDuration();
+        TimeSpan? remaining = circuitBreaker.GetRemainingOpenDuration();
 
         // Assert
         remaining.Should().BeNull();
@@ -362,7 +362,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Not_Open_If_Below_Minimum_Throughput()
     {
         // Arrange
-        var options = CreateDefaultOptions();
+        MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 3;
         options.CircuitBreakerMinimumThroughput = 10; // Require at least 10 operations
         var circuitBreaker = new MongoDbCircuitBreaker(options);

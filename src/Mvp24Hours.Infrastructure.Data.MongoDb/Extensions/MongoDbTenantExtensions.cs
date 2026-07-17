@@ -76,10 +76,10 @@ namespace Mvp24Hours.Extensions
             var tenantId = tenantProvider.TenantId;
 
             // Build expression: e => e.TenantId == tenantId
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
-            var tenantIdConstant = Expression.Constant(tenantId, typeof(string));
-            var equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
+            ParameterExpression parameter = Expression.Parameter(typeof(T), "e");
+            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+            ConstantExpression tenantIdConstant = Expression.Constant(tenantId, typeof(string));
+            BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
             var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
 
             return query.Where(lambda);
@@ -124,10 +124,10 @@ namespace Mvp24Hours.Extensions
             }
 
             // Build expression: e => e.TenantId.Equals(tenantId)
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity<TTenantId>.TenantId));
-            var tenantIdConstant = Expression.Constant(tenantId, typeof(TTenantId));
-            var equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
+            ParameterExpression parameter = Expression.Parameter(typeof(T), "e");
+            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity<TTenantId>.TenantId));
+            ConstantExpression tenantIdConstant = Expression.Constant(tenantId, typeof(TTenantId));
+            BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, tenantIdConstant);
             var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
 
             return query.Where(lambda);
@@ -160,7 +160,7 @@ namespace Mvp24Hours.Extensions
                 return filter;
             }
 
-            var tenantFilter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
+            FilterDefinition<T> tenantFilter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
             return Builders<T>.Filter.And(filter, tenantFilter);
         }
 
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Extensions
                 return filter;
             }
 
-            var tenantFilter = Builders<T>.Filter.Eq(e => e.TenantId, tenantId);
+            FilterDefinition<T> tenantFilter = Builders<T>.Filter.Eq(e => e.TenantId, tenantId);
             return Builders<T>.Filter.And(filter, tenantFilter);
         }
 
@@ -228,7 +228,7 @@ namespace Mvp24Hours.Extensions
                 return aggregate;
             }
 
-            var filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
+            FilterDefinition<T> filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantProvider.TenantId);
 
             return aggregate.Match(filter);
         }
@@ -250,7 +250,7 @@ namespace Mvp24Hours.Extensions
                 return aggregate;
             }
 
-            var filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantId);
+            FilterDefinition<T> filter = Builders<T>.Filter.Eq(e => e.TenantId, tenantId);
             return aggregate.Match(filter);
         }
 
@@ -294,9 +294,9 @@ namespace Mvp24Hours.Extensions
             where T : class
         {
             // Build expression: e => !((ISoftDeletable)e).IsDeleted
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-            var notExpression = Expression.Not(isDeletedProperty);
+            ParameterExpression parameter = Expression.Parameter(typeof(T), "e");
+            MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            UnaryExpression notExpression = Expression.Not(isDeletedProperty);
             var lambda = Expression.Lambda<Func<T, bool>>(notExpression, parameter);
 
             return query.Where(lambda);
@@ -319,14 +319,14 @@ namespace Mvp24Hours.Extensions
             // Tenant filter
             if (typeof(ITenantEntity).IsAssignableFrom(typeof(T)) && tenantProvider?.HasTenant == true)
             {
-                var tenantFilter = Builders<T>.Filter.Eq(nameof(ITenantEntity.TenantId), tenantProvider.TenantId);
+                FilterDefinition<T> tenantFilter = Builders<T>.Filter.Eq(nameof(ITenantEntity.TenantId), tenantProvider.TenantId);
                 filters.Add(tenantFilter);
             }
 
             // Soft delete filter
             if (!includeSoftDeleted && typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
             {
-                var softDeleteFilter = Builders<T>.Filter.Eq(nameof(ISoftDeletable.IsDeleted), false);
+                FilterDefinition<T> softDeleteFilter = Builders<T>.Filter.Eq(nameof(ISoftDeletable.IsDeleted), false);
                 filters.Add(softDeleteFilter);
             }
 

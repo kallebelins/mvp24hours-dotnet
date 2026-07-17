@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 _logger?.LogDebug("Write-Through: Successfully saved to source for key: {Key}", key);
 
                 // Then write to cache
-                var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
+                CacheEntryOptions options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
                 await _cache.SetAsync(key, value, options, cancellationToken);
 
                 _logger?.LogDebug("Write-Through: Successfully cached value for key: {Key}", key);

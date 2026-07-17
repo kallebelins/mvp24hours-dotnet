@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -71,12 +72,12 @@ namespace Mvp24Hours.Application.Logic.Validation
                 validationContext.SetRuleSetsExecuted(context.Options.RuleSets);
             }
 
-            foreach (var validator in _validators)
+            foreach (IValidator<T> validator in _validators)
             {
-                var result = validator.Validate(validationContext);
+                ValidationResult result = validator.Validate(validationContext);
                 if (!result.IsValid)
                 {
-                    foreach (var failure in result.Errors)
+                    foreach (ValidationFailure? failure in result.Errors)
                     {
                         var propertyPath = context.Options.IncludePropertyPath &&
                                           !string.IsNullOrEmpty(context.PropertyPath)
@@ -118,12 +119,12 @@ namespace Mvp24Hours.Application.Logic.Validation
                 validationContext.SetRuleSetsExecuted(context.Options.RuleSets);
             }
 
-            foreach (var validator in _validators)
+            foreach (IValidator<T> validator in _validators)
             {
-                var result = await validator.ValidateAsync(validationContext, cancellationToken);
+                ValidationResult result = await validator.ValidateAsync(validationContext, cancellationToken);
                 if (!result.IsValid)
                 {
-                    foreach (var failure in result.Errors)
+                    foreach (ValidationFailure? failure in result.Errors)
                     {
                         var propertyPath = context.Options.IncludePropertyPath &&
                                           !string.IsNullOrEmpty(context.PropertyPath)

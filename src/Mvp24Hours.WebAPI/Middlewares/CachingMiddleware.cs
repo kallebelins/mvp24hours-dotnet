@@ -69,7 +69,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 return;
             }
 
-            var profile = GetCacheProfileForRequest(context);
+            CacheProfile? profile = GetCacheProfileForRequest(context);
             if (profile != null)
             {
                 ApplyCacheProfile(context, profile);
@@ -90,7 +90,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             // For now, return default profile if configured
             // In a full implementation, this would check route-specific profiles
             if (!string.IsNullOrEmpty(_options.DefaultProfile) &&
-                _options.Profiles.TryGetValue(_options.DefaultProfile, out var profile))
+                _options.Profiles.TryGetValue(_options.DefaultProfile, out CacheProfile? profile))
             {
                 return profile;
             }
@@ -134,7 +134,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
 
             if (_options.VaryByQueryKeys && profile.VaryByQueryKeys != null && profile.VaryByQueryKeys.Length > 0)
             {
-                var responseCachingFeature = context.Features.Get<IResponseCachingFeature>();
+                IResponseCachingFeature? responseCachingFeature = context.Features.Get<IResponseCachingFeature>();
                 if (responseCachingFeature != null)
                 {
                     responseCachingFeature.VaryByQueryKeys = profile.VaryByQueryKeys;

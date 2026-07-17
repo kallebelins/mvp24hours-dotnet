@@ -52,7 +52,7 @@ namespace Mvp24Hours.Extensions
             }
             else
             {
-                var namingOptions = options.NamingConventionOptions ?? new EndpointNamingConventionOptions();
+                EndpointNamingConventionOptions namingOptions = options.NamingConventionOptions ?? new EndpointNamingConventionOptions();
                 var prefix = options.EndpointPrefix ?? string.Empty;
                 services.TryAddSingleton<IEndpointNameFormatter>(
                     new EndpointNameFormatter(prefix, namingOptions));
@@ -65,10 +65,10 @@ namespace Mvp24Hours.Extensions
             }
             else
             {
-                var routingOptions = options.RoutingKeyConventionOptions ?? new RoutingKeyConventionOptions();
+                RoutingKeyConventionOptions routingOptions = options.RoutingKeyConventionOptions ?? new RoutingKeyConventionOptions();
                 services.TryAddSingleton<IRoutingKeyConvention>(sp =>
                 {
-                    var nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
+                    IEndpointNameFormatter nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
                     return new RoutingKeyConvention(nameFormatter, routingOptions);
                 });
             }
@@ -76,19 +76,19 @@ namespace Mvp24Hours.Extensions
             // Register topology builder
             services.TryAddSingleton<ITopologyBuilder>(sp =>
             {
-                var nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
-                var routingKeyConvention = sp.GetRequiredService<IRoutingKeyConvention>();
-                var builderOptions = options.TopologyBuilderOptions ?? new TopologyBuilderOptions();
+                IEndpointNameFormatter nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
+                IRoutingKeyConvention routingKeyConvention = sp.GetRequiredService<IRoutingKeyConvention>();
+                TopologyBuilderOptions builderOptions = options.TopologyBuilderOptions ?? new TopologyBuilderOptions();
                 return new TopologyBuilder(nameFormatter, routingKeyConvention, builderOptions);
             });
 
             // Register auto-binding helper
             services.TryAddSingleton(sp =>
             {
-                var nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
-                var routingKeyConvention = sp.GetRequiredService<IRoutingKeyConvention>();
-                var topologyBuilder = sp.GetRequiredService<ITopologyBuilder>();
-                var bindingOptions = options.AutoBindingOptions ?? new AutoBindingOptions();
+                IEndpointNameFormatter nameFormatter = sp.GetRequiredService<IEndpointNameFormatter>();
+                IRoutingKeyConvention routingKeyConvention = sp.GetRequiredService<IRoutingKeyConvention>();
+                ITopologyBuilder topologyBuilder = sp.GetRequiredService<ITopologyBuilder>();
+                AutoBindingOptions bindingOptions = options.AutoBindingOptions ?? new AutoBindingOptions();
                 return new AutoBindingHelper(nameFormatter, routingKeyConvention, topologyBuilder, bindingOptions);
             });
 

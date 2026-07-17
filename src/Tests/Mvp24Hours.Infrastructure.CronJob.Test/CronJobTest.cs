@@ -31,14 +31,14 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test
             var timerService = new TimerService();
             var services = new ServiceCollection();
             services.AddSingleton(timerService);
-            var serviceProvider = services.BuildServiceProvider();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
             var scheduleConfig = new ScheduleConfig<CustomerCronJob>()
             {
                 TimeZoneInfo = TimeZoneInfo.Utc,
                 CronExpression = "* * * * *"
             };
             var hostApplicationLifetimeMock = new Mock<IHostApplicationLifetime>();
-            var logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
+            NullLogger<CronJobService<CustomerCronJob>> logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
             var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider, logger);
 
             var cts = new CancellationTokenSource();

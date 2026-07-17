@@ -66,8 +66,8 @@ public class SagaHostedService : BackgroundService
 
     private async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        ISagaOrchestrator orchestrator = scope.ServiceProvider.GetRequiredService<ISagaOrchestrator>();
 
         // Process timeouts
         if (_options.ProcessTimeouts)

@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -52,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
         {
             Guard.Against.Null(services, nameof(services));
 
-            var optionsBuilder = services.AddOptions<CronJobGlobalOptions>();
+            OptionsBuilder<CronJobGlobalOptions> optionsBuilder = services.AddOptions<CronJobGlobalOptions>();
 
             if (configure != null)
             {
@@ -138,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configuration, nameof(configuration));
 
             var sectionPath = CronJobOptions<T>.GetSectionPath();
-            var section = configuration.GetSection(sectionPath);
+            IConfigurationSection section = configuration.GetSection(sectionPath);
 
             if (!section.Exists())
             {
@@ -169,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configuration, nameof(configuration));
 
             var sectionPath = CronJobOptions<T>.GetSectionPath();
-            var section = configuration.GetSection(sectionPath);
+            IConfigurationSection section = configuration.GetSection(sectionPath);
 
             if (!section.Exists())
             {
@@ -200,7 +201,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configuration, nameof(configuration));
 
             var sectionPath = CronJobOptions<T>.GetSectionPath();
-            var section = configuration.GetSection(sectionPath);
+            IConfigurationSection section = configuration.GetSection(sectionPath);
 
             if (!section.Exists())
             {
@@ -250,12 +251,12 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configure, nameof(configure));
 
             // Register options with validation
-            var optionsBuilder = services.AddOptions<CronJobOptions<T>>();
+            OptionsBuilder<CronJobOptions<T>> optionsBuilder = services.AddOptions<CronJobOptions<T>>();
 
             // Bind from configuration if provided
             if (configuration != null)
             {
-                var section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
+                IConfigurationSection section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
                 if (section.Exists())
                 {
                     optionsBuilder.Bind(section);
@@ -272,7 +273,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             // Register the schedule config (adapter from CronJobOptions to IScheduleConfig)
             services.AddSingleton<IScheduleConfig<T>>(sp =>
             {
-                var opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
+                CronJobOptions<T> opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
 
                 // Check if job is enabled
                 if (!opts.Enabled)
@@ -323,11 +324,11 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configure, nameof(configure));
 
             // Register options with validation
-            var optionsBuilder = services.AddOptions<CronJobOptions<T>>();
+            OptionsBuilder<CronJobOptions<T>> optionsBuilder = services.AddOptions<CronJobOptions<T>>();
 
             if (configuration != null)
             {
-                var section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
+                IConfigurationSection section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
                 if (section.Exists())
                 {
                     optionsBuilder.Bind(section);
@@ -341,7 +342,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             // Register resilient schedule config
             services.AddSingleton<IResilientScheduleConfig<T>>(sp =>
             {
-                var opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
+                CronJobOptions<T> opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
                 return opts;
             });
 
@@ -381,11 +382,11 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(configure, nameof(configure));
 
             // Register options with validation
-            var optionsBuilder = services.AddOptions<CronJobOptions<T>>();
+            OptionsBuilder<CronJobOptions<T>> optionsBuilder = services.AddOptions<CronJobOptions<T>>();
 
             if (configuration != null)
             {
-                var section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
+                IConfigurationSection section = configuration.GetSection(CronJobOptions<T>.GetSectionPath());
                 if (section.Exists())
                 {
                     optionsBuilder.Bind(section);
@@ -399,7 +400,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             // Register resilient schedule config
             services.AddSingleton<IResilientScheduleConfig<T>>(sp =>
             {
-                var opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
+                CronJobOptions<T> opts = sp.GetRequiredService<IOptions<CronJobOptions<T>>>().Value;
                 return opts;
             });
 
@@ -471,7 +472,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
                 throw new ArgumentException("At least one configuration must be provided.", nameof(configurations));
             }
 
-            foreach (var config in configurations)
+            foreach (CronJobOptions<T> config in configurations)
             {
                 var instanceName = config.GetEffectiveInstanceName();
 
@@ -533,7 +534,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             Guard.Against.Null(services, nameof(services));
             Guard.Against.Null(configuration, nameof(configuration));
 
-            var instancesSection = configuration.GetSection($"{CronJobOptions<T>.GetSectionPath()}:Instances");
+            IConfigurationSection instancesSection = configuration.GetSection($"{CronJobOptions<T>.GetSectionPath()}:Instances");
 
             if (!instancesSection.Exists())
             {
@@ -542,8 +543,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
                     $"Add the section to appsettings.json or use AddCronJobInstances<{typeof(T).Name}>() for code configuration.");
             }
 
-            var instances = instancesSection.GetChildren();
-            foreach (var instance in instances)
+            IEnumerable<IConfigurationSection> instances = instancesSection.GetChildren();
+            foreach (IConfigurationSection instance in instances)
             {
                 var config = new CronJobOptions<T>();
                 instance.Bind(config);
@@ -581,7 +582,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Configuration
             // for custom validation scenarios
             try
             {
-                var globalOptions = serviceProvider.GetService<IOptions<CronJobGlobalOptions>>();
+                IOptions<CronJobGlobalOptions>? globalOptions = serviceProvider.GetService<IOptions<CronJobGlobalOptions>>();
                 globalOptions?.Value.ToString(); // Force validation
 
                 return true;

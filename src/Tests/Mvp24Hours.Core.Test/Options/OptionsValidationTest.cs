@@ -141,7 +141,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.True(result.Succeeded);
@@ -160,7 +160,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -180,7 +180,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -201,7 +201,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -215,7 +215,7 @@ public class OptionsValidationTest
         var validator = new TestOptionsValidator();
 
         // Act
-        var result = validator.Validate(null!);
+        OptionsValidationResult result = validator.Validate(null!);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -234,7 +234,7 @@ public class OptionsValidationTest
         var options = new SimpleTestOptions { ApiKey = "API_12345" };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.True(result.Succeeded);
@@ -248,7 +248,7 @@ public class OptionsValidationTest
         var options = new SimpleTestOptions { ApiKey = "INVALID_KEY" };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -263,7 +263,7 @@ public class OptionsValidationTest
         var options = new SimpleTestOptions { ApiKey = null };
 
         // Act
-        var result = validator.Validate(options);
+        OptionsValidationResult result = validator.Validate(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -282,8 +282,8 @@ public class OptionsValidationTest
             "ApiKey is required.");
 
         // Act
-        var validResult = validator.Validate(new SimpleTestOptions { ApiKey = "test" });
-        var invalidResult = validator.Validate(new SimpleTestOptions { ApiKey = null });
+        OptionsValidationResult validResult = validator.Validate(new SimpleTestOptions { ApiKey = "test" });
+        OptionsValidationResult invalidResult = validator.Validate(new SimpleTestOptions { ApiKey = null });
 
         // Assert
         Assert.True(validResult.Succeeded);
@@ -309,7 +309,7 @@ public class OptionsValidationTest
         var composite = new CompositeOptionsValidator<SimpleTestOptions>(new[] { validator1, validator2 });
 
         // Act
-        var result = composite.Validate(new SimpleTestOptions { ApiKey = "ab" }); // Too short
+        OptionsValidationResult result = composite.Validate(new SimpleTestOptions { ApiKey = "ab" }); // Too short
 
         // Assert
         Assert.False(result.Succeeded);
@@ -324,7 +324,7 @@ public class OptionsValidationTest
     public void AddOptionsWithValidation_RegistersAndValidates()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Test:ConnectionString"] = "Host=localhost",
@@ -341,8 +341,8 @@ public class OptionsValidationTest
             configuration.GetSection("Test"),
             validateOnStart: false); // Don't validate on start for this test
 
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptions<TestOptions>>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IOptions<TestOptions> options = provider.GetRequiredService<IOptions<TestOptions>>();
 
         // Assert
         Assert.NotNull(options.Value);
@@ -354,7 +354,7 @@ public class OptionsValidationTest
     public void AddOptionsWithValidation_WithCustomValidator_RegistersValidator()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Test:ConnectionString"] = "Host=localhost",
@@ -369,8 +369,8 @@ public class OptionsValidationTest
             configuration.GetSection("Test"),
             validateOnStart: false);
 
-        var provider = services.BuildServiceProvider();
-        var validators = provider.GetServices<IValidateOptions<TestOptions>>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEnumerable<IValidateOptions<TestOptions>> validators = provider.GetServices<IValidateOptions<TestOptions>>();
 
         // Assert
         Assert.NotEmpty(validators);
@@ -386,8 +386,8 @@ public class OptionsValidationTest
         // Act
         services.AddOptionsValidator<SimpleTestOptions, SimpleApiKeyValidator>();
 
-        var provider = services.BuildServiceProvider();
-        var validators = provider.GetServices<IValidateOptions<SimpleTestOptions>>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEnumerable<IValidateOptions<SimpleTestOptions>> validators = provider.GetServices<IValidateOptions<SimpleTestOptions>>();
 
         // Assert
         Assert.NotEmpty(validators);
@@ -405,7 +405,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = OptionsValidationExtensions.ValidateWithDataAnnotations(options);
+        OptionsValidationResult result = OptionsValidationExtensions.ValidateWithDataAnnotations(options);
 
         // Assert
         Assert.True(result.Succeeded);
@@ -423,7 +423,7 @@ public class OptionsValidationTest
         };
 
         // Act
-        var result = OptionsValidationExtensions.ValidateWithDataAnnotations(options);
+        OptionsValidationResult result = OptionsValidationExtensions.ValidateWithDataAnnotations(options);
 
         // Assert
         Assert.False(result.Succeeded);
@@ -438,7 +438,7 @@ public class OptionsValidationTest
     public void AddOptionsForMonitor_RegistersOptions()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Test:ConnectionString"] = "Host=localhost"
@@ -450,8 +450,8 @@ public class OptionsValidationTest
         // Act
         services.AddOptionsForMonitor<TestOptions>(configuration.GetSection("Test"));
 
-        var provider = services.BuildServiceProvider();
-        var optionsMonitor = provider.GetService<IOptionsMonitor<TestOptions>>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IOptionsMonitor<TestOptions>? optionsMonitor = provider.GetRequiredService<IOptionsMonitor<TestOptions>>();
 
         // Assert
         Assert.NotNull(optionsMonitor);
@@ -466,7 +466,7 @@ public class OptionsValidationTest
     public void AddOptionsForSnapshot_RegistersOptions()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Test:ConnectionString"] = "Host=localhost"
@@ -478,9 +478,9 @@ public class OptionsValidationTest
         // Act
         services.AddOptionsForSnapshot<TestOptions>(configuration.GetSection("Test"));
 
-        using var provider = services.BuildServiceProvider();
-        using var scope = provider.CreateScope();
-        var optionsSnapshot = scope.ServiceProvider.GetService<IOptionsSnapshot<TestOptions>>();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using IServiceScope scope = provider.CreateScope();
+        IOptionsSnapshot<TestOptions>? optionsSnapshot = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<TestOptions>>();
 
         // Assert
         Assert.NotNull(optionsSnapshot);

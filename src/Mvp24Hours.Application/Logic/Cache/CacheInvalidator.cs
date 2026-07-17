@@ -90,7 +90,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             try
             {
                 // Generate possible cache keys for this entity ID
-                var entityType = typeof(TEntity);
+                Type entityType = typeof(TEntity);
 
                 // Common key patterns for GetById operations
                 var keys = new[]

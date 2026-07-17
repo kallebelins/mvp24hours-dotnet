@@ -5,8 +5,10 @@
 //=====================================================================================
 using System;
 using System.Reflection;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
 
@@ -70,8 +72,8 @@ namespace Mvp24Hours.Application.Extensions
                 typeof(IValidationService<T>),
                 sp =>
                 {
-                    var validators = sp.GetServices<FluentValidation.IValidator<T>>();
-                    var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<ValidationService<T>>>();
+                    IEnumerable<IValidator<T>> validators = sp.GetServices<FluentValidation.IValidator<T>>();
+                    ILogger<ValidationService<T>>? logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<ValidationService<T>>>();
                     return new ValidationService<T>(validators, sp, logger, options);
                 },
                 lifetime));
@@ -113,23 +115,23 @@ namespace Mvp24Hours.Application.Extensions
             var options = new ValidationServiceOptions();
             configureOptions?.Invoke(options);
 
-            var validatorInterfaceType = typeof(FluentValidation.IValidator<>);
-            var validationServiceType = typeof(IValidationService<>);
-            var cascadeValidatorType = typeof(ICascadeValidator<>);
-            var validationServiceImplType = typeof(ValidationService<>);
+            Type validatorInterfaceType = typeof(FluentValidation.IValidator<>);
+            Type validationServiceType = typeof(IValidationService<>);
+            Type cascadeValidatorType = typeof(ICascadeValidator<>);
+            Type validationServiceImplType = typeof(ValidationService<>);
 
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
-                var types = assembly.GetTypes();
+                Type[] types = assembly.GetTypes();
 
-                foreach (var type in types)
+                foreach (Type type in types)
                 {
                     if (type.IsAbstract || type.IsInterface)
                         continue;
 
-                    var interfaces = type.GetInterfaces();
+                    Type[] interfaces = type.GetInterfaces();
 
-                    foreach (var @interface in interfaces)
+                    foreach (Type @interface in interfaces)
                     {
                         if (!@interface.IsGenericType)
                             continue;
@@ -138,22 +140,22 @@ namespace Mvp24Hours.Application.Extensions
                             continue;
 
                         // Get the type being validated
-                        var validatedType = @interface.GetGenericArguments()[0];
+                        Type validatedType = @interface.GetGenericArguments()[0];
 
                         // Register IValidationService<T> if not already registered
-                        var serviceType = validationServiceType.MakeGenericType(validatedType);
-                        var implType = validationServiceImplType.MakeGenericType(validatedType);
-                        var cascadeType = cascadeValidatorType.MakeGenericType(validatedType);
+                        Type serviceType = validationServiceType.MakeGenericType(validatedType);
+                        Type implType = validationServiceImplType.MakeGenericType(validatedType);
+                        Type cascadeType = cascadeValidatorType.MakeGenericType(validatedType);
 
                         services.TryAdd(new ServiceDescriptor(
                             serviceType,
                             sp =>
                             {
-                                var validatorType = validatorInterfaceType.MakeGenericType(validatedType);
-                                var validators = sp.GetServices(validatorType);
+                                Type validatorType = validatorInterfaceType.MakeGenericType(validatedType);
+                                IEnumerable<object?> validators = sp.GetServices(validatorType);
 
                                 // Use reflection to create the service
-                                var loggerType = typeof(Microsoft.Extensions.Logging.ILogger<>)
+                                Type loggerType = typeof(Microsoft.Extensions.Logging.ILogger<>)
                                     .MakeGenericType(implType);
                                 var logger = sp.GetService(loggerType);
 

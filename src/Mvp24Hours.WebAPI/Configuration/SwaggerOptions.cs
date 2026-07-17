@@ -91,7 +91,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of API version configurations.
         /// </summary>
-        public List<SwaggerVersionInfo> Versions { get; set; } = new List<SwaggerVersionInfo>();
+        public List<SwaggerVersionInfo> Versions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the authorization scheme configuration.

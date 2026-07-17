@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
             if (_buildersComplex.TryGetValue(keyName, out List<Type>? value))
             {
                 var result = new List<T>();
-                foreach (var item in value)
+                foreach (Type item in value)
                 {
                     var instance = (T?)Activator.CreateInstance(item);
                     if (instance != null)

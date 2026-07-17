@@ -130,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             T defaultValue,
             CancellationToken cancellationToken = default) where T : class
         {
-            var value = await provider.GetAsync<T>(key, cancellationToken);
+            T? value = await provider.GetAsync<T>(key, cancellationToken);
             return value ?? defaultValue;
         }
 

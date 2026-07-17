@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register key generator
             services.AddSingleton<ICacheKeyGenerator>(sp =>
             {
-                var logger = sp.GetService<ILogger<DefaultCacheKeyGenerator>>();
+                ILogger<DefaultCacheKeyGenerator>? logger = sp.GetService<ILogger<DefaultCacheKeyGenerator>>();
                 return new DefaultCacheKeyGenerator(
                     options.KeyPrefix,
                     options.KeySeparator,
@@ -133,9 +133,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register memory cache provider
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var memoryCache = sp.GetRequiredService<IMemoryCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
                 return new MemoryCacheProvider(memoryCache, serializer, logger);
             });
         }
@@ -147,9 +147,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<ICacheProvider>(sp =>
             {
-                var distributedCache = sp.GetRequiredService<IDistributedCache>();
-                var serializer = sp.GetRequiredService<ICacheSerializer>();
-                var logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+                IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+                ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                 return new DistributedCacheProvider(distributedCache, serializer, logger);
             });
         }

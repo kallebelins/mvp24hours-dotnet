@@ -107,7 +107,7 @@ public sealed class RequestContextAccessor : IRequestContextAccessor
         get => _contextHolder.Value?.Context;
         set
         {
-            var holder = _contextHolder.Value;
+            ContextHolder? holder = _contextHolder.Value;
             if (holder != null)
             {
                 holder.Context = null;

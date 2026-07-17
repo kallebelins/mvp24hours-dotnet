@@ -112,14 +112,14 @@ public class RequestSizeLimitMiddleware
         }
 
         // Set the maximum request body size feature
-        var maxRequestBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        IHttpMaxRequestBodySizeFeature? maxRequestBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
         if (maxRequestBodySizeFeature != null && !maxRequestBodySizeFeature.IsReadOnly)
         {
             maxRequestBodySizeFeature.MaxRequestBodySize = maxBodySize.Value;
         }
 
         // Set form options if applicable
-        var formFeature = context.Features.Get<IFormFeature>();
+        IFormFeature? formFeature = context.Features.Get<IFormFeature>();
         if (formFeature != null)
         {
             // Form options are set via IFormFeature, but we handle this at the service level
@@ -152,7 +152,7 @@ public class RequestSizeLimitMiddleware
         var contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
 
         // Check endpoint-specific limits first (most specific)
-        foreach (var endpointLimit in _options.EndpointLimits)
+        foreach (KeyValuePair<string, long> endpointLimit in _options.EndpointLimits)
         {
             if (MatchesPattern(path, endpointLimit.Key))
             {

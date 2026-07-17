@@ -71,7 +71,7 @@ namespace Mvp24Hours.Extensions
                 page,
                 summary,
                 value,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Extensions
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: value,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Extensions
                 new PageResult(0, 0, 0),
                 new SummaryResult(0, 0),
                 data: default,
-                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? new List<IMessageResult>()),
+                messages: new ReadOnlyCollection<IMessageResult>(messageResult ?? []),
                 token: tokenDefault
             );
         }
@@ -150,10 +150,10 @@ namespace Mvp24Hours.Extensions
             var totalCount = repository.GetByCount(clause);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
-            var items = repository.GetBy(clause, effectiveCriteria);
+            IPagingCriteria effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            IList<TEntity> items = repository.GetBy(clause, effectiveCriteria);
 
-            var result = items.ToBusinessPaging(
+            IPagingResult<IList<TEntity>> result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),
                 new SummaryResult(totalCount, totalPages)
             );
@@ -179,10 +179,10 @@ namespace Mvp24Hours.Extensions
             var totalCount = repository.ListCount();
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
 
-            var effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
-            var items = repository.List(effectiveCriteria);
+            IPagingCriteria effectiveCriteria = criteria ?? new PagingCriteria(limit, offset);
+            IList<TEntity> items = repository.List(effectiveCriteria);
 
-            var result = items.ToBusinessPaging(
+            IPagingResult<IList<TEntity>> result = items.ToBusinessPaging(
                 new PageResult(limit, offset, items.Count),
                 new SummaryResult(totalCount, totalPages)
             );

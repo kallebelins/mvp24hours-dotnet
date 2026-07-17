@@ -63,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             _operations.Add(async (input, ct) =>
             {
                 var typedInput = (TOpInput?)input;
-                var result = await operation.ExecuteAsync(typedInput!, ct);
+                IOperationResult<TOpOutput> result = await operation.ExecuteAsync(typedInput!, ct);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             _operations.Add(async (input, ct) =>
             {
                 var typedInput = (TInput?)input;
-                var result = await transform(typedInput!, ct);
+                IOperationResult<TOutput> result = await transform(typedInput!, ct);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 object? currentValue = input;
                 var allMessages = new List<IMessageResult>();
 
-                foreach (var operation in _operations)
+                foreach (Func<object?, CancellationToken, Task<IOperationResult<object>>> operation in _operations)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 

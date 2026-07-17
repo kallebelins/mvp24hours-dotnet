@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
@@ -88,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 .Where(e => e.State == EntityState.Modified || e.State == EntityState.Added)
                 .ToList();
 
-            foreach (var entry in modifiedEntries)
+            foreach (EntityEntry? entry in modifiedEntries)
             {
                 if (entry.Entity is IVersionedEntityWithCounter versionedEntity)
                 {
@@ -133,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// </example>
         public static ModelBuilder ApplyConcurrencyTokens(this ModelBuilder modelBuilder)
         {
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
                 // Configure byte[] RowVersion for IVersionedEntity
                 if (typeof(IVersionedEntity).IsAssignableFrom(entityType.ClrType))

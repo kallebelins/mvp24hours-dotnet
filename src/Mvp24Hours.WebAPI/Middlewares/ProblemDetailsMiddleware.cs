@@ -102,7 +102,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Map exception to ProblemDetails
-            var problemDetails = _mapper.Map(exception, context);
+            ProblemDetails problemDetails = _mapper.Map(exception, context);
 
             // Set response properties
             context.Response.StatusCode = problemDetails.Status ?? _options.FallbackStatusCode;
@@ -132,7 +132,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
         private void LogException(Exception exception, HttpContext context)
         {
             var statusCode = _mapper.GetStatusCode(exception);
-            var requestPath = context.Request.Path;
+            PathString requestPath = context.Request.Path;
             var requestMethod = context.Request.Method;
             var traceId = context.TraceIdentifier;
 

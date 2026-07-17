@@ -64,11 +64,11 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             TimeSpan duration,
             CancellationToken cancellationToken)
         {
-            var expiresAt = DateTimeOffset.UtcNow.Add(duration);
+            DateTimeOffset expiresAt = DateTimeOffset.UtcNow.Add(duration);
             var key = GetLockKey(resource);
 
             // Try to acquire lock atomically
-            var entry = _locks.AddOrUpdate(
+            LockEntry entry = _locks.AddOrUpdate(
                 key,
                 _ => new LockEntry
                 {
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             var key = GetLockKey(resource);
 
-            if (_locks.TryGetValue(key, out var entry) && entry.LockId == lockId)
+            if (_locks.TryGetValue(key, out LockEntry? entry) && entry.LockId == lockId)
             {
                 var removed = _locks.TryRemove(key, out _);
                 if (removed)
@@ -145,9 +145,9 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             var key = GetLockKey(resource);
 
-            if (_locks.TryGetValue(key, out var entry) && entry.LockId == lockId)
+            if (_locks.TryGetValue(key, out LockEntry? entry) && entry.LockId == lockId)
             {
-                var newExpiresAt = DateTimeOffset.UtcNow.Add(duration);
+                DateTimeOffset newExpiresAt = DateTimeOffset.UtcNow.Add(duration);
                 entry.ExpiresAt = newExpiresAt;
 
                 _logger?.LogDebug(
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             var key = GetLockKey(resource);
 
-            if (_locks.TryGetValue(key, out var entry))
+            if (_locks.TryGetValue(key, out LockEntry? entry))
             {
                 // Check if lock has expired
                 if (DateTimeOffset.UtcNow >= entry.ExpiresAt)

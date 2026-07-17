@@ -5,6 +5,7 @@
 //=====================================================================================
 using System.Threading.Tasks;
 using FluentValidation;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation;
 using Xunit;
 
@@ -27,7 +28,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             };
 
             // Act
-            var result = await operation.ExecuteAsync(order);
+            IOperationResult<TestOrder> result = await operation.ExecuteAsync(order);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -48,7 +49,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             };
 
             // Act
-            var result = await operation.ExecuteAsync(order);
+            IOperationResult<TestOrder> result = await operation.ExecuteAsync(order);
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -68,7 +69,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             };
 
             // Act
-            var result = await operation.ExecuteAsync(order);
+            IOperationResult<TestOrder> result = await operation.ExecuteAsync(order);
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -111,7 +112,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Integration
             };
 
             // Act
-            var result = await operation.ExecuteAsync(order);
+            IOperationResult<TestOrder> result = await operation.ExecuteAsync(order);
 
             // Assert
             Assert.False(result.IsSuccess);

@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
 
             if (listener.HasErrors())
             {
-                var errors = listener.GetErrorActivities();
+                IReadOnlyList<RecordedActivity> errors = listener.GetErrorActivities();
                 var errorDetails = string.Join("\n", errors.Select(e =>
                     $"  - {e.OperationName}: {e.StatusDescription ?? "No description"}"));
                 throw new AssertionException(
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (string.IsNullOrEmpty(operationName)) throw new ArgumentNullException(nameof(operationName));
             if (string.IsNullOrEmpty(tagKey)) throw new ArgumentNullException(nameof(tagKey));
 
-            var activity = listener.GetActivities(operationName).FirstOrDefault();
+            RecordedActivity? activity = listener.GetActivities(operationName).FirstOrDefault();
             if (activity == null)
             {
                 throw new AssertionException(
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (string.IsNullOrEmpty(operationName)) throw new ArgumentNullException(nameof(operationName));
             if (string.IsNullOrEmpty(eventName)) throw new ArgumentNullException(nameof(eventName));
 
-            var activity = listener.GetActivities(operationName).FirstOrDefault();
+            RecordedActivity? activity = listener.GetActivities(operationName).FirstOrDefault();
             if (activity == null)
             {
                 throw new AssertionException(
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(operationName)) throw new ArgumentNullException(nameof(operationName));
 
-            var activity = listener.GetActivities(operationName).FirstOrDefault();
+            RecordedActivity? activity = listener.GetActivities(operationName).FirstOrDefault();
             if (activity == null)
             {
                 throw new AssertionException(
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(operationName)) throw new ArgumentNullException(nameof(operationName));
 
-            var activity = listener.GetActivities(operationName).FirstOrDefault();
+            RecordedActivity? activity = listener.GetActivities(operationName).FirstOrDefault();
             if (activity == null)
             {
                 throw new AssertionException(
@@ -264,8 +264,8 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (string.IsNullOrEmpty(parentOperationName)) throw new ArgumentNullException(nameof(parentOperationName));
             if (string.IsNullOrEmpty(childOperationName)) throw new ArgumentNullException(nameof(childOperationName));
 
-            var parent = listener.GetActivities(parentOperationName).FirstOrDefault();
-            var child = listener.GetActivities(childOperationName).FirstOrDefault();
+            RecordedActivity? parent = listener.GetActivities(parentOperationName).FirstOrDefault();
+            RecordedActivity? child = listener.GetActivities(childOperationName).FirstOrDefault();
 
             if (parent == null)
             {
@@ -300,7 +300,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (listener == null) throw new ArgumentNullException(nameof(listener));
             if (string.IsNullOrEmpty(operationName)) throw new ArgumentNullException(nameof(operationName));
 
-            var activity = listener.GetActivities(operationName).FirstOrDefault();
+            RecordedActivity? activity = listener.GetActivities(operationName).FirstOrDefault();
             if (activity == null)
             {
                 var operations = string.Join(", ", listener.Activities.Select(a => a.OperationName).Distinct());

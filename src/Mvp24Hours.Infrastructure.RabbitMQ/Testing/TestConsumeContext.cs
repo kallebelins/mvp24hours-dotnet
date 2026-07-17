@@ -18,8 +18,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
     public class TestConsumeContext<TMessage> : IConsumeContext<TMessage> where TMessage : class
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly List<object> _publishedMessages = new();
-        private readonly List<object> _responses = new();
+        private readonly List<object> _publishedMessages = [];
+        private readonly List<object> _responses = [];
 
         /// <summary>
         /// Creates a new test consume context.
@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             QueueName = queueName ?? "test-queue";
             Headers = headers != null
                 ? new Dictionary<string, object>(headers)
-                : new Dictionary<string, object>();
+                : [];
             RedeliveryCount = redeliveryCount;
             Redelivered = redeliveryCount > 0;
             SentAt = sentAt;

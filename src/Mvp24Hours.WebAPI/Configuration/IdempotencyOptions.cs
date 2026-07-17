@@ -217,20 +217,20 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// Gets or sets paths excluded from idempotency processing.
         /// Supports wildcard patterns (e.g., "/api/internal/*").
         /// </summary>
-        public List<string> ExcludedPaths { get; set; } = new()
-        {
+        public List<string> ExcludedPaths { get; set; } =
+        [
             "/health",
             "/health/*",
             "/swagger",
             "/swagger/*",
             "/metrics"
-        };
+        ];
 
         /// <summary>
         /// Gets or sets paths that explicitly require idempotency keys.
         /// Takes precedence over RequireIdempotencyKey for specific paths.
         /// </summary>
-        public List<string> RequiredPaths { get; set; } = new();
+        public List<string> RequiredPaths { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the maximum request body size to hash for key generation.
@@ -254,10 +254,10 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <remarks>
         /// Server errors are typically transient and should be retried.
         /// </remarks>
-        public HashSet<int> NonCacheableStatusCodes { get; set; } = new()
-        {
+        public HashSet<int> NonCacheableStatusCodes { get; set; } =
+        [
             500, 501, 502, 503, 504
-        };
+        ];
 
         /// <summary>
         /// Gets or sets whether to integrate with IIdempotentCommand from CQRS module.

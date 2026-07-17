@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -126,8 +127,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             {
                 // Use reflection to call Redis methods without direct dependency
                 // In a real implementation, you'd use StackExchange.Redis directly
-                var connectionType = _redisConnection.GetType();
-                var getDatabaseMethod = connectionType.GetMethod("GetDatabase", new[] { typeof(int) });
+                Type connectionType = _redisConnection.GetType();
+                MethodInfo? getDatabaseMethod = connectionType.GetMethod("GetDatabase", new[] { typeof(int) });
                 if (getDatabaseMethod == null)
                 {
                     getDatabaseMethod = connectionType.GetMethod("GetDatabase");
@@ -156,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 }
 
                 // Try string-based publish first (most common)
-                var publishMethod = database.GetType().GetMethod("PublishAsync", new[] { typeof(string), typeof(string) });
+                MethodInfo? publishMethod = database.GetType().GetMethod("PublishAsync", new[] { typeof(string), typeof(string) });
                 if (publishMethod != null)
                 {
                     var task = publishMethod.Invoke(database, new object[] { channel, message }) as Task<long>;
@@ -171,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 publishMethod = database.GetType().GetMethod("PublishAsync");
                 if (publishMethod != null)
                 {
-                    var parameters = publishMethod.GetParameters();
+                    ParameterInfo[] parameters = publishMethod.GetParameters();
                     if (parameters.Length == 2)
                     {
                         var channelParam = channel; // Use string directly
@@ -198,8 +199,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 // Check if Redis connection is available
-                var connectionType = _redisConnection.GetType();
-                var isConnectedProperty = connectionType.GetProperty("IsConnected");
+                Type connectionType = _redisConnection.GetType();
+                PropertyInfo? isConnectedProperty = connectionType.GetProperty("IsConnected");
                 if (isConnectedProperty != null)
                 {
                     var isConnected = isConnectedProperty.GetValue(_redisConnection);

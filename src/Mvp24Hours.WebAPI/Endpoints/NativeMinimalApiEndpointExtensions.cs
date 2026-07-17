@@ -123,7 +123,7 @@ public static class NativeMinimalApiEndpointExtensions
 
         method ??= HttpMethod.Post;
 
-        var builder = endpoints.MapMethods(pattern, [method.Method],
+        RouteHandlerBuilder builder = endpoints.MapMethods(pattern, [method.Method],
             async Task<IResult> (
                 [FromBody] TCommand command,
                 [FromServices] ISender sender,
@@ -133,7 +133,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var response = await sender.SendAsync<TResponse>(command, cancellationToken);
+                    TResponse? response = await sender.SendAsync<TResponse>(command, cancellationToken);
                     return TypedResults.Ok(response);
                 }
                 catch (ValidationException ex)
@@ -233,7 +233,7 @@ public static class NativeMinimalApiEndpointExtensions
 
         method ??= HttpMethod.Post;
 
-        var builder = endpoints.MapMethods(pattern, [method.Method],
+        RouteHandlerBuilder builder = endpoints.MapMethods(pattern, [method.Method],
             async Task<IResult> (
                 [FromBody] TCommand command,
                 [FromServices] ISender sender,
@@ -243,7 +243,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
+                    IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
                     return result.ToNativeTypedResult();
                 }
                 catch (ValidationException ex)
@@ -338,7 +338,7 @@ public static class NativeMinimalApiEndpointExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
         ArgumentNullException.ThrowIfNull(idSelector);
 
-        var builder = endpoints.MapPost(pattern,
+        RouteHandlerBuilder builder = endpoints.MapPost(pattern,
             async Task<IResult> (
                 [FromBody] TCommand command,
                 [FromServices] ISender sender,
@@ -348,7 +348,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
+                    IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
 
                     if (result.HasErrors)
                     {
@@ -424,7 +424,7 @@ public static class NativeMinimalApiEndpointExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapDelete(pattern,
+        RouteHandlerBuilder builder = endpoints.MapDelete(pattern,
             async Task<IResult> (
                 [AsParameters] TCommand command,
                 [FromServices] ISender sender,
@@ -434,7 +434,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
+                    IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(command, cancellationToken);
                     return result.ToNoContentTypedResult();
                 }
                 catch (ValidationException ex)
@@ -512,7 +512,7 @@ public static class NativeMinimalApiEndpointExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapGet(pattern,
+        RouteHandlerBuilder builder = endpoints.MapGet(pattern,
             async Task<Results<Ok<TResponse>, NotFound<ProblemDetails>, BadRequest<ProblemDetails>, UnauthorizedHttpResult, ForbidHttpResult, ProblemHttpResult>> (
                 [AsParameters] TQuery query,
                 [FromServices] ISender sender,
@@ -522,7 +522,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var response = await sender.SendAsync<TResponse>(query, cancellationToken);
+                    TResponse? response = await sender.SendAsync<TResponse>(query, cancellationToken);
 
                     if (response is null)
                     {
@@ -609,7 +609,7 @@ public static class NativeMinimalApiEndpointExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapGet(pattern,
+        RouteHandlerBuilder builder = endpoints.MapGet(pattern,
             async Task<IResult> (
                 [AsParameters] TQuery query,
                 [FromServices] ISender sender,
@@ -619,7 +619,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var result = await sender.SendAsync<IBusinessResult<TResponse>>(query, cancellationToken);
+                    IBusinessResult<TResponse> result = await sender.SendAsync<IBusinessResult<TResponse>>(query, cancellationToken);
                     return result.ToNativeTypedResult();
                 }
                 catch (ValidationException ex)
@@ -697,7 +697,7 @@ public static class NativeMinimalApiEndpointExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        var builder = endpoints.MapGet(pattern,
+        RouteHandlerBuilder builder = endpoints.MapGet(pattern,
             async Task<Results<Ok<TResponse>, BadRequest<ProblemDetails>, UnauthorizedHttpResult, ForbidHttpResult, ProblemHttpResult>> (
                 [AsParameters] TQuery query,
                 [FromServices] ISender sender,
@@ -707,7 +707,7 @@ public static class NativeMinimalApiEndpointExtensions
 
                 try
                 {
-                    var response = await sender.SendAsync<TResponse>(query, cancellationToken);
+                    TResponse? response = await sender.SendAsync<TResponse>(query, cancellationToken);
                     return TypedResults.Ok(response);
                 }
                 catch (ValidationException ex)
@@ -785,7 +785,7 @@ public static class NativeMinimalApiEndpointExtensions
         if (ex.ValidationErrors?.Count > 0)
         {
             var errors = new System.Collections.Generic.Dictionary<string, string[]>();
-            foreach (var group in ex.ValidationErrors.GroupBy(e => e.Key ?? ""))
+            foreach (IGrouping<string, IMessageResult> group in ex.ValidationErrors.GroupBy(e => e.Key ?? ""))
             {
                 errors[group.Key] = group.Select(e => e.Message ?? "").ToArray();
             }

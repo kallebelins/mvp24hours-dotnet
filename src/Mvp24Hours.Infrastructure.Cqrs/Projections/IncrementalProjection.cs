@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
@@ -51,7 +52,7 @@ public abstract class IncrementalProjection<TReadModel> : ProjectionBase, IIncre
     /// </summary>
     protected IReadModelRepository<TReadModel> Repository { get; }
 
-    private readonly List<Type> _handledEventTypes = new();
+    private readonly List<Type> _handledEventTypes = [];
 
     /// <inheritdoc />
     public IReadOnlyList<Type> HandledEventTypes => _handledEventTypes.AsReadOnly();
@@ -143,7 +144,7 @@ public abstract class IncrementalProjection<TReadModel> : ProjectionBase, IIncre
 public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadModel>
     where TReadModel : class
 {
-    private readonly Dictionary<Type, Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task>> _handlers = new();
+    private readonly Dictionary<Type, Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task>> _handlers = [];
 
     /// <summary>
     /// Initializes a new instance of the apply projection.
@@ -160,9 +161,9 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
         ProjectionContext context,
         CancellationToken cancellationToken = default)
     {
-        var eventType = @event.GetType();
+        Type eventType = @event.GetType();
 
-        if (_handlers.TryGetValue(eventType, out var handler))
+        if (_handlers.TryGetValue(eventType, out Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task>? handler))
         {
             await handler(@event, context, cancellationToken);
         }
@@ -170,21 +171,21 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
 
     private void DiscoverApplyMethods()
     {
-        var methods = GetType()
+        IEnumerable<MethodInfo> methods = GetType()
             .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             .Where(m => m.Name == "Apply" && m.GetParameters().Length == 3);
 
-        foreach (var method in methods)
+        foreach (MethodInfo? method in methods)
         {
-            var parameters = method.GetParameters();
+            ParameterInfo[] parameters = method.GetParameters();
             if (parameters.Length != 3) continue;
 
-            var eventType = parameters[0].ParameterType;
+            Type eventType = parameters[0].ParameterType;
             if (!typeof(IMediatorDomainEvent).IsAssignableFrom(eventType)) continue;
             if (parameters[1].ParameterType != typeof(ProjectionContext)) continue;
             if (parameters[2].ParameterType != typeof(CancellationToken)) continue;
 
-            var handler = CreateHandler(method, eventType);
+            Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task> handler = CreateHandler(method, eventType);
             _handlers[eventType] = handler;
         }
     }
@@ -319,7 +320,7 @@ public class ProjectionCheckpoint
     /// <summary>
     /// Gets or sets optional metadata.
     /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new();
+    public Dictionary<string, string> Metadata { get; set; } = [];
 }
 
 /// <summary>
@@ -327,14 +328,14 @@ public class ProjectionCheckpoint
 /// </summary>
 public class InMemoryProjectionCheckpointManager : IProjectionCheckpointManager
 {
-    private readonly Dictionary<string, ProjectionCheckpoint> _checkpoints = new();
+    private readonly Dictionary<string, ProjectionCheckpoint> _checkpoints = [];
 
     /// <inheritdoc />
     public Task<ProjectionCheckpoint?> GetCheckpointAsync(
         string projectionName,
         CancellationToken cancellationToken = default)
     {
-        _checkpoints.TryGetValue(projectionName, out var checkpoint);
+        _checkpoints.TryGetValue(projectionName, out ProjectionCheckpoint? checkpoint);
         return Task.FromResult(checkpoint);
     }
 

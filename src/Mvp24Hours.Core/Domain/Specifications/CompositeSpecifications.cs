@@ -138,7 +138,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
         /// </summary>
         public static Expression<Func<T, bool>> Not<T>(Expression<Func<T, bool>> expression)
         {
-            var negated = Expression.Not(expression.Body);
+            UnaryExpression negated = Expression.Not(expression.Body);
             return Expression.Lambda<Func<T, bool>>(negated, expression.Parameters);
         }
 
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
                 .ToDictionary(p => p.s, p => p.f);
 
             // Replace parameters in the second lambda expression with parameters from the first
-            var secondBody = ParameterRebinder.ReplaceParameters(map, second.Body);
+            Expression secondBody = ParameterRebinder.ReplaceParameters(map, second.Body);
 
             // Create a merged lambda expression with parameters from the first expression
             return Expression.Lambda<TDelegate>(merge(first.Body, secondBody), first.Parameters);

@@ -94,12 +94,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
 
             try
             {
-                var client = GetOrCreateClient();
-                var database = client.GetDatabase(_options.DatabaseName);
+                IMongoClient client = GetOrCreateClient();
+                IMongoDatabase database = client.GetDatabase(_options.DatabaseName);
 
                 // Execute ping command to verify connectivity
                 var pingCommand = new BsonDocument("ping", 1);
-                var pingResult = await database.RunCommandAsync<BsonDocument>(
+                BsonDocument pingResult = await database.RunCommandAsync<BsonDocument>(
                     pingCommand,
                     readPreference: null,
                     cancellationToken);
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 // Optionally verify database permissions by listing collections
                 if (_healthCheckOptions.VerifyDatabaseAccess)
                 {
-                    var collections = await database.ListCollectionNamesAsync(cancellationToken: cancellationToken);
+                    IAsyncCursor<string> collections = await database.ListCollectionNamesAsync(cancellationToken: cancellationToken);
                     var collectionCount = 0;
                     while (await collections.MoveNextAsync(cancellationToken))
                     {
@@ -124,8 +124,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 {
                     try
                     {
-                        var adminDb = client.GetDatabase("admin");
-                        var serverStatus = await adminDb.RunCommandAsync<BsonDocument>(
+                        IMongoDatabase adminDb = client.GetDatabase("admin");
+                        BsonDocument serverStatus = await adminDb.RunCommandAsync<BsonDocument>(
                             new BsonDocument("serverStatus", 1),
                             readPreference: null,
                             cancellationToken);
@@ -136,9 +136,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                             data["uptime"] = serverStatus.GetValue("uptime", 0).ToDouble();
 
                             // Get connections info
-                            if (serverStatus.TryGetValue("connections", out var connections) && connections.IsBsonDocument)
+                            if (serverStatus.TryGetValue("connections", out BsonValue? connections) && connections.IsBsonDocument)
                             {
-                                var connDoc = connections.AsBsonDocument;
+                                BsonDocument connDoc = connections.AsBsonDocument;
                                 data["currentConnections"] = connDoc.GetValue("current", 0).ToInt32();
                                 data["availableConnections"] = connDoc.GetValue("available", 0).ToInt32();
                             }

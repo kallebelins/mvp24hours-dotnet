@@ -41,7 +41,7 @@ namespace Mvp24Hours.Extensions
             );
 
             // Add ordering expressions
-            foreach (var (keySelector, descending) in specification.OrderBy)
+            foreach ((Expression<Func<T, object>>? keySelector, bool descending) in specification.OrderBy)
             {
                 if (descending)
                 {
@@ -54,7 +54,7 @@ namespace Mvp24Hours.Extensions
             }
 
             // Add navigation expressions
-            foreach (var include in specification.Includes)
+            foreach (Expression<Func<T, object>> include in specification.Includes)
             {
                 paging.NavigationExpr.Add(include);
             }
@@ -171,7 +171,7 @@ namespace Mvp24Hours.Extensions
             // Apply expression-based ordering (ascending)
             if (pagingCriteria.OrderByAscendingExpr != null)
             {
-                foreach (var order in pagingCriteria.OrderByAscendingExpr)
+                foreach (Expression<Func<T, dynamic>> order in pagingCriteria.OrderByAscendingExpr)
                 {
                     AddOrderBy(order);
                 }
@@ -180,7 +180,7 @@ namespace Mvp24Hours.Extensions
             // Apply expression-based ordering (descending)
             if (pagingCriteria.OrderByDescendingExpr != null)
             {
-                foreach (var order in pagingCriteria.OrderByDescendingExpr)
+                foreach (Expression<Func<T, dynamic>> order in pagingCriteria.OrderByDescendingExpr)
                 {
                     AddOrderByDescending(order);
                 }
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Extensions
             // Apply expression-based navigation
             if (pagingCriteria.NavigationExpr != null)
             {
-                foreach (var nav in pagingCriteria.NavigationExpr)
+                foreach (Expression<Func<T, dynamic>> nav in pagingCriteria.NavigationExpr)
                 {
                     AddInclude(nav);
                 }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.PostgreSql.Test.Setup;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Entities;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Services.Async;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Xunit;
@@ -28,8 +29,8 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task CreateCustomer()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize(false);
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize(false);
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
             var customer = new Customer
             {
@@ -46,8 +47,8 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task CreateManyCustomers()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize(false);
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize(false);
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
             List<Customer> customers = [];
             for (int i = 2; i <= 10; i++)
@@ -68,10 +69,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task UpdateCustomer()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize();
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize();
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
-            var customer = await service.GetByIdAsync(1).GetDataValueAsync();
+            Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
             customer.Name = "Test Updated";
             await service.ModifyAsync(customer);
             customer = await service.GetByIdAsync(1).GetDataValueAsync();
@@ -84,15 +85,15 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task UpdateManyCustomers()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize();
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize();
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             var paging = new PagingCriteria(1, 0);
-            var customers = await service.ListAsync(paging)
+            IList<Customer>? customers = await service.ListAsync(paging)
                 .GetDataValueAsync();
-            foreach (var item in customers)
+            foreach (Customer? item in customers)
                 item.Active = false;
             await service.ModifyAsync(customers);
-            var result = await service.GetByCountAsync(x => !x.Active);
+            IBusinessResult<int> result = await service.GetByCountAsync(x => !x.Active);
             // assert
             Assert.True(result.GetDataValue() > 0);
             // dispose
@@ -102,12 +103,12 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task DeleteCustomer()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize();
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize();
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
-            var customer = await service.GetByIdAsync(1).GetDataValueAsync();
+            Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
             await service.RemoveByIdAsync(customer.Id);
-            var result = await service.GetByIdAsync(customer.Id);
+            IBusinessResult<Customer> result = await service.GetByIdAsync(customer.Id);
             // assert
             Assert.Null(result.GetDataValue());
             // dispose
@@ -117,12 +118,12 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task DeleteManyCustomers()
         {
             // arrange
-            var serviceProvider = StartupAsync.Initialize();
-            var service = serviceProvider.GetService<CustomerServiceAsync>();
+            ServiceProvider serviceProvider = StartupAsync.Initialize();
+            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
-            var customers = await service.ListAsync().GetDataValueAsync();
+            IList<Customer>? customers = await service.ListAsync().GetDataValueAsync();
             await service.RemoveAsync(customers);
-            var result = await service.ListCountAsync();
+            IBusinessResult<int> result = await service.ListCountAsync();
             // assert
             Assert.Equal(0, result.GetDataValue());
             // dispose

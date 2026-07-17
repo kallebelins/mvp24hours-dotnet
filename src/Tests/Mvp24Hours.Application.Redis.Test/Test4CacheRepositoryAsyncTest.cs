@@ -68,7 +68,7 @@ namespace Mvp24Hours.Application.Redis.Test
             };
             string content = customer.ToSerialize();
 
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.SetStringAsync(keyString, content);
             Assert.True(true);
         }
@@ -77,7 +77,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task GetStringAsync()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.SetStringAsync(keyString, "Test");
             string content = await repo.GetStringAsync(keyString);
             Assert.False(string.IsNullOrEmpty(content));
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task RemoveStringAsync()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.RemoveAsync(keyString);
             string content = await repo.GetStringAsync(keyString);
             Assert.True(string.IsNullOrEmpty(content));
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Application.Redis.Test
                 Name = "Test 1",
                 Active = true
             };
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.SetAsync(keyObject, customer);
             Assert.True(true);
         }
@@ -113,9 +113,9 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task GetObjectAsync()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.SetAsync(keyObject, new Customer { });
-            var customer = await repo.GetAsync(keyObject);
+            Customer? customer = await repo.GetAsync(keyObject);
             Assert.NotNull(customer);
         }
 
@@ -123,9 +123,9 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task RemoveObjectAsync()
         {
             Setup();
-            var repo = serviceProvider.GetService<IRepositoryCacheAsync<Customer>>();
+            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
             await repo.RemoveAsync(keyObject);
-            var customer = await repo.GetAsync(keyObject);
+            Customer? customer = await repo.GetAsync(keyObject);
             Assert.Null(customer);
         }
     }

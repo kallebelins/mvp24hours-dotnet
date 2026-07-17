@@ -19,8 +19,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
     /// </summary>
     public class SubPipelineOperation : IOperation
     {
-        private readonly List<IOperation> _operations = new();
-        private readonly List<IOperation> _executedOperations = new();
+        private readonly List<IOperation> _operations = [];
+        private readonly List<IOperation> _executedOperations = [];
         private readonly ILogger<SubPipelineOperation>? _logger;
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
 
             try
             {
-                foreach (var operation in _operations)
+                foreach (IOperation operation in _operations)
                 {
                     if (input.IsLocked && !operation.IsRequired)
                         continue;
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
         /// <inheritdoc />
         public void Rollback(IPipelineMessage input)
         {
-            foreach (var operation in _executedOperations.Reverse<IOperation>())
+            foreach (IOperation operation in _executedOperations.Reverse<IOperation>())
             {
                 try
                 {
@@ -118,8 +118,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
     /// </summary>
     public class SubPipelineOperationAsync : IOperationAsync
     {
-        private readonly List<IOperationAsync> _operations = new();
-        private readonly List<IOperationAsync> _executedOperations = new();
+        private readonly List<IOperationAsync> _operations = [];
+        private readonly List<IOperationAsync> _executedOperations = [];
         private readonly ILogger<SubPipelineOperationAsync>? _logger;
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
 
             try
             {
-                foreach (var operation in _operations)
+                foreach (IOperationAsync operation in _operations)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -215,7 +215,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Composition
         /// <inheritdoc />
         public async Task RollbackAsync(IPipelineMessage input)
         {
-            foreach (var operation in _executedOperations.Reverse<IOperationAsync>())
+            foreach (IOperationAsync operation in _executedOperations.Reverse<IOperationAsync>())
             {
                 try
                 {

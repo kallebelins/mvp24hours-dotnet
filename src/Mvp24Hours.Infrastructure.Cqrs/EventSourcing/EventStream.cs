@@ -24,7 +24,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// </remarks>
 public class EventStream
 {
-    private readonly List<CoreDomainEvent> _events = new();
+    private readonly List<CoreDomainEvent> _events = [];
 
     /// <summary>
     /// Gets the aggregate identifier for this stream.
@@ -98,7 +98,7 @@ public class EventStream
     {
         ArgumentNullException.ThrowIfNull(events);
 
-        foreach (var @event in events)
+        foreach (CoreDomainEvent @event in events)
         {
             _events.Add(@event);
             Version++;

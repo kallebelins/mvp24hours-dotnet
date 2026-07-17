@@ -35,7 +35,7 @@ public class SafeExecutorTest
     public void Execute_SuccessfulOperation_ShouldReturnSuccessResult()
     {
         // Act
-        var result = SafeExecutor.Execute(() => "Success", _mapper, _logger);
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute(() => "Success", _mapper, _logger);
 
         // Assert
         result.Should().NotBeNull();
@@ -48,7 +48,7 @@ public class SafeExecutorTest
     public void Execute_OperationThrowsNotFoundException_ShouldReturnNotFoundResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new NotFoundException("Resource not found"),
             _mapper,
             _logger);
@@ -62,7 +62,7 @@ public class SafeExecutorTest
     public void Execute_OperationThrowsValidationException_ShouldReturnValidationFailedResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new ValidationException("Validation failed"),
             _mapper,
             _logger);
@@ -76,7 +76,7 @@ public class SafeExecutorTest
     public void Execute_OperationThrowsUnknownException_ShouldReturnInternalErrorResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new Exception("Unknown error"),
             _mapper,
             _logger);
@@ -90,7 +90,7 @@ public class SafeExecutorTest
     public void Execute_WithNullResult_ShouldReturnSuccessWithNullData()
     {
         // Act
-        var result = SafeExecutor.Execute<string?>(() => null, _mapper, _logger);
+        IBusinessResultWithStatus<string?> result = SafeExecutor.Execute<string?>(() => null, _mapper, _logger);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -104,7 +104,7 @@ public class SafeExecutorTest
         var expected = new TestEntity { Id = 1, Name = "Test" };
 
         // Act
-        var result = SafeExecutor.Execute(() => expected, _mapper, _logger);
+        IBusinessResultWithStatus<TestEntity> result = SafeExecutor.Execute(() => expected, _mapper, _logger);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -120,7 +120,7 @@ public class SafeExecutorTest
         var executed = false;
 
         // Act
-        var result = SafeExecutor.Execute(() => { executed = true; }, _mapper, _logger);
+        IBusinessResultWithStatus<bool> result = SafeExecutor.Execute(() => { executed = true; }, _mapper, _logger);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -132,7 +132,7 @@ public class SafeExecutorTest
     public void Execute_VoidOperationThrows_ShouldReturnFailure()
     {
         // Act
-        var result = SafeExecutor.Execute(
+        IBusinessResultWithStatus<bool> result = SafeExecutor.Execute(
             () => throw new NotFoundException("Not found"),
             _mapper,
             _logger);
@@ -149,7 +149,7 @@ public class SafeExecutorTest
         var customMessage = "Custom error message";
 
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new NotFoundException("Original message"),
             _mapper,
             customMessage,
@@ -164,7 +164,7 @@ public class SafeExecutorTest
     public void Execute_WithResultMapping_ShouldMapCorrectly()
     {
         // Act
-        var result = SafeExecutor.Execute(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute(
             () => 42,
             x => x.ToString(),
             _mapper,
@@ -183,7 +183,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_SuccessfulOperation_ShouldReturnSuccessResult()
     {
         // Act
-        var result = await SafeExecutor.ExecuteAsync(async () =>
+        IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync(async () =>
         {
             await Task.Delay(1);
             return "Success";
@@ -198,7 +198,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_OperationThrowsNotFoundException_ShouldReturnNotFoundResult()
     {
         // Act
-        var result = await SafeExecutor.ExecuteAsync<string>(async () =>
+        IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync<string>(async () =>
         {
             await Task.Delay(1);
             throw new NotFoundException("Resource not found");
@@ -213,7 +213,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_OperationThrowsTimeoutException_ShouldReturnTimeoutResult()
     {
         // Act
-        var result = await SafeExecutor.ExecuteAsync<string>(async () =>
+        IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync<string>(async () =>
         {
             await Task.Delay(1);
             throw new TimeoutException("Operation timed out");
@@ -231,7 +231,7 @@ public class SafeExecutorTest
         var expected = new TestEntity { Id = 42, Name = "AsyncTest" };
 
         // Act
-        var result = await SafeExecutor.ExecuteAsync(async () =>
+        IBusinessResultWithStatus<TestEntity> result = await SafeExecutor.ExecuteAsync(async () =>
         {
             await Task.Delay(1);
             return expected;
@@ -249,7 +249,7 @@ public class SafeExecutorTest
         var executed = false;
 
         // Act
-        var result = await SafeExecutor.ExecuteAsync(async () =>
+        IBusinessResultWithStatus<bool> result = await SafeExecutor.ExecuteAsync(async () =>
         {
             await Task.Delay(1);
             executed = true;
@@ -268,7 +268,7 @@ public class SafeExecutorTest
         var customMessage = "Custom async error message";
 
         // Act
-        var result = await SafeExecutor.ExecuteAsync<string>(
+        IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync<string>(
             async () =>
             {
                 await Task.Delay(1);
@@ -287,7 +287,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_WithResultMapping_ShouldMapCorrectly()
     {
         // Act
-        var result = await SafeExecutor.ExecuteAsync(
+        IBusinessResultWithStatus<int> result = await SafeExecutor.ExecuteAsync(
             async () =>
             {
                 await Task.Delay(1);
@@ -306,7 +306,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_WithAsyncResultMapping_ShouldMapCorrectly()
     {
         // Act
-        var result = await SafeExecutor.ExecuteAsync(
+        IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync(
             async () =>
             {
                 await Task.Delay(1);
@@ -333,7 +333,7 @@ public class SafeExecutorTest
     public void ExecuteOrNotFound_WithNullResult_ShouldReturnNotFound()
     {
         // Act
-        var result = SafeExecutor.ExecuteOrNotFound<TestEntity>(
+        IBusinessResultWithStatus<TestEntity> result = SafeExecutor.ExecuteOrNotFound<TestEntity>(
             () => null,
             _mapper,
             "Entity not found",
@@ -351,7 +351,7 @@ public class SafeExecutorTest
         var expected = new TestEntity { Id = 1, Name = "Test" };
 
         // Act
-        var result = SafeExecutor.ExecuteOrNotFound(
+        IBusinessResultWithStatus<TestEntity> result = SafeExecutor.ExecuteOrNotFound(
             () => expected,
             _mapper,
             "Entity not found",
@@ -366,7 +366,7 @@ public class SafeExecutorTest
     public async Task ExecuteOrNotFoundAsync_WithNullResult_ShouldReturnNotFound()
     {
         // Act
-        var result = await SafeExecutor.ExecuteOrNotFoundAsync<TestEntity>(
+        IBusinessResultWithStatus<TestEntity> result = await SafeExecutor.ExecuteOrNotFoundAsync<TestEntity>(
             async () =>
             {
                 await Task.Delay(1);
@@ -388,7 +388,7 @@ public class SafeExecutorTest
         var expected = new TestEntity { Id = 1, Name = "Test" };
 
         // Act
-        var result = await SafeExecutor.ExecuteOrNotFoundAsync(
+        IBusinessResultWithStatus<TestEntity> result = await SafeExecutor.ExecuteOrNotFoundAsync(
             async () =>
             {
                 await Task.Delay(1);
@@ -415,7 +415,7 @@ public class SafeExecutorTest
         mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new Exception("Critical error"),
             _mapper,
             mockLogger.Object);
@@ -440,7 +440,7 @@ public class SafeExecutorTest
         mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
         // Act - NotFoundException typically doesn't require logging as error
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new NotFoundException("Not found"),
             _mapper,
             mockLogger.Object);
@@ -466,7 +466,7 @@ public class SafeExecutorTest
     public void Execute_WithNullOperation_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => SafeExecutor.Execute<string>(null!, _mapper, _logger);
+        Func<IBusinessResultWithStatus<string>> act = () => SafeExecutor.Execute<string>(null!, _mapper, _logger);
         act.Should().Throw<ArgumentNullException>().WithParameterName("operation");
     }
 
@@ -474,7 +474,7 @@ public class SafeExecutorTest
     public void Execute_WithNullMapper_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => SafeExecutor.Execute(() => "test", null!, _logger);
+        Func<IBusinessResultWithStatus<string>> act = () => SafeExecutor.Execute(() => "test", null!, _logger);
         act.Should().Throw<ArgumentNullException>().WithParameterName("mapper");
     }
 
@@ -482,7 +482,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_WithNullOperation_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = async () => await SafeExecutor.ExecuteAsync<string>(null!, _mapper, _logger);
+        Func<Task<IBusinessResultWithStatus<string>>> act = async () => await SafeExecutor.ExecuteAsync<string>(null!, _mapper, _logger);
         await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("operation");
     }
 
@@ -490,7 +490,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_WithNullMapper_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = async () => await SafeExecutor.ExecuteAsync(async () => { await Task.Delay(1); return "test"; }, null!, _logger);
+        Func<Task<IBusinessResultWithStatus<string>>> act = async () => await SafeExecutor.ExecuteAsync(async () => { await Task.Delay(1); return "test"; }, null!, _logger);
         await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("mapper");
     }
 
@@ -502,7 +502,7 @@ public class SafeExecutorTest
     public void Execute_ActionThrowsArgumentNullException_ShouldReturnValidationFailedResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new ArgumentNullException("param"),
             _mapper,
             _logger);
@@ -516,7 +516,7 @@ public class SafeExecutorTest
     public void Execute_ActionThrowsUnauthorizedException_ShouldReturnUnauthorizedResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new UnauthorizedException("Not authenticated"),
             _mapper,
             _logger);
@@ -530,7 +530,7 @@ public class SafeExecutorTest
     public void Execute_ActionThrowsForbiddenException_ShouldReturnForbiddenResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new ForbiddenException("Access denied"),
             _mapper,
             _logger);
@@ -544,7 +544,7 @@ public class SafeExecutorTest
     public void Execute_ActionThrowsConflictException_ShouldReturnConflictResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new ConflictException("Resource conflict"),
             _mapper,
             _logger);
@@ -558,7 +558,7 @@ public class SafeExecutorTest
     public void Execute_ActionThrowsDomainException_ShouldReturnDomainRuleViolationResult()
     {
         // Act
-        var result = SafeExecutor.Execute<string>(
+        IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
             () => throw new DomainException("Domain rule violated"),
             _mapper,
             _logger);
@@ -575,7 +575,7 @@ public class SafeExecutorTest
         var count = 0;
 
         // Act & Assert
-        var result1 = await SafeExecutor.ExecuteAsync<string>(async () =>
+        IBusinessResultWithStatus<string> result1 = await SafeExecutor.ExecuteAsync<string>(async () =>
         {
             await Task.Delay(1);
             count++;
@@ -583,7 +583,7 @@ public class SafeExecutorTest
         }, _mapper, _logger);
         result1.StatusCode.Should().Be(ResultStatusCode.NotFound);
 
-        var result2 = await SafeExecutor.ExecuteAsync<string>(async () =>
+        IBusinessResultWithStatus<string> result2 = await SafeExecutor.ExecuteAsync<string>(async () =>
         {
             await Task.Delay(1);
             count++;
@@ -591,7 +591,7 @@ public class SafeExecutorTest
         }, _mapper, _logger);
         result2.StatusCode.Should().Be(ResultStatusCode.ValidationFailed);
 
-        var result3 = await SafeExecutor.ExecuteAsync(async () =>
+        IBusinessResultWithStatus<string> result3 = await SafeExecutor.ExecuteAsync(async () =>
         {
             await Task.Delay(1);
             count++;

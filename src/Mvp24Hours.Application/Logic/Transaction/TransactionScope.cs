@@ -329,7 +329,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
 
             try
             {
-                var result = await func();
+                TResult? result = await func();
                 var affectedRows = await CommitAsync(cancellationToken);
                 return (result, affectedRows);
             }
@@ -564,7 +564,7 @@ namespace Mvp24Hours.Application.Logic.Transaction
             Begin();
             try
             {
-                var result = func();
+                TResult? result = func();
                 var affectedRows = Commit();
                 return (result, affectedRows);
             }

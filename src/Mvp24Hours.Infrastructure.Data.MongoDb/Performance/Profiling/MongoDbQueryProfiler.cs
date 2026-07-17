@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             ExplainVerbosity verbosity = ExplainVerbosity.ExecutionStats,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
             return await ExplainAsync(filterDef, null, verbosity, cancellationToken);
         }
 
@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
 
             try
             {
-                var findFluent = _collection.Find(filter);
+                IFindFluent<T, T> findFluent = _collection.Find(filter);
                 if (sort != null)
                 {
                     findFluent = findFluent.Sort(sort);
@@ -116,12 +116,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
 
                 if (sort != null)
                 {
-                    var sortDoc = sort.Render(renderArgs);
+                    BsonDocument sortDoc = sort.Render(renderArgs);
                     command["explain"]["sort"] = sortDoc;
                 }
 
-                var result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-                var explainResult = ParseExplainResult(result);
+                BsonDocument result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+                QueryExplainResult explainResult = ParseExplainResult(result);
                 _logger?.LogDebug("Query explain completed for collection {CollectionName}: Index={IndexName}, ExecutionTime={ExecutionTimeMs}ms",
                     typeof(T).Name, explainResult.IndexName, explainResult.ExecutionTimeMs);
                 return explainResult;
@@ -150,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             try
             {
                 var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
-                var pipelineDocs = pipeline.Render(renderArgs);
+                RenderedPipelineDefinition<BsonDocument> pipelineDocs = pipeline.Render(renderArgs);
 
                 var command = new BsonDocument
                 {
@@ -164,8 +164,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                     { "verbosity", verbosity.ToString().ToLowerInvariant() }
                 };
 
-                var result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-                var explainResult = ParseExplainResult(result);
+                BsonDocument result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+                QueryExplainResult explainResult = ParseExplainResult(result);
                 _logger?.LogDebug("Aggregation explain completed for collection {CollectionName}: ExecutionTime={ExecutionTimeMs}ms",
                     typeof(T).Name, explainResult.ExecutionTimeMs);
                 return explainResult;
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 Hint = indexName
             };
 
-            var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            IAsyncCursor<T> cursor = await _collection.FindAsync(filter, options, cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 Hint = indexKeys
             };
 
-            var cursor = await _collection.FindAsync(filter, options, cancellationToken);
+            IAsyncCursor<T> cursor = await _collection.FindAsync(filter, options, cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -231,7 +231,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         public async Task<List<IndexInfo>> GetIndexesAsync(CancellationToken cancellationToken = default)
         {
             var indexes = new List<IndexInfo>();
-            var cursor = await _collection.Indexes.ListAsync(cancellationToken);
+            IAsyncCursor<BsonDocument> cursor = await _collection.Indexes.ListAsync(cancellationToken);
 
             await cursor.ForEachAsync(doc =>
             {
@@ -262,7 +262,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         public async Task<CollectionStats> GetCollectionStatsAsync(CancellationToken cancellationToken = default)
         {
             var command = new BsonDocument("collStats", _collection.CollectionNamespace.CollectionName);
-            var result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+            BsonDocument result = await _collection.Database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             return new CollectionStats
             {
@@ -274,7 +274,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
                 TotalIndexSize = result.GetValue("totalIndexSize", 0).ToInt64(),
                 IndexSizes = result.Contains("indexSizes")
                     ? result["indexSizes"].AsBsonDocument
-                    : new BsonDocument(),
+                    : [],
                 Capped = result.GetValue("capped", false).AsBoolean
             };
         }
@@ -291,18 +291,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             // Parse query planner
             if (result.Contains("queryPlanner"))
             {
-                var queryPlanner = result["queryPlanner"].AsBsonDocument;
+                BsonDocument queryPlanner = result["queryPlanner"].AsBsonDocument;
 
                 if (queryPlanner.Contains("winningPlan"))
                 {
-                    var winningPlan = queryPlanner["winningPlan"].AsBsonDocument;
+                    BsonDocument winningPlan = queryPlanner["winningPlan"].AsBsonDocument;
                     explainResult.WinningPlan = winningPlan;
                     explainResult.Stage = winningPlan.GetValue("stage", "").AsString;
 
                     // Try to get index name from input stage
                     if (winningPlan.Contains("inputStage"))
                     {
-                        var inputStage = winningPlan["inputStage"].AsBsonDocument;
+                        BsonDocument inputStage = winningPlan["inputStage"].AsBsonDocument;
                         explainResult.IndexName = inputStage.GetValue("indexName", "").AsString;
 
                         if (inputStage.Contains("indexBounds"))
@@ -321,7 +321,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
             // Parse execution stats
             if (result.Contains("executionStats"))
             {
-                var execStats = result["executionStats"].AsBsonDocument;
+                BsonDocument execStats = result["executionStats"].AsBsonDocument;
 
                 explainResult.ExecutionSuccess = execStats.GetValue("executionSuccess", false).AsBoolean;
                 explainResult.DocumentsReturned = execStats.GetValue("nReturned", 0).ToInt64();

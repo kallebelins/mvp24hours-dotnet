@@ -46,7 +46,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         /// <inheritdoc />
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
         {
-            var fallbackOperation = GetFallbackOperation(message);
+            IFallbackOperation? fallbackOperation = GetFallbackOperation(message);
             Exception? caughtException = null;
             bool operationFailed = false;
 
@@ -210,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         /// <inheritdoc />
         public void Execute(IPipelineMessage message, Action next)
         {
-            var fallbackOperationSync = GetFallbackOperationSync(message);
+            IFallbackOperationSync? fallbackOperationSync = GetFallbackOperationSync(message);
             Exception? caughtException = null;
             bool operationFailed = false;
 

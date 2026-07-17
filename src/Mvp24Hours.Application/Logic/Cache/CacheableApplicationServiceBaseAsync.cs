@@ -346,7 +346,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             if (specification == null)
             {
-                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+                return ((IList<TEntity>)[]).ToBusiness();
             }
 
             if (!CacheEnabled)
@@ -375,7 +375,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             if (!CacheEnabled)
             {
-                var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+                IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
                 return result?.SingleOrDefault().ToBusiness();
             }
 
@@ -384,7 +384,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+                    IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
                     return result?.SingleOrDefault().ToBusiness();
                 },
                 _defaultCacheOptions,
@@ -404,7 +404,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             if (!CacheEnabled)
             {
-                var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+                IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
                 return result?.FirstOrDefault().ToBusiness();
             }
 
@@ -413,7 +413,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 cacheKey,
                 async () =>
                 {
-                    var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+                    IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
                     return result?.FirstOrDefault().ToBusiness();
                 },
                 _defaultCacheOptions,
@@ -429,11 +429,11 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             _logger.LogDebug("cacheable-appservice-addasync");
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.AddAsync(entity, cancellationToken: cancellationToken);
-                var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+                IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
                 // Invalidate cache on successful add
                 if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -456,9 +456,9 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
@@ -466,7 +466,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
 
             await Task.WhenAll(entities.Select(entity => _repository.AddAsync(entity, cancellationToken: cancellationToken)));
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful add
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -482,11 +482,11 @@ namespace Mvp24Hours.Application.Logic.Cache
         {
             _logger.LogDebug("cacheable-appservice-modifyasync");
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.ModifyAsync(entity, cancellationToken: cancellationToken);
-                var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+                IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
                 // Invalidate cache on successful modify
                 if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -509,9 +509,9 @@ namespace Mvp24Hours.Application.Logic.Cache
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
@@ -519,7 +519,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
 
             await Task.WhenAll(entities.Select(entity => _repository.ModifyAsync(entity, cancellationToken: cancellationToken)));
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful modify
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -536,7 +536,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             _logger.LogDebug("cacheable-appservice-removeasync");
 
             await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful remove
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -558,7 +558,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
 
             await Task.WhenAll(entities.Select(entity => _repository.RemoveAsync(entity, cancellationToken: cancellationToken)));
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful remove
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -575,7 +575,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             _logger.LogDebug("cacheable-appservice-removebyidasync");
 
             await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful remove
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -598,7 +598,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             }
 
             await Task.WhenAll(ids.Select(id => _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken)));
-            var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
+            IBusinessResult<int> result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
 
             // Invalidate cache on successful remove
             if (AutoInvalidateOnCommand && result.HasData() && result.GetDataValue() > 0)
@@ -618,7 +618,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// </summary>
         protected virtual string GenerateCacheKey(string operation, params object?[] parameters)
         {
-            var entityType = typeof(TEntity);
+            Type entityType = typeof(TEntity);
             var keyParts = new List<string>
             {
                 entityType.Name,
@@ -641,7 +641,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// </summary>
         protected virtual string GenerateCacheKeyFromExpression(string operation, Expression expression, IPagingCriteria? criteria = null)
         {
-            var entityType = typeof(TEntity);
+            Type entityType = typeof(TEntity);
             var expressionHash = expression.ToString().GetHashCode().ToString("X8");
             var key = $"{entityType.Name}:{operation}:{expressionHash}";
 

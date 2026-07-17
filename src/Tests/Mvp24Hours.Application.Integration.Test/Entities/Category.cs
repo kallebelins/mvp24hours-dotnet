@@ -15,7 +15,7 @@ public class Category : EntityBase<int>
 {
     public Category()
     {
-        Products = new List<Product>();
+        Products = [];
     }
 
     [Required]

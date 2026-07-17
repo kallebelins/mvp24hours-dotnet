@@ -127,7 +127,7 @@ namespace Mvp24Hours.Application.Test.Pagination
                 nextCursor: "next");
 
             // Act
-            var mappedResult = result.Map(x => x.ToString());
+            CursorPagedResult<string> mappedResult = result.Map(x => x.ToString());
 
             // Assert
             mappedResult.Items.Should().BeEquivalentTo("1", "2", "3");
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Application.Test.Pagination
                 hasNextPage: true);
 
             // Act
-            var deserializedValue = CursorPagedResult<string, Guid>.DeserializeCursor(result.NextCursor);
+            Guid? deserializedValue = CursorPagedResult<string, Guid>.DeserializeCursor(result.NextCursor);
 
             // Assert
             deserializedValue.Should().Be(originalValue);
@@ -182,7 +182,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void DeserializeCursor_WithInvalidString_ShouldReturnNull()
         {
             // Act
-            var result = CursorPagedResult<string, Guid>.DeserializeCursor("invalid-base64!");
+            Guid? result = CursorPagedResult<string, Guid>.DeserializeCursor("invalid-base64!");
 
             // Assert
             result.Should().BeNull();
@@ -192,7 +192,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void DeserializeCursor_WithNullString_ShouldReturnNull()
         {
             // Act
-            var result = CursorPagedResult<string, Guid>.DeserializeCursor(null);
+            Guid? result = CursorPagedResult<string, Guid>.DeserializeCursor(null);
 
             // Assert
             result.Should().BeNull();
@@ -206,7 +206,7 @@ namespace Mvp24Hours.Application.Test.Pagination
         public void CompositeCursor_ShouldStoreMultipleFields()
         {
             // Arrange & Act
-            var cursor = CompositeCursor.Create()
+            CompositeCursor cursor = CompositeCursor.Create()
                 .WithField("Id", 123)
                 .WithField("CreatedAt", DateTime.UtcNow.ToString("O"));
 

@@ -73,7 +73,7 @@ public sealed class PipelineMetrics
     /// </summary>
     public PipelineMetrics()
     {
-        var meter = Mvp24HoursMeters.Pipe.Meter;
+        Meter meter = Mvp24HoursMeters.Pipe.Meter;
 
         _executionsTotal = meter.CreateCounter<long>(
             MetricNames.PipelineExecutionsTotal,
@@ -134,7 +134,7 @@ public sealed class PipelineMetrics
         bool success,
         IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
     {
-        var tags = CreateTags(pipelineName, success, additionalTags);
+        TagList tags = CreateTags(pipelineName, success, additionalTags);
 
         _executionsTotal.Add(1, tags);
 
@@ -172,7 +172,7 @@ public sealed class PipelineMetrics
         bool success,
         IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
     {
-        var tags = CreateOperationTags(pipelineName, operationName, success, additionalTags);
+        TagList tags = CreateOperationTags(pipelineName, operationName, success, additionalTags);
 
         _operationsTotal.Add(1, tags);
 
@@ -215,7 +215,7 @@ public sealed class PipelineMetrics
 
         if (additionalTags != null)
         {
-            foreach (var tag in additionalTags)
+            foreach (KeyValuePair<string, object?> tag in additionalTags)
             {
                 tags.Add(tag);
             }
@@ -239,7 +239,7 @@ public sealed class PipelineMetrics
 
         if (additionalTags != null)
         {
-            foreach (var tag in additionalTags)
+            foreach (KeyValuePair<string, object?> tag in additionalTags)
             {
                 tags.Add(tag);
             }
@@ -296,7 +296,7 @@ public sealed class PipelineMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordExecution(_pipelineName, elapsed.TotalMilliseconds, Succeeded);
 
             if (_trackActive)
@@ -349,7 +349,7 @@ public sealed class PipelineMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordOperation(_pipelineName, _operationName, elapsed.TotalMilliseconds, Succeeded);
         }
     }

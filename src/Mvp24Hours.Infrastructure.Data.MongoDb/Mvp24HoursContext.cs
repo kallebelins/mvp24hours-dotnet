@@ -309,7 +309,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
 
         private void ConfigureCommandLogging(MongoClientSettings settings)
         {
-            var logger = _logger; // Capture logger for closure
+            ILogger<Mvp24HoursContext>? logger = _logger; // Capture logger for closure
             settings.ClusterConfigurator = builder =>
             {
                 builder.Subscribe<CommandStartedEvent>(e =>

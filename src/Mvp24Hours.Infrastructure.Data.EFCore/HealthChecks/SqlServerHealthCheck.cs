@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 data["workstationId"] = connection.WorkstationId;
 
                 // Execute basic health query
-                using (var command = connection.CreateCommand())
+                using (SqlCommand command = connection.CreateCommand())
                 {
                     command.CommandText = _options.HealthQuery;
                     command.CommandTimeout = _options.QueryTimeoutSeconds;
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 FROM sys.databases 
                 WHERE name = DB_NAME()";
 
-            using var command = connection.CreateCommand();
+            using SqlCommand command = connection.CreateCommand();
             command.CommandText = query;
             var result = await command.ExecuteScalarAsync(cancellationToken);
             return result?.ToString() ?? "UNKNOWN";
@@ -206,7 +206,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 FROM sys.dm_exec_requests 
                 WHERE blocking_session_id <> 0";
 
-            using var command = connection.CreateCommand();
+            using SqlCommand command = connection.CreateCommand();
             command.CommandText = query;
             var result = await command.ExecuteScalarAsync(cancellationToken);
             return Convert.ToInt32(result);
@@ -220,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 WHERE total_elapsed_time > {_options.LongRunningQuerySeconds * 1000}
                 AND session_id <> @@SPID";
 
-            using var command = connection.CreateCommand();
+            using SqlCommand command = connection.CreateCommand();
             command.CommandText = query;
             var result = await command.ExecuteScalarAsync(cancellationToken);
             return Convert.ToInt32(result);
@@ -248,10 +248,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
             var details = new List<object>();
 
-            using var command = connection.CreateCommand();
+            using SqlCommand command = connection.CreateCommand();
             command.CommandText = query;
 
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
             {
                 details.Add(new

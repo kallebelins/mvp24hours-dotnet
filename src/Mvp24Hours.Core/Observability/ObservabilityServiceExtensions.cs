@@ -245,7 +245,7 @@ public class ObservabilityOptions
     /// <summary>
     /// Gets or sets custom resource attributes to add to all telemetry.
     /// </summary>
-    public Dictionary<string, object> ResourceAttributes { get; set; } = new();
+    public Dictionary<string, object> ResourceAttributes { get; set; } = [];
 }
 
 /// <summary>

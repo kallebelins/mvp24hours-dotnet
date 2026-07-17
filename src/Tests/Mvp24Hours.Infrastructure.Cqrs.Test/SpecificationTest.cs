@@ -186,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var spec = new ActiveProductSpec();
 
             // Act
-            var expression = spec.IsSatisfiedByExpression;
+            Expression<Func<Product, bool>> expression = spec.IsSatisfiedByExpression;
 
             // Assert
             Assert.NotNull(expression);
@@ -252,7 +252,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var expensiveSpec = new ExpensiveProductSpec(100);
 
             // Act
-            var combinedSpec = activeSpec & expensiveSpec;
+            Specification<Product> combinedSpec = activeSpec & expensiveSpec;
 
             // Assert
             Assert.True(combinedSpec.IsSatisfiedBy(product));
@@ -267,7 +267,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var expensiveSpec = new ExpensiveProductSpec(100);
 
             // Act
-            var combinedSpec = activeSpec & expensiveSpec;
+            Specification<Product> combinedSpec = activeSpec & expensiveSpec;
 
             // Assert
             Assert.False(combinedSpec.IsSatisfiedBy(product));
@@ -283,7 +283,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var inStockSpec = new InStockProductSpec();
 
             // Act
-            var combinedSpec = activeSpec.AndSpec(expensiveSpec).AndSpec(inStockSpec);
+            Specification<Product> combinedSpec = activeSpec.AndSpec(expensiveSpec).AndSpec(inStockSpec);
 
             // Assert
             Assert.True(combinedSpec.IsSatisfiedBy(product));
@@ -302,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var expensiveSpec = new ExpensiveProductSpec(100);
 
             // Act
-            var combinedSpec = activeSpec | expensiveSpec;
+            Specification<Product> combinedSpec = activeSpec | expensiveSpec;
 
             // Assert
             Assert.True(combinedSpec.IsSatisfiedBy(product));
@@ -317,7 +317,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var expensiveSpec = new ExpensiveProductSpec(100);
 
             // Act
-            var combinedSpec = activeSpec | expensiveSpec;
+            Specification<Product> combinedSpec = activeSpec | expensiveSpec;
 
             // Assert
             Assert.False(combinedSpec.IsSatisfiedBy(product));
@@ -332,7 +332,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var electronicsSpec = new CategoryProductSpec("Electronics");
 
             // Act
-            var combinedSpec = activeSpec.OrSpec(electronicsSpec);
+            Specification<Product> combinedSpec = activeSpec.OrSpec(electronicsSpec);
 
             // Assert
             Assert.True(combinedSpec.IsSatisfiedBy(product));
@@ -350,7 +350,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var activeSpec = new ActiveProductSpec();
 
             // Act
-            var negatedSpec = !activeSpec;
+            Specification<Product> negatedSpec = !activeSpec;
 
             // Assert
             Assert.False(negatedSpec.IsSatisfiedBy(product));
@@ -364,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var activeSpec = new ActiveProductSpec();
 
             // Act
-            var negatedSpec = activeSpec.NotSpec();
+            Specification<Product> negatedSpec = activeSpec.NotSpec();
 
             // Assert
             Assert.True(negatedSpec.IsSatisfiedBy(product));
@@ -394,7 +394,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var electronicsSpec = new CategoryProductSpec("Electronics");
 
             // Act
-            var complexSpec = (activeSpec & expensiveSpec) | (inStockSpec & electronicsSpec);
+            Specification<Product> complexSpec = (activeSpec & expensiveSpec) | (inStockSpec & electronicsSpec);
 
             // Assert
             Assert.True(complexSpec.IsSatisfiedBy(product));
@@ -413,7 +413,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
                 Category = "Electronics"
             };
 
-            var spec = Specification<Product>.Create(p => p.IsActive)
+            Specification<Product> spec = Specification<Product>.Create(p => p.IsActive)
                 .AndSpec(p => p.Price >= 100)
                 .AndSpec(p => p.Stock > 0);
 
@@ -442,7 +442,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             var spec = new ProductWithIncludesSpec();
 
             // Act
-            var orderBy = spec.OrderBy;
+            IReadOnlyList<(Expression<Func<Product, object>> KeySelector, bool Descending)> orderBy = spec.OrderBy;
 
             // Assert
             Assert.Equal(2, orderBy.Count);
@@ -527,7 +527,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         public void PaginatedQuery_FluentMethods_Work()
         {
             // Arrange
-            var query = new GetProductsQuery(0, 10)
+            PaginatedQuery<IEnumerable<Product>> query = new GetProductsQuery(0, 10)
                 .WithOrderBy("Name", "-Price")
                 .WithNavigation("Category");
 
@@ -592,7 +592,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             query.SortByAsc("Stock");
 
             // Assert
-            var lastSort = query.SortCriteria[^1];
+            SortCriteria lastSort = query.SortCriteria[^1];
             Assert.Equal("Stock", lastSort.PropertyName);
             Assert.Equal(SortDirection.Ascending, lastSort.Direction);
         }
@@ -607,7 +607,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
             query.SortByDesc("Stock");
 
             // Assert
-            var lastSort = query.SortCriteria[^1];
+            SortCriteria lastSort = query.SortCriteria[^1];
             Assert.Equal("Stock", lastSort.PropertyName);
             Assert.Equal(SortDirection.Descending, lastSort.Direction);
         }
@@ -632,7 +632,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
         public void SortedQuery_WithIncludes_Works()
         {
             // Arrange
-            var query = new GetActiveProductsQuery()
+            SortedQuery<IEnumerable<Product>> query = new GetActiveProductsQuery()
                 .WithIncludes("Category", "Supplier");
 
             // Assert

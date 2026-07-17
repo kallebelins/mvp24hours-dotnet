@@ -62,7 +62,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
                 Oid = Guid.NewGuid(),
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
 
             // act
             await cache.SetStringAsync(keyString, "Test");
@@ -100,7 +100,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
 
             //  act
             await cache.RemoveAsync(keyString);
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
                 Oid = Guid.NewGuid(),
@@ -128,7 +128,7 @@ namespace Mvp24Hours.Application.Redis.Test
             await cache.SetObjectAsync(keyObject, customer);
 
             // assert
-            var result = await cache.GetObjectAsync<Customer>(keyObject);
+            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
             Assert.NotNull(result);
         }
 
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
                 Oid = Guid.NewGuid(),
@@ -159,7 +159,7 @@ namespace Mvp24Hours.Application.Redis.Test
         {
             // arrange
             Setup();
-            var cache = serviceProvider.GetService<IDistributedCache>();
+            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
                 Oid = Guid.NewGuid(),

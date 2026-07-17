@@ -37,7 +37,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         /// <inheritdoc />
         public Task<SagaInstance<TData>?> FindAsync(Guid correlationId, CancellationToken cancellationToken = default)
         {
-            _sagas.TryGetValue(correlationId, out var instance);
+            _sagas.TryGetValue(correlationId, out SagaInstance<TData>? instance);
 
             // Return a clone to prevent external modification
             if (instance != null)
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             TimeSpan timeoutThreshold,
             CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
+            DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
 
             var result = _sagas.Values
                 .Where(s => s.IsActive && s.LastUpdatedAt < threshold)
@@ -144,14 +144,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         /// <inheritdoc />
         public Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(olderThan);
+            DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
             var toRemove = _sagas.Values
                 .Where(s => (s.IsCompleted || s.IsFaulted) && s.LastUpdatedAt < threshold)
                 .Select(s => s.CorrelationId)
                 .ToList();
 
             var removed = 0;
-            foreach (var id in toRemove)
+            foreach (Guid id in toRemove)
             {
                 if (_sagas.TryRemove(id, out _))
                 {
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             Action<SagaInstance<TData>> update,
             CancellationToken cancellationToken = default)
         {
-            if (!_sagas.TryGetValue(correlationId, out var instance))
+            if (!_sagas.TryGetValue(correlationId, out SagaInstance<TData>? instance))
             {
                 return Task.FromResult(false);
             }
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
                 return Task.FromResult(false);
             }
 
-            var updated = Clone(instance);
+            SagaInstance<TData> updated = Clone(instance);
             update(updated);
             updated.LastUpdatedAt = DateTime.UtcNow;
             updated.Version++;

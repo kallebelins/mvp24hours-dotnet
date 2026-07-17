@@ -104,7 +104,7 @@ namespace Mvp24Hours.Application.Extensions
                     token: result.Token);
             }
 
-            var mappedData = await mapper(result.Data!);
+            TNew? mappedData = await mapper(result.Data!);
 
             return new BusinessResultWithStatus<TNew>(
                 data: mappedData,
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Application.Extensions
                     token: result.Token);
             }
 
-            var bindResult = binder(result.Data!);
+            IBusinessResultWithStatus<TNew> bindResult = binder(result.Data!);
             bindResult.SetToken(result.Token);
 
             return bindResult;
@@ -159,7 +159,7 @@ namespace Mvp24Hours.Application.Extensions
                     token: result.Token);
             }
 
-            var bindResult = await binder(result.Data!);
+            IBusinessResultWithStatus<TNew> bindResult = await binder(result.Data!);
             bindResult.SetToken(result.Token);
 
             return bindResult;
@@ -305,7 +305,7 @@ namespace Mvp24Hours.Application.Extensions
             if (result.HasErrors)
             {
                 var errorMessages = new List<string>();
-                foreach (var error in result.Errors)
+                foreach (IResultMessage error in result.Errors)
                 {
                     errorMessages.Add(error.Message);
                 }

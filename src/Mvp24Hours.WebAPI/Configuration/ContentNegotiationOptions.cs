@@ -40,13 +40,13 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// The first matching type in this list will be used.
         /// </para>
         /// </remarks>
-        public List<MediaTypeMapping> SupportedMediaTypes { get; set; } = new()
-        {
+        public List<MediaTypeMapping> SupportedMediaTypes { get; set; } =
+        [
             new MediaTypeMapping("application/json", ContentFormat.Json),
             new MediaTypeMapping("text/json", ContentFormat.Json),
             new MediaTypeMapping("application/xml", ContentFormat.Xml),
             new MediaTypeMapping("text/xml", ContentFormat.Xml)
-        };
+        ];
 
         /// <summary>
         /// Gets or sets whether to respect the Accept header quality values.

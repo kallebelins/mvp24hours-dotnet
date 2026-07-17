@@ -12,6 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Sms.Contract;
 using Mvp24Hours.Infrastructure.Sms.Models;
+using Mvp24Hours.Infrastructure.Sms.Results;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {
@@ -95,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                     data["testSmsRecipient"] = testMessage.To;
 
                     var sendStopwatch = Stopwatch.StartNew();
-                    var sendResult = await _smsService.SendAsync(testMessage, cts.Token);
+                    SmsSendResult sendResult = await _smsService.SendAsync(testMessage, cts.Token);
                     sendStopwatch.Stop();
 
                     stopwatch.Stop();

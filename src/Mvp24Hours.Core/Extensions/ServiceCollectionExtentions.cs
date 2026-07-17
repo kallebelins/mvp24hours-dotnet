@@ -45,7 +45,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static IServiceCollection Remove(this IServiceCollection services, Type type)
         {
-            var serviceDescriptor = services.FirstOrDefault(descriptor => descriptor.ServiceType == type);
+            ServiceDescriptor? serviceDescriptor = services.FirstOrDefault(descriptor => descriptor.ServiceType == type);
             if (serviceDescriptor != null)
             {
                 services.Remove(serviceDescriptor);
@@ -64,9 +64,9 @@ namespace Mvp24Hours.Extensions
             , ServiceLifetime lifetime = ServiceLifetime.Transient
         )
         {
-            var typesFromAssemblies = assemblies.SelectMany(a =>
+            IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a =>
                 a.DefinedTypes.Where(x => x.GetInterfaces().AnySafe(i => i == typeof(T))));
-            foreach (var type in typesFromAssemblies)
+            foreach (TypeInfo? type in typesFromAssemblies)
             {
                 services.Add(new ServiceDescriptor(typeof(T), type, lifetime));
                 if (additionalRegisterTypesByThemself)
@@ -87,11 +87,11 @@ namespace Mvp24Hours.Extensions
             , ServiceLifetime lifetime = ServiceLifetime.Transient
         )
         {
-            var genericType = t;
-            var typesFromAssemblies = assemblies.SelectMany(a => a.DefinedTypes.Where(x => x.GetInterfaces()
+            Type genericType = t;
+            IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a => a.DefinedTypes.Where(x => x.GetInterfaces()
                 .AnySafe(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericType)));
 
-            foreach (var type in typesFromAssemblies)
+            foreach (TypeInfo? type in typesFromAssemblies)
             {
                 services.Add(new ServiceDescriptor(t, type, lifetime));
                 if (additionalRegisterTypesByThemself)

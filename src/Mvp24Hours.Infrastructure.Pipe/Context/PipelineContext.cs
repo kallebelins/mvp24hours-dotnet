@@ -40,8 +40,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
 
         #region [ Fields ]
 
-        private readonly Dictionary<string, object> _metadata = new();
-        private readonly List<PipelineStateSnapshot> _snapshots = new();
+        private readonly Dictionary<string, object> _metadata = [];
+        private readonly List<PipelineStateSnapshot> _snapshots = [];
         private int _snapshotSequence = 0;
 
         #endregion
@@ -187,7 +187,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
                 throw new ArgumentException("Operation name cannot be null or empty.", nameof(operationName));
             }
 
-            var activity = ActivitySource.StartActivity(operationName, kind);
+            Activity? activity = ActivitySource.StartActivity(operationName, kind);
 
             if (activity != null)
             {
@@ -270,7 +270,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             };
 
             // Copy metadata to child
-            foreach (var kvp in _metadata)
+            foreach (KeyValuePair<string, object> kvp in _metadata)
             {
                 childContext._metadata[kvp.Key] = kvp.Value;
             }
@@ -291,7 +291,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             };
 
             // Copy metadata
-            foreach (var kvp in _metadata)
+            foreach (KeyValuePair<string, object> kvp in _metadata)
             {
                 clonedContext._metadata[kvp.Key] = kvp.Value;
             }
@@ -317,7 +317,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             TenantId = requestContext.TenantId;
 
             // Copy items from request context to metadata
-            foreach (var item in requestContext.Items)
+            foreach (KeyValuePair<string, object> item in requestContext.Items)
             {
                 _metadata[item.Key] = item.Value;
             }
@@ -335,7 +335,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
             };
 
             // Copy metadata to request context items
-            foreach (var kvp in _metadata)
+            foreach (KeyValuePair<string, object> kvp in _metadata)
             {
                 requestContext.Items[kvp.Key] = kvp.Value;
             }

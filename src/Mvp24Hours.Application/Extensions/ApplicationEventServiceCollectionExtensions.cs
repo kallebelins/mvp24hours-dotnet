@@ -189,9 +189,9 @@ public static class ApplicationEventServiceCollectionExtensions
             throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
         }
 
-        var handlerInterfaceType = typeof(IApplicationEventHandler<>);
+        Type handlerInterfaceType = typeof(IApplicationEventHandler<>);
 
-        foreach (var assembly in assemblies)
+        foreach (Assembly assembly in assemblies)
         {
             var handlerTypes = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract)
@@ -200,13 +200,13 @@ public static class ApplicationEventServiceCollectionExtensions
                     i.GetGenericTypeDefinition() == handlerInterfaceType))
                 .ToList();
 
-            foreach (var handlerType in handlerTypes)
+            foreach (Type? handlerType in handlerTypes)
             {
                 var interfaces = handlerType.GetInterfaces()
                     .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType)
                     .ToList();
 
-                foreach (var @interface in interfaces)
+                foreach (Type? @interface in interfaces)
                 {
                     services.Add(new ServiceDescriptor(@interface, handlerType, lifetime));
                 }

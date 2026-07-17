@@ -150,7 +150,7 @@ public static class EFCoreActivitySource
     /// <returns>The created activity, or null if not sampled.</returns>
     public static Activity? StartQueryActivity(string commandText, string? dbName = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Client);
+        Activity? activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Client);
         if (activity == null) return null;
 
         activity.SetTag(TagNames.DbOperation, "SELECT");
@@ -171,7 +171,7 @@ public static class EFCoreActivitySource
     /// <returns>The created activity, or null if not sampled.</returns>
     public static Activity? StartCommandActivity(string commandText, string operation, string? dbName = null)
     {
-        var activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Client);
+        Activity? activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Client);
         if (activity == null) return null;
 
         activity.SetTag(TagNames.DbOperation, operation);
@@ -192,7 +192,7 @@ public static class EFCoreActivitySource
     /// <returns>The created activity, or null if not sampled.</returns>
     public static Activity? StartSlowQueryActivity(string commandText, double durationMs, double thresholdMs)
     {
-        var activity = Source.StartActivity(ActivityNames.SlowQuery, ActivityKind.Client);
+        Activity? activity = Source.StartActivity(ActivityNames.SlowQuery, ActivityKind.Client);
         if (activity == null) return null;
 
         activity.SetTag(TagNames.IsSlowQuery, true);

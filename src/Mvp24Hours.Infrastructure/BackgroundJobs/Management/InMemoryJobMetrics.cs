@@ -22,8 +22,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
     /// </remarks>
     public class InMemoryJobMetrics : IJobMetrics
     {
-        private readonly List<JobMetric> _metrics = new();
-        private readonly Dictionary<string, QueueStatistics> _queueStats = new();
+        private readonly List<JobMetric> _metrics = [];
+        private readonly Dictionary<string, QueueStatistics> _queueStats = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -42,7 +42,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
                 // Update queue statistics
                 var queueName = metric.Queue ?? "default";
-                if (!_queueStats.TryGetValue(queueName, out var queueStat))
+                if (!_queueStats.TryGetValue(queueName, out QueueStatistics? queueStat))
                 {
                     queueStat = new QueueStatistics { QueueName = queueName };
                     _queueStats[queueName] = queueStat;
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                var metrics = _metrics.Where(m => m.JobType == jobType);
+                IEnumerable<JobMetric> metrics = _metrics.Where(m => m.JobType == jobType);
 
                 if (startDate.HasValue)
                 {
@@ -136,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
                 // Calculate throughput
                 if (startDate.HasValue && endDate.HasValue)
                 {
-                    var period = endDate.Value - startDate.Value;
+                    TimeSpan period = endDate.Value - startDate.Value;
                     if (period.TotalSeconds > 0)
                     {
                         aggregate.Throughput = aggregate.TotalExecutions / period.TotalSeconds;
@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
                 foreach (var jobType in jobTypes)
                 {
-                    var metrics = GetMetricsAsync(jobType, startDate, endDate, cancellationToken).Result;
+                    JobMetricsAggregate metrics = GetMetricsAsync(jobType, startDate, endDate, cancellationToken).Result;
                     result[jobType] = metrics;
                 }
 
@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                if (_queueStats.TryGetValue(queueName, out var stats))
+                if (_queueStats.TryGetValue(queueName, out QueueStatistics? stats))
                 {
                     return Task.FromResult(stats);
                 }

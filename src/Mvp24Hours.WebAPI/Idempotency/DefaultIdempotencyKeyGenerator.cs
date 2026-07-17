@@ -119,7 +119,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
         private async Task<IdempotencyKeyResult> ExtractOrGenerateAsync(HttpContext context)
         {
             // First try header
-            var headerResult = ExtractFromHeader(context);
+            IdempotencyKeyResult headerResult = ExtractFromHeader(context);
             if (headerResult.HasKey)
             {
                 return headerResult;
@@ -136,7 +136,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 // Enable buffering so the body can be read multiple times
                 context.Request.EnableBuffering();
 
-                var body = context.Request.Body;
+                Stream body = context.Request.Body;
                 body.Position = 0;
 
                 using var reader = new StreamReader(

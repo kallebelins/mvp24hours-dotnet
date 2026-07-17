@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             _operations.Add(input =>
             {
                 var typedInput = (TOpInput?)input;
-                var result = operation.Execute(typedInput!);
+                IOperationResult<TOpOutput> result = operation.Execute(typedInput!);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             _operations.Add(input =>
             {
                 var typedInput = (TInput?)input;
-                var result = transform(typedInput!);
+                IOperationResult<TOutput> result = transform(typedInput!);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
                 object? currentValue = input;
                 var allMessages = new List<IMessageResult>();
 
-                foreach (var operation in _operations)
+                foreach (Func<object?, IOperationResult<object>> operation in _operations)
                 {
                     _executedInputs.Add(currentValue);
 

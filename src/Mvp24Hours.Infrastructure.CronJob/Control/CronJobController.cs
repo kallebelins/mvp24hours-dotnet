@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
 
             await _stateStore.SetPausedAsync(jobName, true, cancellationToken);
 
-            var state = await _stateStore.GetStateAsync(jobName, cancellationToken);
+            CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
             if (state != null)
             {
                 state.PauseReason = reason;
@@ -111,15 +111,15 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
         /// <inheritdoc />
         public async Task<CronJobStatus?> GetStatusAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            var state = await _stateStore.GetStateAsync(jobName, cancellationToken);
+            CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
             if (state == null)
             {
                 return null;
             }
 
-            _registrations.TryGetValue(jobName, out var registration);
+            _registrations.TryGetValue(jobName, out CronJobRegistration? registration);
 
-            var circuitState = _circuitBreaker.GetState(jobName);
+            CircuitBreakerState circuitState = _circuitBreaker.GetState(jobName);
 
             return new CronJobStatus
             {
@@ -143,13 +143,13 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
         /// <inheritdoc />
         public async Task<IReadOnlyList<CronJobStatus>> GetAllStatusesAsync(CancellationToken cancellationToken = default)
         {
-            var states = await _stateStore.GetAllStatesAsync(cancellationToken);
+            IReadOnlyList<CronJobState> states = await _stateStore.GetAllStatesAsync(cancellationToken);
             var statuses = new List<CronJobStatus>();
 
-            foreach (var state in states)
+            foreach (CronJobState state in states)
             {
-                _registrations.TryGetValue(state.JobName, out var registration);
-                var circuitState = _circuitBreaker.GetState(state.JobName);
+                _registrations.TryGetValue(state.JobName, out CronJobRegistration? registration);
+                CircuitBreakerState circuitState = _circuitBreaker.GetState(state.JobName);
 
                 statuses.Add(new CronJobStatus
                 {
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
             }
 
             // Add registered jobs that don't have state yet
-            foreach (var registration in _registrations.Values)
+            foreach (CronJobRegistration registration in _registrations.Values)
             {
                 if (!statuses.Any(s => s.JobName == registration.JobName))
                 {
@@ -197,7 +197,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
                 return false;
             }
 
-            if (_triggerCallbacks.TryGetValue(jobName, out var callback))
+            if (_triggerCallbacks.TryGetValue(jobName, out Func<CancellationToken, Task>? callback))
             {
                 _logger.LogInformation("Manually triggering CronJob {JobName}", jobName);
                 try

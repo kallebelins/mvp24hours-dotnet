@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamAllAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = GetQuery(null, true);
+            IQueryable<T> query = GetQuery(null, true);
 
             // Apply default tracking behavior from options
             if (Options.DefaultTrackingBehavior == QueryTrackingBehavior.NoTracking)
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamAllAsync");
             }
 
-            await foreach (var entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (T? entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return entity;
             }
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamAllAsync(IPagingCriteria? criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = GetQuery(criteria);
+            IQueryable<T> query = GetQuery(criteria);
 
             // Apply default tracking behavior from options
             if (Options.DefaultTrackingBehavior == QueryTrackingBehavior.NoTracking)
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamAllAsync (with criteria)");
             }
 
-            await foreach (var entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (T? entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return entity;
             }
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             if (clause != null)
             {
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamByAsync");
             }
 
-            await foreach (var entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (T? entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return entity;
             }
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async IAsyncEnumerable<T> StreamByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             if (clause != null)
             {
@@ -182,7 +182,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamByAsync (with criteria)");
             }
 
-            await foreach (var entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (T? entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return entity;
             }
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             var batch = new List<T>(batchSize);
 
-            await foreach (var entity in StreamAllAsync(cancellationToken))
+            await foreach (T entity in StreamAllAsync(cancellationToken))
             {
                 batch.Add(entity);
 
@@ -216,7 +216,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             var batch = new List<T>(batchSize);
 
-            await foreach (var entity in StreamByAsync(clause, cancellationToken))
+            await foreach (T entity in StreamByAsync(clause, cancellationToken))
             {
                 batch.Add(entity);
 
@@ -264,14 +264,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             Expression<Func<T, TResult>> selector,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = dbEntities.AsNoTracking();
+            IQueryable<T> query = dbEntities.AsNoTracking();
 
             if (Options.EnableQueryTags)
             {
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamProjectedAsync");
             }
 
-            await foreach (var item in query.Select(selector).AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (TResult? item in query.Select(selector).AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return item;
             }
@@ -290,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             Expression<Func<T, TResult>> selector,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var query = dbEntities.AsNoTracking();
+            IQueryable<T> query = dbEntities.AsNoTracking();
 
             if (clause != null)
             {
@@ -302,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 query = query.TagWith($"{Options.QueryTagPrefix}: StreamProjectedByAsync");
             }
 
-            await foreach (var item in query.Select(selector).AsAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (TResult? item in query.Select(selector).AsAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return item;
             }
@@ -338,7 +338,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
 
-            await foreach (var entity in StreamAllAsync(cancellationToken))
+            await foreach (T entity in StreamAllAsync(cancellationToken))
             {
                 await semaphore.WaitAsync(cancellationToken);
 
@@ -381,7 +381,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var tasks = new List<Task>();
 
-            await foreach (var entity in StreamByAsync(clause, cancellationToken))
+            await foreach (T entity in StreamByAsync(clause, cancellationToken))
             {
                 await semaphore.WaitAsync(cancellationToken);
 

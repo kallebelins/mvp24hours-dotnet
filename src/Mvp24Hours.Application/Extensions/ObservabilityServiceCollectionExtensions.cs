@@ -164,7 +164,7 @@ public static class ObservabilityServiceCollectionExtensions
         this IServiceCollection services,
         OperationMetricsOptions? options = null)
     {
-        var metricsOptions = options ?? new OperationMetricsOptions();
+        OperationMetricsOptions metricsOptions = options ?? new OperationMetricsOptions();
         services.TryAddSingleton(metricsOptions);
         services.TryAddSingleton<IOperationMetrics, ApplicationOperationMetrics>();
 

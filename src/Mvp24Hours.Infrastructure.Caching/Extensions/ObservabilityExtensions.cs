@@ -66,7 +66,7 @@ public static class ObservabilityExtensions
         where TInterface : class
         where TDecorator : class, TInterface
     {
-        var wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
+        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
         if (wrappedDescriptor == null)
         {
             throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
@@ -80,8 +80,8 @@ public static class ObservabilityExtensions
                     ?? (wrappedDescriptor.ImplementationFactory?.Invoke(sp)
                         ?? ActivatorUtilities.GetServiceOrCreateInstance(sp, wrappedDescriptor.ImplementationType!));
 
-                var metrics = options.EnableMetrics ? sp.GetService<ICacheMetrics>() : null;
-                var logger = options.EnableLogging ? sp.GetService<ILogger<ObservableCacheProvider>>() : null;
+                ICacheMetrics? metrics = options.EnableMetrics ? sp.GetService<ICacheMetrics>() : null;
+                ILogger<ObservableCacheProvider>? logger = options.EnableLogging ? sp.GetService<ILogger<ObservableCacheProvider>>() : null;
 
                 return (TInterface)(object)new ObservableCacheProvider((ICacheProvider)inner, metrics, logger);
             },

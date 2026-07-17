@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             _logger = logger;
 
             // Validate Azure options
-            var validationErrors = _azureOptions.Validate();
+            IList<string> validationErrors = _azureOptions.Validate();
             if (validationErrors.Count > 0)
             {
                 var errorMessage = string.Join("; ", validationErrors);
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
         {
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
+                HttpClient httpClient = _httpClientFactory.CreateClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(30);
 
                 // Azure Communication Services SMS API endpoint
@@ -156,21 +156,21 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                     message.To,
                     message.From ?? Options.DefaultFrom);
 
-                var response = await httpClient.PostAsync(url, content, cancellationToken);
+                HttpResponseMessage response = await httpClient.PostAsync(url, content, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
                     // Parse Azure response
                     var responseJson = JsonDocument.Parse(responseContent);
-                    var valueArray = responseJson.RootElement.GetProperty("value");
+                    JsonElement valueArray = responseJson.RootElement.GetProperty("value");
                     if (valueArray.GetArrayLength() > 0)
                     {
-                        var firstResult = valueArray[0];
-                        var messageId = firstResult.TryGetProperty("messageId", out var messageIdElement)
+                        JsonElement firstResult = valueArray[0];
+                        var messageId = firstResult.TryGetProperty("messageId", out JsonElement messageIdElement)
                             ? messageIdElement.GetString()
                             : null;
-                        var httpStatusCode = firstResult.TryGetProperty("httpStatusCode", out var statusElement)
+                        var httpStatusCode = firstResult.TryGetProperty("httpStatusCode", out JsonElement statusElement)
                             ? statusElement.GetInt32()
                             : (int)response.StatusCode;
 
@@ -184,7 +184,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                         }
                         else
                         {
-                            var errorMessage = firstResult.TryGetProperty("errorMessage", out var errorElement)
+                            var errorMessage = firstResult.TryGetProperty("errorMessage", out JsonElement errorElement)
                                 ? errorElement.GetString()
                                 : $"Azure Communication Services returned status code: {httpStatusCode}";
 

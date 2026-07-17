@@ -135,7 +135,7 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     {
         var requestName = typeof(TRequest).Name;
         ITenantContext? tenantContext = null;
-        var previousContext = _tenantContextAccessor.Context;
+        ITenantContext? previousContext = _tenantContextAccessor.Context;
 
         try
         {

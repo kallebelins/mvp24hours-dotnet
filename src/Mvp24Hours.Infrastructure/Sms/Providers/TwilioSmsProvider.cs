@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
             _logger = logger;
 
             // Validate Twilio options
-            var validationErrors = _twilioOptions.Validate();
+            IList<string> validationErrors = _twilioOptions.Validate();
             if (validationErrors.Count > 0)
             {
                 var errorMessage = string.Join("; ", validationErrors);
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
         {
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
+                HttpClient httpClient = _httpClientFactory.CreateClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(30);
 
                 // Twilio API endpoint: POST /2010-04-01/Accounts/{AccountSid}/Messages.json
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                 // Add metadata if supported
                 if (message.Metadata != null)
                 {
-                    foreach (var metadata in message.Metadata)
+                    foreach (KeyValuePair<string, string> metadata in message.Metadata)
                     {
                         formData.Add(new KeyValuePair<string, string>($"Meta{metadata.Key}", metadata.Value));
                     }
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                     message.To,
                     message.From ?? Options.DefaultFrom);
 
-                var response = await httpClient.PostAsync(url, formContent, cancellationToken);
+                HttpResponseMessage response = await httpClient.PostAsync(url, formContent, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (response.IsSuccessStatusCode)
@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                         status);
 
                     // Map Twilio status to our enum
-                    var deliveryStatus = MapTwilioStatus(status);
+                    SmsDeliveryStatus deliveryStatus = MapTwilioStatus(status);
 
                     return SmsSendResult.Successful(messageId, deliveryStatus);
                 }
@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
                     try
                     {
                         var errorJson = JsonDocument.Parse(responseContent);
-                        if (errorJson.RootElement.TryGetProperty("message", out var messageElement))
+                        if (errorJson.RootElement.TryGetProperty("message", out JsonElement messageElement))
                         {
                             errorMessage = messageElement.GetString();
                         }

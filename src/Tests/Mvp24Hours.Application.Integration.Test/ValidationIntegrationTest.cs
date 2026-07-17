@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using FluentValidation;
+using FluentValidation.Results;
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Validators;
 
@@ -41,7 +42,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -62,7 +63,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -83,7 +84,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -104,7 +105,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -128,7 +129,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -149,7 +150,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -172,7 +173,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -193,7 +194,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _productValidator.Validate(product);
+        ValidationResult result = _productValidator.Validate(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -216,7 +217,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _categoryValidator.Validate(category);
+        ValidationResult result = _categoryValidator.Validate(category);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -234,7 +235,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _categoryValidator.Validate(category);
+        ValidationResult result = _categoryValidator.Validate(category);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -252,7 +253,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _categoryValidator.Validate(category);
+        ValidationResult result = _categoryValidator.Validate(category);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -271,7 +272,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = _categoryValidator.Validate(category);
+        ValidationResult result = _categoryValidator.Validate(category);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -296,7 +297,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = await _productValidator.ValidateAsync(product);
+        ValidationResult result = await _productValidator.ValidateAsync(product);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -316,7 +317,7 @@ public class ValidationIntegrationTest
         };
 
         // Act
-        var result = await _productValidator.ValidateAsync(product);
+        ValidationResult result = await _productValidator.ValidateAsync(product);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -340,7 +341,7 @@ public class ValidationIntegrationTest
         };
 
         // Act & Assert
-        var action = () => _productValidator.ValidateAndThrow(product);
+        Action action = () => _productValidator.ValidateAndThrow(product);
         action.Should().Throw<ValidationException>();
     }
 
@@ -358,7 +359,7 @@ public class ValidationIntegrationTest
         };
 
         // Act & Assert
-        var action = () => _productValidator.ValidateAndThrow(product);
+        Action action = () => _productValidator.ValidateAndThrow(product);
         action.Should().NotThrow();
     }
 

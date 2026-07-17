@@ -22,10 +22,10 @@ namespace Mvp24Hours.Extensions
                 .Where(t => t.InheritsOrImplements(typeof(IBsonClassMap)))
                 .ToList();
 
-            foreach (var type in types)
+            foreach (Type? type in types)
             {
                 var instance = Activator.CreateInstance(type);
-                var methodInfo = type.GetMethod("Configure");
+                MethodInfo? methodInfo = type.GetMethod("Configure");
                 methodInfo?.Invoke(instance, null);
             }
 

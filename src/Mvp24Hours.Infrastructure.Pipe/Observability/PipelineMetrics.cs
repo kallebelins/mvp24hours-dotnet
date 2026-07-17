@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
             _activeExecutions[pipelineId] = context;
 
-            var metrics = _pipelineMetrics.GetOrAdd(pipelineName, _ => new PipelineExecutionMetrics { PipelineName = pipelineName });
+            PipelineExecutionMetrics metrics = _pipelineMetrics.GetOrAdd(pipelineName, _ => new PipelineExecutionMetrics { PipelineName = pipelineName });
             lock (metrics)
             {
                 metrics.ActiveExecutions++;
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (string.IsNullOrEmpty(pipelineId))
                 throw new ArgumentException("Pipeline ID cannot be null or empty.", nameof(pipelineId));
 
-            if (!_activeExecutions.TryRemove(pipelineId, out var context))
+            if (!_activeExecutions.TryRemove(pipelineId, out PipelineExecutionContext? context))
                 return;
 
             context.Stopwatch.Stop();
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 Interlocked.Add(ref _totalMemoryAllocated, memoryDelta);
             }
 
-            var metrics = _pipelineMetrics.GetOrAdd(context.PipelineName, _ => new PipelineExecutionMetrics { PipelineName = context.PipelineName });
+            PipelineExecutionMetrics metrics = _pipelineMetrics.GetOrAdd(context.PipelineName, _ => new PipelineExecutionMetrics { PipelineName = context.PipelineName });
 
             lock (metrics)
             {
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (string.IsNullOrEmpty(operationName))
                 throw new ArgumentException("Operation name cannot be null or empty.", nameof(operationName));
 
-            if (_activeExecutions.TryGetValue(pipelineId, out var context))
+            if (_activeExecutions.TryGetValue(pipelineId, out PipelineExecutionContext? context))
             {
                 var opContext = new OperationExecutionContext
                 {
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
             var durationMs = duration.TotalMilliseconds;
 
-            var metrics = _operationMetrics.GetOrAdd(operationName, _ => new OperationMetrics { OperationName = operationName });
+            OperationMetrics metrics = _operationMetrics.GetOrAdd(operationName, _ => new OperationMetrics { OperationName = operationName });
 
             lock (metrics)
             {
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             TrackDurationSample(operationName, durationMs);
 
             // Clear current operation from pipeline context
-            if (_activeExecutions.TryGetValue(pipelineId, out var context))
+            if (_activeExecutions.TryGetValue(pipelineId, out PipelineExecutionContext? context))
             {
                 context.CurrentOperation = null;
             }
@@ -233,7 +233,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (exception == null)
                 throw new ArgumentNullException(nameof(exception));
 
-            var metrics = _operationMetrics.GetOrAdd(operationName, _ => new OperationMetrics { OperationName = operationName });
+            OperationMetrics metrics = _operationMetrics.GetOrAdd(operationName, _ => new OperationMetrics { OperationName = operationName });
 
             lock (metrics)
             {
@@ -246,7 +246,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         public PipelineMetricsSnapshot GetSnapshot()
         {
             // Calculate percentiles for all operations
-            foreach (var kvp in _operationMetrics)
+            foreach (KeyValuePair<string, OperationMetrics> kvp in _operationMetrics)
             {
                 CalculatePercentiles(kvp.Key, kvp.Value);
             }
@@ -279,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (string.IsNullOrEmpty(pipelineName))
                 return null;
 
-            return _pipelineMetrics.TryGetValue(pipelineName, out var metrics)
+            return _pipelineMetrics.TryGetValue(pipelineName, out PipelineExecutionMetrics? metrics)
                 ? ClonePipelineMetrics(metrics)
                 : null;
         }
@@ -290,10 +290,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (string.IsNullOrEmpty(operationName))
                 return null;
 
-            if (!_operationMetrics.TryGetValue(operationName, out var metrics))
+            if (!_operationMetrics.TryGetValue(operationName, out OperationMetrics? metrics))
                 return null;
 
-            var clone = CloneOperationMetrics(metrics);
+            OperationMetrics clone = CloneOperationMetrics(metrics);
             CalculatePercentiles(operationName, clone);
             return clone;
         }
@@ -323,9 +323,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         {
             lock (_percentileLock)
             {
-                if (!_operationDurations.TryGetValue(operationName, out var samples))
+                if (!_operationDurations.TryGetValue(operationName, out List<double>? samples))
                 {
-                    samples = new List<double>();
+                    samples = [];
                     _operationDurations[operationName] = samples;
                 }
 
@@ -343,7 +343,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         {
             lock (_percentileLock)
             {
-                if (!_operationDurations.TryGetValue(operationName, out var samples) || samples.Count == 0)
+                if (!_operationDurations.TryGetValue(operationName, out List<double>? samples) || samples.Count == 0)
                     return;
 
                 var sorted = samples.OrderBy(x => x).ToList();
@@ -366,7 +366,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             var total = 0.0;
             var count = 0L;
 
-            foreach (var metrics in _pipelineMetrics.Values)
+            foreach (PipelineExecutionMetrics metrics in _pipelineMetrics.Values)
             {
                 total += metrics.TotalDurationMs;
                 count += metrics.TotalExecutions;
@@ -380,7 +380,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             var total = 0.0;
             var count = 0L;
 
-            foreach (var metrics in _operationMetrics.Values)
+            foreach (OperationMetrics metrics in _operationMetrics.Values)
             {
                 total += metrics.TotalDurationMs;
                 count += metrics.TotalExecutions;

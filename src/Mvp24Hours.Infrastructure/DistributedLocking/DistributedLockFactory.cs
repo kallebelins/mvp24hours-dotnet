@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking
             }
 
             // Use first registered provider as default
-            var firstProvider = _providers.First();
+            KeyValuePair<string, IDistributedLock> firstProvider = _providers.First();
             return firstProvider.Value;
         }
 
@@ -63,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking
             var key = _providers.Keys.FirstOrDefault(
                 k => string.Equals(k, providerName, StringComparison.OrdinalIgnoreCase));
 
-            if (key == null || !_providers.TryGetValue(key, out var provider))
+            if (key == null || !_providers.TryGetValue(key, out IDistributedLock? provider))
             {
                 var availableProviders = string.Join(", ", _providers.Keys);
                 throw new ArgumentException(

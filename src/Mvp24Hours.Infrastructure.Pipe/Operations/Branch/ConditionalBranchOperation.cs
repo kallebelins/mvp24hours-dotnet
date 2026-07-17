@@ -24,8 +24,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
     /// </summary>
     public class ConditionalBranchOperation : IConditionalBranch, IOperation
     {
-        private readonly Dictionary<string, List<IOperation>> _branches = new();
-        private readonly List<BranchCase> _cases = new();
+        private readonly Dictionary<string, List<IOperation>> _branches = [];
+        private readonly List<BranchCase> _cases = [];
         private readonly ILogger<ConditionalBranchOperation>? _logger;
         private List<IOperation>? _defaultBranch;
         private List<IOperation>? _executedBranch;
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         /// <inheritdoc />
         public string EvaluateBranch(IPipelineMessage message)
         {
-            foreach (var branchCase in _cases)
+            foreach (BranchCase branchCase in _cases)
             {
                 if (branchCase.Condition(message))
                 {
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
             var branchKey = EvaluateBranch(input);
 
             List<IOperation>? branchToExecute = null;
-            if (branchKey != null && _branches.TryGetValue(branchKey, out var branch))
+            if (branchKey != null && _branches.TryGetValue(branchKey, out List<IOperation>? branch))
             {
                 branchToExecute = branch;
                 _logger?.LogDebug("ConditionalBranchOperation: Branch '{BranchKey}' matched", branchKey);
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
 
             _executedBranch = branchToExecute;
 
-            foreach (var operation in branchToExecute)
+            foreach (IOperation operation in branchToExecute)
             {
                 if (input.IsLocked && !operation.IsRequired)
                     continue;
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         {
             if (_executedBranch == null) return;
 
-            foreach (var operation in _executedBranch.Reverse<IOperation>())
+            foreach (IOperation operation in _executedBranch.Reverse<IOperation>())
             {
                 try
                 {
@@ -163,8 +163,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
     /// </summary>
     public class ConditionalBranchOperationAsync : IConditionalBranchAsync, IOperationAsync
     {
-        private readonly Dictionary<string, List<IOperationAsync>> _branches = new();
-        private readonly List<BranchCase> _cases = new();
+        private readonly Dictionary<string, List<IOperationAsync>> _branches = [];
+        private readonly List<BranchCase> _cases = [];
         private readonly ILogger<ConditionalBranchOperationAsync>? _logger;
         private List<IOperationAsync>? _defaultBranch;
         private List<IOperationAsync>? _executedBranch;
@@ -217,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         /// <inheritdoc />
         public Task<string?> EvaluateBranchAsync(IPipelineMessage message, CancellationToken cancellationToken = default)
         {
-            foreach (var branchCase in _cases)
+            foreach (BranchCase branchCase in _cases)
             {
                 if (branchCase.Condition(message))
                 {
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
             var branchKey = await EvaluateBranchAsync(input, cancellationToken);
 
             List<IOperationAsync>? branchToExecute = null;
-            if (branchKey != null && _branches.TryGetValue(branchKey, out var branch))
+            if (branchKey != null && _branches.TryGetValue(branchKey, out List<IOperationAsync>? branch))
             {
                 branchToExecute = branch;
                 _logger?.LogDebug("ConditionalBranchOperationAsync: Branch '{BranchKey}' matched", branchKey);
@@ -261,7 +261,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
 
             _executedBranch = branchToExecute;
 
-            foreach (var operation in branchToExecute)
+            foreach (IOperationAsync operation in branchToExecute)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -294,7 +294,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
         {
             if (_executedBranch == null) return;
 
-            foreach (var operation in _executedBranch.Reverse<IOperationAsync>())
+            foreach (IOperationAsync operation in _executedBranch.Reverse<IOperationAsync>())
             {
                 try
                 {

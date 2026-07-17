@@ -29,7 +29,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
 
             _dependencies.AddOrUpdate(
                 dependency.DependentJobName,
-                _ => new List<ICronJobDependency> { dependency },
+                _ => [dependency],
                 (_, list) =>
                 {
                     list.Add(dependency);
@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
             {
                 _reverseDependencies.AddOrUpdate(
                     requiredJob,
-                    _ => new List<string> { dependency.DependentJobName },
+                    _ => [dependency.DependentJobName],
                     (_, list) =>
                     {
                         if (!list.Contains(dependency.DependentJobName))
@@ -56,7 +56,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
         /// <inheritdoc />
         public IReadOnlyList<ICronJobDependency> GetDependencies(string jobName)
         {
-            if (_dependencies.TryGetValue(jobName, out var deps))
+            if (_dependencies.TryGetValue(jobName, out List<ICronJobDependency>? deps))
             {
                 return deps.ToList();
             }
@@ -66,14 +66,14 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
         /// <inheritdoc />
         public Task<bool> AreDependenciesSatisfiedAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            var dependencies = GetDependencies(jobName);
+            IReadOnlyList<ICronJobDependency> dependencies = GetDependencies(jobName);
 
             if (dependencies.Count == 0)
             {
                 return Task.FromResult(true);
             }
 
-            foreach (var dependency in dependencies)
+            foreach (ICronJobDependency dependency in dependencies)
             {
                 foreach (var requiredJob in dependency.RequiredJobNames)
                 {
@@ -91,9 +91,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
         public Task<IReadOnlyList<string>> GetUnsatisfiedDependenciesAsync(string jobName, CancellationToken cancellationToken = default)
         {
             var unsatisfied = new List<string>();
-            var dependencies = GetDependencies(jobName);
+            IReadOnlyList<ICronJobDependency> dependencies = GetDependencies(jobName);
 
-            foreach (var dependency in dependencies)
+            foreach (ICronJobDependency dependency in dependencies)
             {
                 foreach (var requiredJob in dependency.RequiredJobNames)
                 {
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
         /// <inheritdoc />
         public IReadOnlyList<string> GetDependentJobs(string jobName)
         {
-            if (_reverseDependencies.TryGetValue(jobName, out var dependents))
+            if (_reverseDependencies.TryGetValue(jobName, out List<string>? dependents))
             {
                 return dependents.ToList();
             }
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
 
         private bool IsDependencySatisfied(string requiredJobName, ICronJobDependency dependency)
         {
-            if (!_completions.TryGetValue(requiredJobName, out var completion))
+            if (!_completions.TryGetValue(requiredJobName, out JobCompletionRecord? completion))
             {
                 return false;
             }
@@ -149,7 +149,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
             // Check max age
             if (dependency.MaxAge.HasValue)
             {
-                var age = DateTimeOffset.UtcNow - completion.CompletedAt;
+                TimeSpan age = DateTimeOffset.UtcNow - completion.CompletedAt;
                 if (age > dependency.MaxAge.Value)
                 {
                     return false;

@@ -26,7 +26,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <summary>
         /// Gets the consumer configurations keyed by consumer type.
         /// </summary>
-        public Dictionary<Type, ConsumerConfiguration> ConsumerConfigurations { get; } = new();
+        public Dictionary<Type, ConsumerConfiguration> ConsumerConfigurations { get; } = [];
 
         /// <summary>
         /// Gets or sets the retry policy configuration.

@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
             services.AddResiliencePipeline(name, (builder, context) =>
             {
-                var logger = context.ServiceProvider.GetService<ILoggerFactory>()
+                ILogger? logger = context.ServiceProvider.GetService<ILoggerFactory>()
                     ?.CreateLogger("Mvp24Hours.MongoDbResilience");
 
                 // 1. Timeout (outermost)

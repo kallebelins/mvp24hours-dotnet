@@ -69,7 +69,7 @@ public class ObservabilityTest
             tenantId: "tenant-abc");
 
         // Act
-        var childContext = parentContext.CreateChildContext();
+        IRequestContext childContext = parentContext.CreateChildContext();
 
         // Assert
         Assert.Equal(parentContext.CorrelationId, childContext.CorrelationId);
@@ -120,7 +120,7 @@ public class ObservabilityTest
         var metadata = new Dictionary<string, object?> { { "key", "value" } };
 
         // Act
-        var context = factory.Create(
+        IRequestContext context = factory.Create(
             correlationId: "factory-correlation",
             causationId: "factory-causation",
             userId: "factory-user",
@@ -150,12 +150,12 @@ public class ObservabilityTest
             options.RegisterRequestContextBehavior = true;
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<ISender>();
-        var contextAccessor = provider.GetRequiredService<IRequestContextAccessor>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        ISender mediator = provider.GetRequiredService<ISender>();
+        IRequestContextAccessor contextAccessor = provider.GetRequiredService<IRequestContextAccessor>();
 
         // Act
-        var result = await mediator.SendAsync(new GetContextCommand());
+        ContextResult result = await mediator.SendAsync(new GetContextCommand());
 
         // Assert
         Assert.NotNull(result);
@@ -232,7 +232,7 @@ public class ObservabilityTest
         });
 
         // Act
-        var entries = store.GetByCorrelationId("corr-1");
+        IReadOnlyList<AuditEntry> entries = store.GetByCorrelationId("corr-1");
 
         // Assert
         Assert.Equal(2, entries.Count);
@@ -258,7 +258,7 @@ public class ObservabilityTest
         });
 
         // Act
-        var entries = store.GetByUserId("user-1");
+        IReadOnlyList<AuditEntry> entries = store.GetByUserId("user-1");
 
         // Assert
         Assert.Single(entries);
@@ -270,7 +270,7 @@ public class ObservabilityTest
     {
         // Arrange
         var store = new InMemoryAuditStore();
-        var entries = new[]
+        AuditEntry[] entries = new[]
         {
             new AuditEntry { OperationName = "Op1", OperationType = "Command" },
             new AuditEntry { OperationName = "Op2", OperationType = "Query" },
@@ -349,7 +349,7 @@ public class ObservabilityTest
             tenantId: "test-tenant");
 
         // Act
-        using var activity = MediatorActivitySource.Source.StartActivity("Test");
+        using Activity? activity = MediatorActivitySource.Source.StartActivity("Test");
         if (activity != null)
         {
             activity.WithContext(context);
@@ -396,11 +396,11 @@ public class ObservabilityTest
             options.WithObservabilityBehaviors();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<ISender>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        ISender mediator = provider.GetRequiredService<ISender>();
 
         // Act
-        var result = await mediator.SendAsync(new GetContextCommand());
+        ContextResult result = await mediator.SendAsync(new GetContextCommand());
 
         // Assert
         Assert.NotNull(result);
@@ -420,8 +420,8 @@ public class ObservabilityTest
             options.WithAuditBehavior();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<ISender>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        ISender mediator = provider.GetRequiredService<ISender>();
 
         // Act
         await mediator.SendAsync(new AuditableCommand { Value = "test" });
@@ -446,8 +446,8 @@ public class ObservabilityTest
             options.WithAuditBehavior();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<ISender>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        ISender mediator = provider.GetRequiredService<ISender>();
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -478,7 +478,7 @@ public class ObservabilityTest
 
         public Task<ContextResult> Handle(GetContextCommand request, CancellationToken cancellationToken)
         {
-            var context = _contextAccessor.Context;
+            IRequestContext? context = _contextAccessor.Context;
             return Task.FromResult(new ContextResult(
                 context?.CorrelationId,
                 context?.RequestId,

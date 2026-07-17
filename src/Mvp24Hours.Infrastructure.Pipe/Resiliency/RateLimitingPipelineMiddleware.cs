@@ -49,9 +49,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var rateLimitedOperation = GetRateLimitedOperation(message);
+            IRateLimitedOperation? rateLimitedOperation = GetRateLimitedOperation(message);
             var key = GetRateLimiterKey(message, rateLimitedOperation);
-            var options = GetEffectiveOptions(rateLimitedOperation);
+            NativeRateLimiterOptions options = GetEffectiveOptions(rateLimitedOperation);
 
             _logger?.LogDebug(
                 "Rate limiting check for key={Key}, algorithm={Algorithm}, permitLimit={PermitLimit}",
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 options.Algorithm,
                 options.PermitLimit);
 
-            using var lease = await _rateLimiterProvider.AcquireAsync(
+            using RateLimitLease lease = await _rateLimiterProvider.AcquireAsync(
                 key,
                 options,
                 1,
@@ -67,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 
             if (!lease.IsAcquired)
             {
-                var retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out var retry)
+                TimeSpan? retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retry)
                     ? retry
                     : (TimeSpan?)null;
 

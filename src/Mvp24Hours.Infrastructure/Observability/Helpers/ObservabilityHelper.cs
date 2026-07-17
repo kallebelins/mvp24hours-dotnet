@@ -73,7 +73,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Helpers
                     operationName, correlationId);
 
                 // Execute operation
-                var result = await operation(cancellationToken);
+                TResult? result = await operation(cancellationToken);
 
                 stopwatch.Stop();
                 var durationSeconds = stopwatch.Elapsed.TotalSeconds;
@@ -185,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Helpers
                     operationName, correlationId);
 
                 // Execute operation
-                var result = operation();
+                TResult? result = operation();
 
                 stopwatch.Stop();
                 var durationSeconds = stopwatch.Elapsed.TotalSeconds;

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Scriban;
@@ -99,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
                     throw new TemplateRenderException($"Template parsing errors: {string.Join("; ", errors)}", errors);
                 }
 
-                var scriptObject = CreateScriptObject(model);
+                ScriptObject scriptObject = CreateScriptObject(model);
                 var context = new TemplateContext
                 {
                     MemberRenamer = member => member.Name,
@@ -201,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             // Handle dictionary
             if (model is IDictionary<string, object?> dictionary)
             {
-                foreach (var kvp in dictionary)
+                foreach (KeyValuePair<string, object?> kvp in dictionary)
                 {
                     scriptObject[kvp.Key] = kvp.Value;
                 }
@@ -209,10 +210,10 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             }
 
             // Handle object properties
-            var type = model.GetType();
-            var properties = type.GetProperties();
+            Type type = model.GetType();
+            PropertyInfo[] properties = type.GetProperties();
 
-            foreach (var property in properties)
+            foreach (PropertyInfo property in properties)
             {
                 if (property.CanRead)
                 {
@@ -222,8 +223,8 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             }
 
             // Handle fields
-            var fields = type.GetFields();
-            foreach (var field in fields)
+            FieldInfo[] fields = type.GetFields();
+            foreach (FieldInfo field in fields)
             {
                 var value = field.GetValue(model);
                 scriptObject[field.Name] = value;
@@ -259,7 +260,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
         /// </summary>
         public TemplateRenderException(string message) : base(message)
         {
-            Errors = new List<string> { message };
+            Errors = [message];
         }
 
         /// <summary>
@@ -267,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
         /// </summary>
         public TemplateRenderException(string message, IList<string> errors) : base(message)
         {
-            Errors = errors ?? new List<string> { message };
+            Errors = errors ?? [message];
         }
 
         /// <summary>
@@ -275,7 +276,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
         /// </summary>
         public TemplateRenderException(string message, Exception innerException) : base(message, innerException)
         {
-            Errors = new List<string> { message };
+            Errors = [message];
         }
 
         /// <summary>

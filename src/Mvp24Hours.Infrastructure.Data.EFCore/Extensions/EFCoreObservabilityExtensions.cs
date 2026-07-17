@@ -74,8 +74,8 @@ public static class EFCoreObservabilityExtensions
 
         services.AddScoped(sp =>
         {
-            var logger = sp.GetService<ILogger<SlowQueryInterceptor>>();
-            var metrics = sp.GetService<EFCoreMetrics>();
+            ILogger<SlowQueryInterceptor>? logger = sp.GetService<ILogger<SlowQueryInterceptor>>();
+            EFCoreMetrics? metrics = sp.GetService<EFCoreMetrics>();
 
             return new SlowQueryInterceptor(
                 slowQueryThreshold: TimeSpan.FromMilliseconds(options.SlowQueryThresholdMs),
@@ -138,8 +138,8 @@ public static class EFCoreObservabilityExtensions
 
         services.AddScoped(sp =>
         {
-            var logger = sp.GetService<ILogger<StructuredLoggingInterceptor>>();
-            var metrics = sp.GetService<EFCoreMetrics>();
+            ILogger<StructuredLoggingInterceptor>? logger = sp.GetService<ILogger<StructuredLoggingInterceptor>>();
+            EFCoreMetrics? metrics = sp.GetService<EFCoreMetrics>();
 
             return new StructuredLoggingInterceptor(
                 logger: logger,
@@ -235,8 +235,8 @@ public static class EFCoreObservabilityExtensions
     {
         services.AddSingleton(sp =>
         {
-            var logger = sp.GetService<ILogger<EFCoreDiagnosticsListener>>();
-            var metrics = sp.GetService<EFCoreMetrics>();
+            ILogger<EFCoreDiagnosticsListener>? logger = sp.GetService<ILogger<EFCoreDiagnosticsListener>>();
+            EFCoreMetrics? metrics = sp.GetService<EFCoreMetrics>();
             var listener = new EFCoreDiagnosticsListener(logger, metrics);
             listener.Subscribe();
             return listener;

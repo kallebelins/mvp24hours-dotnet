@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
             _logger?.LogDebug("ParallelOperationGroup: Execute started with {OperationCount} operations", _operations.Count);
 
             var exceptions = new List<Exception>();
-            var parallelOptions = MaxDegreeOfParallelism.HasValue
+            ParallelOptions parallelOptions = MaxDegreeOfParallelism.HasValue
                 ? new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism.Value }
                 : new System.Threading.Tasks.ParallelOptions();
 
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         public void Rollback(IPipelineMessage input)
         {
             // Rollback all operations in reverse order
-            foreach (var operation in _operations.Reverse<IOperation>())
+            foreach (IOperation operation in _operations.Reverse<IOperation>())
             {
                 try
                 {
@@ -174,7 +174,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
             if (MaxDegreeOfParallelism.HasValue)
             {
                 using var semaphore = new SemaphoreSlim(MaxDegreeOfParallelism.Value);
-                var tasks = _operations.Select(async operation =>
+                IEnumerable<Task> tasks = _operations.Select(async operation =>
                 {
                     await semaphore.WaitAsync(cancellationToken);
                     try
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
             }
             else
             {
-                var tasks = _operations.Select(operation =>
+                IEnumerable<Task> tasks = _operations.Select(operation =>
                     ExecuteOperationAsync(operation, message, exceptions, cancellationToken));
 
                 await Task.WhenAll(tasks);
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
         /// <inheritdoc />
         public async Task RollbackAsync(IPipelineMessage input)
         {
-            foreach (var operation in _operations.Reverse<IOperationAsync>())
+            foreach (IOperationAsync operation in _operations.Reverse<IOperationAsync>())
             {
                 try
                 {

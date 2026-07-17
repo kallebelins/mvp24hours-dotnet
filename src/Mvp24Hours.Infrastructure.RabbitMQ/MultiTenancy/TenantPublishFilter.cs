@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             }
 
             // Try to get tenant from various sources
-            var (tenantId, tenantName) = ResolveTenantContext();
+            (string? tenantId, string? tenantName) = ResolveTenantContext();
 
             // Set headers if tenant is available and not already set
             if (!string.IsNullOrEmpty(tenantId))
@@ -99,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
         private (string? tenantId, string? tenantName) ResolveTenantContext()
         {
             // 1. Try TenantConsumeFilter.Current (from consuming message)
-            var currentContext = TenantConsumeFilter.Current;
+            TenantMessageContext? currentContext = TenantConsumeFilter.Current;
             if (currentContext?.HasTenant == true)
             {
                 return (currentContext.TenantId, currentContext.TenantName);
@@ -121,14 +122,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                 if (accessor == null)
                     return (null, null);
 
-                var contextProperty = accessorType.GetProperty("Context");
+                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
                 var tenantContext = contextProperty?.GetValue(accessor);
                 if (tenantContext == null)
                     return (null, null);
 
-                var tenantContextType = tenantContext.GetType();
-                var tenantIdProperty = tenantContextType.GetProperty("TenantId");
-                var tenantNameProperty = tenantContextType.GetProperty("TenantName");
+                Type tenantContextType = tenantContext.GetType();
+                PropertyInfo? tenantIdProperty = tenantContextType.GetProperty("TenantId");
+                PropertyInfo? tenantNameProperty = tenantContextType.GetProperty("TenantName");
 
                 var tenantId = tenantIdProperty?.GetValue(tenantContext) as string;
                 var tenantName = tenantNameProperty?.GetValue(tenantContext) as string;
@@ -193,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             }
 
             // Try to get tenant from various sources
-            var (tenantId, tenantName) = ResolveTenantContext();
+            (string? tenantId, string? tenantName) = ResolveTenantContext();
 
             // Set headers if tenant is available and not already set
             if (!string.IsNullOrEmpty(tenantId))
@@ -218,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
         private (string? tenantId, string? tenantName) ResolveTenantContext()
         {
             // 1. Try TenantConsumeFilter.Current (from consuming message)
-            var currentContext = TenantConsumeFilter.Current;
+            TenantMessageContext? currentContext = TenantConsumeFilter.Current;
             if (currentContext?.HasTenant == true)
             {
                 return (currentContext.TenantId, currentContext.TenantName);
@@ -240,14 +241,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                 if (accessor == null)
                     return (null, null);
 
-                var contextProperty = accessorType.GetProperty("Context");
+                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
                 var tenantContext = contextProperty?.GetValue(accessor);
                 if (tenantContext == null)
                     return (null, null);
 
-                var tenantContextType = tenantContext.GetType();
-                var tenantIdProperty = tenantContextType.GetProperty("TenantId");
-                var tenantNameProperty = tenantContextType.GetProperty("TenantName");
+                Type tenantContextType = tenantContext.GetType();
+                PropertyInfo? tenantIdProperty = tenantContextType.GetProperty("TenantId");
+                PropertyInfo? tenantNameProperty = tenantContextType.GetProperty("TenantName");
 
                 var tenantId = tenantIdProperty?.GetValue(tenantContext) as string;
                 var tenantName = tenantNameProperty?.GetValue(tenantContext) as string;

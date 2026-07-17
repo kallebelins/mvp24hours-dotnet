@@ -42,7 +42,7 @@ namespace Mvp24Hours.Core.ValueObjects
         public static bool TryParse(string value, out CustomerId result)
         {
             result = null!;
-            if (Guid.TryParse(value, out var guid))
+            if (Guid.TryParse(value, out Guid guid))
             {
                 result = new CustomerId(guid);
                 return true;
@@ -77,7 +77,7 @@ namespace Mvp24Hours.Core.ValueObjects
         public static bool TryParse(string value, out OrderId result)
         {
             result = null!;
-            if (Guid.TryParse(value, out var guid))
+            if (Guid.TryParse(value, out Guid guid))
             {
                 result = new OrderId(guid);
                 return true;
@@ -112,7 +112,7 @@ namespace Mvp24Hours.Core.ValueObjects
         public static bool TryParse(string value, out ProductId result)
         {
             result = null!;
-            if (Guid.TryParse(value, out var guid))
+            if (Guid.TryParse(value, out Guid guid))
             {
                 result = new ProductId(guid);
                 return true;

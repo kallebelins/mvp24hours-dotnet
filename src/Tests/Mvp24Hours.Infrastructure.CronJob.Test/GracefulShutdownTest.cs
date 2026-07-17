@@ -39,9 +39,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             cronExpression: "0 0 1 1 *", // Far in the future
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
@@ -63,8 +63,8 @@ public class GracefulShutdownTest
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await job.StartAsync(cts.Token);
 
-        var stopTask = job.StopAsync(CancellationToken.None);
-        var completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
+        Task stopTask = job.StopAsync(CancellationToken.None);
+        Task completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
 
         // Assert
         completed.Should().Be(stopTask);
@@ -99,9 +99,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             cronExpression: "0 0 1 1 *", // Far in future
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
@@ -125,8 +125,8 @@ public class GracefulShutdownTest
         await job.StartAsync(cts.Token);
 
         // Stop immediately - should not hang
-        var stopTask = job.StopAsync(CancellationToken.None);
-        var completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
+        Task stopTask = job.StopAsync(CancellationToken.None);
+        Task completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
 
         // Assert
         completed.Should().Be(stopTask);
@@ -145,9 +145,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 WaitForExecutionOnShutdown = true,
@@ -181,7 +181,7 @@ public class GracefulShutdownTest
         await job.StartAsync(cts.Token);
         await Task.Delay(50); // Let execution start
 
-        var stopTask = job.StopAsync(CancellationToken.None);
+        Task stopTask = job.StopAsync(CancellationToken.None);
         await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
 
         // Assert - StopAsync should complete even though execution didn't finish
@@ -201,9 +201,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 WaitForExecutionOnShutdown = false,
@@ -255,9 +255,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PropagateCancellation = true,
@@ -287,7 +287,7 @@ public class GracefulShutdownTest
         await job.StopAsync(CancellationToken.None);
 
         // Assert
-        var received = await Task.WhenAny(
+        Task received = await Task.WhenAny(
             cancellationReceived.Task,
             Task.Delay(TimeSpan.FromSeconds(2)));
         received.Should().Be(cancellationReceived.Task);
@@ -306,9 +306,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 ExecutionTimeout = TimeSpan.FromMilliseconds(100),
@@ -364,9 +364,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = false
@@ -405,9 +405,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = false
@@ -446,9 +446,9 @@ public class GracefulShutdownTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = false
@@ -494,9 +494,9 @@ public class GracefulShutdownTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         services.AddSingleton<ICronJobMetrics>(metricsService);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = false
@@ -519,7 +519,7 @@ public class GracefulShutdownTest
         await job.StopAsync(cts.Token);
 
         // Assert
-        var state = metricsService.GetJobState(nameof(TestResilientCronJob));
+        CronJobState? state = metricsService.GetJobState(nameof(TestResilientCronJob));
         state.Should().NotBeNull();
         state!.IsRunning.Should().BeFalse();
     }

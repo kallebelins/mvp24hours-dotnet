@@ -141,7 +141,7 @@ public class RequestLoggingMiddleware
 
     private async Task ProcessWithResponseCapture(HttpContext context, Stopwatch stopwatch)
     {
-        var originalBodyStream = context.Response.Body;
+        Stream originalBodyStream = context.Response.Body;
 
         using var responseBody = new MemoryStream();
         context.Response.Body = responseBody;

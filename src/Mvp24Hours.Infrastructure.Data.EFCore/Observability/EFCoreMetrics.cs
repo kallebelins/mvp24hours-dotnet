@@ -196,7 +196,7 @@ public sealed class EFCoreMetrics : IDisposable
     /// <param name="dbName">Optional database name.</param>
     public void RecordQuery(double durationMs, string operation = "SELECT", string? dbName = null)
     {
-        var tags = CreateTags(operation, dbName);
+        TagList tags = CreateTags(operation, dbName);
         _queryCount.Add(1, tags);
         _queryDuration.Record(durationMs, tags);
     }

@@ -5,6 +5,7 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -69,12 +70,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
     /// </example>
     public abstract class SagaStateMachine<TData> where TData : class, new()
     {
-        private readonly Dictionary<string, SagaState> _states = new();
-        private readonly Dictionary<Type, List<EventHandler>> _initialHandlers = new();
-        private readonly Dictionary<string, Dictionary<Type, List<EventHandler>>> _stateHandlers = new();
-        private readonly HashSet<string> _finalStates = new();
-        private readonly List<Action<SagaInstance<TData>>> _onCompletedCallbacks = new();
-        private readonly List<Action<SagaInstance<TData>, Exception>> _onFaultedCallbacks = new();
+        private readonly Dictionary<string, SagaState> _states = [];
+        private readonly Dictionary<Type, List<EventHandler>> _initialHandlers = [];
+        private readonly Dictionary<string, Dictionary<Type, List<EventHandler>>> _stateHandlers = [];
+        private readonly HashSet<string> _finalStates = [];
+        private readonly List<Action<SagaInstance<TData>>> _onCompletedCallbacks = [];
+        private readonly List<Action<SagaInstance<TData>, Exception>> _onFaultedCallbacks = [];
 
         protected ILogger? Logger { get; set; }
 
@@ -99,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             {
                 var state = new SagaState(name);
                 _states[name] = state;
-                _stateHandlers[name] = new Dictionary<Type, List<EventHandler>>();
+                _stateHandlers[name] = [];
             }
             return _states[name];
         }
@@ -110,11 +111,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         /// <param name="handlers">The event handlers.</param>
         protected void Initially(params EventHandler[] handlers)
         {
-            foreach (var handler in handlers)
+            foreach (EventHandler handler in handlers)
             {
                 if (!_initialHandlers.ContainsKey(handler.EventType))
                 {
-                    _initialHandlers[handler.EventType] = new List<EventHandler>();
+                    _initialHandlers[handler.EventType] = [];
                 }
                 _initialHandlers[handler.EventType].Add(handler);
             }
@@ -128,11 +129,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         protected void During(string stateName, params EventHandler[] handlers)
         {
             State(stateName); // Ensure state exists
-            foreach (var handler in handlers)
+            foreach (EventHandler handler in handlers)
             {
                 if (!_stateHandlers[stateName].ContainsKey(handler.EventType))
                 {
-                    _stateHandlers[stateName][handler.EventType] = new List<EventHandler>();
+                    _stateHandlers[stateName][handler.EventType] = [];
                 }
                 _stateHandlers[stateName][handler.EventType].Add(handler);
             }
@@ -190,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             IConsumeContext<TEvent> context,
             CancellationToken cancellationToken = default) where TEvent : class
         {
-            var eventType = typeof(TEvent);
+            Type eventType = typeof(TEvent);
             List<EventHandler>? handlers = null;
 
             // Find handlers based on current state
@@ -198,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             {
                 _initialHandlers.TryGetValue(eventType, out handlers);
             }
-            else if (_stateHandlers.TryGetValue(instance.CurrentState, out var stateDict))
+            else if (_stateHandlers.TryGetValue(instance.CurrentState, out Dictionary<Type, List<EventHandler>>? stateDict))
             {
                 stateDict.TryGetValue(eventType, out handlers);
             }
@@ -211,7 +212,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                 return false;
             }
 
-            foreach (var handler in handlers)
+            foreach (EventHandler handler in handlers)
             {
                 try
                 {
@@ -221,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                     if (_finalStates.Contains(instance.CurrentState) && !instance.IsCompleted)
                     {
                         instance.Complete();
-                        foreach (var callback in _onCompletedCallbacks)
+                        foreach (Action<SagaInstance<TData>> callback in _onCompletedCallbacks)
                         {
                             callback(instance);
                         }
@@ -238,7 +239,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                         eventType.Name, instance.CorrelationId);
 
                     instance.Fault(ex.Message);
-                    foreach (var callback in _onFaultedCallbacks)
+                    foreach (Action<SagaInstance<TData>, Exception> callback in _onFaultedCallbacks)
                     {
                         callback(instance, ex);
                     }
@@ -269,21 +270,21 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         public virtual Guid GetCorrelationId<TEvent>(TEvent @event) where TEvent : class
         {
             // Try common property names
-            var type = typeof(TEvent);
+            Type type = typeof(TEvent);
 
-            var correlationIdProp = type.GetProperty("CorrelationId");
+            PropertyInfo? correlationIdProp = type.GetProperty("CorrelationId");
             if (correlationIdProp?.PropertyType == typeof(Guid))
             {
                 return (Guid)correlationIdProp.GetValue(@event)!;
             }
 
-            var sagaIdProp = type.GetProperty("SagaId");
+            PropertyInfo? sagaIdProp = type.GetProperty("SagaId");
             if (sagaIdProp?.PropertyType == typeof(Guid))
             {
                 return (Guid)sagaIdProp.GetValue(@event)!;
             }
 
-            var idProp = type.GetProperty("Id");
+            PropertyInfo? idProp = type.GetProperty("Id");
             if (idProp?.PropertyType == typeof(Guid))
             {
                 return (Guid)idProp.GetValue(@event)!;

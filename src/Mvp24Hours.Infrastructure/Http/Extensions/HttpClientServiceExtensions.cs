@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -83,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             services.TryAddSingleton<IHttpClientSerializer, JsonHttpClientSerializer>();
 
             // Configure the named HTTP client
-            var clientBuilder = services.AddHttpClient<ITypedHttpClient<TApi>, TypedHttpClient<TApi>>(
+            IHttpClientBuilder clientBuilder = services.AddHttpClient<ITypedHttpClient<TApi>, TypedHttpClient<TApi>>(
                 options.Name ?? typeof(TApi).Name,
                 client => ConfigureHttpClient(client, options));
 
@@ -151,7 +152,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             HttpClientOptions options)
         {
             // Configure the named HTTP client
-            var clientBuilder = services.AddHttpClient(name, client => ConfigureHttpClient(client, options));
+            IHttpClientBuilder clientBuilder = services.AddHttpClient(name, client => ConfigureHttpClient(client, options));
 
             // Configure primary handler
             clientBuilder.ConfigurePrimaryHttpMessageHandler(() => CreatePrimaryHandler(options));
@@ -186,7 +187,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             client.MaxResponseContentBufferSize = options.MaxResponseContentBufferSize;
 
             // Set default headers
-            foreach (var header in options.DefaultHeaders)
+            foreach (KeyValuePair<string, string> header in options.DefaultHeaders)
             {
                 client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
             }
@@ -234,7 +235,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             }
 
             // Configure client certificate
-            var certificate = CertificateHelper.LoadCertificate(options.Certificate);
+            X509Certificate2? certificate = CertificateHelper.LoadCertificate(options.Certificate);
             if (certificate != null)
             {
                 handler.ClientCertificates.Add(certificate);
@@ -276,7 +277,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    var logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
+                    ILogger<TelemetryDelegatingHandler>? logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
                     return new TelemetryDelegatingHandler(logger, options.TelemetryOptions ?? new TelemetryHandlerOptions());
                 });
             }
@@ -286,7 +287,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    var logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
+                    ILogger<LoggingDelegatingHandler> logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
                     return new LoggingDelegatingHandler(logger, options.LoggingOptions ?? new HttpLoggingOptions());
                 });
             }
@@ -310,7 +311,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                    ILogger<AuthenticationDelegatingHandler> logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
                     return new AuthenticationDelegatingHandler(logger, options.Authentication);
                 });
             }
@@ -320,7 +321,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    var logger = sp.GetRequiredService<ILogger<PropagationHeaderDelegatingHandler>>();
+                    ILogger<PropagationHeaderDelegatingHandler> logger = sp.GetRequiredService<ILogger<PropagationHeaderDelegatingHandler>>();
                     return new PropagationHeaderDelegatingHandler(sp, logger, options.PropagateHeaders.ToArray());
                 });
             }
@@ -330,7 +331,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             {
                 clientBuilder.AddHttpMessageHandler(sp =>
                 {
-                    var logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
+                    ILogger<CompressionDelegatingHandler> logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
                     return new CompressionDelegatingHandler(logger, options.Compression);
                 });
             }
@@ -344,14 +345,14 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             // Add timeout policy (innermost, wraps around the request)
             if (options.TimeoutPolicy?.Enabled == true)
             {
-                var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(options.TimeoutPolicy.Timeout);
+                AsyncTimeoutPolicy<HttpResponseMessage> timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(options.TimeoutPolicy.Timeout);
                 clientBuilder.AddPolicyHandler(timeoutPolicy);
             }
 
             // Add circuit breaker policy
             if (options.CircuitBreakerPolicy?.Enabled == true)
             {
-                var circuitBreakerPolicy = HttpPolicyExtensions
+                AsyncCircuitBreakerPolicy<HttpResponseMessage> circuitBreakerPolicy = HttpPolicyExtensions
                     .HandleTransientHttpError()
                     .Or<TimeoutRejectedException>()
                     .AdvancedCircuitBreakerAsync(
@@ -378,7 +379,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
             // Add retry policy (outermost)
             if (options.RetryPolicy?.Enabled == true)
             {
-                var retryPolicy = CreateRetryPolicy(options.RetryPolicy);
+                IAsyncPolicy<HttpResponseMessage> retryPolicy = CreateRetryPolicy(options.RetryPolicy);
                 clientBuilder.AddPolicyHandler(retryPolicy);
             }
         }
@@ -398,7 +399,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
                     options.MaxRetries,
                     retryAttempt =>
                     {
-                        var delay = options.BackoffType switch
+                        TimeSpan delay = options.BackoffType switch
                         {
                             BackoffType.Constant => options.InitialDelay,
                             BackoffType.Linear => TimeSpan.FromMilliseconds(options.InitialDelay.TotalMilliseconds * retryAttempt),
@@ -501,7 +502,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
 
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
+                ILogger<LoggingDelegatingHandler> logger = sp.GetRequiredService<ILogger<LoggingDelegatingHandler>>();
                 return new LoggingDelegatingHandler(logger, options);
             });
         }
@@ -518,7 +519,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                ILogger<AuthenticationDelegatingHandler> logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
                 return new AuthenticationDelegatingHandler(
                     logger,
                     AuthenticationScheme.Bearer,
@@ -538,7 +539,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                ILogger<AuthenticationDelegatingHandler> logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
                 return new AuthenticationDelegatingHandler(
                     logger,
                     new AuthenticationOptions
@@ -565,7 +566,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                ILogger<AuthenticationDelegatingHandler> logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
                 return new AuthenticationDelegatingHandler(
                     logger,
                     new AuthenticationOptions
@@ -592,7 +593,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
+                ILogger<AuthenticationDelegatingHandler> logger = sp.GetRequiredService<ILogger<AuthenticationDelegatingHandler>>();
                 return new AuthenticationDelegatingHandler(
                     logger,
                     AuthenticationScheme.Basic,
@@ -616,7 +617,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
 
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
+                ILogger<TelemetryDelegatingHandler>? logger = sp.GetService<ILogger<TelemetryDelegatingHandler>>();
                 return new TelemetryDelegatingHandler(logger, options);
             });
         }
@@ -636,7 +637,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
 
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<RetryDelegatingHandler>>();
+                ILogger<RetryDelegatingHandler> logger = sp.GetRequiredService<ILogger<RetryDelegatingHandler>>();
                 return new RetryDelegatingHandler(logger, options);
             });
         }
@@ -658,7 +659,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
 
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<CircuitBreakerDelegatingHandler>>();
+                ILogger<CircuitBreakerDelegatingHandler> logger = sp.GetRequiredService<ILogger<CircuitBreakerDelegatingHandler>>();
                 return new CircuitBreakerDelegatingHandler(logger, options, serviceName ?? "HttpClient");
             });
         }
@@ -675,7 +676,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
         {
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<TimeoutDelegatingHandler>>();
+                ILogger<TimeoutDelegatingHandler> logger = sp.GetRequiredService<ILogger<TimeoutDelegatingHandler>>();
                 return new TimeoutDelegatingHandler(logger, timeout);
             });
         }
@@ -695,7 +696,7 @@ namespace Mvp24Hours.Infrastructure.Http.Extensions
 
             return builder.AddHttpMessageHandler(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
+                ILogger<CompressionDelegatingHandler> logger = sp.GetRequiredService<ILogger<CompressionDelegatingHandler>>();
                 return new CompressionDelegatingHandler(logger, options);
             });
         }

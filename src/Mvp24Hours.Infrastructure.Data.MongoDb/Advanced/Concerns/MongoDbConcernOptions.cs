@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Concerns
                 return ReadPreference.Primary;
             }
 
-            var basePreference = ReadPreferenceMode.Value switch
+            ReadPreference basePreference = ReadPreferenceMode.Value switch
             {
                 Concerns.ReadPreferenceMode.Primary => ReadPreference.Primary,
                 Concerns.ReadPreferenceMode.PrimaryPreferred => ReadPreference.PrimaryPreferred,

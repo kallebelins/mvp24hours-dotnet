@@ -34,7 +34,7 @@ public class ExceptionToResultMapperTest
         var exception = new NotFoundException("Resource not found");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.Should().NotBeNull();
@@ -49,7 +49,7 @@ public class ExceptionToResultMapperTest
         var exception = new ConflictException("Resource conflict");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.Conflict);
@@ -63,7 +63,7 @@ public class ExceptionToResultMapperTest
         var exception = new UnauthorizedException("Not authenticated");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.Unauthorized);
@@ -76,7 +76,7 @@ public class ExceptionToResultMapperTest
         var exception = new ForbiddenException("Access denied");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.Forbidden);
@@ -89,7 +89,7 @@ public class ExceptionToResultMapperTest
         var exception = new ValidationException("Validation failed");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.ValidationFailed);
@@ -102,7 +102,7 @@ public class ExceptionToResultMapperTest
         var exception = new DomainException("Domain rule violated");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.DomainRuleViolation);
@@ -115,7 +115,7 @@ public class ExceptionToResultMapperTest
         var exception = new ArgumentNullException("param", "Parameter cannot be null");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.ValidationFailed);
@@ -128,7 +128,7 @@ public class ExceptionToResultMapperTest
         var exception = new ArgumentOutOfRangeException("param", "Value out of range");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.OutOfRange);
@@ -141,7 +141,7 @@ public class ExceptionToResultMapperTest
         var exception = new TimeoutException("Operation timed out");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.Timeout);
@@ -154,7 +154,7 @@ public class ExceptionToResultMapperTest
         var exception = new OperationCanceledException("Operation cancelled");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.OperationCancelled);
@@ -167,7 +167,7 @@ public class ExceptionToResultMapperTest
         var exception = new NotSupportedException("Operation not supported");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.OperationNotSupported);
@@ -180,7 +180,7 @@ public class ExceptionToResultMapperTest
         var exception = new KeyNotFoundException("Key not found");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.NotFound);
@@ -193,7 +193,7 @@ public class ExceptionToResultMapperTest
         var exception = new FormatException("Invalid format");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.InvalidFormat);
@@ -206,7 +206,7 @@ public class ExceptionToResultMapperTest
         var exception = new Exception("Unknown error");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.InternalError);
@@ -220,7 +220,7 @@ public class ExceptionToResultMapperTest
         var customMessage = "Custom error message";
 
         // Act
-        var result = _mapper.Map<string>(exception, customMessage);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception, customMessage);
 
         // Assert
         result.Errors.Should().Contain(e => e.Message == customMessage);
@@ -230,7 +230,7 @@ public class ExceptionToResultMapperTest
     public void Map_WithNull_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => _mapper.Map<string>(null!);
+        Func<IBusinessResultWithStatus<string>> act = () => _mapper.Map<string>(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -245,7 +245,7 @@ public class ExceptionToResultMapperTest
         var exception = new NotFoundException("Not found");
 
         // Act
-        var statusCode = _mapper.GetStatusCode(exception);
+        ResultStatusCode statusCode = _mapper.GetStatusCode(exception);
 
         // Assert
         statusCode.Should().Be(ResultStatusCode.NotFound);
@@ -258,7 +258,7 @@ public class ExceptionToResultMapperTest
         var exception = new Exception("Unknown");
 
         // Act
-        var statusCode = _mapper.GetStatusCode(exception);
+        ResultStatusCode statusCode = _mapper.GetStatusCode(exception);
 
         // Assert
         statusCode.Should().Be(ResultStatusCode.InternalError);
@@ -370,7 +370,7 @@ public class ExceptionToResultMapperTest
         var exception = new CustomTestException("Custom exception");
 
         // Act
-        var result = mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.RateLimitExceeded);
@@ -403,7 +403,7 @@ public class ExceptionToResultMapperTest
         var exception = new Exception("Outer error", innerException);
 
         // Act
-        var result = mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = mapper.Map<string>(exception);
 
         // Assert
         result.Infos.Should().Contain(i => i.Message.Contains("Inner error"));
@@ -431,7 +431,7 @@ public class ExceptionToResultMapperTest
         }
 
         // Act
-        var result = mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = mapper.Map<string>(exception);
 
         // Assert - ResultMessage.Info uses Key parameter, not ErrorCode
         result.Infos.Should().Contain(i => i.Key == "EXCEPTION.STACK_TRACE");
@@ -448,7 +448,7 @@ public class ExceptionToResultMapperTest
         var exception = new DerivedNotFoundException("Derived not found");
 
         // Act
-        var result = _mapper.Map<string>(exception);
+        IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);
 
         // Assert
         result.StatusCode.Should().Be(ResultStatusCode.NotFound);

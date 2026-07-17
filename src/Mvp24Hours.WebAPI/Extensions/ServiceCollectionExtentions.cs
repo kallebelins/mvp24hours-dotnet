@@ -588,7 +588,7 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             return services.AddMvp24HoursProblemDetails(options =>
             {
-                foreach (var mapping in mappings)
+                foreach (KeyValuePair<Type, HttpStatusCode> mapping in mappings)
                 {
                     options.ExceptionMappings[mapping.Key] = mapping.Value;
                 }
@@ -2240,7 +2240,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             // Register formatter registry
             services.TryAddSingleton<ContentNegotiation.IContentFormatterRegistry>(sp =>
             {
-                var options = sp.GetRequiredService<IOptions<ContentNegotiationOptions>>().Value;
+                ContentNegotiationOptions options = sp.GetRequiredService<IOptions<ContentNegotiationOptions>>().Value;
 
                 // Collect custom formatter instances
                 var customFormatters = new System.Collections.Generic.List<ContentNegotiation.IContentFormatter>();
@@ -2249,7 +2249,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                 customFormatters.AddRange(builder.CustomFormatters);
 
                 // Resolve formatter types registered via builder
-                foreach (var formatterType in builder.CustomFormatterTypes)
+                foreach (Type formatterType in builder.CustomFormatterTypes)
                 {
                     try
                     {
@@ -2268,7 +2268,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                 var registry = new ContentNegotiation.ContentFormatterRegistry(options, customFormatters);
 
                 // Register any formatter types that weren't resolved yet
-                foreach (var formatterType in builder.CustomFormatterTypes)
+                foreach (Type formatterType in builder.CustomFormatterTypes)
                 {
                     try
                     {

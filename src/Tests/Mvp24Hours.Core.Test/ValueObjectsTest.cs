@@ -38,7 +38,7 @@ public class ValueObjectsTest
     public void Email_Create_WithInvalidEmail_ThrowsArgumentException(string emailValue)
     {
         // Act
-        var act = () => Email.Create(emailValue);
+        Func<Email> act = () => Email.Create(emailValue);
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -51,7 +51,7 @@ public class ValueObjectsTest
         var emailValue = "user@example.com";
 
         // Act
-        var result = Email.TryParse(emailValue, out var email);
+        var result = Email.TryParse(emailValue, out Email? email);
 
         // Assert
         result.Should().BeTrue();
@@ -66,7 +66,7 @@ public class ValueObjectsTest
         var emailValue = "invalid";
 
         // Act
-        var result = Email.TryParse(emailValue, out var email);
+        var result = Email.TryParse(emailValue, out Email? email);
 
         // Assert
         result.Should().BeFalse();
@@ -135,7 +135,7 @@ public class ValueObjectsTest
     public void Cpf_Create_WithInvalidCpf_ThrowsArgumentException(string cpfValue)
     {
         // Act
-        var act = () => Cpf.Create(cpfValue);
+        Func<Cpf> act = () => Cpf.Create(cpfValue);
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -148,7 +148,7 @@ public class ValueObjectsTest
         var cpfValue = "123.456.789-09";
 
         // Act
-        var result = Cpf.TryParse(cpfValue, out var cpf);
+        var result = Cpf.TryParse(cpfValue, out Cpf? cpf);
 
         // Assert
         result.Should().BeTrue();
@@ -162,7 +162,7 @@ public class ValueObjectsTest
         var cpfValue = "111.111.111-11";
 
         // Act
-        var result = Cpf.TryParse(cpfValue, out var cpf);
+        var result = Cpf.TryParse(cpfValue, out Cpf? cpf);
 
         // Assert
         result.Should().BeFalse();
@@ -218,7 +218,7 @@ public class ValueObjectsTest
     public void Cnpj_Create_WithInvalidCnpj_ThrowsArgumentException(string cnpjValue)
     {
         // Act
-        var act = () => Cnpj.Create(cnpjValue);
+        Func<Cnpj> act = () => Cnpj.Create(cnpjValue);
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -231,7 +231,7 @@ public class ValueObjectsTest
         var cnpjValue = "11.222.333/0001-81";
 
         // Act
-        var result = Cnpj.TryParse(cnpjValue, out var cnpj);
+        var result = Cnpj.TryParse(cnpjValue, out Cnpj? cnpj);
 
         // Assert
         result.Should().BeTrue();
@@ -245,7 +245,7 @@ public class ValueObjectsTest
         var cnpjValue = "11.111.111/1111-11";
 
         // Act
-        var result = Cnpj.TryParse(cnpjValue, out var cnpj);
+        var result = Cnpj.TryParse(cnpjValue, out Cnpj? cnpj);
 
         // Assert
         result.Should().BeFalse();
@@ -274,7 +274,7 @@ public class ValueObjectsTest
         var tax = Money.Create(10m, "USD");
 
         // Act
-        var total = price + tax;
+        Money total = price + tax;
 
         // Assert
         total.Amount.Should().Be(110m);
@@ -289,7 +289,7 @@ public class ValueObjectsTest
         var discount = Money.Create(20m, "USD");
 
         // Act
-        var final = price - discount;
+        Money final = price - discount;
 
         // Assert
         final.Amount.Should().Be(80m);
@@ -302,7 +302,7 @@ public class ValueObjectsTest
         var price = Money.Create(100m, "USD");
 
         // Act
-        var total = price * 3;
+        Money total = price * 3;
 
         // Assert
         total.Amount.Should().Be(300m);
@@ -315,7 +315,7 @@ public class ValueObjectsTest
         var total = Money.Create(100m, "USD");
 
         // Act
-        var split = total / 4;
+        Money split = total / 4;
 
         // Assert
         split.Amount.Should().Be(25m);
@@ -328,7 +328,7 @@ public class ValueObjectsTest
         var money = Money.Create(100m, "USD");
 
         // Act
-        var act = () => money / 0;
+        Func<Money> act = () => money / 0;
 
         // Assert
         act.Should().Throw<DivideByZeroException>();
@@ -356,7 +356,7 @@ public class ValueObjectsTest
         var brl = Money.Create(100m, "BRL");
 
         // Act
-        var act = () => usd + brl;
+        Func<Money> act = () => usd + brl;
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -371,7 +371,7 @@ public class ValueObjectsTest
         var brl = Money.Create(100m, "BRL");
 
         // Act
-        var act = () => usd > brl;
+        Func<bool> act = () => usd > brl;
 
         // Assert
         act.Should().Throw<InvalidOperationException>();
@@ -457,7 +457,7 @@ public class ValueObjectsTest
     public void Address_Create_WithMissingStreet_ThrowsArgumentException()
     {
         // Act
-        var act = () => Address.Create(
+        Func<Address> act = () => Address.Create(
             street: "",
             number: "1000",
             city: "SÃ£o Paulo",
@@ -508,7 +508,7 @@ public class ValueObjectsTest
         var end = new DateTime(2024, 1, 1);
 
         // Act
-        var act = () => DateRange.Create(start, end);
+        Func<DateRange> act = () => DateRange.Create(start, end);
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -614,7 +614,7 @@ public class ValueObjectsTest
         );
 
         // Act
-        var intersection = range1.GetIntersection(range2);
+        DateRange? intersection = range1.GetIntersection(range2);
 
         // Assert
         intersection.Should().NotBeNull();
@@ -704,7 +704,7 @@ public class ValueObjectsTest
         var percentage = Percentage.FromPercent(30);
 
         // Act
-        var complement = percentage.Complement;
+        Percentage complement = percentage.Complement;
 
         // Assert
         complement.Value.Should().Be(70);
@@ -714,7 +714,7 @@ public class ValueObjectsTest
     public void Percentage_Zero_ReturnsZeroPercentage()
     {
         // Act
-        var zero = Percentage.Zero;
+        Percentage zero = Percentage.Zero;
 
         // Assert
         zero.Value.Should().Be(0);
@@ -725,7 +725,7 @@ public class ValueObjectsTest
     public void Percentage_Full_Returns100Percent()
     {
         // Act
-        var full = Percentage.Full;
+        Percentage full = Percentage.Full;
 
         // Assert
         full.Value.Should().Be(100);
@@ -786,7 +786,7 @@ public class ValueObjectsTest
     public void PhoneNumber_Create_WithInvalidNumber_ThrowsArgumentException()
     {
         // Act
-        var act = () => PhoneNumber.Create("+55", "11", "12345");
+        Func<PhoneNumber> act = () => PhoneNumber.Create("+55", "11", "12345");
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -796,7 +796,7 @@ public class ValueObjectsTest
     public void PhoneNumber_TryParse_WithValidData_ReturnsTrue()
     {
         // Act
-        var result = PhoneNumber.TryParse("+55", "11", "999887766", out var phone);
+        var result = PhoneNumber.TryParse("+55", "11", "999887766", out PhoneNumber? phone);
 
         // Assert
         result.Should().BeTrue();
@@ -807,7 +807,7 @@ public class ValueObjectsTest
     public void PhoneNumber_TryParse_WithInvalidData_ReturnsFalse()
     {
         // Act
-        var result = PhoneNumber.TryParse("+55", "11", "123", out var phone);
+        var result = PhoneNumber.TryParse("+55", "11", "123", out PhoneNumber? phone);
 
         // Assert
         result.Should().BeFalse();

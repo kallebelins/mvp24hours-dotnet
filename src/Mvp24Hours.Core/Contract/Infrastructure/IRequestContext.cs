@@ -140,7 +140,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
     /// </summary>
     public class DefaultRequestContext : IRequestContext
     {
-        private readonly Dictionary<string, object> _items = new();
+        private readonly Dictionary<string, object> _items = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultRequestContext"/> class.

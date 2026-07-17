@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             _commandCounts.AddOrUpdate(commandName, 1, (_, count) => count + 1);
 
             // Track duration
-            var tracker = _durationTrackers.GetOrAdd(commandName, _ => new DurationTracker(_options.DurationHistogramBuckets * 1000));
+            DurationTracker tracker = _durationTrackers.GetOrAdd(commandName, _ => new DurationTracker(_options.DurationHistogramBuckets * 1000));
             tracker.Record(duration.TotalMilliseconds);
         }
 
@@ -134,9 +134,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             };
 
             // Calculate averages and percentiles
-            foreach (var (command, tracker) in _durationTrackers)
+            foreach ((string? command, DurationTracker? tracker) in _durationTrackers)
             {
-                var stats = tracker.GetStatistics();
+                TrackerStats stats = tracker.GetStatistics();
                 snapshot.AverageDurationMs[command] = stats.Average;
                 snapshot.P95DurationMs[command] = stats.P95;
                 snapshot.P99DurationMs[command] = stats.P99;
@@ -148,12 +148,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <inheritdoc />
         public DurationStatistics GetDurationStatistics(string commandName)
         {
-            if (!_durationTrackers.TryGetValue(commandName, out var tracker))
+            if (!_durationTrackers.TryGetValue(commandName, out DurationTracker? tracker))
             {
                 return new DurationStatistics { CommandName = commandName };
             }
 
-            var stats = tracker.GetStatistics();
+            TrackerStats stats = tracker.GetStatistics();
             return new DurationStatistics
             {
                 CommandName = commandName,
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <returns>The checkout duration statistics.</returns>
         public (double Average, double P95, double P99) GetCheckoutStats()
         {
-            var stats = _checkoutDurations.GetStatistics();
+            TrackerStats stats = _checkoutDurations.GetStatistics();
             return (stats.Average, stats.P95, stats.P99);
         }
 

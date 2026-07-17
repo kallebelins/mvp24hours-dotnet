@@ -47,7 +47,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
         /// <inheritdoc />
         public int GetStatusCode(Exception exception)
         {
-            foreach (var mapper in _mappers)
+            foreach (IExceptionToProblemDetailsMapper mapper in _mappers)
             {
                 if (mapper != this && mapper.CanHandle(exception))
                 {
@@ -61,7 +61,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
         /// <inheritdoc />
         public ProblemDetails Map(Exception exception, HttpContext context)
         {
-            foreach (var mapper in _mappers)
+            foreach (IExceptionToProblemDetailsMapper mapper in _mappers)
             {
                 if (mapper != this && mapper.CanHandle(exception))
                 {

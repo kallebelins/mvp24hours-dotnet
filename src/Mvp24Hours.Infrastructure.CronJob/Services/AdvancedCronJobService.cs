@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 var satisfied = await _dependencyTracker.AreDependenciesSatisfiedAsync(JobName, cancellationToken);
                 if (!satisfied)
                 {
-                    var unsatisfied = await _dependencyTracker.GetUnsatisfiedDependenciesAsync(JobName, cancellationToken);
+                    IReadOnlyList<string> unsatisfied = await _dependencyTracker.GetUnsatisfiedDependenciesAsync(JobName, cancellationToken);
                     _logger.LogDebug("CronJob {JobName} dependencies not met: {Dependencies}",
                         JobName, string.Join(", ", unsatisfied));
                     await _eventDispatcher?.DispatchSkippedAsync(JobName, SkipReason.DependencyNotMet, cancellationToken)!;
@@ -125,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
             if (_distributedLock != null && (_advancedOptions?.UseDistributedLocking ?? false))
             {
                 var instanceId = Environment.MachineName + "_" + Environment.ProcessId;
-                var lockDuration = _advancedOptions?.DistributedLockDuration ?? TimeSpan.FromMinutes(5);
+                TimeSpan lockDuration = _advancedOptions?.DistributedLockDuration ?? TimeSpan.FromMinutes(5);
 
                 distributedLockHandle = await _distributedLock.TryAcquireAsync(
                     JobName, instanceId, lockDuration, cancellationToken);
@@ -182,7 +183,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 // Update state
                 if (_stateStore != null)
                 {
-                    var state = await _stateStore.GetStateAsync(JobName, cancellationToken)
+                    CronJobState state = await _stateStore.GetStateAsync(JobName, cancellationToken)
                         ?? new CronJobState(JobName);
                     state.RecordSuccess(stopwatch.Elapsed);
                     await _stateStore.SaveStateAsync(state, cancellationToken);
@@ -222,7 +223,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Services
                 // Update state
                 if (_stateStore != null)
                 {
-                    var state = await _stateStore.GetStateAsync(JobName, cancellationToken)
+                    CronJobState state = await _stateStore.GetStateAsync(JobName, cancellationToken)
                         ?? new CronJobState(JobName);
                     state.RecordFailure(stopwatch.Elapsed, ex.Message);
                     await _stateStore.SaveStateAsync(state, cancellationToken);

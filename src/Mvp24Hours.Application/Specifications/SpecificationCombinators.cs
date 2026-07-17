@@ -114,7 +114,7 @@ namespace Mvp24Hours.Application.Specifications
                 return Specification<T>.All();
             }
 
-            var result = specList[0];
+            Specification<T> result = specList[0];
             for (int i = 1; i < specList.Count; i++)
             {
                 result = new AndSpecification<T>(result, specList[i]);
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Application.Specifications
                 return Specification<T>.None();
             }
 
-            var result = specList[0];
+            Specification<T> result = specList[0];
             for (int i = 1; i < specList.Count; i++)
             {
                 result = new OrSpecification<T>(result, specList[i]);

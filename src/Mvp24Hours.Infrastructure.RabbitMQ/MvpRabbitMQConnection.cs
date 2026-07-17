@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             }
             else if (_options.Configuration != null)
             {
-                var config = _options.Configuration;
+                RabbitMQConnection config = _options.Configuration;
                 _connectionFactory = new ConnectionFactory()
                 {
                     HostName = config.HostName,
@@ -64,13 +64,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         public RabbitMQConnectionOptions Options => _options;
 
-        public bool IsConnected
-        {
-            get
-            {
-                return _connection != null && _connection.IsOpen && !_disposed;
-            }
-        }
+        public bool IsConnected => _connection != null && _connection.IsOpen && !_disposed;
 
         public IModel CreateModel()
         {
@@ -88,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
             lock (sync_root)
             {
-                var policy = RetryPolicy.Handle<SocketException>()
+                RetryPolicy policy = RetryPolicy.Handle<SocketException>()
                     .Or<BrokerUnreachableException>()
                     .WaitAndRetry(_options.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {

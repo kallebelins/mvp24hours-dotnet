@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (emailService == null) throw new ArgumentNullException(nameof(emailService));
             if (string.IsNullOrEmpty(toAddress)) throw new ArgumentNullException(nameof(toAddress));
 
-            var emails = emailService.GetEmailsSentTo(toAddress);
+            IEnumerable<EmailMessage> emails = emailService.GetEmailsSentTo(toAddress);
             if (!emails.Any())
             {
                 throw new AssertionException(
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             if (emailService == null) throw new ArgumentNullException(nameof(emailService));
 
-            var last = emailService.GetLastSentEmail();
+            EmailMessage? last = emailService.GetLastSentEmail();
             if (last == null)
             {
                 throw new AssertionException("No emails were sent.");

@@ -17,7 +17,7 @@ public class UnitStructTest
     public void Unit_Value_ShouldBeDefault()
     {
         // Arrange & Act
-        var unit = Unit.Value;
+        Unit unit = Unit.Value;
 
         // Assert
         Assert.Equal(default, unit);
@@ -27,7 +27,7 @@ public class UnitStructTest
     public async Task Unit_Task_ShouldReturnCompletedTask()
     {
         // Arrange & Act
-        var task = Unit.Task;
+        Task<Unit> task = Unit.Task;
 
         // Assert
         Assert.True(task.IsCompleted);
@@ -38,7 +38,7 @@ public class UnitStructTest
     public void Unit_Equals_ShouldAlwaysReturnTrue()
     {
         // Arrange
-        var unit1 = Unit.Value;
+        Unit unit1 = Unit.Value;
         var unit2 = new Unit();
 
         // Act & Assert
@@ -50,7 +50,7 @@ public class UnitStructTest
     public void Unit_EqualsObject_ShouldReturnTrueForUnit()
     {
         // Arrange
-        var unit = Unit.Value;
+        Unit unit = Unit.Value;
         object obj = new Unit();
 
         // Act & Assert
@@ -61,7 +61,7 @@ public class UnitStructTest
     public void Unit_EqualsObject_ShouldReturnFalseForNonUnit()
     {
         // Arrange
-        var unit = Unit.Value;
+        Unit unit = Unit.Value;
         object obj = "not a unit";
 
         // Act & Assert
@@ -72,7 +72,7 @@ public class UnitStructTest
     public void Unit_GetHashCode_ShouldAlwaysReturnZero()
     {
         // Arrange
-        var unit1 = Unit.Value;
+        Unit unit1 = Unit.Value;
         var unit2 = new Unit();
 
         // Act & Assert
@@ -84,7 +84,7 @@ public class UnitStructTest
     public void Unit_CompareTo_ShouldAlwaysReturnZero()
     {
         // Arrange
-        var unit1 = Unit.Value;
+        Unit unit1 = Unit.Value;
         var unit2 = new Unit();
 
         // Act & Assert
@@ -106,7 +106,7 @@ public class UnitStructTest
     public void Unit_ToString_ShouldReturnParentheses()
     {
         // Arrange
-        var unit = Unit.Value;
+        Unit unit = Unit.Value;
 
         // Act & Assert
         Assert.Equal("()", unit.ToString());
@@ -116,7 +116,7 @@ public class UnitStructTest
     public void Unit_EqualityOperator_ShouldAlwaysReturnTrue()
     {
         // Arrange
-        var unit1 = Unit.Value;
+        Unit unit1 = Unit.Value;
         var unit2 = new Unit();
 
         // Act & Assert
@@ -127,7 +127,7 @@ public class UnitStructTest
     public void Unit_InequalityOperator_ShouldAlwaysReturnFalse()
     {
         // Arrange
-        var unit1 = Unit.Value;
+        Unit unit1 = Unit.Value;
         var unit2 = new Unit();
 
         // Act & Assert
@@ -138,8 +138,8 @@ public class UnitStructTest
     public async Task Unit_Task_ShouldBeReusable()
     {
         // Arrange & Act
-        var task1 = Unit.Task;
-        var task2 = Unit.Task;
+        Task<Unit> task1 = Unit.Task;
+        Task<Unit> task2 = Unit.Task;
 
         // Assert - Same cached task instance
         Assert.Same(task1, task2);

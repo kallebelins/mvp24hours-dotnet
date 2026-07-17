@@ -107,17 +107,17 @@ public static class AspireHostingExtensions
             {
                 Status = "Healthy",
                 Duration = 0,
-                Checks = new List<HealthCheckEntry>
-                {
-                    new() { Name = "self", Status = "Healthy", Duration = 0, Tags = new List<string> { "live" } }
-                }
+                Checks =
+                [
+                    new() { Name = "self", Status = "Healthy", Duration = 0, Tags = ["live"] }
+                ]
             }, JsonOptions);
         });
 
         // Readiness probe - checks if the application is ready to receive traffic
         app.MapGet(options.ReadinessPath, async (HttpContext context, HealthCheckService healthCheckService) =>
         {
-            var report = await healthCheckService.CheckHealthAsync(
+            HealthReport report = await healthCheckService.CheckHealthAsync(
                 registration => registration.Tags.Contains("ready"));
             await WriteHealthCheckResponse(context, report);
         });
@@ -125,7 +125,7 @@ public static class AspireHostingExtensions
         // Startup probe - checks if the application has started
         app.MapGet(options.StartupPath, async (HttpContext context, HealthCheckService healthCheckService) =>
         {
-            var report = await healthCheckService.CheckHealthAsync(
+            HealthReport report = await healthCheckService.CheckHealthAsync(
                 registration => registration.Tags.Contains("startup") || registration.Tags.Contains("live"));
             await WriteHealthCheckResponse(context, report);
         });
@@ -133,7 +133,7 @@ public static class AspireHostingExtensions
         // Overall health - runs all health checks
         app.MapGet("/health", async (HttpContext context, HealthCheckService healthCheckService) =>
         {
-            var report = await healthCheckService.CheckHealthAsync();
+            HealthReport report = await healthCheckService.CheckHealthAsync();
             await WriteHealthCheckResponse(context, report);
         });
 
@@ -155,10 +155,10 @@ public static class AspireHostingExtensions
         {
             Status = report.Status.ToString(),
             Duration = report.TotalDuration.TotalMilliseconds,
-            Checks = new List<HealthCheckEntry>()
+            Checks = []
         };
 
-        foreach (var entry in report.Entries)
+        foreach (KeyValuePair<string, HealthReportEntry> entry in report.Entries)
         {
             response.Checks.Add(new HealthCheckEntry
             {
@@ -226,7 +226,7 @@ internal class HealthCheckResponse
     /// <summary>
     /// Gets or sets the individual health check entries.
     /// </summary>
-    public List<HealthCheckEntry> Checks { get; set; } = new();
+    public List<HealthCheckEntry> Checks { get; set; } = [];
 }
 
 /// <summary>

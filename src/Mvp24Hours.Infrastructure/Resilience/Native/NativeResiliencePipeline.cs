@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
                     options.RetryBackoffType);
             }
 
-            var pipeline = builder.Build();
+            ResiliencePipeline<TResult> pipeline = builder.Build();
 
             _logger?.LogInformation(
                 "Built resilience pipeline '{Name}' with Retry={EnableRetry}, CircuitBreaker={EnableCB}, Timeout={EnableTimeout}",
@@ -362,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
 
             if (options.RetryableExceptionTypes is { Count: > 0 })
             {
-                foreach (var type in options.RetryableExceptionTypes)
+                foreach (Type type in options.RetryableExceptionTypes)
                 {
                     if (type.IsInstanceOfType(exception))
                     {
@@ -385,7 +385,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
 
             if (options.CircuitBreakerExceptionTypes is { Count: > 0 })
             {
-                foreach (var type in options.CircuitBreakerExceptionTypes)
+                foreach (Type type in options.CircuitBreakerExceptionTypes)
                 {
                     if (type.IsInstanceOfType(exception))
                     {

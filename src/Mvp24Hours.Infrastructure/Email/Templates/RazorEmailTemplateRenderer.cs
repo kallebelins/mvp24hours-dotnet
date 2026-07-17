@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -161,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             try
             {
                 // Basic validation - check for balanced braces and common Razor syntax
-                var errors = ValidateRazorSyntax(template);
+                List<string> errors = ValidateRazorSyntax(template);
                 if (errors.Count > 0)
                 {
                     return Task.FromResult(TemplateValidationResult.Invalid(errors.ToArray()));
@@ -194,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             // Handle dictionary
             if (model is IDictionary<string, object?> dictionary)
             {
-                foreach (var kvp in dictionary)
+                foreach (KeyValuePair<string, object?> kvp in dictionary)
                 {
                     var placeholder = $"@Model.{kvp.Key}";
                     var value = kvp.Value?.ToString() ?? string.Empty;
@@ -208,10 +209,10 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             }
 
             // Handle object properties using reflection
-            var type = model.GetType();
-            var properties = type.GetProperties();
+            Type type = model.GetType();
+            PropertyInfo[] properties = type.GetProperties();
 
-            foreach (var property in properties)
+            foreach (PropertyInfo property in properties)
             {
                 if (property.CanRead)
                 {
@@ -229,8 +230,8 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
             }
 
             // Handle fields
-            var fields = type.GetFields();
-            foreach (var field in fields)
+            FieldInfo[] fields = type.GetFields();
+            foreach (FieldInfo field in fields)
             {
                 var value = field.GetValue(model);
                 var stringValue = value?.ToString() ?? string.Empty;

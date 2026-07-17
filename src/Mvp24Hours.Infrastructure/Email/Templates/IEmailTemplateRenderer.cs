@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
         public TemplateValidationResult(bool isValid, IList<string>? errors = null)
         {
             IsValid = isValid;
-            Errors = errors ?? new List<string>();
+            Errors = errors ?? [];
         }
 
         /// <summary>

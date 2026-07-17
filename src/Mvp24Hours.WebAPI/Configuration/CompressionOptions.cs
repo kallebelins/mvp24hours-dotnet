@@ -25,8 +25,8 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of MIME types that should be compressed.
         /// </summary>
-        public HashSet<string> MimeTypes { get; set; } = new HashSet<string>
-        {
+        public HashSet<string> MimeTypes { get; set; } =
+        [
             "application/json",
             "application/xml",
             "text/json",
@@ -36,7 +36,7 @@ namespace Mvp24Hours.WebAPI.Configuration
             "text/javascript",
             "application/javascript",
             "application/x-javascript"
-        };
+        ];
 
         /// <summary>
         /// Gets or sets the minimum response size (in bytes) to compress.
@@ -62,7 +62,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of paths to exclude from compression.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new HashSet<string>();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
     }
 }
 

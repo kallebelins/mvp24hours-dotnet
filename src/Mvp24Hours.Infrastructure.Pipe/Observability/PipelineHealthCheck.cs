@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
-            var snapshot = _metrics.GetSnapshot();
+            PipelineMetricsSnapshot snapshot = _metrics.GetSnapshot();
 
             var data = new Dictionary<string, object>
             {
@@ -96,9 +96,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             }
 
             // Check individual pipeline health
-            foreach (var pipelineKvp in snapshot.PipelineMetrics)
+            foreach (KeyValuePair<string, PipelineExecutionMetrics> pipelineKvp in snapshot.PipelineMetrics)
             {
-                var pipelineMetrics = pipelineKvp.Value;
+                PipelineExecutionMetrics pipelineMetrics = pipelineKvp.Value;
 
                 // Check for pipelines with high active executions (potential stuck pipelines)
                 if (_options.MaxActiveExecutions.HasValue &&
@@ -116,9 +116,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             }
 
             // Check individual operation health
-            foreach (var opKvp in snapshot.OperationMetrics)
+            foreach (KeyValuePair<string, OperationMetrics> opKvp in snapshot.OperationMetrics)
             {
-                var opMetrics = opKvp.Value;
+                OperationMetrics opMetrics = opKvp.Value;
 
                 if (opMetrics.TotalExecutions >= _options.MinimumExecutionsForEvaluation &&
                     opMetrics.SuccessRate < _options.MinimumOperationSuccessRate)
@@ -299,10 +299,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public IReadOnlyList<PipelineHealthStatus> GetAllPipelineHealth()
         {
-            var snapshot = _metrics.GetSnapshot();
+            PipelineMetricsSnapshot snapshot = _metrics.GetSnapshot();
             var results = new List<PipelineHealthStatus>();
 
-            foreach (var kvp in snapshot.PipelineMetrics)
+            foreach (KeyValuePair<string, PipelineExecutionMetrics> kvp in snapshot.PipelineMetrics)
             {
                 results.Add(CreateHealthStatus(kvp.Key, kvp.Value));
             }
@@ -316,7 +316,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (string.IsNullOrEmpty(pipelineName))
                 return null;
 
-            var metrics = _metrics.GetPipelineMetrics(pipelineName);
+            PipelineExecutionMetrics? metrics = _metrics.GetPipelineMetrics(pipelineName);
             if (metrics == null)
                 return null;
 
@@ -326,7 +326,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public HealthStatus GetOverallHealth()
         {
-            var snapshot = _metrics.GetSnapshot();
+            PipelineMetricsSnapshot snapshot = _metrics.GetSnapshot();
 
             if (snapshot.TotalPipelineExecutions < _options.MinimumExecutionsForEvaluation)
                 return HealthStatus.Healthy;
@@ -342,7 +342,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
         private PipelineHealthStatus CreateHealthStatus(string pipelineName, PipelineExecutionMetrics metrics)
         {
-            var status = DetermineStatus(metrics);
+            HealthStatus status = DetermineStatus(metrics);
             var issues = new List<string>();
 
             if (metrics.SuccessRate < _options.MinimumSuccessRate)

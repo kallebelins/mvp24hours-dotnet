@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Observability
         /// </remarks>
         public static string GetCorrelationId()
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity != null)
             {
                 // Check baggage first (explicit correlation ID)
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Observability
                 return;
             }
 
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity != null)
             {
                 activity.SetBaggage(CorrelationIdBaggageKey, correlationId);
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Observability
         /// </remarks>
         public static string EnsureCorrelationId()
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity != null)
             {
                 var existing = activity.GetBaggageItem(CorrelationIdBaggageKey);

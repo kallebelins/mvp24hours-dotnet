@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             // Check for Retry-After header
             if (outcome?.Result?.Headers.RetryAfter?.Delta.HasValue == true)
             {
-                var retryAfter = outcome.Result.Headers.RetryAfter.Delta.Value;
+                TimeSpan retryAfter = outcome.Result.Headers.RetryAfter.Delta.Value;
                 if (retryAfter <= _options.MaxDelay)
                 {
                     _logger.LogDebug("Using Retry-After header value of {RetryAfter}ms for retry attempt {Attempt}",
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
                 }
             }
 
-            var delay = _options.BackoffType switch
+            TimeSpan delay = _options.BackoffType switch
             {
                 BackoffType.Constant => _options.InitialDelay,
                 BackoffType.Linear => TimeSpan.FromMilliseconds(

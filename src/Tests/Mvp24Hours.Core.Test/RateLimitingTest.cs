@@ -41,7 +41,7 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         // Act
-        var limiter = _rateLimiterProvider.GetRateLimiter(key, options);
+        RateLimiter limiter = _rateLimiterProvider.GetRateLimiter(key, options);
 
         // Assert
         limiter.Should().NotBeNull();
@@ -55,8 +55,8 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         // Act
-        var limiter1 = _rateLimiterProvider.GetRateLimiter(key, options);
-        var limiter2 = _rateLimiterProvider.GetRateLimiter(key, options);
+        RateLimiter limiter1 = _rateLimiterProvider.GetRateLimiter(key, options);
+        RateLimiter limiter2 = _rateLimiterProvider.GetRateLimiter(key, options);
 
         // Assert
         limiter1.Should().BeSameAs(limiter2);
@@ -70,7 +70,7 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         // Act
-        var act = () => _rateLimiterProvider.GetRateLimiter(key!, options);
+        Func<RateLimiter> act = () => _rateLimiterProvider.GetRateLimiter(key!, options);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -84,7 +84,7 @@ public class RateLimitingTest : IDisposable
         NativeRateLimiterOptions? options = null;
 
         // Act
-        var act = () => _rateLimiterProvider.GetRateLimiter(key, options!);
+        Func<RateLimiter> act = () => _rateLimiterProvider.GetRateLimiter(key, options!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -98,7 +98,7 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 10, window: TimeSpan.FromSeconds(1));
 
         // Act
-        var lease = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         // Assert
         lease.IsAcquired.Should().BeTrue();
@@ -113,9 +113,9 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 2, window: TimeSpan.FromSeconds(1));
 
         // Act - Acquire all permits
-        var lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         // Assert
         lease1.IsAcquired.Should().BeTrue();
@@ -135,8 +135,8 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 1, window: TimeSpan.FromSeconds(1));
 
         // Act
-        var lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         // Assert
         lease1.IsAcquired.Should().BeTrue();
@@ -144,7 +144,7 @@ public class RateLimitingTest : IDisposable
 
         // Some rate limiters may not provide RetryAfter metadata
         // This is acceptable behavior - we just verify the lease is rejected
-        if (lease2.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        if (lease2.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
         {
             retryAfter.Should().BeGreaterThan(TimeSpan.Zero);
         }
@@ -398,10 +398,10 @@ public class RateLimitingTest : IDisposable
 
         // Act
         services.AddNativeRateLimiting();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var rateLimiterProvider = provider.GetService<IRateLimiterProvider>();
+        IRateLimiterProvider? rateLimiterProvider = provider.GetRequiredService<IRateLimiterProvider>();
         rateLimiterProvider.Should().NotBeNull();
         rateLimiterProvider.Should().BeOfType<NativeRateLimiterProvider>();
     }
@@ -415,10 +415,10 @@ public class RateLimitingTest : IDisposable
 
         // Act
         services.AddSlidingWindowRateLimiter(key, permitLimit: 200);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var registrations = provider.GetServices<RateLimiterRegistration>();
+        IEnumerable<RateLimiterRegistration> registrations = provider.GetServices<RateLimiterRegistration>();
         registrations.Should().Contain(r => r.Key == key);
     }
 
@@ -431,10 +431,10 @@ public class RateLimitingTest : IDisposable
 
         // Act
         services.AddFixedWindowRateLimiter(key, permitLimit: 150);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var registrations = provider.GetServices<RateLimiterRegistration>();
+        IEnumerable<RateLimiterRegistration> registrations = provider.GetServices<RateLimiterRegistration>();
         registrations.Should().Contain(r => r.Key == key);
     }
 
@@ -447,10 +447,10 @@ public class RateLimitingTest : IDisposable
 
         // Act
         services.AddTokenBucketRateLimiter(key, tokenLimit: 75);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var registrations = provider.GetServices<RateLimiterRegistration>();
+        IEnumerable<RateLimiterRegistration> registrations = provider.GetServices<RateLimiterRegistration>();
         registrations.Should().Contain(r => r.Key == key);
     }
 
@@ -463,10 +463,10 @@ public class RateLimitingTest : IDisposable
 
         // Act
         services.AddConcurrencyRateLimiter(key, permitLimit: 5);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var registrations = provider.GetServices<RateLimiterRegistration>();
+        IEnumerable<RateLimiterRegistration> registrations = provider.GetServices<RateLimiterRegistration>();
         registrations.Should().Contain(r => r.Key == key);
     }
 
@@ -484,9 +484,9 @@ public class RateLimitingTest : IDisposable
             window: TimeSpan.FromMilliseconds(100));
 
         // Act - Acquire all permits
-        var lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         lease1.IsAcquired.Should().BeTrue();
         lease2.IsAcquired.Should().BeTrue();
@@ -500,8 +500,8 @@ public class RateLimitingTest : IDisposable
         await Task.Delay(150);
 
         // Act - Try again after window reset
-        var lease4 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease5 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease4 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease5 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         // Assert
         lease4.IsAcquired.Should().BeTrue();
@@ -519,9 +519,9 @@ public class RateLimitingTest : IDisposable
         var options = NativeRateLimiterOptions.Concurrency(permitLimit: 2);
 
         // Act - Try to acquire 3 permits concurrently
-        var lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
-        var lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease2 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease3 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
 
         // Assert
         lease1.IsAcquired.Should().BeTrue();
@@ -533,7 +533,7 @@ public class RateLimitingTest : IDisposable
         lease3.Dispose();
 
         // After releasing, should be able to acquire again
-        var lease4 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
+        RateLimitLease lease4 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
         lease4.IsAcquired.Should().BeTrue();
         lease4.Dispose();
     }
@@ -548,8 +548,8 @@ public class RateLimitingTest : IDisposable
         // Arrange
         var services = new ServiceCollection();
         services.AddNativeRateLimiting();
-        var provider = services.BuildServiceProvider();
-        var rateLimiterProvider = provider.GetRequiredService<IRateLimiterProvider>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IRateLimiterProvider rateLimiterProvider = provider.GetRequiredService<IRateLimiterProvider>();
 
         var key1 = "dispose_test_1";
         var key2 = "dispose_test_2";
@@ -562,7 +562,7 @@ public class RateLimitingTest : IDisposable
         rateLimiterProvider.Dispose();
 
         // Assert - Should throw ObjectDisposedException
-        var act = () => rateLimiterProvider.GetRateLimiter(key1, options);
+        Func<RateLimiter> act = () => rateLimiterProvider.GetRateLimiter(key1, options);
         act.Should().Throw<ObjectDisposedException>();
     }
 

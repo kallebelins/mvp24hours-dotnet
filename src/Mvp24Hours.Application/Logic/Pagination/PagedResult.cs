@@ -186,7 +186,7 @@ namespace Mvp24Hours.Application.Logic.Pagination
             Guard.Against.Null(mapper, nameof(mapper));
 
             var mappedItems = new List<TResult>(Items.Count);
-            foreach (var item in Items)
+            foreach (T? item in Items)
             {
                 mappedItems.Add(mapper(item));
             }

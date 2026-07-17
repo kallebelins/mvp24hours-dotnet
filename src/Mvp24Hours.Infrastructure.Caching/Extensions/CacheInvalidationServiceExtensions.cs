@@ -28,8 +28,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<ICacheTagManager>(sp =>
             {
-                var cacheProvider = sp.GetRequiredService<ICacheProvider>();
-                var logger = sp.GetService<ILogger<CacheTagManager>>();
+                ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
+                ILogger<CacheTagManager>? logger = sp.GetService<ILogger<CacheTagManager>>();
                 return new CacheTagManager(cacheProvider, logger);
             });
 
@@ -48,8 +48,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<CacheDependencyManager>(sp =>
             {
-                var cacheProvider = sp.GetRequiredService<ICacheProvider>();
-                var logger = sp.GetService<ILogger<CacheDependencyManager>>();
+                ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
+                ILogger<CacheDependencyManager>? logger = sp.GetService<ILogger<CacheDependencyManager>>();
                 return new CacheDependencyManager(cacheProvider, logger);
             });
 
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<ICacheStampedePrevention>(sp =>
             {
-                var logger = sp.GetService<ILogger<CacheStampedePrevention>>();
+                ILogger<CacheStampedePrevention>? logger = sp.GetService<ILogger<CacheStampedePrevention>>();
                 return new CacheStampedePrevention(logger);
             });
 
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<ICacheInvalidationEventPublisher>(sp =>
             {
-                var logger = sp.GetService<ILogger<InMemoryCacheInvalidationEventPublisher>>();
+                ILogger<InMemoryCacheInvalidationEventPublisher>? logger = sp.GetService<ILogger<InMemoryCacheInvalidationEventPublisher>>();
                 return new InMemoryCacheInvalidationEventPublisher(logger);
             });
 

@@ -190,9 +190,9 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
     {
         try
         {
-            var reader = _messageChannel.Reader;
+            ChannelReader<BatchMessageItem<TMessage>> reader = _messageChannel.Reader;
 
-            await foreach (var batch in ReadBatchesAsync(_cts.Token))
+            await foreach (List<BatchMessageItem<TMessage>> batch in ReadBatchesAsync(_cts.Token))
             {
                 if (batch.Count == 0) continue;
 
@@ -215,7 +215,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
     private async IAsyncEnumerable<List<BatchMessageItem<TMessage>>> ReadBatchesAsync(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var reader = _messageChannel.Reader;
+        ChannelReader<BatchMessageItem<TMessage>> reader = _messageChannel.Reader;
         var batch = new List<BatchMessageItem<TMessage>>(_options.MaxBatchSize);
         var shouldBreak = false;
         List<BatchMessageItem<TMessage>>? pendingBatch = null;
@@ -235,7 +235,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
                 while (batch.Count < _options.MaxBatchSize)
                 {
                     // Try to read without blocking first
-                    if (reader.TryRead(out var item))
+                    if (reader.TryRead(out BatchMessageItem<TMessage>? item))
                     {
                         batch.Add(item);
                         continue;
@@ -297,7 +297,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
 
         // Yield any remaining messages
         batch.Clear();
-        while (reader.TryRead(out var item))
+        while (reader.TryRead(out BatchMessageItem<TMessage>? item))
         {
             batch.Add(item);
             if (batch.Count >= _options.MaxBatchSize)
@@ -362,8 +362,8 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
         BatchConsumeContext<TMessage> context,
         CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var consumer = scope.ServiceProvider.GetService<IBatchConsumer<TMessage>>();
+        using Microsoft.Extensions.DependencyInjection.IServiceScope scope = _serviceProvider.CreateScope();
+        IBatchConsumer<TMessage>? consumer = scope.ServiceProvider.GetService<IBatchConsumer<TMessage>>();
 
         if (consumer == null)
         {
@@ -389,7 +389,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
 
         if (processingException != null)
         {
-            foreach (var msg in messages)
+            foreach (BatchMessageItem<TMessage> msg in messages)
             {
                 try
                 {
@@ -406,7 +406,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
         if (results == null)
         {
             // No explicit results - ack all
-            foreach (var msg in messages)
+            foreach (BatchMessageItem<TMessage> msg in messages)
             {
                 try
                 {
@@ -422,16 +422,16 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
 
         // Process individual results
         var resultsDict = new Dictionary<ulong, IBatchMessageResult>();
-        foreach (var r in results)
+        foreach (IBatchMessageResult r in results)
         {
             resultsDict[r.DeliveryTag] = r;
         }
 
-        foreach (var msg in messages)
+        foreach (BatchMessageItem<TMessage> msg in messages)
         {
             try
             {
-                if (resultsDict.TryGetValue(msg.DeliveryTag, out var result))
+                if (resultsDict.TryGetValue(msg.DeliveryTag, out IBatchMessageResult? result))
                 {
                     if (result.Success)
                         _channel.BasicAck(msg.DeliveryTag, multiple: false);
@@ -477,7 +477,7 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
         _cts.Dispose();
 
         // Nack remaining messages
-        while (_messageChannel.Reader.TryRead(out var item))
+        while (_messageChannel.Reader.TryRead(out BatchMessageItem<TMessage>? item))
         {
             try
             {

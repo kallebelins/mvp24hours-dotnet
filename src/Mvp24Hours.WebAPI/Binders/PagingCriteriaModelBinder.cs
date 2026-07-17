@@ -52,9 +52,9 @@ namespace Mvp24Hours.WebAPI.Binders
                 throw new ArgumentNullException(nameof(bindingContext));
             }
 
-            var modelType = bindingContext.ModelType;
+            Type modelType = bindingContext.ModelType;
             var modelName = bindingContext.ModelName;
-            var valueProvider = bindingContext.ValueProvider;
+            IValueProvider valueProvider = bindingContext.ValueProvider;
 
             // Get values from query string
             var limitValue = GetValue(valueProvider, modelName, "limit") ?? GetValue(valueProvider, modelName, "pageSize");
@@ -165,7 +165,7 @@ namespace Mvp24Hours.WebAPI.Binders
         private static string? GetValue(IValueProvider valueProvider, string modelName, string propertyName)
         {
             var fullName = string.IsNullOrEmpty(modelName) ? propertyName : $"{modelName}.{propertyName}";
-            var result = valueProvider.GetValue(fullName);
+            ValueProviderResult result = valueProvider.GetValue(fullName);
             if (result != ValueProviderResult.None)
             {
                 return result.FirstValue;
@@ -182,12 +182,12 @@ namespace Mvp24Hours.WebAPI.Binders
                 return false;
 
             // Check if it's PaginatedQuery<TResponse> or a derived type
-            var baseType = type.BaseType;
+            Type? baseType = type.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (baseType.IsGenericType)
                 {
-                    var genericTypeDefinition = baseType.GetGenericTypeDefinition();
+                    Type genericTypeDefinition = baseType.GetGenericTypeDefinition();
                     var name = genericTypeDefinition.Name;
                     if (name.StartsWith("PaginatedQuery`"))
                     {

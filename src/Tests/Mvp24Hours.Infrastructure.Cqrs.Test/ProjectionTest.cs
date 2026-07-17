@@ -28,7 +28,7 @@ public class ProjectionTest
 
         // Act
         await repository.InsertAsync(model);
-        var result = await repository.GetByIdAsync(model.Id);
+        TestReadModel? result = await repository.GetByIdAsync(model.Id);
 
         // Assert
         Assert.NotNull(result);
@@ -48,7 +48,7 @@ public class ProjectionTest
         // Act
         await repository.UpsertAsync(model1);
         await repository.UpsertAsync(model2);
-        var result = await repository.GetByIdAsync(id);
+        TestReadModel? result = await repository.GetByIdAsync(id);
 
         // Assert
         Assert.NotNull(result);
@@ -66,7 +66,7 @@ public class ProjectionTest
         await repository.InsertAsync(new TestReadModel { Id = Guid.NewGuid(), Name = "Item3", Status = "Inactive" });
 
         // Act
-        var activeItems = await repository.FindAsync(x => x.Status == "Active");
+        IReadOnlyList<TestReadModel> activeItems = await repository.FindAsync(x => x.Status == "Active");
 
         // Assert
         Assert.Equal(2, activeItems.Count);
@@ -89,8 +89,8 @@ public class ProjectionTest
         }
 
         // Act
-        var page1 = await repository.FindAsync(x => true, skip: 0, take: 3);
-        var page2 = await repository.FindAsync(x => true, skip: 3, take: 3);
+        IReadOnlyList<TestReadModel> page1 = await repository.FindAsync(x => true, skip: 0, take: 3);
+        IReadOnlyList<TestReadModel> page2 = await repository.FindAsync(x => true, skip: 3, take: 3);
 
         // Assert
         Assert.Equal(3, page1.Count);
@@ -188,7 +188,7 @@ public class ProjectionTest
         await handler.HandleAsync(@event, context);
 
         // Assert
-        var result = await repository.GetByIdAsync(@event.ItemId);
+        TestReadModel? result = await repository.GetByIdAsync(@event.ItemId);
         Assert.NotNull(result);
         Assert.Equal(@event.Name, result.Name);
     }
@@ -202,7 +202,7 @@ public class ProjectionTest
 
         // Act
         IProjectionHandler projectionHandler = handler;
-        var handledTypes = projectionHandler.HandledEventTypes;
+        IReadOnlyList<Type> handledTypes = projectionHandler.HandledEventTypes;
 
         // Assert
         Assert.Single(handledTypes);
@@ -354,7 +354,7 @@ public class ProjectionTest
 
         // Act
         await manager.SaveCheckpointAsync(checkpoint);
-        var result = await manager.GetCheckpointAsync("TestProjection");
+        ProjectionCheckpoint? result = await manager.GetCheckpointAsync("TestProjection");
 
         // Assert
         Assert.NotNull(result);
@@ -369,7 +369,7 @@ public class ProjectionTest
         var manager = new InMemoryProjectionCheckpointManager();
 
         // Act
-        var result = await manager.GetCheckpointAsync("UnknownProjection");
+        ProjectionCheckpoint? result = await manager.GetCheckpointAsync("UnknownProjection");
 
         // Assert
         Assert.Null(result);
@@ -393,13 +393,13 @@ public class ProjectionTest
             options.AddInMemoryRepository<TestReadModel>();
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        Assert.NotNull(provider.GetService<IProjectionPositionStore>());
-        Assert.NotNull(provider.GetService<IProjectionManager>());
-        Assert.NotNull(provider.GetService<IProjectionRebuildService>());
-        Assert.NotNull(provider.GetService<IReadModelRepository<TestReadModel>>());
+        Assert.NotNull(provider.GetRequiredService<IProjectionPositionStore>());
+        Assert.NotNull(provider.GetRequiredService<IProjectionManager>());
+        Assert.NotNull(provider.GetRequiredService<IProjectionRebuildService>());
+        Assert.NotNull(provider.GetRequiredService<IReadModelRepository<TestReadModel>>());
     }
 
     [Fact]
@@ -411,8 +411,8 @@ public class ProjectionTest
         // Act
         services.AddInMemoryReadModelRepository<TestReadModel>();
 
-        var provider = services.BuildServiceProvider();
-        var repository = provider.GetService<IReadModelRepository<TestReadModel>>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IReadModelRepository<TestReadModel>? repository = provider.GetRequiredService<IReadModelRepository<TestReadModel>>();
 
         // Assert
         Assert.NotNull(repository);

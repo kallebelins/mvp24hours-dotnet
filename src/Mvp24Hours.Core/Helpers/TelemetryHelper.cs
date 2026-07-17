@@ -345,9 +345,9 @@ namespace Mvp24Hours.Helpers
         {
             if (servicesStarted && services.Any(x => x.Key.HasFlag(level)))
             {
-                foreach (var key in services.Keys.Where(x => x.HasFlag(level)).ToList())
+                foreach (TelemetryLevels key in services.Keys.Where(x => x.HasFlag(level)).ToList())
                 {
-                    foreach (var item in services[key])
+                    foreach (ITelemetryService item in services[key])
                     {
                         item.Execute(eventName, args);
                     }
@@ -355,9 +355,9 @@ namespace Mvp24Hours.Helpers
             }
             if (servicesAction1Started && servicesAction1.Any(x => x.Key.HasFlag(level)))
             {
-                foreach (var key in servicesAction1.Keys.Where(x => x.HasFlag(level)).ToList())
+                foreach (TelemetryLevels key in servicesAction1.Keys.Where(x => x.HasFlag(level)).ToList())
                 {
-                    foreach (var item in servicesAction1[key])
+                    foreach (Action<string> item in servicesAction1[key])
                     {
                         item.Invoke(eventName);
                     }
@@ -365,9 +365,9 @@ namespace Mvp24Hours.Helpers
             }
             if (servicesAction2Started && servicesAction2.Any(x => x.Key.HasFlag(level)))
             {
-                foreach (var key in servicesAction2.Keys.Where(x => x.HasFlag(level)).ToList())
+                foreach (TelemetryLevels key in servicesAction2.Keys.Where(x => x.HasFlag(level)).ToList())
                 {
-                    foreach (var item in servicesAction2[key])
+                    foreach (Action<string, object[]> item in servicesAction2[key])
                     {
                         item.Invoke(eventName, args);
                     }
@@ -379,21 +379,21 @@ namespace Mvp24Hours.Helpers
         {
             if (serviceFiltersStarted && serviceFilters.TryGetValue(eventName, out List<ITelemetryService>? value1))
             {
-                foreach (var item in value1)
+                foreach (ITelemetryService item in value1)
                 {
                     item.Execute(eventName, args);
                 }
             }
             if (serviceActionFilters1Started && serviceActionFilters1.TryGetValue(eventName, out List<Action<string>>? value2))
             {
-                foreach (var item in value2)
+                foreach (Action<string> item in value2)
                 {
                     item.Invoke(eventName);
                 }
             }
             if (serviceActionFilters2Started && serviceActionFilters2.TryGetValue(eventName, out List<Action<string, object[]>>? value3))
             {
-                foreach (var item in value3)
+                foreach (Action<string, object[]> item in value3)
                 {
                     item.Invoke(eventName, args);
                 }

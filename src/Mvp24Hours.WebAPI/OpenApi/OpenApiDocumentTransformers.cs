@@ -51,14 +51,14 @@ namespace Mvp24Hours.WebAPI.OpenApi
             CancellationToken cancellationToken)
         {
             if (document.Paths == null) return Task.CompletedTask;
-            foreach (var path in document.Paths.Values)
+            foreach (IOpenApiPathItem path in document.Paths.Values)
             {
                 if (path.Operations == null) continue;
-                foreach (var operation in path.Operations.Values)
+                foreach (OpenApiOperation operation in path.Operations.Values)
                 {
-                    operation.Parameters ??= new List<IOpenApiParameter>();
+                    operation.Parameters ??= [];
 
-                    foreach (var (name, description, required) in _headers)
+                    foreach ((string? name, string? description, bool required) in _headers)
                     {
                         // Skip if already exists
                         if (operation.Parameters.Any(p => p.Name == name && p.In == ParameterLocation.Header))
@@ -130,12 +130,12 @@ namespace Mvp24Hours.WebAPI.OpenApi
             CancellationToken cancellationToken)
         {
             if (document.Paths == null) return Task.CompletedTask;
-            foreach (var path in document.Paths.Values)
+            foreach (IOpenApiPathItem path in document.Paths.Values)
             {
                 if (path.Operations == null) continue;
-                foreach (var operation in path.Operations.Values)
+                foreach (OpenApiOperation operation in path.Operations.Values)
                 {
-                    operation.Responses ??= new OpenApiResponses();
+                    operation.Responses ??= [];
 
                     if (_add401 && !operation.Responses.ContainsKey("401"))
                     {
@@ -209,10 +209,10 @@ namespace Mvp24Hours.WebAPI.OpenApi
             CancellationToken cancellationToken)
         {
             if (document.Paths == null) return Task.CompletedTask;
-            foreach (var path in document.Paths.Values)
+            foreach (IOpenApiPathItem path in document.Paths.Values)
             {
                 if (path.Operations == null) continue;
-                foreach (var operation in path.Operations.Values)
+                foreach (OpenApiOperation operation in path.Operations.Values)
                 {
                     if (operation.Deprecated)
                     {
@@ -251,8 +251,8 @@ namespace Mvp24Hours.WebAPI.OpenApi
             IEnumerable<string>? includeTags = null,
             IEnumerable<string>? excludeTags = null)
         {
-            _includeTags = includeTags != null ? new HashSet<string>(includeTags, StringComparer.OrdinalIgnoreCase) : new();
-            _excludeTags = excludeTags != null ? new HashSet<string>(excludeTags, StringComparer.OrdinalIgnoreCase) : new();
+            _includeTags = includeTags != null ? new HashSet<string>(includeTags, StringComparer.OrdinalIgnoreCase) : [];
+            _excludeTags = excludeTags != null ? new HashSet<string>(excludeTags, StringComparer.OrdinalIgnoreCase) : [];
         }
 
         /// <inheritdoc />
@@ -265,14 +265,14 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
             if (document.Paths == null) return Task.CompletedTask;
 
-            foreach (var (pathKey, path) in document.Paths)
+            foreach ((string? pathKey, IOpenApiPathItem? path) in document.Paths)
             {
                 var operationsToRemove = new List<HttpMethod>();
 
                 if (path.Operations == null) continue;
-                foreach (var (operationType, operation) in path.Operations)
+                foreach ((HttpMethod? operationType, OpenApiOperation? operation) in path.Operations)
                 {
-                    var operationTags = operation.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
+                    HashSet<string> operationTags = operation.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
 
                     // Check if should exclude
                     if (_excludeTags.Any() && operationTags.Overlaps(_excludeTags))
@@ -288,7 +288,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
                     }
                 }
 
-                foreach (var op in operationsToRemove)
+                foreach (HttpMethod op in operationsToRemove)
                 {
                     path.Operations.Remove(op);
                 }
@@ -370,12 +370,12 @@ namespace Mvp24Hours.WebAPI.OpenApi
 
             // Update 4xx and 5xx responses to reference ProblemDetails
             if (document.Paths == null) return Task.CompletedTask;
-            foreach (var path in document.Paths.Values)
+            foreach (IOpenApiPathItem path in document.Paths.Values)
             {
                 if (path.Operations == null) continue;
-                foreach (var operation in path.Operations.Values)
+                foreach (OpenApiOperation operation in path.Operations.Values)
                 {
-                    foreach (var (statusCode, response) in operation.Responses ?? new OpenApiResponses())
+                    foreach ((string? statusCode, IOpenApiResponse? response) in operation.Responses ?? [])
                     {
                         if (int.TryParse(statusCode, out var code) && code >= 400)
                         {
@@ -416,12 +416,12 @@ namespace Mvp24Hours.WebAPI.OpenApi
             CancellationToken cancellationToken)
         {
             if (document.Paths == null) return Task.CompletedTask;
-            foreach (var path in document.Paths.Values)
+            foreach (IOpenApiPathItem path in document.Paths.Values)
             {
                 if (path.Operations == null) continue;
-                foreach (var operation in path.Operations.Values)
+                foreach (OpenApiOperation operation in path.Operations.Values)
                 {
-                    foreach (var response in operation.Responses?.Values ?? Enumerable.Empty<IOpenApiResponse>())
+                    foreach (IOpenApiResponse response in operation.Responses?.Values ?? Enumerable.Empty<IOpenApiResponse>())
                     {
                         if (response is not OpenApiResponse openApiResponse)
                         {
@@ -429,7 +429,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
                         }
 
                         openApiResponse.Headers ??= new Dictionary<string, IOpenApiHeader>();
-                        var headers = openApiResponse.Headers;
+                        IDictionary<string, IOpenApiHeader> headers = openApiResponse.Headers;
 
                         if (!headers.ContainsKey("X-RateLimit-Limit"))
                         {
@@ -460,7 +460,7 @@ namespace Mvp24Hours.WebAPI.OpenApi
                     }
 
                     // Add 429 response
-                    operation.Responses ??= new OpenApiResponses();
+                    operation.Responses ??= [];
                     if (!operation.Responses.ContainsKey("429"))
                     {
                         operation.Responses["429"] = new OpenApiResponse

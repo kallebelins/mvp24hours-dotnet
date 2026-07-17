@@ -77,8 +77,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name ?? $"httpclient-{typeof(TApi).Name}",
                 sp =>
                 {
-                    var httpClient = sp.GetRequiredService<ITypedHttpClient<TApi>>();
-                    var logger = sp.GetRequiredService<ILogger<HttpClientHealthCheck<TApi>>>();
+                    ITypedHttpClient<TApi> httpClient = sp.GetRequiredService<ITypedHttpClient<TApi>>();
+                    ILogger<HttpClientHealthCheck<TApi>> logger = sp.GetRequiredService<ILogger<HttpClientHealthCheck<TApi>>>();
                     return new HttpClientHealthCheck<TApi>(httpClient, options, logger);
                 },
                 failureStatus,
@@ -127,8 +127,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name,
                 sp =>
                 {
-                    var lockFactory = sp.GetRequiredService<IDistributedLockFactory>();
-                    var logger = sp.GetRequiredService<ILogger<DistributedLockHealthCheck>>();
+                    IDistributedLockFactory lockFactory = sp.GetRequiredService<IDistributedLockFactory>();
+                    ILogger<DistributedLockHealthCheck> logger = sp.GetRequiredService<ILogger<DistributedLockHealthCheck>>();
                     return new DistributedLockHealthCheck(lockFactory, options, logger);
                 },
                 failureStatus,
@@ -177,8 +177,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name,
                 sp =>
                 {
-                    var fileStorage = sp.GetRequiredService<IFileStorage>();
-                    var logger = sp.GetRequiredService<ILogger<FileStorageHealthCheck>>();
+                    IFileStorage fileStorage = sp.GetRequiredService<IFileStorage>();
+                    ILogger<FileStorageHealthCheck> logger = sp.GetRequiredService<ILogger<FileStorageHealthCheck>>();
                     return new FileStorageHealthCheck(fileStorage, options, logger);
                 },
                 failureStatus,
@@ -227,8 +227,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name,
                 sp =>
                 {
-                    var emailService = sp.GetRequiredService<IEmailService>();
-                    var logger = sp.GetRequiredService<ILogger<EmailServiceHealthCheck>>();
+                    IEmailService emailService = sp.GetRequiredService<IEmailService>();
+                    ILogger<EmailServiceHealthCheck> logger = sp.GetRequiredService<ILogger<EmailServiceHealthCheck>>();
                     return new EmailServiceHealthCheck(emailService, options, logger);
                 },
                 failureStatus,
@@ -277,8 +277,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name,
                 sp =>
                 {
-                    var smsService = sp.GetRequiredService<ISmsService>();
-                    var logger = sp.GetRequiredService<ILogger<SmsServiceHealthCheck>>();
+                    ISmsService smsService = sp.GetRequiredService<ISmsService>();
+                    ILogger<SmsServiceHealthCheck> logger = sp.GetRequiredService<ILogger<SmsServiceHealthCheck>>();
                     return new SmsServiceHealthCheck(smsService, options, logger);
                 },
                 failureStatus,
@@ -327,8 +327,8 @@ namespace Mvp24Hours.Infrastructure.HealthChecks
                 name,
                 sp =>
                 {
-                    var jobScheduler = sp.GetRequiredService<IJobScheduler>();
-                    var logger = sp.GetRequiredService<ILogger<BackgroundJobHealthCheck>>();
+                    IJobScheduler jobScheduler = sp.GetRequiredService<IJobScheduler>();
+                    ILogger<BackgroundJobHealthCheck> logger = sp.GetRequiredService<ILogger<BackgroundJobHealthCheck>>();
                     return new BackgroundJobHealthCheck(jobScheduler, options, logger);
                 },
                 failureStatus,

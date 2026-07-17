@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
 
             try
             {
-                var cacheOptions = ConvertToMemoryCacheEntryOptions(options);
+                MemoryCacheEntryOptions cacheOptions = ConvertToMemoryCacheEntryOptions(options);
                 _cache.Set(key, value, cacheOptions);
                 _logger?.LogDebug("Cache SET for key: {Key}", key);
                 return Task.CompletedTask;
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
 
             try
             {
-                var cacheOptions = ConvertToMemoryCacheEntryOptions(options);
+                MemoryCacheEntryOptions cacheOptions = ConvertToMemoryCacheEntryOptions(options);
                 _cache.Set(key, value, cacheOptions);
                 _logger?.LogDebug("Cache SET for key: {Key}", key);
                 return Task.CompletedTask;
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
         public async Task<Dictionary<string, T>> GetManyAsync<T>(string[] keys, CancellationToken cancellationToken = default) where T : class
         {
             if (keys == null || keys.Length == 0)
-                return new Dictionary<string, T>();
+                return [];
 
             var result = new Dictionary<string, T>();
 
@@ -236,7 +236,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
                 if (string.IsNullOrWhiteSpace(key))
                     continue;
 
-                var value = await GetAsync<T>(key, cancellationToken);
+                T? value = await GetAsync<T>(key, cancellationToken);
                 if (value != null)
                 {
                     result[key] = value;
@@ -252,7 +252,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             if (values == null || values.Count == 0)
                 return Task.CompletedTask;
 
-            var tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
+            IEnumerable<Task> tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
             return Task.WhenAll(tasks);
         }
 
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
                 if (_cache.TryGetValue(key, out var value))
                 {
                     // Re-set with same value to refresh sliding expiration
-                    var entry = _cache.CreateEntry(key);
+                    ICacheEntry entry = _cache.CreateEntry(key);
                     entry.Value = value;
                     entry.Dispose();
                 }

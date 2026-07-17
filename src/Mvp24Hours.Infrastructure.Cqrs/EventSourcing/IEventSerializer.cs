@@ -159,8 +159,8 @@ public class DefaultEventTypeResolver : IEventTypeResolver
 /// </summary>
 public class RegistryEventTypeResolver : IEventTypeResolver
 {
-    private readonly Dictionary<string, Type> _typesByName = new();
-    private readonly Dictionary<Type, string> _namesByType = new();
+    private readonly Dictionary<string, Type> _typesByName = [];
+    private readonly Dictionary<Type, string> _namesByType = [];
 
     /// <summary>
     /// Registers an event type with a name.
@@ -191,7 +191,7 @@ public class RegistryEventTypeResolver : IEventTypeResolver
     /// <inheritdoc />
     public Type? Resolve(string typeName)
     {
-        if (_typesByName.TryGetValue(typeName, out var type))
+        if (_typesByName.TryGetValue(typeName, out Type? type))
         {
             return type;
         }

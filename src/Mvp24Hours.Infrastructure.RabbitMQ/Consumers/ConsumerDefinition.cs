@@ -25,7 +25,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             ConsumerType = typeof(TConsumer);
 
             // Auto-detect message type from IMessageConsumer<T> interface
-            var consumerInterface = ConsumerType
+            Type? consumerInterface = ConsumerType
                 .GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));

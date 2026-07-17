@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
 
             services.TryAddSingleton<INativeResiliencePipeline>(sp =>
             {
-                var logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline>();
+                ILogger<NativeResiliencePipeline>? logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline>();
                 return new NativeResiliencePipeline(options, logger);
             });
 
@@ -118,7 +118,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
             // Register as keyed service for .NET 8+ Keyed Services
             services.AddKeyedSingleton<INativeResiliencePipeline>(name, (sp, _) =>
             {
-                var logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline>();
+                ILogger<NativeResiliencePipeline>? logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline>();
                 return new NativeResiliencePipeline(options, logger);
             });
 
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
 
             services.TryAddSingleton<INativeResiliencePipeline<TResult>>(sp =>
             {
-                var logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline<TResult>>();
+                ILogger<NativeResiliencePipeline<TResult>>? logger = sp.GetService<ILoggerFactory>()?.CreateLogger<NativeResiliencePipeline<TResult>>();
                 return new NativeResiliencePipeline<TResult>(options, logger);
             });
 
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
             this IServiceCollection services,
             Action<NativeResilienceOptions> configure)
         {
-            var options = NativeResilienceOptions.Database;
+            NativeResilienceOptions options = NativeResilienceOptions.Database;
             configure(options);
             return services.AddNativeResilience("database", options);
         }
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Native
             this IServiceCollection services,
             Action<NativeResilienceOptions> configure)
         {
-            var options = NativeResilienceOptions.Messaging;
+            NativeResilienceOptions options = NativeResilienceOptions.Messaging;
             configure(options);
             return services.AddNativeResilience("messaging", options);
         }

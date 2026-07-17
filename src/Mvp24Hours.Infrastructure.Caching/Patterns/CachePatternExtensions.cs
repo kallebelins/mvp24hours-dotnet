@@ -39,8 +39,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 typeof(IReadThroughCache<T>),
                 sp =>
                 {
-                    var cache = sp.GetRequiredService<ICacheProvider>();
-                    var logger = sp.GetService<ILogger<ReadThroughCache<T>>>();
+                    ICacheProvider cache = sp.GetRequiredService<ICacheProvider>();
+                    ILogger<ReadThroughCache<T>>? logger = sp.GetService<ILogger<ReadThroughCache<T>>>();
                     return new ReadThroughCache<T>(cache, loadFromSource, getCacheOptions, logger);
                 },
                 lifetime));
@@ -72,8 +72,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 typeof(IWriteThroughCache<T>),
                 sp =>
                 {
-                    var cache = sp.GetRequiredService<ICacheProvider>();
-                    var logger = sp.GetService<ILogger<WriteThroughCache<T>>>();
+                    ICacheProvider cache = sp.GetRequiredService<ICacheProvider>();
+                    ILogger<WriteThroughCache<T>>? logger = sp.GetService<ILogger<WriteThroughCache<T>>>();
                     return new WriteThroughCache<T>(cache, saveToSource, getCacheOptions, logger);
                 },
                 lifetime));
@@ -105,8 +105,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 typeof(IWriteBehindCache<T>),
                 sp =>
                 {
-                    var cache = sp.GetRequiredService<ICacheProvider>();
-                    var logger = sp.GetService<ILogger<WriteBehindCache<T>>>();
+                    ICacheProvider cache = sp.GetRequiredService<ICacheProvider>();
+                    ILogger<WriteBehindCache<T>>? logger = sp.GetService<ILogger<WriteBehindCache<T>>>();
                     return new WriteBehindCache<T>(cache, saveToSource, getCacheOptions, logger);
                 },
                 lifetime));
@@ -142,8 +142,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 typeof(IRefreshAheadCache<T>),
                 sp =>
                 {
-                    var cache = sp.GetRequiredService<ICacheProvider>();
-                    var logger = sp.GetService<ILogger<RefreshAheadCache<T>>>();
+                    ICacheProvider cache = sp.GetRequiredService<ICacheProvider>();
+                    ILogger<RefreshAheadCache<T>>? logger = sp.GetService<ILogger<RefreshAheadCache<T>>>();
                     return new RefreshAheadCache<T>(cache, loadFromSource, expiration, refreshThreshold, getCacheOptions, logger);
                 },
                 lifetime));

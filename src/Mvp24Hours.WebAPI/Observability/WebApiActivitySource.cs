@@ -317,7 +317,7 @@ public static class WebApiActivitySource
     /// <returns>An Activity if listeners are registered, null otherwise.</returns>
     public static Activity? StartHttpRequestActivity(string method, string path, string? correlationId = null)
     {
-        var activity = Source.StartActivity(ActivityNames.HttpRequest, ActivityKind.Server);
+        Activity? activity = Source.StartActivity(ActivityNames.HttpRequest, ActivityKind.Server);
 
         if (activity == null)
             return null;

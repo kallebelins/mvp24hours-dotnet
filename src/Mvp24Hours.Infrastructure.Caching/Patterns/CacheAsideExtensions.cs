@@ -119,14 +119,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 throw new ArgumentNullException(nameof(factory));
 
             // Try to get from cache first
-            var cached = await cache.GetAsync<T>(key, cancellationToken);
+            T? cached = await cache.GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
             }
 
             // Cache miss - load from source
-            var value = await factory(cancellationToken);
+            T? value = await factory(cancellationToken);
             if (value != null)
             {
                 await cache.SetAsync(key, value, options, cancellationToken);
@@ -192,14 +192,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 throw new ArgumentNullException(nameof(factory));
 
             // Try to get from cache first
-            var cached = await cache.GetAsync<T>(key, cancellationToken);
+            T? cached = await cache.GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
             }
 
             // Cache miss - load from source
-            var value = await factory();
+            T? value = await factory();
             if (value != null)
             {
                 await cache.SetAsync(key, value, options, cancellationToken);

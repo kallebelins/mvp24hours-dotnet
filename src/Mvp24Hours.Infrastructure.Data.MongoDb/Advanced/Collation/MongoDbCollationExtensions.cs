@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation
             MongoDbCollationOptions collationOptions,
             CancellationToken cancellationToken = default)
         {
-            var filter = Builders<TDocument>.Filter.Eq(fieldName, value);
+            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Eq(fieldName, value);
             return await FindWithCollationAsync(collection, filter, collationOptions, cancellationToken);
         }
 
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation
             int? limit = null,
             CancellationToken cancellationToken = default)
         {
-            var sort = ascending
+            SortDefinition<TDocument> sort = ascending
                 ? Builders<TDocument>.Sort.Ascending(sortField)
                 : Builders<TDocument>.Sort.Descending(sortField);
 
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation
                 Collation = collationOptions.ToCollation()
             };
 
-            var findFluent = collection.Find(FilterDefinition<TDocument>.Empty, findOptions)
+            IFindFluent<TDocument, TDocument> findFluent = collection.Find(FilterDefinition<TDocument>.Empty, findOptions)
                 .Sort(sort);
 
             if (limit.HasValue)
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation
             MongoDbCollationOptions collationOptions,
             CancellationToken cancellationToken = default)
         {
-            var indexKeys = Builders<TDocument>.IndexKeys.Ascending(field);
+            IndexKeysDefinition<TDocument> indexKeys = Builders<TDocument>.IndexKeys.Ascending(field);
             var indexOptions = new CreateIndexOptions
             {
                 Collation = collationOptions.ToCollation()

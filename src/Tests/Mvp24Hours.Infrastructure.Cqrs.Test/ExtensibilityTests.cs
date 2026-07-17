@@ -48,7 +48,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class TestPreProcessor : IPreProcessor<TestCommand>
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public Task ProcessAsync(TestCommand request, CancellationToken cancellationToken)
         {
@@ -60,7 +60,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class GlobalTestPreProcessor : IPreProcessorGlobal
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public Task ProcessAsync(object request, CancellationToken cancellationToken)
         {
@@ -84,8 +84,8 @@ public class ExtensibilityTests
         });
         services.AddPreProcessor<TestCommand, TestPreProcessor>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new TestCommand("test"));
@@ -110,8 +110,8 @@ public class ExtensibilityTests
         });
         services.AddGlobalPreProcessor<GlobalTestPreProcessor>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         await mediator.SendAsync(new TestCommand("test1"));
@@ -129,7 +129,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class TestPostProcessor : IPostProcessor<TestCommand, string>
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public Task ProcessAsync(TestCommand request, string response, CancellationToken cancellationToken)
         {
@@ -141,7 +141,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class GlobalTestPostProcessor : IPostProcessorGlobal
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public Task ProcessAsync(object request, object? response, CancellationToken cancellationToken)
         {
@@ -165,8 +165,8 @@ public class ExtensibilityTests
         });
         services.AddPostProcessor<TestCommand, string, TestPostProcessor>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new TestCommand("test"));
@@ -191,8 +191,8 @@ public class ExtensibilityTests
         });
         services.AddGlobalPostProcessor<GlobalTestPostProcessor>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         await mediator.SendAsync(new TestCommand("test1"));
@@ -260,8 +260,8 @@ public class ExtensibilityTests
         });
         services.AddExceptionHandler<FailingCommand, string, InvalidOperationException, InvalidOperationExceptionHandler>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new FailingCommand("test"));
@@ -283,11 +283,11 @@ public class ExtensibilityTests
         });
         services.AddExceptionHandler<FailingCommand, string, InvalidOperationException, RethrowExceptionHandler>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+        ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             mediator.SendAsync(new FailingCommand("test")));
         Assert.Equal("Replaced exception", exception.Message);
     }
@@ -304,11 +304,11 @@ public class ExtensibilityTests
             options.WithExceptionHandlers();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mediator.SendAsync(new FailingCommand("test")));
         Assert.Equal("Command failed", exception.Message);
     }
@@ -320,7 +320,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class TestPipelineHook : PipelineHookBase
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public override Task OnPipelineStartAsync(object request, Type requestType, CancellationToken cancellationToken)
         {
@@ -344,7 +344,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class TypedTestPipelineHook : PipelineHookBase<TestCommand>
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public override Task OnPipelineStartAsync(TestCommand request, CancellationToken cancellationToken)
         {
@@ -374,8 +374,8 @@ public class ExtensibilityTests
         });
         services.AddPipelineHook<TestPipelineHook>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         await mediator.SendAsync(new TestCommand("test"));
@@ -401,8 +401,8 @@ public class ExtensibilityTests
         });
         services.AddPipelineHook<TestPipelineHook>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -427,8 +427,8 @@ public class ExtensibilityTests
         });
         services.AddPipelineHook<TestCommand, TypedTestPipelineHook>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         await mediator.SendAsync(new TestCommand("test"));
@@ -446,7 +446,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class TestMediatorDecorator : MediatorDecoratorBase
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public TestMediatorDecorator(IMediator inner) : base(inner) { }
 
@@ -455,7 +455,7 @@ public class ExtensibilityTests
             CancellationToken cancellationToken = default)
         {
             ExecutionLog.Add($"Before Send: {request.GetType().Name}");
-            var result = await base.SendAsync(request, cancellationToken);
+            TResponse? result = await base.SendAsync(request, cancellationToken);
             ExecutionLog.Add($"After Send: {request.GetType().Name}");
             return result;
         }
@@ -464,7 +464,7 @@ public class ExtensibilityTests
     [Trait("Category", "Unit")]
     public class AnotherMediatorDecorator : MediatorDecoratorBase
     {
-        public static List<string> ExecutionLog { get; } = new();
+        public static List<string> ExecutionLog { get; } = [];
 
         public AnotherMediatorDecorator(IMediator inner) : base(inner) { }
 
@@ -473,7 +473,7 @@ public class ExtensibilityTests
             CancellationToken cancellationToken = default)
         {
             ExecutionLog.Add($"AnotherDecorator Before: {request.GetType().Name}");
-            var result = await base.SendAsync(request, cancellationToken);
+            TResponse? result = await base.SendAsync(request, cancellationToken);
             ExecutionLog.Add($"AnotherDecorator After: {request.GetType().Name}");
             return result;
         }
@@ -493,8 +493,8 @@ public class ExtensibilityTests
         });
         services.AddMediatorDecorator<TestMediatorDecorator>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new TestCommand("test"));
@@ -522,8 +522,8 @@ public class ExtensibilityTests
         services.AddMediatorDecorator<TestMediatorDecorator>();
         services.AddMediatorDecorator<AnotherMediatorDecorator>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new TestCommand("test"));
@@ -563,8 +563,8 @@ public class ExtensibilityTests
         services.AddPipelineHook<TestPipelineHook>();
         services.AddMediatorDecorator<TestMediatorDecorator>();
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
         var result = await mediator.SendAsync(new TestCommand("integration"));
@@ -590,7 +590,7 @@ public class ExtensibilityTests
         Assert.Null(handled.ExceptionToRethrow);
 
         // NotHandled
-        var notHandled = ExceptionHandlingResult<string>.NotHandled;
+        ExceptionHandlingResult<string> notHandled = ExceptionHandlingResult<string>.NotHandled;
         Assert.False(notHandled.IsHandled);
         Assert.False(notHandled.ShouldRethrow);
         Assert.Null(notHandled.Response);

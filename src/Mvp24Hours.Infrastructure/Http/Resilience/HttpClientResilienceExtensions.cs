@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             var builder = new HttpResiliencePolicyBuilder(name);
             configure(builder);
 
-            var clientBuilder = services.AddHttpClient(name);
+            IHttpClientBuilder clientBuilder = services.AddHttpClient(name);
             builder.ApplyTo(clientBuilder);
 
             return clientBuilder;
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
             var builder = new HttpResiliencePolicyBuilder(name);
             configure(builder);
 
-            var clientBuilder = services.AddHttpClient<TClient>();
+            IHttpClientBuilder clientBuilder = services.AddHttpClient<TClient>();
             builder.ApplyTo(clientBuilder);
 
             return clientBuilder;
@@ -155,7 +155,7 @@ namespace Mvp24Hours.Infrastructure.Http.Resilience
     public class HttpResiliencePolicyBuilder
     {
         private readonly string _clientName;
-        private readonly List<IHttpResiliencePolicy> _policies = new();
+        private readonly List<IHttpResiliencePolicy> _policies = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpResiliencePolicyBuilder"/> class.

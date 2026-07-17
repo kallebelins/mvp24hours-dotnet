@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Extensions
             this IServiceCollection services,
             DateTime? initialTime = null)
         {
-            var clock = initialTime.HasValue
+            MockClock clock = initialTime.HasValue
                 ? new MockClock(initialTime.Value)
                 : new MockClock();
 
@@ -140,7 +140,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Extensions
             // Add a default HttpClient using the test handler
             services.AddTransient(sp =>
             {
-                var h = sp.GetRequiredService<TestHttpMessageHandler>();
+                TestHttpMessageHandler h = sp.GetRequiredService<TestHttpMessageHandler>();
                 return new HttpClient(h);
             });
 
@@ -313,7 +313,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Extensions
         private static void RemoveAll<T>(this IServiceCollection services)
         {
             var descriptors = services.Where(d => d.ServiceType == typeof(T)).ToList();
-            foreach (var descriptor in descriptors)
+            foreach (ServiceDescriptor? descriptor in descriptors)
             {
                 services.Remove(descriptor);
             }

@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -77,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <inheritdoc />
         public override Task OnBeforeInsertAsync<T>(T entity, CancellationToken cancellationToken = default)
         {
-            var now = GetCurrentTime();
+            DateTime now = GetCurrentTime();
             var currentUser = GetCurrentUser();
 
             ApplyCreateAudit(entity, now, currentUser);
@@ -91,7 +92,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <inheritdoc />
         public override Task OnBeforeUpdateAsync<T>(T entity, CancellationToken cancellationToken = default)
         {
-            var now = GetCurrentTime();
+            DateTime now = GetCurrentTime();
             var currentUser = GetCurrentUser();
 
             ApplyUpdateAudit(entity, now, currentUser);
@@ -149,21 +150,21 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         private static void TrySetGenericAuditProperty<T>(T entity, string propertyName, object value, Type genericInterfaceType)
             where T : class
         {
-            var entityType = entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == genericInterfaceType)
                 {
-                    var property = entityType.GetProperty(propertyName);
+                    PropertyInfo? property = entityType.GetProperty(propertyName);
                     if (property != null && property.CanWrite)
                     {
                         try
                         {
                             // Try to convert value to the expected type
-                            var targetType = property.PropertyType;
-                            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                            Type targetType = property.PropertyType;
+                            Type underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
                             if (underlyingType == typeof(string))
                             {

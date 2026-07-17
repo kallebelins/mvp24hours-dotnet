@@ -39,7 +39,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             {
                 var errors = new List<IMessageResult>();
 
-                foreach (var result in validationResults)
+                foreach (ValidationResult result in validationResults)
                 {
                     var propertyName = result.MemberNames.Any()
                         ? string.Join(", ", result.MemberNames)

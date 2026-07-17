@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
@@ -121,7 +122,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         };
 
         // Use reflection to call the Publish method
-        var publishMethod = rabbitMqClientType.GetMethod("Publish");
+        MethodInfo? publishMethod = rabbitMqClientType.GetMethod("Publish");
         if (publishMethod != null)
         {
             try
@@ -184,7 +185,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
                 "RabbitMQ client is not registered. Call services.AddMvpRabbitMQ() to configure.");
         }
 
-        var publishMethod = rabbitMqClientType.GetMethod("Publish");
+        MethodInfo? publishMethod = rabbitMqClientType.GetMethod("Publish");
         if (publishMethod != null)
         {
             publishMethod.Invoke(rabbitMqClient, new object[] { wrapper, wrapper.CorrelationId });

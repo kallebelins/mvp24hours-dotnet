@@ -274,10 +274,10 @@ namespace Mvp24Hours.Extensions
         {
             // Command timeout is set at the database level
             // This requires the options to already be configured with a provider
-            var extension = options.Options.FindExtension<RelationalOptionsExtension>();
+            RelationalOptionsExtension? extension = options.Options.FindExtension<RelationalOptionsExtension>();
             if (extension != null)
             {
-                var newExtension = extension.WithCommandTimeout(timeoutSeconds);
+                RelationalOptionsExtension newExtension = extension.WithCommandTimeout(timeoutSeconds);
                 ((IDbContextOptionsBuilderInfrastructure)options).AddOrUpdateExtension(newExtension);
             }
 
@@ -377,9 +377,9 @@ namespace Mvp24Hours.Extensions
 
             services.AddSingleton(sp =>
             {
-                var options = sp.GetService<IOptions<EFCoreResilienceOptions>>()?.Value
+                EFCoreResilienceOptions options = sp.GetService<IOptions<EFCoreResilienceOptions>>()?.Value
                     ?? new EFCoreResilienceOptions();
-                var logger = sp.GetService<ILoggerFactory>()?.CreateLogger<DbContextCircuitBreaker>();
+                ILogger<DbContextCircuitBreaker>? logger = sp.GetService<ILoggerFactory>()?.CreateLogger<DbContextCircuitBreaker>();
                 return new DbContextCircuitBreaker(options, logger);
             });
 
@@ -475,7 +475,7 @@ namespace Mvp24Hours.Extensions
                     // Use custom execution strategy for advanced retry logic
                     sqlOptions.ExecutionStrategy(dependencies =>
                     {
-                        var logger = serviceProvider?.GetService<ILoggerFactory>()
+                        ILogger<MvpExecutionStrategy>? logger = serviceProvider?.GetService<ILoggerFactory>()
                             ?.CreateLogger<MvpExecutionStrategy>();
 
                         return new MvpExecutionStrategy(

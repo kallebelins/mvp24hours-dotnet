@@ -90,10 +90,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         {
             if (context == null) return;
 
-            var now = GetCurrentTime();
+            DateTime now = GetCurrentTime();
             var currentUser = GetCurrentUser();
 
-            foreach (var entry in context.ChangeTracker.Entries())
+            foreach (EntityEntry entry in context.ChangeTracker.Entries())
             {
                 if (entry.Entity is IAuditableEntity auditableEntity)
                 {
@@ -142,10 +142,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private void TryApplyGenericAudit(EntityEntry entry, DateTime now, string currentUser)
         {
-            var entityType = entry.Entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entry.Entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IAuditableEntity<>))
                 {
@@ -162,8 +162,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                             SetPropertyValue(entry, "ModifiedAt", now);
                             SetPropertyValue(entry, "ModifiedBy", currentUser);
                             // Prevent modification of creation audit fields
-                            var createdAtProp = entry.Property("CreatedAt");
-                            var createdByProp = entry.Property("CreatedBy");
+                            PropertyEntry createdAtProp = entry.Property("CreatedAt");
+                            PropertyEntry createdByProp = entry.Property("CreatedBy");
                             if (createdAtProp != null) createdAtProp.IsModified = false;
                             if (createdByProp != null) createdByProp.IsModified = false;
                             break;
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private static void SetPropertyValue(EntityEntry entry, string propertyName, object? value)
         {
-            var property = entry.Property(propertyName);
+            PropertyEntry property = entry.Property(propertyName);
             if (property != null)
             {
                 property.CurrentValue = value;

@@ -74,7 +74,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
             var services = new ServiceCollection();
 
             services.AddMvp24HoursRabbitMQ(
-                new List<Type> { typeof(CustomerConsumer) },
+                [typeof(CustomerConsumer)],
                 connectionOptions =>
                 {
                     connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
             services.AddTransient(x => new CustomerEvent() { Name = "event" });
 
             services.AddMvp24HoursRabbitMQ(
-                new List<Type> { typeof(CustomerWithCtorConsumer) },
+                [typeof(CustomerWithCtorConsumer)],
                 connectionOptions =>
                 {
                     connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
             services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
             services.AddTransient(x => new CustomerEvent() { Name = "event" });
 
-            var consumers = typeof(Test1RabbitMQ).Assembly
+            Type[] consumers = typeof(Test1RabbitMQ).Assembly
                     .GetExportedTypes()
                     .Where(t => t.InheritsOrImplements(typeof(IMvpRabbitMQConsumer)))
                     .ToArray();
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         {
             SetupTypeAssembly();
             // arrange
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // act
             string result = client.Publish(new CustomerEvent
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         public void CreateConsumerAssembly()
         {
             SetupTypeAssembly();
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
             client.Publish(new CustomerEvent
@@ -187,7 +187,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         public void CreateConsumerWithoutInjection()
         {
             SetupTypeAssemblyWithoutInjection();
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
             client.Publish(new CustomerEvent
@@ -210,7 +210,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         {
             SetupTypeDefined();
             // arrange
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // act
             string result = client.Publish(new CustomerEvent
@@ -228,7 +228,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         public void CreateConsumerDefined()
         {
             SetupTypeDefined();
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
             client.Publish(new CustomerEvent
@@ -250,7 +250,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         public void CreateConsumerDefinedList()
         {
             SetupTypeDefinedList();
-            var client = serviceProvider.GetService<MvpRabbitMQClient>();
+            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
             client.Publish(new CustomerEvent

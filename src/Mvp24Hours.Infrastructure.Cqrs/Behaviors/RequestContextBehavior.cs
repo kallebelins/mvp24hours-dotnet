@@ -6,6 +6,7 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -89,11 +90,11 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         // Check if we already have a context (nested request)
-        var existingContext = _contextAccessor.Context;
+        IRequestContext? existingContext = _contextAccessor.Context;
         if (existingContext != null)
         {
             // Create a child context for the nested request
-            var childContext = existingContext.CreateChildContext();
+            IRequestContext childContext = existingContext.CreateChildContext();
             _contextAccessor.Context = childContext;
 
             _logger?.LogDebug(
@@ -119,7 +120,7 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
         var userId = _userContext?.UserId;
         var tenantId = GetTenantIdFromHttpContext();
 
-        var context = _contextFactory.Create(
+        IRequestContext context = _contextFactory.Create(
             correlationId: correlationId,
             causationId: causationId,
             userId: userId,
@@ -146,12 +147,12 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
 
     private string? GetCorrelationIdFromHttpContext()
     {
-        var httpContext = _httpContextAccessor?.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
             return null;
 
         // Try to get from header
-        if (httpContext.Request.Headers.TryGetValue(CorrelationIdHeader, out var headerValue))
+        if (httpContext.Request.Headers.TryGetValue(CorrelationIdHeader, out StringValues headerValue))
         {
             return headerValue.ToString();
         }
@@ -162,11 +163,11 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
 
     private string? GetCausationIdFromHttpContext()
     {
-        var httpContext = _httpContextAccessor?.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
             return null;
 
-        if (httpContext.Request.Headers.TryGetValue(CausationIdHeader, out var headerValue))
+        if (httpContext.Request.Headers.TryGetValue(CausationIdHeader, out StringValues headerValue))
         {
             return headerValue.ToString();
         }
@@ -176,7 +177,7 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
 
     private string? GetTenantIdFromHttpContext()
     {
-        var httpContext = _httpContextAccessor?.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
             return null;
 
@@ -185,7 +186,7 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
 
         foreach (var header in tenantHeaders)
         {
-            if (httpContext.Request.Headers.TryGetValue(header, out var headerValue))
+            if (httpContext.Request.Headers.TryGetValue(header, out StringValues headerValue))
             {
                 return headerValue.ToString();
             }

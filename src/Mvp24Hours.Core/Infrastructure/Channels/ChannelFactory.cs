@@ -52,7 +52,7 @@ public sealed class ChannelFactory : IChannelFactory
     /// <inheritdoc />
     public IChannel<T> Create<T>(MvpChannelOptions? options = null)
     {
-        var effectiveOptions = options ?? new MvpChannelOptions();
+        MvpChannelOptions effectiveOptions = options ?? new MvpChannelOptions();
 
         _logger?.LogDebug(
             "Creating channel of type {Type}, bounded={IsBounded}, capacity={Capacity}",

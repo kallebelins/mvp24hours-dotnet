@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
             if (smsService == null) throw new ArgumentNullException(nameof(smsService));
             if (string.IsNullOrEmpty(phoneNumber)) throw new ArgumentNullException(nameof(phoneNumber));
 
-            var messages = smsService.GetMessagesSentTo(phoneNumber);
+            IEnumerable<SmsMessage> messages = smsService.GetMessagesSentTo(phoneNumber);
             if (!messages.Any())
             {
                 throw new AssertionException(
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             if (smsService == null) throw new ArgumentNullException(nameof(smsService));
 
-            var last = smsService.GetLastSentMessage();
+            SmsMessage? last = smsService.GetLastSentMessage();
             if (last == null)
             {
                 throw new AssertionException("No SMS messages were sent.");

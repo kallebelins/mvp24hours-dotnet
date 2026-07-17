@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
         {
             var spanName = $"TypedOperation.{_operationName}";
 
-            using var activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
 
             if (activity != null)
             {
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
 
             try
             {
-                var result = await _innerOperation.ExecuteAsync(input, cancellationToken);
+                IOperationResult<TOutput> result = await _innerOperation.ExecuteAsync(input, cancellationToken);
 
                 if (activity != null)
                 {
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
         {
             var spanName = $"TypedOperation.{_operationName}.Rollback";
 
-            using var activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
 
             if (activity != null)
             {

@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Specifications
                 throw new ArgumentNullException(nameof(specification));
             }
 
-            var query = inputQuery;
+            IQueryable<T> query = inputQuery;
 
             // Apply criteria (Where clause)
             if (specification.IsSatisfiedByExpression != null)
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Specifications
             {
                 IOrderedQueryable<T>? orderedQuery = null;
 
-                foreach (var (keySelector, descending) in specification.OrderBy)
+                foreach ((Expression<Func<T, object>>? keySelector, bool descending) in specification.OrderBy)
                 {
                     if (orderedQuery == null)
                     {
@@ -223,13 +223,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Specifications
                 return null;
             }
 
-            var sortBuilder = Builders<T>.Sort;
+            SortDefinitionBuilder<T> sortBuilder = Builders<T>.Sort;
             SortDefinition<T>? sort = null;
 
-            foreach (var (keySelector, descending) in specification.OrderBy)
+            foreach ((Expression<Func<T, object>>? keySelector, bool descending) in specification.OrderBy)
             {
                 var fieldName = GetFieldName(keySelector);
-                var fieldSort = descending
+                SortDefinition<T> fieldSort = descending
                     ? sortBuilder.Descending(fieldName)
                     : sortBuilder.Ascending(fieldName);
 

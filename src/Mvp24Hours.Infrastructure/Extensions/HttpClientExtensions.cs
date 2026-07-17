@@ -5,6 +5,7 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -192,7 +193,7 @@ namespace Mvp24Hours.Extensions
 
                 _logger?.LogDebug("Executing {Method} request to {Url}", method, urlRequest);
 
-                var response = await client.SendAsync(request);
+                HttpResponseMessage response = await client.SendAsync(request);
 
                 var responseContent = string.Empty;
 
@@ -227,7 +228,7 @@ namespace Mvp24Hours.Extensions
 
             if (headers != null && headers.AnyOrNotNull())
             {
-                foreach (var keyValue in headers)
+                foreach (KeyValuePair<string, string> keyValue in headers)
                 {
                     if (!keyValue.Key.HasValue() || !keyValue.Value.HasValue())
                         continue;
@@ -260,14 +261,14 @@ namespace Mvp24Hours.Extensions
 
         public static HttpClient PropagateHeaderKey(this HttpClient c, IServiceCollection services, params string[] keys)
         {
-            var serviceProvider = services.BuildServiceProvider();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
             c.PropagateHeaderKey(serviceProvider, keys);
             return c;
         }
 
         public static HttpClient PropagateHeaderKey(this HttpClient c, IServiceProvider serviceProvider, params string[] keys)
         {
-            var httpAccessor = serviceProvider.GetService<IHttpContextAccessor>();
+            IHttpContextAccessor? httpAccessor = serviceProvider.GetService<IHttpContextAccessor>();
             c.PropagateHeaderKey(httpAccessor, keys);
             return c;
         }
@@ -285,14 +286,14 @@ namespace Mvp24Hours.Extensions
 
         public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IServiceCollection services, params string[] keys)
         {
-            var serviceProvider = services.BuildServiceProvider();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
             request.PropagateHeaderKey(serviceProvider, keys);
             return request;
         }
 
         public static HttpRequestMessage PropagateHeaderKey(this HttpRequestMessage request, IServiceProvider serviceProvider, params string[] keys)
         {
-            var httpAccessor = serviceProvider.GetService<IHttpContextAccessor>();
+            IHttpContextAccessor? httpAccessor = serviceProvider.GetService<IHttpContextAccessor>();
             request.PropagateHeaderKey(httpAccessor, keys);
             return request;
         }
@@ -303,7 +304,7 @@ namespace Mvp24Hours.Extensions
             {
                 foreach (var key in keys)
                 {
-                    var headers = httpAccessor.HttpContext.Request.Headers;
+                    IHeaderDictionary headers = httpAccessor.HttpContext.Request.Headers;
                     var headerValue = headers.GetHeaderValue(key);
                     if (headerValue.HasValue())
                         request.Headers.TryAddWithoutValidation(key, headerValue);
@@ -347,7 +348,7 @@ namespace Mvp24Hours.Extensions
             where T : class
         {
             if (!queryString.HasValue()) return null;
-            var dict = HttpUtility.ParseQueryString(queryString);
+            NameValueCollection dict = HttpUtility.ParseQueryString(queryString);
             string json = JsonConvert.SerializeObject(dict.Cast<string>().ToDictionary(k => k, v => dict[v]));
             return JsonConvert.DeserializeObject<T>(json);
         }

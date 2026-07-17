@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Email.Bulk
             options ??= new BulkSendOptions();
             var messagesList = messages.ToList();
             var results = new List<EmailSendResult>();
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
 
             _logger?.LogInformation("Starting bulk email send: {Count} messages", messagesList.Count);
 
@@ -105,8 +105,8 @@ namespace Mvp24Hours.Infrastructure.Email.Bulk
                     cancellationToken);
             }
 
-            var endTime = DateTimeOffset.UtcNow;
-            var duration = endTime - startTime;
+            DateTimeOffset endTime = DateTimeOffset.UtcNow;
+            TimeSpan duration = endTime - startTime;
 
             var bulkResult = new EmailBulkSendResult
             {
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Email.Bulk
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var message = messages[i];
+                EmailMessage message = messages[i];
                 EmailSendResult result;
 
                 try
@@ -190,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Email.Bulk
             for (int i = 0; i < messages.Count; i++)
             {
                 var index = i;
-                var message = messages[index];
+                EmailMessage message = messages[index];
 
                 var task = Task.Run(async () =>
                 {
@@ -326,7 +326,7 @@ namespace Mvp24Hours.Infrastructure.Email.Bulk
         /// <summary>
         /// Gets or sets the individual send results.
         /// </summary>
-        public IList<EmailSendResult> Results { get; set; } = new List<EmailSendResult>();
+        public IList<EmailSendResult> Results { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the duration of the bulk send operation.

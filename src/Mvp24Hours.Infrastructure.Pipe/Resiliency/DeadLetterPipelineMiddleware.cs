@@ -167,10 +167,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 // Add metadata
                 if (_options.MetadataProvider != null)
                 {
-                    var metadata = _options.MetadataProvider(message, exception);
+                    Dictionary<string, string> metadata = _options.MetadataProvider(message, exception);
                     if (metadata != null)
                     {
-                        foreach (var kvp in metadata)
+                        foreach (KeyValuePair<string, string> kvp in metadata)
                         {
                             deadLetter.Metadata[kvp.Key] = kvp.Value;
                         }

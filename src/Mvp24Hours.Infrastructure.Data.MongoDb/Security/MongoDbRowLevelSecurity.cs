@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
@@ -93,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             // Tenant filter
             if (typeof(ITenantEntity).IsAssignableFrom(typeof(T)) && _tenantProvider?.HasTenant == true)
             {
-                var tenantFilter = Builders<T>.Filter.Eq(
+                FilterDefinition<T> tenantFilter = Builders<T>.Filter.Eq(
                     nameof(ITenantEntity.TenantId),
                     _tenantProvider.TenantId);
                 filters.Add(tenantFilter);
@@ -105,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             // Soft delete filter
             if (typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
             {
-                var softDeleteFilter = Builders<T>.Filter.Eq(
+                FilterDefinition<T> softDeleteFilter = Builders<T>.Filter.Eq(
                     nameof(ISoftDeletable.IsDeleted),
                     false);
                 filters.Add(softDeleteFilter);
@@ -114,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             // Apply default policy
             if (_defaultPolicy != null)
             {
-                var policyFilter = _defaultPolicy.CreateFilter<T>(_tenantProvider, _currentUserProvider);
+                FilterDefinition<T>? policyFilter = _defaultPolicy.CreateFilter<T>(_tenantProvider, _currentUserProvider);
                 if (policyFilter != null)
                 {
                     filters.Add(policyFilter);
@@ -139,7 +141,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             params FilterDefinition<T>[] additionalFilters)
             where T : class
         {
-            var securityFilter = CreateSecurityFilter<T>();
+            FilterDefinition<T> securityFilter = CreateSecurityFilter<T>();
 
             if (additionalFilters == null || additionalFilters.Length == 0)
             {
@@ -159,9 +161,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <returns>A BSON document for the $match stage.</returns>
         public BsonDocument CreateSecurityMatchStage<T>() where T : class
         {
-            var filter = CreateSecurityFilter<T>();
-            var serializerRegistry = MongoDB.Bson.Serialization.BsonSerializer.SerializerRegistry;
-            var documentSerializer = serializerRegistry.GetSerializer<T>();
+            FilterDefinition<T> filter = CreateSecurityFilter<T>();
+            IBsonSerializerRegistry serializerRegistry = MongoDB.Bson.Serialization.BsonSerializer.SerializerRegistry;
+            IBsonSerializer<T> documentSerializer = serializerRegistry.GetSerializer<T>();
 
             return filter.Render(new RenderArgs<T>(documentSerializer, serializerRegistry));
         }
@@ -174,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <returns>A filter with security constraints applied.</returns>
         public FilterDefinition<T> WrapWithSecurity<T>(FilterDefinition<T> filter) where T : class
         {
-            var securityFilter = CreateSecurityFilter<T>();
+            FilterDefinition<T> securityFilter = CreateSecurityFilter<T>();
             return Builders<T>.Filter.And(securityFilter, filter);
         }
 
@@ -186,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <returns>A filter with security constraints applied.</returns>
         public FilterDefinition<T> WrapWithSecurity<T>(Expression<Func<T, bool>> predicate) where T : class
         {
-            var filter = Builders<T>.Filter.Where(predicate);
+            FilterDefinition<T> filter = Builders<T>.Filter.Where(predicate);
             return WrapWithSecurity(filter);
         }
 
@@ -198,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <returns>An aggregate fluent interface with security match stage.</returns>
         public IAggregateFluent<T> CreateSecureAggregate<T>(IMongoCollection<T> collection) where T : class
         {
-            var securityFilter = CreateSecurityFilter<T>();
+            FilterDefinition<T> securityFilter = CreateSecurityFilter<T>();
             return collection.Aggregate().Match(securityFilter);
         }
 
@@ -306,8 +308,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             }
 
             // Check if entity has the owner field
-            var entityType = typeof(T);
-            var ownerProperty = entityType.GetProperty(_ownerFieldName);
+            Type entityType = typeof(T);
+            PropertyInfo? ownerProperty = entityType.GetProperty(_ownerFieldName);
             if (ownerProperty == null)
             {
                 return null;
@@ -331,8 +333,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 return;
             }
 
-            var entityType = typeof(T);
-            var ownerProperty = entityType.GetProperty(_ownerFieldName);
+            Type entityType = typeof(T);
+            PropertyInfo? ownerProperty = entityType.GetProperty(_ownerFieldName);
             if (ownerProperty == null)
             {
                 return;
@@ -360,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <param name="policies">The policies to combine.</param>
         public CompositeSecurityPolicy(params IRowLevelSecurityPolicy[] policies)
         {
-            _policies = policies?.ToList() ?? new List<IRowLevelSecurityPolicy>();
+            _policies = policies?.ToList() ?? [];
         }
 
         /// <summary>
@@ -382,9 +384,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         {
             var filters = new List<FilterDefinition<T>>();
 
-            foreach (var policy in _policies)
+            foreach (IRowLevelSecurityPolicy policy in _policies)
             {
-                var filter = policy.CreateFilter<T>(tenantProvider, currentUserProvider);
+                FilterDefinition<T>? filter = policy.CreateFilter<T>(tenantProvider, currentUserProvider);
                 if (filter != null)
                 {
                     filters.Add(filter);
@@ -402,7 +404,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <inheritdoc />
         public void ValidateAccess<T>(T entity, ITenantProvider? tenantProvider, ICurrentUserProvider? currentUserProvider) where T : class
         {
-            foreach (var policy in _policies)
+            foreach (IRowLevelSecurityPolicy policy in _policies)
             {
                 policy.ValidateAccess(entity, tenantProvider, currentUserProvider);
             }
@@ -428,7 +430,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             FilterDefinition<T>? additionalFilter = null)
             where T : class
         {
-            var filter = additionalFilter != null
+            FilterDefinition<T> filter = additionalFilter != null
                 ? rls.WrapWithSecurity(additionalFilter)
                 : rls.CreateSecurityFilter<T>();
 
@@ -449,7 +451,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             Expression<Func<T, bool>> predicate)
             where T : class
         {
-            var filter = rls.WrapWithSecurity(predicate);
+            FilterDefinition<T> filter = rls.WrapWithSecurity(predicate);
             return collection.Find(filter);
         }
 
@@ -482,7 +484,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             FilterDefinition<T>? additionalFilter = null)
             where T : class
         {
-            var filter = additionalFilter != null
+            FilterDefinition<T> filter = additionalFilter != null
                 ? rls.WrapWithSecurity(additionalFilter)
                 : rls.CreateSecurityFilter<T>();
 

@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         public IMessageTopology<TMessage> GetTopology<TMessage>()
             where TMessage : class
         {
-            if (_topologies.TryGetValue(typeof(TMessage), out var topology))
+            if (_topologies.TryGetValue(typeof(TMessage), out IMessageTopology? topology))
             {
                 return (IMessageTopology<TMessage>)topology;
             }
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         /// <returns>The topology configuration, or null if not registered.</returns>
         public IMessageTopology? GetTopology(Type messageType)
         {
-            _topologies.TryGetValue(messageType, out var topology);
+            _topologies.TryGetValue(messageType, out IMessageTopology? topology);
             return topology;
         }
 

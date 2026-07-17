@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
@@ -90,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (!_options.EnableSlowQueryLogging)
                 return;
 
-            var existingConfigurator = settings.ClusterConfigurator;
+            Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
 
             settings.ClusterConfigurator = builder =>
             {
@@ -120,11 +121,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandSucceeded(CommandSucceededEvent e)
         {
-            if (!_pendingCommands.TryRemove(e.RequestId, out var info))
+            if (!_pendingCommands.TryRemove(e.RequestId, out CommandInfo? info))
                 return;
 
             info.Stopwatch.Stop();
-            var duration = info.Stopwatch.Elapsed;
+            TimeSpan duration = info.Stopwatch.Elapsed;
 
             // Record metrics
             _metrics?.RecordCommandDuration(info.CommandName, info.CollectionName, duration, true);
@@ -138,11 +139,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandFailed(CommandFailedEvent e)
         {
-            if (!_pendingCommands.TryRemove(e.RequestId, out var info))
+            if (!_pendingCommands.TryRemove(e.RequestId, out CommandInfo? info))
                 return;
 
             info.Stopwatch.Stop();
-            var duration = info.Stopwatch.Elapsed;
+            TimeSpan duration = info.Stopwatch.Elapsed;
 
             // Record metrics
             _metrics?.RecordCommandDuration(info.CommandName, info.CollectionName, duration, false);
@@ -166,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             {
                 if (reply.Contains("cursor"))
                 {
-                    var cursor = reply["cursor"].AsBsonDocument;
+                    BsonDocument cursor = reply["cursor"].AsBsonDocument;
                     if (cursor.Contains("firstBatch"))
                     {
                         documentsReturned = cursor["firstBatch"].AsBsonArray.Count;
@@ -244,7 +245,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         {
             lock (_rateLimitLock)
             {
-                var now = DateTime.UtcNow;
+                DateTime now = DateTime.UtcNow;
 
                 // Reset counter if window has passed
                 if (now >= _rateLimitResetTime)
@@ -280,7 +281,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             if (collectionCommands.Contains(commandName) && command.Contains(commandName))
             {
-                var value = command[commandName];
+                BsonValue value = command[commandName];
                 if (value.IsString)
                 {
                     return value.AsString;

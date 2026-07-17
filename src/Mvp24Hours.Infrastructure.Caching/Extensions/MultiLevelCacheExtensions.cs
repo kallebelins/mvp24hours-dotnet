@@ -90,9 +90,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             configure?.Invoke(options);
 
             // Store options for later resolution
-            var l1CacheInstance = options.L1Cache;
-            var l2CacheInstance = options.L2Cache;
-            var synchronizerInstance = options.Synchronizer;
+            ICacheProvider? l1CacheInstance = options.L1Cache;
+            ICacheProvider? l2CacheInstance = options.L2Cache;
+            ICacheSynchronizer? synchronizerInstance = options.Synchronizer;
 
             // Register synchronizer if enabled
             if (options.EnableSynchronization && synchronizerInstance != null)
@@ -115,9 +115,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
                 }
                 else
                 {
-                    var memoryCache = sp.GetRequiredService<IMemoryCache>();
-                    var serializer = options.Serializer ?? sp.GetService<ICacheSerializer>();
-                    var logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+                    IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+                    ICacheSerializer? serializer = options.Serializer ?? sp.GetService<ICacheSerializer>();
+                    ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
                     l1Cache = new MemoryCacheProvider(memoryCache, serializer, logger);
                 }
 
@@ -128,9 +128,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
                 }
                 else
                 {
-                    var distributedCache = sp.GetRequiredService<IDistributedCache>();
-                    var serializer = options.Serializer ?? sp.GetService<ICacheSerializer>();
-                    var logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+                    IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+                    ICacheSerializer? serializer = options.Serializer ?? sp.GetService<ICacheSerializer>();
+                    ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                     l2Cache = new DistributedCacheProvider(distributedCache, serializer, logger);
                 }
 
@@ -140,7 +140,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
                     synchronizer = synchronizerInstance ?? sp.GetService<ICacheSynchronizer>();
                 }
 
-                var logger2 = sp.GetService<ILogger<MultiLevelCache>>();
+                ILogger<MultiLevelCache>? logger2 = sp.GetService<ILogger<MultiLevelCache>>();
                 return new MultiLevelCache(l1Cache, l2Cache, synchronizer, logger2);
             });
 

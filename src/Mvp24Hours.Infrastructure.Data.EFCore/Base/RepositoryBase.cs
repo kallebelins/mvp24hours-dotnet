@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
         {
             // cria query
-            var query = this.dbEntities.AsQueryable();
+            IQueryable<T> query = this.dbEntities.AsQueryable();
             return GetQuery(query, criteria, onlyNavigation);
         }
         /// <summary>
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                         if (clauseExpr.OrderByAscendingExpr.AnySafe())
                         {
                             IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (var ord in clauseExpr.OrderByAscendingExpr)
+                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByAscendingExpr)
                             {
                                 if (queryOrdered == null)
                                 {
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                         if (clauseExpr.OrderByDescendingExpr.AnySafe())
                         {
                             IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (var ord in clauseExpr.OrderByDescendingExpr)
+                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByDescendingExpr)
                             {
                                 if (queryOrdered == null)
                                 {
@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                     // navigation by expression
                     if (clauseExpr.NavigationExpr.AnySafe())
                     {
-                        foreach (var nav in clauseExpr.NavigationExpr)
+                        foreach (Expression<Func<T, dynamic>> nav in clauseExpr.NavigationExpr)
                         {
                             query = query.Include(nav);
                         }
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// </summary>
         protected IQueryable<T> GetDynamicFilter<TValue>(IQueryable<T> query, PropertyInfo key, TValue value)
         {
-            var entityParameter = Expression.Parameter(typeof(T), "e");
+            ParameterExpression entityParameter = Expression.Parameter(typeof(T), "e");
 
             var lambda =
                 Expression.Lambda<Func<T, bool>>(
@@ -265,7 +265,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             try
             {
                 Type t = typeof(T);
-                var param = Expression.Parameter(t);
+                ParameterExpression param = Expression.Parameter(t);
 
                 return query.Provider.CreateQuery<T>(
                     Expression.Call(

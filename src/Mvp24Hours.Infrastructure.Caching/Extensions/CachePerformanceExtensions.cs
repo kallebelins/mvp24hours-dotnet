@@ -43,7 +43,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register compressor
             services.AddSingleton<ICacheCompressor>(sp =>
             {
-                var logger = sp.GetService<ILogger<CacheCompressor>>();
+                ILogger<CacheCompressor>? logger = sp.GetService<ILogger<CacheCompressor>>();
                 return new CacheCompressor(algorithm, compressionLevel, logger);
             });
 
@@ -53,14 +53,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             services.AddSingleton<ICacheSerializer>(sp =>
             {
                 // Try to get existing serializer, or create default
-                var existingSerializer = sp.GetService<ICacheSerializer>();
+                ICacheSerializer? existingSerializer = sp.GetService<ICacheSerializer>();
                 if (existingSerializer == null)
                 {
                     existingSerializer = new JsonCacheSerializer();
                 }
 
-                var compressor = sp.GetRequiredService<ICacheCompressor>();
-                var logger = sp.GetService<ILogger<CompressedCacheSerializer>>();
+                ICacheCompressor compressor = sp.GetRequiredService<ICacheCompressor>();
+                ILogger<CompressedCacheSerializer>? logger = sp.GetService<ILogger<CompressedCacheSerializer>>();
                 return new CompressedCacheSerializer(existingSerializer, compressor, compressionThresholdBytes, logger);
             });
 
@@ -79,8 +79,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
 
             services.AddSingleton<ICachePrefetcher>(sp =>
             {
-                var cacheProvider = sp.GetRequiredService<ICacheProvider>();
-                var logger = sp.GetService<ILogger<CachePrefetcher>>();
+                ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
+                ILogger<CachePrefetcher>? logger = sp.GetService<ILogger<CachePrefetcher>>();
                 return new CachePrefetcher(cacheProvider, logger);
             });
 
@@ -103,8 +103,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             // Register cache warmer
             services.AddSingleton<ICacheWarmer>(sp =>
             {
-                var warmupOperations = sp.GetServices<ICacheWarmupOperation>();
-                var logger = sp.GetService<ILogger<CacheWarmer>>();
+                IEnumerable<ICacheWarmupOperation> warmupOperations = sp.GetServices<ICacheWarmupOperation>();
+                ILogger<CacheWarmer>? logger = sp.GetService<ILogger<CacheWarmer>>();
                 return new CacheWarmer(warmupOperations, logger);
             });
 

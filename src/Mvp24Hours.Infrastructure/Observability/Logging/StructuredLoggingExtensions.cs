@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Logging
             var correlationId = CorrelationIdPropagation.GetCorrelationId();
             var stopwatch = Stopwatch.StartNew();
 
-            using var scope = logger.BeginScope("Operation: {OperationName}, CorrelationId: {CorrelationId}",
+            using IDisposable? scope = logger.BeginScope("Operation: {OperationName}, CorrelationId: {CorrelationId}",
                 operationName, correlationId);
 
             logger.LogDebug(
@@ -79,10 +79,10 @@ namespace Mvp24Hours.Infrastructure.Observability.Logging
             Func<T> operation,
             [CallerMemberName] string memberName = "")
         {
-            using var scope = logger.BeginOperation(operationName, memberName);
+            using IDisposable scope = logger.BeginOperation(operationName, memberName);
             try
             {
-                var result = operation();
+                T? result = operation();
                 logger.LogDebug("Operation {OperationName} completed successfully", operationName);
                 return result;
             }
@@ -108,10 +108,10 @@ namespace Mvp24Hours.Infrastructure.Observability.Logging
             Func<Task<T>> operation,
             [CallerMemberName] string memberName = "")
         {
-            using var scope = logger.BeginOperation(operationName, memberName);
+            using IDisposable scope = logger.BeginOperation(operationName, memberName);
             try
             {
-                var result = await operation();
+                T? result = await operation();
                 logger.LogDebug("Operation {OperationName} completed successfully", operationName);
                 return result;
             }
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Logging
             Action operation,
             [CallerMemberName] string memberName = "")
         {
-            using var scope = logger.BeginOperation(operationName, memberName);
+            using IDisposable scope = logger.BeginOperation(operationName, memberName);
             try
             {
                 operation();
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Observability.Logging
             Func<Task> operation,
             [CallerMemberName] string memberName = "")
         {
-            using var scope = logger.BeginOperation(operationName, memberName);
+            using IDisposable scope = logger.BeginOperation(operationName, memberName);
             try
             {
                 await operation();

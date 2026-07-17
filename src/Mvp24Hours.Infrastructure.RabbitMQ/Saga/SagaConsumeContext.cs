@@ -112,7 +112,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
 
             // Add saga correlation to timeout message headers
             var routingKey = $"saga.{typeof(TData).Name}.timeout";
-            var timeoutId = await _scheduler.ScheduleMessageAsync(
+            Guid timeoutId = await _scheduler.ScheduleMessageAsync(
                 delay,
                 timeoutMessage,
                 routingKey,

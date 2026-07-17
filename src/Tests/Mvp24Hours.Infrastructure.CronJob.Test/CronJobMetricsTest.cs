@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections.Concurrent;
 using FluentAssertions;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
 
@@ -27,7 +28,7 @@ public class CronJobMetricsTest
         metricsService.RecordJobStarted("TestJob", "* * * * *");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state.Should().NotBeNull();
         state!.JobName.Should().Be("TestJob");
         state.CronExpression.Should().Be("* * * * *");
@@ -45,7 +46,7 @@ public class CronJobMetricsTest
         metricsService.RecordJobStarted("OneTimeJob", null);
 
         // Assert
-        var state = metricsService.GetJobState("OneTimeJob");
+        CronJobState? state = metricsService.GetJobState("OneTimeJob");
         state.Should().NotBeNull();
         state!.CronExpression.Should().BeNull();
     }
@@ -65,7 +66,7 @@ public class CronJobMetricsTest
         metricsService.RecordExecution("TestJob", 150.5, success: true, 1);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalExecutions.Should().Be(1);
         state.TotalFailures.Should().Be(0);
         state.LastExecutionSuccess.Should().BeTrue();
@@ -84,7 +85,7 @@ public class CronJobMetricsTest
         metricsService.RecordExecution("TestJob", 100, success: false, 1);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalExecutions.Should().Be(1);
         state.TotalFailures.Should().Be(1);
         state.LastExecutionSuccess.Should().BeFalse();
@@ -109,7 +110,7 @@ public class CronJobMetricsTest
         }
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalExecutions.Should().Be(10);
         state.TotalFailures.Should().Be(3);
         state.SuccessRate.Should().Be(70);
@@ -131,7 +132,7 @@ public class CronJobMetricsTest
         metricsService.RecordFailure("TestJob", exception, 250, 1);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.LastErrorMessage.Should().Be("Test error message");
         state.LastErrorType.Should().Be("InvalidOperationException");
     }
@@ -152,7 +153,7 @@ public class CronJobMetricsTest
         metricsService.RecordJobStopped("TestJob", totalExecutions: 10);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.IsRunning.Should().BeFalse();
         state.StopTime.Should().NotBeNull();
     }
@@ -172,7 +173,7 @@ public class CronJobMetricsTest
         metricsService.RecordSkippedExecution("TestJob", "overlapping");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalSkipped.Should().Be(1);
         state.LastSkipReason.Should().Be("overlapping");
     }
@@ -189,7 +190,7 @@ public class CronJobMetricsTest
         metricsService.RecordSkippedExecution("TestJob", "circuit_breaker_open");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalSkipped.Should().Be(2);
         state.LastSkipReason.Should().Be("circuit_breaker_open");
     }
@@ -210,7 +211,7 @@ public class CronJobMetricsTest
         metricsService.RecordRetryAttempt("TestJob", attemptNumber: 2, maxAttempts: 3, delayMs: 200);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.TotalRetries.Should().Be(2);
     }
 
@@ -229,7 +230,7 @@ public class CronJobMetricsTest
         metricsService.RecordCircuitBreakerStateChange("TestJob", "Closed", "Open");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.CircuitBreakerState.Should().Be("Open");
     }
 
@@ -243,13 +244,13 @@ public class CronJobMetricsTest
         // Arrange
         var metricsService = new CronJobMetricsService();
         metricsService.RecordJobStarted("TestJob", "* * * * *");
-        var nextExecution = DateTimeOffset.UtcNow.AddMinutes(5);
+        DateTimeOffset nextExecution = DateTimeOffset.UtcNow.AddMinutes(5);
 
         // Act
         metricsService.RecordNextScheduledExecution("TestJob", nextExecution);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.NextScheduledExecution.Should().Be(nextExecution);
     }
 
@@ -268,7 +269,7 @@ public class CronJobMetricsTest
         metricsService.IncrementActiveJob("TestJob");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.IsActive.Should().BeTrue();
     }
 
@@ -284,7 +285,7 @@ public class CronJobMetricsTest
         metricsService.DecrementActiveJob("TestJob");
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.IsActive.Should().BeFalse();
     }
 
@@ -302,7 +303,7 @@ public class CronJobMetricsTest
         metricsService.RecordJobStarted("Job3", "0 * * * *");
 
         // Act
-        var states = metricsService.GetAllJobStates();
+        ConcurrentDictionary<string, CronJobState> states = metricsService.GetAllJobStates();
 
         // Assert
         states.Should().HaveCount(3);
@@ -318,7 +319,7 @@ public class CronJobMetricsTest
         var metricsService = new CronJobMetricsService();
 
         // Act
-        var states = metricsService.GetAllJobStates();
+        ConcurrentDictionary<string, CronJobState> states = metricsService.GetAllJobStates();
 
         // Assert
         states.Should().BeEmpty();
@@ -372,13 +373,13 @@ public class CronJobMetricsTest
         // Arrange
         var metricsService = new CronJobMetricsService();
         metricsService.RecordJobStarted("TestJob", "* * * * *");
-        var lastExecution = DateTimeOffset.UtcNow;
+        DateTimeOffset lastExecution = DateTimeOffset.UtcNow;
 
         // Act
         metricsService.RecordLastExecution("TestJob", lastExecution);
 
         // Assert
-        var state = metricsService.GetJobState("TestJob");
+        CronJobState? state = metricsService.GetJobState("TestJob");
         state!.LastExecutionTime.Should().Be(lastExecution);
     }
 
@@ -393,7 +394,7 @@ public class CronJobMetricsTest
         var metricsService = new CronJobMetricsService();
 
         // Act
-        var state = metricsService.GetJobState("UnknownJob");
+        CronJobState? state = metricsService.GetJobState("UnknownJob");
 
         // Assert
         state.Should().BeNull();
@@ -409,7 +410,7 @@ public class CronJobMetricsTest
         metricsService.RecordExecution("NewJob", 100, success: true, 1);
 
         // Assert
-        var state = metricsService.GetJobState("NewJob");
+        CronJobState? state = metricsService.GetJobState("NewJob");
         state.Should().NotBeNull();
         state!.TotalExecutions.Should().Be(1);
     }
@@ -428,8 +429,8 @@ public class CronJobMetricsTest
         metricsService.RecordExecution("Job2", 200, success: false, 1);
 
         // Assert
-        var state1 = metricsService.GetJobState("Job1");
-        var state2 = metricsService.GetJobState("Job2");
+        CronJobState? state1 = metricsService.GetJobState("Job1");
+        CronJobState? state2 = metricsService.GetJobState("Job2");
 
         state1!.TotalExecutions.Should().Be(2);
         state1.TotalFailures.Should().Be(0);

@@ -83,7 +83,7 @@ public sealed class RepositoryMetrics
     /// </summary>
     public RepositoryMetrics()
     {
-        var meter = Mvp24HoursMeters.Data.Meter;
+        Meter meter = Mvp24HoursMeters.Data.Meter;
 
         _queriesTotal = meter.CreateCounter<long>(
             MetricNames.DataQueriesTotal,
@@ -190,7 +190,7 @@ public sealed class RepositoryMetrics
         bool success,
         string? dbSystem = null)
     {
-        var tags = CreateQueryTags(operationName, entityType, success, dbSystem);
+        TagList tags = CreateQueryTags(operationName, entityType, success, dbSystem);
 
         _queriesTotal.Add(1, tags);
 
@@ -235,7 +235,7 @@ public sealed class RepositoryMetrics
         int rowsAffected = 0,
         string? dbSystem = null)
     {
-        var tags = CreateQueryTags(operationName, entityType, success, dbSystem);
+        TagList tags = CreateQueryTags(operationName, entityType, success, dbSystem);
 
         _commandsTotal.Add(1, tags);
 
@@ -503,7 +503,7 @@ public sealed class RepositoryMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordQuery(_operationName, _entityType, elapsed.TotalMilliseconds, Succeeded, _dbSystem);
         }
     }
@@ -558,7 +558,7 @@ public sealed class RepositoryMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordCommand(_operationName, _entityType, elapsed.TotalMilliseconds, Succeeded, RowsAffected, _dbSystem);
         }
     }
@@ -609,7 +609,7 @@ public sealed class RepositoryMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordSaveChanges(elapsed.TotalMilliseconds, Succeeded, RowsAffected, _dbSystem);
         }
     }

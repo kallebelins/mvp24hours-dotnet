@@ -218,7 +218,7 @@ namespace Mvp24Hours.Extensions
                 var client = new MvpRabbitMQClient(sp);
 
                 if (typeConsumers.AnySafe())
-                    foreach (var item in typeConsumers)
+                    foreach (Type item in typeConsumers)
                         client.Register(item);
 
                 return client;
@@ -447,7 +447,7 @@ namespace Mvp24Hours.Extensions
 
             services.TryAddSingleton<IScheduledMessageStore>(sp =>
             {
-                var cache = sp.GetRequiredService<IDistributedCache>();
+                IDistributedCache cache = sp.GetRequiredService<IDistributedCache>();
                 return new RedisScheduledMessageStore(cache, keyPrefix);
             });
 
@@ -594,12 +594,12 @@ namespace Mvp24Hours.Extensions
                     i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IBatchConsumer<>)))
                 .ToList();
 
-            foreach (var consumerType in batchConsumerTypes)
+            foreach (Type? consumerType in batchConsumerTypes)
             {
-                var consumerInterface = consumerType.GetInterfaces()
+                Type consumerInterface = consumerType.GetInterfaces()
                     .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IBatchConsumer<>));
 
-                var messageType = consumerInterface.GetGenericArguments()[0];
+                Type messageType = consumerInterface.GetGenericArguments()[0];
 
                 // Register the consumer
                 services.AddScoped(consumerInterface, consumerType);
@@ -609,20 +609,20 @@ namespace Mvp24Hours.Extensions
                 services.TryAddSingleton<IMessageSerializer, JsonMessageSerializer>();
 
                 // Register the batch processor using reflection
-                var processorType = typeof(BatchConsumerProcessor<>).MakeGenericType(messageType);
+                Type processorType = typeof(BatchConsumerProcessor<>).MakeGenericType(messageType);
                 services.TryAddSingleton(processorType, sp =>
                 {
-                    var batchOptions = BatchConsumerOptions.Default;
+                    BatchConsumerOptions batchOptions = BatchConsumerOptions.Default;
 
                     // Try to get options from definition if available
-                    var definitionType = typeof(IBatchConsumerDefinition<>).MakeGenericType(consumerType);
+                    Type definitionType = typeof(IBatchConsumerDefinition<>).MakeGenericType(consumerType);
                     var definition = sp.GetService(definitionType) as IBatchConsumerDefinition;
                     if (definition?.BatchOptions != null)
                     {
                         batchOptions = definition.BatchOptions;
                     }
 
-                    var loggerType = typeof(ILogger<>).MakeGenericType(processorType);
+                    Type loggerType = typeof(ILogger<>).MakeGenericType(processorType);
                     var logger = sp.GetRequiredService(loggerType);
 
                     return Activator.CreateInstance(
@@ -642,10 +642,10 @@ namespace Mvp24Hours.Extensions
                     t.BaseType.GetGenericTypeDefinition() == typeof(BatchConsumerDefinition<>))
                 .ToList();
 
-            foreach (var definitionType in definitionTypes)
+            foreach (Type? definitionType in definitionTypes)
             {
-                var consumerType = definitionType.BaseType!.GetGenericArguments()[0];
-                var definitionInterface = typeof(IBatchConsumerDefinition<>).MakeGenericType(consumerType);
+                Type consumerType = definitionType.BaseType!.GetGenericArguments()[0];
+                Type definitionInterface = typeof(IBatchConsumerDefinition<>).MakeGenericType(consumerType);
 
                 services.TryAddSingleton(definitionInterface, sp => Activator.CreateInstance(definitionType)!);
                 services.TryAddSingleton(typeof(IBatchConsumerDefinition), sp => sp.GetRequiredService(definitionInterface));

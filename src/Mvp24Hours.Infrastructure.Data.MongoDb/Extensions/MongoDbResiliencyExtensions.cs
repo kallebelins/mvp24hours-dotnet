@@ -122,13 +122,13 @@ namespace Mvp24Hours.Extensions
 
             services.TryAddSingleton<IMongoDbResiliencyPolicy>(sp =>
             {
-                var options = sp.GetRequiredService<MongoDbResiliencyOptions>();
+                MongoDbResiliencyOptions options = sp.GetRequiredService<MongoDbResiliencyOptions>();
                 return new MongoDbResiliencyPolicy(options);
             });
 
             services.TryAddSingleton<MongoDbConnectionManager>(sp =>
             {
-                var options = sp.GetRequiredService<MongoDbResiliencyOptions>();
+                MongoDbResiliencyOptions options = sp.GetRequiredService<MongoDbResiliencyOptions>();
                 return new MongoDbConnectionManager(options);
             });
 

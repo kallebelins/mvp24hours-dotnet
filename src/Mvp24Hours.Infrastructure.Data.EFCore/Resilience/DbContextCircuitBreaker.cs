@@ -123,10 +123,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return;
             }
 
-            var state = State;
+            CircuitState state = State;
             if (state == CircuitState.Open)
             {
-                var remainingTime = GetRemainingOpenTime();
+                TimeSpan remainingTime = GetRemainingOpenTime();
                 throw new CircuitBreakerOpenException(
                     $"Circuit breaker is open. Database operations are temporarily blocked. " +
                     $"Circuit will test again in {remainingTime.TotalSeconds:F1} seconds.",
@@ -214,9 +214,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return TimeSpan.Zero;
             }
 
-            var elapsed = DateTime.UtcNow - _circuitOpenedTime;
+            TimeSpan elapsed = DateTime.UtcNow - _circuitOpenedTime;
             var duration = TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
-            var remaining = duration - elapsed;
+            TimeSpan remaining = duration - elapsed;
 
             return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
         }
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
         {
             if (_state == CircuitState.Open)
             {
-                var elapsed = DateTime.UtcNow - _circuitOpenedTime;
+                TimeSpan elapsed = DateTime.UtcNow - _circuitOpenedTime;
                 if (elapsed >= TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds))
                 {
                     // Time to test if database has recovered
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
                 return;
             }
 
-            var oldState = _state;
+            CircuitState oldState = _state;
             _state = newState;
 
             _logger?.Log(

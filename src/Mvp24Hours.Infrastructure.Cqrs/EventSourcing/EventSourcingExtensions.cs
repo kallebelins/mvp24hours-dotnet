@@ -88,10 +88,10 @@ public static class EventSourcingExtensions
     {
         services.AddScoped<IEventStoreRepository<TAggregate>>(sp =>
         {
-            var eventStore = sp.GetRequiredService<IEventStore>();
-            var snapshotStore = sp.GetService<ISnapshotStore>();
-            var snapshotStrategy = sp.GetService<ISnapshotStrategy>();
-            var serializer = sp.GetService<IEventSerializer>();
+            IEventStore eventStore = sp.GetRequiredService<IEventStore>();
+            ISnapshotStore? snapshotStore = sp.GetService<ISnapshotStore>();
+            ISnapshotStrategy? snapshotStrategy = sp.GetService<ISnapshotStrategy>();
+            IEventSerializer? serializer = sp.GetService<IEventSerializer>();
 
             if (snapshotStore != null && snapshotStrategy != null)
             {

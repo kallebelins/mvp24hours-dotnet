@@ -15,10 +15,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Validation
     /// </summary>
     public class DefaultPipelineValidator : IPipelineValidator
     {
-        private readonly List<Func<IEnumerable<object>, IEnumerable<PipelineValidationError>>> _validationRules = new();
+        private readonly List<Func<IEnumerable<object>, IEnumerable<PipelineValidationError>>> _validationRules = [];
         private int _maxOperations = 1000;
         private bool _requireAtLeastOneOperation = false;
-        private readonly HashSet<Type> _requiredOperationTypes = new();
+        private readonly HashSet<Type> _requiredOperationTypes = [];
 
         /// <summary>
         /// Sets the maximum number of operations allowed.
@@ -67,7 +67,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Validation
         public PipelineValidationResult Validate(IEnumerable<object> operations)
         {
             var errors = new List<PipelineValidationError>();
-            var operationList = operations?.ToList() ?? new List<object>();
+            List<object> operationList = operations?.ToList() ?? [];
 
             // Check for null operations
             var nullIndex = operationList.FindIndex(o => o == null);
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Validation
             }
 
             // Check required operation types
-            foreach (var requiredType in _requiredOperationTypes)
+            foreach (Type requiredType in _requiredOperationTypes)
             {
                 if (!operationList.Any(o => requiredType.IsInstanceOfType(o)))
                 {
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Validation
             }
 
             // Run custom validation rules
-            foreach (var rule in _validationRules)
+            foreach (Func<IEnumerable<object>, IEnumerable<PipelineValidationError>> rule in _validationRules)
             {
                 errors.AddRange(rule(operationList));
             }

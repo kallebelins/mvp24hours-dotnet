@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Application.SQLServer.Test.Support.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Xunit;
 using Xunit.Priority;
@@ -39,9 +40,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerList()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             // act
-            var pagingResult = service.ListWithPagination();
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination();
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -49,10 +50,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -60,10 +61,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -71,10 +72,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -82,10 +83,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -93,11 +94,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -105,11 +106,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -117,10 +118,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -128,11 +129,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var pagingResult = service.ListWithPagination(paging);
+            IPagingResult<IList<Customer>> pagingResult = service.ListWithPagination(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -143,9 +144,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetBy()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"));
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"));
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -153,10 +154,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -164,10 +165,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -175,10 +176,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -186,10 +187,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -197,11 +198,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -209,11 +210,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -221,10 +222,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -232,11 +233,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingService>();
+            CustomerPagingService? service = serviceProvider.GetRequiredService<CustomerPagingService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = service.GetByWithPagination(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }

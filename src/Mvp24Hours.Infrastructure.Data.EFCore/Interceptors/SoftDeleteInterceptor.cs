@@ -5,11 +5,13 @@
 //=====================================================================================
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 
@@ -89,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         {
             if (context == null) return;
 
-            var now = GetCurrentTime();
+            DateTime now = GetCurrentTime();
             var currentUser = GetCurrentUser();
 
             var entriesToSoftDelete = context.ChangeTracker
@@ -97,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                 .Where(e => e.State == EntityState.Deleted)
                 .ToList();
 
-            foreach (var entry in entriesToSoftDelete)
+            foreach (EntityEntry? entry in entriesToSoftDelete)
             {
                 if (entry.Entity is ISoftDeletable softDeletable)
                 {
@@ -128,10 +130,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private void TryApplyGenericSoftDelete(EntityEntry entry, DateTime now, string currentUser)
         {
-            var entityType = entry.Entity.GetType();
-            var interfaces = entityType.GetInterfaces();
+            Type entityType = entry.Entity.GetType();
+            Type[] interfaces = entityType.GetInterfaces();
 
-            foreach (var iface in interfaces)
+            foreach (Type iface in interfaces)
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ISoftDeletable<>))
                 {
@@ -149,7 +151,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private static void SetPropertyValue(EntityEntry entry, string propertyName, object value)
         {
-            var property = entry.Property(propertyName);
+            PropertyEntry property = entry.Property(propertyName);
             if (property != null)
             {
                 property.CurrentValue = value;
@@ -192,16 +194,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
         /// </example>
         public static ModelBuilder ApplySoftDeleteGlobalFilter(this ModelBuilder modelBuilder)
         {
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
                 // Check if entity implements ISoftDeletable
                 if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
                 {
-                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
-                    var property = System.Linq.Expressions.Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-                    var falseConstant = System.Linq.Expressions.Expression.Constant(false);
-                    var comparison = System.Linq.Expressions.Expression.Equal(property, falseConstant);
-                    var lambda = System.Linq.Expressions.Expression.Lambda(comparison, parameter);
+                    ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                    MemberExpression property = System.Linq.Expressions.Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+                    ConstantExpression falseConstant = System.Linq.Expressions.Expression.Constant(false);
+                    BinaryExpression comparison = System.Linq.Expressions.Expression.Equal(property, falseConstant);
+                    LambdaExpression lambda = System.Linq.Expressions.Expression.Lambda(comparison, parameter);
 
                     modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }

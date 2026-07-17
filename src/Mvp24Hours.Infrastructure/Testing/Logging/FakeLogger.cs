@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
     /// </example>
     public class FakeLogger : ILogger
     {
-        private readonly ConcurrentBag<LogEntry> _logs = new();
+        private readonly ConcurrentBag<LogEntry> _logs = [];
         private readonly ConcurrentStack<object?> _scopes = new();
         private readonly string _categoryName;
         private LogLevel _minimumLevel = LogLevel.Trace;
@@ -205,7 +205,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
                 return;
 
             var message = formatter(state, exception);
-            var currentScopes = _scopes.ToArray().Reverse();
+            IEnumerable<object?> currentScopes = _scopes.ToArray().Reverse();
             var entry = new LogEntry(logLevel, eventId, message, exception, state, currentScopes);
 
             _logs.Add(entry);

@@ -52,7 +52,7 @@ public static class SagaExtensions
         services.TryAddScoped<ISagaOrchestrator, SagaOrchestrator>();
 
         // Register sagas from assemblies
-        foreach (var assembly in options.AssembliesToScan)
+        foreach (Assembly assembly in options.AssembliesToScan)
         {
             RegisterSagasFromAssembly(services, assembly);
         }
@@ -85,13 +85,13 @@ public static class SagaExtensions
                             i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISaga<>)))
             .ToList();
 
-        foreach (var type in sagaTypes)
+        foreach (Type? type in sagaTypes)
         {
             // Register the saga as transient (new instance per execution)
             services.AddTransient(type);
 
             // Also register by interface
-            var sagaInterface = type.GetInterfaces()
+            Type? sagaInterface = type.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISaga<>));
 
             if (sagaInterface != null)
@@ -107,7 +107,7 @@ public static class SagaExtensions
 /// </summary>
 public sealed class SagaOrchestrationOptions
 {
-    internal List<Assembly> AssembliesToScan { get; } = new();
+    internal List<Assembly> AssembliesToScan { get; } = [];
     internal Func<IServiceProvider, ISagaStateStore>? StateStoreFactory { get; private set; }
     internal SagaHostedServiceOptions HostedServiceOptions { get; } = new();
 

@@ -211,7 +211,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.AddAsync(entity, cancellationToken: cancellationToken);
@@ -230,9 +230,9 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
@@ -248,7 +248,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.ModifyAsync(entity, cancellationToken: cancellationToken);
@@ -267,9 +267,9 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
@@ -378,7 +378,7 @@ namespace Mvp24Hours.Application.Logic
 
             if (specification == null)
             {
-                return ((IList<TEntity>)new List<TEntity>()).ToBusiness();
+                return ((IList<TEntity>)[]).ToBusiness();
             }
 
             // Try to use repository's specification method if available
@@ -415,8 +415,8 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take single
-            var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-            var entity = result?.SingleOrDefault();
+            IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+            TEntity? entity = result?.SingleOrDefault();
             return entity.ToBusiness();
         }
 
@@ -438,8 +438,8 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take first
-            var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-            var entity = result?.FirstOrDefault();
+            IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
+            TEntity? entity = result?.FirstOrDefault();
             return entity.ToBusiness();
         }
 

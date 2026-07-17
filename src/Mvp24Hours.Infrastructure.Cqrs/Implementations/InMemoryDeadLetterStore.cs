@@ -91,14 +91,14 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     /// <inheritdoc />
     public Task<DeadLetterMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _messages.TryGetValue(id, out var message);
+        _messages.TryGetValue(id, out DeadLetterMessage? message);
         return Task.FromResult(message);
     }
 
     /// <inheritdoc />
     public Task<bool> RequeueAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (!_messages.TryGetValue(id, out var message))
+        if (!_messages.TryGetValue(id, out DeadLetterMessage? message))
         {
             _logger?.LogWarning("[DLQ] Message {MessageId} not found for requeue", id);
             return Task.FromResult(false);
@@ -120,7 +120,7 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     /// <inheritdoc />
     public Task MarkAsResolvedAsync(Guid id, string resolution, CancellationToken cancellationToken = default)
     {
-        if (_messages.TryGetValue(id, out var message))
+        if (_messages.TryGetValue(id, out DeadLetterMessage? message))
         {
             message.Status = DeadLetterStatus.Resolved;
             message.Resolution = resolution;
@@ -138,7 +138,7 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     /// <inheritdoc />
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var removed = _messages.TryRemove(id, out var message);
+        var removed = _messages.TryRemove(id, out DeadLetterMessage? message);
 
         if (removed)
         {

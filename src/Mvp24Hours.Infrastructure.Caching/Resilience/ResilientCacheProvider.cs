@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Resilience.Native;
+using Mvp24Hours.Infrastructure.Resilience.Options;
 
 namespace Mvp24Hours.Infrastructure.Caching.Resilience
 {
@@ -79,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
 
             if (_options.EnableCircuitBreaker || _options.EnableRetry)
             {
-                var nativeOptions = CreateNativeOptions(_options, _logger);
+                NativeResilienceOptions nativeOptions = CreateNativeOptions(_options, _logger);
                 _pipeline = new NativeResiliencePipeline<object?>(nativeOptions, _logger);
                 _pipelineVoid = new NativeResiliencePipeline(nativeOptions, _logger);
             }
@@ -217,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             if (keys == null || keys.Length == 0)
                 return;
 
-            var tasks = keys
+            IEnumerable<Task> tasks = keys
                 .Where(k => !string.IsNullOrWhiteSpace(k))
                 .Select(key => RemoveAsync(key, cancellationToken));
 
@@ -253,7 +254,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
         public async Task<Dictionary<string, T>> GetManyAsync<T>(string[] keys, CancellationToken cancellationToken = default) where T : class
         {
             if (keys == null || keys.Length == 0)
-                return new Dictionary<string, T>();
+                return [];
 
             var result = new Dictionary<string, T>();
 
@@ -261,7 +262,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
                 .Where(k => !string.IsNullOrWhiteSpace(k))
                 .Select(async key =>
                 {
-                    var value = await GetAsync<T>(key, cancellationToken);
+                    T? value = await GetAsync<T>(key, cancellationToken);
                     return new { Key = key, Value = value };
                 });
 
@@ -284,7 +285,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             if (values == null || values.Count == 0)
                 return;
 
-            var tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
+            IEnumerable<Task> tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
             await Task.WhenAll(tasks);
         }
 
@@ -318,8 +319,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Resilience
             CacheResilienceOptions options,
             ILogger? logger)
         {
-            var cb = options.CircuitBreaker;
-            var shouldCountAsFailure = options.ShouldCountAsFailure
+            CircuitBreakerOptions cb = options.CircuitBreaker;
+            Func<Exception, bool> shouldCountAsFailure = options.ShouldCountAsFailure
                 ?? cb.ShouldCountAsFailure
                 ?? IsTransientException;
 

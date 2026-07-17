@@ -101,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             }
 
             // Start an activity (span) for this HTTP request
-            using var activity = ActivitySource.StartActivity(
+            using Activity? activity = ActivitySource.StartActivity(
                 $"HTTP {request.Method}",
                 ActivityKind.Client);
 
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
                 SetRequestAttributes(activity, request);
 
                 // Execute the request
-                var response = await base.SendAsync(request, cancellationToken);
+                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -195,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             // Custom tags from options
             if (_options.CustomTags != null)
             {
-                foreach (var tag in _options.CustomTags)
+                foreach (KeyValuePair<string, object> tag in _options.CustomTags)
                 {
                     activity.SetTag(tag.Key, tag.Value);
                 }

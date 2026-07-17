@@ -71,7 +71,7 @@ namespace Mvp24Hours.Application.Extensions
             this IServiceCollection services,
             params Type[] profileAssemblyMarkerTypes)
         {
-            var assemblies = profileAssemblyMarkerTypes
+            Assembly[] assemblies = profileAssemblyMarkerTypes
                 .Select(t => t.Assembly)
                 .Distinct()
                 .ToArray();
@@ -117,14 +117,14 @@ namespace Mvp24Hours.Application.Extensions
                 configAction?.Invoke(cfg);
 
                 // Add all discovered profiles
-                foreach (var profileType in profileTypes)
+                foreach (Type? profileType in profileTypes)
                 {
                     cfg.AddProfile(profileType);
                 }
             }, NullLoggerFactory.Instance);
 
             // Register IMapper as singleton
-            var mapper = config.CreateMapper();
+            IMapper mapper = config.CreateMapper();
             services.AddSingleton(mapper);
 
             return services;
@@ -161,14 +161,14 @@ namespace Mvp24Hours.Application.Extensions
             var config = new MapperConfiguration(cfg =>
             {
                 // Add all discovered profiles
-                foreach (var profileType in profileTypes)
+                foreach (Type? profileType in profileTypes)
                 {
                     cfg.AddProfile(profileType);
                 }
             }, NullLoggerFactory.Instance);
 
             // Register IMapper as singleton
-            var mapper = config.CreateMapper();
+            IMapper mapper = config.CreateMapper();
             services.AddSingleton(mapper);
 
             return services;
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Application.Extensions
                 throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
             }
 
-            var applicationServiceInterfaces = new[]
+            Type[] applicationServiceInterfaces = new[]
             {
                 typeof(IApplicationService<>),
                 typeof(IApplicationServiceAsync<>),
@@ -243,20 +243,20 @@ namespace Mvp24Hours.Application.Extensions
                 typeof(IReadOnlyApplicationServiceWithSeparateDtosAsync<,>)
             };
 
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
                 var types = assembly.GetTypes()
                     .Where(t => t.IsClass && !t.IsAbstract)
                     .ToList();
 
-                foreach (var type in types)
+                foreach (Type? type in types)
                 {
                     var interfaces = type.GetInterfaces()
                         .Where(i => i.IsGenericType &&
                                    applicationServiceInterfaces.Contains(i.GetGenericTypeDefinition()))
                         .ToList();
 
-                    foreach (var @interface in interfaces)
+                    foreach (Type? @interface in interfaces)
                     {
                         services.Add(new ServiceDescriptor(@interface, type, lifetime));
                     }
@@ -430,22 +430,22 @@ namespace Mvp24Hours.Application.Extensions
                 throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
             }
 
-            var validatorInterfaceType = typeof(FluentValidation.IValidator<>);
+            Type validatorInterfaceType = typeof(FluentValidation.IValidator<>);
 
-            foreach (var assembly in assemblies)
+            foreach (Assembly assembly in assemblies)
             {
                 var types = assembly.GetTypes()
                     .Where(t => t.IsClass && !t.IsAbstract)
                     .ToList();
 
-                foreach (var type in types)
+                foreach (Type? type in types)
                 {
                     var interfaces = type.GetInterfaces()
                         .Where(i => i.IsGenericType &&
                                    i.GetGenericTypeDefinition() == validatorInterfaceType)
                         .ToList();
 
-                    foreach (var @interface in interfaces)
+                    foreach (Type? @interface in interfaces)
                     {
                         services.Add(new ServiceDescriptor(@interface, type, lifetime));
                     }

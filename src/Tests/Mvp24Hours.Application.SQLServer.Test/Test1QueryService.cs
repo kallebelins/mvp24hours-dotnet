@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Application.SQLServer.Test.Support.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Xunit;
@@ -40,9 +41,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerList()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.List();
+            IBusinessResult<IList<Customer>> result = service.List();
             // assert
             Assert.True(result.HasData());
         }
@@ -50,9 +51,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListAny()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.ListAny();
+            IBusinessResult<bool> result = service.ListAny();
             // assert
             Assert.True(result.GetDataValue());
         }
@@ -60,9 +61,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListCount()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.ListCount();
+            IBusinessResult<int> result = service.ListCount();
             // assert
             Assert.True(result.GetDataValue() > 0);
         }
@@ -70,10 +71,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -81,10 +82,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -92,10 +93,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -103,10 +104,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -114,11 +115,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -126,11 +127,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -138,10 +139,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -149,11 +150,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerListNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var result = service.List(paging);
+            IBusinessResult<IList<Customer>> result = service.List(paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -164,9 +165,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetById()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.GetById(1);
+            IBusinessResult<Customer> result = service.GetById(1);
             // assert
             Assert.NotNull(result.GetDataValue());
         }
@@ -174,10 +175,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByIdNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(1, 0, navigation: new List<string> { "Contacts" });
             // act
-            var result = service.GetById(1, paging);
+            IBusinessResult<Customer> result = service.GetById(1, paging);
             // assert
             Assert.True(result.GetDataValue().Contacts.AnyOrNotNull());
         }
@@ -185,9 +186,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetBy()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"));
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"));
             // assert
             Assert.True(result.HasData());
         }
@@ -195,9 +196,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByAny()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.GetByAny(x => x.Name.Contains("Test"));
+            IBusinessResult<bool> result = service.GetByAny(x => x.Name.Contains("Test"));
             // assert
             Assert.True(result.GetDataValue());
         }
@@ -205,9 +206,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByCount()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var result = service.GetByCount(x => x.Name.Contains("Test"));
+            IBusinessResult<int> result = service.GetByCount(x => x.Name.Contains("Test"));
             // assert
             Assert.True(result.GetDataValue() > 0);
         }
@@ -215,10 +216,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -226,10 +227,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -237,10 +238,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, orderBy: new List<string> { "Name" });
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -248,10 +249,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, orderBy: new List<string> { "Name desc" });
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -259,11 +260,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -271,11 +272,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -283,10 +284,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -294,11 +295,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -306,12 +307,12 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigationExpressionNewCriteria()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
-            var paging = new PagingCriteria(3, 0)
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            IPagingCriteriaExpression<Customer> paging = new PagingCriteria(3, 0)
                 .NewCriteriaExpression<Customer>();
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }
@@ -319,11 +320,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void GetFilterCustomerGetByNavigationNewCriteria()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerService>();
-            var paging = new PagingCriteria(3, 0)
-                .NewCriteria(navigation: new List<string> { "Contacts" });
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            IPagingCriteria paging = new PagingCriteria(3, 0)
+                .NewCriteria(navigation: ["Contacts"]);
             // act
-            var result = service.GetBy(x => x.Name.Contains("Test"), paging);
+            IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.True(result.HasDataCount(3));
         }

@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
                 throw new ArgumentException("Database name is required.", nameof(databaseName));
             }
 
-            var adminDb = _client.GetDatabase("admin");
+            IMongoDatabase adminDb = _client.GetDatabase("admin");
             var command = new BsonDocument("enableSharding", databaseName);
 
             await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
@@ -106,11 +106,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
                 throw new ArgumentException("At least one shard key field is required.", nameof(options));
             }
 
-            var adminDb = _client.GetDatabase("admin");
+            IMongoDatabase adminDb = _client.GetDatabase("admin");
 
             // Build shard key
             var shardKey = new BsonDocument();
-            foreach (var field in options.ShardKeyFields)
+            foreach (ShardKeyField field in options.ShardKeyFields)
             {
                 shardKey.Add(field.FieldName, field.Order);
             }
@@ -143,9 +143,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             string collectionName,
             CancellationToken cancellationToken = default)
         {
-            var database = _client.GetDatabase(databaseName);
+            IMongoDatabase database = _client.GetDatabase(databaseName);
             var command = new BsonDocument("collStats", collectionName);
-            var stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+            BsonDocument stats = await database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             var distribution = new ShardDistribution
             {
@@ -156,10 +156,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
 
             if (stats.Contains("shards"))
             {
-                var shards = stats["shards"].AsBsonDocument;
-                foreach (var shard in shards.Elements)
+                BsonDocument shards = stats["shards"].AsBsonDocument;
+                foreach (BsonElement shard in shards.Elements)
                 {
-                    var shardStats = shard.Value.AsBsonDocument;
+                    BsonDocument shardStats = shard.Value.AsBsonDocument;
                     distribution.ShardStats.Add(new ShardStats
                     {
                         ShardId = shard.Name,
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
                 }
 
                 // Calculate percentages
-                foreach (var shardStat in distribution.ShardStats)
+                foreach (ShardStats shardStat in distribution.ShardStats)
                 {
                     shardStat.PercentageOfTotal = distribution.TotalDocuments > 0
                         ? (double)shardStat.DocumentCount / distribution.TotalDocuments * 100
@@ -183,10 +183,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <inheritdoc/>
         public async Task<IList<ShardInfo>> GetShardsAsync(CancellationToken cancellationToken = default)
         {
-            var configDb = _client.GetDatabase("config");
-            var shardsCollection = configDb.GetCollection<BsonDocument>("shards");
+            IMongoDatabase configDb = _client.GetDatabase("config");
+            IMongoCollection<BsonDocument> shardsCollection = configDb.GetCollection<BsonDocument>("shards");
 
-            var shards = await shardsCollection.Find(FilterDefinition<BsonDocument>.Empty)
+            List<BsonDocument> shards = await shardsCollection.Find(FilterDefinition<BsonDocument>.Empty)
                 .ToListAsync(cancellationToken);
 
             return shards.Select(s => new ShardInfo
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
                 Id = s["_id"].AsString,
                 Host = s["host"].AsString,
                 State = s.Contains("state") ? (s["state"].ToString() ?? "unknown") : "unknown",
-                Tags = s.Contains("tags") ? s["tags"].AsBsonArray.Select(t => t.AsString).ToList() : new List<string>()
+                Tags = s.Contains("tags") ? s["tags"].AsBsonArray.Select(t => t.AsString).ToList() : []
             }).ToList();
         }
 
@@ -203,11 +203,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             string databaseName,
             CancellationToken cancellationToken = default)
         {
-            var configDb = _client.GetDatabase("config");
-            var databasesCollection = configDb.GetCollection<BsonDocument>("databases");
+            IMongoDatabase configDb = _client.GetDatabase("config");
+            IMongoCollection<BsonDocument> databasesCollection = configDb.GetCollection<BsonDocument>("databases");
 
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", databaseName);
-            var database = await databasesCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("_id", databaseName);
+            BsonDocument database = await databasesCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
 
             return database != null && database.Contains("partitioned") && database["partitioned"].AsBoolean;
         }
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             string collectionName,
             CancellationToken cancellationToken = default)
         {
-            var shardKey = await GetShardKeyAsync(databaseName, collectionName, cancellationToken);
+            BsonDocument? shardKey = await GetShardKeyAsync(databaseName, collectionName, cancellationToken);
             return shardKey != null;
         }
 
@@ -228,12 +228,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             string collectionName,
             CancellationToken cancellationToken = default)
         {
-            var configDb = _client.GetDatabase("config");
-            var collectionsConfig = configDb.GetCollection<BsonDocument>("collections");
+            IMongoDatabase configDb = _client.GetDatabase("config");
+            IMongoCollection<BsonDocument> collectionsConfig = configDb.GetCollection<BsonDocument>("collections");
 
             var ns = $"{databaseName}.{collectionName}";
-            var filter = Builders<BsonDocument>.Filter.Eq("_id", ns);
-            var collection = await collectionsConfig.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("_id", ns);
+            BsonDocument collection = await collectionsConfig.Find(filter).FirstOrDefaultAsync(cancellationToken);
 
             if (collection != null && collection.Contains("key"))
             {
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             string targetShard,
             CancellationToken cancellationToken = default)
         {
-            var adminDb = _client.GetDatabase("admin");
+            IMongoDatabase adminDb = _client.GetDatabase("admin");
 
             var command = new BsonDocument
             {
@@ -273,7 +273,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
             BsonDocument splitPoint,
             CancellationToken cancellationToken = default)
         {
-            var adminDb = _client.GetDatabase("admin");
+            IMongoDatabase adminDb = _client.GetDatabase("admin");
 
             var command = new BsonDocument
             {
@@ -290,7 +290,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <inheritdoc/>
         public async Task<BsonDocument> GetClusterStatsAsync(CancellationToken cancellationToken = default)
         {
-            var adminDb = _client.GetDatabase("admin");
+            IMongoDatabase adminDb = _client.GetDatabase("admin");
             var command = new BsonDocument("serverStatus", 1);
 
             return await adminDb.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
 {
@@ -79,12 +80,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
 
             try
             {
-                using var timeoutCts = _options.ExecutionTimeout.HasValue
+                using CancellationTokenSource timeoutCts = _options.ExecutionTimeout.HasValue
                     ? new CancellationTokenSource(_options.ExecutionTimeout.Value)
                     : new CancellationTokenSource();
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-                var semaphore = _options.MaxDegreeOfParallelism.HasValue
+                SemaphoreSlim? semaphore = _options.MaxDegreeOfParallelism.HasValue
                     ? new SemaphoreSlim(_options.MaxDegreeOfParallelism.Value)
                     : null;
 
@@ -114,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
 
                         if (stuckNodes.Any())
                         {
-                            foreach (var stuckNode in stuckNodes)
+                            foreach (IDependencyGraphNode<TContext>? stuckNode in stuckNodes)
                             {
                                 pendingNodes.TryRemove(stuckNode.Id, out _);
                                 skippedNodes.Add(stuckNode.Id);
@@ -133,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                     }
 
                     // Execute ready nodes in parallel
-                    var tasks = readyNodes.Select(async node =>
+                    IEnumerable<Task> tasks = readyNodes.Select(async node =>
                     {
                         if (semaphore != null)
                         {
@@ -143,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                         try
                         {
                             var nodeStopwatch = Stopwatch.StartNew();
-                            var startedAt = DateTime.UtcNow;
+                            DateTime startedAt = DateTime.UtcNow;
 
                             _logger?.LogDebug("DependencyGraphExecutor: Node '{NodeId}' started", node.Id);
 
@@ -152,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                                 var dependencyResults = node.Dependencies
                                     .ToDictionary(d => d, d => nodeResults.GetValueOrDefault(d));
 
-                                var result = _options.NodeTimeout.HasValue
+                                IOperationResult<object> result = _options.NodeTimeout.HasValue
                                     ? await ExecuteNodeWithTimeout(node, context, dependencyResults, _options.NodeTimeout.Value, linkedCts.Token)
                                     : await node.ExecuteAsync(context, dependencyResults, linkedCts.Token);
 
@@ -219,7 +220,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                     if (_options.StopOnFirstFailure && failedNodeIds.Count > 0)
                     {
                         // Skip remaining pending nodes
-                        foreach (var node in pendingNodes.Values)
+                        foreach (IDependencyGraphNode<TContext> node in pendingNodes.Values)
                         {
                             skippedNodes.Add(node.Id);
                             executionResults[node.Id] = new NodeExecutionResult
@@ -311,7 +312,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
             var visited = new HashSet<string>();
             var recursionStack = new HashSet<string>();
 
-            foreach (var node in _graph.Nodes)
+            foreach (IDependencyGraphNode<TContext> node in _graph.Nodes)
             {
                 if (HasCyclesDfs(node.Id, visited, recursionStack))
                 {
@@ -337,7 +338,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
             visited.Add(nodeId);
             recursionStack.Add(nodeId);
 
-            var node = _graph.GetNode(nodeId);
+            IDependencyGraphNode<TContext>? node = _graph.GetNode(nodeId);
             if (node != null)
             {
                 foreach (var dependency in node.Dependencies)
@@ -429,7 +430,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
 
                 recursionStack.Add(nodeId);
 
-                var node = _nodes.GetValueOrDefault(nodeId);
+                IDependencyGraphNode<TContext>? node = _nodes.GetValueOrDefault(nodeId);
                 if (node != null)
                 {
                     foreach (var dep in node.Dependencies)
@@ -444,7 +445,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
                 recursionStack.Remove(nodeId);
             }
 
-            foreach (var node in _nodes.Values.OrderByDescending(n => n.Priority))
+            foreach (IDependencyGraphNode<TContext>? node in _nodes.Values.OrderByDescending(n => n.Priority))
             {
                 Visit(node.Id);
             }

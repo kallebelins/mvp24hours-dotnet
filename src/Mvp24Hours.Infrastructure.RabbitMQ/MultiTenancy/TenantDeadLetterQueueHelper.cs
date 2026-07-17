@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
             try
             {
-                using var channel = _connectionFactory.GetOrCreateChannel(tenantId);
+                using IModel channel = _connectionFactory.GetOrCreateChannel(tenantId);
 
                 var dlxName = GetDeadLetterExchangeName(tenantId);
                 var dlqName = GetDeadLetterQueueName(tenantId);
@@ -155,7 +155,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
             if (!_options.UseTenantSpecificDeadLetterQueues)
             {
-                return new Dictionary<string, object>();
+                return [];
             }
 
             return new Dictionary<string, object>
@@ -173,13 +173,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
             EnsureDeadLetterInfrastructure(tenantId);
 
-            using var channel = _connectionFactory.GetOrCreateChannel(tenantId);
+            using IModel channel = _connectionFactory.GetOrCreateChannel(tenantId);
 
             var dlxName = GetDeadLetterExchangeName(tenantId);
             var dlqName = GetDeadLetterQueueName(tenantId);
 
             // Create new properties with dead letter info
-            var dlqProperties = channel.CreateBasicProperties();
+            IBasicProperties dlqProperties = channel.CreateBasicProperties();
             dlqProperties.Persistent = true;
             dlqProperties.Headers = new Dictionary<string, object>(properties?.Headers ?? new Dictionary<string, object>())
             {

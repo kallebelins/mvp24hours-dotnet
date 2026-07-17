@@ -182,7 +182,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Observability
     public sealed class FakeActivityListener : IDisposable
     {
         private readonly ActivityListener _listener;
-        private readonly ConcurrentBag<RecordedActivity> _activities = new();
+        private readonly ConcurrentBag<RecordedActivity> _activities = [];
         private readonly string? _sourceNameFilter;
         private bool _disposed;
 

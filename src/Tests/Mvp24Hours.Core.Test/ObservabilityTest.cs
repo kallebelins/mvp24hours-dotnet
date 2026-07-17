@@ -37,7 +37,7 @@ public class ObservabilityTest
     public void ActivitySources_CoreSource_ShouldBeValid()
     {
         // Arrange & Act
-        var source = Mvp24HoursActivitySources.Core.Source;
+        ActivitySource source = Mvp24HoursActivitySources.Core.Source;
 
         // Assert
         source.Should().NotBeNull();
@@ -76,7 +76,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartOperation(
+        using Activity? activity = ActivityHelper.StartOperation(
             Mvp24HoursActivitySources.Core.Source,
             "TestOperation",
             "Test");
@@ -100,7 +100,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartCommandActivity("CreateOrder");
+        using Activity? activity = ActivityHelper.StartCommandActivity("CreateOrder");
 
         // Assert
         activity.Should().NotBeNull();
@@ -120,7 +120,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartQueryActivity("GetOrderById");
+        using Activity? activity = ActivityHelper.StartQueryActivity("GetOrderById");
 
         // Assert
         activity.Should().NotBeNull();
@@ -140,7 +140,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartPipelineActivity("OrderPipeline", 5);
+        using Activity? activity = ActivityHelper.StartPipelineActivity("OrderPipeline", 5);
 
         // Assert
         activity.Should().NotBeNull();
@@ -160,7 +160,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartDatabaseActivity(
+        using Activity? activity = ActivityHelper.StartDatabaseActivity(
             "GetOrder",
             "SELECT",
             "sqlserver",
@@ -185,7 +185,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         // Act
-        using var activity = ActivityHelper.StartCacheActivity("GET", "order:123", "redis");
+        using Activity? activity = ActivityHelper.StartCacheActivity("GET", "order:123", "redis");
 
         // Assert
         activity.Should().NotBeNull();
@@ -205,10 +205,10 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
-        var headers = ActivityHelper.GetTracePropagationHeaders();
+        Dictionary<string, string> headers = ActivityHelper.GetTracePropagationHeaders();
 
         // Assert
         headers.Should().ContainKey("traceparent");
@@ -230,7 +230,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.SetSuccess();
@@ -252,7 +252,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
         var exception = new InvalidOperationException("Test error");
 
         // Act
@@ -278,7 +278,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.WithCorrelationId("test-correlation-123");
@@ -300,7 +300,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.WithUser("user-123", "John Doe");
@@ -322,7 +322,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.WithTenant("tenant-456", "Acme Corp");
@@ -344,7 +344,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.RecordCacheHit("order:123");
@@ -366,7 +366,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         activity.RecordRetryAttempt(2, TimeSpan.FromSeconds(5), "Timeout");
@@ -394,7 +394,7 @@ public class ObservabilityTest
         Activity? capturedActivity = null;
 
         // Act
-        using (var scope = Mvp24HoursActivitySources.Core.Source.StartScopedActivity("Test"))
+        using (ScopedActivity scope = Mvp24HoursActivitySources.Core.Source.StartScopedActivity("Test"))
         {
             capturedActivity = scope.Activity;
         }
@@ -419,7 +419,7 @@ public class ObservabilityTest
         var exception = new InvalidOperationException("Test error");
 
         // Act
-        using (var scope = Mvp24HoursActivitySources.Core.Source.StartScopedActivity("Test"))
+        using (ScopedActivity scope = Mvp24HoursActivitySources.Core.Source.StartScopedActivity("Test"))
         {
             capturedActivity = scope.Activity;
             scope.SetException(exception);
@@ -445,7 +445,7 @@ public class ObservabilityTest
         };
         ActivitySource.AddActivityListener(listener);
 
-        using var originalActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Original");
+        using Activity? originalActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Original");
 
         // Act - Inject
         var headers = new Dictionary<string, string>();
@@ -453,7 +453,7 @@ public class ObservabilityTest
 
         // Act - Extract
         var headersWithNullable = headers.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value);
-        var extractedContext = TracePropagation.ExtractTraceContext(headersWithNullable);
+        TraceContext? extractedContext = TracePropagation.ExtractTraceContext(headersWithNullable);
 
         // Assert
         extractedContext.Should().NotBeNull();
@@ -468,7 +468,7 @@ public class ObservabilityTest
         var traceparent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
         // Act
-        var context = ActivityHelper.ParseTraceContext(traceparent);
+        ActivityContext context = ActivityHelper.ParseTraceContext(traceparent);
 
         // Assert
         context.TraceId.ToString().Should().Be("0af7651916cd43dd8448eb211c80319c");
@@ -495,7 +495,7 @@ public class ObservabilityTest
             GetCorrelationId = () => "test-correlation"
         };
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         enricher.EnrichOnStart(activity!, null);
@@ -522,7 +522,7 @@ public class ObservabilityTest
             GetUserRoles = () => new[] { "Admin", "User" }
         };
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         enricher.EnrichOnStart(activity!, null);
@@ -550,7 +550,7 @@ public class ObservabilityTest
             GetTenantName = () => "Acme Corp"
         };
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         enricher.EnrichOnStart(activity!, null);
@@ -582,7 +582,7 @@ public class ObservabilityTest
             tenantEnricher
         });
 
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act
         composite.EnrichOnStart(activity!, null);
@@ -605,13 +605,13 @@ public class ObservabilityTest
 
         // Act
         services.AddMvp24HoursTracing();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var accessor = provider.GetService<ITraceContextAccessor>();
+        ITraceContextAccessor? accessor = provider.GetRequiredService<ITraceContextAccessor>();
         accessor.Should().NotBeNull();
 
-        var options = provider.GetService<TracingOptions>();
+        TracingOptions? options = provider.GetRequiredService<TracingOptions>();
         options.Should().NotBeNull();
     }
 
@@ -629,10 +629,10 @@ public class ObservabilityTest
             options.AddEnricher(new CorrelationIdEnricher());
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetService<TracingOptions>();
+        TracingOptions? options = provider.GetRequiredService<TracingOptions>();
         options.Should().NotBeNull();
         options!.ServiceName.Should().Be("TestService");
         options.EnableCorrelationIdPropagation.Should().BeTrue();
@@ -650,7 +650,7 @@ public class ObservabilityTest
         ActivitySource.AddActivityListener(listener);
 
         var accessor = new TraceContextAccessor();
-        using var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
+        using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 
         // Act & Assert
         accessor.TraceId.Should().NotBeNull();

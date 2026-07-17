@@ -35,7 +35,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
         {
             if (exception == null) throw new ArgumentNullException(nameof(exception));
 
-            var statusCode = GetStatusCode(exception);
+            ResultStatusCode statusCode = GetStatusCode(exception);
             var errorCode = GetErrorCode(exception);
             var message = GetMessage(exception);
 
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
             if (exception == null) throw new ArgumentNullException(nameof(exception));
             if (string.IsNullOrEmpty(customMessage)) throw new ArgumentNullException(nameof(customMessage));
 
-            var statusCode = GetStatusCode(exception);
+            ResultStatusCode statusCode = GetStatusCode(exception);
             var errorCode = GetErrorCode(exception);
 
             var messages = new List<IResultMessage>
@@ -84,27 +84,27 @@ namespace Mvp24Hours.Application.Logic.Resilience
         /// <inheritdoc/>
         public ResultStatusCode GetStatusCode(Exception exception)
         {
-            var mapping = GetMapping(exception);
+            ExceptionMapping? mapping = GetMapping(exception);
             return mapping?.StatusCode ?? ResultStatusCode.InternalError;
         }
 
         /// <inheritdoc/>
         public string GetErrorCode(Exception exception)
         {
-            var mapping = GetMapping(exception);
+            ExceptionMapping? mapping = GetMapping(exception);
             return mapping?.ErrorCode ?? "SYSTEM.INTERNAL_ERROR";
         }
 
         /// <inheritdoc/>
         public bool ShouldLog(Exception exception)
         {
-            var mapping = GetMapping(exception);
+            ExceptionMapping? mapping = GetMapping(exception);
             if (mapping?.ShouldLog.HasValue == true)
             {
                 return mapping.ShouldLog.Value;
             }
 
-            var statusCode = GetStatusCode(exception);
+            ResultStatusCode statusCode = GetStatusCode(exception);
             var statusCodeInt = (int)statusCode;
 
             // Server errors (500+) should be logged
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
         /// <inheritdoc/>
         public bool ShouldIncludeDetails(Exception exception)
         {
-            var mapping = GetMapping(exception);
+            ExceptionMapping? mapping = GetMapping(exception);
             if (mapping?.IncludeDetails.HasValue == true)
             {
                 return mapping.IncludeDetails.Value;
@@ -133,22 +133,22 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
         private ExceptionMapping? GetMapping(Exception exception)
         {
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
 
             // Check custom mappings first
-            if (_options.CustomMappings.TryGetValue(exceptionType, out var customMapping))
+            if (_options.CustomMappings.TryGetValue(exceptionType, out ExceptionMapping? customMapping))
             {
                 return customMapping;
             }
 
             // Check default mappings
-            if (_defaultMappings.TryGetValue(exceptionType, out var defaultMapping))
+            if (_defaultMappings.TryGetValue(exceptionType, out ExceptionMapping? defaultMapping))
             {
                 return defaultMapping;
             }
 
             // Check base types for inheritance-based mapping
-            var baseType = exceptionType.BaseType;
+            Type? baseType = exceptionType.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (_options.CustomMappings.TryGetValue(baseType, out customMapping))
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
 
         private string GetMessage(Exception exception)
         {
-            var mapping = GetMapping(exception);
+            ExceptionMapping? mapping = GetMapping(exception);
 
             if (mapping?.MessageFactory != null)
             {
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
             }
 
             // For server errors, use default message in production
-            var statusCode = GetStatusCode(exception);
+            ResultStatusCode statusCode = GetStatusCode(exception);
             if ((int)statusCode >= 500 && !_options.IncludeExceptionDetails)
             {
                 return _options.DefaultErrorMessage;

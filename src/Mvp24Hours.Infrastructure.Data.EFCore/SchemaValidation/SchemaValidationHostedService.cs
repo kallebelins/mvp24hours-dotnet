@@ -51,13 +51,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var validator = scope.ServiceProvider.GetRequiredService<ISchemaValidator>();
+                using IServiceScope scope = _serviceProvider.CreateScope();
+                ISchemaValidator validator = scope.ServiceProvider.GetRequiredService<ISchemaValidator>();
 
                 // Log model summary
                 if (_options.EnableDetailedLogging)
                 {
-                    var summary = validator.GetModelSummary();
+                    ModelSummary summary = validator.GetModelSummary();
                     _logger.LogInformation(
                         "Model summary for {DbContext}: {EntityCount} entities, {TableCount} tables, {MigrationCount} applied migrations",
                         typeof(TContext).Name,
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 cts.CancelAfter(_options.ValidationTimeout);
 
-                var result = await validator.ValidateAsync(cts.Token);
+                SchemaValidationResult result = await validator.ValidateAsync(cts.Token);
 
                 // Process results
                 if (result.IsValid)
@@ -85,9 +85,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                     var criticalIssues = result.Issues.Where(i => i.Severity >= IssueSeverity.Error).ToList();
                     var warningIssues = result.Issues.Where(i => i.Severity == IssueSeverity.Warning).ToList();
 
-                    foreach (var issue in result.Issues)
+                    foreach (SchemaIssue issue in result.Issues)
                     {
-                        var logLevel = issue.Severity switch
+                        LogLevel logLevel = issue.Severity switch
                         {
                             IssueSeverity.Critical => LogLevel.Critical,
                             IssueSeverity.Error => LogLevel.Error,

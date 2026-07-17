@@ -51,8 +51,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var requestType = typeof(TRequest);
-        var responseType = typeof(TResponse);
+        Type requestType = typeof(TRequest);
+        Type responseType = typeof(TResponse);
         var stopwatch = Stopwatch.StartNew();
 
         // Execute OnPipelineStart hooks
@@ -60,7 +60,7 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
         try
         {
-            var response = await next();
+            TResponse? response = await next();
             stopwatch.Stop();
 
             // Execute OnPipelineComplete hooks
@@ -85,8 +85,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         CancellationToken cancellationToken)
     {
         // Global hooks
-        var globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
-        foreach (var hook in globalHooks)
+        IEnumerable<IPipelineHook> globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
+        foreach (IPipelineHook hook in globalHooks)
         {
             try
             {
@@ -100,8 +100,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         }
 
         // Typed hooks
-        var typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
-        foreach (var hook in typedHooks)
+        IEnumerable<IPipelineHook<TRequest>> typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
+        foreach (IPipelineHook<TRequest> hook in typedHooks)
         {
             try
             {
@@ -125,8 +125,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         CancellationToken cancellationToken)
     {
         // Global hooks
-        var globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
-        foreach (var hook in globalHooks)
+        IEnumerable<IPipelineHook> globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
+        foreach (IPipelineHook hook in globalHooks)
         {
             try
             {
@@ -140,8 +140,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         }
 
         // Typed hooks
-        var typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
-        foreach (var hook in typedHooks)
+        IEnumerable<IPipelineHook<TRequest>> typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
+        foreach (IPipelineHook<TRequest> hook in typedHooks)
         {
             try
             {
@@ -164,8 +164,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         CancellationToken cancellationToken)
     {
         // Global hooks
-        var globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
-        foreach (var hook in globalHooks)
+        IEnumerable<IPipelineHook> globalHooks = _serviceProvider.GetServices<IPipelineHook>() ?? [];
+        foreach (IPipelineHook hook in globalHooks)
         {
             try
             {
@@ -179,8 +179,8 @@ public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         }
 
         // Typed hooks
-        var typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
-        foreach (var hook in typedHooks)
+        IEnumerable<IPipelineHook<TRequest>> typedHooks = _serviceProvider.GetServices<IPipelineHook<TRequest>>() ?? [];
+        foreach (IPipelineHook<TRequest> hook in typedHooks)
         {
             try
             {

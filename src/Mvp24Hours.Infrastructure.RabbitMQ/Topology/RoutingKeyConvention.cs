@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(messageType);
 
             // Check if there's a custom topology registered
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             if (topology?.RoutingKey != null)
             {
                 return topology.RoutingKey;
@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             if (_options.IncludeNamespace && messageType.Namespace != null)
             {
                 var namespaceParts = messageType.Namespace.Split('.');
-                var relevantParts = namespaceParts.TakeLast(_options.NamespaceDepth);
+                IEnumerable<string> relevantParts = namespaceParts.TakeLast(_options.NamespaceDepth);
                 parts.AddRange(relevantParts);
             }
 
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             // Check if consumer wants to receive all messages of a certain type hierarchy
             if (_options.UseWildcardsForBaseTypes)
             {
-                var baseType = messageType.BaseType;
+                Type? baseType = messageType.BaseType;
                 while (baseType != null && baseType != typeof(object))
                 {
                     if (IsMessageBaseType(baseType))

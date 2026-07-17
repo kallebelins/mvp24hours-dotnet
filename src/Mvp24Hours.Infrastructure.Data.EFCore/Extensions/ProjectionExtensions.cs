@@ -133,18 +133,20 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TSource : class, IEntityBase
         {
             // Build dynamic select expression
-            var parameter = Expression.Parameter(typeof(TSource), "e");
+            ParameterExpression parameter = Expression.Parameter(typeof(TSource), "e");
             var bindings = new List<MemberBinding>();
 
             // Add key binding
-            var keyBody = ReplaceParameter(keySelector.Body, keySelector.Parameters[0], parameter);
+            Expression keyBody = ReplaceParameter(keySelector.Body, keySelector.Parameters[0], parameter);
             // For dynamic, we'll use a different approach
-            var selectList = new List<Expression>();
-            selectList.Add(keyBody);
-
-            foreach (var selector in columnSelectors)
+            var selectList = new List<Expression>
             {
-                var body = ReplaceParameter(selector.Body, selector.Parameters[0], parameter);
+                keyBody
+            };
+
+            foreach (Expression<Func<TSource, object>> selector in columnSelectors)
+            {
+                Expression body = ReplaceParameter(selector.Body, selector.Parameters[0], parameter);
                 selectList.Add(body);
             }
 
@@ -190,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             where TSource : class, IEntityBase
         {
             // Apply includes before projection
-            foreach (var include in includes)
+            foreach (Expression<Func<TSource, object>> include in includes)
             {
                 query = query.Include(include);
             }
@@ -220,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
             CancellationToken cancellationToken = default)
             where TSource : class, IEntityBase
         {
-            var entities = await query.ToListAsync(cancellationToken);
+            List<TSource> entities = await query.ToListAsync(cancellationToken);
             return entities.Select(mapper).ToList();
         }
 

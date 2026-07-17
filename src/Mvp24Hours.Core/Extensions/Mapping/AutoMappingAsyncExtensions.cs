@@ -21,7 +21,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IPagingResult<TDestination>?> MapPagingToAsync<TSource, TDestination>(this IMapper mapper, Task<IPagingResult<TSource>?> sourceAsync)
         {
-            var source = await sourceAsync;
+            IPagingResult<TSource>? source = await sourceAsync;
 
             if (source == null)
             {
@@ -57,7 +57,7 @@ namespace Mvp24Hours.Extensions
         /// </summary>
         public static async Task<IBusinessResult<TDestination>?> MapBusinessToAsync<TSource, TDestination>(this IMapper mapper, Task<IBusinessResult<TSource>?> sourceAsync)
         {
-            var source = await sourceAsync;
+            IBusinessResult<TSource>? source = await sourceAsync;
 
             if (source == null)
             {

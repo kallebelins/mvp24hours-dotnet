@@ -78,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ArgumentNullException.ThrowIfNull(consumerType);
 
             // Extract message type from IMessageConsumer<T> if available
-            var messageType = GetMessageTypeFromConsumer(consumerType);
+            Type? messageType = GetMessageTypeFromConsumer(consumerType);
 
             var baseName = messageType != null
                 ? FormatTypeName(messageType)
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             if (_options.IncludeNamespaceInRoutingKey && namespaceParts.Length > 0)
             {
                 // Take last 2 namespace parts for context
-                var relevantParts = namespaceParts.TakeLast(2);
+                IEnumerable<string> relevantParts = namespaceParts.TakeLast(2);
                 return ApplyCasing(string.Join(Separator, relevantParts.Concat(new[] { typeName })));
             }
 
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                     genericTypeDefinition = genericTypeDefinition[..index];
                 }
 
-                var genericArgs = type.GetGenericArguments();
+                Type[] genericArgs = type.GetGenericArguments();
                 var argNames = string.Join(Separator, genericArgs.Select(FormatTypeName));
                 name = $"{genericTypeDefinition}{Separator}{argNames}";
             }
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
         private static Type? GetMessageTypeFromConsumer(Type consumerType)
         {
-            var consumerInterface = consumerType
+            Type? consumerInterface = consumerType
                 .GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));

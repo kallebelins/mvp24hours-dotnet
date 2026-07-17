@@ -99,7 +99,7 @@ public sealed class TenantContextAccessor : ITenantContextAccessor
         get => _contextHolder.Value?.Context;
         set
         {
-            var holder = _contextHolder.Value;
+            TenantContextHolder? holder = _contextHolder.Value;
             if (holder != null)
             {
                 holder.Context = null;
@@ -167,7 +167,7 @@ public sealed class InMemoryTenantStore : ITenantStore
 
         lock (_lock)
         {
-            if (_tenantsById.TryGetValue(tenantId, out var tenant))
+            if (_tenantsById.TryGetValue(tenantId, out TenantContext? tenant))
             {
                 _tenantsById.Remove(tenantId);
                 if (!string.IsNullOrEmpty(tenant.TenantName))
@@ -191,7 +191,7 @@ public sealed class InMemoryTenantStore : ITenantStore
         lock (_lock)
         {
             return Task.FromResult<ITenantContext?>(
-                _tenantsById.TryGetValue(tenantId, out var tenant) ? tenant : null);
+                _tenantsById.TryGetValue(tenantId, out TenantContext? tenant) ? tenant : null);
         }
     }
 
@@ -206,7 +206,7 @@ public sealed class InMemoryTenantStore : ITenantStore
         lock (_lock)
         {
             return Task.FromResult<ITenantContext?>(
-                _tenantsByName.TryGetValue(tenantName, out var tenant) ? tenant : null);
+                _tenantsByName.TryGetValue(tenantName, out TenantContext? tenant) ? tenant : null);
         }
     }
 

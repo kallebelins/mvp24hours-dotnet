@@ -34,7 +34,7 @@ public class OverlappingExecutionTest
         var executionLock = new InMemoryCronJobExecutionLock();
 
         // Act
-        var handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Assert
         handle.Should().NotBeNull();
@@ -48,10 +48,10 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Act
-        var secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Assert
         firstHandle.Should().NotBeNull();
@@ -63,7 +63,7 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Act
         await handle!.DisposeAsync();
@@ -79,11 +79,11 @@ public class OverlappingExecutionTest
         var executionLock = new InMemoryCronJobExecutionLock();
 
         // First acquisition and release
-        var firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
         await firstHandle!.DisposeAsync();
 
         // Act
-        var secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Assert
         secondHandle.Should().NotBeNull();
@@ -95,7 +95,7 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Start a task to release the lock after a delay
         _ = Task.Run(async () =>
@@ -105,7 +105,7 @@ public class OverlappingExecutionTest
         });
 
         // Act
-        var secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromSeconds(1));
+        ICronJobLockHandle? secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromSeconds(1));
 
         // Assert
         secondHandle.Should().NotBeNull();
@@ -116,10 +116,10 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Act
-        var secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromMilliseconds(50));
+        ICronJobLockHandle? secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromMilliseconds(50));
 
         // Assert
         secondHandle.Should().BeNull();
@@ -130,11 +130,11 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var beforeAcquire = DateTimeOffset.UtcNow;
+        DateTimeOffset beforeAcquire = DateTimeOffset.UtcNow;
 
         // Act
-        var handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
-        var lockTime = executionLock.GetLockAcquiredTime("TestJob");
+        ICronJobLockHandle? handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        DateTimeOffset? lockTime = executionLock.GetLockAcquiredTime("TestJob");
 
         // Assert
         lockTime.Should().NotBeNull();
@@ -149,8 +149,8 @@ public class OverlappingExecutionTest
         var executionLock = new InMemoryCronJobExecutionLock();
 
         // Act
-        var handle1 = await executionLock.TryAcquireAsync("Job1", TimeSpan.Zero);
-        var handle2 = await executionLock.TryAcquireAsync("Job2", TimeSpan.Zero);
+        ICronJobLockHandle? handle1 = await executionLock.TryAcquireAsync("Job1", TimeSpan.Zero);
+        ICronJobLockHandle? handle2 = await executionLock.TryAcquireAsync("Job2", TimeSpan.Zero);
 
         // Assert
         handle1.Should().NotBeNull();
@@ -164,7 +164,7 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        var firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -192,9 +192,9 @@ public class OverlappingExecutionTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = true,
@@ -204,7 +204,7 @@ public class OverlappingExecutionTest
             });
 
         // Acquire lock externally to simulate overlapping
-        var externalLock = await executionLock.TryAcquireAsync(nameof(TestResilientCronJob), TimeSpan.Zero);
+        ICronJobLockHandle? externalLock = await executionLock.TryAcquireAsync(nameof(TestResilientCronJob), TimeSpan.Zero);
 
         var job = new TestResilientCronJob(
             config,
@@ -248,9 +248,9 @@ public class OverlappingExecutionTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = true,
@@ -294,9 +294,9 @@ public class OverlappingExecutionTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = true,
@@ -335,9 +335,9 @@ public class OverlappingExecutionTest
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = true,
@@ -376,9 +376,9 @@ public class OverlappingExecutionTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         services.AddSingleton<ICronJobMetrics>(metricsService);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
+        ResilientScheduleConfig<TestResilientCronJob> config = TestCronJobFactory.CreateConfig<TestResilientCronJob>(
             resilience: new CronJobResilienceConfig<TestResilientCronJob>
             {
                 PreventOverlapping = true,
@@ -386,7 +386,7 @@ public class OverlappingExecutionTest
             });
 
         // Acquire lock externally
-        var externalLock = await executionLock.TryAcquireAsync(nameof(TestResilientCronJob), TimeSpan.Zero);
+        ICronJobLockHandle? externalLock = await executionLock.TryAcquireAsync(nameof(TestResilientCronJob), TimeSpan.Zero);
 
         var job = new TestResilientCronJob(
             config,
@@ -405,7 +405,7 @@ public class OverlappingExecutionTest
         await job.StopAsync(cts.Token);
 
         // Assert
-        var jobState = metricsService.GetJobState(nameof(TestResilientCronJob));
+        CronJobState? jobState = metricsService.GetJobState(nameof(TestResilientCronJob));
         jobState.Should().NotBeNull();
         jobState!.TotalSkipped.Should().BeGreaterThan(0);
         jobState.LastSkipReason.Should().Be("overlapping");
@@ -432,7 +432,7 @@ public class OverlappingExecutionTest
         {
             executionTasks.Add(Task.Run(async () =>
             {
-                var handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromSeconds(5));
+                ICronJobLockHandle? handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromSeconds(5));
                 if (handle != null)
                 {
                     var current = Interlocked.Increment(ref concurrentExecutions);

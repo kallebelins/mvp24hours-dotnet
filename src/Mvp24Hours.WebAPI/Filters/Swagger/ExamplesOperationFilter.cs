@@ -37,7 +37,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             // Add examples to request body
             if (operation.RequestBody?.Content != null)
             {
-                foreach (var content in operation.RequestBody.Content)
+                foreach (KeyValuePair<string, OpenApiMediaType> content in operation.RequestBody.Content)
                 {
                     AddExamplesToContent(content.Value, context);
                 }
@@ -46,11 +46,11 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             // Add examples to responses
             if (operation.Responses != null)
             {
-                foreach (var response in operation.Responses.Values)
+                foreach (IOpenApiResponse response in operation.Responses.Values)
                 {
                     if (response.Content != null)
                     {
-                        foreach (var content in response.Content)
+                        foreach (KeyValuePair<string, OpenApiMediaType> content in response.Content)
                         {
                             AddExamplesToContent(content.Value, context);
                         }
@@ -61,7 +61,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             // Add examples to parameters
             if (operation.Parameters != null)
             {
-                foreach (var parameter in operation.Parameters)
+                foreach (IOpenApiParameter parameter in operation.Parameters)
                 {
                     if (parameter is OpenApiParameter openApiParameter)
                     {
@@ -81,7 +81,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             // Try to get example from schema
             if (mediaType.Schema.Example == null && mediaType.Example == null)
             {
-                var example = GenerateExampleFromSchema(mediaType.Schema, context);
+                JsonNode? example = GenerateExampleFromSchema(mediaType.Schema, context);
                 if (example != null)
                 {
                     mediaType.Example = example;
@@ -96,7 +96,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
                 return;
             }
 
-            var example = GenerateExampleFromSchema(parameter.Schema, context);
+            JsonNode? example = GenerateExampleFromSchema(parameter.Schema, context);
             if (example != null)
             {
                 parameter.Example = example;
@@ -145,7 +145,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
 
             if (HasSchemaType(openApiSchema, JsonSchemaType.Array) && openApiSchema.Items != null)
             {
-                var itemExample = GenerateExampleFromSchema(openApiSchema.Items, context);
+                JsonNode? itemExample = GenerateExampleFromSchema(openApiSchema.Items, context);
                 if (itemExample != null)
                 {
                     return new JsonArray(itemExample);

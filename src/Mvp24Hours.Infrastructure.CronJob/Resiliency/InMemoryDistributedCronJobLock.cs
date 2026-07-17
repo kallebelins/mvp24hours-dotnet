@@ -39,10 +39,10 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
             TimeSpan lockDuration,
             CancellationToken cancellationToken = default)
         {
-            var now = _timeProvider.GetUtcNow();
+            DateTimeOffset now = _timeProvider.GetUtcNow();
 
             // Try to add or update if expired
-            var entry = _locks.AddOrUpdate(
+            LockEntry entry = _locks.AddOrUpdate(
                 jobName,
                 _ => new LockEntry
                 {
@@ -85,9 +85,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <inheritdoc />
         public Task<bool> IsLockedAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            if (_locks.TryGetValue(jobName, out var entry))
+            if (_locks.TryGetValue(jobName, out LockEntry? entry))
             {
-                var now = _timeProvider.GetUtcNow();
+                DateTimeOffset now = _timeProvider.GetUtcNow();
                 return Task.FromResult(entry.ExpiresAt > now);
             }
             return Task.FromResult(false);
@@ -96,9 +96,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <inheritdoc />
         public Task<DistributedLockInfo?> GetLockInfoAsync(string jobName, CancellationToken cancellationToken = default)
         {
-            if (_locks.TryGetValue(jobName, out var entry))
+            if (_locks.TryGetValue(jobName, out LockEntry? entry))
             {
-                var now = _timeProvider.GetUtcNow();
+                DateTimeOffset now = _timeProvider.GetUtcNow();
                 if (entry.ExpiresAt > now)
                 {
                     return Task.FromResult<DistributedLockInfo?>(new DistributedLockInfo
@@ -116,11 +116,11 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
 
         internal bool TryExtend(string jobName, string instanceId, TimeSpan extension)
         {
-            if (_locks.TryGetValue(jobName, out var entry))
+            if (_locks.TryGetValue(jobName, out LockEntry? entry))
             {
                 if (entry.InstanceId == instanceId)
                 {
-                    var now = _timeProvider.GetUtcNow();
+                    DateTimeOffset now = _timeProvider.GetUtcNow();
                     if (entry.ExpiresAt > now)
                     {
                         entry.ExpiresAt = now + extension;
@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
 
         internal bool TryRelease(string jobName, string instanceId)
         {
-            if (_locks.TryGetValue(jobName, out var entry))
+            if (_locks.TryGetValue(jobName, out LockEntry? entry))
             {
                 if (entry.InstanceId == instanceId)
                 {

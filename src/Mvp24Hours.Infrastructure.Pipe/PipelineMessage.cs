@@ -57,20 +57,8 @@ namespace Mvp24Hours.Infrastructure.Pipe
         #endregion
 
         #region [ Properties ]
-        public bool IsFaulty
-        {
-            get
-            {
-                return isFaulty || Messages.Any(x => x.Type == Core.Enums.MessageType.Error);
-            }
-        }
-        public IList<IMessageResult> Messages
-        {
-            get
-            {
-                return _messages ??= new List<IMessageResult>();
-            }
-        }
+        public bool IsFaulty => isFaulty || Messages.Any(x => x.Type == Core.Enums.MessageType.Error);
+        public IList<IMessageResult> Messages => _messages ??= [];
         public string Token { get; private set; }
         public bool IsLocked { get; private set; }
         public dynamic DynamicContents { get; private set; }

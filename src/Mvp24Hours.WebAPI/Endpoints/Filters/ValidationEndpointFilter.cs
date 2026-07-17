@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,7 @@ public class ValidationEndpointFilter<TRequest> : IEndpointFilter
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         // Find the request parameter
-        var request = context.Arguments.OfType<TRequest>().FirstOrDefault();
+        TRequest? request = context.Arguments.OfType<TRequest>().FirstOrDefault();
 
         if (request is null)
         {
@@ -64,7 +65,7 @@ public class ValidationEndpointFilter<TRequest> : IEndpointFilter
         }
 
         // Try to resolve validator from DI container
-        var validator = context.HttpContext.RequestServices.GetService<IValidator<TRequest>>();
+        IValidator<TRequest>? validator = context.HttpContext.RequestServices.GetService<IValidator<TRequest>>();
 
         // If no validator is registered, proceed without validation
         if (validator is null)
@@ -73,7 +74,7 @@ public class ValidationEndpointFilter<TRequest> : IEndpointFilter
         }
 
         // Validate the request
-        var validationResult = await validator.ValidateAsync(request, CancellationToken.None);
+        ValidationResult validationResult = await validator.ValidateAsync(request, CancellationToken.None);
 
         if (!validationResult.IsValid)
         {

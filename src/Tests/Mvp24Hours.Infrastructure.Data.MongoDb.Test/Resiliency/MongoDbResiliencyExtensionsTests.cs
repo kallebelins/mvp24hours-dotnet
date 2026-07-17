@@ -20,12 +20,12 @@ public class MongoDbResiliencyExtensionsTests
 
         // Act
         services.AddMongoDbResiliency();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetService<MongoDbResiliencyOptions>();
-        var policy = provider.GetService<IMongoDbResiliencyPolicy>();
-        var connectionManager = provider.GetService<MongoDbConnectionManager>();
+        MongoDbResiliencyOptions? options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        IMongoDbResiliencyPolicy? policy = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
+        MongoDbConnectionManager? connectionManager = provider.GetRequiredService<MongoDbConnectionManager>();
 
         options.Should().NotBeNull();
         policy.Should().NotBeNull();
@@ -46,8 +46,8 @@ public class MongoDbResiliencyExtensionsTests
             options.DefaultOperationTimeoutSeconds = 60;
         });
 
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.RetryCount.Should().Be(5);
@@ -63,8 +63,8 @@ public class MongoDbResiliencyExtensionsTests
 
         // Act
         services.AddMongoDbResiliencyForProduction();
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.EnableCircuitBreaker.Should().BeTrue();
@@ -80,8 +80,8 @@ public class MongoDbResiliencyExtensionsTests
 
         // Act
         services.AddMongoDbResiliencyForDevelopment();
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.EnableCircuitBreaker.Should().BeFalse();
@@ -98,8 +98,8 @@ public class MongoDbResiliencyExtensionsTests
 
         // Act
         services.AddMongoDbRetryPolicy(retryCount: 5);
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.EnableRetry.Should().BeTrue();
@@ -116,8 +116,8 @@ public class MongoDbResiliencyExtensionsTests
 
         // Act
         services.AddMongoDbCircuitBreaker(failureThreshold: 3, durationSeconds: 60);
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.EnableCircuitBreaker.Should().BeTrue();
@@ -137,11 +137,11 @@ public class MongoDbResiliencyExtensionsTests
         services.AddMongoDbResiliency()
                 .AddRetryableExceptions(typeof(InvalidOperationException), typeof(NotSupportedException));
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert - We can't directly access PostConfigure results in a simple way,
         // but we can verify the extension doesn't throw
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
         options.Should().NotBeNull();
     }
 
@@ -155,10 +155,10 @@ public class MongoDbResiliencyExtensionsTests
         services.AddMongoDbResiliency()
                 .AddNonRetryableExceptions(typeof(ArgumentException), typeof(FormatException));
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
         options.Should().NotBeNull();
     }
 
@@ -168,11 +168,11 @@ public class MongoDbResiliencyExtensionsTests
         // Arrange
         var services = new ServiceCollection();
         services.AddMongoDbResiliency();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var policy1 = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
-        var policy2 = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
+        IMongoDbResiliencyPolicy policy1 = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
+        IMongoDbResiliencyPolicy policy2 = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
 
         // Assert - Should be same instance (singleton)
         policy1.Should().BeSameAs(policy2);
@@ -184,11 +184,11 @@ public class MongoDbResiliencyExtensionsTests
         // Arrange
         var services = new ServiceCollection();
         services.AddMongoDbResiliency();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var manager1 = provider.GetRequiredService<MongoDbConnectionManager>();
-        var manager2 = provider.GetRequiredService<MongoDbConnectionManager>();
+        MongoDbConnectionManager manager1 = provider.GetRequiredService<MongoDbConnectionManager>();
+        MongoDbConnectionManager manager2 = provider.GetRequiredService<MongoDbConnectionManager>();
 
         // Assert - Should be same instance (singleton)
         manager1.Should().BeSameAs(manager2);
@@ -203,10 +203,10 @@ public class MongoDbResiliencyExtensionsTests
         {
             options.RetryCount = 7;
         });
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var options = provider.GetRequiredService<MongoDbResiliencyOptions>();
+        MongoDbResiliencyOptions options = provider.GetRequiredService<MongoDbResiliencyOptions>();
 
         // Assert
         options.RetryCount.Should().Be(7);
@@ -225,8 +225,8 @@ public class MongoDbResiliencyExtensionsTests
             options.EnableCircuitBreaker = false;
             options.EnableOperationTimeout = false;
         });
-        var provider = services.BuildServiceProvider();
-        var policy = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMongoDbResiliencyPolicy policy = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
 
         var executionCount = 0;
 
@@ -252,7 +252,7 @@ public class MongoDbResiliencyExtensionsTests
         var services = new ServiceCollection();
 
         // Act & Assert - Should not throw and support chaining
-        var action = () => services
+        Func<IServiceCollection> action = () => services
             .AddMongoDbResiliency()
             .AddRetryableExceptions(typeof(InvalidOperationException))
             .AddNonRetryableExceptions(typeof(ArgumentException));

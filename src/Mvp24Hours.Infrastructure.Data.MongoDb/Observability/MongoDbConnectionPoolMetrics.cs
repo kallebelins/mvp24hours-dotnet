@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
@@ -89,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (!_options.EnableConnectionPoolMetrics)
                 return;
 
-            var existingConfigurator = settings.ClusterConfigurator;
+            Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
 
             settings.ClusterConfigurator = builder =>
             {
@@ -120,7 +121,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnPoolOpened(ConnectionPoolOpenedEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             stats.MaxSize = e.ConnectionPoolSettings?.MaxConnections ?? 100;
             stats.MinSize = e.ConnectionPoolSettings?.MinConnections ?? 0;
             stats.IsOpen = true;
@@ -131,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnPoolClosed(ConnectionPoolClosedEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            if (_serverStats.TryGetValue(endpoint, out var stats))
+            if (_serverStats.TryGetValue(endpoint, out ServerPoolStats? stats))
             {
                 stats.IsOpen = false;
             }
@@ -142,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnConnectionCreated(ConnectionCreatedEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             Interlocked.Increment(ref stats.TotalCreated);
             Interlocked.Increment(ref stats.CurrentSize);
 
@@ -152,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnConnectionClosed(ConnectionClosedEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             Interlocked.Increment(ref stats.TotalClosed);
             Interlocked.Decrement(ref stats.CurrentSize);
 
@@ -169,14 +170,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCheckoutSucceeded(ConnectionPoolCheckedOutConnectionEvent e)
         {
-            if (e.OperationId.HasValue && _pendingCheckouts.TryRemove(e.OperationId.Value, out var sw))
+            if (e.OperationId.HasValue && _pendingCheckouts.TryRemove(e.OperationId.Value, out Stopwatch? sw))
             {
                 sw.Stop();
                 _metrics?.RecordConnectionCheckoutDuration(sw.Elapsed);
             }
 
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             Interlocked.Increment(ref stats.TotalCheckouts);
             Interlocked.Increment(ref stats.InUseCount);
             Interlocked.Decrement(ref stats.AvailableCount);
@@ -193,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
 
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             Interlocked.Increment(ref stats.TotalCheckoutFailures);
 
             LogWarning("Connection checkout failed for {Endpoint}, Reason: {Reason}", endpoint, e.Reason);
@@ -202,7 +203,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnCheckedIn(ConnectionPoolCheckedInConnectionEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
             Interlocked.Decrement(ref stats.InUseCount);
             Interlocked.Increment(ref stats.AvailableCount);
         }
@@ -216,7 +217,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private void OnPoolCleared(ConnectionPoolClearedEvent e)
         {
             var endpoint = e.ServerId?.EndPoint?.ToString() ?? "unknown";
-            var stats = GetOrCreateStats(endpoint);
+            ServerPoolStats stats = GetOrCreateStats(endpoint);
 
             // Reset counters after pool clear
             stats.AvailableCount = 0;
@@ -245,7 +246,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <returns>The connection pool stats, or null if not found.</returns>
         public ConnectionPoolStats? GetStats(string endpoint)
         {
-            if (_serverStats.TryGetValue(endpoint, out var stats))
+            if (_serverStats.TryGetValue(endpoint, out ServerPoolStats? stats))
             {
                 return CreateStats(endpoint, stats);
             }
@@ -264,7 +265,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 Timestamp = DateTimeOffset.UtcNow
             };
 
-            foreach (var stats in _serverStats.Values)
+            foreach (ServerPoolStats stats in _serverStats.Values)
             {
                 aggregate.CurrentSize += stats.CurrentSize;
                 aggregate.AvailableCount += stats.AvailableCount;
@@ -350,7 +351,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             if (utilization >= _options.ConnectionPoolAlertThreshold)
             {
-                var now = DateTime.UtcNow;
+                DateTime now = DateTime.UtcNow;
                 if (now - _lastAlertTime >= _alertCooldown)
                 {
                     _lastAlertTime = now;
@@ -367,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         {
             try
             {
-                var stats = GetCurrentStats();
+                ConnectionPoolStats stats = GetCurrentStats();
 
                 LogDebug(
                     "Connection pool metrics - Size: {Size}, InUse: {InUse}, Available: {Available}, " +

@@ -92,7 +92,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (BreakOnExceptions == null || BreakOnExceptions.Length == 0)
                 return true;
 
-            foreach (var type in BreakOnExceptions)
+            foreach (Type type in BreakOnExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (BreakOnExceptions == null || BreakOnExceptions.Length == 0)
                 return true;
 
-            foreach (var type in BreakOnExceptions)
+            foreach (Type type in BreakOnExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;

@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <returns>True if the operation should proceed; false if it should be rejected.</returns>
         public bool AllowRequest()
         {
-            var state = State; // This may trigger state transition
+            CircuitBreakerState state = State; // This may trigger state transition
 
             switch (state)
             {
@@ -164,9 +164,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
                 if (_state != CircuitBreakerState.Open || !_openedAt.HasValue)
                     return null;
 
-                var elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
+                TimeSpan elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
                 var breakDuration = TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
-                var remaining = breakDuration - elapsed;
+                TimeSpan remaining = breakDuration - elapsed;
 
                 return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
             }
@@ -280,13 +280,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             if (!_openedAt.HasValue)
                 return false;
 
-            var elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
+            TimeSpan elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
             return elapsed >= TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
         }
 
         private void TransitionTo(CircuitBreakerState newState)
         {
-            var previousState = _state;
+            CircuitBreakerState previousState = _state;
             _state = newState;
 
             if (newState == CircuitBreakerState.Open)
@@ -302,9 +302,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 
         private void CleanupOldFailures()
         {
-            var cutoff = DateTimeOffset.UtcNow.AddSeconds(-_options.CircuitBreakerSamplingDurationSeconds);
+            DateTimeOffset cutoff = DateTimeOffset.UtcNow.AddSeconds(-_options.CircuitBreakerSamplingDurationSeconds);
 
-            while (_recentFailures.TryPeek(out var oldest) && oldest < cutoff)
+            while (_recentFailures.TryPeek(out DateTimeOffset oldest) && oldest < cutoff)
             {
                 _recentFailures.TryDequeue(out _);
             }

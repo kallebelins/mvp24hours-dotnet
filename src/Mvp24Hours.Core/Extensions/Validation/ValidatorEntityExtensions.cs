@@ -17,10 +17,10 @@ namespace Mvp24Hours.Extensions
         public static IList<IMessageResult> TryValidate<TEntity>(this TEntity entity, IValidator<TEntity>? _validator = null)
             where TEntity : class
         {
-            var validator = _validator;
+            IValidator<TEntity>? validator = _validator;
             if (validator != null)
             {
-                var validationResult = validator.Validate(entity);
+                FluentValidation.Results.ValidationResult validationResult = validator.Validate(entity);
                 if (!validationResult.IsValid)
                 {
                     return validationResult.Errors
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Extensions
                         .ToList();
                 }
             }
-            return new List<IMessageResult>();
+            return [];
         }
     }
 }

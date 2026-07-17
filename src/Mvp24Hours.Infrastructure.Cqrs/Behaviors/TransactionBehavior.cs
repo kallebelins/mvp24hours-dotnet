@@ -111,7 +111,7 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
         try
         {
             // Execute the handler
-            var response = await next();
+            TResponse? response = await next();
 
             // Commit the transaction
             var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -208,7 +208,7 @@ public sealed class TransactionWithEventsBehavior<TRequest, TResponse> : IPipeli
         try
         {
             // Execute the handler
-            var response = await next();
+            TResponse? response = await next();
 
             // Commit the transaction
             var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);

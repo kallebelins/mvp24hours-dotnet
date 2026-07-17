@@ -5,6 +5,7 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
     /// </remarks>
     public class InMemoryJobHistoryStore : IJobHistoryStore
     {
-        private readonly List<JobExecutionRecord> _records = new();
+        private readonly List<JobExecutionRecord> _records = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -55,7 +56,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                var history = _records
+                ReadOnlyCollection<JobExecutionRecord> history = _records
                     .Where(r => r.JobId == jobId)
                     .OrderByDescending(r => r.StartedAt)
                     .ToList()
@@ -77,7 +78,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                var query = _records.AsQueryable();
+                IQueryable<JobExecutionRecord> query = _records.AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(filter.JobId))
                 {
@@ -109,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
                     query = query.Where(r => r.StartedAt <= filter.EndDate.Value);
                 }
 
-                var results = query
+                IEnumerable<JobExecutionRecord> results = query
                     .OrderByDescending(r => r.StartedAt)
                     .AsEnumerable();
 
@@ -141,7 +142,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                var records = _records.Where(r => r.JobType == jobType);
+                IEnumerable<JobExecutionRecord> records = _records.Where(r => r.JobType == jobType);
 
                 if (startDate.HasValue)
                 {
@@ -191,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
                 throw new ArgumentException("Retention days must be greater than or equal to zero.", nameof(retentionDays));
             }
 
-            var cutoffDate = DateTimeOffset.UtcNow.AddDays(-retentionDays);
+            DateTimeOffset cutoffDate = DateTimeOffset.UtcNow.AddDays(-retentionDays);
 
             lock (_lock)
             {

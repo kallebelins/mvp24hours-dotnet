@@ -53,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// Connection strings for read replica databases.
         /// Read operations are distributed across these replicas.
         /// </summary>
-        public IList<string> ReplicaConnectionStrings { get; set; } = new List<string>();
+        public IList<string> ReplicaConnectionStrings { get; set; } = [];
 
         /// <summary>
         /// Optional fallback to primary for reads when all replicas are unavailable.
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         /// Index corresponds to ReplicaConnectionStrings index.
         /// Higher weight means more traffic.
         /// </summary>
-        public IList<int> ReplicaWeights { get; set; } = new List<int>();
+        public IList<int> ReplicaWeights { get; set; } = [];
 
         #endregion
 
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         public static ReadWriteOptions SimpleSetup(string primaryConnectionString, string replicaConnectionString) => new()
         {
             PrimaryConnectionString = primaryConnectionString,
-            ReplicaConnectionStrings = new List<string> { replicaConnectionString },
+            ReplicaConnectionStrings = [replicaConnectionString],
             LoadBalancing = ReplicaLoadBalancing.RoundRobin,
             EnableReplicaHealthChecks = true
         };

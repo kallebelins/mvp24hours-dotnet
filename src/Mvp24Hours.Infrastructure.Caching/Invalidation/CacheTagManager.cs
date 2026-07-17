@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 foreach (var tag in tagList)
                 {
                     var tagKey = GetTagKey(tag);
-                    var keySet = await GetKeySetAsync(tagKey, cancellationToken);
+                    HashSet<string> keySet = await GetKeySetAsync(tagKey, cancellationToken);
                     if (!keySet.Contains(key))
                     {
                         keySet.Add(key);
@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
 
                 // Store tags for the key (for reverse lookup)
                 var keyTagKey = GetKeyTagKey(key);
-                var keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
+                List<string> keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
                 foreach (var tag in tagList)
                 {
                     if (!keyTags.Contains(tag))
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 var tagKey = GetTagKey(tag);
-                var keySet = await GetKeySetAsync(tagKey, cancellationToken);
+                HashSet<string> keySet = await GetKeySetAsync(tagKey, cancellationToken);
                 return keySet;
             }
             catch (Exception ex)
@@ -116,7 +116,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 var tagKey = GetTagKey(tag);
-                var keySet = await GetKeySetAsync(tagKey, cancellationToken);
+                HashSet<string> keySet = await GetKeySetAsync(tagKey, cancellationToken);
 
                 if (keySet.Count == 0)
                     return 0;
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 foreach (var key in keys)
                 {
                     var keyTagKey = GetKeyTagKey(key);
-                    var keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
+                    List<string> keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
                     keyTags.Remove(tag);
                     if (keyTags.Count == 0)
                     {
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 // Collect all unique keys from all tags
                 foreach (var tag in tagList)
                 {
-                    var keys = await GetKeysByTagAsync(tag, cancellationToken);
+                    IEnumerable<string> keys = await GetKeysByTagAsync(tag, cancellationToken);
                     foreach (var key in keys)
                     {
                         invalidatedKeys.Add(key);
@@ -190,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 foreach (var key in keysArray)
                 {
                     var keyTagKey = GetKeyTagKey(key);
-                    var keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
+                    List<string> keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
                     foreach (var tag in tagList)
                     {
                         keyTags.Remove(tag);
@@ -240,7 +240,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 var keyTagKey = GetKeyTagKey(key);
-                var keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
+                List<string> keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
 
                 foreach (var tag in tagList)
                 {
@@ -248,7 +248,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
 
                     // Remove key from tag's key set
                     var tagKey = GetTagKey(tag);
-                    var keySet = await GetKeySetAsync(tagKey, cancellationToken);
+                    HashSet<string> keySet = await GetKeySetAsync(tagKey, cancellationToken);
                     keySet.Remove(key);
                     if (keySet.Count == 0)
                     {
@@ -287,13 +287,13 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 var keyTagKey = GetKeyTagKey(key);
-                var keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
+                List<string> keyTags = await GetKeyTagsAsync(keyTagKey, cancellationToken);
 
                 // Remove key from all tag key sets
                 foreach (var tag in keyTags)
                 {
                     var tagKey = GetTagKey(tag);
-                    var keySet = await GetKeySetAsync(tagKey, cancellationToken);
+                    HashSet<string> keySet = await GetKeySetAsync(tagKey, cancellationToken);
                     keySet.Remove(key);
                     if (keySet.Count == 0)
                     {
@@ -322,8 +322,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
 
         private async Task<HashSet<string>> GetKeySetAsync(string tagKey, CancellationToken cancellationToken)
         {
-            var keySet = await _cacheProvider.GetAsync<HashSet<string>>(tagKey, cancellationToken);
-            return keySet ?? new HashSet<string>();
+            HashSet<string>? keySet = await _cacheProvider.GetAsync<HashSet<string>>(tagKey, cancellationToken);
+            return keySet ?? [];
         }
 
         private async Task SaveKeySetAsync(string tagKey, HashSet<string> keySet, CancellationToken cancellationToken)
@@ -335,8 +335,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
 
         private async Task<List<string>> GetKeyTagsAsync(string keyTagKey, CancellationToken cancellationToken)
         {
-            var tags = await _cacheProvider.GetAsync<List<string>>(keyTagKey, cancellationToken);
-            return tags ?? new List<string>();
+            List<string>? tags = await _cacheProvider.GetAsync<List<string>>(keyTagKey, cancellationToken);
+            return tags ?? [];
         }
 
         private async Task SaveKeyTagsAsync(string keyTagKey, List<string> tags, CancellationToken cancellationToken)

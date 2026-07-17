@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
@@ -49,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
-                var repo = serviceProvider.GetService<IRepositoryAsync<T>>()
+                IRepositoryAsync<T> repo = serviceProvider.GetService<IRepositoryAsync<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 this.repositories.Add(typeof(T), repo);
             }
@@ -101,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             var changedEntries = this.DbContext.ChangeTracker.Entries()
             .Where(x => x.State != EntityState.Unchanged).ToList();
 
-            foreach (var entry in changedEntries)
+            foreach (EntityEntry? entry in changedEntries)
             {
                 switch (entry.State)
                 {

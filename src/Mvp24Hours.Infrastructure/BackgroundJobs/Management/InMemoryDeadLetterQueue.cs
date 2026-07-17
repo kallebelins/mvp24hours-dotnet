@@ -22,7 +22,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
     /// </remarks>
     public class InMemoryDeadLetterQueue : IDeadLetterQueue
     {
-        private readonly Dictionary<string, FailedJob> _failedJobs = new();
+        private readonly Dictionary<string, FailedJob> _failedJobs = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -56,7 +56,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
         {
             lock (_lock)
             {
-                var query = _failedJobs.Values.AsQueryable();
+                IQueryable<FailedJob> query = _failedJobs.Values.AsQueryable();
 
                 if (filter != null)
                 {
@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
                     }
                 }
 
-                var results = query
+                IEnumerable<FailedJob> results = query
                     .OrderByDescending(j => j.AddedToDlqAt)
                     .AsEnumerable();
 
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
 
             lock (_lock)
             {
-                _failedJobs.TryGetValue(jobId, out var failedJob);
+                _failedJobs.TryGetValue(jobId, out FailedJob? failedJob);
                 return Task.FromResult(failedJob);
             }
         }
@@ -167,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
         {
             lock (_lock)
             {
-                var query = _failedJobs.Values.AsQueryable();
+                IQueryable<FailedJob> query = _failedJobs.Values.AsQueryable();
 
                 if (filter != null)
                 {

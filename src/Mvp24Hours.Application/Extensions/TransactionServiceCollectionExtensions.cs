@@ -51,13 +51,13 @@ namespace Mvp24Hours.Application.Extensions
             // Register transaction scope as transient (new instance per request)
             services.TryAddTransient<ITransactionScope>(sp =>
             {
-                var factory = sp.GetRequiredService<ITransactionScopeFactory>();
+                ITransactionScopeFactory factory = sp.GetRequiredService<ITransactionScopeFactory>();
                 return factory.Create();
             });
 
             services.TryAddTransient<ITransactionScopeSync>(sp =>
             {
-                var factory = sp.GetRequiredService<ITransactionScopeFactory>();
+                ITransactionScopeFactory factory = sp.GetRequiredService<ITransactionScopeFactory>();
                 return factory.CreateSync();
             });
 

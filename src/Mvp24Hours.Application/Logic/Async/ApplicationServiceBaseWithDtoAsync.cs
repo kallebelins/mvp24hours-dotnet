@@ -181,8 +181,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-applicationservicebasewithdtoasync-listasync");
-            var entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = await _repository.ListAsync(criteria, cancellationToken: cancellationToken);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -210,8 +210,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyasync");
-            var entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
-            var dtos = MapToDtos(entities);
+            IList<TEntity> entities = await _repository.GetByAsync(clause, criteria, cancellationToken: cancellationToken);
+            IList<TDto> dtos = MapToDtos(entities);
             return dtos.ToBusiness();
         }
 
@@ -225,8 +225,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyidasync");
-            var entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
-            var dto = MapToDto(entity);
+            TEntity? entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
+            TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }
 
@@ -240,17 +240,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdtoasync-addasync");
 
             // Validate DTO if validator is available
-            var dtoErrors = dto.TryValidate(_dtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<int>();
             }
 
             // Map DTO to Entity
-            var entity = MapToEntity(dto);
+            TEntity entity = MapToEntity(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<int>();
@@ -272,20 +272,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
                 // Validate DTO if validator is available
-                var dtoErrors = dto.TryValidate(_dtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map DTO to Entity
-                var entity = MapToEntity(dto);
+                TEntity entity = MapToEntity(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -304,17 +304,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdtoasync-modifyasync");
 
             // Validate DTO if validator is available
-            var dtoErrors = dto.TryValidate(_dtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<int>();
             }
 
             // Map DTO to Entity
-            var entity = MapToEntity(dto);
+            TEntity entity = MapToEntity(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<int>();
@@ -336,20 +336,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
                 // Validate DTO if validator is available
-                var dtoErrors = dto.TryValidate(_dtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map DTO to Entity
-                var entity = MapToEntity(dto);
+                TEntity entity = MapToEntity(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdtoasync-removeasync");
 
             // Map DTO to Entity
-            var entity = MapToEntity(dto);
+            TEntity entity = MapToEntity(dto);
 
             await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
             return await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken).ToBusinessAsync();
@@ -386,7 +386,7 @@ namespace Mvp24Hours.Application.Logic
 
             await Task.WhenAll(dtos.Select(dto =>
             {
-                var entity = MapToEntity(dto);
+                TEntity entity = MapToEntity(dto);
                 return _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
             }));
 

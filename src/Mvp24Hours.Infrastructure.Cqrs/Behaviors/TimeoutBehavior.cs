@@ -188,8 +188,8 @@ public sealed class TimeoutBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         try
         {
             // Execute with the linked token
-            var task = next();
-            var completedTask = await Task.WhenAny(task, Task.Delay(timeout, linkedCts.Token));
+            Task<TResponse> task = next();
+            Task completedTask = await Task.WhenAny(task, Task.Delay(timeout, linkedCts.Token));
 
             if (completedTask != task)
             {

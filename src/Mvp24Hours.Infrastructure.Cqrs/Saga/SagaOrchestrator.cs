@@ -42,17 +42,17 @@ public class SagaOrchestrator : ISagaOrchestrator
         ArgumentNullException.ThrowIfNull(data);
 
         options ??= new SagaExecutionOptions();
-        var saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
+        TSaga saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
 
         _logger.LogInformation("Starting saga {SagaType}", typeof(TSaga).Name);
 
         try
         {
-            var result = await saga.StartAsync(data, cancellationToken);
+            SagaResult result = await saga.StartAsync(data, cancellationToken);
 
             if (options.PersistState)
             {
-                var state = CreateState<TSaga, TData>(saga, options);
+                SagaState<TData> state = CreateState<TSaga, TData>(saga, options);
                 await _stateStore.SaveAsync(state, cancellationToken);
             }
 
@@ -66,7 +66,7 @@ public class SagaOrchestrator : ISagaOrchestrator
 
             if (options.PersistState)
             {
-                var state = CreateState<TSaga, TData>(saga, options);
+                SagaState<TData> state = CreateState<TSaga, TData>(saga, options);
                 state.Status = SagaStatus.Failed;
                 state.Errors.Add(ex.Message);
                 await _stateStore.SaveAsync(state, cancellationToken);
@@ -83,19 +83,19 @@ public class SagaOrchestrator : ISagaOrchestrator
         where TSaga : ISaga<TData>
         where TData : class
     {
-        var state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
+        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
         if (state == null)
         {
             throw new SagaNotFoundException(sagaId);
         }
 
-        var saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
+        TSaga saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
 
         _logger.LogInformation("Resuming saga {SagaId} of type {SagaType}", sagaId, typeof(TSaga).Name);
 
         try
         {
-            var result = await saga.ResumeAsync(state, cancellationToken);
+            SagaResult result = await saga.ResumeAsync(state, cancellationToken);
 
             await _stateStore.UpdateAsync<TData>(sagaId, s =>
             {
@@ -131,7 +131,7 @@ public class SagaOrchestrator : ISagaOrchestrator
         where TSaga : ISaga<TData>
         where TData : class
     {
-        var state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
+        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
         if (state == null)
         {
             throw new SagaNotFoundException(sagaId);
@@ -142,7 +142,7 @@ public class SagaOrchestrator : ISagaOrchestrator
             throw new SagaInvalidStateException(sagaId, state.Status, SagaStatus.Failed);
         }
 
-        var saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
+        TSaga saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
 
         _logger.LogInformation("Compensating saga {SagaId}", sagaId);
 
@@ -185,7 +185,7 @@ public class SagaOrchestrator : ISagaOrchestrator
     /// <inheritdoc />
     public async Task<SagaResult> CancelAsync(Guid sagaId, bool compensate = true, CancellationToken cancellationToken = default)
     {
-        var state = await _stateStore.GetAsync(sagaId, cancellationToken);
+        SagaState? state = await _stateStore.GetAsync(sagaId, cancellationToken);
         if (state == null)
         {
             throw new SagaNotFoundException(sagaId);
@@ -214,10 +214,10 @@ public class SagaOrchestrator : ISagaOrchestrator
     /// <inheritdoc />
     public async Task<int> ProcessRetryQueueAsync(CancellationToken cancellationToken = default)
     {
-        var readyForRetry = await _stateStore.GetReadyForRetryAsync(cancellationToken);
+        IReadOnlyList<SagaState> readyForRetry = await _stateStore.GetReadyForRetryAsync(cancellationToken);
         var processed = 0;
 
-        foreach (var state in readyForRetry)
+        foreach (SagaState state in readyForRetry)
         {
             if (cancellationToken.IsCancellationRequested)
                 break;
@@ -259,10 +259,10 @@ public class SagaOrchestrator : ISagaOrchestrator
     /// <inheritdoc />
     public async Task<int> ProcessTimeoutsAsync(CancellationToken cancellationToken = default)
     {
-        var timedOut = await _stateStore.GetTimedOutSagasAsync(cancellationToken);
+        IReadOnlyList<SagaState> timedOut = await _stateStore.GetTimedOutSagasAsync(cancellationToken);
         var processed = 0;
 
-        foreach (var state in timedOut)
+        foreach (SagaState state in timedOut)
         {
             if (cancellationToken.IsCancellationRequested)
                 break;
@@ -312,7 +312,7 @@ public class SagaOrchestrator : ISagaOrchestrator
             ExpiresAt = options.ExpiresAt,
             CorrelationId = options.CorrelationId,
             MaxRetries = options.MaxRetries ?? 3,
-            Metadata = options.Metadata ?? new Dictionary<string, string>()
+            Metadata = options.Metadata ?? []
         };
     }
 }

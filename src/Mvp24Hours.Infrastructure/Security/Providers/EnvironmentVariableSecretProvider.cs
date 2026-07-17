@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -156,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
             {
                 // On Windows, environment variables are case-insensitive
                 // Find the actual variable name by checking all environment variables
-                var envVars = Environment.GetEnvironmentVariables(_options.Target);
+                IDictionary envVars = Environment.GetEnvironmentVariables(_options.Target);
                 foreach (string key in envVars.Keys)
                 {
                     if (string.Equals(key, variableName, StringComparison.OrdinalIgnoreCase))

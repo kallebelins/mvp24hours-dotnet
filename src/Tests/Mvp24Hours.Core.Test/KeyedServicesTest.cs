@@ -185,12 +185,12 @@ public class KeyedServicesTest
             config.AddKeyed<ServiceC>("key:c");
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var serviceA = provider.GetRequiredKeyedService<ITestService>("key:a");
-        var serviceB = provider.GetRequiredKeyedService<ITestService>("key:b");
-        var serviceC = provider.GetRequiredKeyedService<ITestService>("key:c");
+        ITestService serviceA = provider.GetRequiredKeyedService<ITestService>("key:a");
+        ITestService serviceB = provider.GetRequiredKeyedService<ITestService>("key:b");
+        ITestService serviceC = provider.GetRequiredKeyedService<ITestService>("key:c");
 
         Assert.Equal("ServiceA", serviceA.GetName());
         Assert.Equal("ServiceB", serviceB.GetName());
@@ -209,15 +209,15 @@ public class KeyedServicesTest
         {
             config.AddKeyed("key:factory", (sp, _) =>
             {
-                var dep = sp.GetRequiredService<ITestDependency>();
+                ITestDependency dep = sp.GetRequiredService<ITestDependency>();
                 return new ServiceWithDependency(dep);
             });
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("key:factory");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:factory");
         Assert.Equal("ServiceWithDependency:dependency-value", service.GetName());
     }
 
@@ -235,10 +235,10 @@ public class KeyedServicesTest
             config.SetDefault("key:a");
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var defaultService = provider.GetRequiredService<ITestService>();
+        ITestService defaultService = provider.GetRequiredService<ITestService>();
         Assert.Equal("ServiceA", defaultService.GetName());
     }
 
@@ -256,16 +256,16 @@ public class KeyedServicesTest
             config.AddKeyed<ServiceC>("key:transient", ServiceLifetime.Transient);
         });
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert - Singleton returns same instance
-        var singleton1 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
-        var singleton2 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
+        ITestService singleton1 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
+        ITestService singleton2 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
         Assert.Same(singleton1, singleton2);
 
         // Assert - Transient returns different instances
-        var transient1 = provider.GetRequiredKeyedService<ITestService>("key:transient");
-        var transient2 = provider.GetRequiredKeyedService<ITestService>("key:transient");
+        ITestService transient1 = provider.GetRequiredKeyedService<ITestService>("key:transient");
+        ITestService transient2 = provider.GetRequiredKeyedService<ITestService>("key:transient");
         Assert.NotSame(transient1, transient2);
     }
 
@@ -281,11 +281,11 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedSingletonService<ITestService, ServiceA>("key:singleton");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service1 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
-        var service2 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
+        ITestService service1 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
+        ITestService service2 = provider.GetRequiredKeyedService<ITestService>("key:singleton");
         Assert.Same(service1, service2);
     }
 
@@ -297,17 +297,17 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedScopedService<ITestService, ServiceA>("key:scoped");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert - Same scope = same instance
-        using var scope1 = provider.CreateScope();
-        var service1 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
-        var service2 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
+        using IServiceScope scope1 = provider.CreateScope();
+        ITestService service1 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
+        ITestService service2 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
         Assert.Same(service1, service2);
 
         // Different scope = different instance
-        using var scope2 = provider.CreateScope();
-        var service3 = scope2.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
+        using IServiceScope scope2 = provider.CreateScope();
+        ITestService service3 = scope2.ServiceProvider.GetRequiredKeyedService<ITestService>("key:scoped");
         Assert.NotSame(service1, service3);
     }
 
@@ -319,11 +319,11 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedTransientService<ITestService, ServiceA>("key:transient");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service1 = provider.GetRequiredKeyedService<ITestService>("key:transient");
-        var service2 = provider.GetRequiredKeyedService<ITestService>("key:transient");
+        ITestService service1 = provider.GetRequiredKeyedService<ITestService>("key:transient");
+        ITestService service2 = provider.GetRequiredKeyedService<ITestService>("key:transient");
         Assert.NotSame(service1, service2);
     }
 
@@ -335,10 +335,10 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedSingletonService<ITestService>("key:factory", (sp, key) => new ServiceA());
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("key:factory");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:factory");
         Assert.Equal("ServiceA", service.GetName());
     }
 
@@ -356,10 +356,10 @@ public class KeyedServicesTest
 
         // Act
         services.SetDefaultKeyedService<ITestService>("key:b");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var defaultService = provider.GetRequiredService<ITestService>();
+        ITestService defaultService = provider.GetRequiredService<ITestService>();
         Assert.Equal("ServiceB", defaultService.GetName());
     }
 
@@ -376,10 +376,10 @@ public class KeyedServicesTest
 
         // Act
         services.TryAddKeyedSingletonService<ITestService, ServiceB>("key:test");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert - Should still be ServiceA
-        var service = provider.GetRequiredKeyedService<ITestService>("key:test");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:test");
         Assert.Equal("ServiceA", service.GetName());
     }
 
@@ -391,10 +391,10 @@ public class KeyedServicesTest
 
         // Act
         services.TryAddKeyedSingletonService<ITestService, ServiceA>("key:new");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("key:new");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:new");
         Assert.Equal("ServiceA", service.GetName());
     }
 
@@ -407,10 +407,10 @@ public class KeyedServicesTest
     {
         // Arrange
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var service = provider.GetKeyedServiceOrDefault<ITestService>("nonexistent");
+        ITestService? service = provider.GetKeyedServiceOrDefault<ITestService>("nonexistent");
 
         // Assert
         Assert.Null(service);
@@ -421,10 +421,10 @@ public class KeyedServicesTest
     {
         // Arrange
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var service = provider.GetKeyedServiceOrFallback<ITestService>(
+        ITestService service = provider.GetKeyedServiceOrFallback<ITestService>(
             "nonexistent",
             _ => new ServiceA());
 
@@ -438,10 +438,10 @@ public class KeyedServicesTest
         // Arrange
         var services = new ServiceCollection();
         services.AddKeyedSingleton<ITestService, ServiceB>("key:exists");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var service = provider.GetKeyedServiceOrFallback<ITestService>(
+        ITestService service = provider.GetKeyedServiceOrFallback<ITestService>(
             "key:exists",
             _ => new ServiceA());
 
@@ -502,11 +502,11 @@ public class KeyedServicesTest
         // Act
         services.AddTenantKeyedService<ITestService, ServiceA>("tenant-1", "Database");
         services.AddTenantKeyedService<ITestService, ServiceB>("tenant-2", "Database");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var tenant1Service = provider.GetTenantService<ITestService>("tenant-1", "Database");
-        var tenant2Service = provider.GetTenantService<ITestService>("tenant-2", "Database");
+        ITestService tenant1Service = provider.GetTenantService<ITestService>("tenant-1", "Database");
+        ITestService tenant2Service = provider.GetTenantService<ITestService>("tenant-2", "Database");
 
         Assert.Equal("ServiceA", tenant1Service.GetName());
         Assert.Equal("ServiceB", tenant2Service.GetName());
@@ -518,10 +518,10 @@ public class KeyedServicesTest
         // Arrange
         var services = new ServiceCollection();
         services.AddKeyedSingleton<ITestService, ServiceA>(ServiceKeys.Database.Default);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act - tenant-unknown doesn't have a specific service
-        var service = provider.GetTenantServiceOrDefault<ITestService>(
+        ITestService service = provider.GetTenantServiceOrDefault<ITestService>(
             "tenant-unknown",
             "Database",
             ServiceKeys.Database.Default);
@@ -537,10 +537,10 @@ public class KeyedServicesTest
         var services = new ServiceCollection();
         services.AddKeyedSingleton<ITestService, ServiceA>(ServiceKeys.Database.Default);
         services.AddTenantKeyedService<ITestService, ServiceB>("tenant-1", "Database");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var service = provider.GetTenantServiceOrDefault<ITestService>(
+        ITestService service = provider.GetTenantServiceOrDefault<ITestService>(
             "tenant-1",
             "Database",
             ServiceKeys.Database.Default);
@@ -561,10 +561,10 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedServicesFromAssembly(typeof(KeyedServicesTest).Assembly);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var attributedService = provider.GetRequiredKeyedService<ITestService>("test:attributed");
+        ITestService attributedService = provider.GetRequiredKeyedService<ITestService>("test:attributed");
         Assert.Equal("AttributedService", attributedService.GetName());
     }
 
@@ -576,14 +576,14 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedServicesFromAssembly(typeof(KeyedServicesTest).Assembly);
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert - Scoped service should have different instances in different scopes
-        using var scope1 = provider.CreateScope();
-        using var scope2 = provider.CreateScope();
+        using IServiceScope scope1 = provider.CreateScope();
+        using IServiceScope scope2 = provider.CreateScope();
 
-        var service1 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("test:scoped");
-        var service2 = scope2.ServiceProvider.GetRequiredKeyedService<ITestService>("test:scoped");
+        ITestService service1 = scope1.ServiceProvider.GetRequiredKeyedService<ITestService>("test:scoped");
+        ITestService service2 = scope2.ServiceProvider.GetRequiredKeyedService<ITestService>("test:scoped");
 
         Assert.NotSame(service1, service2);
     }
@@ -596,10 +596,10 @@ public class KeyedServicesTest
 
         // Act
         services.AddKeyedServicesFromAssemblyContaining<KeyedServicesTest>();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("test:attributed");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("test:attributed");
         Assert.NotNull(service);
     }
 
@@ -616,10 +616,10 @@ public class KeyedServicesTest
 
         // Act
         services.ReplaceKeyedService<ITestService, ServiceB>("key:test");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("key:test");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:test");
         Assert.Equal("ServiceB", service.GetName());
     }
 
@@ -631,10 +631,10 @@ public class KeyedServicesTest
 
         // Act
         services.ReplaceKeyedService<ITestService, ServiceB>("key:new");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetRequiredKeyedService<ITestService>("key:new");
+        ITestService service = provider.GetRequiredKeyedService<ITestService>("key:new");
         Assert.Equal("ServiceB", service.GetName());
     }
 
@@ -647,10 +647,10 @@ public class KeyedServicesTest
 
         // Act
         services.RemoveKeyedService<ITestService>("key:toremove");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var service = provider.GetKeyedService<ITestService>("key:toremove");
+        ITestService? service = provider.GetKeyedService<ITestService>("key:toremove");
         Assert.Null(service);
     }
 

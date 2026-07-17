@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
@@ -154,19 +155,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
                 { "filter", new BsonDocument("name", collectionName) }
             };
 
-            var result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+            BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             if (result.Contains("cursor"))
             {
-                var cursor = result["cursor"].AsBsonDocument;
-                var firstBatch = cursor["firstBatch"].AsBsonArray;
+                BsonDocument cursor = result["cursor"].AsBsonDocument;
+                BsonArray firstBatch = cursor["firstBatch"].AsBsonArray;
 
                 if (firstBatch.Count > 0)
                 {
-                    var collectionInfo = firstBatch[0].AsBsonDocument;
+                    BsonDocument collectionInfo = firstBatch[0].AsBsonDocument;
                     if (collectionInfo.Contains("options"))
                     {
-                        var options = collectionInfo["options"].AsBsonDocument;
+                        BsonDocument options = collectionInfo["options"].AsBsonDocument;
                         if (options.Contains("validator"))
                         {
                             return options["validator"].AsBsonDocument;
@@ -184,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
             TDocument document,
             CancellationToken cancellationToken = default)
         {
-            var schema = await GetValidationAsync(collectionName, cancellationToken);
+            BsonDocument? schema = await GetValidationAsync(collectionName, cancellationToken);
 
             if (schema == null)
             {
@@ -206,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
                 try
                 {
-                    var collection = _database.GetCollection<TDocument>(tempCollectionName);
+                    IMongoCollection<TDocument> collection = _database.GetCollection<TDocument>(tempCollectionName);
                     await collection.InsertOneAsync(document, cancellationToken: cancellationToken);
                     return SchemaValidationResult.Success();
                 }
@@ -228,14 +229,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// <inheritdoc/>
         public BsonDocument GenerateSchemaFromType<T>(bool includeRequired = true)
         {
-            var type = typeof(T);
-            var builder = new JsonSchemaBuilder().WithBsonType("object");
+            Type type = typeof(T);
+            JsonSchemaBuilder builder = new JsonSchemaBuilder().WithBsonType("object");
             var requiredFields = new List<string>();
 
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 var propertyName = GetBsonPropertyName(property);
-                var propertySchema = GeneratePropertySchema(property);
+                BsonDocument propertySchema = GeneratePropertySchema(property);
 
                 builder.WithProperty(propertyName, propertySchema);
 
@@ -255,7 +256,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
         private static string GetBsonPropertyName(PropertyInfo property)
         {
-            var bsonElement = property.GetCustomAttribute<MongoDB.Bson.Serialization.Attributes.BsonElementAttribute>();
+            BsonElementAttribute? bsonElement = property.GetCustomAttribute<MongoDB.Bson.Serialization.Attributes.BsonElementAttribute>();
             return bsonElement?.ElementName ?? property.Name;
         }
 
@@ -269,15 +270,15 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
             // Check for non-nullable reference types (C# 8+)
             var nullabilityContext = new NullabilityInfoContext();
-            var nullabilityInfo = nullabilityContext.Create(property);
+            NullabilityInfo nullabilityInfo = nullabilityContext.Create(property);
             return nullabilityInfo.WriteState == NullabilityState.NotNull;
         }
 
         private static BsonDocument GeneratePropertySchema(PropertyInfo property)
         {
             var schema = new BsonDocument();
-            var type = property.PropertyType;
-            var underlyingType = Nullable.GetUnderlyingType(type);
+            Type type = property.PropertyType;
+            Type? underlyingType = Nullable.GetUnderlyingType(type);
 
             if (underlyingType != null)
             {
@@ -317,7 +318,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 
         private static void AddAttributeValidation(PropertyInfo property, BsonDocument schema)
         {
-            var stringLength = property.GetCustomAttribute<StringLengthAttribute>();
+            StringLengthAttribute? stringLength = property.GetCustomAttribute<StringLengthAttribute>();
             if (stringLength != null)
             {
                 if (stringLength.MinimumLength > 0)
@@ -326,19 +327,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
                     schema["maxLength"] = stringLength.MaximumLength;
             }
 
-            var maxLength = property.GetCustomAttribute<MaxLengthAttribute>();
+            MaxLengthAttribute? maxLength = property.GetCustomAttribute<MaxLengthAttribute>();
             if (maxLength != null)
             {
                 schema["maxLength"] = maxLength.Length;
             }
 
-            var minLength = property.GetCustomAttribute<MinLengthAttribute>();
+            MinLengthAttribute? minLength = property.GetCustomAttribute<MinLengthAttribute>();
             if (minLength != null)
             {
                 schema["minLength"] = minLength.Length;
             }
 
-            var range = property.GetCustomAttribute<RangeAttribute>();
+            RangeAttribute? range = property.GetCustomAttribute<RangeAttribute>();
             if (range != null)
             {
                 if (range.Minimum != null)
@@ -347,13 +348,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
                     schema["maximum"] = Convert.ToDouble(range.Maximum);
             }
 
-            var regex = property.GetCustomAttribute<RegularExpressionAttribute>();
+            RegularExpressionAttribute? regex = property.GetCustomAttribute<RegularExpressionAttribute>();
             if (regex != null)
             {
                 schema["pattern"] = regex.Pattern;
             }
 
-            var email = property.GetCustomAttribute<EmailAddressAttribute>();
+            EmailAddressAttribute? email = property.GetCustomAttribute<EmailAddressAttribute>();
             if (email != null)
             {
                 schema["pattern"] = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";

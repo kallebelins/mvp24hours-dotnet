@@ -44,7 +44,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             var modelName = bindingContext.ModelName;
-            var valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
+            ValueProviderResult valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
 
             if (valueProviderResult == ValueProviderResult.None)
             {
@@ -61,7 +61,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Try parsing with ISO 8601 format first (HH:mm:ss)
-            if (TimeOnly.TryParseExact(value, "HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timeOnly))
+            if (TimeOnly.TryParseExact(value, "HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly timeOnly))
             {
                 bindingContext.Result = ModelBindingResult.Success(timeOnly);
                 return Task.CompletedTask;

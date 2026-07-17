@@ -55,14 +55,14 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
         {
             _pagingLogger.LogDebug("application-repositorypagingserviceasync-getbywithpaginationasync");
-            var repo = UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
             return await repo.ToBusinessPagingAsync(clause, criteria);
         }
 
         public virtual async Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync(IPagingCriteria? criteria = null, CancellationToken cancellationToken = default)
         {
             _pagingLogger.LogDebug("application-repositorypagingserviceasync-listwithpaginationasync");
-            var repo = UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> repo = UnitOfWork.GetRepository<TEntity>();
             return await repo.ToBusinessPagingAsync(criteria);
         }
 

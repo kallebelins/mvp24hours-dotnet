@@ -86,7 +86,7 @@ public class AspireOptions
     /// <summary>
     /// Gets or sets custom resource attributes for OpenTelemetry.
     /// </summary>
-    public Dictionary<string, object> ResourceAttributes { get; set; } = new();
+    public Dictionary<string, object> ResourceAttributes { get; set; } = [];
 }
 
 /// <summary>
@@ -145,12 +145,12 @@ public class AspireTelemetryOptions
     /// <summary>
     /// Gets or sets additional ActivitySource names to include in tracing.
     /// </summary>
-    public List<string> AdditionalActivitySources { get; set; } = new();
+    public List<string> AdditionalActivitySources { get; set; } = [];
 
     /// <summary>
     /// Gets or sets additional Meter names to include in metrics.
     /// </summary>
-    public List<string> AdditionalMeterNames { get; set; } = new();
+    public List<string> AdditionalMeterNames { get; set; } = [];
 }
 
 /// <summary>

@@ -167,8 +167,8 @@ namespace Mvp24Hours.Infrastructure.FileStorage.Contract
         private ValidationResult(bool isValid, IList<string>? errors = null, IList<string>? warnings = null)
         {
             IsValid = isValid;
-            Errors = errors ?? new List<string>();
-            Warnings = warnings ?? new List<string>();
+            Errors = errors ?? [];
+            Warnings = warnings ?? [];
         }
 
         /// <summary>

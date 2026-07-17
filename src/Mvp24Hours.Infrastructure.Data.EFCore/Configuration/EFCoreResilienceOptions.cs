@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Configuration
         /// </list>
         /// </para>
         /// </remarks>
-        public ICollection<int> AdditionalTransientErrorNumbers { get; set; } = new List<int>();
+        public ICollection<int> AdditionalTransientErrorNumbers { get; set; } = [];
 
         /// <summary>
         /// Additional exception types that should trigger retries.
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Configuration
         /// options.TransientExceptionTypes.Add(typeof(CustomTransientException));
         /// </code>
         /// </example>
-        public ICollection<Type> TransientExceptionTypes { get; set; } = new List<Type>();
+        public ICollection<Type> TransientExceptionTypes { get; set; } = [];
 
         #endregion
 
@@ -313,8 +313,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Configuration
             CircuitBreakerFailureThreshold = 5,
             CircuitBreakerDurationSeconds = 60,
             // Azure SQL specific transient errors
-            AdditionalTransientErrorNumbers = new List<int>
-            {
+            AdditionalTransientErrorNumbers =
+            [
                 4060,  // Cannot open database
                 4221,  // Login to read-secondary failed
                 40143, // Connection could not be initialized
@@ -325,7 +325,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Configuration
                 40553, // Session terminated (excessive memory)
                 40615, // Cannot connect due to firewall
                 40627, // Operation in progress
-            }
+            ]
         };
 
         /// <summary>

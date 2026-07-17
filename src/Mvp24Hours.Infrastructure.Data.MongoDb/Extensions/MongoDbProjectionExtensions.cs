@@ -75,10 +75,10 @@ namespace Mvp24Hours.Extensions
             Expression<Func<T, TProjection>> projection,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
-            var projectionDef = Builders<T>.Projection.Expression(projection);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
+            ProjectionDefinition<T, TProjection> projectionDef = Builders<T>.Projection.Expression(projection);
 
-            var cursor = await collection.FindAsync(filterDef, new FindOptions<T, TProjection>
+            IAsyncCursor<TProjection> cursor = await collection.FindAsync(filterDef, new FindOptions<T, TProjection>
             {
                 Projection = projectionDef
             }, cancellationToken);
@@ -102,10 +102,10 @@ namespace Mvp24Hours.Extensions
             Expression<Func<T, TProjection>> projection,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
-            var projectionDef = Builders<T>.Projection.Expression(projection);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
+            ProjectionDefinition<T, TProjection> projectionDef = Builders<T>.Projection.Expression(projection);
 
-            var cursor = await collection.FindAsync(filterDef, new FindOptions<T, TProjection>
+            IAsyncCursor<TProjection> cursor = await collection.FindAsync(filterDef, new FindOptions<T, TProjection>
             {
                 Projection = projectionDef,
                 Limit = 1
@@ -144,11 +144,11 @@ namespace Mvp24Hours.Extensions
             Expression<Func<TSource, bool>> filter,
             CancellationToken cancellationToken = default)
         {
-            var filterDef = Builders<TSource>.Filter.Where(filter);
-            var projectionOptions = new MongoDbProjectionOptions<TSource, TDestination>().AutoMap();
-            var projection = projectionOptions.Build();
+            FilterDefinition<TSource> filterDef = Builders<TSource>.Filter.Where(filter);
+            MongoDbProjectionOptions<TSource, TDestination> projectionOptions = new MongoDbProjectionOptions<TSource, TDestination>().AutoMap();
+            ProjectionDefinition<TSource, TDestination> projection = projectionOptions.Build();
 
-            var cursor = await collection.FindAsync(filterDef, new FindOptions<TSource, TDestination>
+            IAsyncCursor<TDestination> cursor = await collection.FindAsync(filterDef, new FindOptions<TSource, TDestination>
             {
                 Projection = projection
             }, cancellationToken);

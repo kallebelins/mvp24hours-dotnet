@@ -29,7 +29,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task TestExceptions1()
         {
             // arrange
-            using var host = await new HostBuilder()
+            using IHost host = await new HostBuilder()
                 .ConfigureWebHost(webBuilder =>
                 {
                     webBuilder
@@ -55,7 +55,7 @@ namespace Mvp24Hours.Patterns.Test
                 .StartAsync();
 
             // act
-            var response = await host.GetTestClient().GetAsync("/");
+            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
             // assert
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task TestExceptions2()
         {
             // arrange
-            using var host = await new HostBuilder()
+            using IHost host = await new HostBuilder()
                 .ConfigureWebHost(webBuilder =>
                 {
                     webBuilder
@@ -95,7 +95,7 @@ namespace Mvp24Hours.Patterns.Test
                 .StartAsync();
 
             // act
-            var response = await host.GetTestClient().GetAsync("/");
+            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
             // assert
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task TestCors1()
         {
             // arrange
-            using var host = await new HostBuilder()
+            using IHost host = await new HostBuilder()
                 .ConfigureWebHost(webBuilder =>
                 {
                     webBuilder
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Patterns.Test
                 .StartAsync();
 
             // act
-            var response = await host.GetTestClient().GetAsync("/");
+            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
             // assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task TestCors2()
         {
             // arrange
-            using var host = await new HostBuilder()
+            using IHost host = await new HostBuilder()
                 .ConfigureWebHost(webBuilder =>
                 {
                     webBuilder
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Patterns.Test
                 .StartAsync();
 
             // act
-            var response = await host.GetTestClient().GetAsync("/");
+            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
             // assert
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Patterns.Test
         public async Task TestCorrelationId1()
         {
             // arrange
-            using var host = await new HostBuilder()
+            using IHost host = await new HostBuilder()
                 .ConfigureWebHost(webBuilder =>
                 {
                     webBuilder
@@ -218,9 +218,9 @@ namespace Mvp24Hours.Patterns.Test
                 .StartAsync();
 
             // act
-            var client = host.GetTestClient();
+            HttpClient client = host.GetTestClient();
             client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-ID", "123456");
-            var response = await client.GetAsync("/");
+            HttpResponseMessage response = await client.GetAsync("/");
 
             // assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);

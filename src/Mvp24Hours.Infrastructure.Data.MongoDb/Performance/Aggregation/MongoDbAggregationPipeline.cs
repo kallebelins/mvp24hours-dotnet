@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
     public class MongoDbAggregationPipeline<T>
     {
         private readonly IMongoCollection<T> _collection;
-        private readonly List<BsonDocument> _stages = new();
+        private readonly List<BsonDocument> _stages = [];
 
         private MongoDbAggregationPipeline(IMongoCollection<T> collection)
         {
@@ -64,7 +64,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The pipeline builder for chaining.</returns>
         public MongoDbAggregationPipeline<T> Match(Expression<Func<T, bool>> filter)
         {
-            var filterDef = Builders<T>.Filter.Where(filter);
+            FilterDefinition<T> filterDef = Builders<T>.Filter.Where(filter);
             return Match(filterDef);
         }
 
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         public MongoDbAggregationPipeline<T> Match(FilterDefinition<T> filter)
         {
             var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
-            var bsonFilter = filter.Render(renderArgs);
+            BsonDocument bsonFilter = filter.Render(renderArgs);
 
             _stages.Add(new BsonDocument("$match", bsonFilter));
             return this;
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         public MongoDbAggregationPipeline<T> Project(ProjectionDefinition<T> projection)
         {
             var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
-            var bsonProjection = projection.Render(renderArgs);
+            BsonDocument bsonProjection = projection.Render(renderArgs);
 
             // The render result is already a BsonDocument
             _stages.Add(new BsonDocument("$project", bsonProjection));
@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         public MongoDbAggregationPipeline<T> Sort(SortDefinition<T> sort)
         {
             var renderArgs = new RenderArgs<T>(_collection.DocumentSerializer, _collection.Settings.SerializerRegistry);
-            var bsonSort = sort.Render(renderArgs);
+            BsonDocument bsonSort = sort.Render(renderArgs);
 
             _stages.Add(new BsonDocument("$sort", bsonSort));
             return this;
@@ -296,7 +296,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         public MongoDbAggregationPipeline<T> Facet(Dictionary<string, BsonArray> facets)
         {
             var facetDocument = new BsonDocument();
-            foreach (var facet in facets)
+            foreach (KeyValuePair<string, BsonArray> facet in facets)
             {
                 facetDocument.Add(facet.Key, facet.Value);
             }
@@ -413,8 +413,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The aggregation results.</returns>
         public async Task<List<BsonDocument>> ToListAsync(CancellationToken cancellationToken = default)
         {
-            var pipeline = Build();
-            var cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
+            PipelineDefinition<T, BsonDocument> pipeline = Build();
+            IAsyncCursor<BsonDocument> cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -426,8 +426,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The aggregation results.</returns>
         public async Task<List<TResult>> ToListAsync<TResult>(CancellationToken cancellationToken = default)
         {
-            var pipeline = Build<TResult>();
-            var cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
+            PipelineDefinition<T, TResult> pipeline = Build<TResult>();
+            IAsyncCursor<TResult> cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
             return await cursor.ToListAsync(cancellationToken);
         }
 
@@ -439,8 +439,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The first result or default.</returns>
         public async Task<TResult> FirstOrDefaultAsync<TResult>(CancellationToken cancellationToken = default)
         {
-            var pipeline = Build<TResult>().Limit(1);
-            var cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
+            PipelineDefinition<T, TResult> pipeline = Build<TResult>().Limit(1);
+            IAsyncCursor<TResult> cursor = await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
             return await cursor.FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -452,7 +452,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Aggregation
         /// <returns>The cursor for iterating results.</returns>
         public async Task<IAsyncCursor<TResult>> ToCursorAsync<TResult>(CancellationToken cancellationToken = default)
         {
-            var pipeline = Build<TResult>();
+            PipelineDefinition<T, TResult> pipeline = Build<TResult>();
             return await _collection.AggregateAsync(pipeline, cancellationToken: cancellationToken);
         }
     }

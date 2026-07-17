@@ -209,7 +209,7 @@ namespace Mvp24Hours.Application.Test.Pagination
             var result = PagedResult<int>.Create(items, 1, 10, 100);
 
             // Act
-            var mappedResult = result.Map(x => x.ToString());
+            PagedResult<string> mappedResult = result.Map(x => x.ToString());
 
             // Assert
             mappedResult.Items.Should().BeEquivalentTo("1", "2", "3");
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Application.Test.Pagination
             var result = PagedResult<string>.Create(items, 2, 10, 50);
 
             // Act
-            var metadata = result.ToMetadata();
+            IDictionary<string, object> metadata = result.ToMetadata();
 
             // Assert
             metadata.Should().ContainKey("currentPage").WhoseValue.Should().Be(2);

@@ -50,9 +50,9 @@ namespace Mvp24Hours.Extensions
 
             services.AddSingleton<IPipelineMiddleware>(sp =>
             {
-                var cache = sp.GetRequiredService<IDistributedCache>();
-                var logger = sp.GetService<ILogger<CacheResultsMiddleware>>();
-                var options = sp.GetService<CacheOperationOptions>() ?? new CacheOperationOptions();
+                IDistributedCache cache = sp.GetRequiredService<IDistributedCache>();
+                ILogger<CacheResultsMiddleware>? logger = sp.GetService<ILogger<CacheResultsMiddleware>>();
+                CacheOperationOptions options = sp.GetService<CacheOperationOptions>() ?? new CacheOperationOptions();
                 return new CacheResultsMiddleware(cache, logger, options);
             });
 
@@ -134,10 +134,10 @@ namespace Mvp24Hours.Extensions
             // Register the caching wrapper
             services.AddTransient<ITypedOperationAsync<TInput, TOutput>>(sp =>
             {
-                var innerOperation = sp.GetRequiredService<TOperation>();
-                var cache = sp.GetRequiredService<IDistributedCache>();
-                var logger = sp.GetService<ILogger<CachingOperation<TInput, TOutput>>>();
-                var globalOptions = sp.GetService<CacheOperationOptions>() ?? new CacheOperationOptions();
+                TOperation innerOperation = sp.GetRequiredService<TOperation>();
+                IDistributedCache cache = sp.GetRequiredService<IDistributedCache>();
+                ILogger<CachingOperation<TInput, TOutput>>? logger = sp.GetService<ILogger<CachingOperation<TInput, TOutput>>>();
+                CacheOperationOptions globalOptions = sp.GetService<CacheOperationOptions>() ?? new CacheOperationOptions();
 
                 var options = new CacheOperationOptions
                 {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
 
@@ -49,7 +50,7 @@ namespace Mvp24Hours.WebAPI.Filters
                 objectResult.Value == null)
             {
                 var statusCode = objectResult.StatusCode.Value;
-                var problemDetails = CreateProblemDetails(statusCode, context.HttpContext);
+                ProblemDetails problemDetails = CreateProblemDetails(statusCode, context.HttpContext);
 
                 objectResult.Value = problemDetails;
                 objectResult.ContentTypes.Clear();
@@ -61,7 +62,7 @@ namespace Mvp24Hours.WebAPI.Filters
                      statusCodeResult.StatusCode >= 400)
             {
                 var statusCode = statusCodeResult.StatusCode;
-                var problemDetails = CreateProblemDetails(statusCode, context.HttpContext);
+                ProblemDetails problemDetails = CreateProblemDetails(statusCode, context.HttpContext);
 
                 context.Result = new ObjectResult(problemDetails)
                 {
@@ -82,7 +83,7 @@ namespace Mvp24Hours.WebAPI.Filters
 
         private ProblemDetails CreateProblemDetails(int statusCode, HttpContext httpContext)
         {
-            var (title, type) = GetTitleAndType(statusCode);
+            (string? title, string? type) = GetTitleAndType(statusCode);
 
             var problemDetails = new ProblemDetails
             {
@@ -147,7 +148,7 @@ namespace Mvp24Hours.WebAPI.Filters
 
         private string? GetCorrelationId(HttpContext context)
         {
-            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out var headerValue))
+            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out StringValues headerValue))
             {
                 return headerValue.ToString();
             }

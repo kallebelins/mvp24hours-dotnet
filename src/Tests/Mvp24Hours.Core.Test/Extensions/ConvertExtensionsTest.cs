@@ -1,4 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+
 namespace Mvp24Hours.Core.Test.Extensions;
+
+#pragma warning disable CS8604
 
 /// <summary>
 /// Testes unitÃ¡rios para ConvertExtensions (mÃ©todos existentes).
@@ -41,7 +46,7 @@ public class ConvertExtensionsTest
     {
         // Arrange
         var input = "Hello";
-        var encoding = System.Text.Encoding.ASCII;
+        Encoding encoding = System.Text.Encoding.ASCII;
 
         // Act
         var base64 = input.ToBase64(encoding);
@@ -64,7 +69,7 @@ public class ConvertExtensionsTest
     public void ToEnum_WithValidString_ReturnsEnumValue(string input, TestEnum expected)
     {
         // Act
-        var result = input.ToEnum<TestEnum>();
+        TestEnum result = input.ToEnum<TestEnum>();
 
         // Assert
         result.Should().Be(expected);
@@ -77,7 +82,7 @@ public class ConvertExtensionsTest
     public void ToEnum_WithInvalidString_ReturnsDefault(string input)
     {
         // Act
-        var result = input.ToEnum<TestEnum>();
+        TestEnum result = input.ToEnum<TestEnum>();
 
         // Assert
         result.Should().Be(default(TestEnum));
@@ -90,7 +95,7 @@ public class ConvertExtensionsTest
         var input = "Invalid";
 
         // Act
-        var result = input.ToEnum(TestEnum.Pending);
+        TestEnum result = input.ToEnum(TestEnum.Pending);
 
         // Assert
         result.Should().Be(TestEnum.Pending);
@@ -562,3 +567,5 @@ public class ConvertExtensionsTest
 
     #endregion
 }
+
+#pragma warning restore CS8604

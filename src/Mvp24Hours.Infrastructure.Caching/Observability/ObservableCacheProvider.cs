@@ -70,7 +70,7 @@ public class ObservableCacheProvider : ICacheProvider
                 key,
                 _providerName);
 
-            var value = await _innerProvider.GetAsync<T>(key, cancellationToken);
+            T? value = await _innerProvider.GetAsync<T>(key, cancellationToken);
             var isHit = value != null;
             var durationMs = stopwatch.Elapsed.TotalMilliseconds;
 

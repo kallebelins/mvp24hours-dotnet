@@ -44,9 +44,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var activityName = $"RabbitMQ Consume {messageType}";
 
             // Try to extract parent context from headers
-            var parentContext = ExtractParentContext(context);
+            ActivityContext parentContext = ExtractParentContext(context);
 
-            using var activity = ActivitySource.StartActivity(
+            using Activity? activity = ActivitySource.StartActivity(
                 activityName,
                 ActivityKind.Consumer,
                 parentContext);
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var traceparent = context.GetHeader<string>("traceparent");
             if (!string.IsNullOrEmpty(traceparent))
             {
-                if (ActivityContext.TryParse(traceparent, null, out var activityContext))
+                if (ActivityContext.TryParse(traceparent, null, out ActivityContext activityContext))
                 {
                     return activityContext;
                 }
@@ -158,7 +158,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var messageType = typeof(TMessage).Name;
             var activityName = $"RabbitMQ Publish {messageType}";
 
-            using var activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
+            using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
 
             if (activity != null)
             {
@@ -246,7 +246,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var messageType = typeof(TMessage).Name;
             var activityName = $"RabbitMQ Send {messageType}";
 
-            using var activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
+            using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
 
             if (activity != null)
             {

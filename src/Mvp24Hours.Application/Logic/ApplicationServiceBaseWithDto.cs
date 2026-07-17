@@ -177,8 +177,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-applicationservicebasewithdto-list");
-            var entities = _repository.List(criteria);
-            var dtos = _mapper.Map<IList<TDto>>(entities);
+            IList<TEntity> entities = _repository.List(criteria);
+            IList<TDto> dtos = _mapper.Map<IList<TDto>>(entities);
             return dtos.ToBusiness();
         }
 
@@ -206,8 +206,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-applicationservicebasewithdto-getby");
-            var entities = _repository.GetBy(clause, criteria);
-            var dtos = _mapper.Map<IList<TDto>>(entities);
+            IList<TEntity> entities = _repository.GetBy(clause, criteria);
+            IList<TDto> dtos = _mapper.Map<IList<TDto>>(entities);
             return dtos.ToBusiness();
         }
 
@@ -221,8 +221,8 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-applicationservicebasewithdto-getbyid");
-            var entity = _repository.GetById(id, criteria);
-            var dto = _mapper.Map<TDto>(entity);
+            TEntity? entity = _repository.GetById(id, criteria);
+            TDto dto = _mapper.Map<TDto>(entity);
             return dto.ToBusiness();
         }
 
@@ -236,17 +236,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdto-add");
 
             // Validate DTO if validator is available
-            var dtoErrors = dto.TryValidate(_dtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<int>();
             }
 
             // Map DTO to Entity
-            var entity = _mapper.Map<TEntity>(dto);
+            TEntity entity = _mapper.Map<TEntity>(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<int>();
@@ -268,20 +268,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
                 // Validate DTO if validator is available
-                var dtoErrors = dto.TryValidate(_dtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map DTO to Entity
-                var entity = _mapper.Map<TEntity>(dto);
+                TEntity entity = _mapper.Map<TEntity>(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -290,7 +290,7 @@ namespace Mvp24Hours.Application.Logic
                 entities.Add(entity);
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Add(entity);
             }
@@ -304,17 +304,17 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdto-modify");
 
             // Validate DTO if validator is available
-            var dtoErrors = dto.TryValidate(_dtoValidator);
+            IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
             if (dtoErrors.AnySafe())
             {
                 return dtoErrors.ToBusiness<int>();
             }
 
             // Map DTO to Entity
-            var entity = _mapper.Map<TEntity>(dto);
+            TEntity entity = _mapper.Map<TEntity>(dto);
 
             // Validate Entity if validator is available
-            var entityErrors = entity.TryValidate(_entityValidator);
+            IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
             if (entityErrors.AnySafe())
             {
                 return entityErrors.ToBusiness<int>();
@@ -336,20 +336,20 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>();
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
                 // Validate DTO if validator is available
-                var dtoErrors = dto.TryValidate(_dtoValidator);
+                IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
                 if (dtoErrors.AnySafe())
                 {
                     return dtoErrors.ToBusiness<int>();
                 }
 
                 // Map DTO to Entity
-                var entity = _mapper.Map<TEntity>(dto);
+                TEntity entity = _mapper.Map<TEntity>(dto);
 
                 // Validate Entity if validator is available
-                var entityErrors = entity.TryValidate(_entityValidator);
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                 if (entityErrors.AnySafe())
                 {
                     return entityErrors.ToBusiness<int>();
@@ -358,7 +358,7 @@ namespace Mvp24Hours.Application.Logic
                 entities.Add(entity);
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Modify(entity);
             }
@@ -372,7 +372,7 @@ namespace Mvp24Hours.Application.Logic
             _logger.LogDebug("application-applicationservicebasewithdto-remove");
 
             // Map DTO to Entity
-            var entity = _mapper.Map<TEntity>(dto);
+            TEntity entity = _mapper.Map<TEntity>(dto);
 
             _repository.Remove(entity);
             return _unitOfWork.SaveChanges().ToBusiness();
@@ -388,9 +388,9 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
-                var entity = _mapper.Map<TEntity>(dto);
+                TEntity entity = _mapper.Map<TEntity>(dto);
                 _repository.Remove(entity);
             }
 

@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Models
         /// </summary>
         public MmsMessage()
         {
-            Attachments = new List<MmsAttachment>();
+            Attachments = [];
         }
 
         /// <summary>
@@ -124,9 +124,9 @@ namespace Mvp24Hours.Infrastructure.Sms.Models
             // Validate attachments
             if (Attachments != null)
             {
-                foreach (var attachment in Attachments)
+                foreach (MmsAttachment attachment in Attachments)
                 {
-                    var attachmentErrors = attachment.Validate();
+                    IList<string> attachmentErrors = attachment.Validate();
                     errors.AddRange(attachmentErrors);
                 }
             }

@@ -20,7 +20,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.Basics
 
         public CustomerBasic()
         {
-            Contacts = new List<ContactBasic>();
+            Contacts = [];
         }
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 messageId);
 
             // Store in AsyncLocal for downstream access
-            var previousContext = _currentContext.Value;
+            CorrelationContext? previousContext = _currentContext.Value;
             _currentContext.Value = correlationContext;
 
             // Store in Items for filter chain access
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             CancellationToken cancellationToken = default) where TMessage : class
         {
             // Get current correlation context
-            var currentContext = CorrelationConsumeFilter.Current;
+            CorrelationContext? currentContext = CorrelationConsumeFilter.Current;
 
             // Set correlation ID (preserve existing or use from context or generate new)
             var correlationId = context.CorrelationId
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             CancellationToken cancellationToken = default) where TMessage : class
         {
             // Get current correlation context
-            var currentContext = CorrelationConsumeFilter.Current;
+            CorrelationContext? currentContext = CorrelationConsumeFilter.Current;
 
             // Set correlation ID (preserve existing or use from context or generate new)
             var correlationId = context.CorrelationId

@@ -180,7 +180,7 @@ public static class RabbitMQActivitySource
     /// <returns>The started activity, or null if no listeners are registered.</returns>
     public static Activity? StartPublishActivity(string messageType, string exchange, string? routingKey = null)
     {
-        var activity = Source.StartActivity($"RabbitMQ Publish {messageType}", ActivityKind.Producer);
+        Activity? activity = Source.StartActivity($"RabbitMQ Publish {messageType}", ActivityKind.Producer);
 
         if (activity != null)
         {
@@ -208,7 +208,7 @@ public static class RabbitMQActivitySource
     /// <returns>The started activity, or null if no listeners are registered.</returns>
     public static Activity? StartConsumeActivity(string messageType, string queueName, ActivityContext parentContext = default)
     {
-        var activity = Source.StartActivity(
+        Activity? activity = Source.StartActivity(
             $"RabbitMQ Consume {messageType}",
             ActivityKind.Consumer,
             parentContext);
@@ -234,7 +234,7 @@ public static class RabbitMQActivitySource
     /// <returns>The started activity, or null if no listeners are registered.</returns>
     public static Activity? StartRequestActivity(string requestType, string responseType, string destinationQueue)
     {
-        var activity = Source.StartActivity($"RabbitMQ Request {requestType}", ActivityKind.Client);
+        Activity? activity = Source.StartActivity($"RabbitMQ Request {requestType}", ActivityKind.Client);
 
         if (activity != null)
         {
@@ -258,7 +258,7 @@ public static class RabbitMQActivitySource
     /// <returns>The started activity, or null if no listeners are registered.</returns>
     public static Activity? StartBatchActivity(string messageType, int batchSize, string queueName)
     {
-        var activity = Source.StartActivity($"RabbitMQ Batch {messageType}", ActivityKind.Consumer);
+        Activity? activity = Source.StartActivity($"RabbitMQ Batch {messageType}", ActivityKind.Consumer);
 
         if (activity != null)
         {
@@ -280,7 +280,7 @@ public static class RabbitMQActivitySource
     /// <returns>The started activity, or null if no listeners are registered.</returns>
     public static Activity? StartSagaActivity(string sagaType, string correlationId)
     {
-        var activity = Source.StartActivity($"RabbitMQ Saga {sagaType}", ActivityKind.Internal);
+        Activity? activity = Source.StartActivity($"RabbitMQ Saga {sagaType}", ActivityKind.Internal);
 
         if (activity != null)
         {

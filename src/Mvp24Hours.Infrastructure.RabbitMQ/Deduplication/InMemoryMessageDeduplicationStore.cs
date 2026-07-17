@@ -40,7 +40,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Deduplication
         {
             ArgumentNullException.ThrowIfNull(messageId);
 
-            if (_processedMessages.TryGetValue(messageId, out var entry))
+            if (_processedMessages.TryGetValue(messageId, out DeduplicationEntry? entry))
             {
                 // Check if entry has expired
                 if (entry.ExpiresAt.HasValue && entry.ExpiresAt.Value < DateTimeOffset.UtcNow)
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Deduplication
 
             try
             {
-                var now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
                 var expiredKeys = _processedMessages
                     .Where(kvp => kvp.Value.ExpiresAt.HasValue && kvp.Value.ExpiresAt.Value < now)
                     .Select(kvp => kvp.Key)

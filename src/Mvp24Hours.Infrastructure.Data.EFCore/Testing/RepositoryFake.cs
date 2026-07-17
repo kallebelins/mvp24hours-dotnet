@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -174,14 +175,14 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public IList<TEntity> List(IPagingCriteria? criteria)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         return ApplyCriteria(query, criteria).ToList();
     }
 
     /// <inheritdoc />
     public bool GetByAny(Expression<Func<TEntity, bool>> clause)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -192,7 +193,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public int GetByCount(Expression<Func<TEntity, bool>> clause)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -209,7 +210,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria)
     {
-        var query = _entities.AsQueryable();
+        IQueryable<TEntity> query = _entities.AsQueryable();
         if (clause != null)
         {
             query = query.Where(clause);
@@ -291,7 +292,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 Add(entity);
             }
@@ -310,7 +311,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 Modify(entity);
             }
@@ -329,7 +330,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     {
         if (entities.AnySafe())
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 Remove(entity);
             }
@@ -339,7 +340,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public void RemoveById(object id)
     {
-        var entity = GetById(id);
+        TEntity? entity = GetById(id);
         if (entity != null)
         {
             Remove(entity);
@@ -382,7 +383,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         var changeCount = 0;
 
         // Process adds
-        foreach (var entity in _pendingAdds)
+        foreach (TEntity entity in _pendingAdds)
         {
             _entities.Add(entity);
             changeCount++;
@@ -390,7 +391,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         _pendingAdds.Clear();
 
         // Process modifies
-        foreach (var modifiedEntity in _pendingModifies)
+        foreach (TEntity modifiedEntity in _pendingModifies)
         {
             var key = _keySelector(modifiedEntity);
             var existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
@@ -403,10 +404,10 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         _pendingModifies.Clear();
 
         // Process removes
-        foreach (var entity in _pendingRemoves)
+        foreach (TEntity entity in _pendingRemoves)
         {
             var key = _keySelector(entity);
-            var existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
+            TEntity? existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
             if (existingEntity != null)
             {
                 _entities.Remove(existingEntity);
@@ -496,15 +497,15 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
                 var isDescending = parts.Length > 1 &&
                     parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
 
-                var parameter = Expression.Parameter(typeof(TEntity), "e");
-                var property = Expression.PropertyOrField(parameter, propertyName);
-                var lambda = Expression.Lambda(property, parameter);
+                ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "e");
+                MemberExpression property = Expression.PropertyOrField(parameter, propertyName);
+                LambdaExpression lambda = Expression.Lambda(property, parameter);
 
                 var methodName = isFirst
                     ? (isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy))
                     : (isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy));
 
-                var method = typeof(Queryable).GetMethods()
+                MethodInfo method = typeof(Queryable).GetMethods()
                     .First(m => m.Name == methodName && m.GetParameters().Length == 2)
                     .MakeGenericMethod(typeof(TEntity), property.Type);
 

@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             try
             {
                 // Try to get from cache
-                var cachedWrapper = await _cache.GetAsync<CachedItemWithExpiration<T>>(key, cancellationToken);
+                CachedItemWithExpiration<T>? cachedWrapper = await _cache.GetAsync<CachedItemWithExpiration<T>>(key, cancellationToken);
 
                 if (cachedWrapper != null)
                 {
@@ -151,11 +151,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
 
         private async Task<T?> LoadAndCacheAsync(string key, CancellationToken cancellationToken)
         {
-            var value = await _loadFromSource(key, cancellationToken);
+            T? value = await _loadFromSource(key, cancellationToken);
             if (value != null)
             {
                 var wrapper = new CachedItemWithExpiration<T>(value, _expiration);
-                var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(_expiration);
+                CacheEntryOptions options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(_expiration);
                 await _cache.SetAsync(key, wrapper, options, cancellationToken);
                 _logger?.LogDebug("Refresh-Ahead: Loaded and cached value for key: {Key}", key);
             }
@@ -166,7 +166,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
         private async Task RefreshInBackgroundAsync(string key, CancellationToken cancellationToken)
         {
             // Get or create a semaphore for this key to prevent concurrent refreshes
-            var semaphore = _refreshLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+            SemaphoreSlim semaphore = _refreshLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
 
             if (!await semaphore.WaitAsync(0, cancellationToken))
             {
@@ -178,12 +178,12 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             try
             {
                 _logger?.LogDebug("Refresh-Ahead: Refreshing key: {Key}", key);
-                var value = await _loadFromSource(key, cancellationToken);
+                T? value = await _loadFromSource(key, cancellationToken);
 
                 if (value != null)
                 {
                     var wrapper = new CachedItemWithExpiration<T>(value, _expiration);
-                    var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(_expiration);
+                    CacheEntryOptions options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(_expiration);
                     await _cache.SetAsync(key, wrapper, options, cancellationToken);
                     _logger?.LogDebug("Refresh-Ahead: Successfully refreshed key: {Key}", key);
                 }
@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 semaphore.Release();
 
                 // Clean up semaphore if no longer needed (optional optimization)
-                if (_refreshLocks.TryRemove(key, out var removedSemaphore))
+                if (_refreshLocks.TryRemove(key, out SemaphoreSlim? removedSemaphore))
                 {
                     removedSemaphore.Dispose();
                 }

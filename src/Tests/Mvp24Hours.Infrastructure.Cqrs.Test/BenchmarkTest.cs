@@ -75,7 +75,7 @@ public class BenchmarkTest
 
         // Act
         var sw = Stopwatch.StartNew();
-        foreach (var command in commands)
+        foreach (TestCommand? command in commands)
         {
             await _mediator.SendAsync(command);
         }
@@ -170,7 +170,7 @@ public class BenchmarkTest
 
         // Act
         var sw = Stopwatch.StartNew();
-        foreach (var notification in notifications)
+        foreach (OrderCreatedNotification? notification in notifications)
         {
             await _mediator.PublishAsync(notification);
         }
@@ -212,7 +212,7 @@ public class BenchmarkTest
     {
         // Arrange
         SetupServices();
-        var dispatcher = _serviceProvider.GetRequiredService<IDomainEventDispatcher>();
+        IDomainEventDispatcher dispatcher = _serviceProvider.GetRequiredService<IDomainEventDispatcher>();
 
         var aggregates = Enumerable.Range(1, 100)
             .Select(i =>
@@ -227,7 +227,7 @@ public class BenchmarkTest
         await dispatcher.DispatchEventsAsync(aggregates[0]);
 
         // Reset for actual test
-        foreach (var agg in aggregates.Skip(1))
+        foreach (TestAggregate? agg in aggregates.Skip(1))
         {
             agg.Register($"user{agg.Id}@test.com"); // Re-add event
         }
@@ -253,7 +253,7 @@ public class BenchmarkTest
 
         // Act
         var sw = Stopwatch.StartNew();
-        var tasks = commands.Select(c => _mediator.SendAsync(c));
+        IEnumerable<Task<string>> tasks = commands.Select(c => _mediator.SendAsync(c));
         var results = await Task.WhenAll(tasks);
         sw.Stop();
 
@@ -278,7 +278,7 @@ public class BenchmarkTest
 
         // Act
         var sw = Stopwatch.StartNew();
-        foreach (var query in queries)
+        foreach (GetUserQuery? query in queries)
         {
             await _mediator.SendAsync(query);
         }
@@ -297,14 +297,14 @@ public class BenchmarkTest
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
-        var sp = services.BuildServiceProvider();
+        ServiceProvider sp = services.BuildServiceProvider();
 
         // Act - Measure scope creation and mediator resolution
         var sw = Stopwatch.StartNew();
         for (int i = 0; i < 1000; i++)
         {
-            using var scope = sp.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            using IServiceScope scope = sp.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         }
         sw.Stop();
 

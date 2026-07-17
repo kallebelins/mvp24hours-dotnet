@@ -50,7 +50,7 @@ public static class ActivityExtensions
         activity.SetTag(SemanticTags.OperationSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
 
-        foreach (var (key, value) in tags)
+        foreach ((string? key, object? value) in tags)
         {
             activity.SetTag(key, value);
         }
@@ -150,7 +150,7 @@ public static class ActivityExtensions
         if (activity == null) return null;
 
         var activityTags = new ActivityTagsCollection();
-        foreach (var (key, value) in tags)
+        foreach ((string? key, object? value) in tags)
         {
             activityTags.Add(key, value);
         }
@@ -452,7 +452,7 @@ public static class ActivityExtensions
         string name,
         ActivityKind kind = ActivityKind.Internal)
     {
-        var activity = source.StartActivity(name, kind);
+        Activity? activity = source.StartActivity(name, kind);
         return new ScopedActivity(activity);
     }
 

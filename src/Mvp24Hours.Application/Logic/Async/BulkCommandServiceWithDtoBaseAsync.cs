@@ -167,7 +167,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate and map DTOs to entities
-                var mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
+                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
                 if (!mappingResult.HasData() || mappingResult.Data == null)
                 {
                     stopwatch.Stop();
@@ -176,10 +176,10 @@ namespace Mvp24Hours.Application.Logic
                         stopwatch.Elapsed).ToBusiness();
                 }
 
-                var entities = mappingResult.Data;
+                IList<TEntity> entities = mappingResult.Data;
 
                 // Execute bulk insert using base class
-                var result = await base.BulkAddAsync(entities, options, cancellationToken);
+                IBusinessResult<BulkOperationResult> result = await base.BulkAddAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate and map DTOs to entities
-                var mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
+                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
                 if (!mappingResult.HasData() || mappingResult.Data == null)
                 {
                     stopwatch.Stop();
@@ -234,10 +234,10 @@ namespace Mvp24Hours.Application.Logic
                         stopwatch.Elapsed).ToBusiness();
                 }
 
-                var entities = mappingResult.Data;
+                IList<TEntity> entities = mappingResult.Data;
 
                 // Execute bulk update using base class
-                var result = await base.BulkModifyAsync(entities, options, cancellationToken);
+                IBusinessResult<BulkOperationResult> result = await base.BulkModifyAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -283,10 +283,10 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Map DTOs to entities (no validation needed for delete)
-                var entities = MapDtosToEntities(dtos);
+                IList<TEntity> entities = MapDtosToEntities(dtos);
 
                 // Execute bulk delete using base class
-                var result = await base.BulkRemoveAsync(entities, options, cancellationToken);
+                IBusinessResult<BulkOperationResult> result = await base.BulkRemoveAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -353,14 +353,14 @@ namespace Mvp24Hours.Application.Logic
 
             var entities = new List<TEntity>(dtos.Count);
 
-            foreach (var dto in dtos)
+            foreach (TDto dto in dtos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // Validate DTO if validator is available
                 if (_dtoValidator != null)
                 {
-                    var dtoErrors = dto.TryValidate(_dtoValidator);
+                    IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
                     if (dtoErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandservicedtoasync-validatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
@@ -370,12 +370,12 @@ namespace Mvp24Hours.Application.Logic
                 }
 
                 // Map DTO to Entity
-                var entity = MapDtoToEntity(dto);
+                TEntity entity = MapDtoToEntity(dto);
 
                 // Validate Entity if validator is available
                 if (_entityValidator != null)
                 {
-                    var entityErrors = entity.TryValidate(_entityValidator);
+                    IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
                     if (entityErrors.AnySafe())
                     {
                         _logger.LogDebug("application-bulkcommandservicedtoasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",

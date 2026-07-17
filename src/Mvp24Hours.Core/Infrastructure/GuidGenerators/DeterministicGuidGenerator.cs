@@ -96,7 +96,7 @@ namespace Mvp24Hours.Core.Infrastructure.GuidGenerators
         /// <param name="guids">The GUIDs to add.</param>
         public void AddGuids(params Guid[] guids)
         {
-            foreach (var guid in guids)
+            foreach (Guid guid in guids)
             {
                 _predefinedGuids.Enqueue(guid);
             }

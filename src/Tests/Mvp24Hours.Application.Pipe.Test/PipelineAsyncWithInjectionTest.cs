@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Setup;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Xunit;
@@ -27,8 +28,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineStarted()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
             pipeline.Add(_ =>
@@ -53,8 +54,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineMessageContentGet()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -76,7 +77,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             });
 
             // define param
-            var message = "Parameter received.".ToMessage();
+            IPipelineMessage message = "Parameter received.".ToMessage();
 
             await pipeline.ExecuteAsync(message);
 
@@ -88,8 +89,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineMessageContentAdd()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -111,7 +112,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             });
 
             // define attachment for message 
-            var message = "Parameter received.".ToMessage();
+            IPipelineMessage message = "Parameter received.".ToMessage();
 
             await pipeline.ExecuteAsync(message);
 
@@ -132,8 +133,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineMessageContentValidate()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -151,9 +152,9 @@ namespace Mvp24Hours.Application.Pipe.Test
                 }
             });
             await pipeline.ExecuteAsync();
-            var result1 = pipeline.GetMessage();
+            IPipelineMessage result1 = pipeline.GetMessage();
             await pipeline.ExecuteAsync("Parameter received.".ToMessage());
-            var result2 = pipeline.GetMessage();
+            IPipelineMessage result2 = pipeline.GetMessage();
 
             // assert
             Assert.True(result1 != null && result2 != null);
@@ -163,8 +164,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineOperationLock()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -197,8 +198,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineOperationLockExecuteForce()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -247,8 +248,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineOperationFailure()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -287,8 +288,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineOperationLockWithNotification()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -310,9 +311,9 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             await pipeline.ExecuteAsync();
 
-            var message = pipeline.GetMessage();
+            IPipelineMessage message = pipeline.GetMessage();
 
-            foreach (var item in message.Messages)
+            foreach (IMessageResult item in message.Messages)
             {
                 Trace.WriteLine(item.Message);
             }
@@ -325,8 +326,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineInterceptors()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -402,8 +403,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineEventInterceptors()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -479,8 +480,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineEventInterceptorsWithLock()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
 
@@ -558,8 +559,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public async Task PipelineFactory()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionFactoryAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionFactoryAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
             pipeline.Add(_ =>
@@ -573,7 +574,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             await pipeline.ExecuteAsync();
 
             // assert
-            var message = pipeline.GetMessage();
+            IPipelineMessage message = pipeline.GetMessage();
             Assert.Equal(1, message.GetContent<int>("factory"));
         }
 
@@ -581,8 +582,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         public void PipelineWithOperation()
         {
             // arrange
-            var serviceProvider = StartupAsync.SetupInjectionAsync();
-            var pipeline = serviceProvider.GetService<IPipelineAsync>();
+            IServiceProvider serviceProvider = StartupAsync.SetupInjectionAsync();
+            IPipelineAsync? pipeline = serviceProvider.GetRequiredService<IPipelineAsync>();
 
             // act
             pipeline.Add<OperationTestAsync>();

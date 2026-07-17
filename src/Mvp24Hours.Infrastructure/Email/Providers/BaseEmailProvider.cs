@@ -71,19 +71,19 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             cancellationToken.ThrowIfCancellationRequested();
 
             // Validate message
-            var validationErrors = ValidateMessage(message);
+            IList<string> validationErrors = ValidateMessage(message);
             if (validationErrors.Count > 0)
             {
                 return EmailSendResult.Failed(validationErrors);
             }
 
             // Apply defaults
-            var emailToSend = ApplyDefaults(message);
+            EmailMessage emailToSend = ApplyDefaults(message);
 
             try
             {
                 // Delegate to derived class for actual sending
-                var result = await SendEmailAsync(emailToSend, cancellationToken);
+                EmailSendResult result = await SendEmailAsync(emailToSend, cancellationToken);
                 return result;
             }
             catch (Exception ex)
@@ -112,11 +112,11 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             var results = new List<EmailSendResult>();
             var messagesList = messages.ToList();
 
-            foreach (var message in messagesList)
+            foreach (EmailMessage? message in messagesList)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = await SendAsync(message, cancellationToken);
+                EmailSendResult result = await SendAsync(message, cancellationToken);
                 results.Add(result);
             }
 
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             var errors = new List<string>();
 
             // Validate using EmailMessage.Validate()
-            var validationErrors = message.Validate();
+            IList<string> validationErrors = message.Validate();
             errors.AddRange(validationErrors);
 
             // Validate recipient limits
@@ -171,7 +171,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             // Validate attachment sizes
             if (Options.MaxAttachmentSize.HasValue && message.Attachments != null)
             {
-                foreach (var attachment in message.Attachments)
+                foreach (IEmailAttachment attachment in message.Attachments)
                 {
                     if (attachment.ContentLength.HasValue &&
                         attachment.ContentLength.Value > Options.MaxAttachmentSize.Value)
@@ -194,9 +194,9 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             // Create a copy to avoid modifying the original
             var emailCopy = new EmailMessage
             {
-                To = new List<string>(message.To ?? new List<string>()),
-                Cc = new List<string>(message.Cc ?? new List<string>()),
-                Bcc = new List<string>(message.Bcc ?? new List<string>()),
+                To = new List<string>(message.To ?? []),
+                Cc = new List<string>(message.Cc ?? []),
+                Bcc = new List<string>(message.Bcc ?? []),
                 From = message.From ?? Options.DefaultFrom,
                 ReplyTo = message.ReplyTo ?? Options.DefaultReplyTo,
                 Subject = !string.IsNullOrWhiteSpace(Options.DefaultSubjectPrefix)
@@ -206,11 +206,11 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 PlainTextBody = message.PlainTextBody,
                 Priority = message.Priority != EmailPriority.Normal ? message.Priority : Options.DefaultPriority,
                 RequestReadReceipt = message.RequestReadReceipt || Options.DefaultRequestReadReceipt,
-                Attachments = new List<IEmailAttachment>(message.Attachments ?? new List<IEmailAttachment>())
+                Attachments = new List<IEmailAttachment>(message.Attachments ?? [])
             };
 
             // Apply default headers
-            foreach (var header in Options.DefaultHeaders)
+            foreach (KeyValuePair<string, string> header in Options.DefaultHeaders)
             {
                 if (!emailCopy.Headers.ContainsKey(header.Key))
                 {
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             }
 
             // Copy custom headers from original message
-            foreach (var header in message.Headers)
+            foreach (KeyValuePair<string, string> header in message.Headers)
             {
                 emailCopy.Headers[header.Key] = header.Value;
             }

@@ -134,7 +134,7 @@ public static class NativeTypedResultsExtensions
 
         if (result.HasErrors)
         {
-            var errorMessages = result.Messages?
+            List<string> errorMessages = result.Messages?
                 .Where(m => m.Type == MessageType.Error)
                 .Select(m => m.Message)
                 .ToList() ?? [];
@@ -168,7 +168,7 @@ public static class NativeTypedResultsExtensions
 
         if (result.HasErrors)
         {
-            var structuredMessages = result.Messages?
+            List<IStructuredMessageResult> structuredMessages = result.Messages?
                 .OfType<IStructuredMessageResult>()
                 .ToList() ?? [];
 
@@ -209,7 +209,7 @@ public static class NativeTypedResultsExtensions
 
         if (result.HasErrors)
         {
-            var structuredMessages = result.Messages?
+            List<IStructuredMessageResult> structuredMessages = result.Messages?
                 .OfType<IStructuredMessageResult>()
                 .ToList() ?? [];
 
@@ -292,7 +292,7 @@ public static class NativeTypedResultsExtensions
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        var (statusCode, title, type) = MapExceptionToStatusCode(exception);
+        (int statusCode, string? title, string? type) = MapExceptionToStatusCode(exception);
         var detail = includeDetails ? exception.Message : GetSafeExceptionDetail(exception);
 
         var problemDetails = new ProblemDetails
@@ -340,7 +340,7 @@ public static class NativeTypedResultsExtensions
         this Exception exception,
         string? instance = null)
     {
-        var result = exception.ToNativeTypedProblem(includeDetails: true, instance);
+        ProblemHttpResult result = exception.ToNativeTypedProblem(includeDetails: true, instance);
         result.ProblemDetails.Extensions["stackTrace"] = exception.StackTrace;
         return result;
     }
@@ -418,7 +418,7 @@ public static class NativeTypedResultsExtensions
             ? $"{entityName} with ID '{entityId}' was not found."
             : $"{entityName} was not found.";
 
-        var problemDetails = CreateProblemDetails(StatusCodes.Status404NotFound, "Resource Not Found", detail);
+        ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status404NotFound, "Resource Not Found", detail);
         problemDetails.Extensions["entityName"] = entityName;
         if (entityId is not null)
             problemDetails.Extensions["entityId"] = entityId;
@@ -434,7 +434,7 @@ public static class NativeTypedResultsExtensions
     /// <returns>A Conflict result with ProblemDetails.</returns>
     public static Conflict<ProblemDetails> Conflict(string detail, string? entityName = null)
     {
-        var problemDetails = CreateProblemDetails(StatusCodes.Status409Conflict, "Resource Conflict", detail);
+        ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status409Conflict, "Resource Conflict", detail);
         if (entityName is not null)
             problemDetails.Extensions["entityName"] = entityName;
 
@@ -450,7 +450,7 @@ public static class NativeTypedResultsExtensions
     /// <returns>A Problem result with 422 status.</returns>
     public static ProblemHttpResult UnprocessableEntity(string detail, string? entityName = null, string? ruleName = null)
     {
-        var problemDetails = CreateProblemDetails(StatusCodes.Status422UnprocessableEntity, "Domain Rule Violation", detail);
+        ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status422UnprocessableEntity, "Domain Rule Violation", detail);
         problemDetails.Type = "https://httpstatuses.com/domain-error";
         if (entityName is not null)
             problemDetails.Extensions["entityName"] = entityName;
@@ -525,11 +525,11 @@ public static class NativeTypedResultsExtensions
         string detail,
         IDictionary<string, object?>? extensions = null)
     {
-        var problemDetails = CreateProblemDetails(statusCode, title, detail);
+        ProblemDetails problemDetails = CreateProblemDetails(statusCode, title, detail);
 
         if (extensions is not null)
         {
-            foreach (var extension in extensions)
+            foreach (KeyValuePair<string, object?> extension in extensions)
             {
                 problemDetails.Extensions[extension.Key] = extension.Value;
             }
@@ -602,7 +602,7 @@ public static class NativeTypedResultsExtensions
         }
 
         // Default: BadRequest
-        var problemDetails = CreateProblemDetails(
+        ProblemDetails problemDetails = CreateProblemDetails(
             StatusCodes.Status400BadRequest,
             "Validation Failed",
             errorDetail);

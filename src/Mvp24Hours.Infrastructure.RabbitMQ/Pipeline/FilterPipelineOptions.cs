@@ -15,9 +15,9 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
     /// </summary>
     public class FilterPipelineOptions
     {
-        private readonly List<Type> _consumeFilters = new();
-        private readonly List<Type> _publishFilters = new();
-        private readonly List<Type> _sendFilters = new();
+        private readonly List<Type> _consumeFilters = [];
+        private readonly List<Type> _publishFilters = [];
+        private readonly List<Type> _sendFilters = [];
 
         /// <summary>
         /// Gets the registered consume filter types.
@@ -226,7 +226,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         /// <returns>The options for chaining.</returns>
         public FilterPipelineOptions UseFilter<TFilter>() where TFilter : class
         {
-            var filterType = typeof(TFilter);
+            Type filterType = typeof(TFilter);
 
             if (typeof(IConsumeFilter).IsAssignableFrom(filterType) || IsGenericConsumeFilter(filterType))
             {

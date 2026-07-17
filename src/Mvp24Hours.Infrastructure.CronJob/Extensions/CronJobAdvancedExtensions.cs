@@ -131,7 +131,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
         {
             Guard.Against.Null(services, nameof(services));
 
-            var handlerType = typeof(THandler);
+            Type handlerType = typeof(THandler);
 
             // Register for each interface the handler implements
             if (typeof(ICronJobStartingHandler).IsAssignableFrom(handlerType))
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
             // Register initialization action
             services.AddSingleton(sp =>
             {
-                var tracker = sp.GetRequiredService<ICronJobDependencyTracker>();
+                ICronJobDependencyTracker tracker = sp.GetRequiredService<ICronJobDependencyTracker>();
                 tracker.RegisterDependency(dependency);
                 return dependency;
             });
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Extensions
             Guard.Against.Null(services, nameof(services));
             Guard.Against.Null(configure, nameof(configure));
 
-            var builder = CronJobDependency.For(typeof(TDependentJob).Name);
+            CronJobDependencyBuilder builder = CronJobDependency.For(typeof(TDependentJob).Name);
             configure(builder);
 
             return services.AddCronJobDependency(builder.Build());

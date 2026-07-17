@@ -212,7 +212,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            var requests = handler.ReceivedRequests;
+            IReadOnlyList<RecordedRequest> requests = handler.ReceivedRequests;
             if (requests.Count == 0)
             {
                 throw new AssertionException("No HTTP requests were recorded.");

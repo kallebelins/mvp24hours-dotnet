@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             try
             {
                 // Try L1 first (fastest)
-                var l1Value = await _l1Cache.GetAsync<T>(key, cancellationToken);
+                T? l1Value = await _l1Cache.GetAsync<T>(key, cancellationToken);
                 if (l1Value != null)
                 {
                     _statistics.L1.Hits++;
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
                 _statistics.L2.Requests++;
 
                 // Try L2 (distributed)
-                var l2Value = await _l2Cache.GetAsync<T>(key, cancellationToken);
+                T? l2Value = await _l2Cache.GetAsync<T>(key, cancellationToken);
                 if (l2Value != null)
                 {
                     _statistics.L2.Hits++;
@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
                 throw new ArgumentNullException(nameof(factory));
 
             // Try cache first
-            var cached = await GetAsync<T>(key, cancellationToken);
+            T? cached = await GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
@@ -210,7 +210,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
 
             // Load from factory
             _logger?.LogDebug("[MultiLevelCache] Loading {Key} from factory", key);
-            var value = await factory(cancellationToken);
+            T? value = await factory(cancellationToken);
 
             if (value != null)
             {
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             _statistics.L1.Requests++;
             try
             {
-                var value = await _l1Cache.GetAsync<T>(key, cancellationToken);
+                T? value = await _l1Cache.GetAsync<T>(key, cancellationToken);
                 if (value != null)
                 {
                     _statistics.L1.Hits++;
@@ -258,7 +258,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             _statistics.L2.Requests++;
             try
             {
-                var value = await _l2Cache.GetAsync<T>(key, cancellationToken);
+                T? value = await _l2Cache.GetAsync<T>(key, cancellationToken);
                 if (value != null)
                 {
                     _statistics.L2.Hits++;
@@ -285,7 +285,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
 
             try
             {
-                var l2Value = await _l2Cache.GetAsync<T>(key, cancellationToken);
+                T? l2Value = await _l2Cache.GetAsync<T>(key, cancellationToken);
                 if (l2Value == null)
                 {
                     return false;
@@ -555,13 +555,13 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
         public async Task<Dictionary<string, T>> GetManyAsync<T>(string[] keys, CancellationToken cancellationToken = default) where T : class
         {
             if (keys == null || keys.Length == 0)
-                return new Dictionary<string, T>();
+                return [];
 
             var result = new Dictionary<string, T>();
 
             // Try L1 first
-            var l1Results = await _l1Cache.GetManyAsync<T>(keys, cancellationToken);
-            foreach (var kvp in l1Results)
+            Dictionary<string, T> l1Results = await _l1Cache.GetManyAsync<T>(keys, cancellationToken);
+            foreach (KeyValuePair<string, T> kvp in l1Results)
             {
                 result[kvp.Key] = kvp.Value;
             }
@@ -570,8 +570,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             var missingKeys = keys.Where(k => !result.ContainsKey(k)).ToArray();
             if (missingKeys.Length > 0)
             {
-                var l2Results = await _l2Cache.GetManyAsync<T>(missingKeys, cancellationToken);
-                foreach (var kvp in l2Results)
+                Dictionary<string, T> l2Results = await _l2Cache.GetManyAsync<T>(missingKeys, cancellationToken);
+                foreach (KeyValuePair<string, T> kvp in l2Results)
                 {
                     result[kvp.Key] = kvp.Value;
                     // Promote to L1

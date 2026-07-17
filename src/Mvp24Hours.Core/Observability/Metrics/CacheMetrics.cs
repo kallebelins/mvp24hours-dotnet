@@ -54,7 +54,7 @@ public sealed class CacheMetrics
     /// </summary>
     public CacheMetrics()
     {
-        var meter = Mvp24HoursMeters.Caching.Meter;
+        Meter meter = Mvp24HoursMeters.Caching.Meter;
 
         _getsTotal = meter.CreateCounter<long>(
             MetricNames.CacheGetsTotal,
@@ -296,7 +296,7 @@ public sealed class CacheMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             var durationMs = elapsed.TotalMilliseconds;
 
             switch (_operation)

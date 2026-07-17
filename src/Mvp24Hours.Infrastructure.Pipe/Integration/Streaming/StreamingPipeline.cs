@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             _operations.Add(async (input, ct) =>
             {
                 var typedInput = (TOpInput?)input;
-                var result = await operation.ExecuteAsync(typedInput!, ct);
+                IOperationResult<TOpOutput> result = await operation.ExecuteAsync(typedInput!, ct);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -77,7 +77,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             _operations.Add(async (input, ct) =>
             {
                 var typedInput = (TInput?)input;
-                var result = await transform(typedInput!, ct);
+                IOperationResult<TOutput> result = await transform(typedInput!, ct);
                 return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
             });
 
@@ -94,9 +94,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             if (MaxDegreeOfParallelism <= 1)
             {
                 // Sequential processing
-                await foreach (var input in inputs.WithCancellation(cancellationToken))
+                await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
                 {
-                    var result = await ProcessSingleItemAsync(input, cancellationToken);
+                    IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
 
                     if (result.IsFailure && !ContinueOnError)
                     {
@@ -118,9 +118,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
                         FullMode = BoundedChannelFullMode.Wait
                     });
 
-                var processingTask = ProcessInParallelAsync(inputs, channel.Writer, cancellationToken);
+                Task processingTask = ProcessInParallelAsync(inputs, channel.Writer, cancellationToken);
 
-                await foreach (var result in channel.Reader.ReadAllAsync(cancellationToken))
+                await foreach (IOperationResult<TOutput> result in channel.Reader.ReadAllAsync(cancellationToken))
                 {
                     yield return result;
                 }
@@ -136,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             IEnumerable<TInput> inputs,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            await foreach (var result in ExecuteStreamAsync(ToAsyncEnumerable(inputs), cancellationToken))
+            await foreach (IOperationResult<TOutput> result in ExecuteStreamAsync(ToAsyncEnumerable(inputs), cancellationToken))
             {
                 yield return result;
             }
@@ -153,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
 
             try
             {
-                await foreach (var input in inputs.WithCancellation(cancellationToken))
+                await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
                 {
                     if (shouldStop)
                         break;
@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
                     {
                         try
                         {
-                            var result = await ProcessSingleItemAsync(input, cancellationToken);
+                            IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
                             await writer.WriteAsync(result, cancellationToken);
 
                             if (result.IsFailure && !ContinueOnError)
@@ -198,11 +198,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
             {
                 object? currentValue = input;
 
-                foreach (var operation in _operations)
+                foreach (Func<object?, CancellationToken, Task<IOperationResult<object>>> operation in _operations)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var result = await operation(currentValue, cancellationToken);
+                    IOperationResult<object> result = await operation(currentValue, cancellationToken);
 
                     if (result.IsFailure)
                     {
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
 
         private static async IAsyncEnumerable<TInput> ToAsyncEnumerable(IEnumerable<TInput> source)
         {
-            foreach (var item in source)
+            foreach (TInput? item in source)
             {
                 yield return item;
                 await Task.CompletedTask; // Allow cooperative scheduling

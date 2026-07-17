@@ -98,8 +98,8 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <returns>A DateRange spanning the entire day.</returns>
         public static DateRange ForDay(DateTime date)
         {
-            var start = date.Date;
-            var end = start.AddDays(1).AddTicks(-1);
+            DateTime start = date.Date;
+            DateTime end = start.AddDays(1).AddTicks(-1);
             return new DateRange(start, end);
         }
 
@@ -109,9 +109,9 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <returns>A DateRange spanning the current month.</returns>
         public static DateRange CurrentMonth()
         {
-            var now = DateTime.Now;
+            DateTime now = DateTime.Now;
             var start = new DateTime(now.Year, now.Month, 1);
-            var end = start.AddMonths(1).AddTicks(-1);
+            DateTime end = start.AddMonths(1).AddTicks(-1);
             return new DateRange(start, end);
         }
 
@@ -121,9 +121,9 @@ namespace Mvp24Hours.Core.ValueObjects
         /// <returns>A DateRange spanning the current year.</returns>
         public static DateRange CurrentYear()
         {
-            var now = DateTime.Now;
+            DateTime now = DateTime.Now;
             var start = new DateTime(now.Year, 1, 1);
-            var end = start.AddYears(1).AddTicks(-1);
+            DateTime end = start.AddYears(1).AddTicks(-1);
             return new DateRange(start, end);
         }
 
@@ -173,8 +173,8 @@ namespace Mvp24Hours.Core.ValueObjects
                 return null;
             }
 
-            var intersectStart = Start > other.Start ? Start : other.Start;
-            var intersectEnd = End < other.End ? End : other.End;
+            DateTime intersectStart = Start > other.Start ? Start : other.Start;
+            DateTime intersectEnd = End < other.End ? End : other.End;
 
             return new DateRange(intersectStart, intersectEnd);
         }
@@ -188,8 +188,8 @@ namespace Mvp24Hours.Core.ValueObjects
         {
             Guard.Against.Null(other, nameof(other));
 
-            var unionStart = Start < other.Start ? Start : other.Start;
-            var unionEnd = End > other.End ? End : other.End;
+            DateTime unionStart = Start < other.Start ? Start : other.Start;
+            DateTime unionEnd = End > other.End ? End : other.End;
 
             return new DateRange(unionStart, unionEnd);
         }

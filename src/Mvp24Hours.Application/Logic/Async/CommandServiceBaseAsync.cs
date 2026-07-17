@@ -140,7 +140,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing AddAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.AddAsync(entity, cancellationToken: cancellationToken);
@@ -159,9 +159,9 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing ModifyAsync for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 await _repository.ModifyAsync(entity, cancellationToken: cancellationToken);
@@ -196,9 +196,9 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();

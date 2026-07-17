@@ -136,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Helpers
                 {
                     lastException = ex;
 
-                    var delay = CalculateDelay(attempt, options);
+                    TimeSpan delay = CalculateDelay(attempt, options);
 
                     logger?.LogWarning(
                         ex,
@@ -248,7 +248,7 @@ namespace Mvp24Hours.Infrastructure.Resilience.Helpers
         /// </summary>
         private static TimeSpan CalculateDelay(int attempt, RetryOptions options)
         {
-            var delay = options.BackoffType switch
+            TimeSpan delay = options.BackoffType switch
             {
                 RetryBackoffType.Constant => options.InitialDelay,
                 RetryBackoffType.Linear => TimeSpan.FromMilliseconds(

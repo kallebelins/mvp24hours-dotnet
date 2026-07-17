@@ -154,7 +154,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-addasync");
-            var errors = entity.TryValidate(Validator);
+            IList<IMessageResult> errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
                 await this.UnitOfWork
@@ -174,15 +174,15 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(Validator);
+                IList<IMessageResult> errors = entity.TryValidate(Validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
                 }
             }
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
             await Task.WhenAll(entities.Select(entity => rep.AddAsync(entity, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-modifyasync");
-            var errors = entity.TryValidate(Validator);
+            IList<IMessageResult> errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
                 await this.UnitOfWork
@@ -211,15 +211,15 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(Validator);
+                IList<IMessageResult> errors = entity.TryValidate(Validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
                 }
             }
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
             await Task.WhenAll(entities.Select(entity => rep.ModifyAsync(entity, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
             await Task.WhenAll(entities.Select(entity => rep.RemoveAsync(entity, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();
@@ -263,7 +263,7 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
+            IRepositoryAsync<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
             await Task.WhenAll(ids.Select(id => rep.RemoveByIdAsync(id, cancellationToken: cancellationToken)));
             return await this.UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken)
                 .ToBusinessAsync();

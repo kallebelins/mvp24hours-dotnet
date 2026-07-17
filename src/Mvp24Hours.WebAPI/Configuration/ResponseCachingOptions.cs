@@ -26,7 +26,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the dictionary of cache profiles.
         /// </summary>
-        public Dictionary<string, CacheProfile> Profiles { get; set; } = new Dictionary<string, CacheProfile>();
+        public Dictionary<string, CacheProfile> Profiles { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the maximum response body size (in bytes) to cache.
@@ -42,7 +42,7 @@ namespace Mvp24Hours.WebAPI.Configuration
         /// <summary>
         /// Gets or sets the list of paths to exclude from caching.
         /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = new HashSet<string>();
+        public HashSet<string> ExcludedPaths { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to vary cache by query string keys.

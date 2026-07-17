@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SecretsManager.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Security.Contract;
@@ -95,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
                     SecretId = fullSecretName
                 };
 
-                var response = await _client.Value.GetSecretValueAsync(request, cancellationToken);
+                GetSecretValueResponse response = await _client.Value.GetSecretValueAsync(request, cancellationToken);
                 return response.SecretString;
             }
             catch (Amazon.SecretsManager.Model.ResourceNotFoundException)
@@ -121,7 +122,7 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
             }
 
             var result = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-            var tasks = secretNames.Select(async name =>
+            IEnumerable<Task<KeyValuePair<string, string?>>> tasks = secretNames.Select(async name =>
             {
                 if (string.IsNullOrWhiteSpace(name))
                 {
@@ -132,8 +133,8 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
                 return new KeyValuePair<string, string?>(name, value);
             });
 
-            var results = await Task.WhenAll(tasks);
-            foreach (var kvp in results)
+            KeyValuePair<string, string?>[] results = await Task.WhenAll(tasks);
+            foreach (KeyValuePair<string, string?> kvp in results)
             {
                 result[kvp.Key] = kvp.Value;
             }
@@ -166,7 +167,7 @@ namespace Mvp24Hours.Infrastructure.Security.Providers
                     VersionId = version
                 };
 
-                var response = await _client.Value.GetSecretValueAsync(request, cancellationToken);
+                GetSecretValueResponse response = await _client.Value.GetSecretValueAsync(request, cancellationToken);
                 return response.SecretString;
             }
             catch (Amazon.SecretsManager.Model.ResourceNotFoundException)

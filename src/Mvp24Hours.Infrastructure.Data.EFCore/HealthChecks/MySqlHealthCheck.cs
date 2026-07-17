@@ -81,14 +81,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
             try
             {
-                using var connection = _connectionFactory(_connectionString);
+                using DbConnection connection = _connectionFactory(_connectionString);
                 await connection.OpenAsync(cancellationToken);
 
                 data["database"] = connection.Database;
                 data["serverVersion"] = connection.ServerVersion;
 
                 // Execute basic health query
-                using (var command = connection.CreateCommand())
+                using (DbCommand command = connection.CreateCommand())
                 {
                     command.CommandText = _options.HealthQuery;
                     command.CommandTimeout = _options.QueryTimeoutSeconds;
@@ -96,7 +96,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 }
 
                 // Get server status variables
-                var status = await GetServerStatusAsync(connection, cancellationToken);
+                Dictionary<string, object> status = await GetServerStatusAsync(connection, cancellationToken);
 
                 // Check connection usage if enabled
                 if (_options.CheckConnectionUsage && status.ContainsKey("Threads_connected") && status.ContainsKey("max_connections"))
@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 // Check InnoDB buffer pool if enabled
                 if (_options.CheckBufferPool)
                 {
-                    var bufferPoolStats = await GetBufferPoolStatsAsync(connection, cancellationToken);
+                    Dictionary<string, object> bufferPoolStats = await GetBufferPoolStatsAsync(connection, cancellationToken);
                     if (bufferPoolStats.Count > 0)
                     {
                         data["innodbBufferPoolStats"] = bufferPoolStats;
@@ -158,7 +158,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 // Check replication status if enabled
                 if (_options.CheckReplication)
                 {
-                    var replicationStatus = await GetReplicationStatusAsync(connection, cancellationToken);
+                    Dictionary<string, object>? replicationStatus = await GetReplicationStatusAsync(connection, cancellationToken);
                     if (replicationStatus != null)
                     {
                         data["replicationStatus"] = replicationStatus;
@@ -218,10 +218,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
             var status = new Dictionary<string, object>();
 
             // Get status variables
-            using (var command = connection.CreateCommand())
+            using (DbCommand command = connection.CreateCommand())
             {
                 command.CommandText = "SHOW GLOBAL STATUS WHERE Variable_name IN ('Threads_connected', 'Slow_queries', 'Table_locks_waited', 'Questions', 'Uptime')";
-                using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     status[reader.GetString(0)] = reader.GetString(1);
@@ -229,10 +229,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
             }
 
             // Get variables
-            using (var command = connection.CreateCommand())
+            using (DbCommand command = connection.CreateCommand())
             {
                 command.CommandText = "SHOW GLOBAL VARIABLES WHERE Variable_name = 'max_connections'";
-                using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     status[reader.GetString(0)] = reader.GetString(1);
@@ -246,7 +246,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
         {
             var stats = new Dictionary<string, object>();
 
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = @"
                 SHOW GLOBAL STATUS WHERE Variable_name IN (
                     'Innodb_buffer_pool_read_requests',
@@ -255,7 +255,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                     'Innodb_buffer_pool_pages_free'
                 )";
 
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
             {
                 stats[reader.GetString(0)] = reader.GetString(1);
@@ -279,12 +279,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private static async Task<Dictionary<string, object>?> GetReplicationStatusAsync(DbConnection connection, CancellationToken cancellationToken)
         {
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = "SHOW SLAVE STATUS";
 
             try
             {
-                using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
                 if (await reader.ReadAsync(cancellationToken))
                 {
                     var status = new Dictionary<string, object>();

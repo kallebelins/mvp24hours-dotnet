@@ -69,7 +69,7 @@ namespace Mvp24Hours.Extensions
                 return false;
             }
 
-            var WebUrlExpression = IsValidWebUrlRegex();
+            Regex WebUrlExpression = IsValidWebUrlRegex();
             return target.HasValue() && WebUrlExpression.IsMatch(target);
         }
 
@@ -293,10 +293,10 @@ namespace Mvp24Hours.Extensions
                 return false;
             }
 
-            var cardCheck = CardRegex();
-            var monthCheck = MonthCheckRegex();
-            var yearCheck = YearCheckRegex();
-            var cvvCheck = CvvCheckRegex();
+            Regex cardCheck = CardRegex();
+            Regex monthCheck = MonthCheckRegex();
+            Regex yearCheck = YearCheckRegex();
+            Regex cvvCheck = CvvCheckRegex();
 
             if (!cardCheck.IsMatch(cardNo)) // <1>check card number is valid
             {

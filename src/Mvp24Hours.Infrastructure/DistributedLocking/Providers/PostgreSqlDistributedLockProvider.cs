@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             TimeSpan duration,
             CancellationToken cancellationToken)
         {
-            var expiresAt = DateTimeOffset.UtcNow.Add(duration);
+            DateTimeOffset expiresAt = DateTimeOffset.UtcNow.Add(duration);
             var lockKey = GetLockKey(resource);
 
             try

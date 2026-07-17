@@ -34,28 +34,19 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
         /// </summary>
         [IgnoreDataMember]
         [JsonIgnore]
-        public IList<Expression<Func<T, dynamic>>> OrderByAscendingExpr
-        {
-            get { return orderByAscendingExpr ??= new List<Expression<Func<T, dynamic>>>(); }
-        }
+        public IList<Expression<Func<T, dynamic>>> OrderByAscendingExpr => orderByAscendingExpr ??= [];
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.OrderByDescendingExpr"/>
         /// </summary>
         [IgnoreDataMember]
         [JsonIgnore]
-        public IList<Expression<Func<T, dynamic>>> OrderByDescendingExpr
-        {
-            get { return orderByDescendingExpr ??= new List<Expression<Func<T, dynamic>>>(); }
-        }
+        public IList<Expression<Func<T, dynamic>>> OrderByDescendingExpr => orderByDescendingExpr ??= [];
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.NavigationExpr"/>
         /// </summary>
         [IgnoreDataMember]
         [JsonIgnore]
-        public IList<Expression<Func<T, dynamic>>> NavigationExpr
-        {
-            get { return navigationExpr ??= new List<Expression<Func<T, dynamic>>>(); }
-        }
+        public IList<Expression<Func<T, dynamic>>> NavigationExpr => navigationExpr ??= [];
         #endregion
 
         #region [ Methods ]

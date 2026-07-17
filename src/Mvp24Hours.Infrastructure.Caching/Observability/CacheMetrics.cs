@@ -157,7 +157,7 @@ public class CacheMetrics : ICacheMetrics
     public void RecordGet(string key, double durationMs, bool isHit, string? provider = null, string? level = null)
     {
         provider ??= "unknown";
-        var stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
+        CacheProviderStats stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
 
         Interlocked.Increment(ref stats.TotalOperations);
         CacheActivitySource.RecordOperation("get", provider, durationMs, isHit, true, null, level);
@@ -176,7 +176,7 @@ public class CacheMetrics : ICacheMetrics
     public void RecordSet(string key, double durationMs, long? valueSizeBytes = null, string? provider = null, string? level = null)
     {
         provider ??= "unknown";
-        var stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
+        CacheProviderStats stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
 
         Interlocked.Increment(ref stats.TotalOperations);
         CacheActivitySource.RecordOperation("set", provider, durationMs, null, true, valueSizeBytes, level);
@@ -186,7 +186,7 @@ public class CacheMetrics : ICacheMetrics
     public void RecordRemove(string key, double durationMs, string? provider = null, string? level = null)
     {
         provider ??= "unknown";
-        var stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
+        CacheProviderStats stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
 
         Interlocked.Increment(ref stats.TotalOperations);
         CacheActivitySource.RecordOperation("remove", provider, durationMs, null, true, null, level);
@@ -196,7 +196,7 @@ public class CacheMetrics : ICacheMetrics
     public void RecordError(string operation, Exception exception, string? provider = null)
     {
         provider ??= "unknown";
-        var stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
+        CacheProviderStats stats = _providerStats.GetOrAdd(provider, _ => new CacheProviderStats());
 
         Interlocked.Increment(ref stats.Errors);
         CacheActivitySource.RecordOperation(operation, provider, 0, null, false);
@@ -221,7 +221,7 @@ public class CacheMetrics : ICacheMetrics
     {
         if (provider != null)
         {
-            if (!_providerStats.TryGetValue(provider, out var stats))
+            if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
                 return null;
 
             var hits = stats.Hits;
@@ -235,7 +235,7 @@ public class CacheMetrics : ICacheMetrics
         long totalHits = 0;
         long totalMisses = 0;
 
-        foreach (var kvp in _providerStats)
+        foreach (KeyValuePair<string, CacheProviderStats> kvp in _providerStats)
         {
             totalHits += kvp.Value.Hits;
             totalMisses += kvp.Value.Misses;
@@ -250,7 +250,7 @@ public class CacheMetrics : ICacheMetrics
     {
         if (provider != null)
         {
-            if (!_providerStats.TryGetValue(provider, out var stats))
+            if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
                 return 0;
 
             return stats.TotalOperations;
@@ -258,7 +258,7 @@ public class CacheMetrics : ICacheMetrics
 
         // Aggregate across all providers
         long total = 0;
-        foreach (var kvp in _providerStats)
+        foreach (KeyValuePair<string, CacheProviderStats> kvp in _providerStats)
         {
             total += kvp.Value.TotalOperations;
         }
@@ -271,7 +271,7 @@ public class CacheMetrics : ICacheMetrics
     {
         if (provider != null)
         {
-            if (!_providerStats.TryGetValue(provider, out var stats))
+            if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
                 return 0;
 
             return stats.Hits;
@@ -279,7 +279,7 @@ public class CacheMetrics : ICacheMetrics
 
         // Aggregate across all providers
         long total = 0;
-        foreach (var kvp in _providerStats)
+        foreach (KeyValuePair<string, CacheProviderStats> kvp in _providerStats)
         {
             total += kvp.Value.Hits;
         }
@@ -292,7 +292,7 @@ public class CacheMetrics : ICacheMetrics
     {
         if (provider != null)
         {
-            if (!_providerStats.TryGetValue(provider, out var stats))
+            if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
                 return 0;
 
             return stats.Misses;
@@ -300,7 +300,7 @@ public class CacheMetrics : ICacheMetrics
 
         // Aggregate across all providers
         long total = 0;
-        foreach (var kvp in _providerStats)
+        foreach (KeyValuePair<string, CacheProviderStats> kvp in _providerStats)
         {
             total += kvp.Value.Misses;
         }

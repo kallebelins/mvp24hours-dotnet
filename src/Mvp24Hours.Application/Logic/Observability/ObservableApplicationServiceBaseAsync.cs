@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -176,8 +177,8 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             "List",
             async ct =>
             {
-                var result = await _repository.ListAsync(criteria, cancellationToken: ct);
-                return result ?? new List<TEntity>();
+                IList<TEntity> result = await _repository.ListAsync(criteria, cancellationToken: ct);
+                return result ?? [];
             },
             cancellationToken,
             metadata: criteria != null ? new { Offset = criteria.Offset, Limit = criteria.Limit } : null);
@@ -214,8 +215,8 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             "GetBy",
             async ct =>
             {
-                var result = await _repository.GetByAsync(clause, criteria, cancellationToken: ct);
-                return result ?? new List<TEntity>();
+                IList<TEntity> result = await _repository.GetByAsync(clause, criteria, cancellationToken: ct);
+                return result ?? [];
             },
             cancellationToken,
             metadata: criteria != null ? new { Offset = criteria.Offset, Limit = criteria.Limit } : null);
@@ -244,7 +245,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     /// <inheritdoc />
     public virtual async Task<IBusinessResult<int>> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        var errors = entity.TryValidate(_validator);
+        IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
         {
             LogValidationFailure("Add", errors);
@@ -271,9 +272,9 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             return 0.ToBusiness();
         }
 
-        foreach (var entity in entities)
+        foreach (TEntity entity in entities)
         {
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (errors.AnySafe())
             {
                 LogValidationFailure("Add", errors);
@@ -295,7 +296,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     /// <inheritdoc />
     public virtual async Task<IBusinessResult<int>> ModifyAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        var errors = entity.TryValidate(_validator);
+        IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
         {
             LogValidationFailure("Modify", errors);
@@ -322,9 +323,9 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             return 0.ToBusiness();
         }
 
-        foreach (var entity in entities)
+        foreach (TEntity entity in entities)
         {
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (errors.AnySafe())
             {
                 LogValidationFailure("Modify", errors);
@@ -460,13 +461,13 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
-                    return (IList<TEntity>)new List<TEntity>();
+                    return (IList<TEntity>)[];
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
                     return await readOnlyRepo.GetBySpecificationAsync(specification, ct);
 
-                var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
-                return result ?? new List<TEntity>();
+                IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
+                return result ?? [];
             },
             cancellationToken);
     }
@@ -485,7 +486,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
                     return await readOnlyRepo.GetSingleBySpecificationAsync(specification, ct);
 
-                var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
+                IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
                 return result?.SingleOrDefault();
             },
             cancellationToken);
@@ -505,7 +506,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
                     return await readOnlyRepo.GetFirstBySpecificationAsync(specification, ct);
 
-                var result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
+                IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
                 return result?.FirstOrDefault();
             },
             cancellationToken);
@@ -533,7 +534,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
             LogOperationStart(operationName, "Query", entityId, metadata);
 
-            var result = await operation(cancellationToken);
+            T? result = await operation(cancellationToken);
             stopwatch.Stop();
 
             ApplicationActivitySource.SetSuccess(activity);
@@ -733,7 +734,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             ["ServiceName"] = _serviceName
         }))
         {
-            var errorMessages = errors.Select(e => e.Message);
+            IEnumerable<string> errorMessages = errors.Select(e => e.Message);
             _logger.LogWarning(
                 "Validation failed for {ServiceName}.{OperationName}: {Errors}",
                 _serviceName, operationName, string.Join(", ", errorMessages));
@@ -743,7 +744,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     private static object? GetEntityId(TEntity entity)
     {
         // Try common ID property names
-        var idProperty = typeof(TEntity).GetProperty("Id")
+        PropertyInfo? idProperty = typeof(TEntity).GetProperty("Id")
             ?? typeof(TEntity).GetProperty("ID")
             ?? typeof(TEntity).GetProperty($"{typeof(TEntity).Name}Id");
 

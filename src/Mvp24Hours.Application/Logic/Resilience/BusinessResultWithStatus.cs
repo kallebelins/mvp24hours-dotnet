@@ -46,7 +46,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
             Data = data;
             StatusCode = statusCode;
             Token = token;
-            _extendedMessages = messages?.ToList() ?? new List<IResultMessage>();
+            _extendedMessages = messages?.ToList() ?? [];
         }
 
         #endregion
@@ -152,7 +152,7 @@ namespace Mvp24Hours.Application.Logic.Resilience
             yield return StatusCode;
             yield return Data!;
             yield return Token ?? string.Empty;
-            foreach (var msg in _extendedMessages)
+            foreach (IResultMessage msg in _extendedMessages)
             {
                 yield return msg;
             }
@@ -505,9 +505,9 @@ namespace Mvp24Hours.Application.Logic.Resilience
                 return Success(result.Data!, result.Token);
             }
 
-            var messages = result.Messages?
+            List<ResultMessage> messages = result.Messages?
                 .Select(m => ResultMessage.Error(m.Message, m.Key))
-                .ToList() ?? new List<ResultMessage>();
+                .ToList() ?? [];
 
             return new BusinessResultWithStatus<T>(
                 data: default,

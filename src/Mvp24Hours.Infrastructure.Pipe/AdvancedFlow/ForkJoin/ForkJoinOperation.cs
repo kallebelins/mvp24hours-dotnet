@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                 var branchResults = new ConcurrentBag<(int Index, IOperationResult<TBranchOutput> Result)>();
                 var exceptions = new ConcurrentBag<Exception>();
 
-                var parallelOptions = _options.MaxDegreeOfParallelism.HasValue
+                ParallelOptions parallelOptions = _options.MaxDegreeOfParallelism.HasValue
                     ? new ParallelOptions { MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism.Value }
                     : new ParallelOptions();
 
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                             try
                             {
                                 _logger?.LogDebug("ForkJoinOperation: Branch {BranchIndex} started", item.index);
-                                var result = _branchSync(item.input);
+                                IOperationResult<TBranchOutput> result = _branchSync(item.input);
                                 branchResults.Add((item.index, result));
                                 _logger?.LogDebug("ForkJoinOperation: Branch {BranchIndex} finished. Success: {IsSuccess}", item.index, result.IsSuccess);
 
@@ -132,13 +132,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                 }
 
                 // Order results if needed
-                var orderedResults = _options.PreserveOrder
+                List<IOperationResult<TBranchOutput>> orderedResults = _options.PreserveOrder
                     ? branchResults.OrderBy(r => r.Index).Select(r => r.Result).ToList()
                     : branchResults.Select(r => r.Result).ToList();
 
                 // Join phase
                 _logger?.LogDebug("ForkJoinOperation: Join phase started");
-                var joinResult = _join(orderedResults);
+                IOperationResult<TOutput> joinResult = _join(orderedResults);
                 _logger?.LogDebug("ForkJoinOperation: Join phase finished. Success: {IsSuccess}", joinResult.IsSuccess);
 
                 return joinResult;
@@ -166,18 +166,18 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                 _logger?.LogDebug("ForkJoinOperation: Fork async phase complete. Branches: {BranchCount}", branchInputs.Count);
 
                 // Create linked cancellation token for cancel-on-failure
-                using var linkedCts = _options.CancelOnFirstFailure
+                using CancellationTokenSource? linkedCts = _options.CancelOnFirstFailure
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
                     : null;
-                var effectiveToken = linkedCts?.Token ?? cancellationToken;
+                CancellationToken effectiveToken = linkedCts?.Token ?? cancellationToken;
 
                 // Branch processing phase (parallel)
                 var branchResults = new ConcurrentDictionary<int, IOperationResult<TBranchOutput>>();
-                var semaphore = _options.MaxDegreeOfParallelism.HasValue
+                SemaphoreSlim? semaphore = _options.MaxDegreeOfParallelism.HasValue
                     ? new SemaphoreSlim(_options.MaxDegreeOfParallelism.Value)
                     : null;
 
-                var tasks = branchInputs.Select(async (branchInput, index) =>
+                IEnumerable<Task> tasks = branchInputs.Select(async (branchInput, index) =>
                 {
                     if (semaphore != null)
                     {
@@ -246,15 +246,15 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.ForkJoin
                 await Task.WhenAll(tasks);
 
                 // Order results
-                var orderedResults = _options.PreserveOrder
+                List<IOperationResult<TBranchOutput>> orderedResults = _options.PreserveOrder
                     ? Enumerable.Range(0, branchInputs.Count)
-                        .Select(i => branchResults.TryGetValue(i, out var r) ? r : OperationResult<TBranchOutput>.Failure("Branch did not complete"))
+                        .Select(i => branchResults.TryGetValue(i, out IOperationResult<TBranchOutput>? r) ? r : OperationResult<TBranchOutput>.Failure("Branch did not complete"))
                         .ToList()
                     : branchResults.Values.ToList();
 
                 // Join phase
                 _logger?.LogDebug("ForkJoinOperation: Join async phase started");
-                var joinResult = _join(orderedResults);
+                IOperationResult<TOutput> joinResult = _join(orderedResults);
                 _logger?.LogDebug("ForkJoinOperation: Join async phase finished. Success: {IsSuccess}", joinResult.IsSuccess);
 
                 return joinResult;

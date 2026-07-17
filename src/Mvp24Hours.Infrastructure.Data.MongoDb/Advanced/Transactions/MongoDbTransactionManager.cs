@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger;
             _options = options ?? new MongoDbTransactionOptions();
-            _savepoints = new HashSet<string>();
+            _savepoints = [];
         }
 
         /// <inheritdoc/>
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions
             options ??= CreateDefaultTransactionOptions();
             var maxRetries = _options.MaxTransactionRetries;
 
-            using var session = await _client.StartSessionAsync(cancellationToken: cancellationToken);
+            using IClientSessionHandle session = await _client.StartSessionAsync(cancellationToken: cancellationToken);
 
             while (true)
             {

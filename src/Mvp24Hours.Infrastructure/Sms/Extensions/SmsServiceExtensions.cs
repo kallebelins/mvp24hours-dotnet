@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Extensions
             // Register InMemorySmsProvider by default (for testing/development)
             services.AddSingleton<ISmsService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
+                SmsOptions options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
                 return new InMemorySmsProvider(options);
             });
 
@@ -122,7 +122,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Extensions
 
             services.AddSingleton<ISmsService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
+                SmsOptions options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
                 return factory(serviceProvider, options);
             });
 
@@ -188,10 +188,10 @@ namespace Mvp24Hours.Infrastructure.Sms.Extensions
 
             services.AddSingleton<ISmsService>(serviceProvider =>
             {
-                var smsOptions = serviceProvider.GetRequiredService<IOptions<SmsOptions>>();
-                var twilioOptions = serviceProvider.GetRequiredService<IOptions<TwilioSmsOptions>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-                var logger = serviceProvider.GetService<ILogger<TwilioSmsProvider>>();
+                IOptions<SmsOptions> smsOptions = serviceProvider.GetRequiredService<IOptions<SmsOptions>>();
+                IOptions<TwilioSmsOptions> twilioOptions = serviceProvider.GetRequiredService<IOptions<TwilioSmsOptions>>();
+                IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                ILogger<TwilioSmsProvider>? logger = serviceProvider.GetService<ILogger<TwilioSmsProvider>>();
                 return new TwilioSmsProvider(smsOptions, twilioOptions, httpClientFactory, logger);
             });
 
@@ -258,10 +258,10 @@ namespace Mvp24Hours.Infrastructure.Sms.Extensions
 
             services.AddSingleton<ISmsService>(serviceProvider =>
             {
-                var smsOptions = serviceProvider.GetRequiredService<IOptions<SmsOptions>>();
-                var azureOptions = serviceProvider.GetRequiredService<IOptions<AzureCommunicationSmsOptions>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-                var logger = serviceProvider.GetService<ILogger<AzureCommunicationSmsProvider>>();
+                IOptions<SmsOptions> smsOptions = serviceProvider.GetRequiredService<IOptions<SmsOptions>>();
+                IOptions<AzureCommunicationSmsOptions> azureOptions = serviceProvider.GetRequiredService<IOptions<AzureCommunicationSmsOptions>>();
+                IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                ILogger<AzureCommunicationSmsProvider>? logger = serviceProvider.GetService<ILogger<AzureCommunicationSmsProvider>>();
                 return new AzureCommunicationSmsProvider(smsOptions, azureOptions, httpClientFactory, logger);
             });
 
@@ -308,7 +308,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Extensions
 
             services.AddSingleton<ISmsService>(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
+                SmsOptions options = serviceProvider.GetRequiredService<IOptions<SmsOptions>>().Value;
                 return new InMemorySmsProvider(options);
             });
 

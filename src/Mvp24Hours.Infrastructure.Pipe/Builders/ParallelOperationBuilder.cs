@@ -18,7 +18,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
     {
         private readonly Pipeline _pipeline;
         private readonly IServiceProvider? _provider;
-        private readonly List<IOperation> _operations = new();
+        private readonly List<IOperation> _operations = [];
         private int? _maxDegreeOfParallelism;
         private bool _requireAllSuccess = true;
 
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Builders
     {
         private readonly PipelineAsync _pipeline;
         private readonly IServiceProvider? _provider;
-        private readonly List<IOperationAsync> _operations = new();
+        private readonly List<IOperationAsync> _operations = [];
         private int? _maxDegreeOfParallelism;
         private bool _requireAllSuccess = true;
 

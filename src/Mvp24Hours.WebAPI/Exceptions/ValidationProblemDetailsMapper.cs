@@ -9,6 +9,8 @@ using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.WebAPI.Configuration;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
@@ -66,7 +68,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
 
             if (validationException.ValidationErrors != null)
             {
-                foreach (var error in validationException.ValidationErrors)
+                foreach (IMessageResult error in validationException.ValidationErrors)
                 {
                     var key = error.Key ?? "General";
                     if (!errors.ContainsKey(key))
@@ -131,7 +133,7 @@ namespace Mvp24Hours.WebAPI.Exceptions
 
         private string? GetCorrelationId(HttpContext context)
         {
-            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out var headerValue))
+            if (context.Request.Headers.TryGetValue(_options.CorrelationIdHeaderName, out StringValues headerValue))
             {
                 return headerValue.ToString();
             }

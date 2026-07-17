@@ -244,14 +244,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 messageType.FullName);
 
             // Get topology configuration (registered or default)
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
 
             // Determine names from topology or conventions
             var exchangeName = topology?.ExchangeName ?? _nameFormatter.FormatExchangeName(messageType);
-            var exchangeType = topology?.ExchangeType ?? _options.DefaultExchangeType;
+            MvpRabbitMQExchangeType exchangeType = topology?.ExchangeType ?? _options.DefaultExchangeType;
             var durable = topology?.Durable ?? _options.DefaultDurable;
             var autoDelete = topology?.AutoDelete ?? _options.DefaultAutoDelete;
-            var arguments = topology?.ExchangeArguments;
+            IDictionary<string, object>? arguments = topology?.ExchangeArguments;
 
             // Declare exchange
             DeclareExchange(channel, exchangeName, exchangeType.ToString(), durable, autoDelete, arguments);
@@ -279,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 consumerType.FullName);
 
             // Get message type from consumer
-            var messageType = GetMessageTypeFromConsumer(consumerType);
+            Type? messageType = GetMessageTypeFromConsumer(consumerType);
             if (messageType == null)
             {
                 _logger?.LogWarning(
@@ -292,7 +292,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             ConfigureTopologyForMessage(channel, messageType);
 
             // Get topology and naming
-            var topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
+            IMessageTopology? topology = MessageTopologyRegistry.Instance.GetTopology(messageType);
             var exchangeName = topology?.ExchangeName ?? _nameFormatter.FormatExchangeName(messageType);
             var queueName = _nameFormatter.FormatQueueName(consumerType);
             var routingKey = _routingKeyConvention.GetSubscriptionPattern(consumerType, messageType);
@@ -324,7 +324,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
         private static Type? GetMessageTypeFromConsumer(Type consumerType)
         {
-            var consumerInterface = consumerType
+            Type? consumerInterface = consumerType
                 .GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));

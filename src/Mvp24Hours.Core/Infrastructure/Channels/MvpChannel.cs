@@ -157,7 +157,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
 
     public bool TryRead(out T? item)
     {
-        if (_reader.TryRead(out var result))
+        if (_reader.TryRead(out T? result))
         {
             item = result;
             return true;
@@ -193,7 +193,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
             throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.");
 
         var batch = new List<T>(batchSize);
-        var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+        TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
         var shouldBreak = false;
         IReadOnlyList<T>? pendingBatch = null;
 
@@ -210,7 +210,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
                 while (batch.Count < batchSize)
                 {
                     // Try to read immediately first
-                    if (_reader.TryRead(out var item))
+                    if (_reader.TryRead(out T? item))
                     {
                         batch.Add(item);
                         continue;
@@ -279,7 +279,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
 
     public bool TryPeek(out T? item)
     {
-        if (_reader.TryPeek(out var result))
+        if (_reader.TryPeek(out T? result))
         {
             item = result;
             return true;
@@ -337,7 +337,7 @@ internal sealed class MvpChannelWriter<T> : IChannelWriter<T>
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        foreach (var item in items)
+        foreach (T? item in items)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await WriteAsync(item, cancellationToken);
@@ -348,7 +348,7 @@ internal sealed class MvpChannelWriter<T> : IChannelWriter<T>
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        await foreach (var item in items.WithCancellation(cancellationToken))
+        await foreach (T? item in items.WithCancellation(cancellationToken))
         {
             await WriteAsync(item, cancellationToken);
         }

@@ -70,7 +70,7 @@ public static class ActivityHelper
     {
         if (source == null) return null;
 
-        var activity = source.StartActivity(
+        Activity? activity = source.StartActivity(
             name,
             kind,
             parentContext,
@@ -432,7 +432,7 @@ public static class ActivityHelper
     public static Dictionary<string, string> GetTracePropagationHeaders()
     {
         var headers = new Dictionary<string, string>();
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
 
         if (activity != null)
         {
@@ -479,7 +479,7 @@ public static class ActivityHelper
 
             var traceId = ActivityTraceId.CreateFromString(parts[1].AsSpan());
             var spanId = ActivitySpanId.CreateFromString(parts[2].AsSpan());
-            var flags = parts[3] == "01" ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None;
+            ActivityTraceFlags flags = parts[3] == "01" ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None;
 
             return new ActivityContext(traceId, spanId, flags, tracestate);
         }

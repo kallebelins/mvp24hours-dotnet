@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
@@ -100,7 +101,7 @@ public class ProjectionManager : IProjectionManager
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ProjectionManager> _logger;
     private readonly IProjectionPositionStore _positionStore;
-    private readonly Dictionary<string, ProjectionRegistration> _registrations = new();
+    private readonly Dictionary<string, ProjectionRegistration> _registrations = [];
     private readonly CancellationTokenSource _cts = new();
     private Task? _processingTask;
 
@@ -144,7 +145,7 @@ public class ProjectionManager : IProjectionManager
         _logger.LogInformation("Starting projection manager with {Count} projections", _registrations.Count);
 
         // Load initial positions for all projections
-        foreach (var registration in _registrations.Values)
+        foreach (ProjectionRegistration registration in _registrations.Values)
         {
             registration.Position = await _positionStore.GetPositionAsync(registration.Name, cancellationToken);
             registration.Status = ProjectionStatus.CatchingUp;
@@ -178,7 +179,7 @@ public class ProjectionManager : IProjectionManager
             }
         }
 
-        foreach (var registration in _registrations.Values)
+        foreach (ProjectionRegistration registration in _registrations.Values)
         {
             registration.Status = ProjectionStatus.Stopped;
         }
@@ -187,7 +188,7 @@ public class ProjectionManager : IProjectionManager
     /// <inheritdoc />
     public async Task RebuildAsync(string projectionName, CancellationToken cancellationToken = default)
     {
-        if (!_registrations.TryGetValue(projectionName, out var registration))
+        if (!_registrations.TryGetValue(projectionName, out ProjectionRegistration? registration))
         {
             throw new InvalidOperationException($"Projection '{projectionName}' not found.");
         }
@@ -201,8 +202,8 @@ public class ProjectionManager : IProjectionManager
         registration.Position = 0;
 
         // Reset any resettable projections
-        using var scope = _serviceProvider.CreateScope();
-        foreach (var handlerType in registration.HandlerTypes)
+        using IServiceScope scope = _serviceProvider.CreateScope();
+        foreach (Type handlerType in registration.HandlerTypes)
         {
             var handler = scope.ServiceProvider.GetService(handlerType);
             if (handler is IResettableProjection resettable)
@@ -246,7 +247,7 @@ public class ProjectionManager : IProjectionManager
     /// <inheritdoc />
     public ProjectionInfo? GetProjectionInfo(string projectionName)
     {
-        if (!_registrations.TryGetValue(projectionName, out var registration))
+        if (!_registrations.TryGetValue(projectionName, out ProjectionRegistration? registration))
         {
             return null;
         }
@@ -269,9 +270,9 @@ public class ProjectionManager : IProjectionManager
     /// <inheritdoc />
     public async Task ProcessEventAsync(StoredEvent storedEvent, CancellationToken cancellationToken = default)
     {
-        var @event = _eventSerializer.Deserialize(storedEvent.EventType, storedEvent.EventData);
+        CoreDomainEvent @event = _eventSerializer.Deserialize(storedEvent.EventType, storedEvent.EventData);
 
-        foreach (var registration in _registrations.Values)
+        foreach (ProjectionRegistration registration in _registrations.Values)
         {
             if (storedEvent.GlobalPosition <= registration.Position)
             {
@@ -302,7 +303,7 @@ public class ProjectionManager : IProjectionManager
         try
         {
             // First, catch up all projections
-            foreach (var registration in _registrations.Values)
+            foreach (ProjectionRegistration registration in _registrations.Values)
             {
                 await CatchUpAsync(registration, isRebuild: false, cancellationToken);
                 registration.Status = ProjectionStatus.Live;
@@ -311,7 +312,7 @@ public class ProjectionManager : IProjectionManager
             // Then subscribe to new events
             var minPosition = _registrations.Values.Min(r => r.Position);
 
-            await foreach (var storedEvent in _eventStore.SubscribeFromPositionAsync(minPosition, cancellationToken))
+            await foreach (StoredEvent storedEvent in _eventStore.SubscribeFromPositionAsync(minPosition, cancellationToken))
             {
                 await ProcessEventAsync(storedEvent, cancellationToken);
             }
@@ -334,9 +335,9 @@ public class ProjectionManager : IProjectionManager
             registration.Name,
             registration.Position);
 
-        await foreach (var storedEvent in _eventStore.SubscribeFromPositionAsync(registration.Position, cancellationToken))
+        await foreach (StoredEvent storedEvent in _eventStore.SubscribeFromPositionAsync(registration.Position, cancellationToken))
         {
-            var @event = _eventSerializer.Deserialize(storedEvent.EventType, storedEvent.EventData);
+            CoreDomainEvent @event = _eventSerializer.Deserialize(storedEvent.EventType, storedEvent.EventData);
 
             await ProcessEventForProjectionAsync(
                 registration,
@@ -360,11 +361,11 @@ public class ProjectionManager : IProjectionManager
         bool isRebuild,
         CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = _serviceProvider.CreateScope();
         var context = ProjectionContext.FromStoredEvent(storedEvent, registration.Name, isRebuild);
-        var eventType = @event.GetType();
+        Type eventType = @event.GetType();
 
-        foreach (var handlerType in registration.HandlerTypes)
+        foreach (Type handlerType in registration.HandlerTypes)
         {
             var handler = scope.ServiceProvider.GetService(handlerType);
             if (handler == null) continue;
@@ -389,8 +390,8 @@ public class ProjectionManager : IProjectionManager
             return multiHandler.CanHandle(eventType);
         }
 
-        var handlerType = handler.GetType();
-        var interfaces = handlerType.GetInterfaces();
+        Type handlerType = handler.GetType();
+        Type[] interfaces = handlerType.GetInterfaces();
 
         return interfaces.Any(i =>
             i.IsGenericType &&
@@ -410,9 +411,9 @@ public class ProjectionManager : IProjectionManager
             return;
         }
 
-        var eventType = @event.GetType();
-        var handlerType = handler.GetType();
-        var handleMethod = handlerType.GetMethod("HandleAsync", new[] { eventType, typeof(ProjectionContext), typeof(CancellationToken) });
+        Type eventType = @event.GetType();
+        Type handlerType = handler.GetType();
+        MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync", new[] { eventType, typeof(ProjectionContext), typeof(CancellationToken) });
 
         if (handleMethod != null)
         {
@@ -441,7 +442,7 @@ public class ProjectionManager : IProjectionManager
     private class ProjectionRegistration
     {
         public string Name { get; set; } = string.Empty;
-        public List<Type> HandlerTypes { get; set; } = new();
+        public List<Type> HandlerTypes { get; set; } = [];
         public long Position { get; set; }
         public ProjectionStatus Status { get; set; } = ProjectionStatus.NotStarted;
         public Exception? LastError { get; set; }
@@ -476,7 +477,7 @@ public interface IProjectionPositionStore
 /// </summary>
 public class InMemoryProjectionPositionStore : IProjectionPositionStore
 {
-    private readonly Dictionary<string, long> _positions = new();
+    private readonly Dictionary<string, long> _positions = [];
 
     /// <inheritdoc />
     public Task<long> GetPositionAsync(string projectionName, CancellationToken cancellationToken = default)

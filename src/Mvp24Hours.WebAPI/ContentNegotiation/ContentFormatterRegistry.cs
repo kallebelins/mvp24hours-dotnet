@@ -22,7 +22,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
     /// </remarks>
     public class ContentFormatterRegistry : IContentFormatterRegistry
     {
-        private readonly List<IContentFormatter> _formatters = new();
+        private readonly List<IContentFormatter> _formatters = [];
         private readonly ContentNegotiationOptions _options;
         private readonly object _lock = new();
         private IContentFormatter? _defaultFormatter;
@@ -48,7 +48,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             // Register custom formatters if provided
             if (customFormatters != null)
             {
-                foreach (var formatter in customFormatters)
+                foreach (IContentFormatter formatter in customFormatters)
                 {
                     RegisterFormatter(formatter);
                 }
@@ -103,7 +103,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             lock (_lock)
             {
                 // First, try exact match
-                var formatter = _formatters.FirstOrDefault(f =>
+                IContentFormatter? formatter = _formatters.FirstOrDefault(f =>
                     f.SupportedMediaTypes.Any(mt =>
                         string.Equals(mt, normalizedMediaType, StringComparison.OrdinalIgnoreCase)));
 
@@ -146,7 +146,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <inheritdoc />
         public IProblemDetailsFormatter? GetProblemDetailsFormatter(string mediaType)
         {
-            var formatter = GetFormatter(mediaType);
+            IContentFormatter? formatter = GetFormatter(mediaType);
             return formatter as IProblemDetailsFormatter;
         }
 
@@ -200,7 +200,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <param name="mediaType">The media type of the formatter to set as default.</param>
         public void SetDefaultFormatter(string mediaType)
         {
-            var formatter = GetFormatter(mediaType);
+            IContentFormatter? formatter = GetFormatter(mediaType);
             if (formatter == null)
             {
                 throw new ArgumentException($"No formatter found for media type: {mediaType}", nameof(mediaType));

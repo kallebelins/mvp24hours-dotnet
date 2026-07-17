@@ -195,7 +195,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 aes.Key = _key;
                 aes.GenerateIV();
 
-                using (var encryptor = aes.CreateEncryptor())
+                using (ICryptoTransform encryptor = aes.CreateEncryptor())
                 using (var ms = new MemoryStream())
                 {
                     // Write IV first (16 bytes for AES)
@@ -229,7 +229,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 Array.Copy(encryptedData, 0, iv, 0, 16);
                 aes.IV = iv;
 
-                using (var decryptor = aes.CreateDecryptor())
+                using (ICryptoTransform decryptor = aes.CreateDecryptor())
                 using (var ms = new MemoryStream())
                 {
                     using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
@@ -322,7 +322,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <inheritdoc />
         public override string? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
-            var bsonType = context.Reader.GetCurrentBsonType();
+            BsonType bsonType = context.Reader.GetCurrentBsonType();
 
             if (bsonType == BsonType.Null)
             {

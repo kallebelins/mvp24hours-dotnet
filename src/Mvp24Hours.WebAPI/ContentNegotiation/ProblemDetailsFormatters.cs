@@ -210,7 +210,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
         /// <inheritdoc />
         public async Task SerializeProblemDetailsAsync(Stream stream, ProblemDetails problemDetails, Encoding encoding, CancellationToken cancellationToken = default)
         {
-            var xmlSettingsWithEncoding = _xmlSettings.Clone();
+            XmlWriterSettings xmlSettingsWithEncoding = _xmlSettings.Clone();
             xmlSettingsWithEncoding.Encoding = encoding;
             xmlSettingsWithEncoding.Async = true;
 
@@ -258,7 +258,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
 
             // Write extensions
-            foreach (var extension in problemDetails.Extensions)
+            foreach (KeyValuePair<string, object?> extension in problemDetails.Extensions)
             {
                 if (extension.Value != null)
                 {
@@ -271,7 +271,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
                 validationProblemDetails.Errors?.Count > 0)
             {
                 writer.WriteStartElement("errors");
-                foreach (var error in validationProblemDetails.Errors)
+                foreach (KeyValuePair<string, string[]> error in validationProblemDetails.Errors)
                 {
                     writer.WriteStartElement("error");
                     writer.WriteElementString("field", error.Key);
@@ -309,7 +309,7 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
             }
             else if (value is IDictionary<string, object> dict)
             {
-                foreach (var kvp in dict)
+                foreach (KeyValuePair<string, object> kvp in dict)
                 {
                     WriteExtensionValue(writer, kvp.Key, kvp.Value);
                 }

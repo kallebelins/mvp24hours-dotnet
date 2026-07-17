@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
                 throw new ArgumentNullException(nameof(factory));
 
             // Try to get from cache
-            var cached = await cacheProvider.GetAsync<T>(key, cancellationToken);
+            T? cached = await cacheProvider.GetAsync<T>(key, cancellationToken);
             if (cached != null)
             {
                 return cached;
@@ -145,14 +145,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
                 return await stampedePrevention.ExecuteAsync(key, async (ct) =>
                 {
                     // Double-check cache after acquiring lock
-                    var doubleCheck = await cacheProvider.GetAsync<T>(key, ct);
+                    T? doubleCheck = await cacheProvider.GetAsync<T>(key, ct);
                     if (doubleCheck != null)
                     {
                         return doubleCheck;
                     }
 
                     // Compute value
-                    var value = await factory(ct);
+                    T value = await factory(ct);
 
                     // Set in cache with tags/dependencies
                     await SetWithInvalidationAsync(
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Extensions
             }
 
             // Without stampede prevention, just compute and set
-            var computed = await factory(cancellationToken);
+            T computed = await factory(cancellationToken);
             await SetWithInvalidationAsync(
                 cacheProvider,
                 key,

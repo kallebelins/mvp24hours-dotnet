@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             // Step 1: Check circuit breaker
             if (_options.EnableCircuitBreaker && !_circuitBreaker.AllowRequest())
             {
-                var remaining = _circuitBreaker.GetRemainingOpenDuration();
+                TimeSpan? remaining = _circuitBreaker.GetRemainingOpenDuration();
                 throw new MongoDbCircuitBreakerOpenException(remaining ?? TimeSpan.Zero);
             }
 
@@ -206,13 +206,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
             // Check circuit breaker first
             if (_options.EnableCircuitBreaker && !_circuitBreaker.AllowRequest())
             {
-                var remaining = _circuitBreaker.GetRemainingOpenDuration();
+                TimeSpan? remaining = _circuitBreaker.GetRemainingOpenDuration();
                 throw new MongoDbCircuitBreakerOpenException(remaining ?? TimeSpan.Zero);
             }
 
             try
             {
-                var result = await ExecuteWithTimeoutInternalAsync(operation, timeout, cancellationToken);
+                TResult? result = await ExecuteWithTimeoutInternalAsync(operation, timeout, cancellationToken);
 
                 if (_options.EnableCircuitBreaker)
                 {

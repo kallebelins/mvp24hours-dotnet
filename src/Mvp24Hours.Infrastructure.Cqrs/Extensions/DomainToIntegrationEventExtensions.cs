@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
@@ -49,11 +50,11 @@ public static class DomainToIntegrationEventExtensions
             return;
         }
 
-        var logger = serviceProvider.GetService<ILogger<TEntity>>();
+        ILogger<TEntity>? logger = serviceProvider.GetService<ILogger<TEntity>>();
 
-        foreach (var domainEvent in entity.DomainEvents)
+        foreach (CoreDomainEvent domainEvent in entity.DomainEvents)
         {
-            var integrationEvent = ConvertDomainEventToIntegrationEvent(domainEvent, serviceProvider);
+            IIntegrationEvent? integrationEvent = ConvertDomainEventToIntegrationEvent(domainEvent, serviceProvider);
 
             if (integrationEvent != null)
             {
@@ -77,33 +78,33 @@ public static class DomainToIntegrationEventExtensions
         CoreDomainEvent domainEvent,
         IServiceProvider serviceProvider)
     {
-        var domainEventType = domainEvent.GetType();
+        Type domainEventType = domainEvent.GetType();
 
         // Find a converter for this domain event type
         // Look for IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>
-        var converterInterfaceType = typeof(IDomainToIntegrationEventConverter<,>);
+        Type converterInterfaceType = typeof(IDomainToIntegrationEventConverter<,>);
 
         foreach (var service in serviceProvider.GetServices<object>())
         {
             if (service == null) continue;
 
-            var serviceType = service.GetType();
-            var interfaces = serviceType.GetInterfaces();
+            Type serviceType = service.GetType();
+            Type[] interfaces = serviceType.GetInterfaces();
 
-            foreach (var @interface in interfaces)
+            foreach (Type @interface in interfaces)
             {
                 if (!@interface.IsGenericType) continue;
                 if (@interface.GetGenericTypeDefinition() != converterInterfaceType) continue;
 
-                var genericArgs = @interface.GetGenericArguments();
+                Type[] genericArgs = @interface.GetGenericArguments();
                 if (genericArgs.Length != 2) continue;
 
-                var converterDomainEventType = genericArgs[0];
+                Type converterDomainEventType = genericArgs[0];
 
                 if (!converterDomainEventType.IsAssignableFrom(domainEventType)) continue;
 
                 // Found a matching converter, invoke the Convert method
-                var convertMethod = @interface.GetMethod("Convert");
+                MethodInfo? convertMethod = @interface.GetMethod("Convert");
                 if (convertMethod != null)
                 {
                     var result = convertMethod.Invoke(service, new object[] { domainEvent });
@@ -173,7 +174,7 @@ public sealed class AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>
             return;
         }
 
-        var integrationEvent = _converter.Convert(notification);
+        TIntegrationEvent? integrationEvent = _converter.Convert(notification);
 
         if (integrationEvent != null)
         {

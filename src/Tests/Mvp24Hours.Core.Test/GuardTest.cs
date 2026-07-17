@@ -35,7 +35,7 @@ public class GuardTest
         string? value = null;
 
         // Act
-        var act = () => Guard.Against.Null(value, nameof(value));
+        Func<string> act = () => Guard.Against.Null(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -50,7 +50,7 @@ public class GuardTest
         var customMessage = "Custom error message";
 
         // Act
-        var act = () => Guard.Against.Null(value, nameof(value), customMessage);
+        Func<string> act = () => Guard.Against.Null(value, nameof(value), customMessage);
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -81,7 +81,7 @@ public class GuardTest
         string? value = null;
 
         // Act
-        var act = () => Guard.Against.NullOrEmpty(value, nameof(value));
+        Func<string> act = () => Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -95,7 +95,7 @@ public class GuardTest
         var value = string.Empty;
 
         // Act
-        var act = () => Guard.Against.NullOrEmpty(value, nameof(value));
+        Func<string> act = () => Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -113,7 +113,7 @@ public class GuardTest
         var value = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = Guard.Against.NullOrEmpty(value, nameof(value));
+        IEnumerable<int> result = Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         result.Should().BeEquivalentTo(value);
@@ -126,7 +126,7 @@ public class GuardTest
         List<int>? value = null;
 
         // Act
-        var act = () => Guard.Against.NullOrEmpty(value, nameof(value));
+        Func<IEnumerable<int>> act = () => Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -140,7 +140,7 @@ public class GuardTest
         var value = new List<int>();
 
         // Act
-        var act = () => Guard.Against.NullOrEmpty(value, nameof(value));
+        Func<IEnumerable<int>> act = () => Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -171,7 +171,7 @@ public class GuardTest
         string? value = null;
 
         // Act
-        var act = () => Guard.Against.NullOrWhiteSpace(value, nameof(value));
+        Func<string> act = () => Guard.Against.NullOrWhiteSpace(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -185,7 +185,7 @@ public class GuardTest
         var value = "   ";
 
         // Act
-        var act = () => Guard.Against.NullOrWhiteSpace(value, nameof(value));
+        Func<string> act = () => Guard.Against.NullOrWhiteSpace(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -203,7 +203,7 @@ public class GuardTest
         var value = Guid.NewGuid();
 
         // Act
-        var result = Guard.Against.Default(value, nameof(value));
+        Guid result = Guard.Against.Default(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -213,10 +213,10 @@ public class GuardTest
     public void Default_WithDefaultGuid_ThrowsArgumentException()
     {
         // Arrange
-        var value = Guid.Empty;
+        Guid value = Guid.Empty;
 
         // Act
-        var act = () => Guard.Against.Default(value, nameof(value));
+        Func<Guid> act = () => Guard.Against.Default(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -230,7 +230,7 @@ public class GuardTest
         var value = default(DateTime);
 
         // Act
-        var act = () => Guard.Against.Default(value, nameof(value));
+        Func<DateTime> act = () => Guard.Against.Default(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -244,7 +244,7 @@ public class GuardTest
         var value = default(int);
 
         // Act
-        var act = () => Guard.Against.Default(value, nameof(value));
+        Func<int> act = () => Guard.Against.Default(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -275,7 +275,7 @@ public class GuardTest
     public void OutOfRange_WithOutOfRangeValue_ThrowsArgumentOutOfRangeException(int value, int min, int max)
     {
         // Act
-        var act = () => Guard.Against.OutOfRange(value, min, max, nameof(value));
+        Func<int> act = () => Guard.Against.OutOfRange(value, min, max, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -306,7 +306,7 @@ public class GuardTest
     public void NegativeOrZero_Int_WithNegativeOrZero_ThrowsArgumentOutOfRangeException(int value)
     {
         // Act
-        var act = () => Guard.Against.NegativeOrZero(value, nameof(value));
+        Func<int> act = () => Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -333,7 +333,7 @@ public class GuardTest
     public void NegativeOrZero_Long_WithNegativeOrZero_ThrowsArgumentOutOfRangeException(long value)
     {
         // Act
-        var act = () => Guard.Against.NegativeOrZero(value, nameof(value));
+        Func<long> act = () => Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -362,7 +362,7 @@ public class GuardTest
         var value = (decimal)inputValue;
 
         // Act
-        var act = () => Guard.Against.NegativeOrZero(value, nameof(value));
+        Func<decimal> act = () => Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -392,7 +392,7 @@ public class GuardTest
     public void Negative_Int_WithNegativeValue_ThrowsArgumentOutOfRangeException(int value)
     {
         // Act
-        var act = () => Guard.Against.Negative(value, nameof(value));
+        Func<int> act = () => Guard.Against.Negative(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -421,7 +421,7 @@ public class GuardTest
         var value = -1.5m;
 
         // Act
-        var act = () => Guard.Against.Negative(value, nameof(value));
+        Func<decimal> act = () => Guard.Against.Negative(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentOutOfRangeException>()
@@ -454,7 +454,7 @@ public class GuardTest
     public void InvalidEmail_WithInvalidEmail_ThrowsArgumentException(string email)
     {
         // Act
-        var act = () => Guard.Against.InvalidEmail(email, nameof(email));
+        Func<string> act = () => Guard.Against.InvalidEmail(email, nameof(email));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -468,7 +468,7 @@ public class GuardTest
         string? email = null;
 
         // Act
-        var act = () => Guard.Against.InvalidEmail(email!, nameof(email));
+        Func<string> act = () => Guard.Against.InvalidEmail(email!, nameof(email));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -501,7 +501,7 @@ public class GuardTest
     public void InvalidCpf_WithInvalidCpf_ThrowsArgumentException(string cpf)
     {
         // Act
-        var act = () => Guard.Against.InvalidCpf(cpf, nameof(cpf));
+        Func<string> act = () => Guard.Against.InvalidCpf(cpf, nameof(cpf));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -515,7 +515,7 @@ public class GuardTest
         string? cpf = null;
 
         // Act
-        var act = () => Guard.Against.InvalidCpf(cpf!, nameof(cpf));
+        Func<string> act = () => Guard.Against.InvalidCpf(cpf!, nameof(cpf));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -548,7 +548,7 @@ public class GuardTest
     public void InvalidCnpj_WithInvalidCnpj_ThrowsArgumentException(string cnpj)
     {
         // Act
-        var act = () => Guard.Against.InvalidCnpj(cnpj, nameof(cnpj));
+        Func<string> act = () => Guard.Against.InvalidCnpj(cnpj, nameof(cnpj));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -562,7 +562,7 @@ public class GuardTest
         string? cnpj = null;
 
         // Act
-        var act = () => Guard.Against.InvalidCnpj(cnpj!, nameof(cnpj));
+        Func<string> act = () => Guard.Against.InvalidCnpj(cnpj!, nameof(cnpj));
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -595,7 +595,7 @@ public class GuardTest
         var pattern = @"^[A-Z]{3}-\d{3}$";
 
         // Act
-        var act = () => Guard.Against.InvalidFormat(value, pattern, nameof(value));
+        Func<string> act = () => Guard.Against.InvalidFormat(value, pattern, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -613,7 +613,7 @@ public class GuardTest
         var value = Guid.NewGuid();
 
         // Act
-        var result = Guard.Against.EmptyGuid(value, nameof(value));
+        Guid result = Guard.Against.EmptyGuid(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -623,10 +623,10 @@ public class GuardTest
     public void EmptyGuid_WithEmptyGuid_ThrowsArgumentException()
     {
         // Arrange
-        var value = Guid.Empty;
+        Guid value = Guid.Empty;
 
         // Act
-        var act = () => Guard.Against.EmptyGuid(value, nameof(value));
+        Func<Guid> act = () => Guard.Against.EmptyGuid(value, nameof(value));
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -641,7 +641,7 @@ public class GuardTest
     public void Condition_WithFalseCondition_DoesNotThrow()
     {
         // Act
-        var act = () => Guard.Against.Condition(false, "param", "Error message");
+        Action act = () => Guard.Against.Condition(false, "param", "Error message");
 
         // Assert
         act.Should().NotThrow();
@@ -654,7 +654,7 @@ public class GuardTest
         var message = "Error message";
 
         // Act
-        var act = () => Guard.Against.Condition(true, "param", message);
+        Action act = () => Guard.Against.Condition(true, "param", message);
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -669,7 +669,7 @@ public class GuardTest
     public void InvalidOperation_WithFalseCondition_DoesNotThrow()
     {
         // Act
-        var act = () => Guard.Against.InvalidOperation(false, "Error message");
+        Action act = () => Guard.Against.InvalidOperation(false, "Error message");
 
         // Assert
         act.Should().NotThrow();
@@ -682,7 +682,7 @@ public class GuardTest
         var message = "Invalid state error";
 
         // Act
-        var act = () => Guard.Against.InvalidOperation(true, message);
+        Action act = () => Guard.Against.InvalidOperation(true, message);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()

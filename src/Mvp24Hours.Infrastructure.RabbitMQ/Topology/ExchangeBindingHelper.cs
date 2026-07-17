@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
                 durable: durable,
                 autoDelete: false);
 
-            foreach (var rule in routingRules)
+            foreach (KeyValuePair<string, string> rule in routingRules)
             {
                 var destExchange = rule.Key;
                 var routingKeyPattern = rule.Value;

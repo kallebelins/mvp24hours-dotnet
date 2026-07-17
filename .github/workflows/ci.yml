@@ -79,10 +79,14 @@ jobs:
     - name: 🎨 Check code formatting
       run: dotnet format src/Mvp24Hours.sln --severity error --verify-no-changes --verbosity diagnostic
 
-    # TreatWarningsAsErrors deferred: ~969 residual warnings accepted in phase 10.1
-    # (see tasks/phase10-warnings-residual-net10-v1.md). Re-enable when residual ≈ 0.
+    # Scoped quality gate (task 10.3): TreatWarningsAsErrors=true promotes any NEW
+    # warning category to an error, while the residual warnings accepted in task 10.1
+    # stay warnings via WarningsNotAsErrors (MvpResidualWarnings in src/Directory.Build.props).
+    # --no-incremental forces a full recompile so warnings are actually re-emitted
+    # (an incremental build would skip compilation and hide them).
+    # See tasks/phase10-gate-treatwarningsaserrors-net10-v1.md.
     - name: 🔍 Run static code analysis
-      run: dotnet build --configuration Release
+      run: dotnet build src/Mvp24Hours.sln --configuration Release --no-incremental /p:TreatWarningsAsErrors=true
 
   package:
     name: Create NuGet Packages

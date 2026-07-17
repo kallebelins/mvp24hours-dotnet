@@ -123,7 +123,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             try
             {
                 var bytes = await _serializer.SerializeAsync(value, cancellationToken);
-                var distributedOptions = ConvertToDistributedCacheEntryOptions(options);
+                DistributedCacheEntryOptions distributedOptions = ConvertToDistributedCacheEntryOptions(options);
                 await _cache.SetAsync(key, bytes, distributedOptions, cancellationToken);
                 _logger?.LogDebug("Cache SET for key: {Key}", key);
             }
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
 
             try
             {
-                var distributedOptions = ConvertToDistributedCacheEntryOptions(options);
+                DistributedCacheEntryOptions distributedOptions = ConvertToDistributedCacheEntryOptions(options);
                 await _cache.SetStringAsync(key, value, distributedOptions, cancellationToken);
                 _logger?.LogDebug("Cache SET for key: {Key}", key);
             }
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             if (keys == null || keys.Length == 0)
                 return;
 
-            var tasks = keys
+            IEnumerable<Task> tasks = keys
                 .Where(k => !string.IsNullOrWhiteSpace(k))
                 .Select(key => RemoveAsync(key, cancellationToken));
 
@@ -209,7 +209,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
         public async Task<Dictionary<string, T>> GetManyAsync<T>(string[] keys, CancellationToken cancellationToken = default) where T : class
         {
             if (keys == null || keys.Length == 0)
-                return new Dictionary<string, T>();
+                return [];
 
             var result = new Dictionary<string, T>();
 
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
                 .Where(k => !string.IsNullOrWhiteSpace(k))
                 .Select(async key =>
                 {
-                    var value = await GetAsync<T>(key, cancellationToken);
+                    T? value = await GetAsync<T>(key, cancellationToken);
                     return new { Key = key, Value = value };
                 });
 
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Providers
             if (values == null || values.Count == 0)
                 return;
 
-            var tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
+            IEnumerable<Task> tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
             await Task.WhenAll(tasks);
             _logger?.LogDebug("Cache SET for {Count} keys", values.Count);
         }

@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             }
 
             // Store in AsyncLocal for downstream access
-            var previousContext = _currentTenantContext.Value;
+            TenantMessageContext? previousContext = _currentTenantContext.Value;
             _currentTenantContext.Value = tenantContext;
 
             // Store in filter context Items
@@ -151,14 +152,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                 if (tenantStore != null)
                 {
                     // Use reflection to call GetByIdAsync
-                    var method = tenantStoreType.GetMethod("GetByIdAsync");
+                    MethodInfo? method = tenantStoreType.GetMethod("GetByIdAsync");
                     if (method != null)
                     {
                         var task = method.Invoke(tenantStore, new object[] { tenantId, cancellationToken }) as Task;
                         if (task != null)
                         {
                             await task;
-                            var resultProperty = task.GetType().GetProperty("Result");
+                            PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
                             var result = resultProperty?.GetValue(task);
                             return result != null;
                         }
@@ -167,15 +168,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             }
 
             // Check ITenantRabbitMQResolver
-            var resolver = serviceProvider.GetService<ITenantRabbitMQResolver>();
+            ITenantRabbitMQResolver? resolver = serviceProvider.GetService<ITenantRabbitMQResolver>();
             if (resolver != null)
             {
-                var config = await resolver.ResolveAsync(tenantId, cancellationToken);
+                TenantRabbitMQConfiguration? config = await resolver.ResolveAsync(tenantId, cancellationToken);
                 return config != null && config.IsEnabled;
             }
 
             // Check static configuration
-            if (_options.Tenants.TryGetValue(tenantId, out var staticConfig))
+            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
             {
                 return staticConfig.IsEnabled;
             }
@@ -210,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                     tenantId, tenantName, null, null, null);
 
                 // Set Context property
-                var contextProperty = accessorType.GetProperty("Context");
+                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
                 contextProperty?.SetValue(accessor, tenantContextInstance);
             }
             catch (Exception ex)
@@ -232,7 +233,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
                 if (accessor == null)
                     return;
 
-                var contextProperty = accessorType.GetProperty("Context");
+                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
                 contextProperty?.SetValue(accessor, null);
             }
             catch

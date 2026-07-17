@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             try
             {
                 // Write to cache immediately
-                var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
+                CacheEntryOptions options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
                 await _cache.SetAsync(key, value, options, cancellationToken);
 
                 _logger?.LogDebug("Write-Behind: Cached value for key: {Key}", key);
@@ -133,7 +133,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 var processed = 0;
                 var failed = 0;
 
-                while (_writeQueue.TryDequeue(out var pendingWrite))
+                while (_writeQueue.TryDequeue(out PendingWrite<T>? pendingWrite))
                 {
                     try
                     {
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 var batch = new System.Collections.Generic.List<PendingWrite<T>>();
 
                 // Dequeue up to batchSize items
-                while (batch.Count < batchSize && _writeQueue.TryDequeue(out var pendingWrite))
+                while (batch.Count < batchSize && _writeQueue.TryDequeue(out PendingWrite<T>? pendingWrite))
                 {
                     batch.Add(pendingWrite);
                 }
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
 
                 _logger?.LogDebug("Write-Behind: Processing batch of {Count} writes", batch.Count);
 
-                var tasks = batch.Select(async pendingWrite =>
+                IEnumerable<Task> tasks = batch.Select(async pendingWrite =>
                 {
                     try
                     {

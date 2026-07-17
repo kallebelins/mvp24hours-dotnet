@@ -46,7 +46,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             var modelName = bindingContext.ModelName;
-            var valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
+            ValueProviderResult valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
 
             if (valueProviderResult == ValueProviderResult.None)
             {
@@ -63,7 +63,7 @@ namespace Mvp24Hours.WebAPI.Binders
             }
 
             // Try parsing with ISO 8601 format first (most common)
-            if (DateTimeOffset.TryParseExact(value, "yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dateTimeOffset))
+            if (DateTimeOffset.TryParseExact(value, "yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset dateTimeOffset))
             {
                 bindingContext.Result = ModelBindingResult.Success(dateTimeOffset);
                 return Task.CompletedTask;

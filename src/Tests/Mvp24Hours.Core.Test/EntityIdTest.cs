@@ -78,7 +78,7 @@ public class EntityIdTest
     public void GuidEntityId_IsEmpty_ReturnsTrueForEmptyGuid()
     {
         // Act
-        var id = TestGuidId.Empty;
+        TestGuidId id = TestGuidId.Empty;
 
         // Assert
         id.IsEmpty.Should().BeTrue();
@@ -339,7 +339,7 @@ public class EntityIdTest
     public void StringEntityId_Creation_WithNull_ThrowsArgumentNullException()
     {
         // Act
-        var act = () => new TestStringId(null!);
+        Func<TestStringId> act = () => new TestStringId(null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();

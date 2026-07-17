@@ -20,9 +20,9 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
         {
             var paging = new PagingCriteria(3, 0);
 
-            var customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
+            IList<CustomerBasic> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
 
-            foreach (var customer in customers)
+            foreach (CustomerBasic customer in customers)
             {
                 Repository.LoadRelation(customer, x => x.Contacts);
             }
@@ -33,9 +33,9 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
         {
             var paging = new PagingCriteria(3, 0);
 
-            var customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
+            IList<CustomerBasic> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
 
-            foreach (var customer in customers)
+            foreach (CustomerBasic customer in customers)
             {
                 Repository.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 1);
             }

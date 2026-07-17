@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Services;
@@ -60,7 +61,7 @@ public class DefaultRequestLogger : IRequestLogger
         if (_options.LoggingLevel == RequestLoggingLevel.None)
             return;
 
-        var requestData = await BuildRequestLogDataAsync(context);
+        RequestLogData requestData = await BuildRequestLogDataAsync(context);
 
         _logger.LogInformation(
             "HTTP {Method} {Path} started | CorrelationId: {CorrelationId} | Client: {ClientIp} | User: {UserId}",
@@ -94,8 +95,8 @@ public class DefaultRequestLogger : IRequestLogger
         if (_options.LoggingLevel == RequestLoggingLevel.None)
             return Task.CompletedTask;
 
-        var responseData = BuildResponseLogData(context, durationMs);
-        var logLevel = GetLogLevelForStatusCode(responseData.StatusCode);
+        ResponseLogData responseData = BuildResponseLogData(context, durationMs);
+        LogLevel logLevel = GetLogLevelForStatusCode(responseData.StatusCode);
 
         _logger.Log(
             logLevel,
@@ -121,7 +122,7 @@ public class DefaultRequestLogger : IRequestLogger
     /// <inheritdoc />
     public Task LogExceptionAsync(HttpContext context, Exception exception, double durationMs)
     {
-        var exceptionData = BuildExceptionLogData(context, exception, durationMs);
+        ExceptionLogData exceptionData = BuildExceptionLogData(context, exception, durationMs);
 
         _logger.LogError(
             exception,
@@ -159,7 +160,7 @@ public class DefaultRequestLogger : IRequestLogger
 
     private async Task<RequestLogData> BuildRequestLogDataAsync(HttpContext context)
     {
-        var request = context.Request;
+        HttpRequest request = context.Request;
         var correlationId = context.TraceIdentifier;
 
         string? body = null;
@@ -191,7 +192,7 @@ public class DefaultRequestLogger : IRequestLogger
 
     private ResponseLogData BuildResponseLogData(HttpContext context, double durationMs)
     {
-        var response = context.Response;
+        HttpResponse response = context.Response;
         var correlationId = context.TraceIdentifier;
         var statusCode = response.StatusCode;
 
@@ -260,7 +261,7 @@ public class DefaultRequestLogger : IRequestLogger
     {
         var maskedHeaders = new Dictionary<string, string>();
 
-        foreach (var header in headers)
+        foreach (KeyValuePair<string, StringValues> header in headers)
         {
             if (_options.SensitiveHeaders.Contains(header.Key))
             {
@@ -332,7 +333,7 @@ public class DefaultRequestLogger : IRequestLogger
         {
             case JsonValueKind.Object:
                 writer.WriteStartObject();
-                foreach (var prop in element.EnumerateObject())
+                foreach (JsonProperty prop in element.EnumerateObject())
                 {
                     writer.WritePropertyName(prop.Name);
                     MaskJsonElementRecursive(prop.Value, writer, prop.Name);
@@ -342,7 +343,7 @@ public class DefaultRequestLogger : IRequestLogger
 
             case JsonValueKind.Array:
                 writer.WriteStartArray();
-                foreach (var item in element.EnumerateArray())
+                foreach (JsonElement item in element.EnumerateArray())
                 {
                     MaskJsonElementRecursive(item, writer, null);
                 }
@@ -411,7 +412,7 @@ public class DefaultRequestLogger : IRequestLogger
 
     private static string? GetUserId(HttpContext context)
     {
-        var user = context.User;
+        ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
             return null;
 

@@ -103,7 +103,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             {
                 // HybridCache doesn't have a direct GetAsync without factory
                 // We use GetOrCreateAsync with a factory that returns null-ish sentinel
-                var result = await _hybridCache.GetOrCreateAsync<CacheWrapper<T>>(
+                CacheWrapper<T> result = await _hybridCache.GetOrCreateAsync<CacheWrapper<T>>(
                     fullKey,
                     ct => ValueTask.FromResult<CacheWrapper<T>>(new CacheWrapper<T> { Value = default, HasValue = false }),
                     cancellationToken: cancellationToken);
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             try
             {
-                var result = await _hybridCache.GetOrCreateAsync<StringWrapper>(
+                StringWrapper result = await _hybridCache.GetOrCreateAsync<StringWrapper>(
                     fullKey,
                     ct => ValueTask.FromResult(new StringWrapper { Value = null, HasValue = false }),
                     cancellationToken: cancellationToken);
@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 throw new ArgumentNullException(nameof(value));
 
             var fullKey = GetFullKey(key);
-            var entryOptions = ConvertToHybridCacheEntryOptions(options);
+            HybridCacheEntryOptions? entryOptions = ConvertToHybridCacheEntryOptions(options);
             var tags = GetTags(options);
 
             try
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 throw new ArgumentNullException(nameof(value));
 
             var fullKey = GetFullKey(key);
-            var entryOptions = ConvertToHybridCacheEntryOptions(options);
+            HybridCacheEntryOptions? entryOptions = ConvertToHybridCacheEntryOptions(options);
             var tags = GetTags(options);
 
             try
@@ -261,7 +261,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
 
             try
             {
-                var tasks = keys.Select(key => RemoveAsync(key, cancellationToken));
+                IEnumerable<Task> tasks = keys.Select(key => RemoveAsync(key, cancellationToken));
                 await Task.WhenAll(tasks);
 
                 LogDebug("HybridCache REMOVE_MANY: {Count} keys", keys.Length);
@@ -289,20 +289,20 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
         public async Task<Dictionary<string, T>> GetManyAsync<T>(string[] keys, CancellationToken cancellationToken = default) where T : class
         {
             if (keys == null || keys.Length == 0)
-                return new Dictionary<string, T>();
+                return [];
 
             var result = new Dictionary<string, T>();
 
             // HybridCache doesn't have native batch get, so we parallelize
-            var tasks = keys.Select(async key =>
+            IEnumerable<Task<(string key, T? value)>> tasks = keys.Select(async key =>
             {
-                var value = await GetAsync<T>(key, cancellationToken);
+                T? value = await GetAsync<T>(key, cancellationToken);
                 return (key, value);
             });
 
-            var results = await Task.WhenAll(tasks);
+            (string key, T? value)[] results = await Task.WhenAll(tasks);
 
-            foreach (var (key, value) in results)
+            foreach ((string? key, T? value) in results)
             {
                 if (value != null)
                 {
@@ -320,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             if (values == null || values.Count == 0)
                 return;
 
-            var tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
+            IEnumerable<Task> tasks = values.Select(kvp => SetAsync(kvp.Key, kvp.Value, options, cancellationToken));
             await Task.WhenAll(tasks);
 
             LogDebug("HybridCache SET_MANY: {Count} keys", values.Count);
@@ -367,12 +367,12 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
                 throw new ArgumentNullException(nameof(factory));
 
             var fullKey = GetFullKey(key);
-            var entryOptions = ConvertToHybridCacheEntryOptions(options);
+            HybridCacheEntryOptions? entryOptions = ConvertToHybridCacheEntryOptions(options);
             var allTags = GetTags(options, tags);
 
             try
             {
-                var result = await _hybridCache.GetOrCreateAsync(
+                T? result = await _hybridCache.GetOrCreateAsync(
                     fullKey,
                     factory,
                     entryOptions,
@@ -433,7 +433,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
             if (tags == null || tags.Length == 0)
                 return;
 
-            var tasks = tags.Select(tag => InvalidateByTagAsync(tag, cancellationToken));
+            IEnumerable<Task> tasks = tags.Select(tag => InvalidateByTagAsync(tag, cancellationToken));
             await Task.WhenAll(tasks);
 
             LogDebug("HybridCache INVALIDATE_TAGS: {Count} tags", tags.Length);

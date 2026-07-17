@@ -25,10 +25,10 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
     {
         public static IServiceProvider Initialize(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServices;
+            IServiceProvider serviceProvider = ConfigureServices;
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -41,10 +41,10 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         public static IServiceProvider InitializeBasic(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServices;
+            IServiceProvider serviceProvider = ConfigureServices;
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -57,10 +57,10 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         public static IServiceProvider InitializeLog(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServices;
+            IServiceProvider serviceProvider = ConfigureServices;
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -73,10 +73,10 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         public static IServiceProvider InitializeBasicLog(bool canLoadData = true)
         {
-            var serviceProvider = ConfigureServices;
+            IServiceProvider serviceProvider = ConfigureServices;
 
             // ensure database
-            var db = serviceProvider.GetService<DataContext>();
+            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
             db.Database?.EnsureCreated();
 
             // load data
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
         public static void Cleanup(IServiceProvider serviceProvider)
         {
             // ensure database drop
-            var db = serviceProvider?.GetService<DataContext>();
+            DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
             if (db != null)
             {
                 db.Database.EnsureDeleted();
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         private static void LoadData(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerService>();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             List<Customer> customers = [];
             for (int i = 1; i <= 10; i++)
             {
@@ -165,7 +165,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         private static void LoadDataBasic(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerBasicService>();
+            CustomerBasicService? service = serviceProvider.GetRequiredService<CustomerBasicService>();
             List<CustomerBasic> customers = [];
             for (int i = 1; i <= 10; i++)
             {
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         private static void LoadDataLog(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerLogService>();
+            CustomerLogService? service = serviceProvider.GetRequiredService<CustomerLogService>();
             List<CustomerBasicLog> customers = [];
             for (int i = 1; i <= 10; i++)
             {
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
         private static void LoadDataBasicLog(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetService<CustomerBasicLogService>();
+            CustomerBasicLogService? service = serviceProvider.GetRequiredService<CustomerBasicLogService>();
             List<CustomerBasicLog> customers = [];
             for (int i = 1; i <= 10; i++)
             {

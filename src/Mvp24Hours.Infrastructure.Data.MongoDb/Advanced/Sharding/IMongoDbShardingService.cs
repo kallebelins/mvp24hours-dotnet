@@ -158,7 +158,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets additional shard tags.
         /// </summary>
-        public List<string> Tags { get; set; } = new();
+        public List<string> Tags { get; set; } = [];
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets distribution per shard.
         /// </summary>
-        public List<ShardStats> ShardStats { get; set; } = new();
+        public List<ShardStats> ShardStats { get; set; } = [];
     }
 
     /// <summary>

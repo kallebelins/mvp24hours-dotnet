@@ -221,7 +221,7 @@ namespace Mvp24Hours.Infrastructure.Security.Helpers
             var sensitiveKeySet = new HashSet<string>(sensitiveKeys, StringComparer.OrdinalIgnoreCase);
             var result = new Dictionary<string, string?>(data.Count);
 
-            foreach (var kvp in data)
+            foreach (KeyValuePair<string, string?> kvp in data)
             {
                 if (sensitiveKeySet.Contains(kvp.Key) && !string.IsNullOrEmpty(kvp.Value))
                 {

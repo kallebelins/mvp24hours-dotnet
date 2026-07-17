@@ -117,6 +117,6 @@ public class EventMetadata
     /// <summary>
     /// Gets or sets additional custom properties.
     /// </summary>
-    public Dictionary<string, object?> AdditionalProperties { get; set; } = new();
+    public Dictionary<string, object?> AdditionalProperties { get; set; } = [];
 }
 

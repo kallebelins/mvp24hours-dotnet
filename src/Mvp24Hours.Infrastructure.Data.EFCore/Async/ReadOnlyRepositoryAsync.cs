@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
@@ -51,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<bool> ListAnyAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = await GetQuery(null, true).AnyAsync(cancellationToken);
             scope?.Complete();
             return result;
@@ -60,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<int> ListCountAsync(CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
+            using TransactionScope? scope = CreateTransactionScope(true);
             var result = await GetQuery(null, true).CountAsync(cancellationToken);
             scope?.Complete();
             return result;
@@ -75,8 +77,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<IList<T>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var result = await GetQuery(criteria).AsNoTracking().ToListAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            List<T> result = await GetQuery(criteria).AsNoTracking().ToListAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -84,8 +86,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<bool> GetByAnyAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -98,8 +100,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<int> GetByCountAsync(Expression<Func<T, bool>> clause, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope(true);
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
@@ -118,13 +120,13 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<IList<T>> GetByAsync(Expression<Func<T, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var query = dbEntities.AsQueryable();
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = dbEntities.AsQueryable();
             if (clause != null)
             {
                 query = query.Where(clause);
             }
-            var result = await GetQuery(query, criteria).AsNoTracking().ToListAsync(cancellationToken);
+            List<T> result = await GetQuery(query, criteria).AsNoTracking().ToListAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -138,8 +140,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <inheritdoc />
         public async Task<T?> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
-            var result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            T? result = await GetDynamicFilter(GetQuery(criteria, true), GetKeyInfo(), id).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -159,7 +161,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -178,7 +180,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task LoadRelationSortByAscendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -202,7 +204,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task LoadRelationSortByDescendingAsync<TProperty, TKey>(T entity, Expression<Func<T, IEnumerable<TProperty>>> propertyExpression, Expression<Func<TProperty, TKey>> orderKey, Expression<Func<TProperty, bool>>? clause = null, int limit = 0, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            var query = dbContext.Entry(entity).Collection(propertyExpression).Query();
+            IQueryable<TProperty> query = dbContext.Entry(entity).Collection(propertyExpression).Query();
 
             if (clause != null)
             {
@@ -230,8 +232,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<bool> AnyBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope(true);
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
             var result = await query.AnyAsync(cancellationToken);
             scope?.Complete();
             return result;
@@ -241,8 +243,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<int> CountBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope(true);
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            using TransactionScope? scope = CreateTransactionScope(true);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
             var result = await query.CountAsync(cancellationToken);
             scope?.Complete();
             return result;
@@ -252,9 +254,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<IList<T>> GetBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-            var result = await query.AsNoTracking().ToListAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            List<T> result = await query.AsNoTracking().ToListAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -263,9 +265,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<T?> GetSingleBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-            var result = await query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            T? result = await query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -274,9 +276,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public async Task<T?> GetFirstBySpecificationAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
-            var result = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+            using TransactionScope? scope = CreateTransactionScope();
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            T? result = await query.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
             scope?.Complete();
             return result;
         }
@@ -294,9 +296,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             bool ascending = true,
             CancellationToken cancellationToken = default) where TKey : struct
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             // Apply filter clause
             if (clause != null)
@@ -316,7 +318,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 : query.OrderByDescending(keySelector);
 
             // Fetch one extra item to determine if there are more pages
-            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+            List<T> items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
 
             var hasMore = items.Count > pageSize;
             if (hasMore)
@@ -344,9 +346,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+            IQueryable<T> query = SpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
 
             // Apply keyset condition
             if (lastKey.HasValue)
@@ -360,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 : query.OrderByDescending(keySelector);
 
             // Fetch one extra item to determine if there are more pages
-            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+            List<T> items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
 
             var hasMore = items.Count > pageSize;
             if (hasMore)
@@ -386,9 +388,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             bool ascending = true,
             CancellationToken cancellationToken = default)
         {
-            using var scope = CreateTransactionScope();
+            using TransactionScope? scope = CreateTransactionScope();
 
-            var query = dbEntities.AsQueryable();
+            IQueryable<T> query = dbEntities.AsQueryable();
 
             // Apply filter clause
             if (clause != null)
@@ -408,7 +410,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                 : query.OrderByDescending(keySelector);
 
             // Fetch one extra item to determine if there are more pages
-            var items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
+            List<T> items = await query.AsNoTracking().Take(pageSize + 1).ToListAsync(cancellationToken);
 
             var hasMore = items.Count > pageSize;
             if (hasMore)
@@ -445,11 +447,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             TKey lastKey,
             bool ascending) where TKey : struct
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(keyProperty, lastKeyConstant)
                 : Expression.LessThan(keyProperty, lastKeyConstant);
 
@@ -466,16 +468,16 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             string lastKey,
             bool ascending)
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(string));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(string));
 
             // Use string.CompareTo for string comparison
-            var compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
-            var compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
-            var zero = Expression.Constant(0);
+            MethodInfo compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
+            MethodCallExpression compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
+            ConstantExpression zero = Expression.Constant(0);
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(compareCall, zero)
                 : Expression.LessThan(compareCall, zero);
 

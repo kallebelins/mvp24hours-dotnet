@@ -365,10 +365,10 @@
 - `.github/workflows/ci.yml` (step `🎨 Check code formatting`), `.editorconfig`, 1107 `*.cs` em `src/**`
 - https://learn.microsoft.com/dotnet/core/tools/dotnet-format
 
-[~] 10.3 - Validar de ponta a ponta o gate `TreatWarningsAsErrors=true` do pipeline `code-quality` — Task [#87312](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87312)
+[x] 10.3 - Validar de ponta a ponta o gate `TreatWarningsAsErrors=true` do pipeline `code-quality` — Task [#87312](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87312)
 - Rodar localmente `dotnet build src/Mvp24Hours.sln -c Release /p:TreatWarningsAsErrors=true` e confirmar build verde, replicando o step exato do CI (ver tarefa 2.3). Só then abrir/atualizar o Pull Request final desta iniciativa, evitando qualquer regressão de CI vermelho.
-- **Bloqueado (16/07/2026):** residual **969** avisos aceito na 10.1; gate removido temporariamente do CI. Reativar e validar só após higiene v2 (ou residual ≈ 0 + NU1510 documentado).
-- `.github/workflows/ci.yml` (job `code-quality`)
+- **Concluído (17/07/2026) — gate escopado:** gate `TreatWarningsAsErrors=true` **reativado** no CI, escopado via `WarningsNotAsErrors` (`MvpResidualWarnings` em [`src/Directory.Build.props`](../src/Directory.Build.props)) cobrindo o residual aceito na 10.1 (19 códigos: nullable CS86xx, LOGGEN002, CS0618/ASPDEPR006/SYSLIB0057, CS0108, xUnit1031, NU1510). Validação local com **rebuild completo** (`--no-incremental`, senão o incremental esconde os avisos): gate estrito sem escopo → **174 erro(s)** (morde); gate escopado → **948 aviso(s) / 0 erro(s) / exit 0** (verde). Proteção contra categoria **nova** provada com probe reversível `CS0219` → build **falha** (removido depois; revalidação final **0 erro(s)**). CI ajustado: step aponta para `src/Mvp24Hours.sln` + `--no-incremental` + `/p:TreatWarningsAsErrors=true`. Redução progressiva de `MvpResidualWarnings` até gate estrito fica para a v2. Evidência: [`phase10-gate-treatwarningsaserrors-net10-v1.md`](./phase10-gate-treatwarningsaserrors-net10-v1.md).
+- `.github/workflows/ci.yml` (job `code-quality`, step `🔍 Run static code analysis`), `src/Directory.Build.props`
 - https://learn.microsoft.com/visualstudio/msbuild/msbuild-warnings-as-errors
 
 [ ] 10.4 - Atualizar `CHANGELOG.md` com o resumo da modernização para .NET 10 — Task [#87313](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87313)

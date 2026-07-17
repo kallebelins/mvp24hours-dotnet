@@ -66,7 +66,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
             var newRecord = new IdempotencyRecord
             {
                 Key = key,
@@ -92,7 +92,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
             }
 
             // Key exists, check if expired
-            if (_records.TryGetValue(key, out var existing))
+            if (_records.TryGetValue(key, out IdempotencyRecord? existing))
             {
                 if (existing.IsExpired)
                 {
@@ -130,7 +130,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_records.TryGetValue(key, out var record))
+            if (_records.TryGetValue(key, out IdempotencyRecord? record))
             {
                 var updatedRecord = new IdempotencyRecord
                 {
@@ -177,7 +177,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 _records.TryRemove(key, out _);
                 _logger?.LogDebug("[Idempotency] Removed failed record for key {Key}", key);
             }
-            else if (_records.TryGetValue(key, out var record))
+            else if (_records.TryGetValue(key, out IdempotencyRecord? record))
             {
                 var updatedRecord = new IdempotencyRecord
                 {
@@ -205,7 +205,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_records.TryGetValue(key, out var record) && !record.IsExpired)
+            if (_records.TryGetValue(key, out IdempotencyRecord? record) && !record.IsExpired)
             {
                 return Task.FromResult<IdempotencyRecord?>(record);
             }
@@ -233,7 +233,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_records.TryGetValue(key, out var record))
+            if (_records.TryGetValue(key, out IdempotencyRecord? record))
             {
                 return Task.FromResult(!record.IsExpired);
             }
@@ -244,9 +244,9 @@ namespace Mvp24Hours.WebAPI.Idempotency
         private void CleanupExpiredRecords(object? state)
         {
             var expiredCount = 0;
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            foreach (var kvp in _records)
+            foreach (KeyValuePair<string, IdempotencyRecord> kvp in _records)
             {
                 if (kvp.Value.ExpiresAt <= now)
                 {

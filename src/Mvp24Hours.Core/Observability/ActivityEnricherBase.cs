@@ -122,7 +122,7 @@ public class UserContextEnricher : ActivityEnricherBase
             activity.SetTag(SemanticTags.EnduserName, userName);
         }
 
-        var roles = GetUserRoles?.Invoke();
+        IEnumerable<string>? roles = GetUserRoles?.Invoke();
         if (roles != null)
         {
             activity.SetTag(SemanticTags.EnduserRoles, string.Join(",", roles));
@@ -188,7 +188,7 @@ public class CompositeActivityEnricher : IActivityEnricher
     /// <inheritdoc />
     public void EnrichOnStart(Activity activity, object? context = null)
     {
-        foreach (var enricher in _enrichers)
+        foreach (IActivityEnricher enricher in _enrichers)
         {
             try
             {
@@ -204,7 +204,7 @@ public class CompositeActivityEnricher : IActivityEnricher
     /// <inheritdoc />
     public void EnrichOnEnd(Activity activity, object? context = null, Exception? exception = null)
     {
-        foreach (var enricher in _enrichers)
+        foreach (IActivityEnricher enricher in _enrichers)
         {
             try
             {

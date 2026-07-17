@@ -165,7 +165,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// </list>
         /// Use this property to add custom exception types.
         /// </remarks>
-        public List<Type> AdditionalRetryableExceptions { get; set; } = new();
+        public List<Type> AdditionalRetryableExceptions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets exception types that should never trigger a retry.
@@ -174,7 +174,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// These exceptions will always fail fast, even if they would normally be retryable.
         /// Useful for business logic exceptions that shouldn't be retried.
         /// </remarks>
-        public List<Type> NonRetryableExceptions { get; set; } = new();
+        public List<Type> NonRetryableExceptions { get; set; } = [];
 
         #endregion
 

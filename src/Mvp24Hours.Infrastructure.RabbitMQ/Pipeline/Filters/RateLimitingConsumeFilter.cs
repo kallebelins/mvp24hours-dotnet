@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             CancellationToken cancellationToken = default) where TMessage : class
         {
             var key = GetRateLimiterKey(context);
-            var options = GetRateLimiterOptions<TMessage>();
+            NativeRateLimiterOptions options = GetRateLimiterOptions<TMessage>();
 
             _logger?.LogDebug(
                 "Rate limiting check for consumer key={Key}, messageType={MessageType}, algorithm={Algorithm}",
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 typeof(TMessage).Name,
                 options.Algorithm);
 
-            using var lease = await _rateLimiterProvider.AcquireAsync(
+            using RateLimitLease lease = await _rateLimiterProvider.AcquireAsync(
                 key,
                 options,
                 1,
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 
             if (!lease.IsAcquired)
             {
-                var retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out var retry)
+                TimeSpan? retryAfter = lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retry)
                     ? retry
                     : (TimeSpan?)null;
 
@@ -114,7 +114,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
         private NativeRateLimiterOptions GetRateLimiterOptions<TMessage>()
         {
             // Check if there are type-specific options
-            if (_options.TypeSpecificOptions.TryGetValue(typeof(TMessage), out var typeOptions))
+            if (_options.TypeSpecificOptions.TryGetValue(typeof(TMessage), out NativeRateLimiterOptions? typeOptions))
             {
                 return typeOptions;
             }
@@ -186,7 +186,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
         /// <summary>
         /// Gets or sets type-specific rate limiter options.
         /// </summary>
-        public System.Collections.Generic.Dictionary<Type, NativeRateLimiterOptions> TypeSpecificOptions { get; set; } = new();
+        public System.Collections.Generic.Dictionary<Type, NativeRateLimiterOptions> TypeSpecificOptions { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the behavior when rate limit is exceeded.

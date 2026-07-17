@@ -6,6 +6,8 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Providers;
@@ -106,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Extensions
 
             services.TryAddSingleton<IJobScheduler>(serviceProvider =>
             {
-                var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<InMemoryJobProvider>>();
+                ILogger<InMemoryJobProvider>? logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<InMemoryJobProvider>>();
                 return new InMemoryJobProvider(serviceProvider, logger);
             });
 
@@ -158,8 +160,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Extensions
             // Register HangfireJobProvider
             services.TryAddSingleton<IJobScheduler>(serviceProvider =>
             {
-                var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<HangfireJobProvider>>();
-                var optionsSnapshot = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<HangfireJobOptions>>();
+                ILogger<HangfireJobProvider>? logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<HangfireJobProvider>>();
+                IOptions<HangfireJobOptions> optionsSnapshot = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<HangfireJobOptions>>();
                 return new HangfireJobProvider(serviceProvider, optionsSnapshot, logger);
             });
 
@@ -210,8 +212,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Extensions
             // Register QuartzJobProvider
             services.TryAddSingleton<IJobScheduler>(serviceProvider =>
             {
-                var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<QuartzJobProvider>>();
-                var optionsSnapshot = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<QuartzJobOptions>>();
+                ILogger<QuartzJobProvider>? logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<QuartzJobProvider>>();
+                IOptions<QuartzJobOptions> optionsSnapshot = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<QuartzJobOptions>>();
                 return new QuartzJobProvider(serviceProvider, optionsSnapshot, logger);
             });
 

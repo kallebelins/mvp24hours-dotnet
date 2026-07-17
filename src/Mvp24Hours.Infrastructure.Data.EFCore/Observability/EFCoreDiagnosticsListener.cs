@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
@@ -36,9 +37,9 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 {
     private readonly ILogger<EFCoreDiagnosticsListener>? _logger;
     private readonly EFCoreMetrics? _metrics;
-    private readonly List<IDisposable> _subscriptions = new();
-    private readonly Dictionary<Guid, Activity> _commandActivities = new();
-    private readonly Dictionary<Guid, Stopwatch> _commandTimings = new();
+    private readonly List<IDisposable> _subscriptions = [];
+    private readonly Dictionary<Guid, Activity> _commandActivities = [];
+    private readonly Dictionary<Guid, Stopwatch> _commandTimings = [];
     private readonly object _lock = new();
 
     /// <summary>
@@ -62,7 +63,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     /// </summary>
     public void Subscribe()
     {
-        var subscription = DiagnosticListener.AllListeners.Subscribe(this);
+        IDisposable subscription = DiagnosticListener.AllListeners.Subscribe(this);
         lock (_lock)
         {
             _subscriptions.Add(subscription);
@@ -74,7 +75,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (listener.Name == DiagnosticListenerName)
         {
-            var subscription = listener.Subscribe(this);
+            IDisposable subscription = listener.Subscribe(this);
             lock (_lock)
             {
                 _subscriptions.Add(subscription);
@@ -147,14 +148,14 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return;
 
-        var commandId = GetCommandId(payload);
+        Guid commandId = GetCommandId(payload);
         var commandText = GetCommandText(payload);
         var dbName = GetDatabaseName(payload);
 
         if (commandId == Guid.Empty) return;
 
         // Start activity
-        var activity = EFCoreActivitySource.Source.StartActivity(
+        Activity? activity = EFCoreActivitySource.Source.StartActivity(
             EFCoreActivitySource.ActivityNames.Query,
             ActivityKind.Client);
 
@@ -181,7 +182,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return;
 
-        var commandId = GetCommandId(payload);
+        Guid commandId = GetCommandId(payload);
         if (commandId == Guid.Empty) return;
 
         Activity? activity = null;
@@ -215,7 +216,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return;
 
-        var commandId = GetCommandId(payload);
+        Guid commandId = GetCommandId(payload);
         if (commandId == Guid.Empty) return;
 
         Activity? activity = null;
@@ -231,7 +232,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
         stopwatch?.Stop();
 
-        var exception = GetException(payload);
+        Exception? exception = GetException(payload);
         if (activity != null)
         {
             if (exception != null)
@@ -265,7 +266,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private void OnConnectionError(object? payload)
     {
-        var exception = GetException(payload);
+        Exception? exception = GetException(payload);
         _logger?.LogError(exception, "Database connection error");
     }
 
@@ -283,7 +284,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     private void OnTransactionCommitted(object? payload)
     {
         var dbName = GetDatabaseName(payload);
-        var duration = GetDuration(payload);
+        TimeSpan duration = GetDuration(payload);
         _metrics?.RecordTransactionCommit(duration.TotalMilliseconds, dbName);
         _logger?.LogDebug("Transaction committed on database {Database} after {DurationMs:F2}ms", dbName, duration.TotalMilliseconds);
     }
@@ -291,7 +292,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     private void OnTransactionRolledBack(object? payload)
     {
         var dbName = GetDatabaseName(payload);
-        var duration = GetDuration(payload);
+        TimeSpan duration = GetDuration(payload);
         _metrics?.RecordTransactionRollback(duration.TotalMilliseconds, null, dbName);
         _logger?.LogWarning("Transaction rolled back on database {Database} after {DurationMs:F2}ms", dbName, duration.TotalMilliseconds);
     }
@@ -318,8 +319,8 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return Guid.Empty;
 
-        var type = payload.GetType();
-        var prop = type.GetProperty("CommandId");
+        Type type = payload.GetType();
+        PropertyInfo? prop = type.GetProperty("CommandId");
         if (prop?.GetValue(payload) is Guid id)
             return id;
 
@@ -330,12 +331,12 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return string.Empty;
 
-        var type = payload.GetType();
-        var commandProp = type.GetProperty("Command");
+        Type type = payload.GetType();
+        PropertyInfo? commandProp = type.GetProperty("Command");
         var command = commandProp?.GetValue(payload);
         if (command == null) return string.Empty;
 
-        var textProp = command.GetType().GetProperty("CommandText");
+        PropertyInfo? textProp = command.GetType().GetProperty("CommandText");
         return textProp?.GetValue(command) as string ?? string.Empty;
     }
 
@@ -343,27 +344,27 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return null;
 
-        var type = payload.GetType();
+        Type type = payload.GetType();
 
         // Try Connection property
-        var connectionProp = type.GetProperty("Connection");
+        PropertyInfo? connectionProp = type.GetProperty("Connection");
         var connection = connectionProp?.GetValue(payload);
         if (connection != null)
         {
-            var dbProp = connection.GetType().GetProperty("Database");
+            PropertyInfo? dbProp = connection.GetType().GetProperty("Database");
             return dbProp?.GetValue(connection) as string;
         }
 
         // Try DbContext property
-        var contextProp = type.GetProperty("Context");
+        PropertyInfo? contextProp = type.GetProperty("Context");
         var context = contextProp?.GetValue(payload);
         if (context != null)
         {
-            var databaseProp = context.GetType().GetProperty("Database");
+            PropertyInfo? databaseProp = context.GetType().GetProperty("Database");
             var database = databaseProp?.GetValue(context);
             if (database != null)
             {
-                var currentDbProp = database.GetType().GetProperty("ProviderName");
+                PropertyInfo? currentDbProp = database.GetType().GetProperty("ProviderName");
                 return currentDbProp?.GetValue(database) as string;
             }
         }
@@ -375,8 +376,8 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return null;
 
-        var type = payload.GetType();
-        var prop = type.GetProperty("Exception");
+        Type type = payload.GetType();
+        PropertyInfo? prop = type.GetProperty("Exception");
         return prop?.GetValue(payload) as Exception;
     }
 
@@ -384,8 +385,8 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         if (payload == null) return TimeSpan.Zero;
 
-        var type = payload.GetType();
-        var prop = type.GetProperty("Duration");
+        Type type = payload.GetType();
+        PropertyInfo? prop = type.GetProperty("Duration");
         if (prop?.GetValue(payload) is TimeSpan duration)
             return duration;
 
@@ -425,13 +426,13 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     {
         lock (_lock)
         {
-            foreach (var subscription in _subscriptions)
+            foreach (IDisposable subscription in _subscriptions)
             {
                 subscription.Dispose();
             }
             _subscriptions.Clear();
 
-            foreach (var activity in _commandActivities.Values)
+            foreach (Activity activity in _commandActivities.Values)
             {
                 activity.Dispose();
             }

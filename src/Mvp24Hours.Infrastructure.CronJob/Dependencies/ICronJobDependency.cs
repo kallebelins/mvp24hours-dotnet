@@ -168,7 +168,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Dependencies
     public sealed class CronJobDependencyBuilder
     {
         private readonly string _dependentJobName;
-        private readonly List<string> _requiredJobs = new();
+        private readonly List<string> _requiredJobs = [];
         private bool _requireSuccess = true;
         private TimeSpan? _maxAge;
 

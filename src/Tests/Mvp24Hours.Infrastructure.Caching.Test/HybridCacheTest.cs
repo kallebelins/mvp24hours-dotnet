@@ -112,9 +112,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.TrackKeyWithTagsAsync(key, tags);
 
             // Assert
-            var keysByTag1 = await tagManager.GetKeysByTagAsync("products");
-            var keysByTag2 = await tagManager.GetKeysByTagAsync("category:electronics");
-            var tagsByKey = await tagManager.GetTagsByKeyAsync(key);
+            IEnumerable<string> keysByTag1 = await tagManager.GetKeysByTagAsync("products");
+            IEnumerable<string> keysByTag2 = await tagManager.GetKeysByTagAsync("category:electronics");
+            IEnumerable<string> tagsByKey = await tagManager.GetTagsByKeyAsync(key);
 
             keysByTag1.Should().Contain(key);
             keysByTag2.Should().Contain(key);
@@ -135,9 +135,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.RemoveKeyFromTagsAsync(key);
 
             // Assert
-            var keysByTag1 = await tagManager.GetKeysByTagAsync("products");
-            var keysByTag2 = await tagManager.GetKeysByTagAsync("category:electronics");
-            var tagsByKey = await tagManager.GetTagsByKeyAsync(key);
+            IEnumerable<string> keysByTag1 = await tagManager.GetKeysByTagAsync("products");
+            IEnumerable<string> keysByTag2 = await tagManager.GetKeysByTagAsync("category:electronics");
+            IEnumerable<string> tagsByKey = await tagManager.GetTagsByKeyAsync(key);
 
             keysByTag1.Should().NotContain(key);
             keysByTag2.Should().NotContain(key);
@@ -157,12 +157,12 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.InvalidateTagAsync("products");
 
             // Assert
-            var keysForProducts = await tagManager.GetKeysByTagAsync("products");
+            IEnumerable<string> keysForProducts = await tagManager.GetKeysByTagAsync("products");
             keysForProducts.Should().BeEmpty();
 
             // Keys should no longer have "products" tag
-            var tagsForKey1 = await tagManager.GetTagsByKeyAsync("product:1");
-            var tagsForKey3 = await tagManager.GetTagsByKeyAsync("product:3");
+            IEnumerable<string> tagsForKey1 = await tagManager.GetTagsByKeyAsync("product:1");
+            IEnumerable<string> tagsForKey3 = await tagManager.GetTagsByKeyAsync("product:3");
 
             tagsForKey1.Should().NotContain("products");
             tagsForKey3.Should().NotContain("products");
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.TrackKeyWithTagsAsync("category:1", new[] { "categories" });
 
             // Act
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
 
             // Assert
             stats.TotalTags.Should().Be(3);
@@ -197,7 +197,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
 
             // Act
             await tagManager.InvalidateTagAsync("products");
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
 
             // Assert
             stats.TagInvalidations.Should().Be(1);
@@ -215,7 +215,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.ClearAsync();
 
             // Assert
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
             stats.TotalTags.Should().Be(0);
             stats.TotalAssociations.Should().Be(0);
         }
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.TrackKeyWithTagsAsync("key", Array.Empty<string>());
 
             // Assert
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
             stats.TotalTags.Should().Be(0);
         }
 
@@ -252,7 +252,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var tagManager = new InMemoryHybridCacheTagManager();
 
             // Act
-            var keys = await tagManager.GetKeysByTagAsync("non-existent");
+            IEnumerable<string> keys = await tagManager.GetKeysByTagAsync("non-existent");
 
             // Assert
             keys.Should().BeEmpty();
@@ -272,7 +272,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             }
 
             // Assert
-            var keys = await tagManager.GetKeysByTagAsync(tag);
+            IEnumerable<string> keys = await tagManager.GetKeysByTagAsync(tag);
             keys.Should().HaveCount(100);
         }
 
@@ -292,11 +292,11 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
 #pragma warning disable EXTEXP0018
             services.AddMvpHybridCache();
 #pragma warning restore EXTEXP0018
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var cacheProvider = provider.GetService<ICacheProvider>();
-            var tagManager = provider.GetService<IHybridCacheTagManager>();
+            ICacheProvider? cacheProvider = provider.GetRequiredService<ICacheProvider>();
+            IHybridCacheTagManager? tagManager = provider.GetRequiredService<IHybridCacheTagManager>();
 
             cacheProvider.Should().NotBeNull();
             cacheProvider.Should().BeOfType<HybridCacheProvider>();
@@ -321,10 +321,10 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
                 options.EnableDetailedLogging = true;
             });
 #pragma warning restore EXTEXP0018
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var options = provider.GetService<IOptions<MvpHybridCacheOptions>>();
+            IOptions<MvpHybridCacheOptions>? options = provider.GetRequiredService<IOptions<MvpHybridCacheOptions>>();
             options.Should().NotBeNull();
             options!.Value.DefaultExpiration.Should().Be(TimeSpan.FromMinutes(30));
             options.Value.KeyPrefix.Should().Be("test:");
@@ -347,10 +347,10 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
 #pragma warning disable EXTEXP0018
             services.ReplaceCacheProviderWithHybridCache();
 #pragma warning restore EXTEXP0018
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert
-            var cacheProvider = provider.GetService<ICacheProvider>();
+            ICacheProvider? cacheProvider = provider.GetRequiredService<ICacheProvider>();
             cacheProvider.Should().BeOfType<HybridCacheProvider>();
         }
 
@@ -369,10 +369,10 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
 
             // Act
             services.AddSingleton(customTagManager.Object);
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             // Assert - Should have both registrations but custom should be retrievable
-            var tagManager = provider.GetService<IHybridCacheTagManager>();
+            IHybridCacheTagManager? tagManager = provider.GetRequiredService<IHybridCacheTagManager>();
             tagManager.Should().NotBeNull();
         }
 
@@ -387,7 +387,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var options = new CacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
-                Tags = new List<string> { "products", "featured" }
+                Tags = ["products", "featured"]
             };
 
             // Assert
@@ -448,10 +448,10 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await Task.WhenAll(tasks);
 
             // Assert
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
             stats.TotalTags.Should().Be(2);
 
-            var keysForTag1 = await tagManager.GetKeysByTagAsync("tag1");
+            IEnumerable<string> keysForTag1 = await tagManager.GetKeysByTagAsync("tag1");
             keysForTag1.Should().HaveCount(100);
         }
 
@@ -463,7 +463,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.TrackKeyWithTagsAsync("key:1", new[] { "tag1" });
 
             // Act - Concurrent invalidation and write
-            var tasks = new[]
+            Task[] tasks = new[]
             {
                 tagManager.InvalidateTagAsync("tag1"),
                 tagManager.TrackKeyWithTagsAsync("key:2", new[] { "tag1" })
@@ -488,7 +488,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var defaultValue = new TestEntity { Id = 999, Name = "Default" };
 
             // Act
-            var result = await mockProvider.Object.GetOrDefaultAsync("non-existent", defaultValue);
+            TestEntity result = await mockProvider.Object.GetOrDefaultAsync("non-existent", defaultValue);
 
             // Assert
             result.Should().NotBeNull();
@@ -508,7 +508,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var defaultValue = new TestEntity { Id = 999, Name = "Default" };
 
             // Act
-            var result = await mockProvider.Object.GetOrDefaultAsync("existing", defaultValue);
+            TestEntity result = await mockProvider.Object.GetOrDefaultAsync("existing", defaultValue);
 
             // Assert
             result.Should().NotBeNull();
@@ -602,7 +602,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.InvalidateByTagAsync("tag"));
             exception.Message.Should().Contain("HybridCacheProvider");
         }
@@ -614,7 +614,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.InvalidateByTagsAsync(new[] { "tag1", "tag2" }));
             exception.Message.Should().Contain("HybridCacheProvider");
         }
@@ -626,7 +626,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             var mockProvider = new Mock<ICacheProvider>();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 mockProvider.Object.GetOrCreateAsync(
                     "key",
                     ct => ValueTask.FromResult(new TestEntity { Id = 1 })));
@@ -729,7 +729,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.TrackKeyWithTagsAsync("product:4", new[] { "products", "category:clothing", "featured" });
 
             // Assert - Check statistics
-            var stats = tagManager.GetStatistics();
+            HybridCacheTagStatistics stats = tagManager.GetStatistics();
             stats.TotalTags.Should().Be(4); // products, category:electronics, category:clothing, featured
             stats.KeysPerTag["products"].Should().Be(4);
             stats.KeysPerTag["category:electronics"].Should().Be(2);
@@ -740,13 +740,13 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.InvalidateTagAsync("category:electronics");
 
             // Assert - Check remaining tags
-            var statsAfter = tagManager.GetStatistics();
+            HybridCacheTagStatistics statsAfter = tagManager.GetStatistics();
             statsAfter.TotalTags.Should().Be(3); // products, category:clothing, featured
             statsAfter.TagInvalidations.Should().Be(1);
 
             // Verify product:1 and product:2 no longer have category:electronics
-            var tagsForProduct1 = await tagManager.GetTagsByKeyAsync("product:1");
-            var tagsForProduct2 = await tagManager.GetTagsByKeyAsync("product:2");
+            IEnumerable<string> tagsForProduct1 = await tagManager.GetTagsByKeyAsync("product:1");
+            IEnumerable<string> tagsForProduct2 = await tagManager.GetTagsByKeyAsync("product:2");
             tagsForProduct1.Should().NotContain("category:electronics");
             tagsForProduct2.Should().NotContain("category:electronics");
 
@@ -766,13 +766,13 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             await tagManager.RemoveKeyFromTagsAsync("product:1");
 
             // Assert - Key should have no tags
-            var tagsForKey = await tagManager.GetTagsByKeyAsync("product:1");
+            IEnumerable<string> tagsForKey = await tagManager.GetTagsByKeyAsync("product:1");
             tagsForKey.Should().BeEmpty();
 
             // All tags should not contain the key
-            var productsKeys = await tagManager.GetKeysByTagAsync("products");
-            var featuredKeys = await tagManager.GetKeysByTagAsync("featured");
-            var newArrivalsKeys = await tagManager.GetKeysByTagAsync("new-arrivals");
+            IEnumerable<string> productsKeys = await tagManager.GetKeysByTagAsync("products");
+            IEnumerable<string> featuredKeys = await tagManager.GetKeysByTagAsync("featured");
+            IEnumerable<string> newArrivalsKeys = await tagManager.GetKeysByTagAsync("new-arrivals");
 
             productsKeys.Should().NotContain("product:1");
             featuredKeys.Should().NotContain("product:1");

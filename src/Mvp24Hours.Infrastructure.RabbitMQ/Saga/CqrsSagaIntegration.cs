@@ -71,13 +71,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             ArgumentNullException.ThrowIfNull(context);
             ArgumentNullException.ThrowIfNull(dataFactory);
 
-            var data = dataFactory(context.Message);
+            TData data = dataFactory(context.Message);
 
             _logger?.LogInformation(
                 "Starting CQRS saga {SagaType} from RabbitMQ message {MessageType}",
                 typeof(TSaga).Name, typeof(TMessage).Name);
 
-            var result = await _orchestrator.ExecuteAsync<TSaga, TData>(data, null, cancellationToken);
+            SagaResult<TData> result = await _orchestrator.ExecuteAsync<TSaga, TData>(data, null, cancellationToken);
 
             if (result.IsSuccess)
             {
@@ -105,14 +105,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             Guid sagaId,
             CancellationToken cancellationToken = default)
         {
-            var stateStore = _serviceProvider.GetService<ISagaStateStore>();
+            ISagaStateStore? stateStore = _serviceProvider.GetService<ISagaStateStore>();
             if (stateStore == null)
             {
                 _logger?.LogWarning("ISagaStateStore not registered, cannot resume saga {SagaId}", sagaId);
                 return null;
             }
 
-            var state = await stateStore.GetAsync<TData>(sagaId, cancellationToken);
+            SagaState<TData>? state = await stateStore.GetAsync<TData>(sagaId, cancellationToken);
             if (state == null)
             {
                 _logger?.LogWarning("Saga state not found for {SagaId}", sagaId);
@@ -164,8 +164,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             // Check if this should resume an existing saga
             if (_correlationIdExtractor != null)
             {
-                var correlationId = _correlationIdExtractor(context.Message);
-                var result = await _adapter.ResumeSagaAsync(correlationId, cancellationToken);
+                Guid correlationId = _correlationIdExtractor(context.Message);
+                SagaResult<TData>? result = await _adapter.ResumeSagaAsync(correlationId, cancellationToken);
                 if (result != null)
                 {
                     _logger?.LogDebug(
@@ -203,8 +203,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
             where TSaga : SagaBase<TData>
             where TMessage : class
         {
-            var adapter = serviceProvider.GetRequiredService<CqrsSagaAdapter<TData, TSaga>>();
-            var logger = serviceProvider.GetService<ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>>();
+            CqrsSagaAdapter<TData, TSaga> adapter = serviceProvider.GetRequiredService<CqrsSagaAdapter<TData, TSaga>>();
+            ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>? logger = serviceProvider.GetService<ILogger<CqrsSagaMessageConsumer<TData, TSaga, TMessage>>>();
 
             return new CqrsSagaMessageConsumer<TData, TSaga, TMessage>(
                 adapter, dataFactory, correlationIdExtractor, logger);

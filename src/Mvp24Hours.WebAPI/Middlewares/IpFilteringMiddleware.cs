@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
@@ -94,7 +95,7 @@ public class IpFilteringMiddleware
         }
 
         // Get client IP
-        var clientIp = GetClientIpAddress(context);
+        IPAddress? clientIp = GetClientIpAddress(context);
         if (clientIp == null)
         {
             _logger.LogWarning("Could not determine client IP address for request to {Path}", path);
@@ -170,19 +171,19 @@ public class IpFilteringMiddleware
     private IPAddress? GetIpFromForwardedHeaders(HttpContext context)
     {
         // Try primary forwarded header
-        if (context.Request.Headers.TryGetValue(_options.ForwardedHeaderName, out var forwardedFor))
+        if (context.Request.Headers.TryGetValue(_options.ForwardedHeaderName, out StringValues forwardedFor))
         {
-            var ip = ParseForwardedForHeader(forwardedFor.ToString());
+            IPAddress? ip = ParseForwardedForHeader(forwardedFor.ToString());
             if (ip != null) return ip;
         }
 
         // Try alternative headers
         foreach (var header in _options.AlternativeIpHeaders)
         {
-            if (context.Request.Headers.TryGetValue(header, out var headerValue))
+            if (context.Request.Headers.TryGetValue(header, out StringValues headerValue))
             {
                 var ipString = headerValue.ToString().Split(',').FirstOrDefault()?.Trim();
-                if (!string.IsNullOrEmpty(ipString) && IPAddress.TryParse(ipString, out var ip))
+                if (!string.IsNullOrEmpty(ipString) && IPAddress.TryParse(ipString, out IPAddress? ip))
                 {
                     return ip;
                 }
@@ -202,7 +203,7 @@ public class IpFilteringMiddleware
         // Find the first IP that's not a trusted proxy
         foreach (var ipString in ips)
         {
-            if (IPAddress.TryParse(ipString, out var ip))
+            if (IPAddress.TryParse(ipString, out IPAddress? ip))
             {
                 // Check if it's a trusted proxy
                 if (!IsIpAllowed(ip, _options.TrustedProxies))
@@ -213,7 +214,7 @@ public class IpFilteringMiddleware
         }
 
         // If all are trusted proxies, return the first one
-        if (ips.Count > 0 && IPAddress.TryParse(ips[0], out var firstIp))
+        if (ips.Count > 0 && IPAddress.TryParse(ips[0], out IPAddress? firstIp))
         {
             return firstIp;
         }
@@ -224,7 +225,7 @@ public class IpFilteringMiddleware
     private bool? CheckPathSpecificRules(string path, IPAddress clientIp)
     {
         // Check path-specific whitelist
-        foreach (var rule in _options.PathWhitelists)
+        foreach (KeyValuePair<string, HashSet<string>> rule in _options.PathWhitelists)
         {
             if (MatchesPattern(path, rule.Key))
             {
@@ -233,7 +234,7 @@ public class IpFilteringMiddleware
         }
 
         // Check path-specific blacklist
-        foreach (var rule in _options.PathBlacklists)
+        foreach (KeyValuePair<string, HashSet<string>> rule in _options.PathBlacklists)
         {
             if (MatchesPattern(path, rule.Key))
             {
@@ -266,7 +267,7 @@ public class IpFilteringMiddleware
         }
 
         // Check exact IP match
-        if (IPAddress.TryParse(entry, out var allowedIp))
+        if (IPAddress.TryParse(entry, out IPAddress? allowedIp))
         {
             return clientIp.Equals(allowedIp);
         }
@@ -279,7 +280,7 @@ public class IpFilteringMiddleware
         try
         {
             var parts = cidr.Split('/');
-            if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out var networkAddress) || !int.TryParse(parts[1], out var prefixLength))
+            if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out IPAddress? networkAddress) || !int.TryParse(parts[1], out var prefixLength))
             {
                 return false;
             }

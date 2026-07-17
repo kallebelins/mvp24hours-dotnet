@@ -23,7 +23,7 @@ public class OrderCreatedNotification : IMediatorNotification
 /// </summary>
 public class OrderCreatedEmailHandler : IMediatorNotificationHandler<OrderCreatedNotification>
 {
-    public static List<string> HandledNotifications { get; } = new();
+    public static List<string> HandledNotifications { get; } = [];
 
     public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
     {
@@ -37,7 +37,7 @@ public class OrderCreatedEmailHandler : IMediatorNotificationHandler<OrderCreate
 /// </summary>
 public class OrderCreatedAuditHandler : IMediatorNotificationHandler<OrderCreatedNotification>
 {
-    public static List<string> HandledNotifications { get; } = new();
+    public static List<string> HandledNotifications { get; } = [];
 
     public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
     {

@@ -26,7 +26,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
     /// </remarks>
     public class InMemorySmsTemplateService : ISmsTemplateService
     {
-        private readonly Dictionary<string, SmsTemplate> _templates = new();
+        private readonly Dictionary<string, SmsTemplate> _templates = [];
 
         /// <summary>
         /// Gets a template by ID.
@@ -38,7 +38,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
                 throw new ArgumentException("Template ID cannot be null or empty.", nameof(templateId));
             }
 
-            _templates.TryGetValue(templateId, out var template);
+            _templates.TryGetValue(templateId, out SmsTemplate? template);
             return Task.FromResult<SmsTemplate?>(template);
         }
 
@@ -52,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
                 throw new ArgumentNullException(nameof(template));
             }
 
-            var validationErrors = template.Validate();
+            IList<string> validationErrors = template.Validate();
             if (validationErrors.Count > 0)
             {
                 throw new ArgumentException($"Template validation failed: {string.Join(", ", validationErrors)}");
@@ -136,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
             IDictionary<string, object> values,
             CancellationToken cancellationToken = default)
         {
-            var template = await GetTemplateAsync(templateId, cancellationToken);
+            SmsTemplate? template = await GetTemplateAsync(templateId, cancellationToken);
             if (template == null)
             {
                 throw new KeyNotFoundException($"Template '{templateId}' not found.");
@@ -160,7 +160,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Services
             var result = new StringBuilder(templateBody);
             var processedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var kvp in values)
+            foreach (KeyValuePair<string, object> kvp in values)
             {
                 var placeholder = $"{{{kvp.Key}}}";
                 var value = kvp.Value?.ToString() ?? string.Empty;

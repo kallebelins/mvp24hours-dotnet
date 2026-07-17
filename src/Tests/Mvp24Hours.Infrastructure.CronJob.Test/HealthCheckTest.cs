@@ -30,7 +30,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck();
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -47,7 +47,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -70,7 +70,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -91,7 +91,7 @@ public class HealthCheckTest
     {
         // Arrange
         var metricsService = new CronJobMetricsService();
-        var options = Options.Create(new CronJobHealthCheckOptions
+        IOptions<CronJobHealthCheckOptions> options = Options.Create(new CronJobHealthCheckOptions
         {
             MaxFailureRate = 0.1, // 10%
             MinExecutionsForRateCheck = 5
@@ -115,7 +115,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService, null, options);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -130,7 +130,7 @@ public class HealthCheckTest
     {
         // Arrange
         var metricsService = new CronJobMetricsService();
-        var options = Options.Create(new CronJobHealthCheckOptions
+        IOptions<CronJobHealthCheckOptions> options = Options.Create(new CronJobHealthCheckOptions
         {
             RecentFailureWindow = TimeSpan.FromMinutes(15)
         });
@@ -141,7 +141,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService, null, options);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -164,7 +164,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -179,7 +179,7 @@ public class HealthCheckTest
     {
         // Arrange
         var metricsService = new CronJobMetricsService();
-        var options = Options.Create(new CronJobHealthCheckOptions
+        IOptions<CronJobHealthCheckOptions> options = Options.Create(new CronJobHealthCheckOptions
         {
             MaxFailureRate = 0.1,      // 10% for degraded
             CriticalFailureRate = 0.5,  // 50% for unhealthy
@@ -204,7 +204,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService, null, options);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -221,7 +221,7 @@ public class HealthCheckTest
 
         // Act - Force an exception by manipulating internal state (simulated)
         // In this case, the null metrics service returns healthy, so we test exception path differently
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -261,7 +261,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -284,7 +284,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -315,7 +315,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 
@@ -341,7 +341,7 @@ public class HealthCheckTest
         var healthCheck = new CronJobHealthCheck(metricsService);
 
         // Act
-        var result = await healthCheck.CheckHealthAsync(
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(
             new HealthCheckContext(),
             CancellationToken.None);
 

@@ -37,7 +37,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
         /// <inheritdoc />
         public virtual IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecificationQuery<T> specification)
         {
-            var query = inputQuery;
+            IQueryable<T> query = inputQuery;
 
             // Apply criteria (Where clause)
             if (specification.IsSatisfiedByExpression != null)
@@ -70,7 +70,7 @@ namespace Mvp24Hours.Core.Domain.Specifications
             {
                 IOrderedQueryable<T>? orderedQuery = null;
 
-                foreach (var (keySelector, descending) in specification.OrderBy)
+                foreach ((System.Linq.Expressions.Expression<Func<T, object>>? keySelector, bool descending) in specification.OrderBy)
                 {
                     if (orderedQuery == null)
                     {

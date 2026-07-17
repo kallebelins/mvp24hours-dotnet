@@ -83,7 +83,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 {
                     _logger?.LogDebug("CachingOperation: Cache hit. Key: {CacheKey}", cacheKey);
 
-                    var cachedResult = DeserializeResult(cachedData);
+                    IOperationResult<TOutput>? cachedResult = DeserializeResult(cachedData);
                     if (cachedResult != null)
                     {
                         return cachedResult;
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
             _logger?.LogDebug("CachingOperation: Cache miss. Key: {CacheKey}", cacheKey);
 
             // Execute inner operation
-            var result = await _innerOperation.ExecuteAsync(input, cancellationToken);
+            IOperationResult<TOutput> result = await _innerOperation.ExecuteAsync(input, cancellationToken);
 
             // Cache result if successful (or if caching failures is enabled)
             if (result.IsSuccess || _options.CacheFailedResults)
@@ -173,7 +173,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
         {
             try
             {
-                var cacheEntry = JsonSerializer.Deserialize<CachedOperationResult<TOutput>>(data, _jsonOptions);
+                CachedOperationResult<TOutput>? cacheEntry = JsonSerializer.Deserialize<CachedOperationResult<TOutput>>(data, _jsonOptions);
                 if (cacheEntry == null)
                     return null;
 

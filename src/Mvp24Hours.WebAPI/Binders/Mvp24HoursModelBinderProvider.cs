@@ -33,7 +33,7 @@ namespace Mvp24Hours.WebAPI.Binders
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var modelType = context.Metadata.ModelType;
+            Type modelType = context.Metadata.ModelType;
 
             // DateOnly
             if (modelType == typeof(DateOnly) || modelType == typeof(DateOnly?))
@@ -79,19 +79,19 @@ namespace Mvp24Hours.WebAPI.Binders
             // Handle nullable types
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                var underlying = Nullable.GetUnderlyingType(type);
+                Type? underlying = Nullable.GetUnderlyingType(type);
                 if (underlying == null)
                     return false;
                 type = underlying;
             }
 
             // Check if it's EntityId<TSelf, TValue> or a derived type
-            var baseType = type.BaseType;
+            Type? baseType = type.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (baseType.IsGenericType)
                 {
-                    var genericTypeDefinition = baseType.GetGenericTypeDefinition();
+                    Type genericTypeDefinition = baseType.GetGenericTypeDefinition();
                     if (genericTypeDefinition == typeof(EntityId<,>))
                     {
                         return true;
@@ -109,12 +109,12 @@ namespace Mvp24Hours.WebAPI.Binders
                 return false;
 
             // Check if it's PaginatedQuery<TResponse> or a derived type
-            var baseType = type.BaseType;
+            Type? baseType = type.BaseType;
             while (baseType != null && baseType != typeof(object))
             {
                 if (baseType.IsGenericType)
                 {
-                    var genericTypeDefinition = baseType.GetGenericTypeDefinition();
+                    Type genericTypeDefinition = baseType.GetGenericTypeDefinition();
                     var name = genericTypeDefinition.Name;
                     if (name.StartsWith("PaginatedQuery`", StringComparison.Ordinal))
                     {

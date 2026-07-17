@@ -72,7 +72,7 @@ public static class ConventionBasedServiceCollectionExtensions
             throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
         }
 
-        foreach (var assembly in assemblies)
+        foreach (Assembly assembly in assemblies)
         {
             services.RegisterServicesByConvention(assembly);
         }
@@ -124,7 +124,7 @@ public static class ConventionBasedServiceCollectionExtensions
         }
         if (filter == null) throw new ArgumentNullException(nameof(filter));
 
-        foreach (var assembly in assemblies)
+        foreach (Assembly assembly in assemblies)
         {
             services.RegisterServicesByConvention(assembly, filter);
         }
@@ -186,7 +186,7 @@ public static class ConventionBasedServiceCollectionExtensions
         Assembly assembly,
         Func<Type, bool>? filter = null)
     {
-        var markerInterface = typeof(IServiceLifetimeMarker);
+        Type markerInterface = typeof(IServiceLifetimeMarker);
 
         // Get all eligible types
         var eligibleTypes = assembly.GetTypes()
@@ -203,9 +203,9 @@ public static class ConventionBasedServiceCollectionExtensions
             .Select(x => x.Type)
             .ToList();
 
-        foreach (var implementationType in eligibleTypes)
+        foreach (Type? implementationType in eligibleTypes)
         {
-            var lifetime = GetServiceLifetime(implementationType);
+            ServiceLifetime lifetime = GetServiceLifetime(implementationType);
             var isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
             var isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
             var shouldReplace = implementationType.IsDefined(typeof(ServiceReplaceAttribute), false);
@@ -224,7 +224,7 @@ public static class ConventionBasedServiceCollectionExtensions
             string? serviceKey = null;
             if (isKeyedService)
             {
-                var keyAttribute = implementationType.GetCustomAttribute<Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute>();
+                Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute? keyAttribute = implementationType.GetCustomAttribute<Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute>();
                 serviceKey = keyAttribute?.Key;
 
                 if (string.IsNullOrEmpty(serviceKey))
@@ -235,7 +235,7 @@ public static class ConventionBasedServiceCollectionExtensions
             }
 
             // Register for each interface
-            foreach (var serviceInterface in serviceInterfaces)
+            foreach (Type? serviceInterface in serviceInterfaces)
             {
                 if (isKeyedService && serviceKey != null)
                 {
@@ -315,7 +315,7 @@ public static class ConventionBasedServiceCollectionExtensions
         bool shouldTryAdd)
     {
         // Use .NET 8 Keyed Services
-        var descriptor = lifetime switch
+        ServiceDescriptor descriptor = lifetime switch
         {
             ServiceLifetime.Singleton => ServiceDescriptor.KeyedSingleton(serviceType, key, implementationType),
             ServiceLifetime.Transient => ServiceDescriptor.KeyedTransient(serviceType, key, implementationType),
@@ -325,7 +325,7 @@ public static class ConventionBasedServiceCollectionExtensions
         if (shouldReplace)
         {
             // Remove existing keyed service with same key
-            var existing = services.FirstOrDefault(d =>
+            ServiceDescriptor? existing = services.FirstOrDefault(d =>
                 d.ServiceType == serviceType &&
                 d.IsKeyedService &&
                 Equals(d.ServiceKey, key));
@@ -380,9 +380,9 @@ public static class ConventionBasedServiceCollectionExtensions
         params Assembly[] assemblies)
     {
         var result = new List<ConventionServiceRegistration>();
-        var markerInterface = typeof(IServiceLifetimeMarker);
+        Type markerInterface = typeof(IServiceLifetimeMarker);
 
-        foreach (var assembly in assemblies)
+        foreach (Assembly assembly in assemblies)
         {
             var eligibleTypes = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract && !t.IsGenericTypeDefinition)
@@ -390,16 +390,16 @@ public static class ConventionBasedServiceCollectionExtensions
                 .Where(t => !t.IsDefined(typeof(ServiceIgnoreAttribute), false))
                 .ToList();
 
-            foreach (var implementationType in eligibleTypes)
+            foreach (Type? implementationType in eligibleTypes)
             {
-                var lifetime = GetServiceLifetime(implementationType);
+                ServiceLifetime lifetime = GetServiceLifetime(implementationType);
                 var isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
                 var isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
 
                 string? serviceKey = null;
                 if (isKeyedService)
                 {
-                    var keyAttribute = implementationType.GetCustomAttribute<Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute>();
+                    Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute? keyAttribute = implementationType.GetCustomAttribute<Core.Contract.Infrastructure.DependencyInjection.ServiceKeyAttribute>();
                     serviceKey = keyAttribute?.Key ?? implementationType.Name;
                 }
 
@@ -411,7 +411,7 @@ public static class ConventionBasedServiceCollectionExtensions
                     .Where(i => i != typeof(IAsyncDisposable))
                     .ToList();
 
-                foreach (var serviceInterface in serviceInterfaces)
+                foreach (Type? serviceInterface in serviceInterfaces)
                 {
                     result.Add(new ConventionServiceRegistration(
                         serviceInterface,

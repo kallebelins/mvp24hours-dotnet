@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             Guid correlationId,
             CancellationToken cancellationToken = default)
         {
-            var entity = await _dbContext.GetSagaStateAsync(correlationId, _sagaTypeName, cancellationToken);
+            SagaStateEntity? entity = await _dbContext.GetSagaStateAsync(correlationId, _sagaTypeName, cancellationToken);
             return entity != null ? EntityToInstance(entity) : null;
         }
 
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             TData? initialData = null,
             CancellationToken cancellationToken = default)
         {
-            var existing = await _dbContext.GetSagaStateAsync(correlationId, _sagaTypeName, cancellationToken);
+            SagaStateEntity? existing = await _dbContext.GetSagaStateAsync(correlationId, _sagaTypeName, cancellationToken);
             if (existing != null)
             {
                 throw new InvalidOperationException(
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
                 Reason = "Saga created"
             });
 
-            var entity = InstanceToEntity(instance);
+            SagaStateEntity entity = InstanceToEntity(instance);
             await _dbContext.AddSagaStateAsync(entity, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             instance.LastUpdatedAt = DateTime.UtcNow;
             instance.Version++;
 
-            var entity = InstanceToEntity(instance);
+            SagaStateEntity entity = InstanceToEntity(instance);
             await _dbContext.UpdateSagaStateAsync(entity, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -132,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             string state,
             CancellationToken cancellationToken = default)
         {
-            var entities = await _dbContext.GetSagasByStateAsync(_sagaTypeName, state, cancellationToken);
+            IReadOnlyList<SagaStateEntity> entities = await _dbContext.GetSagasByStateAsync(_sagaTypeName, state, cancellationToken);
             return entities.Select(EntityToInstance).ToList();
         }
 
@@ -141,8 +141,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             TimeSpan timeoutThreshold,
             CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
-            var entities = await _dbContext.GetTimedOutSagasAsync(_sagaTypeName, threshold, cancellationToken);
+            DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
+            IReadOnlyList<SagaStateEntity> entities = await _dbContext.GetTimedOutSagasAsync(_sagaTypeName, threshold, cancellationToken);
             return entities.Select(EntityToInstance).ToList();
         }
 
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         /// <inheritdoc />
         public async Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
         {
-            var threshold = DateTime.UtcNow.Subtract(olderThan);
+            DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
             var cleaned = await _dbContext.CleanupOldSagasAsync(_sagaTypeName, threshold, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             Action<SagaInstance<TData>> update,
             CancellationToken cancellationToken = default)
         {
-            var instance = await FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
             if (instance == null)
             {
                 return false;
@@ -190,19 +190,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 
         private SagaInstance<TData> EntityToInstance(SagaStateEntity entity)
         {
-            var data = JsonSerializer.Deserialize<TData>(entity.DataJson, _jsonOptions) ?? new TData();
-            var metadata = string.IsNullOrEmpty(entity.MetadataJson)
-                ? new Dictionary<string, string>()
-                : JsonSerializer.Deserialize<Dictionary<string, string>>(entity.MetadataJson, _jsonOptions) ?? new Dictionary<string, string>();
-            var errors = string.IsNullOrEmpty(entity.ErrorsJson)
-                ? new List<string>()
-                : JsonSerializer.Deserialize<List<string>>(entity.ErrorsJson, _jsonOptions) ?? new List<string>();
-            var stateHistory = string.IsNullOrEmpty(entity.StateHistoryJson)
-                ? new List<SagaStateTransition>()
-                : JsonSerializer.Deserialize<List<SagaStateTransition>>(entity.StateHistoryJson, _jsonOptions) ?? new List<SagaStateTransition>();
-            var scheduledTimeouts = string.IsNullOrEmpty(entity.ScheduledTimeoutsJson)
-                ? new List<Guid>()
-                : JsonSerializer.Deserialize<List<Guid>>(entity.ScheduledTimeoutsJson, _jsonOptions) ?? new List<Guid>();
+            TData data = JsonSerializer.Deserialize<TData>(entity.DataJson, _jsonOptions) ?? new TData();
+            Dictionary<string, string> metadata = string.IsNullOrEmpty(entity.MetadataJson)
+                ? []
+                : JsonSerializer.Deserialize<Dictionary<string, string>>(entity.MetadataJson, _jsonOptions) ?? [];
+            List<string> errors = string.IsNullOrEmpty(entity.ErrorsJson)
+                ? []
+                : JsonSerializer.Deserialize<List<string>>(entity.ErrorsJson, _jsonOptions) ?? [];
+            List<SagaStateTransition> stateHistory = string.IsNullOrEmpty(entity.StateHistoryJson)
+                ? []
+                : JsonSerializer.Deserialize<List<SagaStateTransition>>(entity.StateHistoryJson, _jsonOptions) ?? [];
+            List<Guid> scheduledTimeouts = string.IsNullOrEmpty(entity.ScheduledTimeoutsJson)
+                ? []
+                : JsonSerializer.Deserialize<List<Guid>>(entity.ScheduledTimeoutsJson, _jsonOptions) ?? [];
 
             return new SagaInstance<TData>
             {

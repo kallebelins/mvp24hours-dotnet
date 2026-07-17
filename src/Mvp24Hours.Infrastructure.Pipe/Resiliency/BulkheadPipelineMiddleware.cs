@@ -45,7 +45,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var timeout = operation?.QueueTimeout ?? _options.QueueTimeout;
+            TimeSpan? timeout = operation?.QueueTimeout ?? _options.QueueTimeout;
 
             // Try to acquire a slot (execution or queue)
             bool acquired;
@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 // Wait for execution slot
                 if (timeout.HasValue)
                 {
-                    var remainingTimeout = timeout.Value - stopwatch.Elapsed;
+                    TimeSpan remainingTimeout = timeout.Value - stopwatch.Elapsed;
                     if (remainingTimeout <= TimeSpan.Zero)
                     {
                         _queueSemaphore.Release();
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         /// <returns>Current concurrency and queue information.</returns>
         public (int CurrentConcurrency, int QueuedCount, int AvailableSlots)? GetBulkheadState(string key)
         {
-            if (_bulkheads.TryGetValue(key, out var state))
+            if (_bulkheads.TryGetValue(key, out BulkheadState? state))
             {
                 return (state.CurrentConcurrency, state.QueuedCount, state.AvailableSlots);
             }
@@ -206,11 +206,11 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
-            var bulkheadOperation = GetBulkheadOperation(message);
+            IBulkheadOperation? bulkheadOperation = GetBulkheadOperation(message);
             var key = bulkheadOperation?.BulkheadKey ?? _defaultOptions.Key;
-            var options = GetEffectiveOptions(bulkheadOperation);
+            BulkheadOptions options = GetEffectiveOptions(bulkheadOperation);
 
-            var bulkheadState = _bulkheads.GetOrAdd(key, _ => new BulkheadState(options));
+            BulkheadState bulkheadState = _bulkheads.GetOrAdd(key, _ => new BulkheadState(options));
 
             _logger?.LogDebug(
                 "Bulkhead '{Key}' - Current: {Current}, Queued: {Queued}, Available: {Available}",
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 
             if (!acquired)
             {
-                var reason = options.QueueLimit <= 0
+                BulkheadRejectionReason reason = options.QueueLimit <= 0
                     ? BulkheadRejectionReason.AtCapacity
                     : BulkheadRejectionReason.QueueTimeout;
 
@@ -322,7 +322,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             if (!_disposed)
             {
                 _disposed = true;
-                foreach (var kvp in _bulkheads)
+                foreach (KeyValuePair<string, BulkheadState> kvp in _bulkheads)
                 {
                     kvp.Value.Dispose();
                 }

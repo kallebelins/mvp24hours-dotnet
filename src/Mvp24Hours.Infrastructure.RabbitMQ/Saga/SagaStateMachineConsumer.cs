@@ -41,10 +41,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         /// <inheritdoc />
         public async Task ConsumeAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
         {
-            using var scope = context.CreateScope();
+            using Core.Contract.IServiceScope scope = context.CreateScope();
 
-            var machine = scope.ServiceProvider.GetRequiredService<TMachine>();
-            var repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
+            TMachine machine = scope.ServiceProvider.GetRequiredService<TMachine>();
+            ISagaRepository<TData> repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
 
             // Extract correlation ID
             Guid correlationId;
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
                 typeof(TMessage).Name, correlationId, typeof(TMachine).Name);
 
             // Find or create saga instance
-            var instance = await repository.FindAsync(correlationId, cancellationToken);
+            SagaInstance<TData>? instance = await repository.FindAsync(correlationId, cancellationToken);
 
             if (instance == null)
             {

@@ -32,7 +32,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             // Check for deprecated API version on controller
-            var controllerApiVersion = context.MethodInfo.DeclaringType?
+            ApiVersionAttribute? controllerApiVersion = context.MethodInfo.DeclaringType?
                 .GetCustomAttributes(typeof(ApiVersionAttribute), false)
                 .Cast<ApiVersionAttribute>()
                 .FirstOrDefault();
@@ -44,7 +44,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             }
 
             // Check for deprecated API version on action
-            var actionApiVersion = context.MethodInfo
+            ApiVersionAttribute? actionApiVersion = context.MethodInfo
                 .GetCustomAttributes(typeof(ApiVersionAttribute), false)
                 .Cast<ApiVersionAttribute>()
                 .FirstOrDefault();
@@ -56,7 +56,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
             }
 
             // Check for [Obsolete] attribute
-            var obsoleteAttribute = context.MethodInfo
+            ObsoleteAttribute? obsoleteAttribute = context.MethodInfo
                 .GetCustomAttributes(typeof(ObsoleteAttribute), false)
                 .Cast<ObsoleteAttribute>()
                 .FirstOrDefault();

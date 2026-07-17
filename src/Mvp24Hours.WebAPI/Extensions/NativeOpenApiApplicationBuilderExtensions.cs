@@ -59,7 +59,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// </example>
         public static IApplicationBuilder UseMvp24HoursNativeOpenApi(this IApplicationBuilder app)
         {
-            var options = app.ApplicationServices.GetService<NativeOpenApiOptions>()
+            NativeOpenApiOptions options = app.ApplicationServices.GetService<NativeOpenApiOptions>()
                 ?? new NativeOpenApiOptions();
 
             return app.UseMvp24HoursNativeOpenApi(options);
@@ -90,7 +90,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                     swaggerOptions.SwaggerEndpoint($"/{documentPath}", $"{options.Title} {options.Version}");
 
                     // Add additional version documents
-                    foreach (var version in options.AdditionalVersions)
+                    foreach (OpenApiVersionConfig version in options.AdditionalVersions)
                     {
                         var versionDocPath = options.DocumentRoutePattern.Replace("{documentName}", version.DocumentName);
                         var versionTitle = version.IsDeprecated
@@ -148,7 +148,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         /// </example>
         public static WebApplication MapMvp24HoursNativeOpenApi(this WebApplication app)
         {
-            var options = app.Services.GetService<NativeOpenApiOptions>()
+            NativeOpenApiOptions options = app.Services.GetService<NativeOpenApiOptions>()
                 ?? new NativeOpenApiOptions();
 
             return app.MapMvp24HoursNativeOpenApi(options);
@@ -168,7 +168,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             app.MapOpenApi(options.DocumentRoutePattern.Replace("{documentName}", options.DocumentName));
 
             // Map additional version documents
-            foreach (var version in options.AdditionalVersions)
+            foreach (OpenApiVersionConfig version in options.AdditionalVersions)
             {
                 app.MapOpenApi(options.DocumentRoutePattern.Replace("{documentName}", version.DocumentName));
             }
@@ -187,7 +187,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                     }
                 };
 
-                foreach (var version in options.AdditionalVersions)
+                foreach (OpenApiVersionConfig version in options.AdditionalVersions)
                 {
                     documents.Add(new
                     {
@@ -216,7 +216,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                     swaggerOptions.SwaggerEndpoint($"/{documentPath}", $"{options.Title} {options.Version}");
 
                     // Add additional version documents
-                    foreach (var version in options.AdditionalVersions)
+                    foreach (OpenApiVersionConfig version in options.AdditionalVersions)
                     {
                         var versionDocPath = options.DocumentRoutePattern.Replace("{documentName}", version.DocumentName);
                         var versionTitle = version.IsDeprecated
@@ -277,7 +277,7 @@ namespace Mvp24Hours.WebAPI.Extensions
             urlsJs.Append('[');
             urlsJs.Append($"{{ url: '/{documentPath}', name: '{options.Title} {options.Version}' }}");
 
-            foreach (var version in options.AdditionalVersions)
+            foreach (OpenApiVersionConfig version in options.AdditionalVersions)
             {
                 var versionDocPath = options.DocumentRoutePattern.Replace("{documentName}", version.DocumentName);
                 var versionTitle = version.IsDeprecated

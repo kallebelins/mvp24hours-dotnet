@@ -128,11 +128,11 @@ public static class ObservabilityServiceExtensions
     {
         services.TryAddSingleton<IObserverManager>(sp =>
         {
-            var consumeObservers = sp.GetServices<IConsumeObserver>();
-            var publishObservers = sp.GetServices<IPublishObserver>();
-            var sendObservers = sp.GetServices<ISendObserver>();
-            var connectionObservers = sp.GetServices<IConnectionObserver>();
-            var logger = sp.GetService<ILogger<ObserverManager>>();
+            IEnumerable<IConsumeObserver> consumeObservers = sp.GetServices<IConsumeObserver>();
+            IEnumerable<IPublishObserver> publishObservers = sp.GetServices<IPublishObserver>();
+            IEnumerable<ISendObserver> sendObservers = sp.GetServices<ISendObserver>();
+            IEnumerable<IConnectionObserver> connectionObservers = sp.GetServices<IConnectionObserver>();
+            ILogger<ObserverManager>? logger = sp.GetService<ILogger<ObserverManager>>();
 
             return new ObserverManager(
                 consumeObservers,
@@ -211,7 +211,7 @@ public static class ObservabilityServiceExtensions
 
         services.TryAddSingleton<IRabbitMQStructuredLogger>(sp =>
         {
-            var logger = sp.GetRequiredService<ILogger<EnhancedStructuredLogger>>();
+            ILogger<EnhancedStructuredLogger> logger = sp.GetRequiredService<ILogger<EnhancedStructuredLogger>>();
             return new EnhancedStructuredLogger(
                 logger,
                 options.LogPayload,
@@ -234,7 +234,7 @@ public static class ObservabilityServiceExtensions
     {
         services.TryAddSingleton<IRabbitMQDiagnostics>(sp =>
         {
-            var metrics = sp.GetService<IRabbitMQMetrics>();
+            IRabbitMQMetrics? metrics = sp.GetService<IRabbitMQMetrics>();
             return new RabbitMQDiagnostics(metrics, maxErrorHistory);
         });
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
@@ -83,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             }
 
             // entity log and guid
-            foreach (var entry in this.ChangeTracker
+            foreach (EntityEntry? entry in this.ChangeTracker
                 .Entries()
                 .Where(e =>
                     (e.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))

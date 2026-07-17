@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
 
             services.AddScoped<IMongoDbTransactionManager>(sp =>
             {
-                var client = sp.GetRequiredService<IMongoClient>();
+                IMongoClient client = sp.GetRequiredService<IMongoClient>();
                 MongoDbTransactionOptions? options = null;
                 if (configureOptions != null)
                 {
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbGridFsService>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
                 return new MongoDbGridFsService(database);
             });
 
@@ -113,8 +113,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbChangeStreamService<TDocument>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
-                var collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
                 return new MongoDbChangeStreamService<TDocument>(collection);
             });
 
@@ -134,8 +134,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbTextSearchService<TDocument>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
-                var collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
                 return new MongoDbTextSearchService<TDocument>(collection);
             });
 
@@ -159,7 +159,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbTimeSeriesService<TDocument>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
                 return new MongoDbTimeSeriesService<TDocument>(database, collectionName, timeField, metaField);
             });
 
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbCappedCollectionService<TDocument>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
                 return new MongoDbCappedCollectionService<TDocument>(database, collectionName);
             });
 
@@ -199,8 +199,8 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbGeospatialService<TDocument>>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
-                var collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
                 return new MongoDbGeospatialService<TDocument>(collection);
             });
 
@@ -216,7 +216,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbSchemaValidationService>(sp =>
             {
-                var database = sp.GetRequiredService<IMongoDatabase>();
+                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
                 return new MongoDbSchemaValidationService(database);
             });
 
@@ -232,7 +232,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
         {
             services.AddScoped<IMongoDbShardingService>(sp =>
             {
-                var client = sp.GetRequiredService<IMongoClient>();
+                IMongoClient client = sp.GetRequiredService<IMongoClient>();
                 return new MongoDbShardingService(client);
             });
 

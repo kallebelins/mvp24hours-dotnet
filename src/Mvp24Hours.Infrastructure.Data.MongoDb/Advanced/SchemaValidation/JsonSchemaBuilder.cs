@@ -51,9 +51,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// </summary>
         public JsonSchemaBuilder()
         {
-            _schema = new BsonDocument();
-            _properties = new BsonDocument();
-            _required = new List<string>();
+            _schema = [];
+            _properties = [];
+            _required = [];
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// </summary>
         public PropertySchemaBuilder()
         {
-            _schema = new BsonDocument();
+            _schema = [];
         }
 
         /// <summary>

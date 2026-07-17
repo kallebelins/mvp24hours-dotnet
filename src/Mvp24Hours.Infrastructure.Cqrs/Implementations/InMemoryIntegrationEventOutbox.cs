@@ -89,7 +89,7 @@ public sealed class InMemoryIntegrationEventOutbox : IIntegrationEventOutbox
     /// <inheritdoc />
     public Task MarkAsPublishedAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
-        if (_messages.TryGetValue(messageId, out var message))
+        if (_messages.TryGetValue(messageId, out OutboxMessage? message))
         {
             message.Status = OutboxMessageStatus.Published;
             message.ProcessedAt = DateTime.UtcNow;
@@ -103,7 +103,7 @@ public sealed class InMemoryIntegrationEventOutbox : IIntegrationEventOutbox
     /// <inheritdoc />
     public Task MarkAsFailedAsync(Guid messageId, string error, CancellationToken cancellationToken = default)
     {
-        if (_messages.TryGetValue(messageId, out var message))
+        if (_messages.TryGetValue(messageId, out OutboxMessage? message))
         {
             message.RetryCount++;
             message.Error = error;
@@ -140,7 +140,7 @@ public sealed class InMemoryIntegrationEventOutbox : IIntegrationEventOutbox
             .Select(m => m.Id)
             .ToList();
 
-        foreach (var id in toRemove)
+        foreach (Guid id in toRemove)
         {
             _messages.TryRemove(id, out _);
         }

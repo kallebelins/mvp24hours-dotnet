@@ -91,7 +91,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                     return default;
                 }
 
-                var value = JsonSerializer.Deserialize<T>(cachedBytes, JsonOptions);
+                T? value = JsonSerializer.Deserialize<T>(cachedBytes, JsonOptions);
                 _logger.LogDebug("Cache hit (L2) for key: {CacheKey}", key);
 
                 // Populate L1 cache if enabled
@@ -185,7 +185,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             options ??= new QueryCacheEntryOptions();
 
             // Try to get from cache first
-            var cachedValue = await GetAsync<T>(key, cancellationToken);
+            T? cachedValue = await GetAsync<T>(key, cancellationToken);
             if (cachedValue != null)
             {
                 return cachedValue;
@@ -194,7 +194,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             // Cache stampede prevention
             if (options.EnableStampedePrevention)
             {
-                var semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+                SemaphoreSlim semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
 
                 try
                 {
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                     }
 
                     // Execute factory and cache result
-                    var value = await factory();
+                    T? value = await factory();
                     if (value != null)
                     {
                         await SetAsync(key, value, options, cancellationToken);
@@ -234,7 +234,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             else
             {
                 // No stampede prevention - execute factory directly
-                var value = await factory();
+                T? value = await factory();
                 if (value != null)
                 {
                     await SetAsync(key, value, options, cancellationToken);
@@ -287,7 +287,7 @@ namespace Mvp24Hours.Application.Logic.Cache
 
             try
             {
-                if (_regionKeys.TryGetValue(region, out var keys))
+                if (_regionKeys.TryGetValue(region, out ConcurrentBag<string>? keys))
                 {
                     foreach (var key in keys)
                     {
@@ -321,7 +321,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             try
             {
                 // For in-memory tracking, we can match patterns against tracked keys
-                foreach (var regionKvp in _regionKeys)
+                foreach (KeyValuePair<string, ConcurrentBag<string>> regionKvp in _regionKeys)
                 {
                     foreach (var key in regionKvp.Value)
                     {
@@ -379,7 +379,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// </summary>
         private void TrackKeyInRegion(string key, string region)
         {
-            var keys = _regionKeys.GetOrAdd(region, _ => new ConcurrentBag<string>());
+            ConcurrentBag<string> keys = _regionKeys.GetOrAdd(region, _ => []);
             keys.Add(key);
         }
 

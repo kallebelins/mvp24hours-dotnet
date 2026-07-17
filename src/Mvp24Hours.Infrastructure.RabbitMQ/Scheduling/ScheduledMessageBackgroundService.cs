@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             try
             {
-                var olderThan = DateTimeOffset.UtcNow.Subtract(_options.CompletedMessageTtl);
+                DateTimeOffset olderThan = DateTimeOffset.UtcNow.Subtract(_options.CompletedMessageTtl);
                 var removed = await _store.CleanupOldMessagesAsync(olderThan, cancellationToken);
 
                 if (removed > 0)

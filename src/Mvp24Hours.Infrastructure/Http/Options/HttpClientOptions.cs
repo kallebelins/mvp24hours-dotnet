@@ -35,7 +35,7 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// <summary>
         /// Gets or sets the default request headers.
         /// </summary>
-        public Dictionary<string, string> DefaultHeaders { get; set; } = new();
+        public Dictionary<string, string> DefaultHeaders { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the maximum response content buffer size. Default is 2GB.
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// <summary>
         /// Gets or sets custom headers to propagate.
         /// </summary>
-        public List<string> PropagateHeaders { get; set; } = new();
+        public List<string> PropagateHeaders { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to enable request/response logging. Default is true.
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// Gets or sets the HTTP status codes that should trigger a retry.
         /// Default includes: 408, 429, 500, 502, 503, 504.
         /// </summary>
-        public List<int> RetryStatusCodes { get; set; } = new() { 408, 429, 500, 502, 503, 504 };
+        public List<int> RetryStatusCodes { get; set; } = [408, 429, 500, 502, 503, 504];
 
         /// <summary>
         /// Gets or sets whether to retry on timeout exceptions. Default is true.
@@ -383,7 +383,7 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// Gets or sets the headers to exclude from logging.
         /// Default includes: Authorization, Cookie, Set-Cookie.
         /// </summary>
-        public List<string> SensitiveHeaders { get; set; } = new() { "Authorization", "Cookie", "Set-Cookie", "X-Api-Key" };
+        public List<string> SensitiveHeaders { get; set; } = ["Authorization", "Cookie", "Set-Cookie", "X-Api-Key"];
 
         /// <summary>
         /// Gets or sets the mask value for sensitive headers. Default is "***".
@@ -414,7 +414,7 @@ namespace Mvp24Hours.Infrastructure.Http.Options
         /// <summary>
         /// Gets or sets the list of addresses to bypass the proxy for.
         /// </summary>
-        public List<string> BypassList { get; set; } = new();
+        public List<string> BypassList { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use default credentials. Default is false.

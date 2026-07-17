@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<Stream?> GetStreamAsync(string url, CancellationToken cancellationToken = default)
         {
-            using var activity = ActivitySource.StartActivity($"HTTP GET Stream {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP GET Stream {typeof(TApi).Name}");
             activity?.SetTag("http.method", "GET");
             activity?.SetTag("http.url", BuildUrl(url));
 
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<byte[]?> GetBytesAsync(string url, CancellationToken cancellationToken = default)
         {
-            using var activity = ActivitySource.StartActivity($"HTTP GET Bytes {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP GET Bytes {typeof(TApi).Name}");
             activity?.SetTag("http.method", "GET");
             activity?.SetTag("http.url", BuildUrl(url));
 
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Http
             int bufferSize = 8192,
             [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            using var activity = ActivitySource.StartActivity($"HTTP GET Stream Enumerable {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP GET Stream Enumerable {typeof(TApi).Name}");
             activity?.SetTag("http.method", "GET");
             activity?.SetTag("http.url", BuildUrl(url));
             activity?.SetTag("buffer.size", bufferSize);
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Http
                 yield break;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var buffer = new byte[bufferSize];
             int bytesRead;
 
@@ -202,7 +202,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<TResponse?> PostFormAsync<TResponse>(string url, Dictionary<string, string> formData, CancellationToken cancellationToken = default) where TResponse : class
         {
-            using var activity = ActivitySource.StartActivity($"HTTP POST Form {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP POST Form {typeof(TApi).Name}");
             activity?.SetTag("http.method", "POST");
             activity?.SetTag("http.url", BuildUrl(url));
 
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Infrastructure.Http
                 LogRequest("PostFormAsync", url);
 
                 using var content = new FormUrlEncodedContent(formData);
-                var response = await HttpClient.PostAsync(BuildUrl(url), content, cancellationToken);
+                HttpResponseMessage response = await HttpClient.PostAsync(BuildUrl(url), content, cancellationToken);
 
                 await EnsureSuccessResponseAsync(response, url);
 
@@ -233,7 +233,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<TResponse?> PostMultipartAsync<TResponse>(string url, MultipartFormDataContent content, CancellationToken cancellationToken = default) where TResponse : class
         {
-            using var activity = ActivitySource.StartActivity($"HTTP POST Multipart {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP POST Multipart {typeof(TApi).Name}");
             activity?.SetTag("http.method", "POST");
             activity?.SetTag("http.url", BuildUrl(url));
 
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Http
             {
                 LogRequest("PostMultipartAsync", url);
 
-                var response = await HttpClient.PostAsync(BuildUrl(url), content, cancellationToken);
+                HttpResponseMessage response = await HttpClient.PostAsync(BuildUrl(url), content, cancellationToken);
 
                 await EnsureSuccessResponseAsync(response, url);
 
@@ -336,7 +336,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
         {
-            using var activity = ActivitySource.StartActivity($"HTTP {request.Method} {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP {request.Method} {typeof(TApi).Name}");
             activity?.SetTag("http.method", request.Method.ToString());
             activity?.SetTag("http.url", request.RequestUri?.ToString());
 
@@ -344,7 +344,7 @@ namespace Mvp24Hours.Infrastructure.Http
             {
                 LogRequest("SendAsync", request.RequestUri?.ToString() ?? "unknown");
 
-                var response = await HttpClient.SendAsync(request, cancellationToken);
+                HttpResponseMessage response = await HttpClient.SendAsync(request, cancellationToken);
 
                 activity?.SetTag("http.status_code", (int)response.StatusCode);
 
@@ -361,7 +361,7 @@ namespace Mvp24Hours.Infrastructure.Http
         /// <inheritdoc />
         public async Task<T?> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken = default) where T : class
         {
-            var response = await SendAsync(request, cancellationToken);
+            HttpResponseMessage response = await SendAsync(request, cancellationToken);
 
             await EnsureSuccessResponseAsync(response, request.RequestUri?.ToString() ?? "unknown");
 
@@ -375,7 +375,7 @@ namespace Mvp24Hours.Infrastructure.Http
 
         private async Task<string?> SendAndReadStringAsync(HttpMethod method, string url, object? data, Dictionary<string, string>? headers, CancellationToken cancellationToken)
         {
-            using var activity = ActivitySource.StartActivity($"HTTP {method} {typeof(TApi).Name}");
+            using Activity? activity = ActivitySource.StartActivity($"HTTP {method} {typeof(TApi).Name}");
             activity?.SetTag("http.method", method.ToString());
             activity?.SetTag("http.url", BuildUrl(url));
 
@@ -388,7 +388,7 @@ namespace Mvp24Hours.Infrastructure.Http
                 // Add headers
                 if (headers != null)
                 {
-                    foreach (var header in headers)
+                    foreach (KeyValuePair<string, string> header in headers)
                     {
                         request.Headers.TryAddWithoutValidation(header.Key, header.Value);
                     }
@@ -400,7 +400,7 @@ namespace Mvp24Hours.Infrastructure.Http
                     request.Content = _serializer.Serialize(data);
                 }
 
-                var response = await HttpClient.SendAsync(request, cancellationToken);
+                HttpResponseMessage response = await HttpClient.SendAsync(request, cancellationToken);
 
                 activity?.SetTag("http.status_code", (int)response.StatusCode);
 

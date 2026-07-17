@@ -28,8 +28,8 @@ namespace Mvp24Hours.Core.Serialization.Json
     {
         protected override JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
         {
-            var x = base.CreateProperty(member, memberSerialization);
-            var t = member.DeclaringType;
+            JsonProperty x = base.CreateProperty(member, memberSerialization);
+            Type? t = member.DeclaringType;
             if (t != null && Attribute.IsDefined(t, typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)) && t.Name.Contains("AnonymousType"))
             {
                 try

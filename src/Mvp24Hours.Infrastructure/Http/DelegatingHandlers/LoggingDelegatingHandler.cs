@@ -87,7 +87,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
                 await LogRequestAsync(request, requestId, cancellationToken);
 
                 // Execute request
-                var response = await base.SendAsync(request, cancellationToken);
+                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             if (_options.LogRequestHeaders && request.Headers.Any())
             {
                 sb.AppendLine("Headers:");
-                foreach (var header in request.Headers)
+                foreach (KeyValuePair<string, IEnumerable<string>> header in request.Headers)
                 {
                     var value = MaskHeaderValue(header.Key, string.Join(", ", header.Value));
                     sb.AppendLine($"  {header.Key}: {value}");
@@ -153,7 +153,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 
                 if (request.Content?.Headers != null)
                 {
-                    foreach (var header in request.Content.Headers)
+                    foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
                     {
                         var value = MaskHeaderValue(header.Key, string.Join(", ", header.Value));
                         sb.AppendLine($"  {header.Key}: {value}");
@@ -180,7 +180,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             CancellationToken cancellationToken)
         {
             var statusCode = (int)response.StatusCode;
-            var logLevel = statusCode >= 500 ? LogLevel.Error
+            LogLevel logLevel = statusCode >= 500 ? LogLevel.Error
                 : statusCode >= 400 ? LogLevel.Warning
                 : LogLevel.Information;
 
@@ -191,7 +191,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
             if (_options.LogResponseHeaders && response.Headers.Any())
             {
                 sb.AppendLine("Headers:");
-                foreach (var header in response.Headers)
+                foreach (KeyValuePair<string, IEnumerable<string>> header in response.Headers)
                 {
                     var value = MaskHeaderValue(header.Key, string.Join(", ", header.Value));
                     sb.AppendLine($"  {header.Key}: {value}");
@@ -199,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 
                 if (response.Content?.Headers != null)
                 {
-                    foreach (var header in response.Content.Headers)
+                    foreach (KeyValuePair<string, IEnumerable<string>> header in response.Content.Headers)
                     {
                         var value = MaskHeaderValue(header.Key, string.Join(", ", header.Value));
                         sb.AppendLine($"  {header.Key}: {value}");

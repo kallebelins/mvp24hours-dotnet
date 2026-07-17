@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             var key = GetLockKey(resource);
             var lockValue = $"{lockId}:{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-            var expiresAt = DateTimeOffset.UtcNow.Add(duration);
+            DateTimeOffset expiresAt = DateTimeOffset.UtcNow.Add(duration);
             var milliseconds = (int)duration.TotalMilliseconds;
 
             if (_useRedLock)
@@ -125,7 +125,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             DateTimeOffset expiresAt,
             CancellationToken cancellationToken)
         {
-            var db = _redisConnections[0].GetDatabase();
+            IDatabase db = _redisConnections[0].GetDatabase();
 
             try
             {
@@ -165,18 +165,18 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             DateTimeOffset expiresAt,
             CancellationToken cancellationToken)
         {
-            var startTime = DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = DateTimeOffset.UtcNow;
             var acquiredCount = 0;
             var failedInstances = new List<int>();
 
             // Try to acquire lock on all instances
-            var tasks = _redisConnections.Select((connection, index) =>
+            IEnumerable<Task<(bool Success, int InstanceIndex)>> tasks = _redisConnections.Select((connection, index) =>
                 TryAcquireOnInstanceAsync(connection, key, lockValue, milliseconds, index, cancellationToken));
 
-            var results = await Task.WhenAll(tasks);
+            (bool Success, int InstanceIndex)[] results = await Task.WhenAll(tasks);
 
             // Count successful acquisitions
-            foreach (var (success, instanceIndex) in results)
+            foreach ((bool success, int instanceIndex) in results)
             {
                 if (success)
                 {
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             try
             {
-                var db = connection.GetDatabase();
+                IDatabase db = connection.GetDatabase();
                 var acquired = await db.StringSetAsync(
                     key,
                     lockValue,
@@ -250,7 +250,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             IEnumerable<int> instanceIndices,
             CancellationToken cancellationToken)
         {
-            var tasks = instanceIndices.Select(index =>
+            IEnumerable<Task> tasks = instanceIndices.Select(index =>
                 ReleaseLockOnInstanceFireAndForgetAsync(_redisConnections[index], key, lockValue, index, cancellationToken));
 
             await Task.WhenAll(tasks);
@@ -268,7 +268,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             try
             {
-                var db = connection.GetDatabase();
+                IDatabase db = connection.GetDatabase();
 
                 // Lua script to atomically check and delete the lock
                 const string script = @"
@@ -297,7 +297,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             if (_useRedLock)
             {
                 // Release on all instances (fire-and-forget for parallel execution)
-                var tasks = _redisConnections.Select((connection, index) =>
+                IEnumerable<Task> tasks = _redisConnections.Select((connection, index) =>
                     ReleaseLockOnInstanceFireAndForgetAsync(connection, key, lockId, index, cancellationToken));
 
                 await Task.WhenAll(tasks);
@@ -321,7 +321,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             try
             {
-                var db = connection.GetDatabase();
+                IDatabase db = connection.GetDatabase();
 
                 // Lua script to atomically check and delete the lock
                 const string script = @"
@@ -331,7 +331,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
                         return 0
                     end";
 
-                var result = await db.ScriptEvaluateAsync(script, new RedisKey[] { key }, new RedisValue[] { lockValue });
+                RedisResult result = await db.ScriptEvaluateAsync(script, new RedisKey[] { key }, new RedisValue[] { lockValue });
                 var released = (int)result == 1;
 
                 if (released)
@@ -363,7 +363,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
             if (_useRedLock)
             {
                 // Renew on all instances where we hold the lock
-                var tasks = _redisConnections.Select((connection, index) =>
+                IEnumerable<Task<bool>> tasks = _redisConnections.Select((connection, index) =>
                     RenewLockOnInstanceAsync(connection, key, lockId, milliseconds, index, cancellationToken));
 
                 var results = await Task.WhenAll(tasks);
@@ -391,7 +391,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
         {
             try
             {
-                var db = connection.GetDatabase();
+                IDatabase db = connection.GetDatabase();
 
                 // Lua script to atomically check and extend the lock
                 const string script = @"
@@ -401,7 +401,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
                         return 0
                     end";
 
-                var result = await db.ScriptEvaluateAsync(
+                RedisResult result = await db.ScriptEvaluateAsync(
                     script,
                     new RedisKey[] { key },
                     new RedisValue[] { lockValue, milliseconds });
@@ -433,8 +433,8 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
 
             try
             {
-                var db = _redisConnections[0].GetDatabase();
-                var value = await db.StringGetAsync(key);
+                IDatabase db = _redisConnections[0].GetDatabase();
+                RedisValue value = await db.StringGetAsync(key);
                 return value.HasValue;
             }
             catch (Exception ex)

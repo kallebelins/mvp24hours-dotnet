@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
@@ -69,7 +70,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Specifications
         /// <returns>The modified IQueryable with specification applied</returns>
         public virtual IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecificationQuery<T> specification)
         {
-            var query = inputQuery;
+            IQueryable<T> query = inputQuery;
 
             // Apply criteria (Where clause)
             if (specification.IsSatisfiedByExpression != null)
@@ -105,7 +106,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Specifications
             // Apply includes (expression-based)
             if (specification.Includes != null)
             {
-                foreach (var include in specification.Includes)
+                foreach (Expression<Func<T, object>> include in specification.Includes)
                 {
                     query = query.Include(include);
                 }
@@ -125,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Specifications
             {
                 IOrderedQueryable<T>? orderedQuery = null;
 
-                foreach (var (keySelector, descending) in specification.OrderBy)
+                foreach ((Expression<Func<T, object>>? keySelector, bool descending) in specification.OrderBy)
                 {
                     if (orderedQuery == null)
                     {

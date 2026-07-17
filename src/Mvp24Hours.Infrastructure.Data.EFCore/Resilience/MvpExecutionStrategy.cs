@@ -5,6 +5,7 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -83,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;
-            _additionalTransientExceptionTypes = options.TransientExceptionTypes ?? new List<Type>();
+            _additionalTransientExceptionTypes = options.TransientExceptionTypes ?? [];
             _retryCount = 0;
         }
 
@@ -158,8 +159,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 
         private bool IsCustomTransientException(Exception exception)
         {
-            var exceptionType = exception.GetType();
-            foreach (var transientType in _additionalTransientExceptionTypes)
+            Type exceptionType = exception.GetType();
+            foreach (Type transientType in _additionalTransientExceptionTypes)
             {
                 if (transientType.IsAssignableFrom(exceptionType))
                 {
@@ -178,10 +179,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
             }
 
             // Check for Microsoft.Data.SqlClient.SqlException (newer driver)
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
             if (exceptionType.FullName == "Microsoft.Data.SqlClient.SqlException")
             {
-                var numberProperty = exceptionType.GetProperty("Number");
+                PropertyInfo? numberProperty = exceptionType.GetProperty("Number");
                 if (numberProperty != null)
                 {
                     var number = (int?)numberProperty.GetValue(exception);

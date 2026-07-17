@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
@@ -88,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             if (!_options.EnableOpenTelemetry)
                 return;
 
-            var existingConfigurator = settings.ClusterConfigurator;
+            Action<ClusterBuilder> existingConfigurator = settings.ClusterConfigurator;
 
             settings.ClusterConfigurator = builder =>
             {
@@ -106,7 +107,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         {
             var spanName = $"MongoDB.{e.CommandName}";
 
-            var activity = _activitySource.StartActivity(
+            Activity? activity = _activitySource.StartActivity(
                 spanName,
                 ActivityKind.Client,
                 Activity.Current?.Context ?? default);
@@ -175,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandSucceeded(CommandSucceededEvent e)
         {
-            if (!_pendingActivities.TryRemove(e.RequestId, out var activity))
+            if (!_pendingActivities.TryRemove(e.RequestId, out Activity? activity))
                 return;
 
             try
@@ -197,7 +198,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private void OnCommandFailed(CommandFailedEvent e)
         {
-            if (!_pendingActivities.TryRemove(e.RequestId, out var activity))
+            if (!_pendingActivities.TryRemove(e.RequestId, out Activity? activity))
                 return;
 
             try
@@ -226,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             // Add document counts if available
             if (reply.Contains("cursor"))
             {
-                var cursor = reply["cursor"].AsBsonDocument;
+                BsonDocument cursor = reply["cursor"].AsBsonDocument;
                 if (cursor.Contains("firstBatch"))
                 {
                     activity.SetTag("db.mongodb.documents_returned", cursor["firstBatch"].AsBsonArray.Count);
@@ -271,7 +272,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
             if (collectionCommands.Contains(commandName) && command.Contains(commandName))
             {
-                var value = command[commandName];
+                BsonValue value = command[commandName];
                 if (value.IsString)
                 {
                     return value.AsString;
@@ -301,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <returns>The created activity, or null if not sampling.</returns>
         public Activity? StartOperation(string operationName, string? databaseName = null, string? collectionName = null)
         {
-            var activity = _activitySource.StartActivity(
+            Activity? activity = _activitySource.StartActivity(
                 $"MongoDB.{operationName}",
                 ActivityKind.Client);
 
@@ -324,11 +325,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="tags">The tags to add.</param>
         public static void AddTags(params (string Key, object Value)[] tags)
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity == null)
                 return;
 
-            foreach (var (key, value) in tags)
+            foreach ((string? key, object? value) in tags)
             {
                 activity.SetTag(key, value);
             }
@@ -340,7 +341,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <param name="exception">The exception to record.</param>
         public static void RecordException(Exception exception)
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity == null || exception == null)
                 return;
 
@@ -363,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// </summary>
         public void Dispose()
         {
-            foreach (var activity in _pendingActivities.Values)
+            foreach (Activity activity in _pendingActivities.Values)
             {
                 activity.Stop();
                 activity.Dispose();

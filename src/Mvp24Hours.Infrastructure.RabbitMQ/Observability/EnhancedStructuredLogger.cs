@@ -76,7 +76,7 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     /// </summary>
     public void LogMessagePublishedWithEnvelope(MessageEnvelope envelope, TimeSpan elapsed)
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
 
         using (_logger.BeginScope(new Dictionary<string, object?>
         {
@@ -110,7 +110,7 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     /// </summary>
     public void LogMessageConsumedWithEnvelope(MessageEnvelope envelope, TimeSpan processingTime, bool success)
     {
-        var activity = Activity.Current;
+        Activity? activity = Activity.Current;
 
         using (_logger.BeginScope(new Dictionary<string, object?>
         {
@@ -159,7 +159,7 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     {
         if (!_logger.IsEnabled(LogLevel.Debug)) return;
 
-        var sanitizedHeaders = SanitizeHeaders(envelope.Headers);
+        Dictionary<string, object?>? sanitizedHeaders = SanitizeHeaders(envelope.Headers);
 
         _logger.LogDebug(
             "RabbitMQ {Operation} envelope: {Envelope}",
@@ -351,7 +351,7 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     /// <inheritdoc />
     public void LogConnectionEvent(string eventType, string hostName, int port, string? reason = null)
     {
-        var logLevel = eventType switch
+        LogLevel logLevel = eventType switch
         {
             "connected" => LogLevel.Information,
             "disconnected" => LogLevel.Warning,
@@ -424,7 +424,7 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
         if (headers == null || headers.Count == 0) return null;
 
         var sanitized = new Dictionary<string, object?>();
-        foreach (var kvp in headers)
+        foreach (KeyValuePair<string, object> kvp in headers)
         {
             if (_sensitiveHeaders.Contains(kvp.Key))
             {

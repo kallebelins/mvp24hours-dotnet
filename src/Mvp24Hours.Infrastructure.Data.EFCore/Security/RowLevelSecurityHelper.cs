@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
@@ -382,7 +383,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
             var scripts = new Dictionary<string, string>();
             schema ??= databaseType == DatabaseType.PostgreSql ? "public" : "dbo";
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
                 {
@@ -417,7 +418,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
             DatabaseType databaseType,
             string? schema = null)
         {
-            var scripts = GenerateRlsScriptsForModel(modelBuilder, databaseType, schema);
+            Dictionary<string, string> scripts = GenerateRlsScriptsForModel(modelBuilder, databaseType, schema);
             var sb = new StringBuilder();
 
             sb.AppendLine("-- Row-Level Security Configuration");
@@ -426,7 +427,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Security
             sb.AppendLine("-- =========================================");
             sb.AppendLine();
 
-            foreach (var kvp in scripts)
+            foreach (KeyValuePair<string, string> kvp in scripts)
             {
                 sb.AppendLine($"-- Table: {kvp.Key}");
                 sb.AppendLine(kvp.Value);

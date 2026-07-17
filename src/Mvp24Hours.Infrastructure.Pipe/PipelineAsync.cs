@@ -35,7 +35,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             this._logger = _provider?.GetService<ILogger<PipelineAsync>>();
             _logger?.LogDebug("PipelineAsync: Constructor");
 
-            var options = _provider?.GetService<IOptions<PipelineOptions>>()?.Value;
+            PipelineOptions? options = _provider?.GetService<IOptions<PipelineOptions>>()?.Value;
             if (options != null)
             {
                 this.IsBreakOnFail = options.IsBreakOnFail;
@@ -315,7 +315,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
 
             _ = await _operations.Aggregate(Task.FromResult(input), async (currentAsync, operation) =>
             {
-                var current = await currentAsync;
+                IPipelineMessage current = await currentAsync;
 
                 if (!onlyOperationDefault)
                 {
@@ -428,7 +428,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 if (postCustomInterceptors.AnySafe())
                 {
-                    foreach (var ci in postCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
+                    foreach (KeyValuePair<Func<IPipelineMessage, bool>, IOperationAsync> ci in postCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
                     {
                         await RunOperationsAsync([ci.Value], input, true);
                     }
@@ -438,7 +438,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 if (preCustomInterceptors.AnySafe())
                 {
-                    foreach (var ci in preCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
+                    foreach (KeyValuePair<Func<IPipelineMessage, bool>, IOperationAsync> ci in preCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
                     {
                         await RunOperationsAsync([ci.Value], input, true);
                     }
@@ -462,7 +462,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 if (postEventCustomInterceptors.AnySafe())
                 {
-                    foreach (var ci in postEventCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
+                    foreach (KeyValuePair<Func<IPipelineMessage, bool>, MvpEventHandler<IPipelineMessage, EventArgs>> ci in postEventCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
                     {
                         await RunEventsAsync([ci.Value], input);
                     }
@@ -472,7 +472,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
             {
                 if (preEventCustomInterceptors.AnySafe())
                 {
-                    foreach (var ci in preEventCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
+                    foreach (KeyValuePair<Func<IPipelineMessage, bool>, MvpEventHandler<IPipelineMessage, EventArgs>> ci in preEventCustomInterceptors.Where(ci => ci.Key.Invoke(input)))
                     {
                         await RunEventsAsync([ci.Value], input);
                     }
@@ -483,7 +483,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         {
             if (_handlers.AnySafe())
             {
-                foreach (var handler in _handlers)
+                foreach (MvpEventHandler<IPipelineMessage, EventArgs> handler in _handlers)
                 {
                     if (handler == null)
                     {
@@ -503,7 +503,7 @@ namespace Mvp24Hours.Infrastructure.Pipe
         {
             if (executedOperations.AnySafe())
             {
-                foreach (var executedOperation in executedOperations.Reverse<IOperationAsync>())
+                foreach (IOperationAsync executedOperation in executedOperations.Reverse<IOperationAsync>())
                 {
                     if (executedOperation == null)
                     {

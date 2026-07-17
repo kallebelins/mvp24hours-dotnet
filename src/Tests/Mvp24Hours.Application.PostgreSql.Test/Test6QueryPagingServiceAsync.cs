@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.PostgreSql.Test.Setup;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Entities;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Services.Async;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Xunit;
 using Xunit.Priority;
@@ -40,9 +41,9 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerList()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             // act
-            var pagingResult = await service.ListWithPaginationAsync();
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync();
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -50,10 +51,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -61,10 +62,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -72,10 +73,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -83,10 +84,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -94,11 +95,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -106,11 +107,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -118,10 +119,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -129,11 +130,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerListNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var pagingResult = await service.ListWithPaginationAsync(paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.ListWithPaginationAsync(paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -144,9 +145,9 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetBy()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"));
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"));
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -154,10 +155,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByPaging()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0);
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -165,10 +166,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByNavigation()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -176,10 +177,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByOrderAsc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -187,10 +188,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByOrderDesc()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -198,11 +199,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByOrderAscExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByAscendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -210,11 +211,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByOrderDescExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -222,10 +223,10 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByPagingExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }
@@ -233,11 +234,11 @@ namespace Mvp24Hours.Application.PostgreSql.Test
         public async Task GetFilterCustomerGetByNavigationExpression()
         {
             // arrange
-            var service = serviceProvider.GetService<CustomerPagingServiceAsync>();
+            CustomerPagingServiceAsync? service = serviceProvider.GetRequiredService<CustomerPagingServiceAsync>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.NavigationExpr.Add(x => x.Contacts);
             // act
-            var pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
+            IPagingResult<IList<Customer>> pagingResult = await service.GetByWithPaginationAsync(x => x.Name.Contains("Test"), paging);
             // assert
             Assert.NotNull(pagingResult.Paging);
         }

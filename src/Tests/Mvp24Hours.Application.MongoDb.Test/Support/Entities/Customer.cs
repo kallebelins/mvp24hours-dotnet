@@ -15,7 +15,7 @@ namespace Mvp24Hours.Application.MongoDb.Test.Support.Entities
     {
         public Customer()
         {
-            Contacts = new List<ObjectId>();
+            Contacts = [];
         }
 
         [BsonIgnore()]

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
@@ -43,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             ReceivedAt = DateTimeOffset.UtcNow;
 
             // Extract message metadata
-            var props = deliverEventArgs.BasicProperties;
+            IBasicProperties? props = deliverEventArgs.BasicProperties;
             MessageId = props?.MessageId ?? props?.CorrelationId ?? Guid.NewGuid().ToString();
             CorrelationId = props?.CorrelationId;
 
@@ -51,7 +52,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             var headers = new Dictionary<string, object>();
             if (props?.Headers != null)
             {
-                foreach (var header in props.Headers)
+                foreach (KeyValuePair<string, object> header in props.Headers)
                 {
                     headers[header.Key] = header.Value;
                 }
@@ -195,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         /// <inheritdoc />
         public Core.Contract.IServiceScope CreateScope()
         {
-            var scope = _serviceProvider.CreateScope();
+            Microsoft.Extensions.DependencyInjection.IServiceScope scope = _serviceProvider.CreateScope();
             return new ServiceScopeWrapper(scope);
         }
 

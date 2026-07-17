@@ -15,7 +15,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Setup
     {
         public static IServiceProvider SetupInjection()
         {
-            var services = new ServiceCollection()
+            IServiceCollection services = new ServiceCollection()
                             .AddSingleton(ConfigurationHelper.AppSettings);
 
             services.AddMvp24HoursPipeline(options =>
@@ -28,7 +28,7 @@ namespace Mvp24Hours.Application.Pipe.Test.Setup
 
         public static IServiceProvider SetupInjectionFactory()
         {
-            var services = new ServiceCollection()
+            IServiceCollection services = new ServiceCollection()
                            .AddSingleton(ConfigurationHelper.AppSettings);
 
             services.AddMvp24HoursPipeline(factory: (sp) =>

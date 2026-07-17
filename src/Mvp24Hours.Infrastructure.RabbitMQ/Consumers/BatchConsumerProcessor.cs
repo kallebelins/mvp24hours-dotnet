@@ -175,7 +175,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                 _batchTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
                 var messages = new List<BatchMessageItem<TMessage>>();
-                while (messages.Count < _options.MaxBatchSize && _messageQueue.TryDequeue(out var item))
+                while (messages.Count < _options.MaxBatchSize && _messageQueue.TryDequeue(out BatchMessageItem<TMessage>? item))
                 {
                     messages.Add(item);
                 }
@@ -229,8 +229,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             BatchConsumeContext<TMessage> context,
             CancellationToken cancellationToken)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var consumer = scope.ServiceProvider.GetService<IBatchConsumer<TMessage>>();
+            using Microsoft.Extensions.DependencyInjection.IServiceScope scope = _serviceProvider.CreateScope();
+            IBatchConsumer<TMessage>? consumer = scope.ServiceProvider.GetService<IBatchConsumer<TMessage>>();
 
             if (consumer == null)
             {
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             if (processingException != null)
             {
                 // All messages failed due to exception
-                foreach (var msg in messages)
+                foreach (BatchMessageItem<TMessage> msg in messages)
                 {
                     try
                     {
@@ -303,7 +303,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                 }
                 else
                 {
-                    foreach (var msg in messages)
+                    foreach (BatchMessageItem<TMessage> msg in messages)
                     {
                         try
                         {
@@ -322,11 +322,11 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             var resultsList = results.ToList();
             var resultsByDeliveryTag = resultsList.ToDictionary(r => r.DeliveryTag);
 
-            foreach (var msg in messages)
+            foreach (BatchMessageItem<TMessage> msg in messages)
             {
                 try
                 {
-                    if (resultsByDeliveryTag.TryGetValue(msg.DeliveryTag, out var result))
+                    if (resultsByDeliveryTag.TryGetValue(msg.DeliveryTag, out IBatchMessageResult? result))
                     {
                         if (result.Success)
                         {
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             _batchSemaphore.Dispose();
 
             // Nack any remaining messages
-            while (_messageQueue.TryDequeue(out var item))
+            while (_messageQueue.TryDequeue(out BatchMessageItem<TMessage>? item))
             {
                 try
                 {

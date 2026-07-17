@@ -61,14 +61,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken)
         {
             // Try to get existing context from message or create new one
-            var context = GetOrCreateContext(message);
+            IPipelineContext context = GetOrCreateContext(message);
 
             Activity? activity = null;
 
             try
             {
                 // Set context in accessor for operations to access
-                using var scope = _contextAccessor.BeginScope(context);
+                using IDisposable scope = _contextAccessor.BeginScope(context);
 
                 // Start activity for tracing if enabled
                 if (_options.EnableActivityTracing)
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         private IPipelineContext GetOrCreateContext(IPipelineMessage message)
         {
             // First, try to get context from message
-            var existingContext = message.GetContent<IPipelineContext>(PipelineContextKey);
+            IPipelineContext existingContext = message.GetContent<IPipelineContext>(PipelineContextKey);
             if (existingContext != null)
             {
                 return existingContext;

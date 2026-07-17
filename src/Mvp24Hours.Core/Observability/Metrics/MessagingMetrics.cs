@@ -87,7 +87,7 @@ public sealed class MessagingMetrics
     /// </summary>
     public MessagingMetrics()
     {
-        var meter = Mvp24HoursMeters.RabbitMQ.Meter;
+        Meter meter = Mvp24HoursMeters.RabbitMQ.Meter;
 
         // Publishing
         _publishedTotal = meter.CreateCounter<long>(
@@ -214,7 +214,7 @@ public sealed class MessagingMetrics
         bool success,
         int payloadSize = 0)
     {
-        var tags = CreateMessageTags(messageType, destination, success);
+        TagList tags = CreateMessageTags(messageType, destination, success);
 
         _publishedTotal.Add(1, tags);
 
@@ -483,7 +483,7 @@ public sealed class MessagingMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordPublish(_messageType, _destination, elapsed.TotalMilliseconds, Succeeded, PayloadSize);
         }
     }
@@ -527,7 +527,7 @@ public sealed class MessagingMetrics
         /// <inheritdoc />
         public void Dispose()
         {
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordConsume(_messageType, _queueName, elapsed.TotalMilliseconds, Succeeded, _consumerGroup);
         }
     }

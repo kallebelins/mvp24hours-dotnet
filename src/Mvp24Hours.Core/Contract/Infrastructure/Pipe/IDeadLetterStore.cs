@@ -78,7 +78,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
         /// <summary>
         /// Gets or sets additional metadata about the failure.
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; } = new();
+        public Dictionary<string, string> Metadata { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the number of times this operation has been reprocessed.

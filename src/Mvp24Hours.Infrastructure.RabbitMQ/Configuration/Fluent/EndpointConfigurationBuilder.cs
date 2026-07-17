@@ -353,8 +353,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <summary>
         /// Gets the suffixes to strip from type names.
         /// </summary>
-        public List<string> SuffixesToStrip { get; } = new()
-        {
+        public List<string> SuffixesToStrip { get; } =
+        [
             "Consumer",
             "Handler",
             "Command",
@@ -363,7 +363,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             "Message",
             "Request",
             "Response"
-        };
+        ];
 
         /// <summary>
         /// Gets or sets the temporary queue name pattern.

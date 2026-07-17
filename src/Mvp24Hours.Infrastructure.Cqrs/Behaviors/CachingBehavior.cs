@@ -146,7 +146,7 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     requestName,
                     cacheKey);
 
-                var cachedResponse = JsonSerializer.Deserialize<TResponse>(cachedValue, _jsonOptions);
+                TResponse? cachedResponse = JsonSerializer.Deserialize<TResponse>(cachedValue, _jsonOptions);
                 if (cachedResponse != null)
                 {
                     return cachedResponse;
@@ -168,14 +168,14 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             cacheKey);
 
         // Execute the handler
-        var response = await next();
+        TResponse? response = await next();
 
         // Cache the response
         try
         {
             if (response != null)
             {
-                var duration = cacheable.CacheDuration ?? _defaultCacheDuration;
+                TimeSpan duration = cacheable.CacheDuration ?? _defaultCacheDuration;
                 var serialized = JsonSerializer.Serialize(response, _jsonOptions);
 
                 var options = new DistributedCacheEntryOptions
@@ -273,7 +273,7 @@ public sealed class CacheInvalidationBehavior<TRequest, TResponse> : IPipelineBe
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         // Execute the handler first
-        var response = await next();
+        TResponse? response = await next();
 
         // Only invalidate if the request implements ICacheInvalidator
         if (request is ICacheInvalidator invalidator)

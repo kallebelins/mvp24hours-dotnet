@@ -5,6 +5,7 @@
 //=====================================================================================
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -104,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 // Step 3: Check pending migrations if enabled
                 if (_options.CheckPendingMigrations)
                 {
-                    var pendingMigrations = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    IEnumerable<string> pendingMigrations = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
                     var pendingList = new List<string>(pendingMigrations);
                     data["pendingMigrations"] = pendingList.Count;
 
@@ -176,14 +177,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 
         private async Task ExecuteHealthQueryAsync(CancellationToken cancellationToken)
         {
-            var connection = _dbContext.Database.GetDbConnection();
+            DbConnection connection = _dbContext.Database.GetDbConnection();
 
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);
             }
 
-            using var command = connection.CreateCommand();
+            using DbCommand command = connection.CreateCommand();
             command.CommandText = _options.HealthQuery;
             command.CommandTimeout = _options.QueryTimeoutSeconds;
 

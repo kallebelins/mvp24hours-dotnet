@@ -95,7 +95,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <exception cref="InvalidOperationException">Thrown if no enumeration has the specified value.</exception>
         public static TEnum FromValue(int value)
         {
-            if (!_byValue.Value.TryGetValue(value, out var result))
+            if (!_byValue.Value.TryGetValue(value, out TEnum? result))
             {
                 throw new InvalidOperationException(
                     $"'{value}' is not a valid value for {typeof(TEnum).Name}. " +
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
                 throw new ArgumentNullException(nameof(name));
             }
 
-            if (!_byName.Value.TryGetValue(name, out var result))
+            if (!_byName.Value.TryGetValue(name, out TEnum? result))
             {
                 throw new InvalidOperationException(
                     $"'{name}' is not a valid name for {typeof(TEnum).Name}. " +
@@ -166,12 +166,12 @@ namespace Mvp24Hours.Core.Domain.Enumerations
 
         private static IEnumerable<TEnum> GetAllValues()
         {
-            var enumType = typeof(TEnum);
-            var fields = enumType
+            Type enumType = typeof(TEnum);
+            IEnumerable<FieldInfo> fields = enumType
                 .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
                 .Where(f => f.FieldType == enumType);
 
-            foreach (var field in fields)
+            foreach (FieldInfo? field in fields)
             {
                 if (field.GetValue(null) is TEnum value)
                 {

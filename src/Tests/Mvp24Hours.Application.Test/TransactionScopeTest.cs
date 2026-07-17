@@ -207,7 +207,7 @@ public class TransactionScopeTest
         await using var scope = new TransactionScope(unitOfWork);
 
         // Act
-        var (result, affectedRows) = await scope.ExecuteAsync(async () =>
+        (string? result, int affectedRows) = await scope.ExecuteAsync(async () =>
         {
             await Task.Delay(1);
             return "Success";
@@ -437,11 +437,11 @@ public class TransactionScopeTest
         var services = new ServiceCollection();
         services.AddSingleton<IUnitOfWorkAsync, MockUnitOfWorkAsync>();
         services.AddTransactionScope();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var factory = provider.GetRequiredService<ITransactionScopeFactory>();
-        var scope = factory.Create();
+        ITransactionScopeFactory factory = provider.GetRequiredService<ITransactionScopeFactory>();
+        ITransactionScope scope = factory.Create();
 
         // Assert
         scope.Should().NotBeNull();
@@ -455,11 +455,11 @@ public class TransactionScopeTest
         var services = new ServiceCollection();
         services.AddSingleton<IUnitOfWork, MockUnitOfWork>();
         services.AddTransactionScope();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
-        var factory = provider.GetRequiredService<ITransactionScopeFactory>();
-        var scope = factory.CreateSync();
+        ITransactionScopeFactory factory = provider.GetRequiredService<ITransactionScopeFactory>();
+        ITransactionScopeSync scope = factory.CreateSync();
 
         // Assert
         scope.Should().NotBeNull();
@@ -480,12 +480,12 @@ public class TransactionScopeTest
 
         // Act
         services.AddTransactionScope();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        provider.GetService<ITransactionScopeFactory>().Should().NotBeNull();
-        provider.GetService<ITransactionScope>().Should().NotBeNull();
-        provider.GetService<ITransactionScopeSync>().Should().NotBeNull();
+        provider.GetRequiredService<ITransactionScopeFactory>().Should().NotBeNull();
+        provider.GetRequiredService<ITransactionScope>().Should().NotBeNull();
+        provider.GetRequiredService<ITransactionScopeSync>().Should().NotBeNull();
     }
 
     [Fact]
@@ -501,10 +501,10 @@ public class TransactionScopeTest
             options.DefaultTimeoutSeconds = 60;
             options.EnableRetryOnTransientFailure = true;
         });
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        var options = provider.GetService<TransactionScopeOptions>();
+        TransactionScopeOptions? options = provider.GetRequiredService<TransactionScopeOptions>();
         options.Should().NotBeNull();
         options!.DefaultTimeoutSeconds.Should().Be(60);
         options.EnableRetryOnTransientFailure.Should().BeTrue();

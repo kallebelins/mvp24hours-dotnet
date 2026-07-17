@@ -147,7 +147,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate all entities before bulk operation
-                var validationResult = ValidateEntities(entities);
+                IBusinessResult<bool> validationResult = ValidateEntities(entities);
                 if (!validationResult.HasData() || !validationResult.Data)
                 {
                     stopwatch.Stop();
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Application.Logic
                 }
 
                 // Execute bulk insert
-                var result = await _dbContext.BulkInsertAsync(entities, options, cancellationToken);
+                BulkOperationResult result = await _dbContext.BulkInsertAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Validate all entities before bulk operation
-                var validationResult = ValidateEntities(entities);
+                IBusinessResult<bool> validationResult = ValidateEntities(entities);
                 if (!validationResult.HasData() || !validationResult.Data)
                 {
                     stopwatch.Stop();
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Application.Logic
                 }
 
                 // Execute bulk update
-                var result = await _dbContext.BulkUpdateAsync(entities, options, cancellationToken);
+                BulkOperationResult result = await _dbContext.BulkUpdateAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -259,7 +259,7 @@ namespace Mvp24Hours.Application.Logic
             try
             {
                 // Execute bulk delete (no validation needed for delete)
-                var result = await _dbContext.BulkDeleteAsync(entities, options, cancellationToken);
+                BulkOperationResult result = await _dbContext.BulkDeleteAsync(entities, options, cancellationToken);
 
                 stopwatch.Stop();
 
@@ -295,9 +295,9 @@ namespace Mvp24Hours.Application.Logic
                 return true.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     _logger.LogDebug("application-bulkcommandserviceasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",

@@ -97,7 +97,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         /// <inheritdoc />
         public Core.Contract.IServiceScope CreateScope()
         {
-            var scope = _serviceProvider.CreateScope();
+            Microsoft.Extensions.DependencyInjection.IServiceScope scope = _serviceProvider.CreateScope();
             return new ServiceScopeWrapper(scope);
         }
 
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                 headers["x-correlation-id"] = CorrelationId;
             }
 
-            foreach (var message in messages)
+            foreach (T message in messages)
             {
                 _rabbitMQClient.Publish(message, routingKey ?? string.Empty, headers);
             }

@@ -46,7 +46,7 @@ public sealed class HttpMetrics
     /// </summary>
     public HttpMetrics()
     {
-        var meter = Mvp24HoursMeters.WebAPI.Meter;
+        Meter meter = Mvp24HoursMeters.WebAPI.Meter;
 
         _requestsTotal = meter.CreateCounter<long>(
             MetricNames.HttpRequestsTotal,
@@ -262,7 +262,7 @@ public sealed class HttpMetrics
         public void Dispose()
         {
             _metrics.DecrementActiveRequests();
-            var elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
             _metrics.RecordRequest(_method, _route, StatusCode, elapsed.TotalMilliseconds, RequestSize, ResponseSize);
         }
     }

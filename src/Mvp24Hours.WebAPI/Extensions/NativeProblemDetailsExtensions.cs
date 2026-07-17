@@ -15,6 +15,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Exceptions;
@@ -107,14 +109,14 @@ public static class NativeProblemDetailsExtensions
         {
             options.CustomizeProblemDetails = context =>
             {
-                var problemDetails = context.ProblemDetails;
-                var httpContext = context.HttpContext;
+                ProblemDetails problemDetails = context.ProblemDetails;
+                HttpContext httpContext = context.HttpContext;
 
                 // Add trace ID
                 problemDetails.Extensions["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
                 // Add correlation ID if available
-                if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId) &&
+                if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out StringValues correlationId) &&
                     !string.IsNullOrEmpty(correlationId))
                 {
                     problemDetails.Extensions["correlationId"] = correlationId.ToString();
@@ -215,19 +217,19 @@ public static class NativeProblemDetailsExtensions
         {
             exceptionApp.Run(async context =>
             {
-                var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
-                var exception = exceptionHandlerFeature?.Error;
+                IExceptionHandlerFeature? exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+                Exception? exception = exceptionHandlerFeature?.Error;
 
                 if (exception is null)
                 {
                     return;
                 }
 
-                var problemDetailsService = context.RequestServices.GetService<IProblemDetailsService>();
-                var mapper = context.RequestServices.GetService<IExceptionToProblemDetailsMapper>();
-                var options = context.RequestServices.GetService<IOptions<MvpProblemDetailsOptions>>()?.Value
+                IProblemDetailsService? problemDetailsService = context.RequestServices.GetService<IProblemDetailsService>();
+                IExceptionToProblemDetailsMapper? mapper = context.RequestServices.GetService<IExceptionToProblemDetailsMapper>();
+                MvpProblemDetailsOptions options = context.RequestServices.GetService<IOptions<MvpProblemDetailsOptions>>()?.Value
                     ?? new MvpProblemDetailsOptions();
-                var logger = context.RequestServices.GetService<ILogger<IExceptionHandlerFeature>>();
+                ILogger<IExceptionHandlerFeature>? logger = context.RequestServices.GetService<ILogger<IExceptionHandlerFeature>>();
 
                 // Log the exception
                 LogException(logger, exception, context, options);
@@ -239,7 +241,7 @@ public static class NativeProblemDetailsExtensions
                 // Try to use IProblemDetailsService
                 if (problemDetailsService is not null)
                 {
-                    var problemDetails = CreateProblemDetails(exception, context, statusCode, options, mapper);
+                    ProblemDetails problemDetails = CreateProblemDetails(exception, context, statusCode, options, mapper);
 
                     await problemDetailsService.WriteAsync(new ProblemDetailsContext
                     {
@@ -250,7 +252,7 @@ public static class NativeProblemDetailsExtensions
                 else
                 {
                     // Fallback: write ProblemDetails directly
-                    var problemDetails = CreateProblemDetails(exception, context, statusCode, options, mapper);
+                    ProblemDetails problemDetails = CreateProblemDetails(exception, context, statusCode, options, mapper);
                     context.Response.ContentType = "application/problem+json";
                     await context.Response.WriteAsJsonAsync(problemDetails);
                 }
@@ -260,7 +262,7 @@ public static class NativeProblemDetailsExtensions
         // Add status code pages for non-exception errors
         app.UseStatusCodePages(async context =>
         {
-            var problemDetailsService = context.HttpContext.RequestServices.GetService<IProblemDetailsService>();
+            IProblemDetailsService? problemDetailsService = context.HttpContext.RequestServices.GetService<IProblemDetailsService>();
 
             if (problemDetailsService is not null)
             {
@@ -358,7 +360,7 @@ public static class NativeProblemDetailsExtensions
                 if (validationEx.ValidationErrors?.Count > 0)
                 {
                     var errors = new List<object>();
-                    foreach (var error in validationEx.ValidationErrors)
+                    foreach (IMessageResult error in validationEx.ValidationErrors)
                     {
                         errors.Add(new
                         {
@@ -535,7 +537,7 @@ public static class NativeProblemDetailsExtensions
         }
 
         var statusCode = GetDefaultStatusCode(exception);
-        var requestPath = context.Request.Path;
+        PathString requestPath = context.Request.Path;
         var requestMethod = context.Request.Method;
         var traceId = context.TraceIdentifier;
 

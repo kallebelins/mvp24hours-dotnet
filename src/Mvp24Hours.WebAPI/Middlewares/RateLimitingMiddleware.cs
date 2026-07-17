@@ -65,7 +65,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             }
 
             // Acquire a permit from the rate limiter
-            using var lease = await _rateLimiter.AcquireAsync(context, 1, context.RequestAborted);
+            using RateLimitLease lease = await _rateLimiter.AcquireAsync(context, 1, context.RequestAborted);
 
             if (lease.IsAcquired)
             {
@@ -81,7 +81,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                     "Rate limit exceeded for {Path} from {ClientInfo}. Retry after: {RetryAfter}",
                     context.Request.Path,
                     GetClientInfo(context),
-                    lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter) ? retryAfter : TimeSpan.Zero);
+                    lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter) ? retryAfter : TimeSpan.Zero);
 
                 await HandleRateLimitedResponse(context, lease);
             }
@@ -105,13 +105,13 @@ namespace Mvp24Hours.WebAPI.Middlewares
             // The .NET rate limiters don't expose current count via metadata
             // We add the configured limit from options as a reference
 
-            var policy = GetCurrentPolicy(context);
+            RateLimitPolicy? policy = GetCurrentPolicy(context);
             if (policy != null)
             {
                 context.Response.Headers[_options.RateLimitHeaderName] = policy.PermitLimit.ToString();
 
                 // Retry-After for sliding windows
-                if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                if (lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
                 {
                     context.Response.Headers[_options.RateLimitResetHeaderName] =
                         DateTimeOffset.UtcNow.Add(retryAfter).ToUnixTimeSeconds().ToString();
@@ -127,19 +127,19 @@ namespace Mvp24Hours.WebAPI.Middlewares
             context.Response.StatusCode = _options.RateLimitedStatusCode;
 
             // Add Retry-After header
-            if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            if (lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
             {
                 context.Response.Headers[_options.RetryAfterHeaderName] = ((int)retryAfter.TotalSeconds).ToString();
             }
 
             // Add rate limit headers
-            var policy = GetCurrentPolicy(context);
+            RateLimitPolicy? policy = GetCurrentPolicy(context);
             if (policy != null && _options.IncludeRateLimitHeaders)
             {
                 context.Response.Headers[_options.RateLimitHeaderName] = policy.PermitLimit.ToString();
                 context.Response.Headers[_options.RateLimitRemainingHeaderName] = "0";
 
-                if (lease.TryGetMetadata(MetadataName.RetryAfter, out var resetAfter))
+                if (lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan resetAfter))
                 {
                     context.Response.Headers[_options.RateLimitResetHeaderName] =
                         DateTimeOffset.UtcNow.Add(resetAfter).ToUnixTimeSeconds().ToString();
@@ -161,7 +161,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
         /// </summary>
         private async Task WriteRateLimitProblemDetails(HttpContext context, RateLimitLease lease)
         {
-            var retryAfterSeconds = lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+            var retryAfterSeconds = lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter)
                 ? (int)retryAfter.TotalSeconds
                 : 60;
 
@@ -211,16 +211,16 @@ namespace Mvp24Hours.WebAPI.Middlewares
             var path = context.Request.Path.Value ?? "/";
 
             // Check endpoint-specific policies
-            foreach (var (pattern, policyName) in _options.EndpointPolicies)
+            foreach ((string? pattern, string? policyName) in _options.EndpointPolicies)
             {
-                if (PathMatches(path, pattern) && _options.Policies.TryGetValue(policyName, out var policy))
+                if (PathMatches(path, pattern) && _options.Policies.TryGetValue(policyName, out RateLimitPolicy? policy))
                 {
                     return policy;
                 }
             }
 
             // Return default policy
-            if (_options.Policies.TryGetValue(_options.DefaultPolicyName, out var defaultPolicy))
+            if (_options.Policies.TryGetValue(_options.DefaultPolicyName, out RateLimitPolicy? defaultPolicy))
             {
                 return defaultPolicy;
             }

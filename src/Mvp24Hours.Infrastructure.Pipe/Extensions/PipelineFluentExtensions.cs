@@ -275,7 +275,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Extensions
             if (otherPipeline == null)
                 throw new ArgumentNullException(nameof(otherPipeline));
 
-            foreach (var operation in otherPipeline.GetOperations())
+            foreach (IOperation operation in otherPipeline.GetOperations())
             {
                 pipeline.Add(operation);
             }
@@ -298,7 +298,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Extensions
             if (otherPipeline == null)
                 throw new ArgumentNullException(nameof(otherPipeline));
 
-            foreach (var operation in otherPipeline.GetOperations())
+            foreach (IOperationAsync operation in otherPipeline.GetOperations())
             {
                 pipeline.Add(operation);
             }
@@ -342,7 +342,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Extensions
         /// <param name="validator">The validator to use.</param>
         public static void ExecuteValidated(this Pipeline pipeline, IPipelineMessage? input = null, IPipelineValidator? validator = null)
         {
-            var result = pipeline.Validate(validator);
+            PipelineValidationResult result = pipeline.Validate(validator);
             result.ThrowIfInvalid();
             pipeline.Execute(input);
         }
@@ -360,7 +360,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Extensions
             IPipelineValidator? validator = null,
             CancellationToken cancellationToken = default)
         {
-            var result = pipeline.Validate(validator);
+            PipelineValidationResult result = pipeline.Validate(validator);
             result.ThrowIfInvalid();
             await pipeline.ExecuteAsync(input);
         }

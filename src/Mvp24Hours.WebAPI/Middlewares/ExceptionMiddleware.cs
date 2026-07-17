@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.DTOs;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
@@ -58,7 +59,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 message = $"Message: {(exception.InnerException ?? exception).Message}";
             }
 
-            var boResult = message
+            IBusinessResult<VoidResult> boResult = message
                 .ToMessageResult("internalservererror", MessageType.Error)
                 .ToBusiness<VoidResult>();
 

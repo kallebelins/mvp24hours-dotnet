@@ -64,8 +64,8 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
         public InMemorySmsProvider(IOptions<SmsOptions> options)
             : base(options)
         {
-            _sentMessages = new List<SmsMessage>();
-            _sentMmsMessages = new List<MmsMessage>();
+            _sentMessages = [];
+            _sentMmsMessages = [];
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace Mvp24Hours.Infrastructure.Sms.Providers
         public InMemorySmsProvider(SmsOptions options)
             : base(options)
         {
-            _sentMessages = new List<SmsMessage>();
-            _sentMmsMessages = new List<MmsMessage>();
+            _sentMessages = [];
+            _sentMmsMessages = [];
         }
 
         /// <summary>

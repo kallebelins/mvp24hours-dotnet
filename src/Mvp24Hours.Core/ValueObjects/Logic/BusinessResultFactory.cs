@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reflection;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 
@@ -155,7 +156,7 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
             var messages = new List<IMessageResult>();
             if (errors != null)
             {
-                foreach (var (key, message) in errors)
+                foreach ((string? key, string? message) in errors)
                 {
                     messages.Add(new MessageResult(key, message, MessageType.Error));
                 }
@@ -262,11 +263,11 @@ namespace Mvp24Hours.Core.ValueObjects.Logic
 
             foreach (var result in results)
             {
-                var resultType = result.GetType();
+                Type resultType = result.GetType();
                 if (resultType.IsGenericType)
                 {
-                    var messagesProperty = resultType.GetProperty("Messages");
-                    var hasErrorsProperty = resultType.GetProperty("HasErrors");
+                    PropertyInfo? messagesProperty = resultType.GetProperty("Messages");
+                    PropertyInfo? hasErrorsProperty = resultType.GetProperty("HasErrors");
 
                     if (messagesProperty != null)
                     {

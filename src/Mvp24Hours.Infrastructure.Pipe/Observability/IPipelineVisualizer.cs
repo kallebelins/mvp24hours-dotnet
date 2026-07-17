@@ -204,12 +204,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <summary>
         /// Gets or sets the operations in the pipeline.
         /// </summary>
-        public List<OperationNode> Operations { get; set; } = new();
+        public List<OperationNode> Operations { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the interceptors.
         /// </summary>
-        public List<InterceptorGroup> Interceptors { get; set; } = new();
+        public List<InterceptorGroup> Interceptors { get; set; } = [];
     }
 
     /// <summary>
@@ -302,7 +302,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <summary>
         /// Gets or sets the operations in this interceptor group.
         /// </summary>
-        public List<OperationNode> Operations { get; set; } = new();
+        public List<OperationNode> Operations { get; set; } = [];
     }
 }
 

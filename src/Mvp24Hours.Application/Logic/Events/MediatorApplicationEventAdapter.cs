@@ -5,6 +5,7 @@
 //=====================================================================================
 
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -80,7 +81,7 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
             var notification = new ApplicationEventMediatorNotification<TEvent>(@event);
 
             // Get the Publish method
-            var publishMethod = publisherType.GetMethod("Publish");
+            MethodInfo? publishMethod = publisherType.GetMethod("Publish");
             if (publishMethod == null)
             {
                 _logger?.LogWarning(
@@ -89,8 +90,8 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
             }
 
             // Make the generic method
-            var notificationType = typeof(ApplicationEventMediatorNotification<TEvent>);
-            var genericPublish = publishMethod.MakeGenericMethod(notificationType);
+            Type notificationType = typeof(ApplicationEventMediatorNotification<TEvent>);
+            MethodInfo genericPublish = publishMethod.MakeGenericMethod(notificationType);
 
             // Invoke
             var task = genericPublish.Invoke(publisher, [notification, cancellationToken]) as Task;

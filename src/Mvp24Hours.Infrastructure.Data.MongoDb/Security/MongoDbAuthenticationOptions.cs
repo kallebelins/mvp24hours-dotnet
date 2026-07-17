@@ -316,7 +316,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 };
 
                 // Add client certificate
-                var clientCert = GetClientCertificate();
+                X509Certificate2? clientCert = GetClientCertificate();
                 if (clientCert != null)
                 {
                     settings.SslSettings.ClientCertificates = new[] { clientCert };
@@ -356,7 +356,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 
         private string? GetX509Username()
         {
-            var cert = GetClientCertificate();
+            X509Certificate2? cert = GetClientCertificate();
             if (cert != null)
             {
                 // MongoDB uses the certificate subject as the username for X.509
@@ -390,7 +390,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                     if (isValid)
                     {
                         // Verify the root is our CA
-                        var root = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+                        X509Certificate2 root = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
                         return root.Thumbprint == caCert.Thumbprint;
                     }
                 }

@@ -145,8 +145,8 @@ public class MongoDbContextFactory : IDisposable
     {
         _logger?.LogDebug("MongoDB context factory: Creating context");
 
-        var mongoOptions = BuildMongoDbOptions();
-        var context = CreateContextInstance(mongoOptions);
+        MongoDbOptions mongoOptions = BuildMongoDbOptions();
+        Mvp24HoursContext context = CreateContextInstance(mongoOptions);
 
         _createdContexts.Add(context);
 
@@ -169,7 +169,7 @@ public class MongoDbContextFactory : IDisposable
     public Mvp24HoursContext CreateContextWithData<TSeeder>()
         where TSeeder : IMongoDataSeeder, new()
     {
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         var seeder = new TSeeder();
         seeder.Seed(context);
         return context;
@@ -184,7 +184,7 @@ public class MongoDbContextFactory : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seeder);
 
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         seeder.Seed(context);
         return context;
     }
@@ -210,7 +210,7 @@ public class MongoDbContextFactory : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seedAction);
 
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         seedAction(context);
         return context;
     }
@@ -224,7 +224,7 @@ public class MongoDbContextFactory : IDisposable
     public async Task<Mvp24HoursContext> CreateContextWithDataAsync<TSeeder>(CancellationToken cancellationToken = default)
         where TSeeder : IMongoDataSeederAsync, new()
     {
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         var seeder = new TSeeder();
         await seeder.SeedAsync(context, cancellationToken);
         return context;
@@ -242,7 +242,7 @@ public class MongoDbContextFactory : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seeder);
 
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         await seeder.SeedAsync(context, cancellationToken);
         return context;
     }
@@ -259,7 +259,7 @@ public class MongoDbContextFactory : IDisposable
     {
         ArgumentNullException.ThrowIfNull(seedAction);
 
-        var context = CreateContext();
+        Mvp24HoursContext context = CreateContext();
         await seedAction(context, cancellationToken);
         return context;
     }
@@ -344,7 +344,7 @@ public class MongoDbContextFactory : IDisposable
 
         if (disposing)
         {
-            while (_createdContexts.TryTake(out var context))
+            while (_createdContexts.TryTake(out Mvp24HoursContext? context))
             {
                 // Optionally drop the test database on cleanup
                 try

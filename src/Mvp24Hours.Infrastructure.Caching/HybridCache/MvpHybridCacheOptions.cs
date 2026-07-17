@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Caching.HybridCache
         /// Gets or sets the default tags applied to all cache entries.
         /// Useful for global invalidation.
         /// </summary>
-        public IList<string> DefaultTags { get; set; } = new List<string>();
+        public IList<string> DefaultTags { get; set; } = [];
 
         /// <summary>
         /// Gets or sets whether to use compression for large values.

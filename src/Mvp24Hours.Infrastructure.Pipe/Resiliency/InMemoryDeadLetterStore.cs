@@ -50,7 +50,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             // Enforce max items limit by removing oldest acknowledged items
             while (_store.Count >= _maxItems)
             {
-                var oldestAcknowledged = _store.Values
+                DeadLetterOperation? oldestAcknowledged = _store.Values
                     .Where(x => x.IsAcknowledged)
                     .OrderBy(x => x.AcknowledgedAt ?? x.FailedAt)
                     .FirstOrDefault();
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 else
                 {
                     // Remove oldest unacknowledged if no acknowledged items
-                    var oldest = _store.Values
+                    DeadLetterOperation? oldest = _store.Values
                         .OrderBy(x => x.FailedAt)
                         .FirstOrDefault();
 
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         public Task<DeadLetterOperation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _store.TryGetValue(id, out var result);
+            _store.TryGetValue(id, out DeadLetterOperation? result);
             return Task.FromResult(result);
         }
 
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var query = _store.Values.AsEnumerable();
+            IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
 
             if (!includeAcknowledged)
             {
@@ -147,7 +147,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var query = _store.Values.AsEnumerable();
+            IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
 
             if (!includeAcknowledged)
             {
@@ -172,7 +172,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_store.TryGetValue(id, out var deadLetter))
+            if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
             {
                 deadLetter.IsAcknowledged = true;
                 deadLetter.AcknowledgedAt = DateTimeOffset.UtcNow;
@@ -188,7 +188,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_store.TryGetValue(id, out var deadLetter))
+            if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
             {
                 deadLetter.ReprocessCount++;
                 deadLetter.LastReprocessAt = DateTimeOffset.UtcNow;
@@ -210,14 +210,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var cutoff = DateTimeOffset.UtcNow.Subtract(olderThan);
+            DateTimeOffset cutoff = DateTimeOffset.UtcNow.Subtract(olderThan);
             var toRemove = _store.Values
                 .Where(x => x.IsAcknowledged && x.AcknowledgedAt.HasValue && x.AcknowledgedAt.Value < cutoff)
                 .Select(x => x.Id)
                 .ToList();
 
             var count = 0;
-            foreach (var id in toRemove)
+            foreach (Guid id in toRemove)
             {
                 if (_store.TryRemove(id, out _))
                 {

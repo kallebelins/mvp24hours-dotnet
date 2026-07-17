@@ -57,7 +57,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (FallbackOnExceptions == null || FallbackOnExceptions.Length == 0)
                 return true;
 
-            foreach (var type in FallbackOnExceptions)
+            foreach (Type type in FallbackOnExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (FallbackOnExceptions == null || FallbackOnExceptions.Length == 0)
                 return true;
 
-            foreach (var type in FallbackOnExceptions)
+            foreach (Type type in FallbackOnExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;
@@ -203,7 +203,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
             if (FallbackOnExceptions == null || FallbackOnExceptions.Length == 0)
                 return true;
 
-            foreach (var type in FallbackOnExceptions)
+            foreach (Type type in FallbackOnExceptions)
             {
                 if (type.IsInstanceOfType(exception))
                     return true;

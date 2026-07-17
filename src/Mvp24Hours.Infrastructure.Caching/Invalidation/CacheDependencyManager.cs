@@ -63,7 +63,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
                 foreach (var dependency in dependencyList)
                 {
                     var dependencyKey = GetDependencyKey(dependency);
-                    var dependentKeys = await GetDependentKeysAsync(dependencyKey, cancellationToken);
+                    HashSet<string> dependentKeys = await GetDependentKeysAsync(dependencyKey, cancellationToken);
                     if (!dependentKeys.Contains(key))
                     {
                         dependentKeys.Add(key);
@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
             try
             {
                 var dependencyKeyName = GetDependencyKey(dependencyKey);
-                var dependentKeys = await GetDependentKeysAsync(dependencyKeyName, cancellationToken);
+                HashSet<string> dependentKeys = await GetDependentKeysAsync(dependencyKeyName, cancellationToken);
 
                 if (dependentKeys.Count == 0)
                     return 0;
@@ -141,8 +141,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Invalidation
 
         private async Task<HashSet<string>> GetDependentKeysAsync(string dependencyKey, CancellationToken cancellationToken)
         {
-            var dependentKeys = await _cacheProvider.GetAsync<HashSet<string>>(dependencyKey, cancellationToken);
-            return dependentKeys ?? new HashSet<string>();
+            HashSet<string>? dependentKeys = await _cacheProvider.GetAsync<HashSet<string>>(dependencyKey, cancellationToken);
+            return dependentKeys ?? [];
         }
 
         private async Task SaveDependentKeysAsync(string dependencyKey, HashSet<string> dependentKeys, CancellationToken cancellationToken)

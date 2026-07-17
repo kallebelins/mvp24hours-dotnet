@@ -90,7 +90,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
         _stages.Add((input, _) =>
         {
             var typedInput = (TStageInput)input;
-            var result = processor(typedInput);
+            TStageOutput? result = processor(typedInput);
             return Task.FromResult<object>(result!);
         });
 
@@ -121,7 +121,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
         _stages.Add(async (input, ct) =>
         {
             var typedInput = (TStageInput)input;
-            var result = await processor(typedInput, ct);
+            TStageOutput? result = await processor(typedInput, ct);
             return result!;
         });
 
@@ -172,7 +172,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        foreach (var input in inputs)
+        foreach (TInput? input in inputs)
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return await ProcessOneAsync(input, cancellationToken);
@@ -191,7 +191,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        await foreach (var input in inputs.WithCancellation(cancellationToken))
+        await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
         {
             yield return await ProcessOneAsync(input, cancellationToken);
         }
@@ -211,15 +211,15 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        using var inputChannel = MvpChannels.CreateBounded<TInput>(_options.ChannelCapacity);
-        using var outputChannel = MvpChannels.CreateBounded<TOutput>(_options.ChannelCapacity);
+        using IChannel<TInput> inputChannel = MvpChannels.CreateBounded<TInput>(_options.ChannelCapacity);
+        using IChannel<TOutput> outputChannel = MvpChannels.CreateBounded<TOutput>(_options.ChannelCapacity);
 
         // Start producer
         var producerTask = Task.Run(async () =>
         {
             try
             {
-                foreach (var input in inputs)
+                foreach (TInput? input in inputs)
                 {
                     await inputChannel.Writer.WriteAsync(input, cancellationToken);
                 }
@@ -236,9 +236,9 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
         {
             workerTasks.Add(Task.Run(async () =>
             {
-                await foreach (var input in inputChannel.Reader.ReadAllAsync(cancellationToken))
+                await foreach (TInput? input in inputChannel.Reader.ReadAllAsync(cancellationToken))
                 {
-                    var output = await ProcessOneAsync(input, cancellationToken);
+                    TOutput? output = await ProcessOneAsync(input, cancellationToken);
                     await outputChannel.Writer.WriteAsync(output, cancellationToken);
                 }
             }, cancellationToken));
@@ -249,7 +249,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
             outputChannel.Writer.TryComplete(), cancellationToken);
 
         // Yield outputs
-        await foreach (var output in outputChannel.Reader.ReadAllAsync(cancellationToken))
+        await foreach (TOutput? output in outputChannel.Reader.ReadAllAsync(cancellationToken))
         {
             yield return output;
         }
@@ -263,7 +263,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
         if (_disposed) return;
         _disposed = true;
 
-        foreach (var channel in _stageChannels)
+        foreach (IChannel<object> channel in _stageChannels)
         {
             channel.Dispose();
         }

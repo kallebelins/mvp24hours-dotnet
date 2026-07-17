@@ -138,7 +138,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     {
         _logger?.LogDebug("application-eventaware-commandservice-addasync");
 
-        var errors = entity.TryValidate(_validator);
+        IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
         {
             return errors.ToBusiness<int>();
@@ -170,9 +170,9 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
             return 0.ToBusiness();
         }
 
-        foreach (var entity in entities)
+        foreach (TEntity entity in entities)
         {
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (errors.AnySafe())
             {
                 return errors.ToBusiness<int>();
@@ -204,7 +204,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     {
         _logger?.LogDebug("application-eventaware-commandservice-modifyasync");
 
-        var errors = entity.TryValidate(_validator);
+        IList<IMessageResult> errors = entity.TryValidate(_validator);
         if (errors.AnySafe())
         {
             return errors.ToBusiness<int>();
@@ -236,9 +236,9 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
             return 0.ToBusiness();
         }
 
-        foreach (var entity in entities)
+        foreach (TEntity entity in entities)
         {
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (errors.AnySafe())
             {
                 return errors.ToBusiness<int>();

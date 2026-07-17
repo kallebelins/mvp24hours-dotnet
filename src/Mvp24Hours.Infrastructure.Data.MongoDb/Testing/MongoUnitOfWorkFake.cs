@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Data;
@@ -88,7 +89,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
             else
             {
                 // Use reflection for other entity types
-                var commitMethod = repo.GetType().GetMethod("CommitChanges");
+                MethodInfo? commitMethod = repo.GetType().GetMethod("CommitChanges");
                 if (commitMethod != null)
                 {
                     var result = commitMethod.Invoke(repo, null);
@@ -110,7 +111,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
     {
         foreach (var repo in _repositories.Values)
         {
-            var resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
+            MethodInfo? resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
             resetMethod?.Invoke(repo, null);
         }
     }
@@ -122,7 +123,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
     {
         foreach (var repo in _repositories.Values)
         {
-            var clearMethod = repo.GetType().GetMethod("Clear");
+            MethodInfo? clearMethod = repo.GetType().GetMethod("Clear");
             clearMethod?.Invoke(repo, null);
         }
         _repositories.Clear();
@@ -231,7 +232,7 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
         foreach (var repo in _repositories.Values)
         {
             // Use reflection for async commit
-            var commitMethod = repo.GetType().GetMethod("CommitChangesAsync");
+            MethodInfo? commitMethod = repo.GetType().GetMethod("CommitChangesAsync");
             if (commitMethod != null)
             {
                 var task = (Task<int>?)commitMethod.Invoke(repo, [cancellationToken]);
@@ -252,7 +253,7 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     {
         foreach (var repo in _repositories.Values)
         {
-            var resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
+            MethodInfo? resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
             resetMethod?.Invoke(repo, null);
         }
 
@@ -266,7 +267,7 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     {
         foreach (var repo in _repositories.Values)
         {
-            var clearMethod = repo.GetType().GetMethod("Clear");
+            MethodInfo? clearMethod = repo.GetType().GetMethod("Clear");
             clearMethod?.Invoke(repo, null);
         }
         _repositories.Clear();

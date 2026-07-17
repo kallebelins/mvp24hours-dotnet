@@ -47,7 +47,7 @@ namespace Mvp24Hours.Application.Contract.Resilience
         /// <summary>
         /// Gets or sets custom exception mappings.
         /// </summary>
-        public Dictionary<Type, ExceptionMapping> CustomMappings { get; set; } = new();
+        public Dictionary<Type, ExceptionMapping> CustomMappings { get; set; } = [];
 
         /// <summary>
         /// Adds a custom mapping for an exception type.

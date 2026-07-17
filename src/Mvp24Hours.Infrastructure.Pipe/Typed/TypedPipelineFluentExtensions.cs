@@ -72,7 +72,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             // Add transformation that wraps the original pipeline
             newPipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsFailure)
                 {
                     return OperationResult<TNext>.Failure(result.Messages);
@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
                 try
                 {
-                    var transformed = transform(result.Value!);
+                    TNext? transformed = transform(result.Value!);
                     return OperationResult<TNext>.Success(transformed, result.Messages);
                 }
                 catch (Exception ex)
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             newPipeline.Add(async (input, ct) =>
             {
-                var result = await pipeline.ExecuteAsync(input, ct);
+                IOperationResult<TOutput> result = await pipeline.ExecuteAsync(input, ct);
                 if (result.IsFailure)
                 {
                     return OperationResult<TNext>.Failure(result.Messages);
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
                 try
                 {
-                    var transformed = await transform(result.Value!, ct);
+                    TNext? transformed = await transform(result.Value!, ct);
                     return OperationResult<TNext>.Success(transformed, result.Messages);
                 }
                 catch (Exception ex)
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             pipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsSuccess)
                 {
                     action(result.Value!);
@@ -192,7 +192,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             pipeline.Add(async (input, ct) =>
             {
-                var result = await pipeline.ExecuteAsync(input, ct);
+                IOperationResult<TOutput> result = await pipeline.ExecuteAsync(input, ct);
                 if (result.IsSuccess)
                 {
                     await action(result.Value!, ct);
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             pipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsFailure)
                 {
                     return result;
@@ -274,7 +274,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             pipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsFailure)
                 {
                     return result;
@@ -316,7 +316,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             newPipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 return result.IsFailure
                     ? OperationResult<TOutput>.Success(fallback, result.Messages)
                     : result;
@@ -351,12 +351,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             newPipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsFailure)
                 {
                     try
                     {
-                        var fallback = fallbackFactory(input);
+                        TOutput? fallback = fallbackFactory(input);
                         return OperationResult<TOutput>.Success(fallback, result.Messages);
                     }
                     catch (Exception ex)
@@ -395,7 +395,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
 
             pipeline.Add(input =>
             {
-                var result = pipeline.Execute(input);
+                IOperationResult<TOutput> result = pipeline.Execute(input);
                 if (result.IsFailure)
                 {
                     return result;

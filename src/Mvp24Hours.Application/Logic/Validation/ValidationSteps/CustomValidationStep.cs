@@ -161,7 +161,7 @@ namespace Mvp24Hours.Application.Logic.Validation
     /// <typeparam name="T">The type to validate.</typeparam>
     public class RuleBasedValidationStep<T> : IValidationStep<T> where T : class
     {
-        private readonly List<ValidationRule<T>> _rules = new();
+        private readonly List<ValidationRule<T>> _rules = [];
 
         /// <summary>
         /// Creates a new rule-based validation step.
@@ -214,7 +214,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         {
             var errors = new List<IMessageResult>();
 
-            foreach (var rule in _rules.Where(r => r.Predicate != null))
+            foreach (ValidationRule<T>? rule in _rules.Where(r => r.Predicate != null))
             {
                 if (!rule.Predicate!(instance))
                 {
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Application.Logic.Validation
         {
             var errors = new List<IMessageResult>();
 
-            foreach (var rule in _rules)
+            foreach (ValidationRule<T> rule in _rules)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

@@ -37,7 +37,7 @@ namespace Mvp24Hours.Extensions
             int pageSize,
             int totalCount)
         {
-            var items = source as IReadOnlyList<T> ?? source.ToList();
+            IReadOnlyList<T> items = source as IReadOnlyList<T> ?? source.ToList();
             return PagedResult<T>.Create(items, page, pageSize, totalCount);
         }
 
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Extensions
             int page,
             int pageSize)
         {
-            var allItems = source as IList<T> ?? source.ToList();
+            IList<T> allItems = source as IList<T> ?? source.ToList();
             var totalCount = allItems.Count;
 
             var offset = PaginationHelper.CalculateOffset(page, pageSize);
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Extensions
             string pageParam = "page",
             string pageSizeParam = "pageSize")
         {
-            var links = source.CreateLinkHeaders(baseUrl, pageParam, pageSizeParam);
+            IDictionary<string, string> links = source.CreateLinkHeaders(baseUrl, pageParam, pageSizeParam);
             return string.Join(", ", links.Select(l => $"<{l.Value}>; rel=\"{l.Key}\""));
         }
 

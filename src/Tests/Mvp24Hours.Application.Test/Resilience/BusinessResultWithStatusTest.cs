@@ -25,7 +25,7 @@ public class BusinessResultWithStatusTest
         var data = "Test data";
 
         // Act
-        var result = BusinessResultWithStatus.Success(data);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Success(data);
 
         // Assert
         result.Should().NotBeNull();
@@ -42,7 +42,7 @@ public class BusinessResultWithStatusTest
         var infoMessage = "Operation completed successfully";
 
         // Act - Using named parameter to ensure we call the correct overload
-        var result = BusinessResultWithStatus.Success(data, infoMessage: infoMessage);
+        IBusinessResultWithStatus<int> result = BusinessResultWithStatus.Success(data, infoMessage: infoMessage);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -58,7 +58,7 @@ public class BusinessResultWithStatusTest
         var token = "test-token-123";
 
         // Act
-        var result = BusinessResultWithStatus.Success(data, token);
+        IBusinessResultWithStatus<TestEntity> result = BusinessResultWithStatus.Success(data, token);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -74,7 +74,7 @@ public class BusinessResultWithStatusTest
         var warningMessage = "This is a warning";
 
         // Act
-        var result = BusinessResultWithStatus.SuccessWithWarning(data, warningMessage);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.SuccessWithWarning(data, warningMessage);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -94,7 +94,7 @@ public class BusinessResultWithStatusTest
         };
 
         // Act
-        var result = BusinessResultWithStatus.SuccessWithWarnings(data, warnings);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.SuccessWithWarnings(data, warnings);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -113,7 +113,7 @@ public class BusinessResultWithStatusTest
         var errorMessage = "Operation failed";
 
         // Act
-        var result = BusinessResultWithStatus.Failure<string>(
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Failure<string>(
             ResultStatusCode.InternalError,
             errorMessage);
 
@@ -129,10 +129,10 @@ public class BusinessResultWithStatusTest
         // Arrange
         var errorMessage = "Resource not found";
         var errorCode = "RESOURCE.NOT_FOUND";
-        var statusCode = ResultStatusCode.NotFound;
+        ResultStatusCode statusCode = ResultStatusCode.NotFound;
 
         // Act
-        var result = BusinessResultWithStatus.Failure<string>(
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Failure<string>(
             statusCode,
             errorMessage,
             errorCode);
@@ -156,7 +156,7 @@ public class BusinessResultWithStatusTest
         };
 
         // Act
-        var result = BusinessResultWithStatus.Failure<string>(
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Failure<string>(
             ResultStatusCode.ValidationFailed,
             errors);
 
@@ -172,7 +172,7 @@ public class BusinessResultWithStatusTest
         var message = "Entity not found";
 
         // Act
-        var result = BusinessResultWithStatus.NotFound<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.NotFound<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -188,7 +188,7 @@ public class BusinessResultWithStatusTest
         var id = 123;
 
         // Act
-        var result = BusinessResultWithStatus.NotFound<string>(entityName, id);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.NotFound<string>(entityName, id);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -203,7 +203,7 @@ public class BusinessResultWithStatusTest
         var message = "Validation failed";
 
         // Act
-        var result = BusinessResultWithStatus.ValidationFailed<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.ValidationFailed<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -222,7 +222,7 @@ public class BusinessResultWithStatusTest
         };
 
         // Act
-        var result = BusinessResultWithStatus.ValidationFailed<string>(validationErrors);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.ValidationFailed<string>(validationErrors);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -237,7 +237,7 @@ public class BusinessResultWithStatusTest
         var message = "Authentication required";
 
         // Act
-        var result = BusinessResultWithStatus.Unauthorized<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Unauthorized<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -251,7 +251,7 @@ public class BusinessResultWithStatusTest
         var message = "Access denied";
 
         // Act
-        var result = BusinessResultWithStatus.Forbidden<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Forbidden<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -265,7 +265,7 @@ public class BusinessResultWithStatusTest
         var message = "Resource conflict";
 
         // Act
-        var result = BusinessResultWithStatus.Conflict<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Conflict<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -279,7 +279,7 @@ public class BusinessResultWithStatusTest
         var message = "Internal server error";
 
         // Act
-        var result = BusinessResultWithStatus.InternalError<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.InternalError<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -293,7 +293,7 @@ public class BusinessResultWithStatusTest
         var message = "Domain rule violated";
 
         // Act
-        var result = BusinessResultWithStatus.DomainRuleViolation<string>(message);
+        IBusinessResultWithStatus<string> result = BusinessResultWithStatus.DomainRuleViolation<string>(message);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -311,7 +311,7 @@ public class BusinessResultWithStatusTest
         var entity = new TestEntity { Id = 1, Name = "Test" };
 
         // Act
-        var result = BusinessResultWithStatus.From(entity);
+        IBusinessResultWithStatus<TestEntity> result = BusinessResultWithStatus.From(entity);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -322,7 +322,7 @@ public class BusinessResultWithStatusTest
     public void From_WithNullData_ShouldReturnNotFound()
     {
         // Act
-        var result = BusinessResultWithStatus.From<TestEntity>(null);
+        IBusinessResultWithStatus<TestEntity> result = BusinessResultWithStatus.From<TestEntity>(null);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -336,7 +336,7 @@ public class BusinessResultWithStatusTest
         int? value = 42;
 
         // Act
-        var result = BusinessResultWithStatus.FromValue(value);
+        IBusinessResultWithStatus<int> result = BusinessResultWithStatus.FromValue(value);
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -350,7 +350,7 @@ public class BusinessResultWithStatusTest
         int? value = null;
 
         // Act
-        var result = BusinessResultWithStatus.FromValue(value);
+        IBusinessResultWithStatus<int> result = BusinessResultWithStatus.FromValue(value);
 
         // Assert
         result.HasErrors.Should().BeTrue();

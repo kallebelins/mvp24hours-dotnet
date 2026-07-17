@@ -70,17 +70,17 @@ public class SagaState<TData> where TData : class
     /// <summary>
     /// Gets or sets the names of steps that have been executed.
     /// </summary>
-    public List<string> ExecutedSteps { get; set; } = new();
+    public List<string> ExecutedSteps { get; set; } = [];
 
     /// <summary>
     /// Gets or sets error messages that occurred during execution.
     /// </summary>
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 
     /// <summary>
     /// Gets or sets error messages that occurred during compensation.
     /// </summary>
-    public List<string> CompensationErrors { get; set; } = new();
+    public List<string> CompensationErrors { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the correlation ID for tracing.
@@ -105,7 +105,7 @@ public class SagaState<TData> where TData : class
     /// <summary>
     /// Gets or sets custom metadata for the saga.
     /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new();
+    public Dictionary<string, string> Metadata { get; set; } = [];
 
     /// <summary>
     /// Gets whether the saga has expired.
@@ -186,17 +186,17 @@ public class SagaState
     /// <summary>
     /// Gets or sets the names of steps that have been executed.
     /// </summary>
-    public List<string> ExecutedSteps { get; set; } = new();
+    public List<string> ExecutedSteps { get; set; } = [];
 
     /// <summary>
     /// Gets or sets error messages that occurred during execution.
     /// </summary>
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 
     /// <summary>
     /// Gets or sets error messages that occurred during compensation.
     /// </summary>
-    public List<string> CompensationErrors { get; set; } = new();
+    public List<string> CompensationErrors { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the correlation ID for tracing.
@@ -221,6 +221,6 @@ public class SagaState
     /// <summary>
     /// Gets or sets custom metadata for the saga.
     /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new();
+    public Dictionary<string, string> Metadata { get; set; } = [];
 }
 

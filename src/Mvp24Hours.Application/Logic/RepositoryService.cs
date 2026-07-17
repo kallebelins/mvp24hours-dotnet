@@ -181,7 +181,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<int> Add(TEntity entity)
         {
             _logger.LogDebug("application-repositoryservice-add");
-            var errors = entity.TryValidate(Validator);
+            IList<IMessageResult> errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
                 this.UnitOfWork
@@ -201,17 +201,17 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(Validator);
+                IList<IMessageResult> errors = entity.TryValidate(Validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
                 }
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
-            foreach (var entity in entities)
+            IRepository<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
+            foreach (TEntity entity in entities)
             {
                 rep.Add(entity);
             }
@@ -222,7 +222,7 @@ namespace Mvp24Hours.Application.Logic
         public virtual IBusinessResult<int> Modify(TEntity entity)
         {
             _logger.LogDebug("application-repositoryservice-modify");
-            var errors = entity.TryValidate(Validator);
+            IList<IMessageResult> errors = entity.TryValidate(Validator);
             if (!errors.AnySafe())
             {
                 this.UnitOfWork
@@ -242,8 +242,8 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
-            foreach (var entity in entities)
+            IRepository<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
+            foreach (TEntity entity in entities)
             {
                 rep.Modify(entity);
             }
@@ -267,8 +267,8 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
-            foreach (var entity in entities)
+            IRepository<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
+            foreach (TEntity entity in entities)
             {
                 rep.Remove(entity);
             }
@@ -292,7 +292,7 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            var rep = this.UnitOfWork.GetRepository<TEntity>();
+            IRepository<TEntity> rep = this.UnitOfWork.GetRepository<TEntity>();
             foreach (var id in ids)
             {
                 rep.RemoveById(id);

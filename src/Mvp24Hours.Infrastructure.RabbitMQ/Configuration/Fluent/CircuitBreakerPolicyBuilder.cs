@@ -276,12 +276,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <summary>
         /// Gets the exception types to handle (count as failures).
         /// </summary>
-        public HashSet<Type> HandledExceptions { get; } = new();
+        public HashSet<Type> HandledExceptions { get; } = [];
 
         /// <summary>
         /// Gets the exception types to ignore (don't count as failures).
         /// </summary>
-        public HashSet<Type> IgnoredExceptions { get; } = new();
+        public HashSet<Type> IgnoredExceptions { get; } = [];
 
         /// <summary>
         /// Gets or sets the callback invoked when the circuit breaks.
@@ -305,12 +305,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
         /// <returns>True if the exception should count as a failure.</returns>
         public bool ShouldCount(Exception exception)
         {
-            var exceptionType = exception.GetType();
+            Type exceptionType = exception.GetType();
 
             // If we have ignored exceptions and this is one, don't count it
             if (IgnoredExceptions.Count > 0)
             {
-                foreach (var ignored in IgnoredExceptions)
+                foreach (Type ignored in IgnoredExceptions)
                 {
                     if (ignored.IsAssignableFrom(exceptionType))
                         return false;
@@ -320,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             // If we have handled exceptions specified, only count those
             if (HandledExceptions.Count > 0)
             {
-                foreach (var handled in HandledExceptions)
+                foreach (Type handled in HandledExceptions)
                 {
                     if (handled.IsAssignableFrom(exceptionType))
                         return true;

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.MySql.Test.Setup;
 using Mvp24Hours.Application.MySql.Test.Support.Entities;
 using Mvp24Hours.Application.MySql.Test.Support.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Xunit;
@@ -27,8 +28,8 @@ namespace Mvp24Hours.Application.MySql.Test
         public void CreateCustomer()
         {
             // arrange
-            var serviceProvider = Startup.Initialize(false);
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize(false);
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             var customer = new Customer
             {
@@ -45,8 +46,8 @@ namespace Mvp24Hours.Application.MySql.Test
         public void CreateManyCustomers()
         {
             // arrange
-            var serviceProvider = Startup.Initialize(false);
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize(false);
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             List<Customer> customers = [];
             for (int i = 2; i <= 10; i++)
@@ -67,10 +68,10 @@ namespace Mvp24Hours.Application.MySql.Test
         public void UpdateCustomer()
         {
             // arrange
-            var serviceProvider = Startup.Initialize();
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var customer = service.GetById(1).GetDataValue();
+            Customer? customer = service.GetById(1).GetDataValue();
             customer.Name = "Test Updated";
             service.Modify(customer);
             customer = service.GetById(1).GetDataValue();
@@ -83,16 +84,16 @@ namespace Mvp24Hours.Application.MySql.Test
         public void UpdateManyCustomers()
         {
             // arrange
-            var serviceProvider = Startup.Initialize();
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             var paging = new PagingCriteria(1, 0);
-            var customers = service.List(paging)
+            IList<Customer>? customers = service.List(paging)
                 .GetDataValue();
-            foreach (var item in customers)
+            foreach (Customer? item in customers)
                 item.Active = false;
             service.Modify(customers);
-            var result = service.GetByCount(x => !x.Active);
+            IBusinessResult<int> result = service.GetByCount(x => !x.Active);
             // assert
             Assert.True(result.GetDataValue() > 0);
             // dispose
@@ -102,12 +103,12 @@ namespace Mvp24Hours.Application.MySql.Test
         public void DeleteCustomer()
         {
             // arrange
-            var serviceProvider = Startup.Initialize();
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var customer = service.GetById(1).GetDataValue();
+            Customer? customer = service.GetById(1).GetDataValue();
             service.RemoveById(customer.Id);
-            var result = service.GetById(customer.Id);
+            IBusinessResult<Customer> result = service.GetById(customer.Id);
             // assert
             Assert.Null(result.GetDataValue());
             // dispose
@@ -117,12 +118,12 @@ namespace Mvp24Hours.Application.MySql.Test
         public void DeleteManyCustomers()
         {
             // arrange
-            var serviceProvider = Startup.Initialize();
-            var service = serviceProvider.GetService<CustomerService>();
+            IServiceProvider serviceProvider = Startup.Initialize();
+            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            var customers = service.List().Data;
+            IList<Customer>? customers = service.List().Data;
             service.Remove(customers);
-            var result = service.ListCount();
+            IBusinessResult<int> result = service.ListCount();
             // assert
             Assert.Equal(0, result.GetDataValue());
             // dispose

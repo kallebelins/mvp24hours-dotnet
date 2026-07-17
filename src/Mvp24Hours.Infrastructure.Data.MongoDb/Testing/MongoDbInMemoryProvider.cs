@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -123,7 +124,7 @@ public class MongoDbInMemoryProvider : IDisposable
     public InMemoryMongoCollection<TEntity> GetCollection<TEntity>(string collectionName)
         where TEntity : class
     {
-        var database = _databases.GetOrAdd(_currentDatabaseName,
+        ConcurrentDictionary<string, object> database = _databases.GetOrAdd(_currentDatabaseName,
             _ => new ConcurrentDictionary<string, object>());
 
         var collection = database.GetOrAdd(collectionName,
@@ -138,7 +139,7 @@ public class MongoDbInMemoryProvider : IDisposable
     /// <param name="collectionName">The collection name to drop.</param>
     public void DropCollection(string collectionName)
     {
-        if (_databases.TryGetValue(_currentDatabaseName, out var database))
+        if (_databases.TryGetValue(_currentDatabaseName, out ConcurrentDictionary<string, object>? database))
         {
             database.TryRemove(collectionName, out _);
         }
@@ -158,7 +159,7 @@ public class MongoDbInMemoryProvider : IDisposable
     /// <returns>A list of collection names.</returns>
     public IEnumerable<string> GetCollectionNames()
     {
-        if (_databases.TryGetValue(_currentDatabaseName, out var database))
+        if (_databases.TryGetValue(_currentDatabaseName, out ConcurrentDictionary<string, object>? database))
         {
             return database.Keys;
         }
@@ -299,7 +300,7 @@ public class InMemoryMongoCollection<TEntity>
     {
         ArgumentNullException.ThrowIfNull(documents);
 
-        foreach (var document in documents)
+        foreach (TEntity document in documents)
         {
             InsertOne(document);
         }
@@ -385,7 +386,7 @@ public class InMemoryMongoCollection<TEntity>
     /// <returns>The document if found; otherwise, null.</returns>
     public TEntity? FindById(object key)
     {
-        _documents.TryGetValue(key, out var document);
+        _documents.TryGetValue(key, out TEntity? document);
         return document;
     }
 
@@ -410,7 +411,7 @@ public class InMemoryMongoCollection<TEntity>
         ArgumentNullException.ThrowIfNull(predicate);
 
         var results = new List<TEntity>();
-        foreach (var document in _documents.Values)
+        foreach (TEntity document in _documents.Values)
         {
             if (predicate(document))
             {
@@ -462,7 +463,7 @@ public class InMemoryMongoCollection<TEntity>
             return _documents.Count > 0;
         }
 
-        foreach (var document in _documents.Values)
+        foreach (TEntity document in _documents.Values)
         {
             if (predicate(document))
             {
@@ -485,7 +486,7 @@ public class InMemoryMongoCollection<TEntity>
         }
 
         long count = 0;
-        foreach (var document in _documents.Values)
+        foreach (TEntity document in _documents.Values)
         {
             if (predicate(document))
             {
@@ -508,7 +509,7 @@ public class InMemoryMongoCollection<TEntity>
     /// </summary>
     private static Func<TEntity, object> GetDefaultKeySelector()
     {
-        var idProperty = typeof(TEntity).GetProperty("Id")
+        PropertyInfo? idProperty = typeof(TEntity).GetProperty("Id")
             ?? typeof(TEntity).GetProperty("_id")
             ?? typeof(TEntity).GetProperty("EntityKey");
 
@@ -527,7 +528,7 @@ public class InMemoryMongoCollection<TEntity>
     /// </summary>
     private static void EnsureIdSet(TEntity document)
     {
-        var idProperty = typeof(TEntity).GetProperty("Id")
+        PropertyInfo? idProperty = typeof(TEntity).GetProperty("Id")
             ?? typeof(TEntity).GetProperty("_id");
 
         if (idProperty == null) return;

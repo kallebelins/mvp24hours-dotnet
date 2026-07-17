@@ -95,7 +95,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging
             if (messages == null)
                 throw new ArgumentNullException(nameof(messages));
 
-            foreach (var message in messages)
+            foreach (RabbitMQOutboxMessage message in messages)
             {
                 await AddAsync(message, cancellationToken);
             }
@@ -106,11 +106,11 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var cqrsMessages = await _cqrsOutbox.GetPendingAsync(batchSize, cancellationToken);
+            IReadOnlyList<OutboxMessage> cqrsMessages = await _cqrsOutbox.GetPendingAsync(batchSize, cancellationToken);
 
             var result = new List<RabbitMQOutboxMessage>();
 
-            foreach (var cqrsMessage in cqrsMessages)
+            foreach (OutboxMessage cqrsMessage in cqrsMessages)
             {
                 // Only process RabbitMQ outbox messages
                 if (!cqrsMessage.EventType.Contains(nameof(RabbitMQOutboxIntegrationEvent)))
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging
 
                 try
                 {
-                    var integrationEvent = JsonSerializer.Deserialize<RabbitMQOutboxIntegrationEvent>(
+                    RabbitMQOutboxIntegrationEvent? integrationEvent = JsonSerializer.Deserialize<RabbitMQOutboxIntegrationEvent>(
                         cqrsMessage.Payload, _jsonOptions);
 
                     if (integrationEvent != null)
@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging
         /// <inheritdoc />
         public async Task<int> GetPendingCountAsync(CancellationToken cancellationToken = default)
         {
-            var pending = await _cqrsOutbox.GetPendingAsync(int.MaxValue, cancellationToken);
+            IReadOnlyList<OutboxMessage> pending = await _cqrsOutbox.GetPendingAsync(int.MaxValue, cancellationToken);
             return pending.Count(m => m.EventType.Contains(nameof(RabbitMQOutboxIntegrationEvent)));
         }
 
@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging
             int batchSize = 100,
             CancellationToken cancellationToken = default)
         {
-            var pending = await GetPendingAsync(batchSize * 10, cancellationToken);
+            IReadOnlyList<RabbitMQOutboxMessage> pending = await GetPendingAsync(batchSize * 10, cancellationToken);
             return pending
                 .Where(m => m.Status == RabbitMQOutboxStatus.DeadLetter)
                 .Take(batchSize)

@@ -136,7 +136,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing Add for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 _repository.Add(entity);
@@ -155,16 +155,16 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
                 }
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Add(entity);
             }
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger?.LogDebug("[{ServiceName}] Executing Modify for {EntityType}", GetType().Name, typeof(TEntity).Name);
 
-            var errors = entity.TryValidate(_validator);
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
             if (!errors.AnySafe())
             {
                 _repository.Modify(entity);
@@ -196,16 +196,16 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
-                var errors = entity.TryValidate(_validator);
+                IList<IMessageResult> errors = entity.TryValidate(_validator);
                 if (errors.AnySafe())
                 {
                     return errors.ToBusiness<int>();
                 }
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Modify(entity);
             }
@@ -231,7 +231,7 @@ namespace Mvp24Hours.Application.Logic
                 return 0.ToBusiness();
             }
 
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 _repository.Remove(entity);
             }

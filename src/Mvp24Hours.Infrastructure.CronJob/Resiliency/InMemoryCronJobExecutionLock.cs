@@ -47,7 +47,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
 
-            var lockState = _locks.GetOrAdd(jobName, _ => new LockState());
+            LockState lockState = _locks.GetOrAdd(jobName, _ => new LockState());
 
             bool acquired;
             if (timeout == TimeSpan.Zero)
@@ -66,7 +66,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
                 return null;
             }
 
-            var now = _timeProvider.GetUtcNow();
+            DateTimeOffset now = _timeProvider.GetUtcNow();
             lockState.AcquiredAt = now;
             lockState.IsLocked = true;
 
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <inheritdoc />
         public bool IsLocked(string jobName)
         {
-            if (_locks.TryGetValue(jobName, out var state))
+            if (_locks.TryGetValue(jobName, out LockState? state))
             {
                 return state.IsLocked;
             }
@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <inheritdoc />
         public DateTimeOffset? GetLockAcquiredTime(string jobName)
         {
-            if (_locks.TryGetValue(jobName, out var state) && state.IsLocked)
+            if (_locks.TryGetValue(jobName, out LockState? state) && state.IsLocked)
             {
                 return state.AcquiredAt;
             }
@@ -99,7 +99,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         /// <param name="jobName">The name of the job.</param>
         internal void ReleaseLock(string jobName)
         {
-            if (_locks.TryGetValue(jobName, out var state))
+            if (_locks.TryGetValue(jobName, out LockState? state))
             {
                 state.IsLocked = false;
                 state.AcquiredAt = null;

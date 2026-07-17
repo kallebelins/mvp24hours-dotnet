@@ -149,7 +149,7 @@ namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
                         break;
 
                     // Renew if lock is still valid and not close to expiration
-                    var timeUntilExpiry = _expiresAt - DateTimeOffset.UtcNow;
+                    TimeSpan timeUntilExpiry = _expiresAt - DateTimeOffset.UtcNow;
                     if (timeUntilExpiry <= _options.RenewalInterval)
                     {
                         var renewed = await RenewAsync(cancellationToken);

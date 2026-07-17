@@ -195,12 +195,12 @@ public class ApiKeyValidationResult
     /// <summary>
     /// Gets or sets the associated scopes.
     /// </summary>
-    public HashSet<string> Scopes { get; set; } = new();
+    public HashSet<string> Scopes { get; set; } = [];
 
     /// <summary>
     /// Gets or sets additional claims to add to the principal.
     /// </summary>
-    public Dictionary<string, string> Claims { get; set; } = new();
+    public Dictionary<string, string> Claims { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the failure reason (if not valid).

@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -117,7 +118,7 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
         var requestName = typeof(TRequest).Name;
         var requestType = GetRequestType();
-        var context = _contextAccessor?.Context;
+        IRequestContext? context = _contextAccessor?.Context;
 
         var entry = new AuditEntry
         {
@@ -150,7 +151,7 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
         try
         {
-            var response = await next();
+            TResponse? response = await next();
             stopwatch.Stop();
 
             entry.IsSuccess = true;
@@ -224,12 +225,12 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
     private string? GetClientIp()
     {
-        var httpContext = _httpContextAccessor?.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
             return null;
 
         // Try X-Forwarded-For first
-        if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
+        if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwardedFor))
         {
             var ips = forwardedFor.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
             if (ips.Length > 0)
@@ -241,11 +242,11 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
     private string? GetUserAgent()
     {
-        var httpContext = _httpContextAccessor?.HttpContext;
+        HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
             return null;
 
-        if (httpContext.Request.Headers.TryGetValue("User-Agent", out var userAgent))
+        if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues userAgent))
         {
             return userAgent.ToString();
         }
@@ -261,7 +262,7 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
     private static string GetRequestType()
     {
-        var requestType = typeof(TRequest);
+        Type requestType = typeof(TRequest);
 
         if (requestType.GetInterfaces().Any(i =>
             i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IMediatorCommand")))

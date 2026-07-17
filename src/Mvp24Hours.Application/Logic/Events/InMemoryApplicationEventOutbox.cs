@@ -85,9 +85,9 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
     /// <inheritdoc />
     public Task AddRangeAsync(IEnumerable<IApplicationEvent> events, CancellationToken cancellationToken = default)
     {
-        foreach (var @event in events)
+        foreach (IApplicationEvent @event in events)
         {
-            var eventType = @event.GetType();
+            Type eventType = @event.GetType();
             var entry = new ApplicationEventOutboxEntry
             {
                 Id = Guid.NewGuid(),
@@ -130,7 +130,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
     /// <inheritdoc />
     public Task MarkAsDispatchedAsync(Guid entryId, CancellationToken cancellationToken = default)
     {
-        if (_entries.TryGetValue(entryId, out var entry))
+        if (_entries.TryGetValue(entryId, out ApplicationEventOutboxEntry? entry))
         {
             entry.Status = ApplicationEventOutboxStatus.Dispatched;
             entry.DispatchedAt = DateTime.UtcNow;
@@ -146,7 +146,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
     /// <inheritdoc />
     public Task MarkAsFailedAsync(Guid entryId, string error, CancellationToken cancellationToken = default)
     {
-        if (_entries.TryGetValue(entryId, out var entry))
+        if (_entries.TryGetValue(entryId, out ApplicationEventOutboxEntry? entry))
         {
             entry.RetryCount++;
             entry.Error = error;
@@ -182,7 +182,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
             .Select(e => e.Id)
             .ToList();
 
-        foreach (var id in toRemove)
+        foreach (Guid id in toRemove)
         {
             _entries.TryRemove(id, out _);
         }

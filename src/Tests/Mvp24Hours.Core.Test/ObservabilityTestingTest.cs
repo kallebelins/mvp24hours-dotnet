@@ -85,7 +85,7 @@ public class ObservabilityTestingTest
         }
 
         // Assert
-        var log = logger.Logs[0];
+        LogEntry log = logger.Logs[0];
         log.Scopes.Should().HaveCount(2);
     }
 
@@ -101,9 +101,9 @@ public class ObservabilityTestingTest
         logger.LogError("Error 1");
 
         // Act
-        var debugLogs = logger.GetLogs(LogLevel.Debug);
-        var infoLogs = logger.GetLogs(LogLevel.Information);
-        var warningsAndAbove = logger.GetLogsAtOrAbove(LogLevel.Warning);
+        IReadOnlyList<LogEntry> debugLogs = logger.GetLogs(LogLevel.Debug);
+        IReadOnlyList<LogEntry> infoLogs = logger.GetLogs(LogLevel.Information);
+        IReadOnlyList<LogEntry> warningsAndAbove = logger.GetLogsAtOrAbove(LogLevel.Warning);
 
         // Assert
         debugLogs.Should().HaveCount(1);
@@ -157,8 +157,8 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var provider = new InMemoryLoggerProvider();
-        var logger1 = provider.CreateLogger("Category1");
-        var logger2 = provider.CreateLogger("Category2");
+        ILogger logger1 = provider.CreateLogger("Category1");
+        ILogger logger2 = provider.CreateLogger("Category2");
 
         // Act
         logger1.LogInformation("Message from Category1");
@@ -175,16 +175,16 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var provider = new InMemoryLoggerProvider();
-        var orderLogger = provider.CreateLogger("OrderService");
-        var paymentLogger = provider.CreateLogger("PaymentService");
+        ILogger orderLogger = provider.CreateLogger("OrderService");
+        ILogger paymentLogger = provider.CreateLogger("PaymentService");
 
         orderLogger.LogInformation("Order created");
         orderLogger.LogInformation("Order updated");
         paymentLogger.LogInformation("Payment processed");
 
         // Act
-        var orderLogs = provider.GetLogsForCategory("OrderService");
-        var paymentLogs = provider.GetLogsForCategory("PaymentService");
+        IReadOnlyList<CategorizedLogEntry> orderLogs = provider.GetLogsForCategory("OrderService");
+        IReadOnlyList<CategorizedLogEntry> paymentLogs = provider.GetLogsForCategory("PaymentService");
 
         // Assert
         orderLogs.Should().HaveCount(2);
@@ -196,7 +196,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var provider = new InMemoryLoggerProvider();
-        var logger = provider.CreateLogger("TestCategory");
+        ILogger logger = provider.CreateLogger("TestCategory");
 
         // Act
         logger.LogInformation("Info");
@@ -218,10 +218,10 @@ public class ObservabilityTestingTest
         // Arrange
         var services = new ServiceCollection();
         services.AddInMemoryLoggerProvider();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var loggerProvider = provider.GetRequiredService<InMemoryLoggerProvider>();
-        var logger = provider.GetRequiredService<ILogger<ObservabilityTestingTest>>();
+        InMemoryLoggerProvider loggerProvider = provider.GetRequiredService<InMemoryLoggerProvider>();
+        ILogger<ObservabilityTestingTest> logger = provider.GetRequiredService<ILogger<ObservabilityTestingTest>>();
 
         // Act
         logger.LogInformation("Test from DI");
@@ -253,7 +253,7 @@ public class ObservabilityTestingTest
         logger.LogInformation("Some message");
 
         // Act & Assert
-        var action = () => LogAssertions.AssertLogged(logger, LogLevel.Error, "Missing message");
+        Action action = () => LogAssertions.AssertLogged(logger, LogLevel.Error, "Missing message");
         action.Should().Throw<AssertionException>()
             .WithMessage("*Error log*Missing message*");
     }
@@ -278,7 +278,7 @@ public class ObservabilityTestingTest
         logger.LogError("An error occurred");
 
         // Act & Assert
-        var action = () => LogAssertions.AssertNoErrorsLogged(logger);
+        Action action = () => LogAssertions.AssertNoErrorsLogged(logger);
         action.Should().Throw<AssertionException>()
             .WithMessage("*Expected no errors*");
     }
@@ -318,7 +318,7 @@ public class ObservabilityTestingTest
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
         // Act
-        using (var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("TestOperation"))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("TestOperation"))
         {
             activity?.SetTag("test.tag", "test-value");
         }
@@ -335,7 +335,7 @@ public class ObservabilityTestingTest
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
         // Act
-        using (var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("DetailedOperation", ActivityKind.Internal))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("DetailedOperation", ActivityKind.Internal))
         {
             activity?.SetTag("custom.tag", "custom-value");
             activity?.AddEvent(new ActivityEvent("test-event"));
@@ -343,7 +343,7 @@ public class ObservabilityTestingTest
         }
 
         // Assert
-        var recorded = listener.GetActivities("DetailedOperation").First();
+        RecordedActivity recorded = listener.GetActivities("DetailedOperation").First();
         recorded.Kind.Should().Be(ActivityKind.Internal);
         recorded.HasTag("custom.tag").Should().BeTrue();
         recorded.GetTag("custom.tag").Should().Be("custom-value");
@@ -374,19 +374,19 @@ public class ObservabilityTestingTest
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
         // Act
-        using (var successActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Success"))
+        using (Activity? successActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Success"))
         {
             successActivity?.SetStatus(ActivityStatusCode.Ok);
         }
 
-        using (var errorActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Error"))
+        using (Activity? errorActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Error"))
         {
             errorActivity?.SetStatus(ActivityStatusCode.Error, "Something failed");
         }
 
         // Assert
         listener.HasErrors().Should().BeTrue();
-        var errors = listener.GetErrorActivities();
+        IReadOnlyList<RecordedActivity> errors = listener.GetErrorActivities();
         errors.Should().HaveCount(1);
         errors[0].OperationName.Should().Be("Error");
     }
@@ -414,7 +414,7 @@ public class ObservabilityTestingTest
         using (Mvp24HoursActivitySources.Core.Source.StartActivity("SomeActivity")) { }
 
         // Act & Assert
-        var action = () => ActivityAssertions.AssertActivityRecorded(listener, "MissingActivity");
+        Action action = () => ActivityAssertions.AssertActivityRecorded(listener, "MissingActivity");
         action.Should().Throw<AssertionException>()
             .WithMessage("*MissingActivity*");
     }
@@ -424,7 +424,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         using var listener = new FakeActivityListener("Mvp24Hours.*");
-        using (var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Success"))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Success"))
         {
             activity?.SetStatus(ActivityStatusCode.Ok);
         }
@@ -438,7 +438,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         using var listener = new FakeActivityListener("Mvp24Hours.*");
-        using (var activity = Mvp24HoursActivitySources.Core.Source.StartActivity("TaggedActivity"))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("TaggedActivity"))
         {
             activity?.SetTag("user.id", "user-123");
         }
@@ -456,7 +456,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("TestMeter", "1.0.0");
-        var counter = meter.CreateCounter<int>("test_counter", "items", "Test counter");
+        Counter<int> counter = meter.CreateCounter<int>("test_counter", "items", "Test counter");
 
         using var listener = new FakeMeterListener("TestMeter");
 
@@ -475,7 +475,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("HistogramMeter", "1.0.0");
-        var histogram = meter.CreateHistogram<double>("request_duration", "ms", "Request duration");
+        Histogram<double> histogram = meter.CreateHistogram<double>("request_duration", "ms", "Request duration");
 
         using var listener = new FakeMeterListener("HistogramMeter");
 
@@ -494,7 +494,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("TagMeter", "1.0.0");
-        var counter = meter.CreateCounter<int>("tagged_counter");
+        Counter<int> counter = meter.CreateCounter<int>("tagged_counter");
 
         using var listener = new FakeMeterListener("TagMeter");
 
@@ -504,7 +504,7 @@ public class ObservabilityTestingTest
             new KeyValuePair<string, object?>("success", true));
 
         // Assert
-        var measurement = listener.GetMeasurements("tagged_counter").First();
+        RecordedMeasurement measurement = listener.GetMeasurements("tagged_counter").First();
         measurement.HasTag("operation").Should().BeTrue();
         measurement.GetTag("operation").Should().Be("read");
         measurement.GetTag("success").Should().Be(true);
@@ -516,8 +516,8 @@ public class ObservabilityTestingTest
         // Arrange
         var meter1 = new Meter("MyApp.Orders", "1.0.0");
         var meter2 = new Meter("MyApp.Payments", "1.0.0");
-        var counter1 = meter1.CreateCounter<int>("orders_total");
-        var counter2 = meter2.CreateCounter<int>("payments_total");
+        Counter<int> counter1 = meter1.CreateCounter<int>("orders_total");
+        Counter<int> counter2 = meter2.CreateCounter<int>("payments_total");
 
         using var listener = new FakeMeterListener("MyApp.Orders");
 
@@ -540,7 +540,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("AssertMeter1", "1.0.0");
-        var counter = meter.CreateCounter<int>("expected_metric");
+        Counter<int> counter = meter.CreateCounter<int>("expected_metric");
         using var listener = new FakeMeterListener("AssertMeter1");
 
         counter.Add(1);
@@ -554,7 +554,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("AssertMeter2", "1.0.0");
-        var counter = meter.CreateCounter<int>("operations_total");
+        Counter<int> counter = meter.CreateCounter<int>("operations_total");
         using var listener = new FakeMeterListener("AssertMeter2");
 
         counter.Add(5);
@@ -570,7 +570,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var meter = new Meter("AssertMeter3", "1.0.0");
-        var counter = meter.CreateCounter<int>("tagged_metric");
+        Counter<int> counter = meter.CreateCounter<int>("tagged_metric");
         using var listener = new FakeMeterListener("AssertMeter3");
 
         counter.Add(1, new KeyValuePair<string, object?>("environment", "production"));
@@ -650,12 +650,12 @@ public class ObservabilityTestingTest
 
         // Act
         services.AddObservabilityTesting("Mvp24Hours.*");
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // Assert
-        provider.GetService<InMemoryLoggerProvider>().Should().NotBeNull();
-        provider.GetService<FakeActivityListener>().Should().NotBeNull();
-        provider.GetService<FakeMeterListener>().Should().NotBeNull();
+        provider.GetRequiredService<InMemoryLoggerProvider>().Should().NotBeNull();
+        provider.GetRequiredService<FakeActivityListener>().Should().NotBeNull();
+        provider.GetRequiredService<FakeMeterListener>().Should().NotBeNull();
     }
 
     [Fact]
@@ -666,8 +666,8 @@ public class ObservabilityTestingTest
 
         // Act
         services.AddFakeActivityListener("Mvp24Hours.Pipe");
-        var provider = services.BuildServiceProvider();
-        var listener = provider.GetRequiredService<FakeActivityListener>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        FakeActivityListener listener = provider.GetRequiredService<FakeActivityListener>();
 
         // Act - Create activities
         using (Mvp24HoursActivitySources.Pipe.Source.StartActivity("PipeActivity")) { }

@@ -172,7 +172,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
 
     private void CheckSlowQuery(DbCommand command, TimeSpan duration, string operation, bool isWrite = false)
     {
-        var threshold = isWrite ? _writeSlowQueryThreshold : _slowQueryThreshold;
+        TimeSpan threshold = isWrite ? _writeSlowQueryThreshold : _slowQueryThreshold;
 
         if (duration < threshold)
             return;
@@ -188,7 +188,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         // Create OpenTelemetry activity
         if (_createActivities)
         {
-            using var activity = EFCoreActivitySource.StartSlowQueryActivity(commandText, durationMs, thresholdMs);
+            using Activity? activity = EFCoreActivitySource.StartSlowQueryActivity(commandText, durationMs, thresholdMs);
             if (activity != null)
             {
                 activity.SetTag(EFCoreActivitySource.TagNames.DbOperation, operation);

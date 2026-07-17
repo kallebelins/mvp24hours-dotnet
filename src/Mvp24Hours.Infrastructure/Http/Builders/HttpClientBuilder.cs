@@ -86,7 +86,7 @@ namespace Mvp24Hours.Infrastructure.Http.Builders
         /// </summary>
         public HttpClientBuilder WithDefaultHeaders(Dictionary<string, string> headers)
         {
-            foreach (var header in headers)
+            foreach (KeyValuePair<string, string> header in headers)
             {
                 _options.DefaultHeaders[header.Key] = header.Value;
             }

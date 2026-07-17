@@ -75,7 +75,7 @@ public static class OpenTelemetryLoggingExtensions
             var entryAssembly = Assembly.GetEntryAssembly();
             if (entryAssembly != null)
             {
-                var version = entryAssembly.GetName().Version;
+                Version? version = entryAssembly.GetName().Version;
                 if (version != null)
                 {
                     attributes[LogResourceAttributes.ServiceVersion] = version.ToString();

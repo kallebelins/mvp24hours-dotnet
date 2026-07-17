@@ -122,7 +122,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                     opt.ExcludedPaths.Add(path);
                 }
 
-                foreach (var policy in mvpOptions.Policies)
+                foreach (KeyValuePair<string, OutputCachePolicyOptions> policy in mvpOptions.Policies)
                 {
                     opt.Policies[policy.Key] = policy.Value;
                 }
@@ -161,7 +161,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                 });
 
                 // Add named policies
-                foreach (var policy in mvpOptions.Policies)
+                foreach (KeyValuePair<string, OutputCachePolicyOptions> policy in mvpOptions.Policies)
                 {
                     options.AddPolicy(policy.Key, builder =>
                     {
@@ -382,7 +382,7 @@ namespace Mvp24Hours.WebAPI.Extensions
         {
             ArgumentNullException.ThrowIfNull(builder);
 
-            var options = builder.ApplicationServices.GetService<IOptions<OutputCachingOptions>>()?.Value;
+            OutputCachingOptions? options = builder.ApplicationServices.GetService<IOptions<OutputCachingOptions>>()?.Value;
 
             if (options == null || !options.Enabled)
             {

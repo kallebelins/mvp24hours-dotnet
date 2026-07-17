@@ -26,7 +26,7 @@ namespace Mvp24Hours.Application.Logic.Validation
     public class CascadeValidationStep<T> : IValidationStep<T> where T : class
     {
         private readonly IServiceProvider? _serviceProvider;
-        private readonly HashSet<object> _validatedObjects = new();
+        private readonly HashSet<object> _validatedObjects = [];
 
         /// <summary>
         /// Creates a new cascade validation step.
@@ -55,7 +55,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             _validatedObjects.Clear();
-            var errors = ValidateNestedProperties(instance, context);
+            IList<IMessageResult> errors = ValidateNestedProperties(instance, context);
 
             return errors.Any()
                 ? ValidationServiceResult.Failure(errors)
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             _validatedObjects.Clear();
-            var errors = await ValidateNestedPropertiesAsync(instance, context, cancellationToken);
+            IList<IMessageResult> errors = await ValidateNestedPropertiesAsync(instance, context, cancellationToken);
 
             return errors.Any()
                 ? ValidationServiceResult.Failure(errors)
@@ -101,11 +101,11 @@ namespace Mvp24Hours.Application.Logic.Validation
                 return errors;
             }
 
-            var type = instance.GetType();
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            Type type = instance.GetType();
+            IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead && !IsSimpleType(p.PropertyType));
 
-            foreach (var property in properties)
+            foreach (PropertyInfo? property in properties)
             {
                 object? value;
                 try
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                 }
 
                 // Check if property should be validated
-                var validateAttr = property.GetCustomAttribute<ValidateNestedAttribute>();
+                ValidateNestedAttribute? validateAttr = property.GetCustomAttribute<ValidateNestedAttribute>();
                 var hasNestedValidation = typeof(IHasNestedValidation).IsAssignableFrom(property.PropertyType);
 
                 if (validateAttr == null && !hasNestedValidation)
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         continue;
                     }
 
-                    var validatorType = typeof(IValidator<>).MakeGenericType(property.PropertyType);
+                    Type validatorType = typeof(IValidator<>).MakeGenericType(property.PropertyType);
                     if (_serviceProvider.GetService(validatorType) == null)
                     {
                         continue;
@@ -168,7 +168,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                                 PropertyPath = itemPath
                             };
 
-                            var itemErrors = ValidateObject(item, childContext);
+                            IList<IMessageResult> itemErrors = ValidateObject(item, childContext);
                             errors.AddRange(itemErrors);
 
                             if (context.Options.StopOnFirstError && errors.Any())
@@ -187,7 +187,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         PropertyPath = newPath
                     };
 
-                    var nestedErrors = ValidateObject(value, childContext);
+                    IList<IMessageResult> nestedErrors = ValidateObject(value, childContext);
                     errors.AddRange(nestedErrors);
 
                     if (context.Options.StopOnFirstError && errors.Any())
@@ -219,11 +219,11 @@ namespace Mvp24Hours.Application.Logic.Validation
                 return errors;
             }
 
-            var type = instance.GetType();
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            Type type = instance.GetType();
+            IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead && !IsSimpleType(p.PropertyType));
 
-            foreach (var property in properties)
+            foreach (PropertyInfo? property in properties)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                 }
 
                 // Check if property should be validated
-                var validateAttr = property.GetCustomAttribute<ValidateNestedAttribute>();
+                ValidateNestedAttribute? validateAttr = property.GetCustomAttribute<ValidateNestedAttribute>();
                 var hasNestedValidation = typeof(IHasNestedValidation).IsAssignableFrom(property.PropertyType);
 
                 if (validateAttr == null && !hasNestedValidation)
@@ -254,7 +254,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         continue;
                     }
 
-                    var validatorType = typeof(IValidator<>).MakeGenericType(property.PropertyType);
+                    Type validatorType = typeof(IValidator<>).MakeGenericType(property.PropertyType);
                     if (_serviceProvider.GetService(validatorType) == null)
                     {
                         continue;
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                                 PropertyPath = itemPath
                             };
 
-                            var itemErrors = await ValidateObjectAsync(item, childContext, cancellationToken);
+                            IList<IMessageResult> itemErrors = await ValidateObjectAsync(item, childContext, cancellationToken);
                             errors.AddRange(itemErrors);
 
                             if (context.Options.StopOnFirstError && errors.Any())
@@ -307,7 +307,7 @@ namespace Mvp24Hours.Application.Logic.Validation
                         PropertyPath = newPath
                     };
 
-                    var nestedErrors = await ValidateObjectAsync(value, childContext, cancellationToken);
+                    IList<IMessageResult> nestedErrors = await ValidateObjectAsync(value, childContext, cancellationToken);
                     errors.AddRange(nestedErrors);
 
                     if (context.Options.StopOnFirstError && errors.Any())
@@ -330,7 +330,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
             if (!Validator.TryValidateObject(instance, validationContext, validationResults, true))
             {
-                foreach (var result in validationResults)
+                foreach (ValidationResult result in validationResults)
                 {
                     var propertyName = result.MemberNames.Any()
                         ? string.Join(", ", result.MemberNames)
@@ -355,16 +355,16 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Validate with FluentValidation if available
             if (_serviceProvider != null)
             {
-                var validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
+                Type validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
                 var validator = _serviceProvider.GetService(validatorType);
 
                 if (validator != null)
                 {
-                    var instanceType = instance.GetType();
-                    var contextType = typeof(ValidationContext<>).MakeGenericType(instanceType);
+                    Type instanceType = instance.GetType();
+                    Type contextType = typeof(ValidationContext<>).MakeGenericType(instanceType);
                     var fluentContext = Activator.CreateInstance(contextType, instance);
 
-                    var validateMethod = validator.GetType()
+                    MethodInfo? validateMethod = validator.GetType()
                         .GetMethod("Validate", new[] { contextType });
 
                     if (validateMethod != null && fluentContext != null)
@@ -374,7 +374,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
                         if (result != null && !result.IsValid)
                         {
-                            foreach (var failure in result.Errors)
+                            foreach (FluentValidation.Results.ValidationFailure? failure in result.Errors)
                             {
                                 var fullPath = context.Options.IncludePropertyPath
                                     ? $"{context.PropertyPath}.{failure.PropertyName}"
@@ -396,7 +396,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             // Recursively validate nested properties
-            var nestedErrors = ValidateNestedProperties(instance, context);
+            IList<IMessageResult> nestedErrors = ValidateNestedProperties(instance, context);
             errors.AddRange(nestedErrors);
 
             return errors;
@@ -415,7 +415,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
             if (!Validator.TryValidateObject(instance, validationContext, validationResults, true))
             {
-                foreach (var result in validationResults)
+                foreach (ValidationResult result in validationResults)
                 {
                     var propertyName = result.MemberNames.Any()
                         ? string.Join(", ", result.MemberNames)
@@ -440,16 +440,16 @@ namespace Mvp24Hours.Application.Logic.Validation
             // Validate with FluentValidation if available
             if (_serviceProvider != null)
             {
-                var validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
+                Type validatorType = typeof(IValidator<>).MakeGenericType(instance.GetType());
                 var validator = _serviceProvider.GetService(validatorType);
 
                 if (validator != null)
                 {
-                    var instanceType = instance.GetType();
-                    var contextType = typeof(ValidationContext<>).MakeGenericType(instanceType);
+                    Type instanceType = instance.GetType();
+                    Type contextType = typeof(ValidationContext<>).MakeGenericType(instanceType);
                     var fluentContext = Activator.CreateInstance(contextType, instance);
 
-                    var validateMethod = validator.GetType()
+                    MethodInfo? validateMethod = validator.GetType()
                         .GetMethod("ValidateAsync", new[] { contextType, typeof(CancellationToken) });
 
                     if (validateMethod != null && fluentContext != null)
@@ -458,12 +458,12 @@ namespace Mvp24Hours.Application.Logic.Validation
                         if (task != null)
                         {
                             await task;
-                            var resultProperty = task.GetType().GetProperty("Result");
+                            PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
                             var result = resultProperty?.GetValue(task) as FluentValidation.Results.ValidationResult;
 
                             if (result != null && !result.IsValid)
                             {
-                                foreach (var failure in result.Errors)
+                                foreach (FluentValidation.Results.ValidationFailure? failure in result.Errors)
                                 {
                                     var fullPath = context.Options.IncludePropertyPath
                                         ? $"{context.PropertyPath}.{failure.PropertyName}"
@@ -486,7 +486,7 @@ namespace Mvp24Hours.Application.Logic.Validation
             }
 
             // Recursively validate nested properties
-            var nestedErrors = await ValidateNestedPropertiesAsync(instance, context, cancellationToken);
+            IList<IMessageResult> nestedErrors = await ValidateNestedPropertiesAsync(instance, context, cancellationToken);
             errors.AddRange(nestedErrors);
 
             return errors;
@@ -494,7 +494,7 @@ namespace Mvp24Hours.Application.Logic.Validation
 
         private static bool IsSimpleType(Type type)
         {
-            var underlyingType = Nullable.GetUnderlyingType(type);
+            Type? underlyingType = Nullable.GetUnderlyingType(type);
             type = underlyingType ?? type;
 
             return type.IsPrimitive ||

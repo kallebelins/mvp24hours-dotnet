@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -110,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetByAny operation started.");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -126,7 +127,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetByCount operation started.");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -148,7 +149,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetBy operation started.");
             try
             {
-                var query = dbEntities.AsQueryable();
+                IQueryable<T> query = dbEntities.AsQueryable();
                 if (clause != null)
                 {
                     query = query.Where(clause);
@@ -230,7 +231,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository AnyBySpecification operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.Any();
             }
             finally { _logger?.LogDebug("MongoDB read-only repository AnyBySpecification operation completed."); }
@@ -242,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository CountBySpecification operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.Count();
             }
             finally { _logger?.LogDebug("MongoDB read-only repository CountBySpecification operation completed."); }
@@ -254,7 +255,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetBySpecification operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.ToList();
             }
             finally { _logger?.LogDebug("MongoDB read-only repository GetBySpecification operation completed."); }
@@ -266,7 +267,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetSingleBySpecification operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.SingleOrDefault();
             }
             finally { _logger?.LogDebug("MongoDB read-only repository GetSingleBySpecification operation completed."); }
@@ -278,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             _logger?.LogDebug("MongoDB read-only repository GetFirstBySpecification operation started.");
             try
             {
-                var query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
+                IQueryable<T> query = MongoDbSpecificationEvaluator<T>.Default.GetQuery(dbEntities.AsQueryable(), specification);
                 return query.FirstOrDefault();
             }
             finally { _logger?.LogDebug("MongoDB read-only repository GetFirstBySpecification operation completed."); }
@@ -449,11 +450,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             TKey lastKey,
             bool ascending) where TKey : struct
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(TKey));
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(keyProperty, lastKeyConstant)
                 : Expression.LessThan(keyProperty, lastKeyConstant);
 
@@ -470,16 +471,16 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             string lastKey,
             bool ascending)
         {
-            var parameter = keySelector.Parameters[0];
-            var keyProperty = keySelector.Body;
-            var lastKeyConstant = Expression.Constant(lastKey, typeof(string));
+            ParameterExpression parameter = keySelector.Parameters[0];
+            Expression keyProperty = keySelector.Body;
+            ConstantExpression lastKeyConstant = Expression.Constant(lastKey, typeof(string));
 
             // Use string.CompareTo for string comparison
-            var compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
-            var compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
-            var zero = Expression.Constant(0);
+            MethodInfo compareToMethod = typeof(string).GetMethod("CompareTo", [typeof(string)])!;
+            MethodCallExpression compareCall = Expression.Call(keyProperty, compareToMethod, lastKeyConstant);
+            ConstantExpression zero = Expression.Constant(0);
 
-            var comparison = ascending
+            BinaryExpression comparison = ascending
                 ? Expression.GreaterThan(compareCall, zero)
                 : Expression.LessThan(compareCall, zero);
 

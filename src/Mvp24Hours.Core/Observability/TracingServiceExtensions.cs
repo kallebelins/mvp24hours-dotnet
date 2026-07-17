@@ -55,12 +55,12 @@ public static class TracingServiceExtensions
         services.AddSingleton(options);
 
         // Register enrichers
-        foreach (var enricherType in options.EnricherTypes)
+        foreach (Type enricherType in options.EnricherTypes)
         {
             services.AddSingleton(typeof(IActivityEnricher), enricherType);
         }
 
-        foreach (var enricherInstance in options.EnricherInstances)
+        foreach (IActivityEnricher enricherInstance in options.EnricherInstances)
         {
             services.AddSingleton(enricherInstance);
         }
@@ -68,7 +68,7 @@ public static class TracingServiceExtensions
         // Register composite enricher
         services.AddSingleton<IActivityEnricher>(sp =>
         {
-            var enrichers = sp.GetServices<IActivityEnricher>();
+            IEnumerable<IActivityEnricher> enrichers = sp.GetServices<IActivityEnricher>();
             return new CompositeActivityEnricher(enrichers);
         });
 
@@ -124,8 +124,8 @@ public static class TracingServiceExtensions
 /// </summary>
 public class TracingOptions
 {
-    internal List<Type> EnricherTypes { get; } = new();
-    internal List<IActivityEnricher> EnricherInstances { get; } = new();
+    internal List<Type> EnricherTypes { get; } = [];
+    internal List<IActivityEnricher> EnricherInstances { get; } = [];
 
     /// <summary>
     /// Gets or sets whether to enable automatic correlation ID propagation.
@@ -227,7 +227,7 @@ public class TraceContextAccessor : ITraceContextAccessor
     {
         get
         {
-            var activity = Activity.Current;
+            Activity? activity = Activity.Current;
             if (activity == null) return null;
 
             return activity.GetBaggageItem("correlation.id")

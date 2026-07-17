@@ -192,12 +192,12 @@ public sealed class InboxCleanupService : BackgroundService
             {
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var inboxStore = scope.ServiceProvider.GetService<IInboxStore>();
+                    using IServiceScope scope = _serviceProvider.CreateScope();
+                    IInboxStore? inboxStore = scope.ServiceProvider.GetService<IInboxStore>();
 
                     if (inboxStore != null)
                     {
-                        var cutoffDate = DateTime.UtcNow.AddDays(-_options.InboxRetentionDays);
+                        DateTime cutoffDate = DateTime.UtcNow.AddDays(-_options.InboxRetentionDays);
                         var deletedCount = await inboxStore.CleanupAsync(cutoffDate, stoppingToken);
 
                         if (deletedCount > 0)

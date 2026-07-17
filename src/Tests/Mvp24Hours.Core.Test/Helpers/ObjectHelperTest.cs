@@ -15,7 +15,7 @@ public class ObjectHelperTest
         var original = new Person { Id = 1, Name = "John", Age = 30 };
 
         // Act
-        var clone = ObjectHelper.Clone(original);
+        Person? clone = ObjectHelper.Clone(original);
 
         // Assert
         clone.Should().NotBeNull();
@@ -32,7 +32,7 @@ public class ObjectHelperTest
         var original = new Person { Id = 1, Name = "John", Age = 30 };
 
         // Act
-        var clone = ObjectHelper.Clone(original);
+        Person? clone = ObjectHelper.Clone(original);
         clone.Name = "Modified";
         clone.Age = 99;
 
@@ -53,7 +53,7 @@ public class ObjectHelperTest
         };
 
         // Act
-        var clone = ObjectHelper.Clone(original);
+        Company? clone = ObjectHelper.Clone(original);
 
         // Assert
         clone.Should().NotBeNull();
@@ -69,15 +69,15 @@ public class ObjectHelperTest
         {
             Id = 1,
             Name = "Tech",
-            Employees = new List<Person>
-            {
+            Employees =
+            [
                 new Person { Id = 1, Name = "John", Age = 30 },
                 new Person { Id = 2, Name = "Jane", Age = 25 }
-            }
+            ]
         };
 
         // Act
-        var clone = ObjectHelper.Clone(original);
+        Company? clone = ObjectHelper.Clone(original);
 
         // Assert
         clone.Employees.Should().HaveCount(2);
@@ -92,7 +92,7 @@ public class ObjectHelperTest
         Person? original = null;
 
         // Act
-        var clone = ObjectHelper.Clone(original);
+        Person? clone = ObjectHelper.Clone(original);
 
         // Assert
         clone.Should().BeNull();
@@ -176,7 +176,7 @@ public class ObjectHelperTest
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var clone = ObjectHelper.Clone(original);
+        Company? clone = ObjectHelper.Clone(original);
         stopwatch.Stop();
 
         // Assert
@@ -203,7 +203,7 @@ public class ObjectHelperTest
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Address Address { get; set; } = new();
-        public List<Person> Employees { get; set; } = new();
+        public List<Person> Employees { get; set; } = [];
     }
 
     [Serializable]

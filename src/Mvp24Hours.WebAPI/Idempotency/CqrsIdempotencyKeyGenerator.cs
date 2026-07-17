@@ -133,7 +133,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
                 // Enable buffering
                 context.Request.EnableBuffering();
 
-                var body = context.Request.Body;
+                Stream body = context.Request.Body;
                 body.Position = 0;
 
                 using var reader = new StreamReader(body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
@@ -147,10 +147,10 @@ namespace Mvp24Hours.WebAPI.Idempotency
 
                 // Try to parse as JSON and look for idempotencyKey property
                 using var document = JsonDocument.Parse(bodyText);
-                var root = document.RootElement;
+                JsonElement root = document.RootElement;
 
                 // Check for idempotencyKey property (case-insensitive)
-                if (root.TryGetProperty("idempotencyKey", out var keyElement) ||
+                if (root.TryGetProperty("idempotencyKey", out JsonElement keyElement) ||
                     root.TryGetProperty("IdempotencyKey", out keyElement) ||
                     root.TryGetProperty("IDEMPOTENCYKEY", out keyElement))
                 {
@@ -204,7 +204,7 @@ namespace Mvp24Hours.WebAPI.Idempotency
             {
                 context.Request.EnableBuffering();
 
-                var body = context.Request.Body;
+                Stream body = context.Request.Body;
                 body.Position = 0;
 
                 using var reader = new StreamReader(

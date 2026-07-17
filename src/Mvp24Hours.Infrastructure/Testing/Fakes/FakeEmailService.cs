@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
     /// </example>
     public class FakeEmailService : IFakeEmailService
     {
-        private readonly List<EmailMessage> _sentEmails = new();
+        private readonly List<EmailMessage> _sentEmails = [];
         private readonly object _lock = new();
 
         /// <inheritdoc />
@@ -124,10 +124,10 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
             }
 
             var results = new List<EmailSendResult>();
-            foreach (var message in messages)
+            foreach (EmailMessage message in messages)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var result = await SendAsync(message, cancellationToken);
+                EmailSendResult result = await SendAsync(message, cancellationToken);
                 results.Add(result);
             }
 

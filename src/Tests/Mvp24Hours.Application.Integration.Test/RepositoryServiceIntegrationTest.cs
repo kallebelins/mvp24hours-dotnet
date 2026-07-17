@@ -6,6 +6,7 @@
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Application.Integration.Test.Fixtures;
 using Mvp24Hours.Application.Integration.Test.Services;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
@@ -35,8 +36,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task AddAsync_SingleEntity_ShouldPersistInDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category
         {
@@ -46,7 +47,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         };
 
         // Act
-        var result = await categoryService.AddAsync(category);
+        IBusinessResult<int> result = await categoryService.AddAsync(category);
 
         // Assert
         result.Should().NotBeNull();
@@ -58,8 +59,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task AddAsync_MultipleEntities_ShouldPersistAllInDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>
         {
@@ -69,7 +70,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         };
 
         // Act
-        var result = await categoryService.AddAsync(categories);
+        IBusinessResult<int> result = await categoryService.AddAsync(categories);
 
         // Assert
         result.Should().NotBeNull();
@@ -81,9 +82,9 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task AddAsync_EntityWithRelationship_ShouldPersistWithChildren()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
-        var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        ProductService productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
         // First add category
         var category = new Category
@@ -106,7 +107,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         };
 
         // Act
-        var result = await productService.AddAsync(product);
+        IBusinessResult<int> result = await productService.AddAsync(product);
 
         // Assert
         result.Should().NotBeNull();
@@ -123,8 +124,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task GetByIdAsync_ExistingEntity_ShouldReturnEntity()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category
         {
@@ -135,7 +136,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(category);
 
         // Act
-        var result = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category> result = await categoryService.GetByIdAsync(category.Id);
 
         // Assert
         result.Should().NotBeNull();
@@ -149,11 +150,11 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task GetByIdAsync_NonExistingEntity_ShouldReturnNullData()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         // Act
-        var result = await categoryService.GetByIdAsync(999999);
+        IBusinessResult<Category> result = await categoryService.GetByIdAsync(999999);
 
         // Assert
         result.Should().NotBeNull();
@@ -164,8 +165,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ListAsync_WithData_ShouldReturnAllEntities()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>
         {
@@ -176,7 +177,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(categories);
 
         // Act
-        var result = await categoryService.ListAsync();
+        IBusinessResult<IList<Category>> result = await categoryService.ListAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -189,8 +190,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task GetByAsync_WithExpression_ShouldReturnFilteredEntities()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>
         {
@@ -201,7 +202,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(categories);
 
         // Act
-        var result = await categoryService.GetByAsync(c => c.IsActive);
+        IBusinessResult<IList<Category>> result = await categoryService.GetByAsync(c => c.IsActive);
 
         // Assert
         result.Should().NotBeNull();
@@ -218,8 +219,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ModifyAsync_ExistingEntity_ShouldUpdateInDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category
         {
@@ -232,14 +233,14 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         // Act
         category.Name = "Updated Name";
         category.Description = "Updated Description";
-        var result = await categoryService.ModifyAsync(category);
+        IBusinessResult<int> result = await categoryService.ModifyAsync(category);
 
         // Assert
         result.Should().NotBeNull();
         result.HasErrors.Should().BeFalse();
 
         // Verify in database
-        var updatedResult = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category> updatedResult = await categoryService.GetByIdAsync(category.Id);
         updatedResult.GetDataValue()!.Name.Should().Be("Updated Name");
         updatedResult.GetDataValue()!.Description.Should().Be("Updated Description");
     }
@@ -248,8 +249,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ModifyAsync_MultipleEntities_ShouldUpdateAllInDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>
         {
@@ -259,18 +260,18 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(categories);
 
         // Act
-        foreach (var cat in categories)
+        foreach (Category cat in categories)
         {
             cat.Name += " - Updated";
         }
-        var result = await categoryService.ModifyAsync(categories);
+        IBusinessResult<int> result = await categoryService.ModifyAsync(categories);
 
         // Assert
         result.Should().NotBeNull();
         result.HasErrors.Should().BeFalse();
 
         // Verify
-        var allResult = await categoryService.GetByAsync(c => c.Name.Contains("Updated"));
+        IBusinessResult<IList<Category>> allResult = await categoryService.GetByAsync(c => c.Name.Contains("Updated"));
         allResult.GetDataValue()!.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
@@ -282,8 +283,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task RemoveByIdAsync_ExistingEntity_ShouldDeleteFromDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category
         {
@@ -294,14 +295,14 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         var categoryId = category.Id;
 
         // Act
-        var result = await categoryService.RemoveByIdAsync(categoryId);
+        IBusinessResult<int> result = await categoryService.RemoveByIdAsync(categoryId);
 
         // Assert
         result.Should().NotBeNull();
         result.HasErrors.Should().BeFalse();
 
         // Verify deletion
-        var getResult = await categoryService.GetByIdAsync(categoryId);
+        IBusinessResult<Category> getResult = await categoryService.GetByIdAsync(categoryId);
         getResult.HasData().Should().BeFalse();
     }
 
@@ -309,8 +310,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task RemoveAsync_EntityInstance_ShouldDeleteFromDatabase()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category
         {
@@ -320,14 +321,14 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(category);
 
         // Act
-        var result = await categoryService.RemoveAsync(category);
+        IBusinessResult<int> result = await categoryService.RemoveAsync(category);
 
         // Assert
         result.Should().NotBeNull();
         result.HasErrors.Should().BeFalse();
 
         // Verify deletion
-        var getResult = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category> getResult = await categoryService.GetByIdAsync(category.Id);
         getResult.HasData().Should().BeFalse();
     }
 
@@ -339,14 +340,14 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ListAnyAsync_WithData_ShouldReturnTrue()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category { Name = "Test Category", IsActive = true };
         await categoryService.AddAsync(category);
 
         // Act
-        var result = await categoryService.ListAnyAsync();
+        IBusinessResult<bool> result = await categoryService.ListAnyAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -358,15 +359,15 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task GetByAnyAsync_WithExpression_ShouldReturnCorrectResult()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var category = new Category { Name = "Special Category", IsActive = true };
         await categoryService.AddAsync(category);
 
         // Act
-        var existsResult = await categoryService.GetByAnyAsync(c => c.Name == "Special Category");
-        var notExistsResult = await categoryService.GetByAnyAsync(c => c.Name == "Non Existent Name XYZ");
+        IBusinessResult<bool> existsResult = await categoryService.GetByAnyAsync(c => c.Name == "Special Category");
+        IBusinessResult<bool> notExistsResult = await categoryService.GetByAnyAsync(c => c.Name == "Non Existent Name XYZ");
 
         // Assert
         existsResult.GetDataValue().Should().BeTrue();
@@ -377,10 +378,10 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ListCountAsync_ShouldReturnCorrectCount()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
-        var initialCountResult = await categoryService.ListCountAsync();
+        IBusinessResult<int> initialCountResult = await categoryService.ListCountAsync();
         var initialCount = initialCountResult.GetDataValue();
 
         var categories = new List<Category>
@@ -392,7 +393,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(categories);
 
         // Act
-        var result = await categoryService.ListCountAsync();
+        IBusinessResult<int> result = await categoryService.ListCountAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -404,8 +405,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task GetByCountAsync_WithExpression_ShouldReturnFilteredCount()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>
         {
@@ -416,8 +417,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(categories);
 
         // Act
-        var activeCount = await categoryService.GetByCountAsync(c => c.Name.StartsWith("CountFilter") && c.IsActive);
-        var inactiveCount = await categoryService.GetByCountAsync(c => c.Name.StartsWith("CountFilter") && !c.IsActive);
+        IBusinessResult<int> activeCount = await categoryService.GetByCountAsync(c => c.Name.StartsWith("CountFilter") && c.IsActive);
+        IBusinessResult<int> inactiveCount = await categoryService.GetByCountAsync(c => c.Name.StartsWith("CountFilter") && !c.IsActive);
 
         // Assert
         activeCount.GetDataValue().Should().BeGreaterThanOrEqualTo(1);
@@ -432,8 +433,8 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
     public async Task ListAsync_WithPaging_ShouldRespectLimit()
     {
         // Arrange
-        using var scope = _fixture.CreateScope();
-        var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+        using IServiceScope scope = _fixture.CreateScope();
+        CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         var categories = new List<Category>();
         for (int i = 0; i < 10; i++)
@@ -445,7 +446,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         var paging = new PagingCriteria(5, 0);
 
         // Act
-        var result = await categoryService.ListAsync(paging);
+        IBusinessResult<IList<Category>> result = await categoryService.ListAsync(paging);
 
         // Assert
         result.Should().NotBeNull();

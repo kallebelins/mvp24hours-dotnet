@@ -21,16 +21,16 @@ public class GetUserQuery : IMediatorQuery<UserDto?>
 /// </summary>
 public class GetUserQueryHandler : IMediatorQueryHandler<GetUserQuery, UserDto?>
 {
-    private static readonly List<UserDto> Users = new()
-    {
+    private static readonly List<UserDto> Users =
+    [
         new UserDto { Id = 1, Name = "John Doe", Email = "john@example.com" },
         new UserDto { Id = 2, Name = "Jane Smith", Email = "jane@example.com" },
         new UserDto { Id = 3, Name = "Bob Wilson", Email = "bob@example.com" }
-    };
+    ];
 
     public Task<UserDto?> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
-        var user = Users.FirstOrDefault(u => u.Id == request.UserId);
+        UserDto? user = Users.FirstOrDefault(u => u.Id == request.UserId);
         return Task.FromResult(user);
     }
 }
@@ -48,16 +48,16 @@ public class GetAllUsersQuery : IMediatorQuery<List<UserDto>>
 /// </summary>
 public class GetAllUsersQueryHandler : IMediatorQueryHandler<GetAllUsersQuery, List<UserDto>>
 {
-    private static readonly List<UserDto> Users = new()
-    {
+    private static readonly List<UserDto> Users =
+    [
         new UserDto { Id = 1, Name = "John Doe", Email = "john@example.com" },
         new UserDto { Id = 2, Name = "Jane Smith", Email = "jane@example.com" },
         new UserDto { Id = 3, Name = "Bob Wilson", Email = "bob@example.com" }
-    };
+    ];
 
     public Task<List<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var result = request.Limit.HasValue
+        List<UserDto> result = request.Limit.HasValue
             ? Users.Take(request.Limit.Value).ToList()
             : Users.ToList();
         return Task.FromResult(result);

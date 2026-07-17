@@ -20,7 +20,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
     /// </remarks>
     public class JobBatch : IJobBatch
     {
-        private readonly List<BatchJob> _jobs = new();
+        private readonly List<BatchJob> _jobs = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JobBatch"/> class.
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
                 jobType,
                 serializedArgs,
                 jobOptions,
-                dependencies?.ToList() ?? new List<string>());
+                dependencies?.ToList() ?? []);
 
             _jobs.Add(batchJob);
             return batchJob;
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
                 jobType,
                 "{}", // Empty JSON object for jobs without arguments
                 jobOptions,
-                dependencies?.ToList() ?? new List<string>());
+                dependencies?.ToList() ?? []);
 
             _jobs.Add(batchJob);
             return batchJob;
@@ -128,7 +128,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
         /// <returns><c>true</c> if the job was removed; <c>false</c> if the job was not found.</returns>
         public bool RemoveJob(string jobId)
         {
-            var job = _jobs.FirstOrDefault(j => j.JobId == jobId);
+            BatchJob? job = _jobs.FirstOrDefault(j => j.JobId == jobId);
             if (job != null)
             {
                 _jobs.Remove(job);

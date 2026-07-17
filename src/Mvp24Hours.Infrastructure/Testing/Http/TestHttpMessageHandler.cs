@@ -42,8 +42,8 @@ namespace Mvp24Hours.Infrastructure.Testing.Http
     /// </remarks>
     public class TestHttpMessageHandler : HttpMessageHandler
     {
-        private readonly List<RequestMatcher> _requestMatchers = new();
-        private readonly List<RecordedRequest> _receivedRequests = new();
+        private readonly List<RequestMatcher> _requestMatchers = [];
+        private readonly List<RecordedRequest> _receivedRequests = [];
         private readonly object _lock = new();
 
         private HttpResponseMessage _defaultResponse = new(HttpStatusCode.OK)
@@ -364,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Http
             CancellationToken cancellationToken)
         {
             // Record the request
-            var recordedRequest = await RecordRequestAsync(request, cancellationToken);
+            RecordedRequest recordedRequest = await RecordRequestAsync(request, cancellationToken);
 
             lock (_lock)
             {
@@ -402,7 +402,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Http
 
             if (request.Content?.Headers != null)
             {
-                foreach (var header in request.Content.Headers)
+                foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
                 {
                     headers[header.Key] = string.Join(", ", header.Value);
                 }
@@ -442,7 +442,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Http
                 clone.Content = new StringContent(contentString, Encoding.UTF8, mediaType);
             }
 
-            foreach (var header in original.Headers)
+            foreach (KeyValuePair<string, IEnumerable<string>> header in original.Headers)
             {
                 clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }

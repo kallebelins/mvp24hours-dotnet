@@ -22,8 +22,8 @@ namespace Mvp24Hours.WebAPI.ContentNegotiation
     public class ContentNegotiationBuilder
     {
         private readonly IServiceCollection _services;
-        private readonly List<Type> _customFormatterTypes = new();
-        private readonly List<IContentFormatter> _customFormatters = new();
+        private readonly List<Type> _customFormatterTypes = [];
+        private readonly List<IContentFormatter> _customFormatters = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContentNegotiationBuilder"/> class.

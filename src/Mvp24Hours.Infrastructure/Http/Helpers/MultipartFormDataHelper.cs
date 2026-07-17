@@ -181,7 +181,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
             var fileName = Path.GetFileName(filePath);
             contentType ??= GetContentTypeFromExtension(Path.GetExtension(filePath));
 
-            using var fileStream = File.OpenRead(filePath);
+            using FileStream fileStream = File.OpenRead(filePath);
             return AddFile(name, fileStream, fileName, contentType);
         }
 
@@ -197,7 +197,7 @@ namespace Mvp24Hours.Infrastructure.Http.Helpers
                 throw new ArgumentNullException(nameof(fields));
             }
 
-            foreach (var field in fields)
+            foreach (KeyValuePair<string, string> field in fields)
             {
                 AddField(field.Key, field.Value);
             }

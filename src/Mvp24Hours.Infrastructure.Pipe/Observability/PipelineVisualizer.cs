@@ -26,14 +26,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public string ToMermaid(IPipelineAsync pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateMermaid(structure, options ?? new PipelineVisualizationOptions());
         }
 
         /// <inheritdoc />
         public string ToMermaid(IPipeline pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateMermaid(structure, options ?? new PipelineVisualizationOptions());
         }
 
@@ -59,8 +59,8 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             // Add operation nodes
             for (var i = 0; i < structure.Operations.Count; i++)
             {
-                var op = structure.Operations[i];
-                var nodeShape = GetMermaidNodeShape(op, options);
+                OperationNode op = structure.Operations[i];
+                (string, string) nodeShape = GetMermaidNodeShape(op, options);
                 var nodeStyle = options.HighlightRequiredOperations && op.IsRequired ? ":::required" : "";
 
                 var label = options.UseShortNames ? op.Name : op.TypeName;
@@ -104,10 +104,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
                 sb.AppendLine();
                 sb.AppendLine("    %% Interceptors");
 
-                foreach (var group in structure.Interceptors)
+                foreach (InterceptorGroup group in structure.Interceptors)
                 {
                     sb.AppendLine($"    subgraph {group.InterceptorType}Interceptors[\"{group.InterceptorType} Interceptors\"]");
-                    foreach (var op in group.Operations)
+                    foreach (OperationNode op in group.Operations)
                     {
                         sb.AppendLine($"        {op.Id}[[\"{op.Name}\"]]");
                     }
@@ -145,14 +145,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public string ToDot(IPipelineAsync pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateDot(structure, options ?? new PipelineVisualizationOptions());
         }
 
         /// <inheritdoc />
         public string ToDot(IPipeline pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateDot(structure, options ?? new PipelineVisualizationOptions());
         }
 
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             sb.AppendLine("    start [shape=circle, label=\"\", style=filled, fillcolor=black, width=0.3];");
 
             // Operation nodes
-            foreach (var op in structure.Operations)
+            foreach (OperationNode op in structure.Operations)
             {
                 var shape = GetDotNodeShape(op);
                 var color = GetDotNodeColor(op, options);
@@ -212,12 +212,12 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (options.IncludeInterceptors && structure.Interceptors.Count > 0)
             {
                 sb.AppendLine();
-                foreach (var group in structure.Interceptors)
+                foreach (InterceptorGroup group in structure.Interceptors)
                 {
                     sb.AppendLine($"    subgraph cluster_{group.InterceptorType} {{");
                     sb.AppendLine($"        label=\"{group.InterceptorType} Interceptors\";");
                     sb.AppendLine("        style=dashed;");
-                    foreach (var op in group.Operations)
+                    foreach (OperationNode op in group.Operations)
                     {
                         sb.AppendLine($"        {op.Id} [label=\"{EscapeDotString(op.Name)}\", shape=box];");
                     }
@@ -268,14 +268,14 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public string ToAscii(IPipelineAsync pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateAscii(structure, options ?? new PipelineVisualizationOptions());
         }
 
         /// <inheritdoc />
         public string ToAscii(IPipeline pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
             return GenerateAscii(structure, options ?? new PipelineVisualizationOptions());
         }
 
@@ -299,13 +299,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             // Operations
             for (var i = 0; i < structure.Operations.Count; i++)
             {
-                var op = structure.Operations[i];
+                OperationNode op = structure.Operations[i];
                 var name = options.UseShortNames ? op.Name : op.TypeName;
                 var prefix = op.IsRequired && options.HighlightRequiredOperations ? "★ " : "  ";
 
                 sb.AppendLine($"║  ▼{new string(' ', maxNameLength - 1)}  ║");
 
-                var border = op.Category switch
+                (string, string, string, string) border = op.Category switch
                 {
                     OperationCategory.Validation => ("╭", "╮", "╰", "╯"),
                     OperationCategory.Conditional => ("◇", "◇", "◇", "◇"),
@@ -342,10 +342,10 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             {
                 sb.AppendLine();
                 sb.AppendLine("Interceptors:");
-                foreach (var group in structure.Interceptors)
+                foreach (InterceptorGroup group in structure.Interceptors)
                 {
                     sb.AppendLine($"  [{group.InterceptorType}]");
-                    foreach (var op in group.Operations)
+                    foreach (OperationNode op in group.Operations)
                     {
                         sb.AppendLine($"    - {op.Name}");
                     }
@@ -362,7 +362,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public string ToJson(IPipelineAsync pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
 
             if (options?.IncludeMetrics == true && options.MetricsProvider != null)
             {
@@ -380,7 +380,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public string ToJson(IPipeline pipeline, PipelineVisualizationOptions? options = null)
         {
-            var structure = GetStructure(pipeline);
+            PipelineStructure structure = GetStructure(pipeline);
 
             if (options?.IncludeMetrics == true && options.MetricsProvider != null)
             {
@@ -402,7 +402,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public PipelineStructure GetStructure(IPipelineAsync pipeline)
         {
-            var pipelineType = pipeline.GetType();
+            Type pipelineType = pipeline.GetType();
             var structure = new PipelineStructure
             {
                 Name = pipelineType.Name,
@@ -413,16 +413,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (pipeline is PipelineAsync concreteAsync)
             {
                 // Get operations
-                var operations = concreteAsync.GetOperations();
+                List<IOperationAsync> operations = concreteAsync.GetOperations();
                 for (var i = 0; i < operations.Count; i++)
                 {
-                    var op = operations[i];
+                    IOperationAsync op = operations[i];
                     structure.Operations.Add(CreateOperationNode(op, i));
                 }
 
                 // Get interceptors
-                var interceptors = concreteAsync.GetInterceptors();
-                foreach (var kvp in interceptors)
+                Dictionary<PipelineInterceptorType, List<IOperationAsync>> interceptors = concreteAsync.GetInterceptors();
+                foreach (KeyValuePair<PipelineInterceptorType, List<IOperationAsync>> kvp in interceptors)
                 {
                     var group = new InterceptorGroup
                     {
@@ -444,7 +444,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
         /// <inheritdoc />
         public PipelineStructure GetStructure(IPipeline pipeline)
         {
-            var pipelineType = pipeline.GetType();
+            Type pipelineType = pipeline.GetType();
             var structure = new PipelineStructure
             {
                 Name = pipelineType.Name,
@@ -455,16 +455,16 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
             if (pipeline is Pipeline concrete)
             {
                 // Get operations
-                var operations = concrete.GetOperations();
+                List<IOperation> operations = concrete.GetOperations();
                 for (var i = 0; i < operations.Count; i++)
                 {
-                    var op = operations[i];
+                    IOperation op = operations[i];
                     structure.Operations.Add(CreateOperationNode(op, i));
                 }
 
                 // Get interceptors
-                var interceptors = concrete.GetInterceptors();
-                foreach (var kvp in interceptors)
+                Dictionary<PipelineInterceptorType, List<IOperation>> interceptors = concrete.GetInterceptors();
+                foreach (KeyValuePair<PipelineInterceptorType, List<IOperation>> kvp in interceptors)
                 {
                     var group = new InterceptorGroup
                     {
@@ -485,7 +485,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
         private static OperationNode CreateOperationNode(IOperationAsync op, int index, string idPrefix = "op_")
         {
-            var type = op.GetType();
+            Type type = op.GetType();
             return new OperationNode
             {
                 Id = $"{idPrefix}{index}",
@@ -499,7 +499,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
         private static OperationNode CreateOperationNode(IOperation op, int index, string idPrefix = "op_")
         {
-            var type = op.GetType();
+            Type type = op.GetType();
             return new OperationNode
             {
                 Id = $"{idPrefix}{index}",
@@ -552,9 +552,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Observability
 
         private static void EnrichWithMetrics(PipelineStructure structure, IPipelineMetrics metrics)
         {
-            foreach (var op in structure.Operations)
+            foreach (OperationNode op in structure.Operations)
             {
-                var opMetrics = metrics.GetOperationMetrics(op.TypeName);
+                OperationMetrics? opMetrics = metrics.GetOperationMetrics(op.TypeName);
                 if (opMetrics == null)
                 {
                     opMetrics = metrics.GetOperationMetrics(op.Name);

@@ -100,7 +100,7 @@ public class SecurityHeadersMiddleware
 
     private void AddSecurityHeaders(HttpContext context)
     {
-        var response = context.Response;
+        HttpResponse response = context.Response;
 
         try
         {
@@ -156,7 +156,7 @@ public class SecurityHeadersMiddleware
             }
 
             // Add custom headers
-            foreach (var header in _options.CustomHeaders)
+            foreach (KeyValuePair<string, string> header in _options.CustomHeaders)
             {
                 response.Headers[header.Key] = header.Value;
             }

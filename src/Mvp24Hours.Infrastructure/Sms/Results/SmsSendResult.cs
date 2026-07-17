@@ -42,7 +42,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Results
             Success = success;
             MessageId = messageId;
             Status = status;
-            Errors = errors ?? new List<string>();
+            Errors = errors ?? [];
             Exception = exception;
             SentAt = sentAt ?? DateTimeOffset.UtcNow;
         }
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Results
             return new SmsSendResult(
                 success: false,
                 status: SmsDeliveryStatus.Failed,
-                errors: new List<string> { errorMessage },
+                errors: [errorMessage],
                 exception: exception,
                 sentAt: sentAt);
         }
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Sms.Results
             return new SmsSendResult(
                 success: false,
                 status: SmsDeliveryStatus.Failed,
-                errors: new List<string> { exception.Message },
+                errors: [exception.Message],
                 exception: exception,
                 sentAt: sentAt);
         }

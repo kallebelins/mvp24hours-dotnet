@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
@@ -109,7 +110,7 @@ public class ApiKeyAuthenticationMiddleware
         }
 
         // Validate API key
-        var validationResult = await ValidateApiKey(apiKey);
+        ApiKeyValidationResult validationResult = await ValidateApiKey(apiKey);
 
         if (!validationResult.IsValid)
         {
@@ -130,7 +131,7 @@ public class ApiKeyAuthenticationMiddleware
         context.Items[ApiKeyValidationResultKey] = validationResult;
 
         // Create authenticated principal
-        var principal = CreatePrincipal(validationResult);
+        ClaimsPrincipal principal = CreatePrincipal(validationResult);
         context.User = principal;
 
         if (_options.LogSuccessfulAuthentication)
@@ -150,7 +151,7 @@ public class ApiKeyAuthenticationMiddleware
 
         // Try header first
         if (_options.EnableHeaderKey &&
-            context.Request.Headers.TryGetValue(_options.HeaderName, out var headerValue))
+            context.Request.Headers.TryGetValue(_options.HeaderName, out StringValues headerValue))
         {
             apiKey = headerValue.ToString();
         }
@@ -158,7 +159,7 @@ public class ApiKeyAuthenticationMiddleware
         // Try query string if header not found and enabled
         if (string.IsNullOrEmpty(apiKey) &&
             _options.EnableQueryStringKey &&
-            context.Request.Query.TryGetValue(_options.QueryParameterName, out var queryValue))
+            context.Request.Query.TryGetValue(_options.QueryParameterName, out StringValues queryValue))
         {
             apiKey = queryValue.ToString();
         }
@@ -180,7 +181,7 @@ public class ApiKeyAuthenticationMiddleware
             var result = ApiKeyValidationResult.Success(GenerateKeyIdentifier(apiKey));
 
             // Add scopes if configured
-            if (_options.ApiKeyScopes.TryGetValue(apiKey, out var scopes))
+            if (_options.ApiKeyScopes.TryGetValue(apiKey, out HashSet<string>? scopes))
             {
                 result.Scopes = scopes;
             }
@@ -235,7 +236,7 @@ public class ApiKeyAuthenticationMiddleware
         }
 
         // Add custom claims
-        foreach (var claim in validationResult.Claims)
+        foreach (KeyValuePair<string, string> claim in validationResult.Claims)
         {
             claims.Add(new Claim(claim.Key, claim.Value));
         }
