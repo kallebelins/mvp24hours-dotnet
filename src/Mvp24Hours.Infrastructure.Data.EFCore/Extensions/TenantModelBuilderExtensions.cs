@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Contract.Infrastructure;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.Infrastructure;
 
 namespace Mvp24Hours.Extensions
 {
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Extensions
                 throw new ArgumentNullException(nameof(tenantProvider));
             }
 
-            modelBuilder.Entity<TEntity>().HasQueryFilter(e => 
+            modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
                 e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null);
 
             return modelBuilder;
@@ -182,7 +182,7 @@ namespace Mvp24Hours.Extensions
                 if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
                 {
                     var entityBuilder = modelBuilder.Entity(entityType.ClrType);
-                    
+
                     entityBuilder.Property(nameof(ITenantEntity.TenantId))
                         .HasMaxLength(maxLength)
                         .IsRequired(isRequired);
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Extensions
         {
             // For generic tenant entities, we create a dynamic filter
             // This is more complex as we need to handle different TenantId types
-            
+
             var parameter = Expression.Parameter(entityType, "e");
             var tenantIdProperty = Expression.Property(parameter, "TenantId");
 
@@ -255,24 +255,24 @@ namespace Mvp24Hours.Extensions
             {
                 // For Guid tenant IDs, use EF.Property for comparison
                 var methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
-                
+
                 // Create method to convert string to Guid at runtime
                 var tenantProviderConstant = Expression.Constant(tenantProvider);
                 var currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-                
+
                 // Convert string to Guid using Guid.Parse wrapped in a null check
                 var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
-                    nameof(ParseGuidOrDefault), 
+                    nameof(ParseGuidOrDefault),
                     BindingFlags.NonPublic | BindingFlags.Static)
                     ?? throw new InvalidOperationException("ParseGuidOrDefault method not found.");
                 var parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
-                
+
                 var equalExpression = Expression.Equal(methodCall, parsedGuid);
-                
+
                 // Check if tenant string is null
                 var nullConstant = Expression.Constant(null, typeof(string));
                 var tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
-                
+
                 var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
                 var lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
@@ -281,21 +281,21 @@ namespace Mvp24Hours.Extensions
             {
                 // For int tenant IDs
                 var methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
-                
+
                 var tenantProviderConstant = Expression.Constant(tenantProvider);
                 var currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-                
+
                 var parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
-                    nameof(ParseIntOrDefault), 
+                    nameof(ParseIntOrDefault),
                     BindingFlags.NonPublic | BindingFlags.Static)
                     ?? throw new InvalidOperationException("ParseIntOrDefault method not found.");
                 var parsedInt = Expression.Call(parseMethod, currentTenantIdString);
-                
+
                 var equalExpression = Expression.Equal(methodCall, parsedInt);
-                
+
                 var nullConstant = Expression.Constant(null, typeof(string));
                 var tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
-                
+
                 var combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
                 var lambda = Expression.Lambda(combinedExpression, parameter);
                 modelBuilder.Entity(entityType).HasQueryFilter(lambda);
@@ -308,7 +308,7 @@ namespace Mvp24Hours.Extensions
             ITenantProvider tenantProvider)
         {
             var parameter = Expression.Parameter(entityType, "e");
-            
+
             // Tenant filter: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
             var tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
             var tenantProviderConstant = Expression.Constant(tenantProvider);
@@ -343,7 +343,7 @@ namespace Mvp24Hours.Extensions
         private static bool ImplementsGenericTenantEntity(Type type, out Type? tenantIdType)
         {
             tenantIdType = null;
-            
+
             foreach (var iface in type.GetInterfaces())
             {
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
@@ -352,13 +352,13 @@ namespace Mvp24Hours.Extensions
                     return true;
                 }
             }
-            
+
             return false;
         }
 
         private static Expression CreateEfPropertyCall(
-            Type entityType, 
-            Type propertyType, 
+            Type entityType,
+            Type propertyType,
             string propertyName,
             ParameterExpression parameter)
         {

@@ -1,8 +1,12 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,10 +14,6 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Caching.HybridCache;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Caching.Test
 {
@@ -450,7 +450,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Test
             // Assert
             var stats = tagManager.GetStatistics();
             stats.TotalTags.Should().Be(2);
-            
+
             var keysForTag1 = await tagManager.GetKeysByTagAsync("tag1");
             keysForTag1.Should().HaveCount(100);
         }

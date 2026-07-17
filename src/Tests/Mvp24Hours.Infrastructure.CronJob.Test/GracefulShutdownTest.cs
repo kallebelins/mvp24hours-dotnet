@@ -1,8 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,9 +16,6 @@ using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
@@ -62,7 +62,7 @@ public class GracefulShutdownTest
         // Act
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await job.StartAsync(cts.Token);
-        
+
         var stopTask = job.StopAsync(CancellationToken.None);
         var completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
 
@@ -123,7 +123,7 @@ public class GracefulShutdownTest
         // Act
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await job.StartAsync(cts.Token);
-        
+
         // Stop immediately - should not hang
         var stopTask = job.StopAsync(CancellationToken.None);
         var completed = await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
@@ -180,7 +180,7 @@ public class GracefulShutdownTest
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         await job.StartAsync(cts.Token);
         await Task.Delay(50); // Let execution start
-        
+
         var stopTask = job.StopAsync(CancellationToken.None);
         await Task.WhenAny(stopTask, Task.Delay(TimeSpan.FromSeconds(2)));
 
@@ -227,7 +227,7 @@ public class GracefulShutdownTest
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         await job.StartAsync(cts.Token);
         await Task.Delay(50); // Let execution start
-        
+
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         await job.StopAsync(CancellationToken.None);
         stopwatch.Stop();
@@ -283,12 +283,12 @@ public class GracefulShutdownTest
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         await job.StartAsync(cts.Token);
         await Task.Delay(100); // Let execution start
-        
+
         await job.StopAsync(CancellationToken.None);
 
         // Assert
         var received = await Task.WhenAny(
-            cancellationReceived.Task, 
+            cancellationReceived.Task,
             Task.Delay(TimeSpan.FromSeconds(2)));
         received.Should().Be(cancellationReceived.Task);
     }
@@ -469,7 +469,7 @@ public class GracefulShutdownTest
         await job.StartAsync(cts.Token);
         await Task.Delay(100);
         await job.StopAsync(cts.Token);
-        
+
         // Multiple disposes should not throw
         await job.DisposeAsync();
         await job.DisposeAsync();

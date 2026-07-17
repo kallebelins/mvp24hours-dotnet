@@ -329,10 +329,10 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     private static Func<T, object> CreateDefaultKeySelector()
     {
         var type = typeof(T);
-        
+
         // Look for "Id" property
         var idProperty = type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
-        
+
         // Look for "{TypeName}Id" property
         if (idProperty == null)
         {

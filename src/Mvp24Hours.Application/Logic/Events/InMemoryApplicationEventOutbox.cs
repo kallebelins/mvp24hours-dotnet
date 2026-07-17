@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Application.Contract.Events;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +11,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Application.Contract.Events;
 
 namespace Mvp24Hours.Application.Logic.Events;
 
@@ -114,7 +114,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
         CancellationToken cancellationToken = default)
     {
         var pending = _entries.Values
-            .Where(e => e.Status == ApplicationEventOutboxStatus.Pending || 
+            .Where(e => e.Status == ApplicationEventOutboxStatus.Pending ||
                        e.Status == ApplicationEventOutboxStatus.Failed)
             .OrderBy(e => e.CreatedAt)
             .Take(batchSize)

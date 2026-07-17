@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using System;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Dashboard
 {
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Dashboard
             // Note: This is a placeholder implementation.
             // In a real implementation, this would call Hangfire's UseHangfireDashboard() method.
             // The actual implementation requires Hangfire.AspNetCore NuGet package to be installed.
-            
+
             throw new NotSupportedException(
                 "UseHangfireDashboard requires Hangfire.AspNetCore NuGet package to be installed. " +
                 "Install Hangfire.AspNetCore and call Hangfire's UseHangfireDashboard() method directly.");
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Dashboard
         {
             // Note: Quartz.NET does not have a built-in web dashboard like Hangfire.
             // This is a placeholder for potential future integrations or third-party solutions.
-            
+
             throw new NotSupportedException(
                 "Quartz.NET does not include a built-in web dashboard. " +
                 "Use Quartz.NET's logging and metrics, or integrate with application monitoring tools.");
@@ -130,7 +130,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Dashboard
 
             // Note: This would integrate with ASP.NET Core health checks
             // In a real implementation, register IHealthCheck implementations for each provider
-            
+
             endpoints.MapGet(path, async context =>
             {
                 // Placeholder implementation

@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 {

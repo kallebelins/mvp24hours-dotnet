@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.Contract.Resilience;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Mvp24Hours.Application.Contract.Resilience;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects;
 
 namespace Mvp24Hours.Application.Logic.Resilience
 {

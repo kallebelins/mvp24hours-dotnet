@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -11,10 +15,6 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 {
@@ -296,7 +296,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
             CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("Executing pipeline operation with native resilience");
-            
+
             await _pipeline.ExecuteAsync(async ct =>
             {
                 await next();

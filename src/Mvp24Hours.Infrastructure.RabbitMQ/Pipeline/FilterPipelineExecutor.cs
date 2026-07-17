@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 {
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             CancellationToken cancellationToken = default) where TMessage : class
         {
             var filters = GetConsumeFilters<TMessage>();
-            
+
             if (!filters.Any())
             {
                 await finalAction(context, cancellationToken);
@@ -59,12 +59,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             {
                 var filter = filters[i];
                 var next = pipeline;
-                
+
                 pipeline = async (ctx, ct) =>
                 {
                     if (ctx.ShouldSkipRemainingFilters)
                         return;
-                        
+
                     await filter.ConsumeAsync(ctx, next, ct);
                 };
             }
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             CancellationToken cancellationToken = default) where TMessage : class
         {
             var filters = GetPublishFilters<TMessage>();
-            
+
             if (!filters.Any())
             {
                 await finalAction(context, cancellationToken);
@@ -99,12 +99,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             {
                 var filter = filters[i];
                 var next = pipeline;
-                
+
                 pipeline = async (ctx, ct) =>
                 {
                     if (ctx.ShouldSkipRemainingFilters || ctx.ShouldCancelPublish)
                         return;
-                        
+
                     await filter.PublishAsync(ctx, next, ct);
                 };
             }
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             CancellationToken cancellationToken = default) where TMessage : class
         {
             var filters = GetSendFilters<TMessage>();
-            
+
             if (!filters.Any())
             {
                 await finalAction(context, cancellationToken);
@@ -139,12 +139,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
             {
                 var filter = filters[i];
                 var next = pipeline;
-                
+
                 pipeline = async (ctx, ct) =>
                 {
                     if (ctx.ShouldSkipRemainingFilters || ctx.ShouldCancelSend)
                         return;
-                        
+
                     await filter.SendAsync(ctx, next, ct);
                 };
             }

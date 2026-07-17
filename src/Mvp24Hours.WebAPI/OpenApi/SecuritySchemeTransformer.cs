@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi;
-using Mvp24Hours.WebAPI.Configuration;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
+using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.OpenApi
 {

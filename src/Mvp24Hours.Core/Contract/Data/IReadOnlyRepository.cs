@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Domain.Specifications;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace Mvp24Hours.Core.Contract.Data
 {
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Core.Contract.Data
             Expression<Func<TEntity, TKey>> keySelector,
             TKey? lastKey,
             int pageSize,
-            bool ascending = true) 
+            bool ascending = true)
             where TKey : struct
             where TSpec : ISpecificationQuery<TEntity>;
 

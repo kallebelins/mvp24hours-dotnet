@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Email.Contract;
-using Mvp24Hours.Infrastructure.Email.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Email.Contract;
+using Mvp24Hours.Infrastructure.Email.Models;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {

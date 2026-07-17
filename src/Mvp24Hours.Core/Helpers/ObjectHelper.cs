@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Extensions;
 using System.Dynamic;
 using System.IO;
 using System.Runtime.Serialization;
+using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Helpers
 {

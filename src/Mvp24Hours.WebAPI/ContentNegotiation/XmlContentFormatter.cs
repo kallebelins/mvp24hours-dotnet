@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.WebAPI.Configuration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.ContentNegotiation
 {

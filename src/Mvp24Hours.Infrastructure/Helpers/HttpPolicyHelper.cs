@@ -1,18 +1,18 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Polly;
-using Polly.CircuitBreaker;
-using Polly.Extensions.Http;
-using Polly.Timeout;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Extensions.Http;
+using Polly.Timeout;
 
 namespace Mvp24Hours.Infrastructure.Helpers
 {

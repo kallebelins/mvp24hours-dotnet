@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Sms.Contract;
-using Mvp24Hours.Infrastructure.Sms.Options;
-using Mvp24Hours.Infrastructure.Sms.Providers;
+using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Net.Http;
+using Mvp24Hours.Infrastructure.Sms.Contract;
+using Mvp24Hours.Infrastructure.Sms.Options;
+using Mvp24Hours.Infrastructure.Sms.Providers;
 
 namespace Mvp24Hours.Infrastructure.Sms.Extensions
 {

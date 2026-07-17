@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Serialization.Json;
-using Mvp24Hours.Core.Serialization.SourceGeneration;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Serialization.Json;
+using Mvp24Hours.Core.Serialization.SourceGeneration;
 
 namespace Mvp24Hours.Core.Extensions.SourceGeneration;
 

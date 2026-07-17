@@ -90,11 +90,11 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         public static SchemaValidationResult Invalid(
             IReadOnlyList<SchemaIssue> issues,
             System.TimeSpan duration) => new()
-        {
-            IsValid = false,
-            Issues = issues,
-            Duration = duration
-        };
+            {
+                IsValid = false,
+                Issues = issues,
+                Duration = duration
+            };
     }
 
     /// <summary>

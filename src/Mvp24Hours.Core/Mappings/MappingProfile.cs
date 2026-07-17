@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using AutoMapper;
-using Mvp24Hours.Core.Contract.Mappings;
-using Mvp24Hours.Extensions;
 using System;
 using System.Linq;
 using System.Reflection;
+using AutoMapper;
+using Mvp24Hours.Core.Contract.Mappings;
+using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Core.Mappings
 {

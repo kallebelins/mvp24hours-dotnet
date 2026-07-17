@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Mvp24Hours.Core.Extensions.KeyedServices;
 
@@ -227,7 +227,7 @@ public static class KeyedServiceExtensions
         object defaultKey)
         where TService : class
     {
-        services.AddSingleton<TService>(sp => 
+        services.AddSingleton<TService>(sp =>
             sp.GetRequiredKeyedService<TService>(defaultKey));
         return services;
     }
@@ -319,7 +319,7 @@ public static class KeyedServiceExtensions
         Func<IServiceProvider, TService> fallbackFactory)
         where TService : class
     {
-        return provider.GetKeyedService<TService>(serviceKey) 
+        return provider.GetKeyedService<TService>(serviceKey)
                ?? fallbackFactory(provider);
     }
 
@@ -359,9 +359,9 @@ public static class KeyedServiceExtensions
         object serviceKey)
         where TService : class
     {
-        return services.Any(d => 
-            d.ServiceType == typeof(TService) && 
-            d.IsKeyedService && 
+        return services.Any(d =>
+            d.ServiceType == typeof(TService) &&
+            d.IsKeyedService &&
             Equals(d.ServiceKey, serviceKey));
     }
 
@@ -476,7 +476,7 @@ public static class KeyedServiceExtensions
     {
         var tenantKey = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
         var service = provider.GetKeyedService<TService>(tenantKey);
-        
+
         return service ?? provider.GetRequiredKeyedService<TService>(defaultKey);
     }
 

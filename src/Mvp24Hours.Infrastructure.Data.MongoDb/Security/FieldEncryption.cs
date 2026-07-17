@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 {
@@ -434,14 +434,14 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 
             // Use HKDF-like derivation (simplified version using HMAC)
             var tenantBytes = Encoding.UTF8.GetBytes(tenantId);
-            
+
             using (var hmac = new HMACSHA256(masterKey))
             {
                 // Derive tenant-specific key
                 var info = new byte[tenantBytes.Length + 4];
                 Array.Copy(tenantBytes, 0, info, 0, tenantBytes.Length);
                 BitConverter.GetBytes(1).CopyTo(info, tenantBytes.Length);
-                
+
                 return hmac.ComputeHash(info);
             }
         }

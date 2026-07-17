@@ -1,15 +1,15 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
 using Mvp24Hours.Application.MongoDb.Test.Support.Services;
 using Mvp24Hours.Extensions;
-using System;
-using System.Threading.Tasks;
 using Testcontainers.MongoDb;
 using Xunit;
 using Xunit.Priority;

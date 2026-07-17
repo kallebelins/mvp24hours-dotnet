@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -15,10 +19,6 @@ using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Specifications;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 
 #nullable enable
 
@@ -59,7 +59,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
     ///     pageSize: 20);
     /// </code>
     /// </example>
-    public class ReadOnlyRepository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null) 
+    public class ReadOnlyRepository<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
         : RepositoryBase<T>(dbContext, options, logger), IReadOnlyRepository<T>
         where T : class, IEntityBase
     {
@@ -342,7 +342,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             Expression<Func<T, TKey>> keySelector,
             TKey? lastKey,
             int pageSize,
-            bool ascending = true) 
+            bool ascending = true)
             where TKey : struct
             where TSpec : ISpecificationQuery<T>
         {

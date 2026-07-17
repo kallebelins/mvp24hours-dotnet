@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom
 {

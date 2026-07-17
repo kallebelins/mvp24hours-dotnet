@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations
 {

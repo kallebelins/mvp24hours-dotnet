@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Observability;
 
@@ -139,7 +139,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
 
                 // Check for unhealthy conditions
                 var status = EvaluateJobHealth(state);
-                
+
                 if (status == HealthStatus.Unhealthy)
                 {
                     unhealthyJobs.Add(jobName);
@@ -204,14 +204,14 @@ public sealed class CronJobHealthCheck : IHealthCheck
             var failureRate = state.TotalFailures / (double)state.TotalExecutions;
             if (failureRate > _options.MaxFailureRate)
             {
-                return failureRate > _options.CriticalFailureRate 
-                    ? HealthStatus.Unhealthy 
+                return failureRate > _options.CriticalFailureRate
+                    ? HealthStatus.Unhealthy
                     : HealthStatus.Degraded;
             }
         }
 
         // Check if job is behind schedule
-        if (state.LastExecutionTime.HasValue && 
+        if (state.LastExecutionTime.HasValue &&
             state.TimeSinceLastExecution > _options.MaxExecutionAge &&
             state.IsRunning)
         {
@@ -219,7 +219,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
         }
 
         // Check for recent failures
-        if (!state.LastExecutionSuccess && 
+        if (!state.LastExecutionSuccess &&
             state.LastExecutionTime.HasValue &&
             (DateTimeOffset.UtcNow - state.LastExecutionTime.Value) < _options.RecentFailureWindow)
         {

@@ -155,7 +155,7 @@ public static class EFCoreActivitySource
 
         activity.SetTag(TagNames.DbOperation, "SELECT");
         activity.SetTag(TagNames.DbStatement, SanitizeSqlForLogging(commandText));
-        
+
         if (!string.IsNullOrEmpty(dbName))
             activity.SetTag(TagNames.DbName, dbName);
 
@@ -176,7 +176,7 @@ public static class EFCoreActivitySource
 
         activity.SetTag(TagNames.DbOperation, operation);
         activity.SetTag(TagNames.DbStatement, SanitizeSqlForLogging(commandText));
-        
+
         if (!string.IsNullOrEmpty(dbName))
             activity.SetTag(TagNames.DbName, dbName);
 

@@ -75,7 +75,7 @@ public class CorrelationIdEnricher : ActivityEnricherBase
     public override void EnrichOnStart(Activity activity, object? context = null)
     {
         var correlationId = GetCorrelationId?.Invoke() ?? Activity.Current?.GetBaggageItem("correlation.id");
-        
+
         if (!string.IsNullOrEmpty(correlationId))
         {
             activity.SetTag(SemanticTags.CorrelationId, correlationId);

@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
 {
@@ -103,7 +103,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
             }
 
             var granularity = ConvertGranularity(options.Granularity);
-            
+
             var timeSeriesOptions = !string.IsNullOrWhiteSpace(options.MetaField)
                 ? new MongoDB.Driver.TimeSeriesOptions(options.TimeField, options.MetaField, granularity)
                 : new MongoDB.Driver.TimeSeriesOptions(options.TimeField);

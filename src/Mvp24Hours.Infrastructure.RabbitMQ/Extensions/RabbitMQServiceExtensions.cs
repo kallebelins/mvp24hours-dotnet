@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,10 +22,6 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
 using Mvp24Hours.Infrastructure.RabbitMQ.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace Mvp24Hours.Extensions
 {

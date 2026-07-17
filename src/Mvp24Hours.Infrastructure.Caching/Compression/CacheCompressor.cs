@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Compression
 {
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Compression
             try
             {
                 using var outputStream = new MemoryStream();
-                
+
                 // Write compression header
                 outputStream.WriteByte((byte)_algorithm);
                 var lengthBytes = BitConverter.GetBytes(data.Length);
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Compression
             try
             {
                 using var inputStream = new MemoryStream(compressedData);
-                
+
                 // Read compression header
                 var algorithmByte = (byte)inputStream.ReadByte();
                 var algorithm = (CompressionAlgorithm)algorithmByte;
@@ -138,7 +138,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Compression
                     var totalRead = 0;
                     int bytesRead;
 
-                    while (totalRead < originalLength && 
+                    while (totalRead < originalLength &&
                            (bytesRead = await decompressionStream.ReadAsync(decompressed, totalRead, originalLength - totalRead, cancellationToken)) > 0)
                     {
                         totalRead += bytesRead;

@@ -4,15 +4,15 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Application.Contract.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Application.Contract.Events;
 
 namespace Mvp24Hours.Application.Logic.Events;
 
@@ -81,7 +81,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
         ArgumentNullException.ThrowIfNull(@event);
 
         var eventType = typeof(TEvent);
-        
+
         _logger?.LogDebug(
             "[ApplicationEvents] Dispatching {EventType} (Id: {EventId})",
             eventType.Name,
@@ -157,9 +157,9 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
             // Use reflection to call the generic method
             var method = typeof(ApplicationEventDispatcher)
                 .GetMethod(nameof(DispatchAsync), [typeof(IApplicationEvent), typeof(CancellationToken)]);
-            
+
             var genericMethod = method?.MakeGenericMethod(@event.GetType());
-            
+
             if (genericMethod != null)
             {
                 var task = genericMethod.Invoke(this, [@event, cancellationToken]) as Task;
@@ -295,7 +295,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
             // Try to resolve IMediatorPublisher or similar from CQRS module
             // This allows application events to also be handled by Mediator notification handlers
             var publisherType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.Abstractions.IPublisher, Mvp24Hours.Infrastructure.Cqrs");
-            
+
             if (publisherType != null)
             {
                 var publisher = _serviceProvider.GetService(publisherType);
@@ -304,7 +304,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
                     // Create a wrapper notification and publish
                     var wrapperType = typeof(ApplicationEventNotification<>).MakeGenericType(typeof(TEvent));
                     var wrapper = Activator.CreateInstance(wrapperType, @event);
-                    
+
                     var publishMethod = publisherType.GetMethod("Publish");
                     if (publishMethod != null && wrapper != null)
                     {

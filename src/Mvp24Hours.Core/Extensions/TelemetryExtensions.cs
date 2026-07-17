@@ -1,13 +1,13 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Infrastructure.Logging;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Helpers;
-using System;
 
 namespace Mvp24Hours.Extensions
 {

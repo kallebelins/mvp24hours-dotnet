@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 {

@@ -3,15 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Http.Options;
-using Polly;
-using Polly.CircuitBreaker;
 using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Http.Options;
+using Polly;
+using Polly.CircuitBreaker;
 // Use the CircuitBreakerStateChangeInfo from Options namespace
 using CircuitBreakerStateChangeInfo = Mvp24Hours.Infrastructure.Http.Options.CircuitBreakerStateChangeInfo;
 
@@ -151,7 +150,7 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 
         private void OnBreak(DelegateResult<HttpResponseMessage> outcome, TimeSpan breakDuration)
         {
-            var reason = outcome.Exception?.Message ?? 
+            var reason = outcome.Exception?.Message ??
                 $"HTTP {(int?)outcome.Result?.StatusCode}: {outcome.Result?.ReasonPhrase}";
 
             _logger.LogWarning(

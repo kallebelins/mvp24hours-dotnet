@@ -3,18 +3,18 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Contract;
-using Mvp24Hours.Infrastructure.Email.Options;
-using Mvp24Hours.Infrastructure.Email.Providers;
-using Mvp24Hours.Infrastructure.Email.Templates;
-using Mvp24Hours.Infrastructure.Email.Queue;
-using Mvp24Hours.Infrastructure.Email.RateLimiting;
-using Mvp24Hours.Infrastructure.Email.Bulk;
+using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Net.Http;
+using Mvp24Hours.Infrastructure.Email.Bulk;
+using Mvp24Hours.Infrastructure.Email.Contract;
+using Mvp24Hours.Infrastructure.Email.Options;
+using Mvp24Hours.Infrastructure.Email.Providers;
+using Mvp24Hours.Infrastructure.Email.Queue;
+using Mvp24Hours.Infrastructure.Email.RateLimiting;
+using Mvp24Hours.Infrastructure.Email.Templates;
 
 namespace Mvp24Hours.Infrastructure.Email.Extensions
 {

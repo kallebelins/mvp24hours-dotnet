@@ -1,15 +1,15 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.MySql.Test.Setup;
 using Mvp24Hours.Application.MySql.Test.Support.Entities;
 using Mvp24Hours.Application.MySql.Test.Support.Services;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using System;
-using System.Collections.Generic;
 using Xunit;
 using Xunit.Priority;
 

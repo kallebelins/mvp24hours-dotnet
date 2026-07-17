@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentValidation;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.ValueObjects.Logic;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using FluentValidation;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Extensions
 {

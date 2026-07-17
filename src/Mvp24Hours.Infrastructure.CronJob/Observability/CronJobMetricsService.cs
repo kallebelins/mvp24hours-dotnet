@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Observability;
-using Mvp24Hours.Core.Observability.Metrics;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Observability;
+using Mvp24Hours.Core.Observability.Metrics;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Observability;
 
@@ -40,13 +40,13 @@ public sealed class CronJobMetricsService : ICronJobMetrics
 {
     private readonly ILogger<CronJobMetricsService>? _logger;
     private readonly CronJobMetrics? _coreMetrics;
-    
+
     // Custom metrics for extended functionality
     private readonly Counter<long> _skippedTotal;
     private readonly Counter<long> _retriesTotal;
     private readonly Counter<long> _circuitBreakerChanges;
     private readonly Histogram<double> _retryDelayMs;
-    
+
     // Job state tracking
     private readonly ConcurrentDictionary<string, CronJobState> _jobStates = new();
 
@@ -95,7 +95,7 @@ public sealed class CronJobMetricsService : ICronJobMetrics
         state.LastExecutionTime = DateTimeOffset.UtcNow;
         state.LastExecutionDurationMs = durationMs;
         state.LastExecutionSuccess = success;
-        
+
         if (!success)
         {
             state.TotalFailures++;
@@ -370,15 +370,15 @@ public sealed class CronJobState
     /// <summary>
     /// Gets the success rate as a percentage.
     /// </summary>
-    public double SuccessRate => TotalExecutions > 0 
-        ? ((TotalExecutions - TotalFailures) / (double)TotalExecutions) * 100 
+    public double SuccessRate => TotalExecutions > 0
+        ? ((TotalExecutions - TotalFailures) / (double)TotalExecutions) * 100
         : 100;
 
     /// <summary>
     /// Gets the time since last execution.
     /// </summary>
-    public TimeSpan? TimeSinceLastExecution => LastExecutionTime.HasValue 
-        ? DateTimeOffset.UtcNow - LastExecutionTime.Value 
+    public TimeSpan? TimeSinceLastExecution => LastExecutionTime.HasValue
+        ? DateTimeOffset.UtcNow - LastExecutionTime.Value
         : null;
 }
 

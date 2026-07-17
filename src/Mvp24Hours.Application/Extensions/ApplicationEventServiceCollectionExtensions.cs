@@ -4,13 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Application.Contract.Events;
 using Mvp24Hours.Application.Logic.Events;
-using System;
-using System.Linq;
-using System.Reflection;
 
 namespace Mvp24Hours.Application.Extensions;
 

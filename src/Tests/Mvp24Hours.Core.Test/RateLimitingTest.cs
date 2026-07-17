@@ -1,15 +1,15 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.RateLimiting;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.Extensions;
 using Mvp24Hours.Core.Infrastructure.RateLimiting;
-using System.Threading.RateLimiting;
 
 namespace Mvp24Hours.Core.Test;
 
@@ -141,7 +141,7 @@ public class RateLimitingTest : IDisposable
         // Assert
         lease1.IsAcquired.Should().BeTrue();
         lease2.IsAcquired.Should().BeFalse();
-        
+
         // Some rate limiters may not provide RetryAfter metadata
         // This is acceptable behavior - we just verify the lease is rejected
         if (lease2.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))

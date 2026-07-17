@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.Testing.Observability;
 using System;
 using System.Linq;
+using Mvp24Hours.Infrastructure.Testing.Observability;
 
 namespace Mvp24Hours.Infrastructure.Testing.Assertions
 {

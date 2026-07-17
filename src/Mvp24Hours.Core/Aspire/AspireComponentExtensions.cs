@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
 
 namespace Mvp24Hours.Core.Aspire;
 
@@ -77,7 +77,7 @@ public static class AspireComponentExtensions
     {
         var options = new AspireRedisOptions { ConnectionName = connectionName };
         services.AddSingleton(options);
-        
+
         return services;
     }
 
@@ -108,7 +108,7 @@ public static class AspireComponentExtensions
         var options = new AspireRabbitMQOptions { ConnectionName = connectionName };
         configure?.Invoke(options);
         services.AddSingleton(options);
-        
+
         return services;
     }
 
@@ -140,7 +140,7 @@ public static class AspireComponentExtensions
             DatabaseType = AspireDatabaseType.SqlServer
         };
         services.AddSingleton(options);
-        
+
         return services;
     }
 
@@ -160,7 +160,7 @@ public static class AspireComponentExtensions
             DatabaseType = AspireDatabaseType.PostgreSql
         };
         services.AddSingleton(options);
-        
+
         return services;
     }
 
@@ -192,7 +192,7 @@ public static class AspireComponentExtensions
             DatabaseType = AspireDatabaseType.MongoDB
         };
         services.AddSingleton(options);
-        
+
         return services;
     }
 
@@ -224,7 +224,7 @@ public class AspireRedisOptions
     /// Gets or sets the Aspire connection name.
     /// </summary>
     public string ConnectionName { get; set; } = "cache";
-    
+
     /// <summary>
     /// Gets or sets the instance name for Redis cache.
     /// </summary>

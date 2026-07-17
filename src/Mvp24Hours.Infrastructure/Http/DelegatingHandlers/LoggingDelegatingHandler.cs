@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Http.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +13,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Http.Options;
 
 namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 {

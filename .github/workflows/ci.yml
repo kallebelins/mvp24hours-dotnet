@@ -72,8 +72,12 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    # Formatting-only gate (whitespace + import ordering). `--severity error` skips
+    # warning-level analyzer code fixes (CS8625/CS0618/CA*), whose churn is deferred to
+    # v2 together with the residual warnings accepted in task 10.1. Solution lives under
+    # src/ — a bare `dotnet format` from repo root cannot find a project/solution.
     - name: 🎨 Check code formatting
-      run: dotnet format --verify-no-changes --verbosity diagnostic
+      run: dotnet format src/Mvp24Hours.sln --severity error --verify-no-changes --verbosity diagnostic
 
     # TreatWarningsAsErrors deferred: ~969 residual warnings accepted in phase 10.1
     # (see tasks/phase10-warnings-residual-net10-v1.md). Re-enable when residual ≈ 0.

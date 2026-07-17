@@ -4,13 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.Sms.Models;
-using Mvp24Hours.Infrastructure.Sms.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Sms.Models;
+using Mvp24Hours.Infrastructure.Sms.Results;
 
 namespace Mvp24Hours.Infrastructure.Testing.Fakes
 {

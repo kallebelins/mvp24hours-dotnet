@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Queries
 {

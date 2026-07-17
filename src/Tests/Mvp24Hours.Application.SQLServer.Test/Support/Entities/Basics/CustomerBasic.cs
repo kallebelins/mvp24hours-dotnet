@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Domain.Entity;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Mvp24Hours.Core.Contract.Domain.Entity;
 
 namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.Basics
 {

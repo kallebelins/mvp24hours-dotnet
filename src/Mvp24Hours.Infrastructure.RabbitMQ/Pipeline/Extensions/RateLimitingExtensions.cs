@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Contract.Infrastructure.RateLimiting;
 using Mvp24Hours.Core.Infrastructure.RateLimiting;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
-using System;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Extensions
 {

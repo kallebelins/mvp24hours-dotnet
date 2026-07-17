@@ -3,12 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Models;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Results;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,6 +10,12 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Models;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Results;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 {
@@ -279,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
         {
             // Simplified implementation - in production, use a proper CRON parser
             _logger?.LogWarning("Recurring jobs are not fully supported in InMemoryJobProvider. Use a production provider like Hangfire or Quartz.NET.");
-            
+
             // For now, just schedule it once
             return EnqueueAsync<TJob, TArgs>(args, options, cancellationToken);
         }
@@ -293,7 +293,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
         {
             // Simplified implementation - in production, use a proper CRON parser
             _logger?.LogWarning("Recurring jobs are not fully supported in InMemoryJobProvider. Use a production provider like Hangfire or Quartz.NET.");
-            
+
             // For now, just schedule it once
             return EnqueueAsync<TJob>(options, cancellationToken);
         }
@@ -331,7 +331,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             _ = Task.Run(async () =>
             {
                 await WaitForJobCompletionAsync(parentJobId, continuation.MaxWaitTime ?? TimeSpan.FromHours(24), cancellationToken);
-                
+
                 var parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
                 if (ShouldExecuteContinuation(parentStatus, continuation))
                 {
@@ -368,7 +368,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             _ = Task.Run(async () =>
             {
                 await WaitForJobCompletionAsync(parentJobId, continuation.MaxWaitTime ?? TimeSpan.FromHours(24), cancellationToken);
-                
+
                 var parentStatus = await GetStatusAsync(parentJobId, cancellationToken);
                 if (ShouldExecuteContinuation(parentStatus, continuation))
                 {
@@ -650,7 +650,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 jobInfo.StartedAt = DateTimeOffset.UtcNow;
                 jobInfo.AttemptNumber++;
 
-                _logger?.LogDebug("Executing job {JobId} of type {JobType} (attempt {Attempt})", 
+                _logger?.LogDebug("Executing job {JobId} of type {JobType} (attempt {Attempt})",
                     jobId, jobInfo.JobType, jobInfo.AttemptNumber);
 
                 try
@@ -664,8 +664,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                         throw new InvalidOperationException($"Failed to deserialize arguments for job {jobId}");
                     }
 
-                    var metadata = jobInfo.Options.Metadata != null 
-                        ? new Dictionary<string, string>(jobInfo.Options.Metadata) 
+                    var metadata = jobInfo.Options.Metadata != null
+                        ? new Dictionary<string, string>(jobInfo.Options.Metadata)
                         : new Dictionary<string, string>();
                     var context = new JobContext(
                         jobId,
@@ -707,8 +707,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     {
                         jobInfo.Status = JobStatus.Retrying;
                         var delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
-                        
-                        _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}", 
+
+                        _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}",
                             jobId, jobInfo.AttemptNumber, delay);
 
                         // Schedule retry
@@ -722,7 +722,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     {
                         jobInfo.Status = JobStatus.Failed;
                         jobInfo.CompletedAt = DateTimeOffset.UtcNow;
-                        _logger?.LogError(ex, "Job {JobId} failed after {Attempts} attempts", 
+                        _logger?.LogError(ex, "Job {JobId} failed after {Attempts} attempts",
                             jobId, jobInfo.AttemptNumber);
                     }
                 }
@@ -753,7 +753,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                 jobInfo.StartedAt = DateTimeOffset.UtcNow;
                 jobInfo.AttemptNumber++;
 
-                _logger?.LogDebug("Executing job {JobId} of type {JobType} (attempt {Attempt})", 
+                _logger?.LogDebug("Executing job {JobId} of type {JobType} (attempt {Attempt})",
                     jobId, jobInfo.JobType, jobInfo.AttemptNumber);
 
                 try
@@ -761,8 +761,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     using var scope = _serviceProvider.CreateScope();
                     var job = scope.ServiceProvider.GetRequiredService<TJob>();
 
-                    var metadata = jobInfo.Options.Metadata != null 
-                        ? new Dictionary<string, string>(jobInfo.Options.Metadata) 
+                    var metadata = jobInfo.Options.Metadata != null
+                        ? new Dictionary<string, string>(jobInfo.Options.Metadata)
                         : new Dictionary<string, string>();
                     var context = new JobContext(
                         jobId,
@@ -798,8 +798,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     {
                         jobInfo.Status = JobStatus.Retrying;
                         var delay = CalculateRetryDelay(jobInfo.AttemptNumber, jobInfo.Options);
-                        
-                        _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}", 
+
+                        _logger?.LogWarning(ex, "Job {JobId} failed (attempt {Attempt}), will retry after {Delay}",
                             jobId, jobInfo.AttemptNumber, delay);
 
                         // Schedule retry
@@ -813,7 +813,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
                     {
                         jobInfo.Status = JobStatus.Failed;
                         jobInfo.CompletedAt = DateTimeOffset.UtcNow;
-                        _logger?.LogError(ex, "Job {JobId} failed after {Attempts} attempts", 
+                        _logger?.LogError(ex, "Job {JobId} failed after {Attempts} attempts",
                             jobId, jobInfo.AttemptNumber);
                     }
                 }
@@ -870,8 +870,8 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 
                 if (_jobs.TryGetValue(jobId, out var jobInfo))
                 {
-                    if (jobInfo.Status == JobStatus.Completed || 
-                        jobInfo.Status == JobStatus.Failed || 
+                    if (jobInfo.Status == JobStatus.Completed ||
+                        jobInfo.Status == JobStatus.Failed ||
                         jobInfo.Status == JobStatus.Cancelled)
                     {
                         return;

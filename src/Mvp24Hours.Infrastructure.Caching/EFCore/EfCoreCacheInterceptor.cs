@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 using System;
 using System.Data.Common;
 using System.Linq;
@@ -15,6 +10,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
+using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 
 namespace Mvp24Hours.Infrastructure.Caching.EFCore
 {

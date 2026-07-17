@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.WebAPI.Models;
 using System;
 using System.Collections.Generic;
+using Mvp24Hours.WebAPI.Models;
 
 namespace Mvp24Hours.WebAPI.Configuration
 {

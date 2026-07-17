@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mvp24Hours.Core.Helpers;
 
 namespace Mvp24Hours.Core.ValueObjects
 {

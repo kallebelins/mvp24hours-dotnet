@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 

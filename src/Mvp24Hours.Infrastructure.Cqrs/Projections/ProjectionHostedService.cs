@@ -217,7 +217,7 @@ public class ProjectionRebuildService : IProjectionRebuildService
         try
         {
             _logger.LogInformation("Starting scheduled rebuild for projection {Name}", projectionName);
-            
+
             await _projectionManager.RebuildAsync(projectionName, cancellationToken);
 
             lock (_lock)
@@ -246,7 +246,7 @@ public class ProjectionRebuildService : IProjectionRebuildService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Rebuild failed for projection {Name}", projectionName);
-            
+
             lock (_lock)
             {
                 _rebuildStatuses[projectionName] = _rebuildStatuses[projectionName] with

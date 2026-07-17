@@ -282,7 +282,7 @@ namespace Mvp24Hours.Infrastructure.Email.RateLimiting
         {
             var elapsed = now - _lastRefillTime;
             var tokensToAdd = (int)(elapsed.TotalMilliseconds / (_options.WindowSize.TotalMilliseconds / _options.MaxRequestsPerWindow));
-            
+
             if (tokensToAdd > 0)
             {
                 _tokens = Math.Min(_options.MaxRequestsPerWindow, _tokens + tokensToAdd);

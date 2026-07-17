@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using RabbitMQ.Client;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 {
@@ -106,7 +106,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
             try
             {
                 using var channel = _connectionFactory.GetOrCreateChannel(tenantId);
-                
+
                 var dlxName = GetDeadLetterExchangeName(tenantId);
                 var dlqName = GetDeadLetterQueueName(tenantId);
 

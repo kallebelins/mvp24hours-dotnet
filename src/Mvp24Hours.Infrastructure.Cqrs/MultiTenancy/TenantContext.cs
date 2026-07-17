@@ -72,7 +72,7 @@ public sealed record TenantContext : ITenantContext
     /// <summary>
     /// Creates a tenant context with ID and name.
     /// </summary>
-    public static TenantContext FromIdAndName(string tenantId, string tenantName) => 
+    public static TenantContext FromIdAndName(string tenantId, string tenantName) =>
         new(tenantId: tenantId, tenantName: tenantName);
 }
 
@@ -137,7 +137,7 @@ public sealed class InMemoryTenantStore : ITenantStore
     public void AddOrUpdate(TenantContext tenant)
     {
         ArgumentNullException.ThrowIfNull(tenant);
-        
+
         if (string.IsNullOrEmpty(tenant.TenantId))
         {
             throw new ArgumentException("Tenant ID cannot be null or empty.", nameof(tenant));

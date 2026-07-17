@@ -3,6 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -13,12 +19,6 @@ using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.WebAPI.Endpoints.Filters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Endpoints;
 
@@ -330,7 +330,7 @@ public static class IEndpointRouteBuilderExtensions
             try
             {
                 var response = await sender.SendAsync<TResponse>(query, cancellationToken);
-                
+
                 if (response is null)
                 {
                     return Results.NotFound(new ProblemDetails

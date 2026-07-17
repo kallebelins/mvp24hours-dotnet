@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Infrastructure.Pipe.Typed;
 
 namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.DependencyGraph
 {

@@ -3,13 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Caching.Attributes;
-using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +10,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Infrastructure.Caching.Attributes;
+using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 
 namespace Mvp24Hours.Infrastructure.Caching.Repository
 {

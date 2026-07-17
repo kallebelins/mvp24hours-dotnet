@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Models;
-using Mvp24Hours.Infrastructure.Email.Options;
-using Mvp24Hours.Infrastructure.Email.Results;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +12,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Email.Options;
+using Mvp24Hours.Infrastructure.Email.Results;
 
 namespace Mvp24Hours.Infrastructure.Email.Providers
 {
@@ -167,11 +167,11 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 new
                 {
                     to = (message.To ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray(),
-                    cc = (message.Cc ?? Enumerable.Empty<string>()).Any() 
-                        ? (message.Cc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray() 
+                    cc = (message.Cc ?? Enumerable.Empty<string>()).Any()
+                        ? (message.Cc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray()
                         : null,
-                    bcc = (message.Bcc ?? Enumerable.Empty<string>()).Any() 
-                        ? (message.Bcc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray() 
+                    bcc = (message.Bcc ?? Enumerable.Empty<string>()).Any()
+                        ? (message.Bcc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray()
                         : null,
                     subject = message.Subject ?? string.Empty
                 }
@@ -191,26 +191,26 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             {
                 personalizations = personalizations,
                 from = from,
-                reply_to = !string.IsNullOrWhiteSpace(message.ReplyTo) 
-                    ? ParseEmailAddress(message.ReplyTo) 
-                    : (!string.IsNullOrWhiteSpace(Options.DefaultReplyTo) 
-                        ? ParseEmailAddress(Options.DefaultReplyTo) 
+                reply_to = !string.IsNullOrWhiteSpace(message.ReplyTo)
+                    ? ParseEmailAddress(message.ReplyTo)
+                    : (!string.IsNullOrWhiteSpace(Options.DefaultReplyTo)
+                        ? ParseEmailAddress(Options.DefaultReplyTo)
                         : null),
                 subject = message.Subject ?? string.Empty,
                 content = content,
                 attachments = (message.Attachments ?? Enumerable.Empty<Contract.IEmailAttachment>())
                     .Select(CreateSendGridAttachment)
                     .ToArray(),
-                categories = _sendGridOptions.DefaultCategories.Any() 
-                    ? _sendGridOptions.DefaultCategories.ToArray() 
+                categories = _sendGridOptions.DefaultCategories.Any()
+                    ? _sendGridOptions.DefaultCategories.ToArray()
                     : null,
                 tracking_settings = new
                 {
                     click_tracking = new { enable = _sendGridOptions.EnableClickTracking },
                     open_tracking = new { enable = _sendGridOptions.EnableOpenTracking }
                 },
-                headers = message.Headers.Any() 
-                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value) 
+                headers = message.Headers.Any()
+                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value)
                     : null
             };
 

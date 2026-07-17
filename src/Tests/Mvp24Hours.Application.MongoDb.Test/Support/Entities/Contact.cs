@@ -1,9 +1,9 @@
+using System;
+using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Mvp24Hours.Application.MongoDb.Test.Support.Enums;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using System;
-using System.Text.Json.Serialization;
 
 namespace Mvp24Hours.Application.MongoDb.Test.Support.Entities
 {

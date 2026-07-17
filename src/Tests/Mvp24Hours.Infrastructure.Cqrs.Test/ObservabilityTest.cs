@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -463,7 +463,7 @@ public class ObservabilityTest
     #region [ Test Commands and Handlers ]
 
     public record GetContextCommand : IMediatorCommand<ContextResult>;
-    
+
     public record ContextResult(string? CorrelationId, string? RequestId, string? CausationId);
 
     [Trait("Category", "Unit")]

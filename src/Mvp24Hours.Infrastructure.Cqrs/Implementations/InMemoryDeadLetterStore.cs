@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Concurrent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -75,8 +75,8 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
 
     /// <inheritdoc />
     public Task<IReadOnlyList<DeadLetterMessage>> GetByEventTypeAsync(
-        string eventType, 
-        int limit = 100, 
+        string eventType,
+        int limit = 100,
         CancellationToken cancellationToken = default)
     {
         var messages = _messages.Values
@@ -139,7 +139,7 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var removed = _messages.TryRemove(id, out var message);
-        
+
         if (removed)
         {
             _logger?.LogDebug("[DLQ] Deleted message {MessageId}", id);

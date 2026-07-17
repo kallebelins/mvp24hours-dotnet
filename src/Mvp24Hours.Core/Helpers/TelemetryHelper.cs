@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Logging;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Core.Contract.Infrastructure.Logging;
+using Mvp24Hours.Core.Enums.Infrastructure;
+using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Helpers
 {

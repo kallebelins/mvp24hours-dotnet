@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
 {
@@ -189,7 +189,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
         {
             // AES encryption adds: IV (16 bytes) + padding (up to 16 bytes) + Base64 overhead (~33%)
             var estimatedEncryptedLength = (int)Math.Ceiling((16 + maxPlainTextLength + 16) * 1.34);
-            
+
             return builder
                 .HasConversion(new EncryptedStringConverter(encryptionProvider))
                 .HasMaxLength(estimatedEncryptedLength);

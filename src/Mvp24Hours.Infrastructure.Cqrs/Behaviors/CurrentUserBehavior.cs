@@ -104,8 +104,8 @@ public sealed class CurrentUserBehavior<TRequest, TResponse> : IPipelineBehavior
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
-        TRequest request, 
-        RequestHandlerDelegate<TResponse> next, 
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
@@ -115,11 +115,11 @@ public sealed class CurrentUserBehavior<TRequest, TResponse> : IPipelineBehavior
         {
             // Resolve current user
             ICurrentUser? currentUser = null;
-            
+
             if (_currentUserFactory != null)
             {
                 currentUser = _currentUserFactory.CreateFromCurrentContext();
-                
+
                 if (currentUser?.IsAuthenticated == true)
                 {
                     _logger?.LogDebug(

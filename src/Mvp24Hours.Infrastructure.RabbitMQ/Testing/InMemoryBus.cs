@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +10,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
 {
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             bool isBatch = false)
         {
             var messageId = tokenDefault ?? Guid.NewGuid().ToString();
-            
+
             var publishedMessage = new PublishedMessage
             {
                 Message = message,
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             };
 
             _publishedMessages.Add(publishedMessage);
-            
+
             return messageId;
         }
 
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
                             exception: ex);
 
                         _consumedMessages.Add(consumedMessage);
-                        
+
                         stopwatch.Stop();
                         return ConsumeResult.Failure(messageId, ex, stopwatch.Elapsed);
                     }

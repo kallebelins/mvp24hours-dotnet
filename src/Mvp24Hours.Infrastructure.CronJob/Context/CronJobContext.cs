@@ -55,7 +55,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Context
             ScheduledTime = scheduledTime;
             ParentJobId = parentJobId;
             CorrelationId = correlationId ?? Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N");
-            
+
             StartTime = DateTimeOffset.UtcNow;
             CurrentAttempt = 1;
             _timeout = timeout;

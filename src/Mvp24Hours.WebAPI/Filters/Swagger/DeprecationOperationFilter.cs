@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Mvp24Hours.WebAPI.Filters.Swagger
 {
@@ -74,7 +74,7 @@ namespace Mvp24Hours.WebAPI.Filters.Swagger
         private static void AddDeprecationWarning(OpenApiOperation operation, ApiVersionAttribute apiVersion)
         {
             var message = "This API version is deprecated.";
-            
+
             if (apiVersion.Deprecated)
             {
                 message = $"API version {apiVersion.Versions.FirstOrDefault()} is deprecated.";

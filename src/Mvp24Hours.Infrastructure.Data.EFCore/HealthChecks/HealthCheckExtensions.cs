@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
 
 namespace Mvp24Hours.Extensions
 {

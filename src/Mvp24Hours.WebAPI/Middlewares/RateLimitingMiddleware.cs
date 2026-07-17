@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.RateLimiting;
-using System;
-using System.Text.Json;
-using System.Threading.RateLimiting;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Middlewares
 {
@@ -43,9 +43,9 @@ namespace Mvp24Hours.WebAPI.Middlewares
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             ArgumentNullException.ThrowIfNull(partitionResolver);
-            
+
             // Create the partitioned rate limiter that resolves partitions based on the request
             _rateLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
                 ctx => partitionResolver.GetPartition(ctx));
@@ -109,11 +109,11 @@ namespace Mvp24Hours.WebAPI.Middlewares
             if (policy != null)
             {
                 context.Response.Headers[_options.RateLimitHeaderName] = policy.PermitLimit.ToString();
-                
+
                 // Retry-After for sliding windows
                 if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
-                    context.Response.Headers[_options.RateLimitResetHeaderName] = 
+                    context.Response.Headers[_options.RateLimitResetHeaderName] =
                         DateTimeOffset.UtcNow.Add(retryAfter).ToUnixTimeSeconds().ToString();
                 }
             }
@@ -138,10 +138,10 @@ namespace Mvp24Hours.WebAPI.Middlewares
             {
                 context.Response.Headers[_options.RateLimitHeaderName] = policy.PermitLimit.ToString();
                 context.Response.Headers[_options.RateLimitRemainingHeaderName] = "0";
-                
+
                 if (lease.TryGetMetadata(MetadataName.RetryAfter, out var resetAfter))
                 {
-                    context.Response.Headers[_options.RateLimitResetHeaderName] = 
+                    context.Response.Headers[_options.RateLimitResetHeaderName] =
                         DateTimeOffset.UtcNow.Add(resetAfter).ToUnixTimeSeconds().ToString();
                 }
             }
@@ -175,7 +175,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             };
 
             problemDetails.Extensions["retryAfter"] = retryAfterSeconds;
-            
+
             // Add trace ID if available
             var traceId = context.TraceIdentifier;
             if (!string.IsNullOrEmpty(traceId))

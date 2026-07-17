@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 {
@@ -38,13 +38,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
         public Task<SagaInstance<TData>?> FindAsync(Guid correlationId, CancellationToken cancellationToken = default)
         {
             _sagas.TryGetValue(correlationId, out var instance);
-            
+
             // Return a clone to prevent external modification
             if (instance != null)
             {
                 instance = Clone(instance);
             }
-            
+
             return Task.FromResult(instance);
         }
 
@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
 
             instance.LastUpdatedAt = DateTime.UtcNow;
             instance.Version++;
-            
+
             _sagas[instance.CorrelationId] = Clone(instance);
             return Task.CompletedTask;
         }
@@ -120,7 +120,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
             CancellationToken cancellationToken = default)
         {
             var threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
-            
+
             var result = _sagas.Values
                 .Where(s => s.IsActive && s.LastUpdatedAt < threshold)
                 .Select(Clone)

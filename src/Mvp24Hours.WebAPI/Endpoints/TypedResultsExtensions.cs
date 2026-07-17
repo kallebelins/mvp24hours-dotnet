@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Mvp24Hours.WebAPI.Endpoints;
 
@@ -137,7 +137,7 @@ public static class TypedResultsExtensions
 
         // Check for structured messages with error codes
         var structuredMessages = errorMessages.OfType<Mvp24Hours.Core.Contract.ValueObjects.Logic.IStructuredMessageResult>().ToList();
-        
+
         // Check for NOT_FOUND error code
         if (structuredMessages.Any(m => m.ErrorCode == "NOT_FOUND" || m.ErrorCode?.Contains("NOT_FOUND") == true) ||
             errorMessages.Any(m => m.Key == "NOT_FOUND" || m.CustomType == "NOT_FOUND"))

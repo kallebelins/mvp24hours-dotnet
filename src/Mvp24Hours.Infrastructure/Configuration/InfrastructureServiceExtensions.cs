@@ -3,6 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Extensions;
 using Mvp24Hours.Infrastructure.DistributedLocking.Extensions;
 using Mvp24Hours.Infrastructure.Email.Extensions;
@@ -17,12 +23,6 @@ using Mvp24Hours.Infrastructure.Security.Extensions;
 using Mvp24Hours.Infrastructure.Security.Options;
 using Mvp24Hours.Infrastructure.Sms.Extensions;
 using Mvp24Hours.Infrastructure.Sms.Options;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.Configuration
 {

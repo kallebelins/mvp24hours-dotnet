@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
 {
@@ -229,7 +229,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                 if (issues.Count > 0)
                 {
                     var message = $"Replica set '{setName}' has issues: {string.Join(" ", issues)}";
-                    
+
                     // Determine if it's degraded or unhealthy
                     var status = primaryCount > 0 && secondaryCount > 0
                         ? HealthStatus.Degraded

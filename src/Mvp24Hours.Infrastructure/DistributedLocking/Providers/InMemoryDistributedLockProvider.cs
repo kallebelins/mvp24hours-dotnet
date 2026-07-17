@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
-using Mvp24Hours.Infrastructure.DistributedLocking.Metrics;
-using Mvp24Hours.Infrastructure.DistributedLocking.Options;
-using Mvp24Hours.Infrastructure.DistributedLocking.Results;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
+using Mvp24Hours.Infrastructure.DistributedLocking.Metrics;
+using Mvp24Hours.Infrastructure.DistributedLocking.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 
 namespace Mvp24Hours.Infrastructure.DistributedLocking.Providers
 {

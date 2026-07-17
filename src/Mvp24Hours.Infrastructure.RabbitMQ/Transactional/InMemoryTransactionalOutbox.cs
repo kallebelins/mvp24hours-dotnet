@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 {
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 
             var pending = _messages.Values
                 .Where(m => m.Status == TransactionalOutboxStatus.Pending ||
-                           (m.Status == TransactionalOutboxStatus.Failed && 
+                           (m.Status == TransactionalOutboxStatus.Failed &&
                             (m.NextRetryAt == null || m.NextRetryAt <= now)))
                 .Where(m => m.ScheduledAt == null || m.ScheduledAt <= now)
                 .OrderBy(m => m.Priority)

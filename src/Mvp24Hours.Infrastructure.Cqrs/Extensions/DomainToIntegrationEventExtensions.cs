@@ -78,11 +78,11 @@ public static class DomainToIntegrationEventExtensions
         IServiceProvider serviceProvider)
     {
         var domainEventType = domainEvent.GetType();
-        
+
         // Find a converter for this domain event type
         // Look for IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>
         var converterInterfaceType = typeof(IDomainToIntegrationEventConverter<,>);
-        
+
         foreach (var service in serviceProvider.GetServices<object>())
         {
             if (service == null) continue;
@@ -99,7 +99,7 @@ public static class DomainToIntegrationEventExtensions
                 if (genericArgs.Length != 2) continue;
 
                 var converterDomainEventType = genericArgs[0];
-                
+
                 if (!converterDomainEventType.IsAssignableFrom(domainEventType)) continue;
 
                 // Found a matching converter, invoke the Convert method

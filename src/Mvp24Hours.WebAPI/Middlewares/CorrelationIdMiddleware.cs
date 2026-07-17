@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Mvp24Hours.WebAPI.Configuration;
-using System;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Middlewares
 {

@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
 {
@@ -193,7 +193,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
                         LowCount = kvp.Value.TryGetValue(JobPriority.Low, out var lq) ? lq.Count : 0
                     };
 
-                    queueStats.TotalCount = queueStats.CriticalCount + queueStats.HighCount + 
+                    queueStats.TotalCount = queueStats.CriticalCount + queueStats.HighCount +
                                           queueStats.NormalCount + queueStats.LowCount;
 
                     stats[kvp.Key] = queueStats;

@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OutputCaching;
@@ -10,10 +14,6 @@ using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Extensions
 {
@@ -116,7 +116,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                 opt.CacheableMethods = mvpOptions.CacheableMethods;
                 opt.CacheableContentTypes = mvpOptions.CacheableContentTypes;
                 opt.CacheableStatusCodes = mvpOptions.CacheableStatusCodes;
-                
+
                 foreach (var path in mvpOptions.ExcludedPaths)
                 {
                     opt.ExcludedPaths.Add(path);

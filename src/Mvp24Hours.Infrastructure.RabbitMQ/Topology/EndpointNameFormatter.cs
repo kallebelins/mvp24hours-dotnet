@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
             // Extract message type from IMessageConsumer<T> if available
             var messageType = GetMessageTypeFromConsumer(consumerType);
-            
+
             var baseName = messageType != null
                 ? FormatTypeName(messageType)
                 : FormatTypeName(consumerType);
@@ -183,7 +183,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 
             // Remove invalid characters (keep alphanumeric, dots, dashes, underscores)
             var sanitized = Regex.Replace(name, @"[^a-zA-Z0-9._\-]", string.Empty);
-            
+
             // Ensure it doesn't start with a number
             if (char.IsDigit(sanitized.FirstOrDefault()))
             {
@@ -262,7 +262,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private string ToKebabCase(string name)
         {
             if (string.IsNullOrEmpty(name)) return name;
-            
+
             var builder = new StringBuilder();
             for (var i = 0; i < name.Length; i++)
             {
@@ -279,7 +279,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
         private string ToSnakeCase(string name)
         {
             if (string.IsNullOrEmpty(name)) return name;
-            
+
             var builder = new StringBuilder();
             for (var i = 0; i < name.Length; i++)
             {

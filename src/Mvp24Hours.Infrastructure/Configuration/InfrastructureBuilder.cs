@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Extensions;
 using Mvp24Hours.Infrastructure.DistributedLocking.Extensions;
 using Mvp24Hours.Infrastructure.Email.Extensions;
@@ -16,9 +19,6 @@ using Mvp24Hours.Infrastructure.Resilience.Options;
 using Mvp24Hours.Infrastructure.Security.Extensions;
 using Mvp24Hours.Infrastructure.Sms.Extensions;
 using Mvp24Hours.Infrastructure.Sms.Options;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Configuration
 {

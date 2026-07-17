@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -493,7 +493,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
             {
                 var parts = orderClause.Split(' ');
                 var propertyName = parts[0];
-                var isDescending = parts.Length > 1 && 
+                var isDescending = parts.Length > 1 &&
                     parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
 
                 var parameter = Expression.Parameter(typeof(TEntity), "e");

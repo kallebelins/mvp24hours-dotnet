@@ -129,8 +129,8 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
-        TRequest request, 
-        RequestHandlerDelegate<TResponse> next, 
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
@@ -145,7 +145,7 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                 if (_tenantStore != null)
                 {
                     tenantContext = await _tenantStore.GetByIdAsync(tenantAware.OverrideTenantId, cancellationToken);
-                    
+
                     if (tenantContext == null)
                     {
                         _logger?.LogWarning(
@@ -165,7 +165,7 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                 {
                     // Create a minimal context from the override ID
                     tenantContext = TenantContext.FromId(tenantAware.OverrideTenantId);
-                    
+
                     _logger?.LogDebug(
                         "[Tenant] Using override tenant ID {TenantId} for {RequestName} (no store available)",
                         tenantAware.OverrideTenantId,
@@ -176,7 +176,7 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             else if (_tenantResolver != null)
             {
                 tenantContext = await _tenantResolver.ResolveAsync(cancellationToken);
-                
+
                 if (tenantContext != null)
                 {
                     _logger?.LogDebug(

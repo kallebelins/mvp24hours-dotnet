@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Mvp24Hours.Core.Aspire;
 
@@ -146,8 +146,8 @@ public static class AspireHostingExtensions
     private static async Task WriteHealthCheckResponse(HttpContext context, HealthReport report)
     {
         context.Response.ContentType = "application/json; charset=utf-8";
-        
-        var statusCode = report.Status == HealthStatus.Healthy ? 200 : 
+
+        var statusCode = report.Status == HealthStatus.Healthy ? 200 :
                         report.Status == HealthStatus.Degraded ? 200 : 503;
         context.Response.StatusCode = statusCode;
 

@@ -10,7 +10,7 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.Services
     public class TimerService
     {
         private readonly Stopwatch _stopwatch = new();
-        
+
         /// <summary>
         /// Gets the list of recorded execution times.
         /// </summary>

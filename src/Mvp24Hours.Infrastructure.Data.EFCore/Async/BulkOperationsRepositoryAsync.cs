@@ -3,6 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,13 +18,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore
 {
@@ -58,7 +58,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
     /// }
     /// </code>
     /// </example>
-    public class BulkOperationsRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<BulkOperationsRepositoryAsync<T>> logger) 
+    public class BulkOperationsRepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<BulkOperationsRepositoryAsync<T>> logger)
         : RepositoryAsync<T>(_dbContext, options), IBulkOperationsRepositoryAsync<T>
         where T : class, IEntityBase
     {

@@ -4,11 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Testing.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Testing.Logging;
 
 namespace Mvp24Hours.Infrastructure.Testing.Assertions
 {
@@ -319,7 +319,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Assertions
         {
             var entries = logs.Take(20).Select(l => $"  {l}");
             var result = string.Join("\n", entries);
-            
+
             var count = logs.Count();
             if (count > 20)
             {

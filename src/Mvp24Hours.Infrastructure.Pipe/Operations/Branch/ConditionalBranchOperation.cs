@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Enums;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
 {
@@ -100,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Branch
             _logger?.LogDebug("ConditionalBranchOperation: Execute started with {BranchCount} branches", _branches.Count);
 
             var branchKey = EvaluateBranch(input);
-            
+
             List<IOperation>? branchToExecute = null;
             if (branchKey != null && _branches.TryGetValue(branchKey, out var branch))
             {

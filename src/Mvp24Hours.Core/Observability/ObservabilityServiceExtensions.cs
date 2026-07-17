@@ -145,7 +145,7 @@ public static class ObservabilityServiceExtensions
             opt.EnableLogging = options.EnableLogging;
             opt.EnableTracing = options.EnableTracing;
             opt.EnableMetrics = options.EnableMetrics;
-            
+
             // Copy nested options
             opt.Logging = options.Logging;
             opt.Tracing = options.Tracing;

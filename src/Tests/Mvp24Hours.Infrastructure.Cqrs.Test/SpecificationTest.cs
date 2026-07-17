@@ -1,14 +1,14 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq.Expressions;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Queries;
-using System;
-using System.Linq.Expressions;
 using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test

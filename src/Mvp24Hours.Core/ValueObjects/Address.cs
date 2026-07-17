@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Mvp24Hours.Core.Helpers;
 
 namespace Mvp24Hours.Core.ValueObjects
 {

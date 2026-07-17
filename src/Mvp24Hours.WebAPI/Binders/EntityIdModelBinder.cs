@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Mvp24Hours.Core.ValueObjects;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Mvp24Hours.Core.ValueObjects;
 
 namespace Mvp24Hours.WebAPI.Binders
 {

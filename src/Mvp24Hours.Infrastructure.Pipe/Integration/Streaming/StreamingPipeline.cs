@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Infrastructure.Pipe.Typed;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
 {
@@ -97,13 +97,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
                 await foreach (var input in inputs.WithCancellation(cancellationToken))
                 {
                     var result = await ProcessSingleItemAsync(input, cancellationToken);
-                    
+
                     if (result.IsFailure && !ContinueOnError)
                     {
                         yield return result;
                         yield break;
                     }
-                    
+
                     yield return result;
                 }
             }

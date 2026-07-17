@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Typed
 {
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
             _syncOperations.Add(input =>
             {
                 var typedInput = (TOutput?)input;
-                
+
                 if (condition(typedInput!))
                 {
                     var branchChain = thenChain(OperationChain.Start<TOutput>());

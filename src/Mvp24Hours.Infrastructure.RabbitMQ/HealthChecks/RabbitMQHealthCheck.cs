@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.HealthChecks
 {
@@ -39,7 +39,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.HealthChecks
                 {
                     // Try to create a model to verify the connection is working
                     using var channel = _connection.CreateModel();
-                    
+
                     var data = new Dictionary<string, object>
                     {
                         ["host"] = _connection.Options?.ConnectionString ?? "Unknown",

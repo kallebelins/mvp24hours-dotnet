@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Patterns
 {
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                 {
                     // Determine cache options
                     var options = _getCacheOptions?.Invoke(key) ?? CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
-                    
+
                     // Store in cache
                     await _cache.SetAsync(key, value, options, cancellationToken);
                     _logger?.LogDebug("Loaded and cached value for key: {Key}", key);

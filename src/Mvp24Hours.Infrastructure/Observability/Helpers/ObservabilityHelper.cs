@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Observability.Metrics;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Observability.Metrics;
 
 namespace Mvp24Hours.Infrastructure.Observability.Helpers
 {

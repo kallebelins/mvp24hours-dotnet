@@ -1,4 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -13,13 +20,6 @@ using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ
 {
@@ -53,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             this._channels = [];
             this._consumers = [];
             this._logger = _provider.GetService<ILogger<MvpRabbitMQClient>>();
-            
+
             // Optional services
             if (_options.EnableMetrics)
             {
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                 using var channel = Connection.CreateModel();
                 _metrics?.IncrementChannelCreations();
-                
+
                 ExchangeDeclare(channel, Options);
                 channel.ConfirmSelect();
 
@@ -172,15 +172,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         }
 
         private string PublishInternal(
-            object message, 
-            string routingKey, 
+            object message,
+            string routingKey,
             string? tokenDefault,
             byte? priority,
             IDictionary<string, object>? headers,
             int? ttlMilliseconds)
         {
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 _logger?.LogDebug(
@@ -244,7 +244,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         if (headers != null || Options.HeadersExchange.DefaultMessageHeaders != null)
                         {
                             properties.Headers ??= new Dictionary<string, object>();
-                            
+
                             if (Options.HeadersExchange.DefaultMessageHeaders != null)
                             {
                                 foreach (var h in Options.HeadersExchange.DefaultMessageHeaders)
@@ -252,7 +252,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                                     properties.Headers[h.Key] = h.Value;
                                 }
                             }
-                            
+
                             if (headers != null)
                             {
                                 foreach (var h in headers)
@@ -266,12 +266,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         {
                             channel.ConfirmSelect();
                         }
-                        
+
                         channel.BasicPublish(exchange: Options.Exchange,
                                          routingKey: routingKey ?? Options.RoutingKey ?? string.Empty,
                                          basicProperties: Options.BasicProperties ?? properties,
                                          body: body);
-                        
+
                         if (Options.PublisherConfirm.Enabled)
                         {
                             if (Options.PublisherConfirm.WaitForConfirmsOrDie)
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                     stopwatch.Stop();
                     _metrics?.IncrementMessagesSent(Options.Exchange);
-                    
+
                     _structuredLogger?.LogMessagePublished(
                         tokenDefault!,
                         Options.Exchange,
@@ -386,8 +386,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                         "Consumer BasicQos. PrefetchSize={PrefetchSize}, PrefetchCount={PrefetchCount}, Global={Global}",
                         Options.ConsumerPrefetch.PrefetchSize, Options.ConsumerPrefetch.PrefetchCount, Options.ConsumerPrefetch.Global);
                     channel.BasicQos(
-                        prefetchSize: Options.ConsumerPrefetch.PrefetchSize, 
-                        prefetchCount: Options.ConsumerPrefetch.PrefetchCount, 
+                        prefetchSize: Options.ConsumerPrefetch.PrefetchSize,
+                        prefetchCount: Options.ConsumerPrefetch.PrefetchCount,
                         global: Options.ConsumerPrefetch.Global);
 
                     _logger?.LogDebug(
@@ -469,7 +469,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 autoDelete: optionsCtx.AutoDelete,
                 arguments: optionsCtx.ExchangeArguments
             );
-            
+
             _structuredLogger?.LogExchangeDeclared(
                 optionsCtx.Exchange,
                 optionsCtx.ExchangeType.ToString(),
@@ -522,7 +522,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 autoDelete: optionsCtx.AutoDelete,
                 arguments: arguments.Count > 0 ? arguments : null
             );
-            
+
             _structuredLogger?.LogQueueDeclared(
                 queueName ?? optionsCtx.QueueName ?? string.Empty,
                 optionsCtx.Durable,
@@ -533,7 +533,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         private void QueueBind(IModel channelCtx, RabbitMQClientOptions optionsCtx, string routingKey, string queueName)
         {
-            QueueBindInternal(channelCtx, optionsCtx, routingKey, queueName, 
+            QueueBindInternal(channelCtx, optionsCtx, routingKey, queueName,
                 optionsCtx.HeadersExchange.Enabled ? optionsCtx.HeadersExchange : null);
         }
 
@@ -596,7 +596,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                 IBusinessEvent bsEvent = ExtractBodyToBusinessEvent(e);
                 token = bsEvent.Token;
-                
+
                 _metrics?.IncrementMessagesReceived(consumerSync.QueueName);
                 _structuredLogger?.LogMessageReceived(
                     messageId,
@@ -633,7 +633,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 // Mark as processed for deduplication
                 if (_deduplicationStore != null && Options.Deduplication.Enabled)
                 {
-                    _deduplicationStore.MarkAsProcessedAsync(messageId, 
+                    _deduplicationStore.MarkAsProcessedAsync(messageId,
                         DateTimeOffset.UtcNow.AddMinutes(Options.Deduplication.ExpirationMinutes))
                         .GetAwaiter().GetResult();
                 }
@@ -707,7 +707,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
                 IBusinessEvent bsEvent = ExtractBodyToBusinessEvent(e);
                 token = bsEvent.Token;
-                
+
                 _metrics?.IncrementMessagesReceived(consumerAsync.QueueName);
                 _structuredLogger?.LogMessageReceived(
                     messageId,
@@ -745,7 +745,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 // Mark as processed for deduplication
                 if (_deduplicationStore != null && Options.Deduplication.Enabled)
                 {
-                    await _deduplicationStore.MarkAsProcessedAsync(messageId, 
+                    await _deduplicationStore.MarkAsProcessedAsync(messageId,
                         DateTimeOffset.UtcNow.AddMinutes(Options.Deduplication.ExpirationMinutes));
                 }
 
@@ -759,7 +759,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     _metrics?.IncrementError(ex.GetType().Name);
                     _structuredLogger?.LogError("HandleConsumeAsync", ex, token);
                     _logger?.LogError(ex, "Consumer received failure. Token={Token}", token);
-                    
+
                     if (consumerAsync is IMvpRabbitMQConsumerRecoveryAsync recoveryAsync)
                         await recoveryAsync.FailureAsync(ex, token ?? string.Empty);
 
@@ -806,7 +806,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         {
             channel.BasicAck(e.DeliveryTag, false);
             _metrics?.IncrementMessagesAcked();
-            
+
             if (messageId != null && processingTime.HasValue)
             {
                 _structuredLogger?.LogMessageAcked(messageId, e.DeliveryTag, processingTime.Value);

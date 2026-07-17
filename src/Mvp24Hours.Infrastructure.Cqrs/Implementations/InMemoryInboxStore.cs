@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Concurrent;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -45,12 +45,12 @@ public sealed class InMemoryInboxStore : IInboxStore
     public Task<bool> ExistsAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
         var exists = _messages.ContainsKey(messageId);
-        
+
         if (exists)
         {
             _logger?.LogDebug("[Inbox] Message {MessageId} already processed (duplicate)", messageId);
         }
-        
+
         return Task.FromResult(exists);
     }
 
@@ -90,8 +90,8 @@ public sealed class InMemoryInboxStore : IInboxStore
 
     /// <inheritdoc />
     public Task<IReadOnlyList<InboxMessage>> GetByTimeRangeAsync(
-        DateTime from, 
-        DateTime to, 
+        DateTime from,
+        DateTime to,
         CancellationToken cancellationToken = default)
     {
         var messages = _messages.Values

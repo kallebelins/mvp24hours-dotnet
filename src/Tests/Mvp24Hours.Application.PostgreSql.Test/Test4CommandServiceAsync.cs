@@ -1,16 +1,16 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.PostgreSql.Test.Setup;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Entities;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Services.Async;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 

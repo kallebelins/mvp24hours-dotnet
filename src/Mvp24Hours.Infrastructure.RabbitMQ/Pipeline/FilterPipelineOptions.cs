@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 {
@@ -79,7 +79,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         /// <typeparam name="TFilter">The filter type.</typeparam>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <returns>The options for chaining.</returns>
-        public FilterPipelineOptions UseConsumeFilter<TFilter, TMessage>() 
+        public FilterPipelineOptions UseConsumeFilter<TFilter, TMessage>()
             where TFilter : class, IConsumeFilter<TMessage>
             where TMessage : class
         {
@@ -98,13 +98,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         public FilterPipelineOptions UseConsumeFilter(Type filterType)
         {
             if (filterType == null) throw new ArgumentNullException(nameof(filterType));
-            
-            if (!typeof(IConsumeFilter).IsAssignableFrom(filterType) && 
+
+            if (!typeof(IConsumeFilter).IsAssignableFrom(filterType) &&
                 !IsGenericConsumeFilter(filterType))
             {
                 throw new ArgumentException($"Type {filterType.Name} must implement IConsumeFilter or IConsumeFilter<TMessage>", nameof(filterType));
             }
-            
+
             if (!_consumeFilters.Contains(filterType))
             {
                 _consumeFilters.Add(filterType);
@@ -132,7 +132,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         /// <typeparam name="TFilter">The filter type.</typeparam>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <returns>The options for chaining.</returns>
-        public FilterPipelineOptions UsePublishFilter<TFilter, TMessage>() 
+        public FilterPipelineOptions UsePublishFilter<TFilter, TMessage>()
             where TFilter : class, IPublishFilter<TMessage>
             where TMessage : class
         {
@@ -151,13 +151,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         public FilterPipelineOptions UsePublishFilter(Type filterType)
         {
             if (filterType == null) throw new ArgumentNullException(nameof(filterType));
-            
-            if (!typeof(IPublishFilter).IsAssignableFrom(filterType) && 
+
+            if (!typeof(IPublishFilter).IsAssignableFrom(filterType) &&
                 !IsGenericPublishFilter(filterType))
             {
                 throw new ArgumentException($"Type {filterType.Name} must implement IPublishFilter or IPublishFilter<TMessage>", nameof(filterType));
             }
-            
+
             if (!_publishFilters.Contains(filterType))
             {
                 _publishFilters.Add(filterType);
@@ -185,7 +185,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         /// <typeparam name="TFilter">The filter type.</typeparam>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <returns>The options for chaining.</returns>
-        public FilterPipelineOptions UseSendFilter<TFilter, TMessage>() 
+        public FilterPipelineOptions UseSendFilter<TFilter, TMessage>()
             where TFilter : class, ISendFilter<TMessage>
             where TMessage : class
         {
@@ -204,13 +204,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         public FilterPipelineOptions UseSendFilter(Type filterType)
         {
             if (filterType == null) throw new ArgumentNullException(nameof(filterType));
-            
-            if (!typeof(ISendFilter).IsAssignableFrom(filterType) && 
+
+            if (!typeof(ISendFilter).IsAssignableFrom(filterType) &&
                 !IsGenericSendFilter(filterType))
             {
                 throw new ArgumentException($"Type {filterType.Name} must implement ISendFilter or ISendFilter<TMessage>", nameof(filterType));
             }
-            
+
             if (!_sendFilters.Contains(filterType))
             {
                 _sendFilters.Add(filterType);
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
         public FilterPipelineOptions UseFilter<TFilter>() where TFilter : class
         {
             var filterType = typeof(TFilter);
-            
+
             if (typeof(IConsumeFilter).IsAssignableFrom(filterType) || IsGenericConsumeFilter(filterType))
             {
                 if (!_consumeFilters.Contains(filterType))
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                     _consumeFilters.Add(filterType);
                 }
             }
-            
+
             if (typeof(IPublishFilter).IsAssignableFrom(filterType) || IsGenericPublishFilter(filterType))
             {
                 if (!_publishFilters.Contains(filterType))
@@ -243,7 +243,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                     _publishFilters.Add(filterType);
                 }
             }
-            
+
             if (typeof(ISendFilter).IsAssignableFrom(filterType) || IsGenericSendFilter(filterType))
             {
                 if (!_sendFilters.Contains(filterType))
@@ -251,7 +251,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
                     _sendFilters.Add(filterType);
                 }
             }
-            
+
             return this;
         }
 
@@ -302,19 +302,19 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline
 
         private static bool IsGenericConsumeFilter(Type type)
         {
-            return type.GetInterfaces().Any(i => 
+            return type.GetInterfaces().Any(i =>
                 i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConsumeFilter<>));
         }
 
         private static bool IsGenericPublishFilter(Type type)
         {
-            return type.GetInterfaces().Any(i => 
+            return type.GetInterfaces().Any(i =>
                 i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPublishFilter<>));
         }
 
         private static bool IsGenericSendFilter(Type type)
         {
-            return type.GetInterfaces().Any(i => 
+            return type.GetInterfaces().Any(i =>
                 i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISendFilter<>));
         }
     }

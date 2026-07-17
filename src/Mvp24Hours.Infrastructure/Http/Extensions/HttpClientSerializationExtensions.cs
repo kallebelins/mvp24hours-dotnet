@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Http.Contract;
-using Mvp24Hours.Infrastructure.Http.Serializers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +10,8 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Http.Contract;
+using Mvp24Hours.Infrastructure.Http.Serializers;
 
 namespace Mvp24Hours.Infrastructure.Http.Extensions
 {

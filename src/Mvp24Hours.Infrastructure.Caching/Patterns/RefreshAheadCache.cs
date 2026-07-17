@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Patterns
 {
@@ -109,14 +109,14 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             {
                 // Try to get from cache
                 var cachedWrapper = await _cache.GetAsync<CachedItemWithExpiration<T>>(key, cancellationToken);
-                
+
                 if (cachedWrapper != null)
                 {
                     // Check if refresh is needed
                     if (cachedWrapper.ShouldRefresh(_refreshThreshold) && !cachedWrapper.IsExpired)
                     {
                         _logger?.LogDebug("Refresh-Ahead: Triggering background refresh for key: {Key}", key);
-                        
+
                         // Trigger background refresh (fire and forget)
                         _ = RefreshInBackgroundAsync(key, cancellationToken);
                     }
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             {
                 _logger?.LogDebug("Refresh-Ahead: Refreshing key: {Key}", key);
                 var value = await _loadFromSource(key, cancellationToken);
-                
+
                 if (value != null)
                 {
                     var wrapper = new CachedItemWithExpiration<T>(value, _expiration);
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             finally
             {
                 semaphore.Release();
-                
+
                 // Clean up semaphore if no longer needed (optional optimization)
                 if (_refreshLocks.TryRemove(key, out var removedSemaphore))
                 {

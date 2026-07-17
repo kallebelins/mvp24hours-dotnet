@@ -11,15 +11,15 @@
 // Uncomment and implement the code below once the package is added to the project.
 //
 //=====================================================================================
-using Mvp24Hours.Infrastructure.FileStorage.Contract;
-using Mvp24Hours.Infrastructure.FileStorage.Options;
-using Mvp24Hours.Infrastructure.FileStorage.Results;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.FileStorage.Contract;
+using Mvp24Hours.Infrastructure.FileStorage.Options;
+using Mvp24Hours.Infrastructure.FileStorage.Results;
 
 namespace Mvp24Hours.Infrastructure.FileStorage.Providers
 {

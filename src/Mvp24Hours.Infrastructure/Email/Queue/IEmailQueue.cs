@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Models;
-using Mvp24Hours.Infrastructure.Email.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Email.Options;
 
 namespace Mvp24Hours.Infrastructure.Email.Queue
 {

@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Helpers;
@@ -12,7 +13,6 @@ using Mvp24Hours.Infrastructure.CronJob.Dependencies;
 using Mvp24Hours.Infrastructure.CronJob.Events;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.State;
-using System;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Extensions
 {

@@ -4,11 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Application.Contract.Events;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Application.Contract.Events;
 
 namespace Mvp24Hours.Application.Logic.Events;
 
@@ -58,7 +58,7 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
         {
             // Try to resolve IPublisher from CQRS module
             var publisherType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.Abstractions.IPublisher, Mvp24Hours.Infrastructure.Cqrs");
-            
+
             if (publisherType == null)
             {
                 _logger?.LogDebug(

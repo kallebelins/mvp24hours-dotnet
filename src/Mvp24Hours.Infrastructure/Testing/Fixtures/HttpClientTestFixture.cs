@@ -4,10 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.Testing.Http;
 using System;
 using System.Net;
 using System.Net.Http;
+using Mvp24Hours.Infrastructure.Testing.Http;
 
 namespace Mvp24Hours.Infrastructure.Testing.Fixtures
 {

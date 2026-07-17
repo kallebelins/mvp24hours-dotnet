@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Caching.Patterns
 {
@@ -72,7 +72,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
 
             // Use PeriodicTimer for modern async/await patterns with proper cancellation
             using var timer = new PeriodicTimer(_options.FlushInterval);
-            
+
             try
             {
                 while (await timer.WaitForNextTickAsync(stoppingToken))
@@ -100,9 +100,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             // Note: In a real implementation, you would need a registry of Write-Behind caches
             // For now, this is a placeholder that shows the pattern
             // You could use a service locator pattern or register caches in a collection
-            
+
             _logger.LogDebug("Processing Write-Behind caches...");
-            
+
             // This would iterate through registered Write-Behind caches
             // For example, if you had a IWriteBehindCacheRegistry:
             // var registry = _serviceProvider.GetService&lt;IWriteBehindCacheRegistry&gt;();
@@ -110,7 +110,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             // {
             //     await cache.ProcessPendingWritesAsync(_options.BatchSize, cancellationToken);
             // }
-            
+
             // Placeholder implementation
             await Task.CompletedTask;
         }

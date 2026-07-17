@@ -62,7 +62,7 @@ public static class LoggingServiceExtensions
 
         // Register log enricher
         services.AddSingleton<ILogEnricher, TraceContextLogEnricher>();
-        
+
         if (options.EnableUserContextEnrichment)
         {
             services.AddSingleton<ILogEnricher, UserContextLogEnricher>();
@@ -136,8 +136,8 @@ public static class LoggingServiceExtensions
             builder.Configure(loggerOptions =>
             {
                 // Configure activity tracking
-                loggerOptions.ActivityTrackingOptions = 
-                    ActivityTrackingOptions.TraceId | 
+                loggerOptions.ActivityTrackingOptions =
+                    ActivityTrackingOptions.TraceId |
                     ActivityTrackingOptions.SpanId |
                     ActivityTrackingOptions.ParentId |
                     ActivityTrackingOptions.Baggage |
@@ -178,7 +178,7 @@ public static class LoggingServiceExtensions
         IConfiguration configuration)
     {
         var logLevelSection = configuration.GetSection("Logging:LogLevel");
-        
+
         foreach (var child in logLevelSection.GetChildren())
         {
             if (Enum.TryParse<LogLevel>(child.Value, out var level))

@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.DTOs;
-using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.ValueObjects.Logic;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.DTOs;
+using Mvp24Hours.Core.Enums;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Core.Serialization.SourceGeneration;
 

@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Logging
 {

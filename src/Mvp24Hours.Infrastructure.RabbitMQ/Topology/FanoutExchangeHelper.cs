@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {

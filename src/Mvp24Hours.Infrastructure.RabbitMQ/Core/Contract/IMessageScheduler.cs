@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract
 {

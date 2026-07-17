@@ -1,13 +1,13 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Infrastructure.Timers;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Infrastructure.Timers;
 using Xunit;
 
 namespace Mvp24Hours.Core.Test
@@ -26,7 +26,7 @@ namespace Mvp24Hours.Core.Test
             // Arrange
             var executionCount = 0;
             using var cts = new CancellationTokenSource();
-            
+
             // Act
             var task = PeriodicTimerHelper.RunPeriodicAsync(
                 TimeSpan.FromMilliseconds(50),
@@ -60,7 +60,7 @@ namespace Mvp24Hours.Core.Test
             // Arrange
             var executionCount = 0;
             using var cts = new CancellationTokenSource();
-            
+
             // Cancel after 150ms (should allow ~2 executions with 50ms period)
             cts.CancelAfter(150);
 
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Core.Test
             // Arrange
             var executionCount = 0;
             using var cts = new CancellationTokenSource();
-            
+
             // Act
             var task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
                 TimeSpan.FromMilliseconds(50),
@@ -406,7 +406,7 @@ namespace Mvp24Hours.Core.Test
                 avgInterval += interval;
             }
             avgInterval /= intervals.Count;
-            
+
             Assert.True(avgInterval >= 40 && avgInterval <= 100,
                 $"Average interval was {avgInterval}ms, expected ~50ms");
         }
@@ -502,14 +502,14 @@ namespace Mvp24Hours.Core.Test
 
             // Act - Using TimeProvider.CreatePeriodicTimer indirectly through CreateTimer
             using var timerWrapper = PeriodicTimerHelper.CreateTimer(timeProvider, TimeSpan.FromMilliseconds(50));
-            
+
             // Note: ITimer from TimeProvider doesn't have WaitForNextTickAsync,
             // so we test that CreateTimer works
             Assert.NotNull(timerWrapper);
-            
+
             // For actual periodic execution, use PeriodicTimer directly
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
-            
+
             try
             {
                 while (await timer.WaitForNextTickAsync(cts.Token))
@@ -544,7 +544,7 @@ namespace Mvp24Hours.Core.Test
                 async ct =>
                 {
                     startedWork = true;
-                    
+
                     try
                     {
                         await Task.Delay(500, ct); // Long running work

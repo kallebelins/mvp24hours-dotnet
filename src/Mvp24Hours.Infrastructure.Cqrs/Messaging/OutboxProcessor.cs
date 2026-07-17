@@ -72,12 +72,12 @@ public sealed class OutboxProcessor : BackgroundService
 
         // Use PeriodicTimer for modern async/await patterns with proper cancellation
         using var timer = new PeriodicTimer(_options.OutboxPollingInterval);
-        
+
         try
         {
             // Process immediately on startup, then periodically
             await ProcessPendingMessagesAsync(stoppingToken);
-            
+
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
                 try
@@ -99,7 +99,7 @@ public sealed class OutboxProcessor : BackgroundService
     private async Task ProcessPendingMessagesAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        
+
         var outbox = scope.ServiceProvider.GetService<IIntegrationEventOutbox>();
         var publisher = scope.ServiceProvider.GetService<IIntegrationEventPublisher>();
         var deadLetterStore = scope.ServiceProvider.GetService<IDeadLetterStore>();
@@ -216,8 +216,8 @@ public sealed class OutboxProcessor : BackgroundService
 
         // Mark as failed with max retries indicator
         await outbox.MarkAsFailedAsync(
-            message.Id, 
-            $"Moved to DLQ: {exception.Message}", 
+            message.Id,
+            $"Moved to DLQ: {exception.Message}",
             stoppingToken);
     }
 
@@ -228,12 +228,12 @@ public sealed class OutboxProcessor : BackgroundService
         var baseDelayMs = _options.RetryBaseDelayMilliseconds;
         var exponentialDelay = baseDelayMs * Math.Pow(2, retryCount);
         var maxDelay = _options.RetryMaxDelayMilliseconds;
-        
+
         var delay = Math.Min(exponentialDelay, maxDelay);
-        
+
         // Add jitter (±20%)
         var jitter = delay * 0.2 * (Random.Shared.NextDouble() * 2 - 1);
-        
+
         return TimeSpan.FromMilliseconds(delay + jitter);
     }
 }
@@ -271,7 +271,7 @@ public sealed class OutboxCleanupService : BackgroundService
     {
         // Use PeriodicTimer for modern async/await patterns
         using var timer = new PeriodicTimer(_options.CleanupInterval);
-        
+
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))

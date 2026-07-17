@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mvp24Hours.Core.ValueObjects;
 using Mvp24Hours.Infrastructure.Data.EFCore.Converters;
-using System;
-using System.Linq;
-using System.Reflection;
 
 namespace Mvp24Hours.Extensions
 {

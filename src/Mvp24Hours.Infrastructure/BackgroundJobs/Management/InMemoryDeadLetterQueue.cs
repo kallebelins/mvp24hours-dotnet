@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Management
             // Note: This method would need access to IJobScheduler to reschedule the job.
             // For now, it just removes the job from DLQ and returns the job ID.
             // The actual rescheduling should be handled by the caller or a higher-level service.
-            
+
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 throw new ArgumentException("Job ID cannot be null or empty.", nameof(jobId));

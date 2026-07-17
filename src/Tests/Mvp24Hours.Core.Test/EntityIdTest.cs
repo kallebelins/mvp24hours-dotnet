@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -385,10 +385,10 @@ public class EntityIdTest
         // Assert - They share the same underlying GUID value but are different types
         // This demonstrates compile-time type safety - you can't accidentally mix ID types
         testId.Value.Should().Be(anotherId.Value);
-        
+
         // They are different object instances
         ReferenceEquals(testId, anotherId).Should().BeFalse();
-        
+
         // The types are different at compile time, preventing accidental mixing
         testId.GetType().Should().NotBe(anotherId.GetType());
     }

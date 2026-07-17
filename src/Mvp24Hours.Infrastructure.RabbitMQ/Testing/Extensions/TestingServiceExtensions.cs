@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
 {
@@ -25,10 +25,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
         public static IServiceCollection AddInMemoryRabbitMQ(this IServiceCollection services)
         {
             services.AddSingleton<IInMemoryBus>(sp => new InMemoryBus(sp));
-            services.AddSingleton<IMvpRabbitMQClient>(sp => 
+            services.AddSingleton<IMvpRabbitMQClient>(sp =>
                 sp.GetRequiredService<IInMemoryBus>() as IMvpRabbitMQClient
                 ?? throw new InvalidOperationException("InMemoryBus not registered"));
-            
+
             return services;
         }
 
@@ -41,7 +41,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
         {
             services.AddInMemoryRabbitMQ();
             services.AddSingleton<ITestHarness>(sp => new TestHarness(sp));
-            
+
             return services;
         }
 

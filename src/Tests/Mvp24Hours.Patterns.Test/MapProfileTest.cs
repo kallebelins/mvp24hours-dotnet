@@ -1,9 +1,9 @@
-﻿using AutoMapper;
+using System.Reflection;
+using AutoMapper;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Core.Mappings;
 using Mvp24Hours.Extensions;
-using System.Reflection;
 using Xunit;
 using Xunit.Priority;
 

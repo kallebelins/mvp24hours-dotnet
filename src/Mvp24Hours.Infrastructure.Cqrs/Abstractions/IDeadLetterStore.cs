@@ -63,8 +63,8 @@ public interface IDeadLetterStore
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of dead letter messages.</returns>
     Task<IReadOnlyList<DeadLetterMessage>> GetByEventTypeAsync(
-        string eventType, 
-        int limit = 100, 
+        string eventType,
+        int limit = 100,
         CancellationToken cancellationToken = default);
 
     /// <summary>

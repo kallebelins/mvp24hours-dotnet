@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.WebAPI.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Net;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
 
 namespace Mvp24Hours.WebAPI.Exceptions

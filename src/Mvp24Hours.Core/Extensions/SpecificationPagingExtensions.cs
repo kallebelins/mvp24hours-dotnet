@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Domain.Specifications;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Domain.Specifications;
-using Mvp24Hours.Core.ValueObjects.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Mvp24Hours.Core.Contract.Domain.Specifications;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.Domain.Specifications;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Extensions
 {

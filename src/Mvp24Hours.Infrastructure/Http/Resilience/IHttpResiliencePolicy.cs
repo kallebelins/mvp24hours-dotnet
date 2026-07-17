@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Polly;
 using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Polly;
 
 namespace Mvp24Hours.Infrastructure.Http.Resilience
 {

@@ -83,11 +83,11 @@ public static class TenantQueryFilter
     /// }
     /// </code>
     /// </example>
-    public static Expression<Func<T, bool>> CreateDynamicFilter<T>(ITenantContextAccessor tenantContextAccessor) 
+    public static Expression<Func<T, bool>> CreateDynamicFilter<T>(ITenantContextAccessor tenantContextAccessor)
         where T : IHasTenant
     {
         // Note: This creates a closure over the accessor, so the tenant ID is evaluated at query time
-        return entity => tenantContextAccessor.Context != null && 
+        return entity => tenantContextAccessor.Context != null &&
                          entity.TenantId == tenantContextAccessor.Context.TenantId;
     }
 
@@ -97,7 +97,7 @@ public static class TenantQueryFilter
     /// <typeparam name="T">The entity type.</typeparam>
     /// <param name="tenantFilter">The tenant filter.</param>
     /// <returns>An expression that filters by tenant when filtering is enabled.</returns>
-    public static Expression<Func<T, bool>> CreateFilterWithBypass<T>(ITenantFilter tenantFilter) 
+    public static Expression<Func<T, bool>> CreateFilterWithBypass<T>(ITenantFilter tenantFilter)
         where T : IHasTenant
     {
         return entity => !tenantFilter.ShouldFilter || entity.TenantId == tenantFilter.CurrentTenantId;
@@ -123,7 +123,7 @@ public static class TenantQueryExtensions
     ///     .ToListAsync();
     /// </code>
     /// </example>
-    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, string? tenantId) 
+    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, string? tenantId)
         where T : IHasTenant
     {
         if (string.IsNullOrEmpty(tenantId))
@@ -141,7 +141,7 @@ public static class TenantQueryExtensions
     /// <param name="query">The query to filter.</param>
     /// <param name="tenantContext">The tenant context.</param>
     /// <returns>The filtered query.</returns>
-    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, ITenantContext? tenantContext) 
+    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, ITenantContext? tenantContext)
         where T : IHasTenant
     {
         return query.FilterByTenant(tenantContext?.TenantId);
@@ -154,7 +154,7 @@ public static class TenantQueryExtensions
     /// <param name="query">The query to filter.</param>
     /// <param name="tenantFilter">The tenant filter.</param>
     /// <returns>The filtered query, or unfiltered if filtering is disabled.</returns>
-    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, ITenantFilter tenantFilter) 
+    public static IQueryable<T> FilterByTenant<T>(this IQueryable<T> query, ITenantFilter tenantFilter)
         where T : IHasTenant
     {
         if (!tenantFilter.ShouldFilter)
@@ -172,7 +172,7 @@ public static class TenantQueryExtensions
     /// <param name="source">The source collection.</param>
     /// <param name="tenantId">The tenant ID to filter by.</param>
     /// <returns>The filtered collection.</returns>
-    public static IEnumerable<T> FilterByTenant<T>(this IEnumerable<T> source, string? tenantId) 
+    public static IEnumerable<T> FilterByTenant<T>(this IEnumerable<T> source, string? tenantId)
         where T : IHasTenant
     {
         if (string.IsNullOrEmpty(tenantId))
@@ -190,7 +190,7 @@ public static class TenantQueryExtensions
     /// <param name="source">The source collection.</param>
     /// <param name="tenantContext">The tenant context.</param>
     /// <returns>The filtered collection.</returns>
-    public static IEnumerable<T> FilterByTenant<T>(this IEnumerable<T> source, ITenantContext? tenantContext) 
+    public static IEnumerable<T> FilterByTenant<T>(this IEnumerable<T> source, ITenantContext? tenantContext)
         where T : IHasTenant
     {
         return source.FilterByTenant(tenantContext?.TenantId);

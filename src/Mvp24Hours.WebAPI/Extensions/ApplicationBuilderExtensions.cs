@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -10,10 +14,6 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Middlewares;
-using System;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Extensions
 {
@@ -756,13 +756,13 @@ namespace Mvp24Hours.WebAPI.Extensions
         public static IApplicationBuilder UseMvp24HoursSecurity(this IApplicationBuilder builder)
         {
             ArgumentNullException.ThrowIfNull(builder);
-            
+
             builder.UseMvp24HoursSecurityHeaders();
             builder.UseMvp24HoursIpFiltering();
             builder.UseMvp24HoursRequestSizeLimit();
             builder.UseMvp24HoursInputSanitization();
             builder.UseMvp24HoursAntiForgery();
-            
+
             return builder;
         }
 
@@ -832,8 +832,8 @@ namespace Mvp24Hours.WebAPI.Extensions
                 // Add endpoint for each API version
                 foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions.OrderByDescending(d => d.ApiVersion))
                 {
-                    var versionInfo = description.IsDeprecated 
-                        ? $"{description.GroupName} (Deprecated)" 
+                    var versionInfo = description.IsDeprecated
+                        ? $"{description.GroupName} (Deprecated)"
                         : description.GroupName;
 
                     options.SwaggerEndpoint(
@@ -897,7 +897,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                 if (latestVersion != null)
                 {
                     var specUrl = $"/swagger/{latestVersion.GroupName}/swagger.json";
-                    
+
                     // Map ReDoc route to serve HTML
                     builder.Map($"/{reDocRoutePrefix}", appBuilder =>
                     {
@@ -1183,7 +1183,7 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             var healthCheckOptions = new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
             {
-                Predicate = check => options.HealthTags.Count == 0 || 
+                Predicate = check => options.HealthTags.Count == 0 ||
                                      options.HealthTags.Any(tag => check.Tags.Contains(tag)),
                 AllowCachingResponses = false,
                 ResponseWriter = async (context, result) =>
@@ -1218,7 +1218,7 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             var readinessOptions = new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
             {
-                Predicate = check => options.ReadinessTags.Count == 0 || 
+                Predicate = check => options.ReadinessTags.Count == 0 ||
                                      options.ReadinessTags.Any(tag => check.Tags.Contains(tag)),
                 AllowCachingResponses = false,
                 ResponseWriter = healthCheckOptions.ResponseWriter
@@ -1226,7 +1226,7 @@ namespace Mvp24Hours.WebAPI.Extensions
 
             var livenessOptions = new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
             {
-                Predicate = check => options.LivenessTags.Count == 0 || 
+                Predicate = check => options.LivenessTags.Count == 0 ||
                                      options.LivenessTags.Any(tag => check.Tags.Contains(tag)),
                 AllowCachingResponses = false,
                 ResponseWriter = healthCheckOptions.ResponseWriter

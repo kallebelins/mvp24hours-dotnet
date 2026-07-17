@@ -3,6 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Authentication;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
@@ -17,12 +23,6 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Timeout;
-using System;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Authentication;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Http.Extensions
 {

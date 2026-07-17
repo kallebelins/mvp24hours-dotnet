@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using static System.Collections.Specialized.BitVector32;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Operations

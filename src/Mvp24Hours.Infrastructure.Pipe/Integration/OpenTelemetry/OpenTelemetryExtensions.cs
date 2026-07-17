@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry;
-using System;
-using System.Diagnostics;
 
 namespace Mvp24Hours.Extensions
 {
@@ -97,7 +97,7 @@ namespace Mvp24Hours.Extensions
                 return null;
 
             activity.SetTag("pipeline.name", pipelineName);
-            
+
             if (operationCount.HasValue)
             {
                 activity.SetTag("pipeline.operation_count", operationCount.Value);
@@ -122,7 +122,7 @@ namespace Mvp24Hours.Extensions
                 return null;
 
             var tags = new ActivityTagsCollection();
-            
+
             if (description != null)
             {
                 tags.Add("event.description", description);
@@ -157,7 +157,7 @@ namespace Mvp24Hours.Extensions
             {
                 activity.SetStatus(ActivityStatusCode.Error, errorMessage);
                 activity.SetTag("pipeline.result", "failure");
-                
+
                 if (errorMessage != null)
                 {
                     activity.SetTag("pipeline.error_message", errorMessage);

@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
 {
@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
         private readonly IReplicaSelector _replicaSelector;
         private readonly ReadWriteOptions _options;
         private readonly ILogger<ConnectionResolver> _logger;
-        
+
         private bool _forceReadFromPrimary;
         private DateTime? _lastWriteTime;
 
@@ -98,7 +98,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
             if (_options.EnableReadAfterWriteConsistency)
             {
                 _lastWriteTime = DateTime.UtcNow;
-                
+
                 if (_options.LogReplicaSelection)
                 {
                     _logger.LogDebug(

@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
 {
@@ -46,7 +46,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             var props = deliverEventArgs.BasicProperties;
             MessageId = props?.MessageId ?? props?.CorrelationId ?? Guid.NewGuid().ToString();
             CorrelationId = props?.CorrelationId;
-            
+
             // Parse headers
             var headers = new Dictionary<string, object>();
             if (props?.Headers != null)
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
             // Extract additional metadata
             CausationId = GetHeader<string>("x-causation-id");
             RedeliveryCount = GetHeader<int?>("x-redelivered-count") ?? (deliverEventArgs.Redelivered ? 1 : 0);
-            
+
             if (props?.Timestamp.UnixTime > 0)
             {
                 SentAt = DateTimeOffset.FromUnixTimeSeconds(props.Timestamp.UnixTime);
@@ -129,7 +129,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                     var stringValue = System.Text.Encoding.UTF8.GetString(bytes);
                     if (typeof(T) == typeof(string))
                         return (T)(object)stringValue;
-                    
+
                     try
                     {
                         return (T)Convert.ChangeType(stringValue, typeof(T));
@@ -159,13 +159,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
                 throw new InvalidOperationException("RabbitMQ client is not available in this context.");
 
             var headers = new Dictionary<string, object>();
-            
+
             // Propagate correlation ID
             if (!string.IsNullOrEmpty(CorrelationId))
             {
                 headers["x-correlation-id"] = CorrelationId;
             }
-            
+
             // Set causation ID to current message ID
             headers["x-causation-id"] = MessageId;
 

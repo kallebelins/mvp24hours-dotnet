@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MongoDB.Bson;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
 {

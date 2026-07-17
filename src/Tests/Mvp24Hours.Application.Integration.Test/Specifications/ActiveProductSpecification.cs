@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Linq.Expressions;
 using Mvp24Hours.Application.Integration.Test.Entities;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
-using System.Linq.Expressions;
 
 namespace Mvp24Hours.Application.Integration.Test.Specifications;
 

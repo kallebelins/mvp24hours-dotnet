@@ -4,10 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.FileStorage.Contract;
-using Mvp24Hours.Infrastructure.FileStorage.Results;
 using System;
 using System.Collections.Generic;
+using Mvp24Hours.Infrastructure.FileStorage.Contract;
+using Mvp24Hours.Infrastructure.FileStorage.Results;
 
 namespace Mvp24Hours.Infrastructure.Testing.Fakes
 {

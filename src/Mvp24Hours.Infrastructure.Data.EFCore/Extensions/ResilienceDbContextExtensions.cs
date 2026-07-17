@@ -3,6 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,8 +12,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Resilience;
-using System;
-using System.Data.SqlClient;
 
 namespace Mvp24Hours.Extensions
 {
@@ -377,7 +377,7 @@ namespace Mvp24Hours.Extensions
 
             services.AddSingleton(sp =>
             {
-                var options = sp.GetService<IOptions<EFCoreResilienceOptions>>()?.Value 
+                var options = sp.GetService<IOptions<EFCoreResilienceOptions>>()?.Value
                     ?? new EFCoreResilienceOptions();
                 var logger = sp.GetService<ILoggerFactory>()?.CreateLogger<DbContextCircuitBreaker>();
                 return new DbContextCircuitBreaker(options, logger);

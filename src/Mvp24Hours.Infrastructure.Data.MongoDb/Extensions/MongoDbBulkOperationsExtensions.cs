@@ -3,13 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +10,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Infrastructure.Data.MongoDb;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 
 namespace Mvp24Hours.Extensions
 {

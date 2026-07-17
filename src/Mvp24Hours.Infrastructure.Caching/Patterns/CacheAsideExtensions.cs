@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Patterns
 {

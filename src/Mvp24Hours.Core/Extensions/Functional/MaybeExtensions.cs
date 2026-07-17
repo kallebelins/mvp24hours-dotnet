@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.ValueObjects.Functional;
-using Mvp24Hours.Core.ValueObjects.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Functional;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Core.Extensions.Functional
 {

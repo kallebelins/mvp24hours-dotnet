@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 {
@@ -49,7 +49,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             catch (Exception ex) when (ShouldHandleException(ex))
             {
                 context.SetException(ex);
-                
+
                 LogException(messageType, messageId, context.RedeliveryCount, ex);
 
                 // Check if we should retry
@@ -57,7 +57,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 {
                     var retryDelay = CalculateRetryDelay(context.RedeliveryCount);
                     context.SetRetry(retryDelay);
-                    
+
                     LogRetry(messageType, messageId, context.RedeliveryCount + 1, _options.MaxRetries, retryDelay);
                 }
                 else
@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                     // Max retries exceeded - send to dead letter queue
                     var reason = $"Max retries ({_options.MaxRetries}) exceeded. Last error: {ex.Message}";
                     context.SendToDeadLetter(reason);
-                    
+
                     LogDeadLetter(messageType, messageId, reason);
                 }
 
@@ -79,14 +79,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             {
                 // Exception types that should not be handled (e.g., OperationCanceledException)
                 context.SetException(ex);
-                
+
                 if (_options.SendUnhandledToDeadLetter)
                 {
                     var reason = $"Unhandled exception type {ex.GetType().Name}: {ex.Message}";
                     context.SendToDeadLetter(reason);
                     LogDeadLetter(messageType, messageId, reason);
                 }
-                
+
                 throw;
             }
         }
@@ -131,18 +131,18 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             // Exponential backoff: delay * 2^retryCount
             var baseDelay = _options.RetryDelay.TotalMilliseconds;
             var exponentialDelay = baseDelay * Math.Pow(2, currentRetryCount);
-            
+
             // Apply max delay cap
             var maxDelay = _options.MaxRetryDelay.TotalMilliseconds;
             var finalDelay = Math.Min(exponentialDelay, maxDelay);
-            
+
             // Add jitter if configured
             if (_options.AddJitter)
             {
                 var jitter = Random.Shared.NextDouble() * _options.JitterFactor * finalDelay;
                 finalDelay += jitter;
             }
-            
+
             return TimeSpan.FromMilliseconds(finalDelay);
         }
 

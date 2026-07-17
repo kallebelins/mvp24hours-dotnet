@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
 {
@@ -40,15 +40,15 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
         {
             Message = message ?? throw new ArgumentNullException(nameof(message));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            
+
             MessageId = messageId ?? Guid.NewGuid().ToString();
             CorrelationId = correlationId;
             CausationId = causationId;
             Exchange = exchange ?? "test-exchange";
             RoutingKey = routingKey ?? "test-routing-key";
             QueueName = queueName ?? "test-queue";
-            Headers = headers != null 
-                ? new Dictionary<string, object>(headers) 
+            Headers = headers != null
+                ? new Dictionary<string, object>(headers)
                 : new Dictionary<string, object>();
             RedeliveryCount = redeliveryCount;
             Redelivered = redeliveryCount > 0;

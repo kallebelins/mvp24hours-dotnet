@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 {

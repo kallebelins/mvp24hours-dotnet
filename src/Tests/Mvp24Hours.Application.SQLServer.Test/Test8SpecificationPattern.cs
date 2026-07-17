@@ -1,8 +1,10 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
@@ -11,8 +13,6 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Specifications;
-using System;
-using System.Linq;
 using Xunit;
 using Xunit.Priority;
 

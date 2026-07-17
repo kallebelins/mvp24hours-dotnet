@@ -3,8 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Newtonsoft.Json;
 using System;
+using Newtonsoft.Json;
 
 namespace Mvp24Hours.Core.Converters
 {

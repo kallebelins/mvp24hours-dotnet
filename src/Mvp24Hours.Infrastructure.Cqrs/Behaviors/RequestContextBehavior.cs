@@ -182,7 +182,7 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
 
         // Common tenant header names
         string[] tenantHeaders = ["X-Tenant-Id", "X-Tenant", "TenantId"];
-        
+
         foreach (var header in tenantHeaders)
         {
             if (httpContext.Request.Headers.TryGetValue(header, out var headerValue))

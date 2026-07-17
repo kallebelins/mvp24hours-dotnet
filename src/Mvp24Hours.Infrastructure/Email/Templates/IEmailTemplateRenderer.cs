@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
         /// <summary>
         /// Creates an invalid template validation result with errors.
         /// </summary>
-        public static TemplateValidationResult Invalid(params string[] errors) => 
+        public static TemplateValidationResult Invalid(params string[] errors) =>
             new(false, errors);
     }
 }

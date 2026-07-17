@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -11,7 +12,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 {

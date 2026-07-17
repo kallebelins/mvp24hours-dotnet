@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Resilience.Contract;
-using Mvp24Hours.Infrastructure.Resilience.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Resilience.Contract;
+using Mvp24Hours.Infrastructure.Resilience.Exceptions;
 
 namespace Mvp24Hours.Infrastructure.Resilience.Implementations
 {

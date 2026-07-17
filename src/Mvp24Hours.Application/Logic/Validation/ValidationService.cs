@@ -3,17 +3,17 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentValidation;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Application.Contract.Validation;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.ValueObjects.Logic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Application.Contract.Validation;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Logic.Validation
 {

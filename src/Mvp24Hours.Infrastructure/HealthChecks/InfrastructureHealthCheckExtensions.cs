@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -12,9 +15,6 @@ using Mvp24Hours.Infrastructure.Email.Contract;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using Mvp24Hours.Infrastructure.Http.Contract;
 using Mvp24Hours.Infrastructure.Sms.Contract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.HealthChecks
 {

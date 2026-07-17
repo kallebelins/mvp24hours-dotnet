@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
 {
@@ -80,7 +80,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Models
 
             var jobId = Guid.NewGuid().ToString();
             var jobType = typeof(TJob).FullName ?? typeof(TJob).Name;
-            
+
             // Serialize arguments (simplified - in real implementation, use proper serializer)
             var serializedArgs = System.Text.Json.JsonSerializer.Serialize(args);
 

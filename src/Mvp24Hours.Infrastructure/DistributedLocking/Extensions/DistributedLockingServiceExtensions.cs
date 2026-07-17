@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
 using Mvp24Hours.Infrastructure.DistributedLocking.Providers;
 using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
 {

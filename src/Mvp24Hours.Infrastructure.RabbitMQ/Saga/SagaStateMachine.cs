@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
 {
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         private readonly HashSet<string> _finalStates = new();
         private readonly List<Action<SagaInstance<TData>>> _onCompletedCallbacks = new();
         private readonly List<Action<SagaInstance<TData>, Exception>> _onFaultedCallbacks = new();
-        
+
         protected ILogger? Logger { get; set; }
 
         /// <summary>
@@ -270,7 +270,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
         {
             // Try common property names
             var type = typeof(TEvent);
-            
+
             var correlationIdProp = type.GetProperty("CorrelationId");
             if (correlationIdProp?.PropertyType == typeof(Guid))
             {

@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Observability;
-using Mvp24Hours.Infrastructure.Observability.Contract;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
+using Mvp24Hours.Infrastructure.Observability;
+using Mvp24Hours.Infrastructure.Observability.Contract;
 
 namespace Mvp24Hours.Infrastructure.Observability.Extensions
 {

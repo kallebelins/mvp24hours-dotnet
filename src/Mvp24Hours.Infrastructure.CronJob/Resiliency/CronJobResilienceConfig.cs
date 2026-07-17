@@ -199,16 +199,16 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
         public override string ToString()
         {
             var features = new System.Collections.Generic.List<string>();
-            
+
             if (EnableRetry)
                 features.Add($"Retry({MaxRetryAttempts}x)");
-            
+
             if (EnableCircuitBreaker)
                 features.Add($"CircuitBreaker({CircuitBreakerFailureThreshold}/{CircuitBreakerDuration.TotalSeconds}s)");
-            
+
             if (PreventOverlapping)
                 features.Add("PreventOverlapping");
-            
+
             if (ExecutionTimeout.HasValue)
                 features.Add($"Timeout({ExecutionTimeout.Value.TotalSeconds}s)");
 

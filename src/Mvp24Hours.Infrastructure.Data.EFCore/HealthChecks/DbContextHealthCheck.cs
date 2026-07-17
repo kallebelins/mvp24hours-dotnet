@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 {
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                     if (pendingList.Count > 0)
                     {
                         data["pendingMigrationsList"] = pendingList;
-                        
+
                         if (_options.FailOnPendingMigrations)
                         {
                             _logger.LogWarning(
@@ -177,7 +177,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
         private async Task ExecuteHealthQueryAsync(CancellationToken cancellationToken)
         {
             var connection = _dbContext.Database.GetDbConnection();
-            
+
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);

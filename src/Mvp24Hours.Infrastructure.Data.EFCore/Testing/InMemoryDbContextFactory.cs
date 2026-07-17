@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Concurrent;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -110,15 +110,15 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     {
         var dbOptions = BuildDbContextOptions();
         var context = CreateContextInstance(dbOptions);
-        
+
         _createdContexts.Add(context);
-        
+
         if (_options.ValidateModel)
         {
             // Force model validation by accessing the model
             _ = context.Model;
         }
-        
+
         return context;
     }
 
@@ -162,7 +162,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     public TContext CreateContextWithData(IDataSeeder<TContext> seeder)
     {
         ArgumentNullException.ThrowIfNull(seeder);
-        
+
         var context = CreateContextWithDatabase();
         seeder.Seed(context);
         context.SaveChanges();
@@ -188,7 +188,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     public TContext CreateContextWithData(Action<TContext> seedAction)
     {
         ArgumentNullException.ThrowIfNull(seedAction);
-        
+
         var context = CreateContextWithDatabase();
         seedAction(context);
         context.SaveChanges();
@@ -202,22 +202,22 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     protected virtual DbContextOptions<TContext> BuildDbContextOptions()
     {
         var builder = new DbContextOptionsBuilder<TContext>();
-        
+
         // Configure in-memory database
         builder.UseInMemoryDatabase(_options.GetEffectiveDatabaseName());
-        
+
         // Configure sensitive data logging
         if (_options.EnableSensitiveDataLogging)
         {
             builder.EnableSensitiveDataLogging();
         }
-        
+
         // Configure detailed errors
         if (_options.EnableDetailedErrors)
         {
             builder.EnableDetailedErrors();
         }
-        
+
         // Configure warnings
         builder.ConfigureWarnings(warnings =>
         {
@@ -225,19 +225,19 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
             {
                 warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning);
             }
-            
+
             if (_options.ThrowOnClientEvaluationWarning)
             {
                 warnings.Throw(CoreEventId.FirstWithoutOrderByAndFilterWarning);
             }
-            
+
             // Apply custom warning configuration
             _options.ConfigureWarnings?.Invoke(warnings);
         });
-        
+
         // Apply custom configuration
         _options.ConfigureOptions?.Invoke(builder);
-        
+
         return builder.Options;
     }
 
@@ -250,7 +250,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
         {
             return _contextFactory(options);
         }
-        
+
         return (TContext)Activator.CreateInstance(typeof(TContext), options)!;
     }
 
@@ -269,7 +269,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;
-        
+
         if (disposing)
         {
             while (_createdContexts.TryTake(out var context))
@@ -277,7 +277,7 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
                 context.Dispose();
             }
         }
-        
+
         _disposed = true;
     }
 }
@@ -327,7 +327,7 @@ public static class InMemoryDbContextHelper
         where TContext : DbContext
     {
         var effectiveName = databaseName ?? $"InMemoryTestDb_{Guid.NewGuid():N}";
-        
+
         return new DbContextOptionsBuilder<TContext>()
             .UseInMemoryDatabase(effectiveName)
             .EnableSensitiveDataLogging()

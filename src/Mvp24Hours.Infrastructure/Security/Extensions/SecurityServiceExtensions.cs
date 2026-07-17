@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Security.Contract;
-using Mvp24Hours.Infrastructure.Security.Options;
-using Mvp24Hours.Infrastructure.Security.Providers;
-using Mvp24Hours.Infrastructure.Security.Helpers;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
+using Mvp24Hours.Infrastructure.Security.Contract;
+using Mvp24Hours.Infrastructure.Security.Helpers;
+using Mvp24Hours.Infrastructure.Security.Options;
+using Mvp24Hours.Infrastructure.Security.Providers;
 
 namespace Mvp24Hours.Infrastructure.Security.Extensions
 {

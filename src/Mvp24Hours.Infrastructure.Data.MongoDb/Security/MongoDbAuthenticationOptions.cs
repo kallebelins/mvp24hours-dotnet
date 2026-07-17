@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using MongoDB.Driver;
 using System;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using MongoDB.Driver;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 {
@@ -325,13 +325,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 // Configure server certificate validation
                 if (!ValidateServerCertificate)
                 {
-                    settings.SslSettings.ServerCertificateValidationCallback = 
+                    settings.SslSettings.ServerCertificateValidationCallback =
                         (sender, certificate, chain, errors) => true;
                 }
                 else if (!string.IsNullOrEmpty(CaCertificatePath))
                 {
                     var caCert = new X509Certificate2(CaCertificatePath);
-                    settings.SslSettings.ServerCertificateValidationCallback = 
+                    settings.SslSettings.ServerCertificateValidationCallback =
                         CreateCaValidationCallback(caCert);
                 }
             }
@@ -385,7 +385,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
                 {
                     chain.ChainPolicy.ExtraStore.Add(caCert);
                     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-                    
+
                     var isValid = chain.Build(new X509Certificate2(certificate));
                     if (isValid)
                     {

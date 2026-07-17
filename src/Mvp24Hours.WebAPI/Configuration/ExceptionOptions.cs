@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Core.Exceptions;
 using System;
 using System.Net;
+using Mvp24Hours.Core.Exceptions;
 
 namespace Mvp24Hours.WebAPI.Configuration
 {

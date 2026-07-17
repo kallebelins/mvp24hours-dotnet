@@ -4,8 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Core.Contract.Infrastructure;
 using System;
+using Mvp24Hours.Core.Contract.Infrastructure;
 
 namespace Mvp24Hours.Core.Infrastructure.Clock
 {

@@ -65,14 +65,14 @@ namespace Mvp24Hours.Extensions
         public static string SqlSafe(this string text)
         {
             var safeText = text.NullSafe();
-            
+
             // Remove SQL comments (everything from -- to end of string)
             int commentIndex = safeText.IndexOf("--");
             if (commentIndex >= 0)
             {
                 safeText = safeText.Substring(0, commentIndex);
             }
-            
+
             // Escape single quotes
             return safeText.Replace("'", "''");
         }

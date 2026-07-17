@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using System;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Application.MongoDb.Test.Support.Entities
 {

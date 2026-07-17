@@ -3,18 +3,18 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
 {
@@ -30,12 +30,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         private readonly ILogger<BatchConsumerProcessor<TMessage>> _logger;
         private readonly IMvpRabbitMQClient? _rabbitMQClient;
         private readonly IModel? _channel;
-        
+
         private readonly ConcurrentQueue<BatchMessageItem<TMessage>> _messageQueue;
         private readonly SemaphoreSlim _batchSemaphore;
         private readonly Timer _batchTimer;
         private readonly object _batchLock = new();
-        
+
         private DateTimeOffset _batchStartTime;
         private bool _isDisposed;
         private string? _queueName;

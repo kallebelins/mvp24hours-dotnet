@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Tests for MongoDbRetryPolicy
 //=====================================================================================
 using FluentAssertions;
@@ -237,11 +237,11 @@ public class MongoDbRetryPolicyTests
         // Assert - Delays should vary due to jitter
         var minDelay = delays.Min();
         var maxDelay = delays.Max();
-        
+
         // With 20% jitter, delays should be between 800 and 1200
         minDelay.Should().BeGreaterThanOrEqualTo(800);
         maxDelay.Should().BeLessThanOrEqualTo(1200);
-        
+
         // Not all delays should be the same
         delays.Distinct().Count().Should().BeGreaterThan(1);
     }
@@ -404,7 +404,7 @@ public class MongoDbRetryPolicyTests
         // Assert - Should have retried
         executionCount.Should().BeGreaterThan(1);
         caughtException.Should().NotBeNull();
-        
+
         // The exception should be either:
         // - MongoDbRetryExhaustedException with TimeoutException as inner
         // - Or TimeoutException directly

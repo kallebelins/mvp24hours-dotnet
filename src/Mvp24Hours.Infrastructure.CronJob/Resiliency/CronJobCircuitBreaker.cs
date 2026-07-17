@@ -275,8 +275,8 @@ namespace Mvp24Hours.Infrastructure.CronJob.Resiliency
 
             public CircuitBreakerState State { get; set; } = CircuitBreakerState.Closed;
             public int FailureCount => _failures.Count;
-            public int HalfOpenSuccessCount 
-            { 
+            public int HalfOpenSuccessCount
+            {
                 get => _halfOpenSuccessCount;
                 set => _halfOpenSuccessCount = value;
             }

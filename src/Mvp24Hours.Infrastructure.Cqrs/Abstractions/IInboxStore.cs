@@ -87,8 +87,8 @@ public interface IInboxStore
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of inbox messages.</returns>
     Task<IReadOnlyList<InboxMessage>> GetByTimeRangeAsync(
-        DateTime from, 
-        DateTime to, 
+        DateTime from,
+        DateTime to,
         CancellationToken cancellationToken = default);
 
     /// <summary>

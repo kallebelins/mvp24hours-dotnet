@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Models;
-using Mvp24Hours.Infrastructure.Email.Options;
-using Mvp24Hours.Infrastructure.Email.Results;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +12,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Email.Options;
+using Mvp24Hours.Infrastructure.Email.Results;
 
 namespace Mvp24Hours.Infrastructure.Email.Providers
 {
@@ -108,7 +108,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
             try
             {
                 using var httpClient = _httpClientFactory.CreateClient();
-                
+
                 // Azure Communication Services uses HMAC-SHA256 authentication
                 var requestUri = $"{_endpoint}/emails:send?api-version=2023-03-31";
                 httpClient.BaseAddress = new Uri(_endpoint);
@@ -125,7 +125,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 // Note: For production, consider using Azure.Communication.Email SDK which handles this automatically
                 var dateHeader = DateTimeOffset.UtcNow.ToString("r");
                 var signature = GenerateHmacSignature("POST", requestUri, dateHeader, jsonContent, _accessKey);
-                
+
                 httpClient.DefaultRequestHeaders.Add("x-ms-date", dateHeader);
                 httpClient.DefaultRequestHeaders.Add("Authorization", $"HMAC-SHA256 SignedHeaders=x-ms-date;host;Signature={signature}");
                 httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
@@ -136,7 +136,7 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                 {
                     var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
                     var responseJson = JsonDocument.Parse(responseContent);
-                    
+
                     // Extract message ID from response
                     string? messageId = null;
                     if (responseJson.RootElement.TryGetProperty("messageId", out var messageIdElement))
@@ -249,15 +249,15 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
         private object CreateAzureCommunicationRequest(EmailMessage message)
         {
             var from = ParseEmailAddress(message.From ?? _azureOptions.DefaultFrom ?? Options.DefaultFrom ?? string.Empty);
-            
+
             var recipients = new
             {
                 to = (message.To ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray(),
-                cc = (message.Cc ?? Enumerable.Empty<string>()).Any() 
-                    ? (message.Cc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray() 
+                cc = (message.Cc ?? Enumerable.Empty<string>()).Any()
+                    ? (message.Cc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray()
                     : null,
-                bcc = (message.Bcc ?? Enumerable.Empty<string>()).Any() 
-                    ? (message.Bcc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray() 
+                bcc = (message.Bcc ?? Enumerable.Empty<string>()).Any()
+                    ? (message.Bcc ?? Enumerable.Empty<string>()).Select(ParseEmailAddress).ToArray()
                     : null
             };
 
@@ -281,17 +281,17 @@ namespace Mvp24Hours.Infrastructure.Email.Providers
                     html = message.HtmlBody
                 },
                 recipients = recipients,
-                replyTo = !string.IsNullOrWhiteSpace(message.ReplyTo) 
-                    ? new[] { ParseEmailAddress(message.ReplyTo) } 
-                    : (!string.IsNullOrWhiteSpace(Options.DefaultReplyTo) 
-                        ? new[] { ParseEmailAddress(Options.DefaultReplyTo) } 
+                replyTo = !string.IsNullOrWhiteSpace(message.ReplyTo)
+                    ? new[] { ParseEmailAddress(message.ReplyTo) }
+                    : (!string.IsNullOrWhiteSpace(Options.DefaultReplyTo)
+                        ? new[] { ParseEmailAddress(Options.DefaultReplyTo) }
                         : null),
                 attachments = (message.Attachments ?? Enumerable.Empty<Contract.IEmailAttachment>())
                     .Select(CreateAzureCommunicationAttachment)
                     .ToArray(),
                 userEngagementTrackingDisabled = !_azureOptions.EnableUserEngagementTracking,
-                headers = message.Headers.Any() 
-                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value) 
+                headers = message.Headers.Any()
+                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value)
                     : null
             };
 

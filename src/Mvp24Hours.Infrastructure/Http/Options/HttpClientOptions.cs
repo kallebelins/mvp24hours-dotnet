@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Http.DelegatingHandlers;
-using Polly.CircuitBreaker;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using Mvp24Hours.Infrastructure.Http.DelegatingHandlers;
+using Polly.CircuitBreaker;
 
 namespace Mvp24Hours.Infrastructure.Http.Options
 {

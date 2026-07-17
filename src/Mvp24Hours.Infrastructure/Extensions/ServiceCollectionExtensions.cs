@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Reflection;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Mappings;
 using Mvp24Hours.Helpers;
-using System.Reflection;
 
 namespace Mvp24Hours.Extensions
 {

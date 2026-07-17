@@ -199,7 +199,7 @@ namespace Mvp24Hours.Infrastructure.Email.Templates
                     var placeholder = $"@Model.{kvp.Key}";
                     var value = kvp.Value?.ToString() ?? string.Empty;
                     result = result.Replace(placeholder, value);
-                    
+
                     // Also handle without Model prefix
                     placeholder = $"@{kvp.Key}";
                     result = result.Replace(placeholder, value);

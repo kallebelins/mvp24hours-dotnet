@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,6 +10,11 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb
 {

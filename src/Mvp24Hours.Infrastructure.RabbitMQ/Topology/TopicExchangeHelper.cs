@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
             for (var i = 0; i < parts.Length; i++)
             {
                 var part = parts[i];
-                
+
                 // Each part should be either *, #, or a word
                 if (part != SingleWordWildcard && part != MultiWordWildcard)
                 {

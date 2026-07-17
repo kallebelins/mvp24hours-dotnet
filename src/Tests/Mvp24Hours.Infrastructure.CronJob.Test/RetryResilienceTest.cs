@@ -1,8 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,9 +18,6 @@ using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
@@ -75,7 +75,7 @@ public class RetryResilienceTest
         // Act
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await job.StartAsync(cts.Token);
-        
+
         // Wait for execution
         await Task.Delay(500);
         await job.StopAsync(cts.Token);
@@ -394,7 +394,7 @@ public class RetryResilienceTest
     {
         // Arrange & Act
         var config = CronJobResilienceConfig<TestResilientCronJob>.WithCircuitBreaker(
-            failureThreshold: 10, 
+            failureThreshold: 10,
             duration: TimeSpan.FromMinutes(1));
 
         // Assert

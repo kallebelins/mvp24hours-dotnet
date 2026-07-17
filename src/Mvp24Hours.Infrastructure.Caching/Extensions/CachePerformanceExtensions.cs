@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.IO.Compression;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,9 +15,6 @@ using Mvp24Hours.Infrastructure.Caching.Compression;
 using Mvp24Hours.Infrastructure.Caching.Prefetching;
 using Mvp24Hours.Infrastructure.Caching.Serializers;
 using Mvp24Hours.Infrastructure.Caching.Warming;
-using System;
-using System.IO.Compression;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.Caching.Extensions
 {

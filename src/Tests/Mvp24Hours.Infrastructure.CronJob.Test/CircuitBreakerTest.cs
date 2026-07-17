@@ -1,8 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,9 +17,6 @@ using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
@@ -98,7 +98,7 @@ public class CircuitBreakerTest
 
         // Act - Advance time past the duration
         fakeTimeProvider.Advance(duration.Add(TimeSpan.FromSeconds(1)));
-        
+
         var canExecute = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
 
         // Assert
@@ -127,7 +127,7 @@ public class CircuitBreakerTest
         circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
 
         // Act - Record success
-        circuitBreaker.RecordSuccess("TestJob", successThreshold: 1, 
+        circuitBreaker.RecordSuccess("TestJob", successThreshold: 1,
             (from, to) => stateChanges.Add((from, to)));
 
         // Assert
@@ -181,9 +181,9 @@ public class CircuitBreakerTest
         }
 
         // Act
-        var canExecute = circuitBreaker.AllowExecution("TestJob", 
-            failureThreshold: 5, 
-            TimeSpan.FromSeconds(30), 
+        var canExecute = circuitBreaker.AllowExecution("TestJob",
+            failureThreshold: 5,
+            TimeSpan.FromSeconds(30),
             TimeSpan.FromMinutes(1));
 
         // Assert
@@ -197,9 +197,9 @@ public class CircuitBreakerTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         // Act
-        var canExecute = circuitBreaker.AllowExecution("TestJob", 
-            failureThreshold: 5, 
-            TimeSpan.FromSeconds(30), 
+        var canExecute = circuitBreaker.AllowExecution("TestJob",
+            failureThreshold: 5,
+            TimeSpan.FromSeconds(30),
             TimeSpan.FromMinutes(1));
 
         // Assert
@@ -342,7 +342,7 @@ public class CircuitBreakerTest
 
         // Act - Advance time past the sampling window
         fakeTimeProvider.Advance(samplingDuration.Add(TimeSpan.FromSeconds(1)));
-        
+
         // This should clean old failures and not open the circuit
         circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, TimeSpan.FromSeconds(30), samplingDuration);
         circuitBreaker.RecordFailure("TestJob", failureThreshold: 5, TimeSpan.FromSeconds(30));
@@ -427,7 +427,7 @@ public class CircuitBreakerTest
         for (int i = 0; i < failureThreshold; i++)
         {
             circuitBreaker.AllowExecution("TestJob", failureThreshold, duration, TimeSpan.FromMinutes(1));
-            circuitBreaker.RecordFailure("TestJob", failureThreshold, duration, 
+            circuitBreaker.RecordFailure("TestJob", failureThreshold, duration,
                 onStateChange: (from, to) => stateChanges.Add((from, to)));
         }
 

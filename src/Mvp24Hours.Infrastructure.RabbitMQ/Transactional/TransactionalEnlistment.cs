@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Transactional.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Transactional
 {

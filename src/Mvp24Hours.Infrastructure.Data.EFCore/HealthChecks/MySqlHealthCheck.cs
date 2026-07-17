@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 {
@@ -103,7 +103,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                 {
                     var current = Convert.ToInt32(status["Threads_connected"]);
                     var max = Convert.ToInt32(status["max_connections"]);
-                    
+
                     data["currentConnections"] = current;
                     data["maxConnections"] = max;
                     data["connectionUsagePercent"] = max > 0 ? Math.Round((double)current / max * 100, 2) : 0;
@@ -163,8 +163,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                     {
                         data["replicationStatus"] = replicationStatus;
 
-                        if (replicationStatus.TryGetValue("Seconds_Behind_Master", out var lag) && 
-                            lag != null && 
+                        if (replicationStatus.TryGetValue("Seconds_Behind_Master", out var lag) &&
+                            lag != null &&
                             Convert.ToInt32(lag) > _options.ReplicationLagThresholdSeconds)
                         {
                             return HealthCheckResult.Degraded(

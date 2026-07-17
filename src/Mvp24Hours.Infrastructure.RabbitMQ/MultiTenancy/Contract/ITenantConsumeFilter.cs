@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract
 {

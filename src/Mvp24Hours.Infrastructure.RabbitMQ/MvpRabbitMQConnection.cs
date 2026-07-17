@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
@@ -8,9 +11,6 @@ using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using System;
-using System.IO;
-using System.Net.Sockets;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ
 {

@@ -4,8 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using System.Runtime.CompilerServices;
+using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -24,7 +24,7 @@ public class GetItemsStreamRequest : IStreamRequest<int>
 public class GetItemsStreamHandler : IStreamRequestHandler<GetItemsStreamRequest, int>
 {
     public async IAsyncEnumerable<int> Handle(
-        GetItemsStreamRequest request, 
+        GetItemsStreamRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         for (int i = 1; i <= request.Count; i++)

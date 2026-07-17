@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.Enums;
 
 namespace Mvp24Hours.Core.ValueObjects.Logic
 {

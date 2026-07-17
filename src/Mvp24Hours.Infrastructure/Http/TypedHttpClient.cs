@@ -3,10 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Http.Contract;
-using Mvp24Hours.Infrastructure.Http.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +10,10 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Exceptions;
+using Mvp24Hours.Infrastructure.Http.Contract;
+using Mvp24Hours.Infrastructure.Http.Serializers;
 
 namespace Mvp24Hours.Infrastructure.Http
 {
@@ -450,12 +450,12 @@ namespace Mvp24Hours.Infrastructure.Http
                     ? await response.Content.ReadAsStringAsync()
                     : string.Empty;
 
-                                throw new HttpStatusCodeException(
-                    response.ReasonPhrase ?? "Unknown error",
-                    response.StatusCode,
-                    response.RequestMessage?.Method ?? HttpMethod.Get,
-                    response.RequestMessage?.RequestUri,
-                    responseContent);
+                throw new HttpStatusCodeException(
+    response.ReasonPhrase ?? "Unknown error",
+    response.StatusCode,
+    response.RequestMessage?.Method ?? HttpMethod.Get,
+    response.RequestMessage?.RequestUri,
+    responseContent);
             }
         }
 
@@ -472,12 +472,12 @@ namespace Mvp24Hours.Infrastructure.Http
         private void LogRequest(string method, string url)
         {
             _logger?.LogDebug("TypedHttpClient<{ApiType}>.{Method}: {Url}", typeof(TApi).Name, method, url);
-                    }
+        }
 
         private void LogError(string method, string url, Exception ex)
         {
             _logger?.LogError(ex, "TypedHttpClient<{ApiType}>.{Method} failed: {Url}", typeof(TApi).Name, method, url);
-                    }
+        }
 
         #endregion
     }

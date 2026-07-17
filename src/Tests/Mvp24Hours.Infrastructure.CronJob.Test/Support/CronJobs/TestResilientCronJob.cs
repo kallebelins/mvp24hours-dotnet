@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,9 +13,6 @@ using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 
@@ -47,7 +47,7 @@ public class TestResilientCronJob : ResilientCronJobService<TestResilientCronJob
     public override async Task DoWork(CancellationToken cancellationToken)
     {
         DoWorkInvocationCount++;
-        
+
         if (_workAction != null)
         {
             try
@@ -75,7 +75,7 @@ public class FailingCronJob : ResilientCronJobService<FailingCronJob>
 {
     private readonly int _failUntilAttempt;
     private readonly ExecutionTracker? _tracker;
-    
+
     /// <summary>
     /// Gets the number of times DoWork was invoked.
     /// </summary>
@@ -99,7 +99,7 @@ public class FailingCronJob : ResilientCronJobService<FailingCronJob>
     public override Task DoWork(CancellationToken cancellationToken)
     {
         DoWorkInvocationCount++;
-        
+
         if (DoWorkInvocationCount <= _failUntilAttempt)
         {
             var ex = new InvalidOperationException($"Simulated failure on attempt {DoWorkInvocationCount}");
@@ -143,7 +143,7 @@ public class SlowCronJob : ResilientCronJobService<SlowCronJob>
     public override async Task DoWork(CancellationToken cancellationToken)
     {
         DoWorkInvocationCount++;
-        
+
         try
         {
             await Task.Delay(_executionDuration, cancellationToken);

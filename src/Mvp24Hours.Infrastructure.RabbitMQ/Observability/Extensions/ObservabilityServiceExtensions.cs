@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
-using System;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability.Extensions;
 
@@ -111,7 +111,7 @@ public static class ObservabilityServiceExtensions
     {
         services.TryAddSingleton<RabbitMQPrometheusMetrics>();
         services.TryAddSingleton<IRabbitMQMetrics>(sp => sp.GetRequiredService<RabbitMQPrometheusMetrics>());
-        
+
         // Also register as observers for automatic metrics collection
         services.AddSingleton<IConsumeObserver>(sp => sp.GetRequiredService<RabbitMQPrometheusMetrics>());
         services.AddSingleton<IPublishObserver>(sp => sp.GetRequiredService<RabbitMQPrometheusMetrics>());

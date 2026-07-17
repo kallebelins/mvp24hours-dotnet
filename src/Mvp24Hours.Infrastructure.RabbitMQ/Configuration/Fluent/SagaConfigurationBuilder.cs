@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence;
-using System;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
 {

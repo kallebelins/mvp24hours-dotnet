@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 using System;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Mvp24Hours.Extensions
 {

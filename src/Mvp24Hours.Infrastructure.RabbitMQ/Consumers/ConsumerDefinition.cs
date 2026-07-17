@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using System.Linq;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
 {
@@ -23,14 +23,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         protected ConsumerDefinition()
         {
             ConsumerType = typeof(TConsumer);
-            
+
             // Auto-detect message type from IMessageConsumer<T> interface
             var consumerInterface = ConsumerType
                 .GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && 
+                .FirstOrDefault(i => i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
 
-            MessageType = consumerInterface?.GetGenericArguments().FirstOrDefault() 
+            MessageType = consumerInterface?.GetGenericArguments().FirstOrDefault()
                 ?? typeof(object);
         }
 

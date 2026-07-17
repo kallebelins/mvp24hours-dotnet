@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Scriban;
-using Scriban.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Scriban;
+using Scriban.Runtime;
 
 namespace Mvp24Hours.Infrastructure.Email.Templates
 {

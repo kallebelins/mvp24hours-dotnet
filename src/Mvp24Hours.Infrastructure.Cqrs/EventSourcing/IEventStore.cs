@@ -153,18 +153,18 @@ public interface IEventStore
 /// </remarks>
 public interface IEventStoreWithSubscription : IEventStore
 {
-/// <summary>
-/// Subscribes to all events from a specific position.
-/// </summary>
-/// <param name="fromPosition">
-/// The global position to start reading from.
-/// Use 0 to read from the beginning.
-/// </param>
-/// <param name="cancellationToken">Cancellation token.</param>
-/// <returns>An async enumerable of stored events.</returns>
-IAsyncEnumerable<StoredEvent> SubscribeFromPositionAsync(
-        long fromPosition,
-        CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Subscribes to all events from a specific position.
+    /// </summary>
+    /// <param name="fromPosition">
+    /// The global position to start reading from.
+    /// Use 0 to read from the beginning.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of stored events.</returns>
+    IAsyncEnumerable<StoredEvent> SubscribeFromPositionAsync(
+            long fromPosition,
+            CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Subscribes to events for a specific aggregate type.

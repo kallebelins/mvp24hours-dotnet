@@ -157,7 +157,7 @@ public static class ActivityHelper
         IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
     {
         var tags = new List<KeyValuePair<string, object?>>();
-        
+
         if (!string.IsNullOrEmpty(destinationName))
         {
             tags.Add(new(SemanticTags.MessagingDestinationName, destinationName));
@@ -186,7 +186,7 @@ public static class ActivityHelper
         IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
     {
         var tags = new List<KeyValuePair<string, object?>>();
-        
+
         if (!string.IsNullOrEmpty(destinationName))
         {
             tags.Add(new(SemanticTags.MessagingDestinationName, destinationName));
@@ -211,10 +211,10 @@ public static class ActivityHelper
         string operationName,
         [CallerMemberName] string? callerName = null)
     {
-        var name = string.IsNullOrEmpty(callerName) 
-            ? operationName 
+        var name = string.IsNullOrEmpty(callerName)
+            ? operationName
             : $"{operationName}.{callerName}";
-        
+
         return StartOperation(Mvp24HoursActivitySources.Core.Source, name);
     }
 
@@ -438,7 +438,7 @@ public static class ActivityHelper
         {
             // W3C Trace Context
             headers["traceparent"] = $"00-{activity.TraceId}-{activity.SpanId}-{(activity.Recorded ? "01" : "00")}";
-            
+
             if (!string.IsNullOrEmpty(activity.TraceStateString))
             {
                 headers["tracestate"] = activity.TraceStateString;

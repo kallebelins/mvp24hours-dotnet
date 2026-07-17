@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -10,9 +13,6 @@ using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.ConnectionPool;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes;
-using System;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Extensions
 {

@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 using System;
 using System.Linq;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
 {
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         {
             var messages = bus.GetConsumedMessages<TMessage>();
             var failed = messages.Where(m => !m.IsSuccess).ToList();
-            
+
             if (failed.Count > 0)
             {
                 var errors = string.Join(", ", failed.Select(f => f.Exception?.Message ?? "Unknown error"));

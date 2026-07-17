@@ -3,6 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,12 +16,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Transactions;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore
 {
@@ -201,9 +201,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (isAggregate || Options.TransactionIsolationLevel != null)
             {
-                Logger?.LogDebug("EFCore RepositoryBase creating transaction scope. EntityType: {EntityType}, IsolationLevel: {IsolationLevel}, Timeout: {Timeout}, AsyncFlow: Enabled", 
-                    typeof(T).Name, 
-                    Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted, 
+                Logger?.LogDebug("EFCore RepositoryBase creating transaction scope. EntityType: {EntityType}, IsolationLevel: {IsolationLevel}, Timeout: {Timeout}, AsyncFlow: Enabled",
+                    typeof(T).Name,
+                    Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
                     TransactionManager.MaximumTimeout);
                 return new TransactionScope(TransactionScopeOption.Required, new TransactionOptions
                 {

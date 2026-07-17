@@ -244,8 +244,8 @@ public static class LogScopeFactory
         if (Activity.Current != null)
         {
             props["TraceId"] = Activity.Current.TraceId.ToString();
-            props[SemanticTags.CorrelationId] = 
-                Activity.Current.GetBaggageItem("correlation.id") 
+            props[SemanticTags.CorrelationId] =
+                Activity.Current.GetBaggageItem("correlation.id")
                 ?? Activity.Current.TraceId.ToString();
         }
 

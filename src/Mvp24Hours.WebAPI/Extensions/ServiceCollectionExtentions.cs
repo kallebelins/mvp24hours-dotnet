@@ -3,35 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc.Versioning;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.ResponseCaching;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi;
-using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
-using Mvp24Hours.WebAPI.Binders;
-using Mvp24Hours.WebAPI.Configuration;
-using Mvp24Hours.WebAPI.Exceptions;
-using Mvp24Hours.WebAPI.Filters;
-using Mvp24Hours.WebAPI.Filters.Swagger;
-using Mvp24Hours.WebAPI.Models;
-using Mvp24Hours.WebAPI.Http;
-using Mvp24Hours.WebAPI.Services;
-using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Filters;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,10 +11,39 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.ResponseCaching;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
+using Mvp24Hours.Extensions;
+using Mvp24Hours.Helpers;
+using Mvp24Hours.WebAPI.Binders;
+using Mvp24Hours.WebAPI.Configuration;
+using Mvp24Hours.WebAPI.Exceptions;
+using Mvp24Hours.WebAPI.Filters;
+using Mvp24Hours.WebAPI.Filters.Swagger;
+using Mvp24Hours.WebAPI.Http;
+using Mvp24Hours.WebAPI.Models;
+using Mvp24Hours.WebAPI.Services;
+using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using MvpApiVersioningOptions = Mvp24Hours.WebAPI.Configuration.ApiVersioningOptions;
 using MvpProblemDetailsOptions = Mvp24Hours.WebAPI.Configuration.MvpProblemDetailsOptions;
 using MvpResponseCachingOptions = Mvp24Hours.WebAPI.Configuration.ResponseCachingOptions;
-using MvpApiVersioningOptions = Mvp24Hours.WebAPI.Configuration.ApiVersioningOptions;
-using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.WebAPI.Extensions
 {
@@ -378,7 +378,7 @@ namespace Mvp24Hours.WebAPI.Extensions
 
                 // Add operation filters
                 c.OperationFilter<DeprecationOperationFilter>();
-                
+
                 if (options.EnableExamples)
                 {
                     c.OperationFilter<ExamplesOperationFilter>();
@@ -2241,13 +2241,13 @@ namespace Mvp24Hours.WebAPI.Extensions
             services.TryAddSingleton<ContentNegotiation.IContentFormatterRegistry>(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<ContentNegotiationOptions>>().Value;
-                
+
                 // Collect custom formatter instances
                 var customFormatters = new System.Collections.Generic.List<ContentNegotiation.IContentFormatter>();
-                
+
                 // Add formatter instances registered via builder
                 customFormatters.AddRange(builder.CustomFormatters);
-                
+
                 // Resolve formatter types registered via builder
                 foreach (var formatterType in builder.CustomFormatterTypes)
                 {
@@ -2264,9 +2264,9 @@ namespace Mvp24Hours.WebAPI.Extensions
                         // Ignore if formatter cannot be resolved (will be registered later)
                     }
                 }
-                
+
                 var registry = new ContentNegotiation.ContentFormatterRegistry(options, customFormatters);
-                
+
                 // Register any formatter types that weren't resolved yet
                 foreach (var formatterType in builder.CustomFormatterTypes)
                 {
@@ -2283,7 +2283,7 @@ namespace Mvp24Hours.WebAPI.Extensions
                         // Ignore if formatter cannot be resolved
                     }
                 }
-                
+
                 return registry;
             });
 

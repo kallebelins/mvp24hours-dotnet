@@ -1,9 +1,9 @@
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Mvp24Hours.Helpers;
 
 namespace Mvp24Hours.Extensions
 {
@@ -80,7 +80,7 @@ namespace Mvp24Hours.Extensions
                         }
                         else // if null we can just set it as null
                             props.targetProperty.SetValue(destination, null, null);
-                        
+
                         var newdstValue = props.targetProperty.GetValue(destination, null);
                         if (!Equals(newdstValue, dstValue))
                             PropertyChanged = true;

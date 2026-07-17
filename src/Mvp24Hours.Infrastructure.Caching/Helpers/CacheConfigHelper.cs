@@ -1,10 +1,10 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Caching.Distributed;
 using System;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Mvp24Hours.Infrastructure.Caching.Helpers
 {

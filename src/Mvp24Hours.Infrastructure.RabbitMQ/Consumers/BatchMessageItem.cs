@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
 {

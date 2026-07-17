@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -36,10 +36,10 @@ public class TransactionIntegrationTest
             options.RegisterHandlersFromAssembly(typeof(CreateOrderTransactionalCommand).Assembly);
             options.RegisterTransactionBehavior = registerTransactionBehavior;
         });
-        
+
         // Register mock UnitOfWork
         services.AddScoped<IUnitOfWorkAsync>(_ => _mockUnitOfWork);
-        
+
         _serviceProvider = services.BuildServiceProvider();
         _mediator = _serviceProvider.GetRequiredService<IMediator>();
     }
@@ -82,7 +82,7 @@ public class TransactionIntegrationTest
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
-        
+
         Assert.Equal("Handler failed", ex.Message);
         Assert.Equal(0, _mockUnitOfWork.SaveChangesCallCount);
         Assert.Equal(1, _mockUnitOfWork.RollbackCallCount);
@@ -193,7 +193,7 @@ public class TransactionIntegrationTest
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
-        
+
         Assert.Equal("Database error", ex.Message);
         // Note: Rollback is only called when the handler fails, not when SaveChanges fails
         // because the exception happens during SaveChanges itself
@@ -210,12 +210,12 @@ public class TransactionIntegrationTest
         services.AddLogging();
         services.AddMvpMediator(typeof(CreateAggregateTransactionalCommand).Assembly);
         services.AddScoped<IUnitOfWorkAsync>(_ => mockUnitOfWork);
-        
+
         // Register the TransactionWithEventsBehavior manually
         services.AddTransient(
             typeof(IPipelineBehavior<CreateAggregateTransactionalCommand, TestAggregate>),
             typeof(TransactionWithEventsBehavior<CreateAggregateTransactionalCommand, TestAggregate>));
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
 
@@ -247,7 +247,7 @@ public class TransactionIntegrationTest
             options.RegisterTransactionBehavior = true;
         });
         // Note: NOT registering IUnitOfWorkAsync
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
         CreateOrderTransactionalCommandHandler.Reset();

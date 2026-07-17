@@ -3,17 +3,17 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.ContentNegotiation;
-using System;
-using System.IO;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Middlewares
 {
@@ -111,7 +111,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
 
             // Default to JSON for error response
             context.Response.ContentType = "application/problem+json; charset=utf-8";
-            
+
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -181,7 +181,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
             {
                 // Check if we need to transform the response
                 var originalContentType = context.Response.ContentType;
-                
+
                 // Only transform if content types don't match
                 var normalizedContentType = NormalizeContentType(originalContentType);
                 var contentTypeMatches = false;
@@ -210,7 +210,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
 
                         // Set new content type
                         context.Response.ContentType = formatter.GetContentType(_options.Charset);
-                        
+
                         // Copy to original body
                         newBody.Seek(0, SeekOrigin.Begin);
                         await newBody.CopyToAsync(originalBody);

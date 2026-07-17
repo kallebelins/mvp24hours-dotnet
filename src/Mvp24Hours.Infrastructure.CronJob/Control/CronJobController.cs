@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.CronJob.Resiliency;
-using Mvp24Hours.Infrastructure.CronJob.State;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.CronJob.Resiliency;
+using Mvp24Hours.Infrastructure.CronJob.State;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Control
 {

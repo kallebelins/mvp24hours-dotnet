@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
@@ -12,7 +13,6 @@ using Mvp24Hours.Infrastructure.Pipe.ExceptionMapping;
 using Mvp24Hours.Infrastructure.Pipe.Middleware;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using Mvp24Hours.Infrastructure.Pipe.Validation;
-using System;
 
 namespace Mvp24Hours.Extensions
 {

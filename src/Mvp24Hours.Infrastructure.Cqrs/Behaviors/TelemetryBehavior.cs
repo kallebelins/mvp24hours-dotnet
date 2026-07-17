@@ -117,19 +117,19 @@ public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<T
     private static string GetRequestType()
     {
         var requestType = typeof(TRequest);
-        
-        if (requestType.GetInterfaces().Any(i => 
+
+        if (requestType.GetInterfaces().Any(i =>
             i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IMediatorCommand")))
         {
             return "Command";
         }
-        
-        if (requestType.GetInterfaces().Any(i => 
+
+        if (requestType.GetInterfaces().Any(i =>
             i.IsGenericType && i.GetGenericTypeDefinition().Name.StartsWith("IMediatorQuery")))
         {
             return "Query";
         }
-        
+
         return "Request";
     }
 }

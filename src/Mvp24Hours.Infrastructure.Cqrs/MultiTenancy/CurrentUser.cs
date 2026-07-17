@@ -65,13 +65,13 @@ public sealed record CurrentUser : ICurrentUser
     /// <summary>
     /// Creates an authenticated user with the specified ID.
     /// </summary>
-    public static CurrentUser FromId(string id, string? name = null) => 
+    public static CurrentUser FromId(string id, string? name = null) =>
         new(id: id, name: name, isAuthenticated: true);
 
     /// <summary>
     /// Creates an authenticated user with ID, name, and email.
     /// </summary>
-    public static CurrentUser Create(string id, string name, string? email = null, IEnumerable<string>? roles = null) => 
+    public static CurrentUser Create(string id, string name, string? email = null, IEnumerable<string>? roles = null) =>
         new(id: id, name: name, email: email, isAuthenticated: true, roles: roles);
 }
 

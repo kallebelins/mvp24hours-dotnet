@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
 

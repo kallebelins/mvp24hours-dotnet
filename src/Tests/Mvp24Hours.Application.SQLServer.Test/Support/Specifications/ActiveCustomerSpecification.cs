@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
-using Mvp24Hours.Core.Domain.Specifications;
 using System;
 using System.Linq.Expressions;
+using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
+using Mvp24Hours.Core.Domain.Specifications;
 
 namespace Mvp24Hours.Application.SQLServer.Test.Support.Specifications
 {
@@ -50,7 +50,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Specifications
         {
             // Include contacts navigation property
             AddInclude(c => c.Contacts);
-            
+
             // Order by name descending
             AddOrderByDescending(c => c.Name);
         }

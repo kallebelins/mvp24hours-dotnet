@@ -68,7 +68,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the Core ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Core";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -93,7 +93,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the Pipe ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Pipe";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -120,7 +120,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the CQRS ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Cqrs";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -153,7 +153,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the Data ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Data";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -182,7 +182,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the RabbitMQ ActivitySource.</summary>
         public const string Name = "Mvp24Hours.RabbitMQ";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -209,7 +209,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the WebAPI ActivitySource.</summary>
         public const string Name = "Mvp24Hours.WebAPI";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -236,7 +236,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the Caching ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Caching";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -261,7 +261,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the CronJob ActivitySource.</summary>
         public const string Name = "Mvp24Hours.CronJob";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 
@@ -282,7 +282,7 @@ public static class Mvp24HoursActivitySources
     {
         /// <summary>The name of the Infrastructure ActivitySource.</summary>
         public const string Name = "Mvp24Hours.Infrastructure";
-        
+
         /// <summary>The ActivitySource instance.</summary>
         public static readonly ActivitySource Source = new(Name, Version);
 

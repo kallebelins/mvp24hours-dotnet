@@ -1,16 +1,16 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Application.SQLServer.Test.Support.Services.Async;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 

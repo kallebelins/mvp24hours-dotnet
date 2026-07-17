@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.DTOs.Models;
-using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Cqrs.Queries;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.DTOs.Models;
+using Mvp24Hours.Core.ValueObjects.Logic;
+using Mvp24Hours.Infrastructure.Cqrs.Queries;
 
 namespace Mvp24Hours.WebAPI.Binders
 {

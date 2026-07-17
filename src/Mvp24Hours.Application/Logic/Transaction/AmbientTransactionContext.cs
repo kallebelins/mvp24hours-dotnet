@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.Contract.Transaction;
 using System;
 using System.Threading;
+using Mvp24Hours.Application.Contract.Transaction;
 
 namespace Mvp24Hours.Application.Logic.Transaction
 {

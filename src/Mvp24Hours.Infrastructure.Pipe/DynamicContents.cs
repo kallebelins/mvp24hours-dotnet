@@ -1,6 +1,6 @@
-﻿using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Dynamic;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe
 {

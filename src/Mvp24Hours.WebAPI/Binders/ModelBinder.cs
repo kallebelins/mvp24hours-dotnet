@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.WebAPI.Binders
 {

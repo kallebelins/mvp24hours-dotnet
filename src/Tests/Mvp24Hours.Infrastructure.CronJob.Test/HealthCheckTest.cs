@@ -1,17 +1,17 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
@@ -98,7 +98,7 @@ public class HealthCheckTest
         });
 
         metricsService.RecordJobStarted("FailingJob", "* * * * *");
-        
+
         // Record 10 executions with 2 failures (20% failure rate)
         for (int i = 0; i < 10; i++)
         {
@@ -187,7 +187,7 @@ public class HealthCheckTest
         });
 
         metricsService.RecordJobStarted("CriticalJob", "* * * * *");
-        
+
         // Record 10 executions with 6 failures (60% failure rate)
         for (int i = 0; i < 10; i++)
         {
@@ -305,10 +305,10 @@ public class HealthCheckTest
     {
         // Arrange
         var metricsService = new CronJobMetricsService();
-        
+
         metricsService.RecordJobStarted("HealthyJob", "* * * * *");
         metricsService.RecordExecution("HealthyJob", 100, success: true, 1);
-        
+
         metricsService.RecordJobStarted("AnotherHealthyJob", "*/5 * * * *");
         metricsService.RecordExecution("AnotherHealthyJob", 200, success: true, 1);
 
@@ -331,10 +331,10 @@ public class HealthCheckTest
     {
         // Arrange
         var metricsService = new CronJobMetricsService();
-        
+
         metricsService.RecordJobStarted("UnhealthyJob1", "* * * * *");
         metricsService.RecordCircuitBreakerStateChange("UnhealthyJob1", "Closed", "Open");
-        
+
         metricsService.RecordJobStarted("UnhealthyJob2", "*/5 * * * *");
         metricsService.RecordCircuitBreakerStateChange("UnhealthyJob2", "Closed", "Open");
 

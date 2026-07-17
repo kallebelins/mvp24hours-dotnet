@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Mvp24Hours.Core.Contract.Domain.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Mvp24Hours.Core.Contract.Domain.Entity;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
 {

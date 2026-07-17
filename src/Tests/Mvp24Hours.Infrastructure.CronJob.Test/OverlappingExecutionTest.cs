@@ -1,8 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,9 +16,6 @@ using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
@@ -437,9 +437,9 @@ public class OverlappingExecutionTest
                 {
                     var current = Interlocked.Increment(ref concurrentExecutions);
                     maxConcurrent = Math.Max(maxConcurrent, current);
-                    
+
                     await Task.Delay(50); // Simulate work
-                    
+
                     Interlocked.Decrement(ref concurrentExecutions);
                     await handle.DisposeAsync();
                 }

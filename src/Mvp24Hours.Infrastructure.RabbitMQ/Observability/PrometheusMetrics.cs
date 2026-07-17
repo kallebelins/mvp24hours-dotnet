@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
-using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
+using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 
@@ -219,7 +219,7 @@ public sealed class RabbitMQPrometheusMetrics : IRabbitMQMetrics, IConsumeObserv
     {
         Interlocked.Increment(ref _messagesSentCount);
         _messagesPublished.Add(1, new KeyValuePair<string, object?>("exchange", exchange ?? "default"));
-        
+
         if (!string.IsNullOrEmpty(exchange))
         {
             _messagesByExchange.AddOrUpdate(exchange, 1, (_, count) => count + 1);
@@ -231,7 +231,7 @@ public sealed class RabbitMQPrometheusMetrics : IRabbitMQMetrics, IConsumeObserv
     {
         Interlocked.Increment(ref _messagesReceivedCount);
         _messagesConsumed.Add(1, new KeyValuePair<string, object?>("queue", queue ?? "default"));
-        
+
         if (!string.IsNullOrEmpty(queue))
         {
             _messagesByQueue.AddOrUpdate(queue, 1, (_, count) => count + 1);
@@ -357,7 +357,7 @@ public sealed class RabbitMQPrometheusMetrics : IRabbitMQMetrics, IConsumeObserv
     public Task PreConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
     {
         IncrementMessagesReceived(context.QueueName);
-        
+
         if (context.Redelivered)
         {
             IncrementMessagesRedelivered();

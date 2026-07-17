@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
 using Mvp24Hours.Core.Infrastructure.Channels;
-using System;
-using System.Threading.Channels;
 
 namespace Mvp24Hours.Core.Extensions;
 

@@ -1,4 +1,4 @@
-﻿using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 
 namespace Mvp24Hours.Application.Pipe.Test.Rollbacks

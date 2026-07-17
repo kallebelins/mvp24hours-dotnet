@@ -55,10 +55,10 @@ namespace Mvp24Hours.Core.Domain.Enumerations
     public abstract class Enumeration<TEnum> : IEquatable<Enumeration<TEnum>>, IComparable<Enumeration<TEnum>>
         where TEnum : Enumeration<TEnum>
     {
-        private static readonly Lazy<Dictionary<int, TEnum>> _byValue = 
+        private static readonly Lazy<Dictionary<int, TEnum>> _byValue =
             new(() => GetAllValues().ToDictionary(e => e.Value));
-        
-        private static readonly Lazy<Dictionary<string, TEnum>> _byName = 
+
+        private static readonly Lazy<Dictionary<string, TEnum>> _byName =
             new(() => GetAllValues().ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase));
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Checks if a name is defined in this enumeration.
         /// </summary>
-        public static bool IsDefined(string name) => 
+        public static bool IsDefined(string name) =>
             !string.IsNullOrWhiteSpace(name) && _byName.Value.ContainsKey(name);
 
         private static IEnumerable<TEnum> GetAllValues()

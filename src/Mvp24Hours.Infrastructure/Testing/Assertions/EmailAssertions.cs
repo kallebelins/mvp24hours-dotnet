@@ -4,10 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.Email.Models;
-using Mvp24Hours.Infrastructure.Testing.Fakes;
 using System;
 using System.Linq;
+using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Testing.Fakes;
 
 namespace Mvp24Hours.Infrastructure.Testing.Assertions
 {

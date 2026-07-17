@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Warming
 {
@@ -43,7 +43,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Warming
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger?.LogInformation("Starting cache warmup hosted service");
-            
+
             try
             {
                 await _cacheWarmer.WarmUpAsync(cancellationToken);

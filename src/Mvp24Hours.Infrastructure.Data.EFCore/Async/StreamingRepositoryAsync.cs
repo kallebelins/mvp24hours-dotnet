@@ -3,13 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +10,13 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore
 {

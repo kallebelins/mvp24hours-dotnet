@@ -4,12 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Text.Json;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Messaging;
 
@@ -123,8 +123,8 @@ public sealed class InboxProcessor : IInboxProcessor
 
             // Mark as processed
             await _inboxStore.MarkAsProcessedAsync(
-                message.Id, 
-                typeof(TMessage).Name, 
+                message.Id,
+                typeof(TMessage).Name,
                 cancellationToken);
 
             _logger?.LogDebug(
@@ -185,7 +185,7 @@ public sealed class InboxCleanupService : BackgroundService
     {
         // Use PeriodicTimer for modern async/await patterns
         using var timer = new PeriodicTimer(_options.CleanupInterval);
-        
+
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))

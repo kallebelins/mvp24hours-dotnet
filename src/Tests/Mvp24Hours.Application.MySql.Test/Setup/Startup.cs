@@ -3,6 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.MySql.Test.Support.Data;
@@ -11,8 +13,6 @@ using Mvp24Hours.Application.MySql.Test.Support.Enums;
 using Mvp24Hours.Application.MySql.Test.Support.Services;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Extensions;
-using System;
-using System.Collections.Generic;
 
 #if !InMemory
 using Microsoft.Extensions.Configuration;

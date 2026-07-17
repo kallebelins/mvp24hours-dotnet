@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
 {
@@ -426,7 +426,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent
             _deferredRegistrations.Add(services =>
             {
                 Transactional.Extensions.TransactionalMessagingExtensions.AddTransactionalMessaging(services);
-                
+
                 // Configure OutboxPublisher options
                 services.Configure<Transactional.OutboxPublisherOptions>(publisherOpts =>
                 {

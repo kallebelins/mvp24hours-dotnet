@@ -4,15 +4,15 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Caching.Observability;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.Caching.Extensions;
 

@@ -4,13 +4,13 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Mvp24Hours.Infrastructure.Email.Models;
-using Mvp24Hours.Infrastructure.Email.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Email.Models;
+using Mvp24Hours.Infrastructure.Email.Results;
 
 namespace Mvp24Hours.Infrastructure.Testing.Fakes
 {
@@ -178,7 +178,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Fakes
 
             lock (_lock)
             {
-                return _sentEmails.Any(e => 
+                return _sentEmails.Any(e =>
                     e.Subject?.Contains(subject, StringComparison.OrdinalIgnoreCase) ?? false);
             }
         }

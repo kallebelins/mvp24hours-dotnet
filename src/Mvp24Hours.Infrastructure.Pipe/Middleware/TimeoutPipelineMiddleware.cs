@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Middleware
 {
@@ -48,7 +48,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
         {
             if (defaultTimeout <= TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(defaultTimeout), "Timeout must be positive");
-            
+
             _defaultTimeout = defaultTimeout;
         }
 

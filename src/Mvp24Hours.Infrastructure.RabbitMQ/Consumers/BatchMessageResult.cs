@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
 {
@@ -71,8 +71,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
         /// <param name="errorMessage">Optional error message.</param>
         /// <returns>A failed batch message result.</returns>
         public static BatchMessageResult NackFrom<TMessage>(
-            IBatchMessageItem<TMessage> item, 
-            bool requeue = true, 
+            IBatchMessageItem<TMessage> item,
+            bool requeue = true,
             string? errorMessage = null) where TMessage : class
             => Nack(item.DeliveryTag, requeue, errorMessage);
 

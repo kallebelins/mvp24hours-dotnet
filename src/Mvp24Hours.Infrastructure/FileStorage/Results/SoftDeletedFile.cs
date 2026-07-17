@@ -3,8 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using System;
+using Mvp24Hours.Infrastructure.FileStorage.Contract;
 
 namespace Mvp24Hours.Infrastructure.FileStorage.Results
 {

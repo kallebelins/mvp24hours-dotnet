@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Warming
 {
@@ -69,9 +69,9 @@ namespace Mvp24Hours.Infrastructure.Caching.Warming
 
                 try
                 {
-                    _logger?.LogDebug("Executing warmup operation: {OperationName} (Priority: {Priority})", 
+                    _logger?.LogDebug("Executing warmup operation: {OperationName} (Priority: {Priority})",
                         operation.Name, operation.Priority);
-                    
+
                     var startTime = DateTime.UtcNow;
                     await operation.ExecuteAsync(cancellationToken);
                     var duration = DateTime.UtcNow - startTime;
@@ -84,7 +84,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Warming
                 catch (Exception ex)
                 {
                     failureCount++;
-                    _logger?.LogError(ex, 
+                    _logger?.LogError(ex,
                         "Warmup operation failed: {OperationName}", operation.Name);
                     // Continue with other operations even if one fails
                 }

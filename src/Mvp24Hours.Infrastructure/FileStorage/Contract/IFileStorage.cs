@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.FileStorage.Results;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.FileStorage.Results;
 
 namespace Mvp24Hours.Infrastructure.FileStorage.Contract
 {

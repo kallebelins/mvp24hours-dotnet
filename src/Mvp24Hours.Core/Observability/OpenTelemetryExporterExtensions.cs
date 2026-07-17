@@ -232,7 +232,7 @@ public static class OpenTelemetryExporterExtensions
 
     private static string GetAssemblyVersion()
     {
-        return System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() 
+        return System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
                ?? "1.0.0";
     }
 }

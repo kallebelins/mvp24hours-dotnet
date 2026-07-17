@@ -1,12 +1,12 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Linq.Expressions;
 using FluentAssertions;
 using Mvp24Hours.Application.Specifications;
 using Mvp24Hours.Core.Domain.Specifications;
-using System.Linq.Expressions;
 using Xunit;
 
 namespace Mvp24Hours.Application.Test.Specifications;

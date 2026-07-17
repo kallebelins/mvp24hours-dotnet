@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 {
@@ -79,12 +79,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Scheduling
 
             // Use PeriodicTimer for modern async/await patterns with proper cancellation
             using var timer = new PeriodicTimer(_options.PollingInterval);
-            
+
             try
             {
                 // Process immediately on startup, then periodically
                 await ProcessAsync(stoppingToken);
-                
+
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
                     try

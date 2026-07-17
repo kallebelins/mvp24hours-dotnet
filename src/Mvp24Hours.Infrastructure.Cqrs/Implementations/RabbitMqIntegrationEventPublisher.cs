@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Text.Json;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -91,7 +91,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         // Use the existing MvpRabbitMQClient infrastructure
         // The client is resolved dynamically to support both scoped and singleton registrations
         var rabbitMqClientType = Type.GetType("Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract.IMvpRabbitMQClient, Mvp24Hours.Infrastructure.RabbitMQ");
-        
+
         if (rabbitMqClientType == null)
         {
             _logger?.LogWarning(
@@ -101,7 +101,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         }
 
         var rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType);
-        
+
         if (rabbitMqClient == null)
         {
             _logger?.LogWarning(
@@ -167,7 +167,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         };
 
         var rabbitMqClientType = Type.GetType("Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract.IMvpRabbitMQClient, Mvp24Hours.Infrastructure.RabbitMQ");
-        
+
         if (rabbitMqClientType == null)
         {
             _logger?.LogWarning(
@@ -177,7 +177,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         }
 
         var rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType);
-        
+
         if (rabbitMqClient == null)
         {
             throw new InvalidOperationException(

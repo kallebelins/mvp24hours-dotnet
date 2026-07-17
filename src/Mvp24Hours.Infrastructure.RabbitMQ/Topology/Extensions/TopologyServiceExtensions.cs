@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
-using System;
 
 namespace Mvp24Hours.Extensions
 {

@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -58,7 +58,7 @@ public class TimeoutAndCircuitBreakerTest
         // Act & Assert
         var ex = await Assert.ThrowsAsync<RequestTimeoutException>(() =>
             mediator.SendAsync(command));
-        
+
         Assert.Equal("SlowTimeoutCommand", ex.RequestName);
         Assert.Equal(100, ex.TimeoutMilliseconds);
     }
@@ -112,7 +112,7 @@ public class TimeoutAndCircuitBreakerTest
     {
         // Arrange
         CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetAllCircuits();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -129,7 +129,7 @@ public class TimeoutAndCircuitBreakerTest
 
         // Assert
         Assert.Equal("Success", result);
-        
+
         var metrics = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.GetMetrics("test-circuit");
         Assert.NotNull(metrics);
         Assert.Equal(CircuitState.Closed, metrics.State);
@@ -141,7 +141,7 @@ public class TimeoutAndCircuitBreakerTest
     {
         // Arrange
         CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetAllCircuits();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -177,7 +177,7 @@ public class TimeoutAndCircuitBreakerTest
     {
         // Arrange
         CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetAllCircuits();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -218,7 +218,7 @@ public class TimeoutAndCircuitBreakerTest
     {
         // Arrange
         CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetAllCircuits();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -246,7 +246,7 @@ public class TimeoutAndCircuitBreakerTest
         // Act & Assert - Next request should be rejected immediately
         var ex = await Assert.ThrowsAsync<CircuitBreakerOpenException>(() =>
             mediator.SendAsync(new CircuitBreakerTestCommand { ShouldFail = false }));
-        
+
         Assert.Equal("test-circuit", ex.CircuitKey);
         Assert.Equal("CircuitBreakerTestCommand", ex.RequestName);
     }
@@ -311,7 +311,7 @@ public class TimeoutAndCircuitBreakerTest
     {
         // Arrange
         var options = new MediatorOptions();
-        
+
         // Act
         options.WithAdvancedResiliency(defaultTimeoutMs: 10000);
 

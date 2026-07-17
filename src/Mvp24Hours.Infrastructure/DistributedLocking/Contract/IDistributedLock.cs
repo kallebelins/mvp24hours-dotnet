@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.DistributedLocking.Options;
-using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.DistributedLocking.Options;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 
 namespace Mvp24Hours.Infrastructure.DistributedLocking.Contract
 {

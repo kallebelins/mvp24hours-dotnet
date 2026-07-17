@@ -1,8 +1,9 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Helpers;
@@ -10,7 +11,6 @@ using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
-using System;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Extensions
 {

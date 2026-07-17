@@ -1,17 +1,17 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 
@@ -578,8 +578,8 @@ namespace Mvp24Hours.Application.Pipe.Test
             var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
             var resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
             var resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
-            var resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");            
-            var resultRollbackStep2 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step2");            
+            var resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");
+            var resultRollbackStep2 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step2");
             var resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
 
             var resultIndexStep1 = RollbackTestContext.Results.IndexOf("key-test-rollback-step1");
@@ -623,7 +623,7 @@ namespace Mvp24Hours.Application.Pipe.Test
             Assert.Equal(3, resultExecutionStep3);
             Assert.False(resultRollbackStep1);
             Assert.False(resultRollbackStep2);
-            Assert.False(resultRollbackStep3);            
+            Assert.False(resultRollbackStep3);
         }
 
         [Fact, Priority(14)]
@@ -678,6 +678,6 @@ namespace Mvp24Hours.Application.Pipe.Test
 
             // assert
             Assert.Null(exception);
-        }        
+        }
     }
 }

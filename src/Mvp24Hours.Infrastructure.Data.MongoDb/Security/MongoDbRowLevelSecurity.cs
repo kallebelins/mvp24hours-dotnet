@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
 {
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
             var filter = CreateSecurityFilter<T>();
             var serializerRegistry = MongoDB.Bson.Serialization.BsonSerializer.SerializerRegistry;
             var documentSerializer = serializerRegistry.GetSerializer<T>();
-            
+
             return filter.Render(new RenderArgs<T>(documentSerializer, serializerRegistry));
         }
 

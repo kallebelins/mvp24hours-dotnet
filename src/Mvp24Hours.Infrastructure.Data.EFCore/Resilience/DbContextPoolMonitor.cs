@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 {

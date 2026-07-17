@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Linq;
 
 namespace Mvp24Hours.WebAPI.Configuration
 {
@@ -47,8 +47,8 @@ namespace Mvp24Hours.WebAPI.Configuration
             // Configure each API version
             foreach (var description in _provider.ApiVersionDescriptions)
             {
-                var versionInfo = _swaggerOptions.Versions.FirstOrDefault(v => 
-                    v.Version == description.ApiVersion.ToString() || 
+                var versionInfo = _swaggerOptions.Versions.FirstOrDefault(v =>
+                    v.Version == description.ApiVersion.ToString() ||
                     v.Version == description.GroupName)
                     ?? new SwaggerVersionInfo
                     {
@@ -74,7 +74,7 @@ namespace Mvp24Hours.WebAPI.Configuration
                         Url = !string.IsNullOrEmpty(_swaggerOptions.License.Url) ? new Uri(_swaggerOptions.License.Url) : null
                     } : null
                 };
-                
+
                 options.SwaggerGeneratorOptions.SwaggerDocs.Add(description.GroupName, openApiInfo);
             }
         }

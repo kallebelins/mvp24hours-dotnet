@@ -184,7 +184,7 @@ public static class BaggagePropagation
         if (headers.TryGetValue(Keys.TraceParent, out var traceparentObj) && traceparentObj != null)
         {
             var traceparent = GetHeaderStringValue(traceparentObj);
-            if (!string.IsNullOrEmpty(traceparent) && 
+            if (!string.IsNullOrEmpty(traceparent) &&
                 ActivityContext.TryParse(traceparent, null, out var activityContext))
             {
                 return activityContext;

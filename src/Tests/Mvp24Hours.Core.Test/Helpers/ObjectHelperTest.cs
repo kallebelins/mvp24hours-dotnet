@@ -1,4 +1,4 @@
-﻿namespace Mvp24Hours.Core.Test.Helpers;
+namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
 /// Testes unitÃ¡rios para ObjectHelper (mÃ©todos existentes).

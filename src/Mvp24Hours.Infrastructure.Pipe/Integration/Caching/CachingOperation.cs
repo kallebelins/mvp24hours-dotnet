@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Infrastructure.Pipe.Typed;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
 {
@@ -72,7 +72,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
         public async Task<IOperationResult<TOutput>> ExecuteAsync(TInput input, CancellationToken cancellationToken = default)
         {
             var cacheKey = GenerateCacheKey(input);
-            
+
             _logger?.LogDebug("CachingOperation: Checking cache. Key: {CacheKey}", cacheKey);
 
             // Try to get from cache
@@ -82,7 +82,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 if (cachedData != null)
                 {
                     _logger?.LogDebug("CachingOperation: Cache hit. Key: {CacheKey}", cacheKey);
-                    
+
                     var cachedResult = DeserializeResult(cachedData);
                     if (cachedResult != null)
                     {
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                     };
 
                     await _cache.SetStringAsync(cacheKey, serialized, cacheOptions, cancellationToken);
-                    
+
                     _logger?.LogDebug("CachingOperation: Cached result. Key: {CacheKey}", cacheKey);
                 }
                 catch (Exception ex)
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
         public async Task InvalidateCacheAsync(TInput input, CancellationToken cancellationToken = default)
         {
             var cacheKey = GenerateCacheKey(input);
-            
+
             try
             {
                 await _cache.RemoveAsync(cacheKey, cancellationToken);

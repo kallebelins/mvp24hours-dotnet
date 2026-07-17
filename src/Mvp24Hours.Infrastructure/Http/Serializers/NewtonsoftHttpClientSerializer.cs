@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Http.Contract;
-using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Http.Contract;
+using Newtonsoft.Json;
 
 namespace Mvp24Hours.Infrastructure.Http.Serializers
 {

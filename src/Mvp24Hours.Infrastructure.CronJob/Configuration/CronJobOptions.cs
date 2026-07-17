@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
-using System;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Configuration
 {

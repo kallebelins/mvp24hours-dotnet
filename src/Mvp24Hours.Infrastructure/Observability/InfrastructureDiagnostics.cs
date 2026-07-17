@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Observability.Contract;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Observability.Contract;
 
 namespace Mvp24Hours.Infrastructure.Observability
 {
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Observability
                 throw new ArgumentException("Subsystem name cannot be null or empty.", nameof(subsystemName));
             }
 
-            var provider = _providers.FirstOrDefault(p => 
+            var provider = _providers.FirstOrDefault(p =>
                 string.Equals(p.SubsystemName, subsystemName, StringComparison.OrdinalIgnoreCase));
 
             if (provider == null)

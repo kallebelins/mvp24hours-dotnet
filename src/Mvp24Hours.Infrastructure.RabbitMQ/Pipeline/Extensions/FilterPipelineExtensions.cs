@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
-using System;
 
 namespace Mvp24Hours.Extensions
 {
@@ -245,7 +245,7 @@ namespace Mvp24Hours.Extensions
         {
             // Order matters: Correlation → Telemetry → Validation → ExceptionHandling → Logging
             // (reverse order because filters are executed in registration order)
-            
+
             if (options.EnableCorrelationFilter)
             {
                 services.AddRabbitMQCorrelationFilters();

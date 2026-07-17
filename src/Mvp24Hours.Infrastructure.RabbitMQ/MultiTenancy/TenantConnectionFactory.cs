@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Concurrent;
+using System.Net.Sockets;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
@@ -12,10 +16,6 @@ using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
-using System;
-using System.Collections.Concurrent;
-using System.Net.Sockets;
-using System.Threading;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 {
@@ -176,7 +176,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 
                 // Get tenant configuration
                 var config = GetTenantConfiguration(tenantId);
-                
+
                 // Create connection factory
                 var factory = CreateConnectionFactory(tenantId, config);
 
@@ -320,7 +320,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
         private void OnConnectionShutdown(string tenantId, ShutdownEventArgs args)
         {
             LogConnectionShutdown(tenantId, args.ReplyText);
-            
+
             // Remove from pool - will be recreated on next access
             _connections.TryRemove(tenantId, out _);
         }

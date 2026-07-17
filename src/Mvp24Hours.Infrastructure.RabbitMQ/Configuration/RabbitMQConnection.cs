@@ -4,8 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent;
 using System;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration.Fluent;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration
 {

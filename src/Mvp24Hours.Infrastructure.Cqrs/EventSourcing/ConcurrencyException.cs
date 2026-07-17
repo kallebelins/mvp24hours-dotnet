@@ -64,7 +64,7 @@ public class ConcurrencyException : Exception
     /// </summary>
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
-    public ConcurrencyException(string message, Exception innerException) 
+    public ConcurrencyException(string message, Exception innerException)
         : base(message, innerException) { }
 
     /// <summary>

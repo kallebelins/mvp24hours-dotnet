@@ -4,6 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
+using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure;
@@ -13,8 +15,6 @@ using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using Mvp24Hours.Infrastructure.Sms.Contract;
 using Mvp24Hours.Infrastructure.Testing.Fakes;
 using Mvp24Hours.Infrastructure.Testing.Http;
-using System;
-using System.Net.Http;
 
 namespace Mvp24Hours.Infrastructure.Testing.Fixtures
 {

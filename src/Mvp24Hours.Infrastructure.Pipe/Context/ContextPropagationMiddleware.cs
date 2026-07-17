@@ -4,12 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Context
 {
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Context
         {
             // Try to get existing context from message or create new one
             var context = GetOrCreateContext(message);
-            
+
             Activity? activity = null;
 
             try

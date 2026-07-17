@@ -4,16 +4,16 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.WebAPI.Configuration;
-using Mvp24Hours.WebAPI.Services;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.WebAPI.Configuration;
+using Mvp24Hours.WebAPI.Services;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
 

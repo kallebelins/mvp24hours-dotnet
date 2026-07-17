@@ -337,7 +337,7 @@ internal sealed class CircuitBreakerState
         lock (_lock)
         {
             CleanupOldRequests();
-            
+
             return new CircuitBreakerMetrics
             {
                 Key = key,
@@ -345,8 +345,8 @@ internal sealed class CircuitBreakerState
                 FailureCount = _requests.Count(r => !r.IsSuccess),
                 SuccessCount = _requests.Count(r => r.IsSuccess),
                 LastOpenedAt = _lastOpenedAt,
-                TransitionToHalfOpenAt = _lastOpenedAt.HasValue 
-                    ? _lastOpenedAt.Value + _durationOfBreak 
+                TransitionToHalfOpenAt = _lastOpenedAt.HasValue
+                    ? _lastOpenedAt.Value + _durationOfBreak
                     : null
             };
         }
@@ -422,7 +422,7 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
     where TRequest : IMediatorRequest<TResponse>
 {
     private static readonly ConcurrentDictionary<string, CircuitBreakerState> _circuits = new();
-    
+
     private readonly ILogger<CircuitBreakerBehavior<TRequest, TResponse>>? _logger;
 
     /// <summary>
@@ -455,7 +455,7 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
         if (!circuitState.ShouldAllowRequest())
         {
             var metrics = circuitState.GetMetrics(circuitKey);
-            
+
             _logger?.LogWarning(
                 "[CircuitBreaker] Circuit '{CircuitKey}' is open. Request {RequestName} rejected. " +
                 "Failures: {FailureCount}, Will retry at: {RetryAt}",
@@ -471,19 +471,19 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
         {
             var response = await next();
             circuitState.RecordSuccess();
-            
+
             _logger?.LogDebug(
                 "[CircuitBreaker] Request {RequestName} succeeded. Circuit '{CircuitKey}' state: {State}",
                 requestName,
                 circuitKey,
                 circuitState.State);
-            
+
             return response;
         }
         catch (Exception ex)
         {
             circuitState.RecordFailure(ex);
-            
+
             var metrics = circuitState.GetMetrics(circuitKey);
             _logger?.LogWarning(ex,
                 "[CircuitBreaker] Request {RequestName} failed. Circuit '{CircuitKey}' state: {State}, " +
@@ -493,7 +493,7 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
                 circuitState.State,
                 metrics.FailureCount,
                 protectedRequest.FailureThreshold);
-            
+
             throw;
         }
     }
@@ -505,8 +505,8 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
     /// <returns>The metrics, or null if no circuit exists for the key.</returns>
     public static CircuitBreakerMetrics? GetMetrics(string circuitKey)
     {
-        return _circuits.TryGetValue(circuitKey, out var state) 
-            ? state.GetMetrics(circuitKey) 
+        return _circuits.TryGetValue(circuitKey, out var state)
+            ? state.GetMetrics(circuitKey)
             : null;
     }
 

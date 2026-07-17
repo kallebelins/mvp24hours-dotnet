@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Http.Options;
-using Polly;
-using Polly.Retry;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Http.Options;
+using Polly;
+using Polly.Retry;
 
 namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 {

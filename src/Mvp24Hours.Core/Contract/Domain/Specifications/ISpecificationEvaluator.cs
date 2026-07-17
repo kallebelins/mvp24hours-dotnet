@@ -3,8 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Domain.Specifications;
 using System.Linq;
+using Mvp24Hours.Core.Domain.Specifications;
 
 namespace Mvp24Hours.Core.Contract.Domain.Specifications
 {

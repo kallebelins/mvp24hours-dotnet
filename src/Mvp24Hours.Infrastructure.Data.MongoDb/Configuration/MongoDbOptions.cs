@@ -1,10 +1,10 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Data.MongoDb.Security;
 using System;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Security;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
 {

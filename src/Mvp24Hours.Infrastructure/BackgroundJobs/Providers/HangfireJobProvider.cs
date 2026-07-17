@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 {
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             // Note: This is a placeholder implementation.
             // In a real implementation, this would use Hangfire.BackgroundJob.Enqueue() or similar.
             // The actual implementation requires Hangfire NuGet packages to be installed.
-            
+
             _logger?.LogWarning(
                 "HangfireJobProvider.EnqueueAsync called but Hangfire packages are not installed. " +
                 "Install Hangfire.Core and Hangfire.AspNetCore NuGet packages to enable this provider.");

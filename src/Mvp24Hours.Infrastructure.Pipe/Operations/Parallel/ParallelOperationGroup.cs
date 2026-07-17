@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Enums;
 using ParallelTasks = System.Threading.Tasks.Parallel;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
@@ -81,7 +81,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                             exceptions.Add(ex);
                         }
                         _logger?.LogError(ex, "ParallelOperationGroup: Operation '{OperationName}' failed", operation.GetType().Name);
-                        
+
                         if (RequireAllSuccess)
                         {
                             throw; // Will be caught by Parallel.ForEach
@@ -218,7 +218,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
             try
             {
                 _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' started", operation.GetType().Name);
-                
+
                 if (operation is IOperationAsyncWithCancellation operationWithCancellation)
                 {
                     await operationWithCancellation.ExecuteAsync(message, cancellationToken);
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                 {
                     await operation.ExecuteAsync(message);
                 }
-                
+
                 _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' finished", operation.GetType().Name);
             }
             catch (Exception ex)
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
                     exceptions.Add(ex);
                 }
                 _logger?.LogError(ex, "ParallelOperationGroupAsync: Operation '{OperationName}' failed", operation.GetType().Name);
-                
+
                 if (RequireAllSuccess)
                 {
                     throw;

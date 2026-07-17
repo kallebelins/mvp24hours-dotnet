@@ -49,7 +49,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     private readonly ILogger _logger;
     private readonly List<ISagaStep<TData>> _steps = new();
     private readonly Stack<ISagaStep<TData>> _executedSteps = new();
-    
+
     private TData _data = default!;
     private Guid _sagaId;
     private SagaStatus _status = SagaStatus.NotStarted;
@@ -178,13 +178,13 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         try
         {
             await ExecuteStepsAsync(cancellationToken);
-            
+
             _status = SagaStatus.Completed;
             _completedAt = DateTime.UtcNow;
-            
+
             _logger.LogInformation("Saga {SagaId} completed successfully", _sagaId);
             await OnSagaCompletedAsync(cancellationToken);
-            
+
             return SagaResult.Success(_sagaId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -197,12 +197,12 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         {
             _error = ex;
             _status = SagaStatus.Failed;
-            
+
             _logger.LogError(ex, "Saga {SagaId} failed at step {Step}", _sagaId, _currentStepName);
-            
+
             await OnSagaFailedAsync(ex, cancellationToken);
             await CompensateAsync(cancellationToken);
-            
+
             return _status == SagaStatus.Compensated
                 ? SagaResult.Compensated(_sagaId, ex.Message)
                 : SagaResult.PartiallyCompensated(_sagaId, ex.Message);
@@ -214,7 +214,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         using var timeoutCts = _timeout.HasValue
             ? new CancellationTokenSource(_timeout.Value)
             : new CancellationTokenSource();
-        
+
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken, timeoutCts.Token);
 
@@ -228,7 +228,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 {
                     throw new SagaTimeoutException(_sagaId, _timeout!.Value, step.Name);
                 }
-                
+
                 linkedCts.Token.ThrowIfCancellationRequested();
             }
 
@@ -240,7 +240,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 await ExecuteStepWithRetryAsync(step, linkedCts.Token);
                 _executedSteps.Push(step);
                 _currentStepIndex++;
-                
+
                 await OnStepCompletedAsync(step, cancellationToken);
             }
             catch (Exception ex)
@@ -267,12 +267,12 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 lastException = ex;
                 attempts++;
                 _retryCount++;
-                
+
                 var delay = CalculateRetryDelay(attempts);
-                _logger.LogWarning(ex, 
+                _logger.LogWarning(ex,
                     "Saga {SagaId}: Step {Step} failed, retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})",
                     _sagaId, step.Name, delay.TotalMilliseconds, attempts, _maxRetries);
-                
+
                 await OnStepRetryAsync(step, attempts, ex, cancellationToken);
                 await Task.Delay(delay, cancellationToken);
             }
@@ -406,11 +406,11 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         {
             // Continue from current step
             var remainingSteps = orderedSteps.Skip(_currentStepIndex).ToList();
-            
+
             using var timeoutCts = _timeout.HasValue
                 ? new CancellationTokenSource(_timeout.Value)
                 : new CancellationTokenSource();
-            
+
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, timeoutCts.Token);
 
@@ -422,7 +422,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                     {
                         throw new SagaTimeoutException(_sagaId, _timeout!.Value, step.Name);
                     }
-                    
+
                     linkedCts.Token.ThrowIfCancellationRequested();
                 }
 
@@ -430,16 +430,16 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 await ExecuteStepWithRetryAsync(step, linkedCts.Token);
                 _executedSteps.Push(step);
                 _currentStepIndex++;
-                
+
                 await OnStepCompletedAsync(step, cancellationToken);
             }
 
             _status = SagaStatus.Completed;
             _completedAt = DateTime.UtcNow;
-            
+
             _logger.LogInformation("Saga {SagaId} completed successfully after resume", _sagaId);
             await OnSagaCompletedAsync(cancellationToken);
-            
+
             return SagaResult.Success(_sagaId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -451,10 +451,10 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         {
             _error = ex;
             _status = SagaStatus.Failed;
-            
+
             await OnSagaFailedAsync(ex, cancellationToken);
             await CompensateAsync(cancellationToken);
-            
+
             return _status == SagaStatus.Compensated
                 ? SagaResult.Compensated(_sagaId, ex.Message)
                 : SagaResult.PartiallyCompensated(_sagaId, ex.Message);

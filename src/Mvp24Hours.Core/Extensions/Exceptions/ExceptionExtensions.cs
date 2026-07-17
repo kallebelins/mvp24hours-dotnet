@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Net;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using System;
-using System.Net;
 
 namespace Mvp24Hours.Core.Extensions.Exceptions
 {

@@ -1,8 +1,10 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
@@ -10,8 +12,6 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Caching;
-using System;
-using System.Threading.Tasks;
 using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;

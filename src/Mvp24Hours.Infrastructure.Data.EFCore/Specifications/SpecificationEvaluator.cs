@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Domain.Specifications;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Specifications
 {

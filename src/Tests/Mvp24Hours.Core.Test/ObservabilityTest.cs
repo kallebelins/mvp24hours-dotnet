@@ -1,7 +1,7 @@
-﻿using FluentAssertions;
+using System.Diagnostics;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Observability;
-using System.Diagnostics;
 using Xunit;
 
 namespace Mvp24Hours.Core.Test;

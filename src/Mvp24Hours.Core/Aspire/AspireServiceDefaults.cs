@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Reflection;
 
 namespace Mvp24Hours.Core.Aspire;
 
@@ -81,10 +81,10 @@ public static class AspireServiceDefaults
         Action<AspireOptions>? configure = null)
     {
         var options = new AspireOptions();
-        
+
         // Bind from configuration first
         builder.Configuration.GetSection("Aspire").Bind(options);
-        
+
         // Then apply custom configuration
         configure?.Invoke(options);
 
@@ -146,7 +146,7 @@ public static class AspireServiceDefaults
     {
         // Register correlation ID accessor
         services.AddSingleton<ICorrelationIdAccessor, CorrelationIdAccessor>();
-        
+
         return services;
     }
 
@@ -215,7 +215,7 @@ public interface ICorrelationIdAccessor
     /// Gets the current correlation ID.
     /// </summary>
     string? CorrelationId { get; }
-    
+
     /// <summary>
     /// Sets the current correlation ID.
     /// </summary>

@@ -161,7 +161,7 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
         CancellationToken cancellationToken = default)
     {
         var eventType = @event.GetType();
-        
+
         if (_handlers.TryGetValue(eventType, out var handler))
         {
             await handler(@event, context, cancellationToken);

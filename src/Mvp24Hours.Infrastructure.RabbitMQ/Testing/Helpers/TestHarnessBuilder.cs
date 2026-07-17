@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
 {
@@ -111,7 +111,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         {
             var consumerTypes = assembly.GetTypes()
                 .Where(t => !t.IsAbstract && !t.IsInterface)
-                .Where(t => t.GetInterfaces().Any(i => 
+                .Where(t => t.GetInterfaces().Any(i =>
                     i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
 
             foreach (var consumerType in consumerTypes)
@@ -156,7 +156,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Helpers
         public TestHarnessBuilder UseInMemoryBus()
         {
             _services.AddSingleton<IInMemoryBus>(sp => new InMemoryBus(sp));
-            _services.AddSingleton<IMvpRabbitMQClient>(sp => sp.GetRequiredService<IInMemoryBus>() as IMvpRabbitMQClient 
+            _services.AddSingleton<IMvpRabbitMQClient>(sp => sp.GetRequiredService<IInMemoryBus>() as IMvpRabbitMQClient
                 ?? throw new InvalidOperationException("InMemoryBus not found"));
             return this;
         }

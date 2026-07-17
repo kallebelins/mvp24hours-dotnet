@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
 {
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                 if (cachedData != null)
                 {
                     _logger?.LogDebug("CacheMiddleware: Cache hit. Key: {CacheKey}", cacheKey);
-                    
+
                     var restored = RestoreMessageState(cachedData, message);
                     if (restored)
                     {
@@ -102,7 +102,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.Caching
                     };
 
                     await _cache.SetStringAsync(cacheKey, serialized, cacheOptions, cancellationToken);
-                    
+
                     _logger?.LogDebug("CacheMiddleware: Cached result. Key: {CacheKey}", cacheKey);
                 }
                 catch (Exception ex)

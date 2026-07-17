@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -135,7 +135,7 @@ public class SagaTest
                 steps.Add<ProcessPaymentStep>();
                 steps.Add<ShipOrderStep>();
             });
-            
+
             WithTimeout(TimeSpan.FromMinutes(5));
             WithMaxRetries(3);
         }
@@ -185,7 +185,7 @@ public class SagaTest
         services.AddTransient<ShipOrderStep>();
         services.AddTransient<FailingStep>();
         services.AddTransient<FailingCompensationStep>();
-        
+
         return services.BuildServiceProvider();
     }
 
@@ -351,7 +351,7 @@ public class SagaTest
     {
         // Arrange
         var store = new InMemorySagaStateStore();
-        
+
         await store.SaveAsync(new SagaState
         {
             SagaId = Guid.NewGuid(),
@@ -409,7 +409,7 @@ public class SagaTest
         // Arrange
         var store = new InMemorySagaStateStore();
         var oldDate = DateTime.UtcNow.AddDays(-10);
-        
+
         await store.SaveAsync(new SagaState
         {
             SagaId = Guid.NewGuid(),
@@ -783,14 +783,14 @@ public class SagaTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        
+
         // Act
         services.AddSagaOrchestration(options =>
         {
             options.UseInMemoryStateStore();
             options.DisableBackgroundService();
         });
-        
+
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -804,14 +804,14 @@ public class SagaTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        
+
         // Act
         services.AddSagaOrchestration(options =>
         {
             options.RegisterSagasFromAssemblyContaining<SagaTest>();
             options.DisableBackgroundService();
         });
-        
+
         var provider = services.BuildServiceProvider();
 
         // Assert

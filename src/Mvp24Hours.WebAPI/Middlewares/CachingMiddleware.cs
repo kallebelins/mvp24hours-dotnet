@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCaching;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using MvpResponseCachingOptions = Mvp24Hours.WebAPI.Configuration.ResponseCachingOptions;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.WebAPI.Middlewares
 {

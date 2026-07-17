@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 using Mvp24Hours.Infrastructure.DistributedLocking.Options;
 using Mvp24Hours.Infrastructure.Email.Options;
@@ -12,7 +13,6 @@ using Mvp24Hours.Infrastructure.Observability.Extensions;
 using Mvp24Hours.Infrastructure.Resilience.Options;
 using Mvp24Hours.Infrastructure.Security.Options;
 using Mvp24Hours.Infrastructure.Sms.Options;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Configuration
 {

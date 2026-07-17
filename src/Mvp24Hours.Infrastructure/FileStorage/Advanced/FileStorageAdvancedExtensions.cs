@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.FileStorage.Contract;
-using Microsoft.Extensions.DependencyInjection;
 using System;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.FileStorage.Contract;
 
 namespace Mvp24Hours.Infrastructure.FileStorage.Advanced
 {

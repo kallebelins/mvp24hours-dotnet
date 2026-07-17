@@ -3,16 +3,16 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Http.Contract;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Exceptions;
+using Mvp24Hours.Infrastructure.Http.Contract;
 
 namespace Mvp24Hours.Infrastructure.Http.Extensions
 {

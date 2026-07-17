@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +10,9 @@ using System.Data.Common;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 

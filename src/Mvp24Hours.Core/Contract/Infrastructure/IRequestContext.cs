@@ -227,7 +227,7 @@ namespace Mvp24Hours.Core.Contract.Infrastructure
         {
             var identity = new ClaimsIdentity(claims, "DefaultAuth");
             var principal = new ClaimsPrincipal(identity);
-            
+
             return new DefaultRequestContext
             {
                 User = principal,

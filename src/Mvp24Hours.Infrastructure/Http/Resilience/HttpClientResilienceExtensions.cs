@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Http.Options;
 using Polly;
 using Polly.Timeout;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 
 namespace Mvp24Hours.Infrastructure.Http.Resilience
 {

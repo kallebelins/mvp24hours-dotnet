@@ -182,7 +182,7 @@ public sealed class TimeoutBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
         using var timeoutCts = new CancellationTokenSource(timeout);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken, 
+            cancellationToken,
             timeoutCts.Token);
 
         try

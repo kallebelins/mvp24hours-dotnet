@@ -148,7 +148,7 @@ public class ProjectionManager : IProjectionManager
         {
             registration.Position = await _positionStore.GetPositionAsync(registration.Name, cancellationToken);
             registration.Status = ProjectionStatus.CatchingUp;
-            
+
             _logger.LogInformation(
                 "Projection {Name} starting from position {Position}",
                 registration.Name,
@@ -391,7 +391,7 @@ public class ProjectionManager : IProjectionManager
 
         var handlerType = handler.GetType();
         var interfaces = handlerType.GetInterfaces();
-        
+
         return interfaces.Any(i =>
             i.IsGenericType &&
             i.GetGenericTypeDefinition() == typeof(IProjectionHandler<>) &&

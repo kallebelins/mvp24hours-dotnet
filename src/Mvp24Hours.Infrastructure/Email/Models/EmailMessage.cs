@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Contract;
-using Mvp24Hours.Infrastructure.Email.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.Email.Contract;
+using Mvp24Hours.Infrastructure.Email.Options;
 
 namespace Mvp24Hours.Infrastructure.Email.Models
 {

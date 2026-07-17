@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Observability;
@@ -7,8 +9,6 @@ using Mvp24Hours.Infrastructure.Testing.Extensions;
 using Mvp24Hours.Infrastructure.Testing.Fixtures;
 using Mvp24Hours.Infrastructure.Testing.Logging;
 using Mvp24Hours.Infrastructure.Testing.Observability;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using Xunit;
 
 namespace Mvp24Hours.Core.Test;
@@ -457,7 +457,7 @@ public class ObservabilityTestingTest
         // Arrange
         var meter = new Meter("TestMeter", "1.0.0");
         var counter = meter.CreateCounter<int>("test_counter", "items", "Test counter");
-        
+
         using var listener = new FakeMeterListener("TestMeter");
 
         // Act
@@ -476,7 +476,7 @@ public class ObservabilityTestingTest
         // Arrange
         var meter = new Meter("HistogramMeter", "1.0.0");
         var histogram = meter.CreateHistogram<double>("request_duration", "ms", "Request duration");
-        
+
         using var listener = new FakeMeterListener("HistogramMeter");
 
         // Act
@@ -495,11 +495,11 @@ public class ObservabilityTestingTest
         // Arrange
         var meter = new Meter("TagMeter", "1.0.0");
         var counter = meter.CreateCounter<int>("tagged_counter");
-        
+
         using var listener = new FakeMeterListener("TagMeter");
 
         // Act
-        counter.Add(1, 
+        counter.Add(1,
             new KeyValuePair<string, object?>("operation", "read"),
             new KeyValuePair<string, object?>("success", true));
 
@@ -518,7 +518,7 @@ public class ObservabilityTestingTest
         var meter2 = new Meter("MyApp.Payments", "1.0.0");
         var counter1 = meter1.CreateCounter<int>("orders_total");
         var counter2 = meter2.CreateCounter<int>("payments_total");
-        
+
         using var listener = new FakeMeterListener("MyApp.Orders");
 
         // Act
@@ -542,7 +542,7 @@ public class ObservabilityTestingTest
         var meter = new Meter("AssertMeter1", "1.0.0");
         var counter = meter.CreateCounter<int>("expected_metric");
         using var listener = new FakeMeterListener("AssertMeter1");
-        
+
         counter.Add(1);
 
         // Act & Assert - Should not throw
@@ -556,7 +556,7 @@ public class ObservabilityTestingTest
         var meter = new Meter("AssertMeter2", "1.0.0");
         var counter = meter.CreateCounter<int>("operations_total");
         using var listener = new FakeMeterListener("AssertMeter2");
-        
+
         counter.Add(5);
         counter.Add(3);
         counter.Add(2);
@@ -572,7 +572,7 @@ public class ObservabilityTestingTest
         var meter = new Meter("AssertMeter3", "1.0.0");
         var counter = meter.CreateCounter<int>("tagged_metric");
         using var listener = new FakeMeterListener("AssertMeter3");
-        
+
         counter.Add(1, new KeyValuePair<string, object?>("environment", "production"));
 
         // Act & Assert - Should not throw
@@ -600,10 +600,10 @@ public class ObservabilityTestingTest
     {
         // Arrange
         using var fixture = new ObservabilityTestFixture("Mvp24Hours.*");
-        
+
         var logger = (ILogger)fixture.LoggerProvider.CreateLogger("Test");
         logger.LogInformation("Test log");
-        
+
         using (Mvp24HoursActivitySources.Core.Source.StartActivity("TestActivity")) { }
 
         fixture.LoggerProvider.LogCount.Should().BeGreaterThan(0);
@@ -623,7 +623,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         using var fixture = new ObservabilityTestFixture("Mvp24Hours.*");
-        
+
         var logger = (ILogger)fixture.LoggerProvider.CreateLogger("Test");
         logger.LogInformation("Test log");
         logger.LogError("Error log");
@@ -647,7 +647,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var services = new ServiceCollection();
-        
+
         // Act
         services.AddObservabilityTesting("Mvp24Hours.*");
         var provider = services.BuildServiceProvider();
@@ -663,7 +663,7 @@ public class ObservabilityTestingTest
     {
         // Arrange
         var services = new ServiceCollection();
-        
+
         // Act
         services.AddFakeActivityListener("Mvp24Hours.Pipe");
         var provider = services.BuildServiceProvider();

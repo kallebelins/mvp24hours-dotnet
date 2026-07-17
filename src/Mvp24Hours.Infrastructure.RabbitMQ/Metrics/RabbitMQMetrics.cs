@@ -25,7 +25,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Metrics
         private long _connectionFailures;
         private long _channelCreations;
         private long _duplicateMessagesSkipped;
-        
+
         private readonly ConcurrentDictionary<string, long> _messagesByQueue = new();
         private readonly ConcurrentDictionary<string, long> _messagesByExchange = new();
         private readonly ConcurrentDictionary<string, long> _errorsByType = new();

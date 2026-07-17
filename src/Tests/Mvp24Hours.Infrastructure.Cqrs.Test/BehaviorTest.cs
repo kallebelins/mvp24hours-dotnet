@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -137,7 +137,7 @@ public class BehaviorTest
         // Act & Assert
         var ex = await Assert.ThrowsAsync<Mvp24Hours.Core.Exceptions.ValidationException>(() =>
             mediator.SendAsync(invalidCommand));
-        
+
         Assert.True(ex.ValidationErrors?.Count > 0);
     }
 
@@ -189,20 +189,20 @@ public class BehaviorTest
     {
         // Arrange
         var executionOrder = new List<string>();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
         {
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
         });
-        
+
         // Add custom tracking behavior
-        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => 
+        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
             new TrackingBehavior<TestCommand, string>("First", executionOrder));
-        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => 
+        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
             new TrackingBehavior<TestCommand, string>("Second", executionOrder));
-        
+
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "Order Test", Value = 1 };
@@ -228,11 +228,11 @@ public class BehaviorTest
         {
             options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
         });
-        
+
         // Add short-circuiting behavior
-        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => 
+        services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
             new ShortCircuitBehavior<TestCommand, string>("Short-circuited!"));
-        
+
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "Should not reach", Value = 1 };

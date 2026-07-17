@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Typed
 {
@@ -48,13 +48,13 @@ namespace Mvp24Hours.Infrastructure.Pipe.Typed
         /// <summary>
         /// Creates a completed task with a successful result.
         /// </summary>
-        protected static Task<IOperationResult<TOutput>> SuccessAsync(TOutput value) 
+        protected static Task<IOperationResult<TOutput>> SuccessAsync(TOutput value)
             => Task.FromResult<IOperationResult<TOutput>>(OperationResult<TOutput>.Success(value));
 
         /// <summary>
         /// Creates a completed task with a failed result.
         /// </summary>
-        protected static Task<IOperationResult<TOutput>> FailureAsync(string errorMessage) 
+        protected static Task<IOperationResult<TOutput>> FailureAsync(string errorMessage)
             => Task.FromResult<IOperationResult<TOutput>>(OperationResult<TOutput>.Failure(errorMessage));
     }
 

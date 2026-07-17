@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Prefetching
 {
@@ -94,7 +94,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Prefetching
             if (requests.Count == 0)
                 return;
 
-            _logger?.LogDebug("Prefetching {Count} values with max concurrency: {MaxConcurrency}", 
+            _logger?.LogDebug("Prefetching {Count} values with max concurrency: {MaxConcurrency}",
                 requests.Count, maxConcurrency);
 
             using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);

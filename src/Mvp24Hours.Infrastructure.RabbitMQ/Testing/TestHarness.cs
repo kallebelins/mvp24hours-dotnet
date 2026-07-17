@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
 {
@@ -128,7 +128,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             where TResponse : class
         {
             var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
-            
+
             var requestClient = _serviceProvider.GetService<IRequestClient<TRequest, TResponse>>();
             if (requestClient != null)
             {
@@ -149,14 +149,14 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             }
 
             var handler = handlers.First();
-            
+
             var context = new TestConsumeContextBuilder<TRequest>()
                 .WithCorrelationId(correlationId)
                 .WithServiceProvider(_serviceProvider)
                 .Build(request);
 
             var response = await handler.HandleAsync(context, cts.Token);
-            
+
             return new Response<TResponse>
             {
                 IsSuccess = true,
@@ -313,7 +313,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
             CancellationToken cancellationToken = default) where TMessage : class
         {
             var result = await _bus.ConsumeAsync(message, configureContext, cancellationToken);
-            
+
             // Track consumed messages for this harness
             var consumedMessages = _bus.GetConsumedMessages<TMessage>();
             foreach (var consumed in consumedMessages)

@@ -1,12 +1,12 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Extensions.KeyedServices;
 using System;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Extensions.KeyedServices;
 using Xunit;
 
 namespace Mvp24Hours.Core.Test;

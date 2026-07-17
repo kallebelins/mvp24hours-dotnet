@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
 {
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
                     if (lagBytes.HasValue)
                     {
                         data["replicationLagBytes"] = lagBytes.Value;
-                        
+
                         if (lagBytes.Value > _options.ReplicationLagThresholdBytes)
                         {
                             return HealthCheckResult.Degraded(

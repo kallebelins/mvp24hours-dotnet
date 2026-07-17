@@ -1,4 +1,4 @@
-﻿using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using RabbitMQ.Client;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract

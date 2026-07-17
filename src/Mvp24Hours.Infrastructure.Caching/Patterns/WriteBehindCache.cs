@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Patterns
 {
@@ -145,7 +145,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
                     {
                         failed++;
                         _logger?.LogError(ex, "Write-Behind: Failed to flush key: {Key}", pendingWrite.Key);
-                        
+
                         // Optionally re-queue failed writes (could implement retry logic here)
                         // For now, we just log the error
                     }
@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Caching.Patterns
             {
                 _isFlushing = true;
                 var batch = new System.Collections.Generic.List<PendingWrite<T>>();
-                
+
                 // Dequeue up to batchSize items
                 while (batch.Count < batchSize && _writeQueue.TryDequeue(out var pendingWrite))
                 {

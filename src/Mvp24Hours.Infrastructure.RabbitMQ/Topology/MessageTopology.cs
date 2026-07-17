@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
-using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
+using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {

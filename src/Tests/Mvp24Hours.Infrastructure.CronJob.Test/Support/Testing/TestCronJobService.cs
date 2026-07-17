@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,10 +16,6 @@ using Mvp24Hours.Infrastructure.CronJob.Interfaces;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.Services;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
 
@@ -111,11 +111,11 @@ public class TestCronJobService<T> : IAsyncDisposable
         where TJob : CronJobService<TJob>
     {
         EnsureServiceProvider();
-        
+
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        
+
         var logger = NullLogger<CronJobService<TJob>>.Instance;
-        
+
         // Create job instance using Activator for flexibility
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
@@ -138,14 +138,14 @@ public class TestCronJobService<T> : IAsyncDisposable
         where TJob : ResilientCronJobService<TJob>
     {
         EnsureServiceProvider();
-        
+
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        
-        var logger = _serviceProvider!.GetService<ILogger<ResilientCronJobService<TJob>>>() 
+
+        var logger = _serviceProvider!.GetService<ILogger<ResilientCronJobService<TJob>>>()
             ?? NullLogger<ResilientCronJobService<TJob>>.Instance;
         var executionLock = _serviceProvider.GetRequiredService<ICronJobExecutionLock>();
         var circuitBreaker = _serviceProvider.GetRequiredService<CronJobCircuitBreaker>();
-        
+
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
             config,
@@ -163,15 +163,15 @@ public class TestCronJobService<T> : IAsyncDisposable
     /// <summary>
     /// Stops the currently running job.
     /// </summary>
-    public async Task StopJobAsync<TJob>(TJob job, TimeSpan? timeout = null) 
+    public async Task StopJobAsync<TJob>(TJob job, TimeSpan? timeout = null)
         where TJob : BackgroundService
     {
-        var stopCts = timeout.HasValue 
-            ? new CancellationTokenSource(timeout.Value) 
+        var stopCts = timeout.HasValue
+            ? new CancellationTokenSource(timeout.Value)
             : new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        
+
         await job.StopAsync(stopCts.Token);
-        
+
         if (job is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync();
@@ -243,10 +243,10 @@ public class TestCronJobService<T> : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
-        
+
         _cts?.Cancel();
         _cts?.Dispose();
-        
+
         if (_serviceProvider is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync();
@@ -255,7 +255,7 @@ public class TestCronJobService<T> : IAsyncDisposable
         {
             disposable.Dispose();
         }
-        
+
         _disposed = true;
     }
 }

@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections;
@@ -14,7 +15,6 @@ using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
 {

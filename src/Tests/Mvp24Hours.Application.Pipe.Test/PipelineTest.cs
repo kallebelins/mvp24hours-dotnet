@@ -1,8 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
@@ -10,9 +13,6 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 using static System.Runtime.InteropServices.JavaScript.JSType;

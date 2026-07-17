@@ -1,14 +1,14 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Pipe.Integration.Streaming;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Infrastructure.Pipe.Integration.Streaming;
+using Mvp24Hours.Infrastructure.Pipe.Typed;
 using Xunit;
 
 namespace Mvp24Hours.Application.Pipe.Test.Integration

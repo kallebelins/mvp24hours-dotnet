@@ -63,7 +63,7 @@ public class SagaOrchestrator : ISagaOrchestrator
         catch (Exception ex)
         {
             _logger.LogError(ex, "Saga {SagaType} execution failed", typeof(TSaga).Name);
-            
+
             if (options.PersistState)
             {
                 var state = CreateState<TSaga, TData>(saga, options);
@@ -193,7 +193,7 @@ public class SagaOrchestrator : ISagaOrchestrator
 
         if (state.Status != SagaStatus.Running && state.Status != SagaStatus.Suspended)
         {
-            throw new SagaInvalidStateException(sagaId, state.Status, 
+            throw new SagaInvalidStateException(sagaId, state.Status,
                 "Saga can only be cancelled when Running or Suspended");
         }
 
@@ -207,7 +207,7 @@ public class SagaOrchestrator : ISagaOrchestrator
 
         // Note: Compensation would require knowing the saga type
         // This is a simplified implementation
-        
+
         return SagaResult.Cancelled(sagaId);
     }
 
@@ -232,18 +232,18 @@ public class SagaOrchestrator : ISagaOrchestrator
                     s.NextRetryAt = null;
                 }, cancellationToken);
 
-                _logger.LogInformation("Retrying saga {SagaId} (attempt {Attempt})", 
+                _logger.LogInformation("Retrying saga {SagaId} (attempt {Attempt})",
                     state.SagaId, state.RetryCount + 1);
 
                 // Note: Actual retry would require instantiating the correct saga type
                 // This would typically be done through a saga registry
-                
+
                 processed++;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to retry saga {SagaId}", state.SagaId);
-                
+
                 await _stateStore.UpdateAsync(state.SagaId, s =>
                 {
                     s.Status = SagaStatus.Suspended;

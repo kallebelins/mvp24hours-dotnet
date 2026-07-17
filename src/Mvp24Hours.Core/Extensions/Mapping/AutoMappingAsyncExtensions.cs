@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using AutoMapper;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
 namespace Mvp24Hours.Extensions
 {

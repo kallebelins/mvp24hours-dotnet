@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
 
 namespace Mvp24Hours.Infrastructure.DistributedLocking
 {

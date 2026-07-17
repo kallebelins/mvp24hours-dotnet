@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -134,8 +134,8 @@ public class InMemoryDbContextOptions
     public string GetEffectiveDatabaseName()
     {
         var baseName = DatabaseName ?? "InMemoryTestDb";
-        return UseUniqueDatabaseName 
-            ? $"{baseName}_{Guid.NewGuid():N}" 
+        return UseUniqueDatabaseName
+            ? $"{baseName}_{Guid.NewGuid():N}"
             : baseName;
     }
 }

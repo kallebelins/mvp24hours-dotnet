@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.Contract.Validation;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Application.Contract.Validation;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Logic.Validation
 {

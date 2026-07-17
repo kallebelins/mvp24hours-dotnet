@@ -101,7 +101,7 @@ public static class MediatorCachingExtensions
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new ArgumentNullException(nameof(connectionString), 
+            throw new ArgumentNullException(nameof(connectionString),
                 "Redis connection string is required.");
         }
 

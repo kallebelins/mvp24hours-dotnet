@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -400,7 +400,7 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(TenantTestCommand).Assembly);
             options.RegisterTenantBehavior = true;
         });
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
         var accessor = sp.GetRequiredService<ITenantContextAccessor>();
@@ -426,7 +426,7 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(TenantRequiredTestCommand).Assembly);
             options.RegisterTenantBehavior = true;
         });
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
         var command = new TenantRequiredTestCommand { Name = "Test" };
@@ -441,7 +441,7 @@ public class MultiTenancyTest
         // Arrange
         var store = new InMemoryTenantStore();
         store.AddOrUpdate(new TenantContext("override-tenant", "Override Tenant"));
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
@@ -452,12 +452,12 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(TenantAwareTestCommand).Assembly);
             options.RegisterTenantBehavior = true;
         });
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
-        var command = new TenantAwareTestCommand 
-        { 
-            Name = "Test", 
+        var command = new TenantAwareTestCommand
+        {
+            Name = "Test",
             TenantOverride = "override-tenant"  // Override the resolved tenant
         };
 
@@ -485,7 +485,7 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(UserTestCommand).Assembly);
             options.RegisterCurrentUserBehavior = true;
         });
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
         var command = new UserTestCommand();
@@ -510,7 +510,7 @@ public class MultiTenancyTest
             options.RegisterHandlersFromAssembly(typeof(UserRequiredTestCommand).Assembly);
             options.RegisterCurrentUserBehavior = true;
         });
-        
+
         var sp = services.BuildServiceProvider();
         var mediator = sp.GetRequiredService<IMediator>();
         var command = new UserRequiredTestCommand();
@@ -632,7 +632,7 @@ internal record TenantAwareTestCommand : IMediatorCommand<string>, ITenantAware
 {
     public string Name { get; init; } = default!;
     public string? TenantOverride { get; init; }
-    
+
     public string? OverrideTenantId => TenantOverride;
 }
 

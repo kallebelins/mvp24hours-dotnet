@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
 namespace Mvp24Hours.Infrastructure.Caching.Serializers
 {
@@ -51,8 +51,8 @@ namespace Mvp24Hours.Infrastructure.Caching.Serializers
         {
             _innerSerializer = innerSerializer ?? throw new ArgumentNullException(nameof(innerSerializer));
             _compressor = compressor ?? throw new ArgumentNullException(nameof(compressor));
-            _compressionThresholdBytes = compressionThresholdBytes > 0 
-                ? compressionThresholdBytes 
+            _compressionThresholdBytes = compressionThresholdBytes > 0
+                ? compressionThresholdBytes
                 : throw new ArgumentException("Compression threshold must be greater than 0.", nameof(compressionThresholdBytes));
             _logger = logger;
         }

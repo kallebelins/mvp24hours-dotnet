@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -74,7 +74,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TestPreProcessor.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -100,7 +100,7 @@ public class ExtensibilityTests
     {
         // Arrange
         GlobalTestPreProcessor.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -155,7 +155,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TestPostProcessor.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -181,7 +181,7 @@ public class ExtensibilityTests
     {
         // Arrange
         GlobalTestPostProcessor.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -207,7 +207,7 @@ public class ExtensibilityTests
     #region [ Exception Handler Tests ]
 
     [Trait("Category", "Unit")]
-    public class InvalidOperationExceptionHandler 
+    public class InvalidOperationExceptionHandler
         : IExceptionHandler<FailingCommand, string, InvalidOperationException>
     {
         public Task<ExceptionHandlingResult<string>> HandleAsync(
@@ -221,7 +221,7 @@ public class ExtensibilityTests
     }
 
     [Trait("Category", "Unit")]
-    public class RethrowExceptionHandler 
+    public class RethrowExceptionHandler
         : IExceptionHandler<FailingCommand, string, InvalidOperationException>
     {
         public Task<ExceptionHandlingResult<string>> HandleAsync(
@@ -287,7 +287,7 @@ public class ExtensibilityTests
         var mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             mediator.SendAsync(new FailingCommand("test")));
         Assert.Equal("Replaced exception", exception.Message);
     }
@@ -308,7 +308,7 @@ public class ExtensibilityTests
         var mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mediator.SendAsync(new FailingCommand("test")));
         Assert.Equal("Command failed", exception.Message);
     }
@@ -364,7 +364,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TestPipelineHook.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -391,7 +391,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TestPipelineHook.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -405,7 +405,7 @@ public class ExtensibilityTests
         var mediator = provider.GetRequiredService<IMediator>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mediator.SendAsync(new FailingCommand("test")));
 
         Assert.Contains("Start: FailingCommand", TestPipelineHook.ExecutionLog);
@@ -417,7 +417,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TypedTestPipelineHook.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -484,7 +484,7 @@ public class ExtensibilityTests
     {
         // Arrange
         TestMediatorDecorator.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -512,7 +512,7 @@ public class ExtensibilityTests
         // Arrange
         TestMediatorDecorator.ExecutionLog.Clear();
         AnotherMediatorDecorator.ExecutionLog.Clear();
-        
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMvpMediator(options =>
@@ -530,7 +530,7 @@ public class ExtensibilityTests
 
         // Assert
         Assert.Equal("Processed: test", result);
-        
+
         // AnotherDecorator wraps TestDecorator, so AnotherDecorator executes first
         Assert.Equal("AnotherDecorator Before: TestCommand", AnotherMediatorDecorator.ExecutionLog[0]);
         Assert.Equal("Before Send: TestCommand", TestMediatorDecorator.ExecutionLog[0]);
@@ -571,7 +571,7 @@ public class ExtensibilityTests
 
         // Assert
         Assert.Equal("Processed: integration", result);
-        
+
         // Verify all components executed
         Assert.Single(TestPreProcessor.ExecutionLog);
         Assert.Single(TestPostProcessor.ExecutionLog);

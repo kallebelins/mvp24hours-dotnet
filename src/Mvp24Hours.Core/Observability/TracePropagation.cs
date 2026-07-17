@@ -100,13 +100,13 @@ public static class TracePropagation
         var baggageItems = activity.Baggage.ToList();
         if (baggageItems.Count > 0)
         {
-            var baggageValue = string.Join(",", 
+            var baggageValue = string.Join(",",
                 baggageItems.Select(b => $"{b.Key}={Uri.EscapeDataString(b.Value ?? "")}"));
             headers[BaggageHeader] = baggageValue;
         }
 
         // Correlation ID (from baggage or generate from trace ID)
-        var correlationId = activity.GetBaggageItem("correlation.id") 
+        var correlationId = activity.GetBaggageItem("correlation.id")
                            ?? activity.TraceId.ToString();
         headers[CorrelationIdHeader] = correlationId;
     }
@@ -119,7 +119,7 @@ public static class TracePropagation
     /// <param name="setter">Action to set a header value.</param>
     /// <param name="activity">Optional activity to use. If null, uses Activity.Current.</param>
     public static void InjectTraceContext<T>(
-        T carrier, 
+        T carrier,
         Action<T, string, string> setter,
         Activity? activity = null)
     {
@@ -136,12 +136,12 @@ public static class TracePropagation
         var baggageItems = activity.Baggage.ToList();
         if (baggageItems.Count > 0)
         {
-            var baggageValue = string.Join(",", 
+            var baggageValue = string.Join(",",
                 baggageItems.Select(b => $"{b.Key}={Uri.EscapeDataString(b.Value ?? "")}"));
             setter(carrier, BaggageHeader, baggageValue);
         }
 
-        var correlationId = activity.GetBaggageItem("correlation.id") 
+        var correlationId = activity.GetBaggageItem("correlation.id")
                            ?? activity.TraceId.ToString();
         setter(carrier, CorrelationIdHeader, correlationId);
     }
@@ -166,7 +166,7 @@ public static class TracePropagation
             return null;
 
         context.TraceState = GetHeaderValue(headers, TracestateHeader);
-        
+
         // Parse baggage
         var baggage = GetHeaderValue(headers, BaggageHeader);
         if (!string.IsNullOrEmpty(baggage))
@@ -202,7 +202,7 @@ public static class TracePropagation
             return null;
 
         context.TraceState = getter(carrier, TracestateHeader);
-        
+
         var baggage = getter(carrier, BaggageHeader);
         if (!string.IsNullOrEmpty(baggage))
         {
@@ -259,7 +259,7 @@ public static class TracePropagation
         ActivityKind kind = ActivityKind.Server)
     {
         var parentContext = context.ToActivityContext();
-        
+
         var activity = source.StartActivity(
             name,
             kind,
@@ -328,7 +328,7 @@ public static class TracePropagation
     private static Dictionary<string, string> ParseBaggage(string baggage)
     {
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        
+
         foreach (var item in baggage.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = item.Split('=', 2);

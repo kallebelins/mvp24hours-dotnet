@@ -13,10 +13,9 @@ using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
-using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
-
 // Extensibility types for decorator registration
 using IExceptionHandlerBase = System.Type;
+using MediatorImpl = Mvp24Hours.Infrastructure.Cqrs.Implementations.Mediator;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
@@ -67,7 +66,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISender>(sp => sp.GetRequiredService<IMediator>());
         services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());
         services.AddScoped<IStreamSender>(sp => sp.GetRequiredService<IMediator>());
-        
+
         // Register Domain Event Dispatcher
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
@@ -92,7 +91,7 @@ public static class ServiceCollectionExtensions
         // 12. Retry - Retry on transient failures
         // 13. Transaction - Wrap in transaction
         // [Handler executes here]
-        
+
         if (options.RegisterUnhandledExceptionBehavior)
         {
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
@@ -538,7 +537,7 @@ public sealed class MediatorOptions
     /// Gets or sets the default notification publishing strategy.
     /// Default is Sequential.
     /// </summary>
-    public Abstractions.NotificationPublishingStrategy DefaultNotificationStrategy { get; set; } 
+    public Abstractions.NotificationPublishingStrategy DefaultNotificationStrategy { get; set; }
         = Abstractions.NotificationPublishingStrategy.Sequential;
 
     #endregion

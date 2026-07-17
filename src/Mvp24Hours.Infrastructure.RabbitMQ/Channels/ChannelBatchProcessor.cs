@@ -3,6 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
@@ -12,11 +17,6 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Channels;
 

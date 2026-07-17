@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using RabbitMQ.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {

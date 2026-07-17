@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -273,7 +273,7 @@ public class TransactionScopeTest
     {
         // Arrange
         var unitOfWork = new MockUnitOfWorkAsync();
-        
+
         // Act
         await using (var scope = new TransactionScope(unitOfWork))
         {

@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 {
@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
             {
                 var hasTenantEntities = context.ChangeTracker
                     .Entries()
-                    .Any(e => e.Entity is ITenantEntity && 
+                    .Any(e => e.Entity is ITenantEntity &&
                               (e.State == EntityState.Added || e.State == EntityState.Modified));
 
                 if (hasTenantEntities)
@@ -162,7 +162,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                     {
                         ValidateTenantId(entry, entity.TenantId, currentTenantId);
                     }
-                    
+
                     // Prevent modification of TenantId
                     if (_options.PreventTenantIdChange)
                     {
@@ -202,12 +202,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
                                 {
                                     tenantIdProperty.CurrentValue = currentTenantId;
                                 }
-                                else if (iface.GetGenericArguments()[0] == typeof(Guid) && 
+                                else if (iface.GetGenericArguments()[0] == typeof(Guid) &&
                                          Guid.TryParse(currentTenantId, out var guidTenantId))
                                 {
                                     tenantIdProperty.CurrentValue = guidTenantId;
                                 }
-                                else if (iface.GetGenericArguments()[0] == typeof(int) && 
+                                else if (iface.GetGenericArguments()[0] == typeof(int) &&
                                          int.TryParse(currentTenantId, out var intTenantId))
                                 {
                                     tenantIdProperty.CurrentValue = intTenantId;
@@ -229,8 +229,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Interceptors
 
         private void ValidateTenantId(EntityEntry entry, string entityTenantId, string currentTenantId)
         {
-            if (!string.IsNullOrEmpty(currentTenantId) && 
-                !string.IsNullOrEmpty(entityTenantId) && 
+            if (!string.IsNullOrEmpty(currentTenantId) &&
+                !string.IsNullOrEmpty(entityTenantId) &&
                 entityTenantId != currentTenantId)
             {
                 throw new InvalidOperationException(

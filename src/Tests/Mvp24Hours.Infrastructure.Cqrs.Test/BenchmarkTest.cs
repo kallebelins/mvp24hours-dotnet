@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -57,7 +57,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        Assert.True(sw.ElapsedMilliseconds < 5, 
+        Assert.True(sw.ElapsedMilliseconds < 5,
             $"Single command should complete in under 5ms, took {sw.ElapsedMilliseconds}ms");
     }
 
@@ -83,7 +83,7 @@ public class BenchmarkTest
 
         // Assert
         var avgMs = (double)sw.ElapsedMilliseconds / 1000;
-        Assert.True(sw.ElapsedMilliseconds < 500, 
+        Assert.True(sw.ElapsedMilliseconds < 500,
             $"1000 commands should complete in under 500ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
 
@@ -121,7 +121,7 @@ public class BenchmarkTest
 
         // Assert - With behaviors should complete within acceptable time
         // We compare absolute times instead of ratios due to low baseline times
-        Assert.True(swWith.ElapsedMilliseconds < 500, 
+        Assert.True(swWith.ElapsedMilliseconds < 500,
             $"500 commands with behaviors should complete in under 500ms, took {swWith.ElapsedMilliseconds}ms " +
             $"(without behaviors: {swWithout.ElapsedMilliseconds}ms)");
     }
@@ -147,7 +147,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        Assert.True(sw.ElapsedMilliseconds < 5, 
+        Assert.True(sw.ElapsedMilliseconds < 5,
             $"Single notification should complete in under 5ms, took {sw.ElapsedMilliseconds}ms");
     }
 
@@ -178,7 +178,7 @@ public class BenchmarkTest
 
         // Assert
         var avgMs = (double)sw.ElapsedMilliseconds / 1000;
-        Assert.True(sw.ElapsedMilliseconds < 500, 
+        Assert.True(sw.ElapsedMilliseconds < 500,
             $"1000 notifications should complete in under 500ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
 
@@ -203,7 +203,7 @@ public class BenchmarkTest
 
         // Assert
         Assert.Equal(100, count);
-        Assert.True(sw.ElapsedMilliseconds < 100, 
+        Assert.True(sw.ElapsedMilliseconds < 100,
             $"100 stream items should complete in under 100ms, took {sw.ElapsedMilliseconds}ms");
     }
 
@@ -213,7 +213,7 @@ public class BenchmarkTest
         // Arrange
         SetupServices();
         var dispatcher = _serviceProvider.GetRequiredService<IDomainEventDispatcher>();
-        
+
         var aggregates = Enumerable.Range(1, 100)
             .Select(i =>
             {
@@ -238,7 +238,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        Assert.True(sw.ElapsedMilliseconds < 200, 
+        Assert.True(sw.ElapsedMilliseconds < 200,
             $"99 domain events should dispatch in under 200ms, took {sw.ElapsedMilliseconds}ms");
     }
 
@@ -260,7 +260,7 @@ public class BenchmarkTest
         // Assert
         Assert.Equal(100, results.Length);
         Assert.All(results, r => Assert.NotNull(r));
-        Assert.True(sw.ElapsedMilliseconds < 500, 
+        Assert.True(sw.ElapsedMilliseconds < 500,
             $"100 concurrent commands should complete in under 500ms, took {sw.ElapsedMilliseconds}ms");
     }
 
@@ -286,7 +286,7 @@ public class BenchmarkTest
 
         // Assert
         var avgMs = (double)sw.ElapsedMilliseconds / 100;
-        Assert.True(sw.ElapsedMilliseconds < 100, 
+        Assert.True(sw.ElapsedMilliseconds < 100,
             $"100 queries should complete in under 100ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
 
@@ -310,7 +310,7 @@ public class BenchmarkTest
 
         // Assert
         var avgMs = (double)sw.ElapsedMilliseconds / 1000;
-        Assert.True(sw.ElapsedMilliseconds < 100, 
+        Assert.True(sw.ElapsedMilliseconds < 100,
             $"1000 mediator resolutions should complete in under 100ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
 }

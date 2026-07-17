@@ -230,7 +230,7 @@ public class TraceContextAccessor : ITraceContextAccessor
             var activity = Activity.Current;
             if (activity == null) return null;
 
-            return activity.GetBaggageItem("correlation.id") 
+            return activity.GetBaggageItem("correlation.id")
                    ?? activity.TraceId.ToString();
         }
     }

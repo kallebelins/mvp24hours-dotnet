@@ -277,7 +277,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
             return;
         }
 
-        var serializedData = _eventSerializer?.Serialize(snapshotData) 
+        var serializedData = _eventSerializer?.Serialize(snapshotData)
             ?? System.Text.Json.JsonSerializer.Serialize(snapshotData);
 
         var snapshot = new Snapshot

@@ -1,11 +1,11 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Threading.Tasks;
 using FluentValidation;
 using Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Mvp24Hours.Application.Pipe.Test.Integration

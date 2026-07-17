@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.WebAPI.Configuration;
 using System;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.RateLimiting
 {
@@ -100,7 +100,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
                 }
             }
 
-            if (policy.KeySource.HasFlag(RateLimitKeySource.CustomHeader) && 
+            if (policy.KeySource.HasFlag(RateLimitKeySource.CustomHeader) &&
                 !string.IsNullOrEmpty(policy.CustomHeaderName))
             {
                 var headerValue = GetCustomHeader(context, policy.CustomHeaderName);

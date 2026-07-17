@@ -1,12 +1,12 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Threading.Tasks;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Patterns.Test.Setup;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 

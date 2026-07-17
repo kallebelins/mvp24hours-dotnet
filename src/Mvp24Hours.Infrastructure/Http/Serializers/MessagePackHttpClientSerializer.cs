@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using MessagePack;
-using Mvp24Hours.Infrastructure.Http.Contract;
 using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MessagePack;
+using Mvp24Hours.Infrastructure.Http.Contract;
 
 namespace Mvp24Hours.Infrastructure.Http.Serializers
 {

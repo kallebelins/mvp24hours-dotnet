@@ -3,6 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
@@ -14,10 +18,6 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
-using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base
 {

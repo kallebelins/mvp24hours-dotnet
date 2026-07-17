@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using MongoDB.Driver;
-using MongoDB.Driver.Core.Events;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Driver;
+using MongoDB.Driver.Core.Events;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
 {

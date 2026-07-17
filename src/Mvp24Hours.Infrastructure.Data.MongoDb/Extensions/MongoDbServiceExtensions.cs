@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Mvp24Hours.Core.Contract.Data;
@@ -10,7 +11,6 @@ using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
-using System;
 
 namespace Mvp24Hours.Extensions
 {

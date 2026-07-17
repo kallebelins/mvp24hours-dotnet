@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -64,9 +64,9 @@ namespace Mvp24Hours.Application.Test.Pagination
 
             // Act
             var result = CursorPagedResult<string>.Create(
-                items, 
-                pageSize: 10, 
-                hasMore: true, 
+                items,
+                pageSize: 10,
+                hasMore: true,
                 nextCursor: "next");
 
             // Assert
@@ -82,9 +82,9 @@ namespace Mvp24Hours.Application.Test.Pagination
 
             // Act
             var result = CursorPagedResult<string>.Create(
-                items, 
-                pageSize: 10, 
-                hasMore: false, 
+                items,
+                pageSize: 10,
+                hasMore: false,
                 nextCursor: null,
                 previousCursor: "prev",
                 hasPreviousPage: true);
@@ -121,9 +121,9 @@ namespace Mvp24Hours.Application.Test.Pagination
             // Arrange
             var items = new[] { 1, 2, 3 };
             var result = CursorPagedResult<int>.Create(
-                items, 
-                pageSize: 10, 
-                hasMore: true, 
+                items,
+                pageSize: 10,
+                hasMore: true,
                 nextCursor: "next");
 
             // Act
@@ -149,8 +149,8 @@ namespace Mvp24Hours.Application.Test.Pagination
 
             // Act
             var result = CursorPagedResult<string, Guid>.Create(
-                items, 
-                pageSize: 10, 
+                items,
+                pageSize: 10,
                 nextCursorValue: cursorValue,
                 hasNextPage: true);
 
@@ -166,8 +166,8 @@ namespace Mvp24Hours.Application.Test.Pagination
             Guid originalValue = Guid.NewGuid();
             var items = new[] { "Item1" };
             var result = CursorPagedResult<string, Guid>.Create(
-                items, 
-                pageSize: 10, 
+                items,
+                pageSize: 10,
                 nextCursorValue: originalValue,
                 hasNextPage: true);
 

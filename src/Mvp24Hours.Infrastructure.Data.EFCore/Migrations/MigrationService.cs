@@ -3,18 +3,18 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 {
@@ -83,14 +83,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         public async Task<MigrationResult> MigrateAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("MigrationService starting migration for {DbContext}", typeof(TContext).Name);
-            
+
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
                 var pendingMigrations = await GetPendingMigrationsAsync(cancellationToken);
-                
+
                 if (pendingMigrations.Count == 0)
                 {
                     _logger.LogInformation("No pending migrations for {DbContext}", typeof(TContext).Name);
@@ -137,7 +137,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                 throw new ArgumentNullException(nameof(targetMigration));
 
             _logger.LogDebug("MigrationService migrating to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
-            
+
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
@@ -186,14 +186,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                 throw new ArgumentNullException(nameof(targetMigration));
 
             _logger.LogDebug("MigrationService rolling back to {TargetMigration} for {DbContext}", targetMigration, typeof(TContext).Name);
-            
+
             var startedAt = DateTime.UtcNow;
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
                 var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
-                
+
                 if (!appliedMigrations.Contains(targetMigration))
                 {
                     throw new InvalidOperationException($"Migration '{targetMigration}' has not been applied");
@@ -241,7 +241,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
             _logger.LogDebug("MigrationService rolling back last migration for {DbContext}", typeof(TContext).Name);
 
             var appliedMigrations = await GetAppliedMigrationsAsync(cancellationToken);
-            
+
             if (appliedMigrations.Count < 2)
             {
                 _logger.LogWarning("Cannot rollback: less than 2 migrations applied for {DbContext}", typeof(TContext).Name);
@@ -260,22 +260,22 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         public async Task<bool> EnsureDatabaseCreatedAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("MigrationService ensuring database created for {DbContext}", typeof(TContext).Name);
-            
+
             var canConnect = await _dbContext.Database.CanConnectAsync(cancellationToken);
-            
+
             if (!canConnect)
             {
                 _logger.LogInformation("Creating database for {DbContext}", typeof(TContext).Name);
                 var created = await _dbContext.Database.EnsureCreatedAsync(cancellationToken);
-                
+
                 if (created)
                 {
                     _logger.LogInformation("Database created for {DbContext}", typeof(TContext).Name);
                 }
-                
+
                 return created;
             }
-            
+
             return false;
         }
 
@@ -284,12 +284,12 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         {
             _logger.LogWarning("MigrationService deleting database for {DbContext}", typeof(TContext).Name);
             var deleted = await _dbContext.Database.EnsureDeletedAsync(cancellationToken);
-            
+
             if (deleted)
             {
                 _logger.LogInformation("Database deleted for {DbContext}", typeof(TContext).Name);
             }
-            
+
             return deleted;
         }
 
@@ -307,14 +307,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
 
             // Note: Full schema validation requires comparing the EF Core model with the actual database schema.
             // This is a simplified implementation. For production, consider using a tool like EFCore.Tools.
-            
+
             var differences = new List<SchemaDifference>();
-            
+
             try
             {
                 // Get the model from DbContext
                 var model = _dbContext.Model;
-                
+
                 foreach (var entityType in model.GetEntityTypes())
                 {
                     // Basic validation - check if entity is configured correctly
@@ -329,24 +329,24 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                         });
                     }
                 }
-                
+
                 if (differences.Count > 0)
                 {
                     _logger.LogWarning(
                         "Schema validation found {Count} differences for {DbContext}",
                         differences.Count,
                         typeof(TContext).Name);
-                    
+
                     return Task.FromResult(SchemaValidationResult.Invalid(differences));
                 }
-                
+
                 _logger.LogInformation("Schema validation passed for {DbContext}", typeof(TContext).Name);
                 return Task.FromResult(SchemaValidationResult.Valid());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Schema validation failed for {DbContext}", typeof(TContext).Name);
-                
+
                 differences.Add(new SchemaDifference
                 {
                     Type = SchemaDifferenceType.Other,
@@ -354,7 +354,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
                     Description = $"Schema validation error: {ex.Message}",
                     IsCritical = true
                 });
-                
+
                 return Task.FromResult(SchemaValidationResult.Invalid(differences));
             }
         }
@@ -368,9 +368,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Migrations
         /// <inheritdoc/>
         public Task<string> GetMigrationScriptAsync(string? fromMigration, string? toMigration, CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug("MigrationService generating migration script from '{From}' to '{To}' for {DbContext}", 
-                fromMigration ?? "(beginning)", 
-                toMigration ?? "(latest)", 
+            _logger.LogDebug("MigrationService generating migration script from '{From}' to '{To}' for {DbContext}",
+                fromMigration ?? "(beginning)",
+                toMigration ?? "(latest)",
                 typeof(TContext).Name);
 
             var migrator = _dbContext.Database.GetInfrastructure().GetRequiredService<IMigrator>();

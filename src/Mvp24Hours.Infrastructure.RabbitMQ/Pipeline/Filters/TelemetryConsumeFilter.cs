@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 {
@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
     public class TelemetryConsumeFilter : IConsumeFilter
     {
         private readonly ILogger<TelemetryConsumeFilter>? _logger;
-        
+
         /// <summary>
         /// The ActivitySource for creating spans.
         /// </summary>
@@ -61,7 +61,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
                 activity.SetTag("messaging.message_id", context.MessageId);
                 activity.SetTag("messaging.message_type", messageType);
-                
+
                 // Set correlation IDs
                 if (!string.IsNullOrEmpty(context.CorrelationId))
                 {
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             try
             {
                 await next(context, cancellationToken);
-                
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
@@ -105,12 +105,12 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                     { "exception.message", ex.Message },
                     { "exception.stacktrace", ex.StackTrace }
                 }));
-                
+
                 throw;
             }
         }
 
-        private static ActivityContext ExtractParentContext<TMessage>(IConsumeFilterContext<TMessage> context) 
+        private static ActivityContext ExtractParentContext<TMessage>(IConsumeFilterContext<TMessage> context)
             where TMessage : class
         {
             // Try to extract traceparent from headers (W3C Trace Context)
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
     public class TelemetryPublishFilter : IPublishFilter
     {
         private readonly ILogger<TelemetryPublishFilter>? _logger;
-        
+
         /// <summary>
         /// The ActivitySource for creating spans.
         /// </summary>
@@ -170,7 +170,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
                 activity.SetTag("messaging.message_id", context.MessageId);
                 activity.SetTag("messaging.message_type", messageType);
-                
+
                 // Set correlation IDs
                 if (!string.IsNullOrEmpty(context.CorrelationId))
                 {
@@ -201,7 +201,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             try
             {
                 await next(context, cancellationToken);
-                
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
@@ -209,7 +209,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 activity?.SetTag("error.type", ex.GetType().FullName);
                 activity?.SetTag("error.message", ex.Message);
-                
+
                 throw;
             }
         }
@@ -222,7 +222,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
     public class TelemetrySendFilter : ISendFilter
     {
         private readonly ILogger<TelemetrySendFilter>? _logger;
-        
+
         /// <summary>
         /// The ActivitySource for creating spans.
         /// </summary>
@@ -257,7 +257,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 activity.SetTag("messaging.destination_kind", "queue");
                 activity.SetTag("messaging.message_id", context.MessageId);
                 activity.SetTag("messaging.message_type", messageType);
-                
+
                 // Set correlation IDs
                 if (!string.IsNullOrEmpty(context.CorrelationId))
                 {
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             try
             {
                 await next(context, cancellationToken);
-                
+
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
@@ -296,7 +296,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 activity?.SetTag("error.type", ex.GetType().FullName);
                 activity?.SetTag("error.message", ex.Message);
-                
+
                 throw;
             }
         }

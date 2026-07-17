@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Application.Contract.Cache;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Application.Contract.Cache;
 
 namespace Mvp24Hours.Application.Logic.Cache
 {
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             {
                 // Generate possible cache keys for this entity ID
                 var entityType = typeof(TEntity);
-                
+
                 // Common key patterns for GetById operations
                 var keys = new[]
                 {

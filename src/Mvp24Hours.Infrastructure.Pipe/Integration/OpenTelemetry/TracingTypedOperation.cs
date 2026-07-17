@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Infrastructure.Pipe.Typed;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
 {
@@ -21,7 +21,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
     public class TracingTypedOperation<TInput, TOutput> : ITypedOperationAsync<TInput, TOutput>
     {
         private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
-        
+
         private readonly ITypedOperationAsync<TInput, TOutput> _innerOperation;
         private readonly ILogger<TracingTypedOperation<TInput, TOutput>>? _logger;
         private readonly string _operationName;

@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Email.Contract;
 using System;
 using System.IO;
+using Mvp24Hours.Infrastructure.Email.Contract;
 
 namespace Mvp24Hours.Infrastructure.Email.Models
 {

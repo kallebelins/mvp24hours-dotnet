@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.Sms.Models;
-using Mvp24Hours.Infrastructure.Sms.Options;
-using Mvp24Hours.Infrastructure.Sms.Results;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.Sms.Models;
+using Mvp24Hours.Infrastructure.Sms.Options;
+using Mvp24Hours.Infrastructure.Sms.Results;
 
 namespace Mvp24Hours.Infrastructure.Sms.Providers
 {

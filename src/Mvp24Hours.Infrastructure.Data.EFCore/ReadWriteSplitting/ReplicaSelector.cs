@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
 {
@@ -160,14 +160,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting
                 var state = kvp.Value;
 
                 // Check if unhealthy replica should be retried
-                if (!state.IsHealthy && 
+                if (!state.IsHealthy &&
                     state.LastFailureTime.HasValue &&
                     now - state.LastFailureTime.Value >= _options.RecoveryTimeout)
                 {
                     // Allow retry - mark as tentatively healthy
                     state.IsHealthy = true;
                     _replicaStates[kvp.Key] = state;
-                    
+
                     _logger.LogDebug(
                         "Allowing retry for previously unhealthy replica: {Replica}",
                         SanitizeConnectionString(kvp.Key));

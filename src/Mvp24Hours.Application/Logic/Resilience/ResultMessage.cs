@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.Contract.Resilience;
-using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Mvp24Hours.Application.Contract.Resilience;
+using Mvp24Hours.Core.Enums;
+using Mvp24Hours.Core.ValueObjects;
 
 namespace Mvp24Hours.Application.Logic.Resilience
 {

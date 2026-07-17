@@ -1,14 +1,14 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Patterns.Test.Setup;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 

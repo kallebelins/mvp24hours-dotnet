@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -165,9 +165,9 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     {
         var dbOptions = BuildDbContextOptions();
         var context = CreateContextInstance(dbOptions);
-        
+
         _createdContexts.Add(context);
-        
+
         return context;
     }
 
@@ -188,7 +188,7 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
             if (_initialized) return;
 
             using var context = CreateContext();
-            
+
             if (_options.UseMigrations)
             {
                 await context.Database.MigrateAsync(cancellationToken);
@@ -229,7 +229,7 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
         {
             return _contextFactory(options);
         }
-        
+
         return (TContext)Activator.CreateInstance(typeof(TContext), options)!;
     }
 
@@ -340,16 +340,16 @@ public class InMemoryTestDbContextFactory<TContext> : TestDbContextFactoryBase<T
     protected override DbContextOptions<TContext> BuildDbContextOptions()
     {
         var builder = new DbContextOptionsBuilder<TContext>();
-        
+
         builder.UseInMemoryDatabase(DatabaseName);
-        
+
         builder.ConfigureWarnings(warnings =>
         {
             warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning);
         });
-        
+
         ApplyCommonConfiguration(builder);
-        
+
         return builder.Options;
     }
 }

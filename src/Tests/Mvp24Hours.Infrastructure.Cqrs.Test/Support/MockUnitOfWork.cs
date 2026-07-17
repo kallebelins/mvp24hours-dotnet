@@ -4,9 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Data;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
-using System.Data;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -17,7 +17,7 @@ public class MockUnitOfWorkAsync : IUnitOfWorkAsync
 {
     private bool _disposed;
     private readonly List<string> _operationsLog = new();
-    
+
     public List<string> OperationsLog => _operationsLog;
     public int SaveChangesCallCount { get; private set; }
     public int RollbackCallCount { get; private set; }

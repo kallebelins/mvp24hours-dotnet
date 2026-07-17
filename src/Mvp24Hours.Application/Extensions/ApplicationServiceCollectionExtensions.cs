@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Mvp24Hours.Core.Contract.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Core.Contract.Logic;
 
 namespace Mvp24Hours.Application.Extensions
 {

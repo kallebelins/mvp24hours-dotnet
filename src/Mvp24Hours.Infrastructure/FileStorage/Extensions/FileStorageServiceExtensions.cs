@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using Mvp24Hours.Infrastructure.FileStorage.Options;
 using Mvp24Hours.Infrastructure.FileStorage.Providers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using System;
 
 namespace Mvp24Hours.Infrastructure.FileStorage.Extensions
 {

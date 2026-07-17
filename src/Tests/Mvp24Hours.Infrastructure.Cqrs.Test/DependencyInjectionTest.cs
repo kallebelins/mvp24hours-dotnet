@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -22,11 +22,11 @@ public class DependencyInjectionTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        
+
         // Act
         services.AddMvpMediator(typeof(TestCommand).Assembly);
         var sp = services.BuildServiceProvider();
-        
+
         // Assert
         var mediator = sp.GetService<IMediator>();
         Assert.NotNull(mediator);
@@ -250,7 +250,7 @@ public class DependencyInjectionTest
         services.AddLogging();
         services.AddMvpMediator(typeof(TestCommand).Assembly);
         var sp = services.BuildServiceProvider();
-        
+
         using var scope = sp.CreateScope();
         var scopedSp = scope.ServiceProvider;
 

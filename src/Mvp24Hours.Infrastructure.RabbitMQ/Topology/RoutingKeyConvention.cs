@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
+using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Topology
 {

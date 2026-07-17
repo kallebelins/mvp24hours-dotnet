@@ -3,14 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.WebAPI.Configuration;
 using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.WebAPI.Configuration;
 
 namespace Mvp24Hours.WebAPI.RateLimiting
 {
@@ -129,7 +129,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             {
                 var fullKey = GetFullKey(key);
                 var stateBytes = await _cache.GetAsync(fullKey, cancellationToken);
-                
+
                 if (stateBytes == null)
                     return 0;
 
@@ -162,7 +162,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             {
                 var fullKey = GetFullKey(key);
                 var stateBytes = await _cache.GetAsync(fullKey, cancellationToken);
-                
+
                 if (stateBytes == null)
                     return null;
 
@@ -187,7 +187,7 @@ namespace Mvp24Hours.WebAPI.RateLimiting
             {
                 var fullKey = GetFullKey(key);
                 await _cache.RemoveAsync(fullKey, cancellationToken);
-                
+
                 _logger.LogDebug("Rate limit reset for key: {Key}", key);
             }
             catch (Exception ex)

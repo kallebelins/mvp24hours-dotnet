@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
-using System;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Resilience
 {

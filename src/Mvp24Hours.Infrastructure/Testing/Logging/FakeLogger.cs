@@ -4,11 +4,11 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 #nullable enable
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Testing.Logging
 {
@@ -207,7 +207,7 @@ namespace Mvp24Hours.Infrastructure.Testing.Logging
             var message = formatter(state, exception);
             var currentScopes = _scopes.ToArray().Reverse();
             var entry = new LogEntry(logLevel, eventId, message, exception, state, currentScopes);
-            
+
             _logs.Add(entry);
             LogAdded?.Invoke(this, entry);
         }

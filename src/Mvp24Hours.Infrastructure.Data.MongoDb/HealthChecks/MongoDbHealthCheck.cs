@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
 {
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.HealthChecks
                         {
                             data["version"] = serverStatus.GetValue("version", "unknown").AsString;
                             data["uptime"] = serverStatus.GetValue("uptime", 0).ToDouble();
-                            
+
                             // Get connections info
                             if (serverStatus.TryGetValue("connections", out var connections) && connections.IsBsonDocument)
                             {

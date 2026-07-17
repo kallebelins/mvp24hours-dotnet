@@ -234,7 +234,7 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
     Guid IEventSourcedAggregate.Id => Id switch
     {
         Guid guid => guid,
-        _ => Id?.GetHashCode() is int hash 
+        _ => Id?.GetHashCode() is int hash
             ? new Guid(hash, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
             : Guid.Empty
     };
@@ -387,7 +387,7 @@ public abstract class SnapshotAggregateRoot<TSnapshot> : AggregateRoot, ISnapsho
     {
         _snapshotVersion = version;
         // Use reflection to set the private _version field from base class
-        var versionField = typeof(AggregateRoot).GetField("_version", 
+        var versionField = typeof(AggregateRoot).GetField("_version",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         versionField?.SetValue(this, version);
     }

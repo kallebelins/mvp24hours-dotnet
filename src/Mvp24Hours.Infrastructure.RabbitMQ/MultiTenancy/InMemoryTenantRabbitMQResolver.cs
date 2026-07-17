@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
-using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
 {

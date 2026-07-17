@@ -71,7 +71,7 @@ namespace Mvp24Hours.Core.Infrastructure.Timers
             }
 
             using var timer = new PeriodicTimer(period);
-            
+
             try
             {
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
@@ -127,7 +127,7 @@ namespace Mvp24Hours.Core.Infrastructure.Timers
 
                 // Then run periodically
                 using var timer = new PeriodicTimer(period);
-                
+
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
                 {
                     await action(cancellationToken).ConfigureAwait(false);
@@ -182,7 +182,7 @@ namespace Mvp24Hours.Core.Infrastructure.Timers
             }
 
             using var timer = new PeriodicTimer(period);
-            
+
             try
             {
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))

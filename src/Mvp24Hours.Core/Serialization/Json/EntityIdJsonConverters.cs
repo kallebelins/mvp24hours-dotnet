@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.ValueObjects;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Mvp24Hours.Core.ValueObjects;
 
 namespace Mvp24Hours.Core.Serialization.Json
 {

@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -108,13 +108,13 @@ public class InboxOutboxTest
         // Arrange
         var store = new InMemoryInboxStore();
         var now = DateTime.UtcNow;
-        
+
         await store.MarkAsProcessedAsync(Guid.NewGuid(), "Event1");
         await store.MarkAsProcessedAsync(Guid.NewGuid(), "Event2");
 
         // Act
         var messages = await store.GetByTimeRangeAsync(
-            now.AddMinutes(-1), 
+            now.AddMinutes(-1),
             now.AddMinutes(1));
 
         // Assert
@@ -358,7 +358,7 @@ public class InboxOutboxTest
             processCount++;
             await Task.CompletedTask;
         });
-        
+
         var result = await processor.ProcessAsync(@event, async (e, ct) =>
         {
             processCount++;

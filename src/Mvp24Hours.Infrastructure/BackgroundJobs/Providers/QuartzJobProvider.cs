@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Contract;
+using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 
 namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
 {
@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.BackgroundJobs.Providers
             // Note: This is a placeholder implementation.
             // In a real implementation, this would use Quartz scheduler to create and trigger jobs.
             // The actual implementation requires Quartz NuGet packages to be installed.
-            
+
             _logger?.LogWarning(
                 "QuartzJobProvider.EnqueueAsync called but Quartz packages are not installed. " +
                 "Install Quartz NuGet package to enable this provider.");

@@ -1,9 +1,9 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using System;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers
 {

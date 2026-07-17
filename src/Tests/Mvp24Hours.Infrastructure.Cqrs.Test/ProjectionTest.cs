@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -80,11 +80,11 @@ public class ProjectionTest
         var repository = new InMemoryReadModelRepository<TestReadModel>();
         for (int i = 0; i < 10; i++)
         {
-            await repository.InsertAsync(new TestReadModel 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = $"Item{i}", 
-                Status = "Active" 
+            await repository.InsertAsync(new TestReadModel
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Item{i}",
+                Status = "Active"
             });
         }
 

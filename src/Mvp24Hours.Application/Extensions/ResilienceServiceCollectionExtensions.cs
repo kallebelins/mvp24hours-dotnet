@@ -3,10 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Logic.Resilience;
-using System;
 
 namespace Mvp24Hours.Application.Extensions
 {

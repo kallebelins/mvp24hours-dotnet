@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
 {
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             {
                 // Restore previous context
                 _currentContext.Value = previousContext;
-                
+
                 LogCorrelationEnded(correlationId);
             }
         }
@@ -117,10 +117,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var currentContext = CorrelationConsumeFilter.Current;
 
             // Set correlation ID (preserve existing or use from context or generate new)
-            var correlationId = context.CorrelationId 
-                ?? currentContext?.CorrelationId 
+            var correlationId = context.CorrelationId
+                ?? currentContext?.CorrelationId
                 ?? Guid.NewGuid().ToString();
-            
+
             context.SetCorrelationId(correlationId);
 
             // Set causation ID to the current message ID (the message that caused this publish)
@@ -169,10 +169,10 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
             var currentContext = CorrelationConsumeFilter.Current;
 
             // Set correlation ID (preserve existing or use from context or generate new)
-            var correlationId = context.CorrelationId 
-                ?? currentContext?.CorrelationId 
+            var correlationId = context.CorrelationId
+                ?? currentContext?.CorrelationId
                 ?? Guid.NewGuid().ToString();
-            
+
             context.SetCorrelationId(correlationId);
 
             // Set causation ID to the current message ID (the message that caused this send)

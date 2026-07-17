@@ -3,6 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -10,8 +12,6 @@ using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
-using System;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Extensions
 {
@@ -33,7 +33,7 @@ namespace Mvp24Hours.Extensions
             var options = new FluentValidationOptions();
             configure?.Invoke(options);
             services.TryAddSingleton(options);
-            
+
             return services;
         }
 
@@ -53,7 +53,7 @@ namespace Mvp24Hours.Extensions
                 var validators = sp.GetServices<IValidator<T>>();
                 var logger = sp.GetService<ILogger<FluentValidationOperation<T>>>();
                 var globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
-                
+
                 var options = new FluentValidationOptions
                 {
                     IsRequired = globalOptions.IsRequired,
@@ -64,9 +64,9 @@ namespace Mvp24Hours.Extensions
                     IncludeNonErrorMessages = globalOptions.IncludeNonErrorMessages,
                     RuleSet = globalOptions.RuleSet
                 };
-                
+
                 configure?.Invoke(options);
-                
+
                 return new FluentValidationOperation<T>(validators, logger, options);
             });
 
@@ -91,7 +91,7 @@ namespace Mvp24Hours.Extensions
                 var validators = sp.GetServices<IValidator<T>>();
                 var logger = sp.GetService<ILogger<FluentValidationPipelineOperation<T>>>();
                 var globalOptions = sp.GetService<FluentValidationOptions>() ?? new FluentValidationOptions();
-                
+
                 var options = new FluentValidationOptions
                 {
                     IsRequired = globalOptions.IsRequired,
@@ -102,9 +102,9 @@ namespace Mvp24Hours.Extensions
                     IncludeNonErrorMessages = globalOptions.IncludeNonErrorMessages,
                     RuleSet = globalOptions.RuleSet
                 };
-                
+
                 configure?.Invoke(options);
-                
+
                 return new FluentValidationPipelineOperation<T>(validators, tokenAlias, logger, options);
             });
 

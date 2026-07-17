@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
 using Microsoft.Extensions.Caching.Distributed;
 using Mvp24Hours.Infrastructure.Caching.Helpers;
-using System;
 
 namespace Mvp24Hours.Extensions
 {

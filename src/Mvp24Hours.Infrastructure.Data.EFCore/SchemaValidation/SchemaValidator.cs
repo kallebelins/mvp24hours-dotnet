@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
 {
@@ -24,7 +24,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         private readonly TContext _dbContext;
         private readonly SchemaValidationOptions _options;
         private readonly ILogger<SchemaValidator<TContext>> _logger;
-        
+
         private SchemaValidationResult? _cachedResult;
         private DateTime? _cacheExpiry;
 
@@ -45,9 +45,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         public async Task<SchemaValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
             // Check cache
-            if (_options.CacheValidationResults && 
-                _cachedResult != null && 
-                _cacheExpiry.HasValue && 
+            if (_options.CacheValidationResults &&
+                _cachedResult != null &&
+                _cacheExpiry.HasValue &&
                 DateTime.UtcNow < _cacheExpiry.Value)
             {
                 _logger.LogDebug("Returning cached schema validation result for {DbContext}", typeof(TContext).Name);
@@ -224,7 +224,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                 try
                 {
                     var tableExists = await CheckTableExistsAsync(tableName, schema, cancellationToken);
-                    
+
                     if (!tableExists)
                     {
                         issues.Add(new SchemaIssue
@@ -271,7 +271,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
                     try
                     {
                         var columnExists = await CheckColumnExistsAsync(tableName, columnName, cancellationToken);
-                        
+
                         if (!columnExists)
                         {
                             issues.Add(new SchemaIssue
@@ -295,7 +295,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         private async Task<bool> CheckTableExistsAsync(string tableName, string? schema, CancellationToken cancellationToken)
         {
             var connection = _dbContext.Database.GetDbConnection();
-            
+
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);
@@ -329,7 +329,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.SchemaValidation
         private async Task<bool> CheckColumnExistsAsync(string tableName, string columnName, CancellationToken cancellationToken)
         {
             var connection = _dbContext.Database.GetDbConnection();
-            
+
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken);

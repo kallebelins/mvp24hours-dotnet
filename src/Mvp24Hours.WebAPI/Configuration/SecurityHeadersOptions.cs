@@ -92,7 +92,7 @@ public class SecurityHeadersOptions
     /// Customize based on your application's needs.
     /// </para>
     /// </remarks>
-    public string ContentSecurityPolicy { get; set; } = 
+    public string ContentSecurityPolicy { get; set; } =
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
@@ -205,7 +205,7 @@ public class SecurityHeadersOptions
     /// Gets or sets the Permissions-Policy value.
     /// Default: disables commonly abused features.
     /// </summary>
-    public string PermissionsPolicy { get; set; } = 
+    public string PermissionsPolicy { get; set; } =
         "accelerometer=(), " +
         "camera=(), " +
         "geolocation=(), " +

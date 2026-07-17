@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Tests for MongoDbCircuitBreaker
 //=====================================================================================
 using FluentAssertions;
@@ -159,7 +159,7 @@ public class MongoDbCircuitBreakerTests
     public void Should_Handle_Failure_After_Reset()
     {
         // Test that after reset, failures can re-open the circuit
-        
+
         // Arrange
         var options = CreateDefaultOptions();
         options.CircuitBreakerFailureThreshold = 2;
@@ -232,7 +232,7 @@ public class MongoDbCircuitBreakerTests
         // First trip
         circuitBreaker.RecordFailure(new Exception("Failure 1"));
         circuitBreaker.RecordFailure(new Exception("Failure 2"));
-        
+
         // Reset and trip again
         circuitBreaker.ResetState();
         circuitBreaker.RecordFailure(new Exception("Failure 3"));

@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
 {
@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
         {
             // Check if the current operation supports retry
             var retryableOperation = GetRetryableOperation(message);
-            
+
             if (_defaultOptions.MaxRetryAttempts <= 0 && retryableOperation == null)
             {
                 // No retry configured
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                 try
                 {
                     await next();
-                    
+
                     // Check if message became faulty without exception
                     if (!message.IsFaulty)
                     {
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
                     lastException = ex;
 
                     // Check if we should retry
-                    bool shouldRetry = retryableOperation?.ShouldRetry(ex, attemptNumber) 
+                    bool shouldRetry = retryableOperation?.ShouldRetry(ex, attemptNumber)
                         ?? options.ShouldRetry(ex, attemptNumber);
 
                     if (!shouldRetry)

@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
 {
@@ -161,13 +161,13 @@ namespace Mvp24Hours.Infrastructure.Http.DelegatingHandlers
         {
             // Required attributes (OpenTelemetry semantic conventions)
             activity.SetTag(HttpRequestMethodTag, request.Method.Method);
-            
+
             if (request.RequestUri != null)
             {
                 activity.SetTag(UrlFullTag, _options.RecordFullUrl
                     ? request.RequestUri.ToString()
                     : request.RequestUri.GetLeftPart(UriPartial.Path));
-                
+
                 activity.SetTag(UrlSchemeTag, request.RequestUri.Scheme);
                 activity.SetTag(ServerAddressTag, request.RequestUri.Host);
 

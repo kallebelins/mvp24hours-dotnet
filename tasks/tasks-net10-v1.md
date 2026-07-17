@@ -359,9 +359,10 @@
 - `build-baseline.log` (gerado na tarefa 1.1)
 - https://learn.microsoft.com/dotnet/core/tools/dotnet-build
 
-[ ] 10.2 - Executar `dotnet format --verify-no-changes` em toda a solução — Task [#87311](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87311)
+[x] 10.2 - Executar `dotnet format --verify-no-changes` em toda a solução — Task [#87311](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87311)
 - Validar que o `.editorconfig` criado na tarefa 3.2 é suficiente para que todo o código já esteja formatado conforme o padrão definido, replicando exatamente o step `🎨 Check code formatting` do job `code-quality` do CI antes de abrir o PR final.
-- `.github/workflows/ci.yml` (linha 76), `.editorconfig`
+- **Concluído (17/07/2026):** primeira passada real de formatação sob o `.editorconfig`. `dotnet format` **escopado só à formatação** via `--severity error` (WHITESPACE **1135** + IMPORTS **983** + 4 FINALNEWLINE; **0** analisador). Aplicado em **1107** arquivos `.cs` (`+3408/-3406`, mecânico) — **0** `[Obsolete]` / **0** mudanças de nulidade. Verify pós-formatação: **exit 0** (`0 de 1723 arquivos`). Build Debug: **0 erro(s)** / 942 aviso(s) (residual 10.1). O `dotnet format` completo (sem `--severity`) tenta *fixers* de analisador (CS0618→`[Obsolete]`, CS8625→nullable, vários **falham** "nó não faz parte da árvore") que conflitam com o residual aceito na 10.1 / gate adiado na 10.3 → **adiados para v2**. CI ajustado: step aponta para `src/Mvp24Hours.sln` (rodava na raiz sem `.sln`) + `--severity error`. Evidência: [`format-verify-net10-v1.md`](./format-verify-net10-v1.md).
+- `.github/workflows/ci.yml` (step `🎨 Check code formatting`), `.editorconfig`, 1107 `*.cs` em `src/**`
 - https://learn.microsoft.com/dotnet/core/tools/dotnet-format
 
 [~] 10.3 - Validar de ponta a ponta o gate `TreatWarningsAsErrors=true` do pipeline `code-quality` — Task [#87312](https://bancorbras-ti.visualstudio.com/Bancorbrás-Agile/_workitems/edit/87312)

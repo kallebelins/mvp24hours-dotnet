@@ -1,4 +1,4 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
@@ -89,7 +89,7 @@ public class MediatorTest
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _mediator.SendAsync<string>(null!));
     }
 
@@ -106,7 +106,7 @@ public class MediatorTest
         var command = new TestCommand { Name = "Test", Value = 1 };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mediator.SendAsync(command));
     }
 
@@ -116,7 +116,7 @@ public class MediatorTest
         // Arrange
         var cts = new CancellationTokenSource();
         var command = new SlowCommand { DelayMs = 5000 };
-        
+
         // Act
         var task = _mediator.SendAsync(command, cts.Token);
         cts.Cancel();
@@ -132,7 +132,7 @@ public class MediatorTest
         var command = new FailingCommand { Message = "Custom error" };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mediator.SendAsync(command));
         Assert.Equal("Custom error", ex.Message);
     }

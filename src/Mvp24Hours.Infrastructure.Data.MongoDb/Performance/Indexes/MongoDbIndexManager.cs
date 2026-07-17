@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,6 +10,11 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
 {

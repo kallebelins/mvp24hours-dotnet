@@ -3,12 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Application.Contract.Resilience;
-using Mvp24Hours.Core.Exceptions;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Application.Contract.Resilience;
+using Mvp24Hours.Core.Exceptions;
 
 namespace Mvp24Hours.Application.Logic.Resilience
 {

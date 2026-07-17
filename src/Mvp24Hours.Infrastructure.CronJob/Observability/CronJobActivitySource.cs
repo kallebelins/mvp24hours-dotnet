@@ -363,7 +363,7 @@ public static class CronJobActivitySource
         else
         {
             activity.SetStatus(ActivityStatusCode.Error, errorMessage ?? "Job execution failed");
-            
+
             if (!string.IsNullOrEmpty(errorMessage))
             {
                 activity.SetTag(Tags.ErrorMessage, errorMessage);

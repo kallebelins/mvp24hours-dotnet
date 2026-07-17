@@ -88,7 +88,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks
         /// The failure status to use when the health check fails completely.
         /// Default is Unhealthy.
         /// </summary>
-        public Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus FailureStatus { get; set; } 
+        public Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus FailureStatus { get; set; }
             = Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy;
 
         #region Factory Methods

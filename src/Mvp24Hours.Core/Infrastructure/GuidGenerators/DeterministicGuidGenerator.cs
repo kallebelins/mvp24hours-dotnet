@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Infrastructure;
 using System;
 using System.Collections.Generic;
+using Mvp24Hours.Core.Contract.Infrastructure;
 
 namespace Mvp24Hours.Core.Infrastructure.GuidGenerators
 {
@@ -124,15 +124,15 @@ namespace Mvp24Hours.Core.Infrastructure.GuidGenerators
             // Create a predictable GUID format: 00000000-0000-0000-0000-{number:D12}
             var bytes = new byte[16];
             var numberBytes = BitConverter.GetBytes(number);
-            
+
             // Place the number in the last 4 bytes
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(numberBytes);
             }
-            
+
             Buffer.BlockCopy(numberBytes, 0, bytes, 12, 4);
-            
+
             return new Guid(bytes);
         }
 

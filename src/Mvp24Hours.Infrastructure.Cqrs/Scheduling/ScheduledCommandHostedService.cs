@@ -3,15 +3,15 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 {
@@ -73,12 +73,12 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Scheduling
 
             // Use PeriodicTimer for modern async/await patterns with proper cancellation
             using var timer = new PeriodicTimer(_options.PollingInterval);
-            
+
             try
             {
                 // Process immediately on startup, then periodically
                 await ProcessAllAsync(stoppingToken);
-                
+
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
                     try

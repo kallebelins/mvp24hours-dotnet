@@ -4,10 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
+using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Text.Json;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 

@@ -150,7 +150,7 @@ public static class InboxOutboxExtensions
         {
             // Inbox options
             opt.InboxRetentionDays = options.InboxRetentionDays;
-            
+
             // Outbox options
             opt.OutboxPollingInterval = options.OutboxPollingInterval;
             opt.BatchSize = options.BatchSize;
@@ -158,7 +158,7 @@ public static class InboxOutboxExtensions
             opt.RetryBaseDelayMilliseconds = options.RetryBaseDelayMilliseconds;
             opt.RetryMaxDelayMilliseconds = options.RetryMaxDelayMilliseconds;
             opt.OutboxRetentionDays = options.OutboxRetentionDays;
-            
+
             // Common options
             opt.CleanupInterval = options.CleanupInterval;
             opt.EnableAutomaticCleanup = options.EnableAutomaticCleanup;

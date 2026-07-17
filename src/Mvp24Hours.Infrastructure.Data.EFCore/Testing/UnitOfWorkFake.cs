@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.Domain.Entity;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.Domain.Entity;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -115,7 +115,7 @@ public class UnitOfWorkFake : IUnitOfWork, IDisposable
     public void RegisterRepository<TEntity>(RepositoryFake<TEntity> repository)
         where TEntity : class, IEntityBase
     {
-        _repositories[typeof(TEntity)] = repository 
+        _repositories[typeof(TEntity)] = repository
             ?? throw new ArgumentNullException(nameof(repository));
     }
 
@@ -309,7 +309,7 @@ public class UnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     public void RegisterRepository<TEntity>(RepositoryFakeAsync<TEntity> repository)
         where TEntity : class, IEntityBase
     {
-        _repositories[typeof(TEntity)] = repository 
+        _repositories[typeof(TEntity)] = repository
             ?? throw new ArgumentNullException(nameof(repository));
     }
 

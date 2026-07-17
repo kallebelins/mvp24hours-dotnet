@@ -57,8 +57,8 @@ public class GetAllUsersQueryHandler : IMediatorQueryHandler<GetAllUsersQuery, L
 
     public Task<List<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var result = request.Limit.HasValue 
-            ? Users.Take(request.Limit.Value).ToList() 
+        var result = request.Limit.HasValue
+            ? Users.Take(request.Limit.Value).ToList()
             : Users.ToList();
         return Task.FromResult(result);
     }

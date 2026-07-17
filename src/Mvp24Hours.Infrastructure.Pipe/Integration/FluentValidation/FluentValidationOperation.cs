@@ -3,6 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -12,11 +17,6 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
 {
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "Validator {ValidatorType} threw an exception", validator.GetType().Name);
-                    
+
                     if (_options.ThrowOnValidatorException)
                     {
                         throw;
@@ -206,7 +206,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
             if (data == null)
             {
                 _logger?.LogWarning("No data found with token alias {TokenAlias} for validation", _tokenAlias);
-                
+
                 if (_options.FailOnMissingData)
                 {
                     input.Messages.Add(new MessageResult(
@@ -237,7 +237,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.Integration.FluentValidation
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "Validator {ValidatorType} threw an exception", validator.GetType().Name);
-                    
+
                     if (_options.ThrowOnValidatorException)
                     {
                         throw;

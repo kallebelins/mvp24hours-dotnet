@@ -1,8 +1,12 @@
-﻿//=====================================================================================
+//=====================================================================================
 // Developed by Kallebe Lins (https://github.com/kallebelins)
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Support.Data;
@@ -10,10 +14,6 @@ using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Priority;
 
@@ -31,20 +31,20 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public Test7BulkOperations()
         {
             var services = new ServiceCollection();
-            
+
             // Add logging (required by BulkOperationsRepositoryAsync)
             services.AddLogging();
-            
+
             // Configure in-memory database for testing
             services.AddDbContext<DataContext>(options =>
             {
                 options.UseInMemoryDatabase($"BulkOperationsTest_{Guid.NewGuid()}");
             });
             services.AddScoped<DbContext, DataContext>();
-            
+
             // Add bulk operations repository
             services.AddMvp24HoursBulkOperationsRepositoryAsync();
-            
+
             _serviceProvider = services.BuildServiceProvider();
         }
 
@@ -57,7 +57,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            
+
             var customers = GenerateCustomers(100);
 
             // Act
@@ -76,7 +76,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            
+
             var customers = GenerateCustomers(50);
             var progressReported = new List<(int processed, int total)>();
 
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            
+
             var customers = new List<Customer>();
 
             // Act
@@ -123,7 +123,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            
+
             // First insert some data
             var customers = GenerateCustomers(20);
             await repository.BulkInsertAsync(customers);
@@ -131,7 +131,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
 
             // Get the inserted customers
             var insertedCustomers = await repository.ListAsync();
-            
+
             // Modify them
             foreach (var customer in insertedCustomers)
             {
@@ -152,7 +152,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            
+
             var customers = new List<Customer>();
 
             // Act
@@ -174,7 +174,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            
+
             // First insert some data
             var customers = GenerateCustomers(15);
             await repository.BulkInsertAsync(customers);
@@ -197,7 +197,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            
+
             var customers = new List<Customer>();
 
             // Act
@@ -225,7 +225,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            
+
             // Insert test data with some active and some inactive
             var customers = GenerateCustomers(30);
             for (int i = 0; i < customers.Count; i++)
@@ -257,7 +257,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-            
+
             // Insert test data
             var customers = GenerateCustomers(25);
             for (int i = 0; i < customers.Count; i++)
@@ -281,7 +281,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<Customer>>();
-            
+
             // Act - Try to delete with impossible condition
             var rowsAffected = await repository.ExecuteDeleteAsync(c => c.Name == "NonExistentName12345");
 
@@ -299,7 +299,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-            
+
             var customers = GenerateCustomers(10);
 
             // Act
@@ -316,7 +316,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // Arrange
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-            
+
             // Insert test data first
             var customers = GenerateCustomers(5);
             await dbContext.BulkInsertAsync(customers);

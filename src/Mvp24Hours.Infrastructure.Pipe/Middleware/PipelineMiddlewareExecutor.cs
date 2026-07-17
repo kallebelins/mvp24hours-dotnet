@@ -3,13 +3,13 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Middleware
 {
@@ -40,9 +40,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             }
 
             var orderedMiddlewares = middlewares.OrderBy(m => m.Order).ToList();
-            
+
             Func<Task> next = coreAction;
-            
+
             // Build middleware chain from inside out
             for (int i = orderedMiddlewares.Count - 1; i >= 0; i--)
             {
@@ -92,9 +92,9 @@ namespace Mvp24Hours.Infrastructure.Pipe.Middleware
             }
 
             var orderedMiddlewares = middlewares.OrderBy(m => m.Order).ToList();
-            
+
             Action next = coreAction;
-            
+
             // Build middleware chain from inside out
             for (int i = orderedMiddlewares.Count - 1; i >= 0; i--)
             {

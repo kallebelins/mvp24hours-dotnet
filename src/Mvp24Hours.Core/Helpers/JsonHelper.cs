@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Converters;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
 
 namespace Mvp24Hours.Helpers
 {

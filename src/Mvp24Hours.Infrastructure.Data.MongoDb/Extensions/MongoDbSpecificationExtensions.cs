@@ -3,17 +3,17 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
 using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Specifications;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 #nullable enable
 
@@ -168,7 +168,7 @@ namespace Mvp24Hours.Extensions
         {
             var pipeline = collection.WithSpecification(specification).Limit(2);
             var results = await pipeline.ToListAsync(cancellationToken);
-            
+
             if (results.Count > 1)
             {
                 throw new InvalidOperationException("Sequence contains more than one element.");
