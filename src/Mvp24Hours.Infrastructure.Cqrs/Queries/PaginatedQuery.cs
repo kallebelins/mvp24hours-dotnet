@@ -149,9 +149,9 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Queries
     {
         #region [ Fields ]
 
-        private IList<Expression<Func<TEntity, dynamic>>> _orderByAscendingExpr;
-        private IList<Expression<Func<TEntity, dynamic>>> _orderByDescendingExpr;
-        private IList<Expression<Func<TEntity, dynamic>>> _navigationExpr;
+        private IList<Expression<Func<TEntity, dynamic>>>? _orderByAscendingExpr;
+        private IList<Expression<Func<TEntity, dynamic>>>? _orderByDescendingExpr;
+        private IList<Expression<Func<TEntity, dynamic>>>? _navigationExpr;
 
         #endregion
 

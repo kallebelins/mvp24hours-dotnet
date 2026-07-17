@@ -261,23 +261,30 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 - **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; recontagem dedup (§2) = **145 avisos em 8 códigos** (WebAPI deixou de aparecer na lista por projeto). Nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Códigos CS86xx permanecem no gate (globais — saem na §7). Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json).
 - **Testes:** `Mvp24Hours.WebAPI.Test` (`Category!=Integration`): **5 aprovados, 0 falhas**.
 
-[ ] 5.6 - Nullable em `Mvp24Hours.Infrastructure.Pipe` (após 4.1)
+[x] 5.6 - Nullable em `Mvp24Hours.Infrastructure.Pipe` (após 4.1)
 - **Padrão:** §1.A. Restante do Pipe após LOGGEN002 (4.1).
 - Rodar `Mvp24Hours.Application.Pipe.Test` / `Mvp24Hours.Infrastructure.Pipe.Test`.
 - `src/Mvp24Hours.Infrastructure.Pipe/**`
 - https://learn.microsoft.com/dotnet/csharp/nullable-references
+- **Concluído 2026-07-17:** build isolado do projeto (§2) acusou **0 avisos próprios** — nenhuma correção de código necessária. Conforme o baseline §3, todo o residual do Pipe (36 linhas) era **LOGGEN002**, já zerado na tarefa 4.1; o projeto **não tinha avisos nullable** (`Nullable=enable` herdado de [`Directory.Build.props`](../src/Directory.Build.props) e código já conforme). Os únicos 2 avisos do log são `CS8603` em `Mvp24Hours.Core/Helpers/ObjectHelper.cs` — projeto **referenciado**, tratado na 5.8. **Testes** `Mvp24Hours.Application.Pipe.Test` (`Category!=Integration`): **78 aprovados, 0 falhas** (não há projeto `Mvp24Hours.Infrastructure.Pipe.Test`; os 3 CS8618 vistos no log de teste são do *próprio projeto de teste*, escopo da Fase 6/6.5). Sem mudança de código ⇒ gate inalterado (permanece verde com `/p:TreatWarningsAsErrors=true`). Códigos CS86xx seguem no gate (globais — saem na §7).
 
-[ ] 5.7 - Nullable em `Mvp24Hours.Infrastructure.Cqrs` (~12 CS8618)
+[x] 5.7 - Nullable em `Mvp24Hours.Infrastructure.Cqrs` (~12 CS8618)
 - **Padrão:** §1.A.
 - Rodar `Mvp24Hours.Infrastructure.Cqrs.Test`.
 - `src/Mvp24Hours.Infrastructure.Cqrs/**`
 - https://learn.microsoft.com/dotnet/csharp/nullable-references
+- **Concluído 2026-07-17:** build isolado do projeto acusava **12 CS8618** (dedup 6), **todos** concentrados em `Queries/PaginatedQuery.cs` — os 3 campos de *backing* `_orderByAscendingExpr`, `_orderByDescendingExpr` e `_navigationExpr` de `PaginatedQuery<TEntity, TResponse>`. Eles **não** são setados no construtor: são inicializados *lazy* nos getters via `??= []` (`OrderByAscendingExpr`/`OrderByDescendingExpr`/`NavigationExpr`). Portanto o tipo honesto do campo é anulável (§1.A opção c): marcados `IList<Expression<Func<TEntity, dynamic>>>?`. Os getters permanecem retornando não-anulável (após o `??= []` o valor nunca é nulo). Sem ripple — os campos só são acessados pelos próprios getters. Build isolado do Cqrs: **CS8618 = 0** (os 2 CS8603 residuais do log vêm do projeto referenciado `Core/Helpers/ObjectHelper.cs:41`, tratado em 5.8).
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s)** (143 avisos, todos no gate; nenhum código novo escapou). Códigos CS86xx permanecem no gate (globais — saem na §7).
+- **Testes:** `Mvp24Hours.Infrastructure.Cqrs.Test` (`Category!=Integration`): **347 aprovados, 0 falhas** (os 3 CS8604 do log são do próprio projeto de teste, escopo da 6.5).
 
-[ ] 5.8 - Nullable em `Mvp24Hours.Core` (residual ~2)
+[x] 5.8 - Nullable em `Mvp24Hours.Core` (residual ~2)
 - **Padrão:** §1.A. Fechar o residual mínimo do Core.
 - Rodar `Mvp24Hours.Core.Test`.
 - `src/Mvp24Hours.Core/**`
 - https://learn.microsoft.com/dotnet/csharp/nullable-references
+- **Concluído 2026-07-17:** build isolado do projeto acusava **1 CS8603** (dedup 1; 2 linhas), em `Helpers/ObjectHelper.cs:41` — `ConvertToDynamic(object obj)` declara retorno **não-anulável** `dynamic`, mas `json.ToDeserialize<ExpandoObject>()` retorna `ExpandoObject?`. O contrato honesto é **não-nulo** (os chamadores em `JsonExtensions` e nos testes acessam propriedades dinâmicas do resultado; o `json` já cai em `"{}"` quando `obj` é nulo, sempre desserializando para um `ExpandoObject` vazio, nunca `null`). Aplicado §1.A/CS8603 (garantir não-nulo): `?? new ExpandoObject()` — mantém o retorno `dynamic` não-anulável sem supressão. Build isolado do Core: **0 aviso(s) / 0 erro(s)**. O CS8603 remanescente na solução (dedup 1) passou a ser só de **teste** (`WebRequestTest.cs:22`, escopo da Fase 6).
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s)**; recontagem dedup (§2) = **142 avisos em 8 códigos** (`Mvp24Hours.Core` deixou de aparecer na lista por projeto). Nenhum código novo fora do gate. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json). Códigos CS86xx permanecem no gate (globais — saem na §7). **Com a 5.8, a Fase 5 (nullable de produção) está concluída** — todo o residual nullable restante está nos projetos de teste (Fase 6).
+- **Testes:** `Mvp24Hours.Core.Test` (`Category!=Integration`): **788 aprovados, 0 falhas** (uma falha *flaky* isolada de concorrência não reproduziu em reexecuções).
 
 ---
 
