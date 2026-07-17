@@ -202,7 +202,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Equality operator.
         /// </summary>
-        public static bool operator ==(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator ==(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             if (left is null) return right is null;
             return left.Equals(right);
@@ -211,7 +211,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Inequality operator.
         /// </summary>
-        public static bool operator !=(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator !=(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             return !(left == right);
         }
@@ -230,7 +230,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Less than operator.
         /// </summary>
-        public static bool operator <(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator <(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             return left is null ? right is not null : left.CompareTo(right) < 0;
         }
@@ -238,7 +238,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Less than or equal operator.
         /// </summary>
-        public static bool operator <=(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator <=(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             return left is null || left.CompareTo(right) <= 0;
         }
@@ -246,7 +246,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Greater than operator.
         /// </summary>
-        public static bool operator >(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator >(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             return left is not null && left.CompareTo(right) > 0;
         }
@@ -254,7 +254,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Greater than or equal operator.
         /// </summary>
-        public static bool operator >=(Enumeration<TEnum> left, Enumeration<TEnum> right)
+        public static bool operator >=(Enumeration<TEnum>? left, Enumeration<TEnum>? right)
         {
             return left is null ? right is null : left.CompareTo(right) >= 0;
         }
@@ -266,7 +266,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Implicit conversion to int.
         /// </summary>
-        public static implicit operator int(Enumeration<TEnum> enumeration)
+        public static implicit operator int(Enumeration<TEnum>? enumeration)
         {
             return enumeration?.Value ?? 0;
         }
@@ -274,7 +274,7 @@ namespace Mvp24Hours.Core.Domain.Enumerations
         /// <summary>
         /// Implicit conversion to string.
         /// </summary>
-        public static implicit operator string(Enumeration<TEnum> enumeration)
+        public static implicit operator string(Enumeration<TEnum>? enumeration)
         {
             return enumeration?.Name ?? string.Empty;
         }

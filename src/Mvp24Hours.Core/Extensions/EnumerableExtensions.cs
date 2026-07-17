@@ -33,7 +33,7 @@ namespace Mvp24Hours.Extensions
                         && Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(ArrayList)));
         }
 
-        public static bool IsDictionary(this object Value)
+        public static bool IsDictionary(this object? Value)
         {
             if (Value == null) return false;
             return Value is IDictionary &&
@@ -56,7 +56,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool AnyOrNotNull<T>(this IEnumerable<T> source)
+        public static bool AnyOrNotNull<T>(this IEnumerable<T>? source)
         {
             if (source == null || !source.Any())
             {
@@ -71,7 +71,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool AnyOrNotNull<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        public static bool AnyOrNotNull<T>(this IEnumerable<T>? source, Func<T, bool> predicate)
         {
             if (source == null || !source.Any(predicate))
             {
@@ -116,7 +116,7 @@ namespace Mvp24Hours.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static bool ContainsKeySafe<TKey, TValue>(this IDictionary<TKey, TValue> source, TKey key)
+        public static bool ContainsKeySafe<TKey, TValue>(this IDictionary<TKey, TValue>? source, TKey key)
         {
             if (source != null && source.ContainsKey(key))
             {

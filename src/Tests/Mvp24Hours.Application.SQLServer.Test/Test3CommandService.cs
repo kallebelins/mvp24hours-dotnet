@@ -72,7 +72,8 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             Customer? customer = service.GetById(1).GetDataValue();
-            customer?.Name = "Test Updated";
+            Assert.NotNull(customer);
+            customer.Name = "Test Updated";
             service.Modify(customer);
             customer = service.GetById(1).GetDataValue();
             // assert
@@ -90,7 +91,8 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var paging = new PagingCriteria(1, 0);
             IList<Customer>? customers = service.List(paging)
                 .GetDataValue();
-            foreach (Customer? item in customers)
+            Assert.NotNull(customers);
+            foreach (Customer item in customers)
                 item.Active = false;
             service.Modify(customers);
             IBusinessResult<int> result = service.GetByCount(x => !x.Active);
@@ -107,8 +109,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             Customer? customer = service.GetById(1).GetDataValue();
+            Assert.NotNull(customer);
             service.RemoveById(customer.Id);
-            IBusinessResult<Customer> result = service.GetById(customer.Id);
+            IBusinessResult<Customer?> result = service.GetById(customer.Id);
             // assert
             Assert.Null(result.GetDataValue());
             // dispose
@@ -122,6 +125,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             IList<Customer>? customers = service.List().Data;
+            Assert.NotNull(customers);
             service.Remove(customers);
             IBusinessResult<int> result = service.ListCount();
             // assert

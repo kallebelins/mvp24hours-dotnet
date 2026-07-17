@@ -364,7 +364,7 @@ public class EntityIdTest
         var id = new TestStringId("ABC-123");
 
         // Act
-        string result = id;
+        string? result = id;
 
         // Assert
         result.Should().Be("ABC-123");

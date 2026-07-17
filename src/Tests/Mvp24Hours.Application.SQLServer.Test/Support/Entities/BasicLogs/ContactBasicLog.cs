@@ -27,7 +27,7 @@ namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs
         public ContactType Type { get; set; }
 
         [Required]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Required]
         public bool Active { get; set; }

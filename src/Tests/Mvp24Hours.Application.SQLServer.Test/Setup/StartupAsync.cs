@@ -64,7 +64,8 @@ namespace Mvp24Hours.Application.SQLServer.Test.Setup
 
             services.AddDbContext<DataContext>(options =>
                 options
-                    .UseSqlServer(ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                    .UseSqlServer((ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                        ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
                         .Format(StringHelper.GenerateKey(10))));
 #endif
 

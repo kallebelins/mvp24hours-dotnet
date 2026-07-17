@@ -33,6 +33,7 @@ public class ObjectHelperTest
 
         // Act
         Person? clone = ObjectHelper.Clone(original);
+        Assert.NotNull(clone);
         clone.Name = "Modified";
         clone.Age = 99;
 
@@ -80,6 +81,7 @@ public class ObjectHelperTest
         Company? clone = ObjectHelper.Clone(original);
 
         // Assert
+        Assert.NotNull(clone);
         clone.Employees.Should().HaveCount(2);
         clone.Employees[0].Should().NotBeSameAs(original.Employees[0]);
         clone.Employees[0].Name.Should().Be("John");

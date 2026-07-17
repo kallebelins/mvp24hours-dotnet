@@ -19,7 +19,7 @@ namespace Mvp24Hours.Extensions
             return Guid.TryParse(oid, out Guid id) ? id : Guid.Empty;
         }
 
-        public static bool IsValidGuid(this string oid)
+        public static bool IsValidGuid(this string? oid)
         {
             if (string.IsNullOrEmpty(oid))
             {

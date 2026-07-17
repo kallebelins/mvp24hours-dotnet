@@ -71,7 +71,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var spec = new ActiveCustomerSpecification();
 
             // act
-            var result = spec.IsSatisfiedBy(null);
+            var result = spec.IsSatisfiedBy(null!); // deliberate null input: verifies null-entity handling
 
             // assert
             Assert.False(result);
@@ -312,7 +312,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         public void Specification_EmptySearchTerm_Throws()
         {
             // act & assert
-            Assert.Throws<ArgumentNullException>(() => new CustomerByNameSpecification(null));
+            Assert.Throws<ArgumentNullException>(() => new CustomerByNameSpecification(null!)); // deliberate null input: verifies guard throws
         }
 
         [Fact, Priority(41)]

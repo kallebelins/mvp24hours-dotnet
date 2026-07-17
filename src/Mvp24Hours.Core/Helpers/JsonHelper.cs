@@ -35,7 +35,7 @@ namespace Mvp24Hours.Helpers
         /// <summary>
         /// 
         /// </summary>
-        public static string Serialize<T>(T dto, JsonSerializerSettings? jsonSerializerSettings = null)
+        public static string Serialize<T>(T? dto, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             return JsonConvert.SerializeObject(dto, jsonSerializerSettings ?? JsonDefaultSettings);
         }

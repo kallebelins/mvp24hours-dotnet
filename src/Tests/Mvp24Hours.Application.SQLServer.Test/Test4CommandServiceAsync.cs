@@ -73,6 +73,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
             Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
+            Assert.NotNull(customer);
             customer.Name = "Test Updated";
             await service.ModifyAsync(customer);
             customer = await service.GetByIdAsync(1).GetDataValueAsync();
@@ -90,7 +91,8 @@ namespace Mvp24Hours.Application.SQLServer.Test
             var paging = new PagingCriteria(1, 0);
             IList<Customer>? customers = await service.ListAsync(paging)
                 .GetDataValueAsync();
-            foreach (Customer? item in customers)
+            Assert.NotNull(customers);
+            foreach (Customer item in customers)
                 item.Active = false;
             await service.ModifyAsync(customers);
             IBusinessResult<int> result = await service.GetByCountAsync(x => !x.Active);
@@ -107,8 +109,9 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
             Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
+            Assert.NotNull(customer);
             await service.RemoveByIdAsync(customer.Id);
-            IBusinessResult<Customer> result = await service.GetByIdAsync(customer.Id);
+            IBusinessResult<Customer?> result = await service.GetByIdAsync(customer.Id);
             // assert
             Assert.Null(result.GetDataValue());
             // dispose
@@ -122,6 +125,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
             IList<Customer>? customers = await service.ListAsync().GetDataValueAsync();
+            Assert.NotNull(customers);
             await service.RemoveAsync(customers);
             IBusinessResult<int> result = await service.ListCountAsync();
             // assert

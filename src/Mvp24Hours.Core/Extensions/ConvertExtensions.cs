@@ -95,7 +95,7 @@ namespace Mvp24Hours.Extensions
             return DateTime.TryParse(value, info ?? new CultureInfo("en-US"), out DateTime result) ? result : defaultValue;
         }
 
-        public static string NullSafe(this string target)
+        public static string NullSafe(this string? target)
         {
             return (target ?? string.Empty).Trim();
         }

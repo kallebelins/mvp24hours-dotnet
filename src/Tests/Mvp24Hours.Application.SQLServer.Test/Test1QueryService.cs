@@ -167,7 +167,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
             // arrange
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             // act
-            IBusinessResult<Customer> result = service.GetById(1);
+            IBusinessResult<Customer?> result = service.GetById(1);
             // assert
             Assert.NotNull(result.GetDataValue());
         }
@@ -178,9 +178,11 @@ namespace Mvp24Hours.Application.SQLServer.Test
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(1, 0, navigation: new List<string> { "Contacts" });
             // act
-            IBusinessResult<Customer> result = service.GetById(1, paging);
+            IBusinessResult<Customer?> result = service.GetById(1, paging);
             // assert
-            Assert.True(result.GetDataValue().Contacts.AnyOrNotNull());
+            Customer? data = result.GetDataValue();
+            Assert.NotNull(data);
+            Assert.True(data.Contacts.AnyOrNotNull());
         }
         [Fact, Priority(14)]
         public void GetFilterCustomerGetBy()

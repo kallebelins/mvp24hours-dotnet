@@ -293,11 +293,30 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 > **Estratégia:** mesmo fluxo (§2) e padrão (§1.A). Em testes é comum CS8618 em fixtures/DTOs e CS8604 em setups; preferir inicialização com default a `= null!`. Muitos avisos somem "de graça" após corrigir as assinaturas de produção (§5) — por isso os testes vêm **depois**.
 > **ADO:** US a criar.
 
-[ ] 6.1 - Nullable em `Mvp24Hours.Application.SQLServer.Test` (~44)
+[x] 6.1 - Nullable em `Mvp24Hours.Application.SQLServer.Test` (~44)
 - **Padrão:** §1.A. `src/Tests/Mvp24Hours.Application.SQLServer.Test/**`
+- **Concluído 2026-07-17:** build isolado do projeto foi de **37 → 0** avisos próprios (os 3 residuais do log são `CS0618` em `Infrastructure.Data.EFCore/Extensions/ResilienceDbContextExtensions.cs:477/478/480` — `MvpExecutionStrategy` auto-obsoleto do projeto referenciado, conhecidos da 4.8, a sair na Fase 7). Correção **na causa/guarda**, por família:
+  - **CS8618 (6, entidades de teste):** propriedades `string` obrigatórias (`Name`/`Description`) de `Customer`/`Contact`/`CustomerBasic`/`ContactBasic`/`CustomerBasicLog`/`ContactBasicLog` sem inicialização → default seguro `= string.Empty;` (§1.A opção b / nota §6 "preferir default a `= null!`").
+  - **CS8619 (12, tipo declarado):** após a 5.2, `GetById(Async)` de entidade retorna `IBusinessResult<TEntity?>`; os locais declarados `IBusinessResult<TEntity> result = service.GetById(...)` (Test1QueryService/BasicService/BasicLogService/LogService/Test2QueryServiceAsync/Test3/Test4) alinhados para `IBusinessResult<TEntity?>`.
+  - **CS8602/CS8604 (deref/arg possivelmente nulo em comandos):** entidade/lista obtida por `GetById`/`List` (dados semeados) é pré-condição do teste — adicionado `Assert.NotNull(...)` (guarda `[NotNull]` do xUnit 2.9.3 estreita a nulidade, §1.A/CS8602-CS8604) antes de `Modify`/`Remove`/`RemoveById`/deref, em `Test3CommandService`/`Test4CommandServiceAsync`; nos testes de navegação, `data = result.GetDataValue(); Assert.NotNull(data);` antes de `data.Contacts...`.
+  - **CS8604 (setup):** `AppSettings.GetConnectionString("DataContext")` (anulável) → `?? throw new InvalidOperationException(...)` em `Startup`/`StartupAsync` (§1.A/CS8604 obrigatório).
+  - **CS8625 (2, testes de null deliberado):** `spec.IsSatisfiedBy(null!)` e `new CustomerByNameSpecification(null!)` em `Test8SpecificationPattern` — supressão `null!` **com comentário** justificando que o input nulo é intencional (verificar comportamento/guarda), §1 exceção.
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s)**; recontagem dedup (§2) = **108 avisos em 8 códigos** (`Mvp24Hours.Application.SQLServer.Test` deixou de aparecer na lista por projeto). Nenhum código novo fora do gate. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json). Códigos CS86xx permanecem no gate (globais — saem na §7).
+- **Testes** (Debug/InMemory, `Category!=Integration`): **232 aprovados, 4 ignorados, 0 falhas**.
 
-[ ] 6.2 - Nullable em `Mvp24Hours.Core.Test` (~38)
+[x] 6.2 - Nullable em `Mvp24Hours.Core.Test` (~38)
 - **Padrão:** §1.A. `src/Tests/Mvp24Hours.Core.Test/**`
+- **Concluído 2026-07-17:** build isolado do projeto foi de **18 → 0** avisos próprios (dedup). Todos os avisos eram **testes de null deliberado** (`*_WithNull_*`) e derefs de resultados de teste. Correção **na causa** — as APIs de produção do `Mvp24Hours.Core` exercitadas por esses testes *declaravam parâmetros não-anuláveis mas já tratavam null internamente* (contrato desonesto). Alinhadas as assinaturas ao comportamento real (§1.A/CS8604 opção "tornar o parâmetro `T?` se ele aceita nulo"), seguindo o estilo que o próprio código já usava (`EnumerableExtensions.IsList`/`AnySafe` já eram anuláveis):
+  - **`StringExtensions`:** `Truncate`/`Reticence`/`SqlSafe` → `this string? text` (corpos já faziam `text ?? string.Empty` / `text.NullSafe()`).
+  - **`ConvertExtensions.NullSafe`:** `this string? target` (corpo já `target ?? string.Empty`; necessário pelo ripple do `SqlSafe`).
+  - **`EnumerableExtensions`:** `IsDictionary(this object? Value)`, `AnyOrNotNull<T>(this IEnumerable<T>? source)` (ambos overloads), `ContainsKeySafe<TKey,TValue>(this IDictionary<TKey,TValue>? source, …)` (todos com guarda `== null`/`!= null` no corpo).
+  - **`GuidExtensions.IsValidGuid`:** `this string? oid` (corpo `string.IsNullOrEmpty(oid)`).
+  - **`Enumeration<TEnum>`:** operadores `==`/`!=`/`<`/`<=`/`>`/`>=` e conversões implícitas (`int`/`string`) → operandos/parâmetro anuláveis (`Enumeration<TEnum>?`), consistente com os corpos que já testam `left is null`/`enumeration?.`.
+  - **`JsonHelper.Serialize<T>`:** `T? dto` (serializa null → `"null"`), resolve o CS8625 do teste `Serialize_WithNull_ReturnsNull`.
+- **Lado do teste (guarda/alvo `T?`, §1.A):** `Assert.NotNull(...)` antes de deref de resultados de `Deserialize`/`Clone` (`JsonHelperTest.cs:197`, `ObjectHelperTest.cs:36/83`); `string? result = id;` na conversão implícita de `EntityId` (`EntityIdTest.cs:367`, CS8600 → alvo anulável). Nenhuma supressão `null!` nova.
+- **Bônus:** por corrigir a **causa** nas APIs de produção, o CS8604 desses mesmos helpers zerou também nos demais projetos de teste que os consomem — dedup da solução caiu de **108 → 90** avisos (8 códigos, todos CS86xx + CS0618 no gate).
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json) (`Mvp24Hours.Core.Test` deixou de aparecer na lista por projeto). Códigos CS86xx permanecem no gate (globais — saem na §7).
+- **Testes:** `Mvp24Hours.Core.Test` (`Category!=Integration`): **788 aprovados, 0 falhas**.
 
 [ ] 6.3 - Nullable em `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (parte nullable, após 4.3)
 - **Padrão:** §1.A. `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/**`

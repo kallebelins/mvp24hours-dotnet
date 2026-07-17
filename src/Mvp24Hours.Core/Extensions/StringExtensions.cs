@@ -24,13 +24,13 @@ namespace Mvp24Hours.Extensions
             return ReplaceEnd(source, value, string.Empty);
         }
 
-        public static string Truncate(this string text, int size)
+        public static string Truncate(this string? text, int size)
         {
             string value = text ?? string.Empty;
             return value.Length > size ? value[..size] : value;
         }
 
-        public static string Reticence(this string text, int size)
+        public static string Reticence(this string? text, int size)
         {
             string value = text ?? string.Empty;
             return value.Length > size ? value[..size] + "..." : value;
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Extensions
             return text.Substring(start, length);
         }
 
-        public static string SqlSafe(this string text)
+        public static string SqlSafe(this string? text)
         {
             var safeText = text.NullSafe();
 

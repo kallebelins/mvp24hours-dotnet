@@ -194,6 +194,7 @@ public class JsonHelperTest
         Person? deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
+        Assert.NotNull(deserialized);
         deserialized.Name.Should().Be("JosÃ© ä¸–ç•Œ ðŸŒ");
     }
 
