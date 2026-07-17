@@ -43,13 +43,17 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         protected DbContext? DbContext { get; private set; }
         private readonly Dictionary<Type, object> repositories;
-        private readonly IServiceProvider serviceProvider;
+        private readonly IServiceProvider? serviceProvider;
 
         public IRepositoryAsync<T> GetRepository<T>()
             where T : class, IEntityBase
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
+                if (serviceProvider is null)
+                {
+                    throw new InvalidOperationException("This UnitOfWork instance was created without a service provider; repositories must be supplied explicitly.");
+                }
                 IRepositoryAsync<T> repo = serviceProvider.GetService<IRepositoryAsync<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 this.repositories.Add(typeof(T), repo);

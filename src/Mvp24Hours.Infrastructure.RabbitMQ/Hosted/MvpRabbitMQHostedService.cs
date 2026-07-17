@@ -19,7 +19,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
     public class MvpRabbitMQHostedService : IHostedService
     {
         private readonly TimerCallback callback;
-        private readonly object state;
+        private readonly object? state;
         private readonly TimeSpan dueTime;
         private readonly TimeSpan period;
 

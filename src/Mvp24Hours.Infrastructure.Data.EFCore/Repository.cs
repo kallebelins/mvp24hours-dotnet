@@ -190,7 +190,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
             _logger?.LogDebug("Repository: LoadRelation started");
             try
             {
-                this.dbContext.Entry(entity).Reference(propertyExpression).Load();
+                this.dbContext.Entry(entity).Reference(Expression.Lambda<Func<T, TProperty?>>(propertyExpression.Body, propertyExpression.Parameters)).Load();
             }
             finally { _logger?.LogDebug("Repository: LoadRelation finished"); }
         }

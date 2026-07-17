@@ -27,7 +27,7 @@ namespace Mvp24Hours.WebAPI.Middlewares
                 context.Response.Headers.Append("Access-Control-Allow-Credentials", options.Credentials);
             }
 
-            string originCors, headersCors, methodsCors;
+            string? originCors, headersCors, methodsCors;
 
             if (options.AllowAll)
             {

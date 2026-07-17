@@ -222,23 +222,44 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 - **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; nenhum código novo fora do gate (12 códigos residuais, todos em `MvpResidualWarnings`); `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Códigos CS86xx permanecem no gate (globais — saem na §7).
 - **Testes (Debug, `Category!=Integration`):** `Mvp24Hours.Application.Test` **264 aprovados/0 falhas**; `Mvp24Hours.Application.SQLServer.Test` **232 aprovados, 4 ignorados, 0 falhas**; `Mvp24Hours.Application.PostgreSql.Test` **96 aprovados/0 falhas** (integração por provedor requer Docker).
 
-[ ] 5.3 - Nullable em `Mvp24Hours.Infrastructure.Data.EFCore` (~14 CS8618 + demais, após 4.2)
+[x] 5.3 - Nullable em `Mvp24Hours.Infrastructure.Data.EFCore` (~14 CS8618 + demais, após 4.2)
 - **Padrão:** §1.A. Restante do EFCore após a migração de SqlClient (4.2). POCOs/entidades de mapeamento ⇒ `= null!` com comentário `// set by EF Core` quando aplicável; opções ⇒ `required`/default.
 - Rodar os testes de EFCore (grupo B + integração com Docker).
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/**`
 - https://learn.microsoft.com/ef/core/miscellaneous/nullable-reference-types
+- **Concluído 2026-07-17:** build isolado do projeto foi de **27 → 0** avisos próprios (os residuais do log vêm de projetos referenciados — `Core/ObjectHelper` CS8603, tratado em 5.8 — mais os 3 CS0618 do `MvpExecutionStrategy` auto-obsoleto em `ResilienceDbContextExtensions.cs`, conhecidos da 4.8/fora de escopo, a sair na Fase 7). Correção **na causa**, por família:
+  - **UoW `serviceProvider` (CS8618×4):** `UnitOfWork`, `UnitOfWorkAsync`, `UnitOfWorkWithEvents`, `UnitOfWorkWithEventsAsync` só setam `serviceProvider` no ctor `[ActivatorUtilitiesConstructor]`; campo marcado `IServiceProvider?` + guarda em `GetRepository` (`InvalidOperationException` se criado sem provider), alinhado ao padrão já aplicado no MongoDb (5.1).
+  - **`Mvp24HoursContext` (CS8618×2):** `EntityLogBy` (virtual, opcional — pode não haver usuário) → `object?`; ripple CS8600×2 nos casts `(dynamic)EntityLogBy` → `(dynamic?)EntityLogBy` em `ApplyLogRules`.
+  - **`DatabaseExtensions` seeder (CS8620/CS8631×4 cada + CS8629×2):** `context` obtido por `GetService<TContext>()` (anulável) era passado a `InvokeSeeder*<TContext>` que exige `TContext` não-nulo — como o seeding **exige** o contexto (pré-condição), trocado por `GetRequiredService<TContext>()`; `retry.Value` → `retry ?? 0`.
+  - **`Reference` (CS8620×4):** `EntityEntry<T>.Reference<TProperty>` espera `Expression<Func<T, TProperty?>>` (nav de referência é opcional), mas `LoadRelation` recebe `Expression<Func<T, TProperty>>` (contrato `IQueryRelation`, compartilhado com MongoDb/Caching/fakes — **fora de escopo** alterar). Mantido local ao EFCore reconstruindo a expressão com a anotação correta: `Expression.Lambda<Func<T, TProperty?>>(propertyExpression.Body, propertyExpression.Parameters)` (mesmo corpo, fortemente tipado, sem supressão) em `Repository`/`ReadOnlyRepository`/`RepositoryAsync`/`ReadOnlyRepositoryAsync`.
+  - **`EncryptedValueConverters` (CS8620×2 + CS8618×1):** `HasEncryptedConversion(PropertyBuilder<byte[]>)` e `HasEncryptedJsonConversion<T>(PropertyBuilder<T>)` alinhados ao tipo-modelo anulável dos conversores (`ValueConverter<byte[]?,…>`/`ValueConverter<T?,…>`) → `PropertyBuilder<byte[]?>`/`PropertyBuilder<T?>`; `EncryptedAttribute.BlindIndexPropertyName` (opcional, "If not specified…") → `string?`.
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; nenhum código novo fora do gate (todos os residuais são CS86xx + CS0618, já em `MvpResidualWarnings`); `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Códigos CS86xx permanecem no gate (globais — saem na §7).
+- **Testes (Debug, `Category!=Integration` / InMemory grupo B):** `Mvp24Hours.Application.SQLServer.Test` **232 aprovados, 4 ignorados, 0 falhas**; `Mvp24Hours.Application.PostgreSql.Test` **96 aprovados, 0 falhas** (integração por provedor requer Docker).
 
-[ ] 5.4 - Nullable em `Mvp24Hours.Infrastructure.RabbitMQ` (~18 CS8618 + demais, após 4.1)
+[x] 5.4 - Nullable em `Mvp24Hours.Infrastructure.RabbitMQ` (~18 CS8618 + demais, após 4.1)
 - **Padrão:** §1.A. Restante do RabbitMQ após LOGGEN002 (4.1). Atenção a handlers/consumers (CS8622) e opções de conexão (CS8618).
 - Rodar `Mvp24Hours.Application.RabbitMQ.Test` (Docker) quando disponível.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/**`
 - https://learn.microsoft.com/dotnet/csharp/nullable-references
+- **Concluído 2026-07-17:** build isolado do projeto foi de **22 → 0** avisos próprios (os 14 residuais do log vêm de projetos referenciados — `Cqrs/PaginatedQuery` CS8618 e `Core/ObjectHelper` CS8603, tratados em 5.7/5.8). Correção **na causa**, por família:
+  - **CS8622 (event handlers, 6 assinaturas):** os handlers `OnConnectionShutdown`/`OnCallbackException`/`OnConnectionBlocked` em `MvpRabbitMQConnection` declaravam `object sender`, divergindo do delegado `EventHandler<T>` (`object? sender`). Alinhados para `object? sender` (assinatura da base, §1.A/CS8622). Zerou CS8622 **na solução inteira** (14 → 0; permanece no gate até a §7).
+  - **`MvpRabbitMQConnection._connection` (CS8618):** só é atribuído em `TryConnect()` (não no ctor) e o ciclo de vida já é guardado por `IsConnected`/checagens de nulo → `IConnection?`. Ripple resolvido **sem supressão**: narrowing explícito em `CreateModel` (`if (!IsConnected || _connection is null) throw`), no bloco de assinatura de eventos (`if (IsConnected && _connection is not null)`) e no `Dispose` (unsubscribe/`Dispose` envoltos em `if (_connection is not null)`).
+  - **Opções de configuração (`RabbitMQOptions`, CS8618×6):** campos obrigatórios com "não-setado" natural = vazio → default seguro (`RoutingKey`/`QueueName` = `string.Empty;`, consistente com os `?? string.Empty`/`.HasValue()` já usados no `MvpRabbitMQClient`); campos genuinamente opcionais (driver aceita ausência) → anuláveis (`ExchangeArguments`/`QueueArguments` `Dictionary<string, object>?`, alinhado ao `?? []`; `BasicProperties` `IBasicProperties?`, alinhado ao `?? properties`).
+  - **`RabbitMQConnectionOptions.Configuration` (CS8618):** genuinamente opcional (usado com `!= null`/`??=` nos builders) → `RabbitMQConnection?`.
+  - **`RabbitMQHostedOptions` (CS8618×2):** `Callback` (`TimerCallback` exigido pelo `new Timer(...)`) → `required` (§1.A — consumidor deve fornecer); `State` (estado do timer, aceita nulo) → `object?`; campo `state` do `MvpRabbitMQHostedService` alinhado para `object?`.
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; recontagem dedup (§2) = **150 avisos em 8 códigos** (CS8618 34, CS8604 34, CS8619 32, CS8602 29, CS8600 11, CS0618 4, CS8625 4, CS8603 2). Nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. CS86xx (incl. CS8622, agora 0 na solução) permanecem no gate — saem na §7.
+- **Testes:** `Mvp24Hours.Application.RabbitMQ.Test` compila contra as novas assinaturas (0 erro); todos os seus testes são `Category=Integration` (exigem RabbitMQ/Docker), sem testes unit para executar — a compilação verde é o sinal de não-regressão.
 
-[ ] 5.5 - Nullable em `Mvp24Hours.WebAPI` (~10 CS8618 + demais, após 4.1/4.5)
+[x] 5.5 - Nullable em `Mvp24Hours.WebAPI` (~10 CS8618 + demais, após 4.1/4.5)
 - **Padrão:** §1.A. Restante do WebAPI após LOGGEN002 (4.1) e ASPDEPR006 (4.5). Middlewares/filtros/opções.
 - Rodar `Mvp24Hours.WebAPI.Test`.
 - `src/Mvp24Hours.WebAPI/**`
 - https://learn.microsoft.com/dotnet/csharp/nullable-references
+- **Concluído 2026-07-17:** build isolado do projeto foi de **5 → 0** avisos próprios (os 7 residuais do log vêm de projetos referenciados — `Cqrs/PaginatedQuery` CS8618×6 e `Core/ObjectHelper` CS8603, tratados em 5.7/5.8). Todos os 5 eram CS8618, em 2 famílias:
+  - **`CorsOptions` (CS8618×4):** `Origin`/`Headers`/`Methods`/`Credentials` são valores de CORS **genuinamente opcionais** — cada acesso em `CorsMiddleware` já é guardado por `.HasValue()` e recai em `"*"` quando `AllowAll`. Tornados anuláveis (`string?`, §1.A opção c). Ripple resolvido tornando os locais `originCors`/`headersCors`/`methodsCors` também `string?` (evita CS8600 no ramo `else` que copia as opções).
+  - **`ModelBinder<T>.Data` (CS8618×1):** sempre preenchido pela *factory* `BindAsync` (`data ?? new T()`), nunca nulo. Como a constraint `IExtensionBinder<ModelBinder<T>>` (`where T : class, new()`) **exige** ctor público sem-parâmetro, não é possível setar só via ctor privado; inicializado com default seguro `= new();` (§1.A opção b), reaproveitando a constraint `new()` de `T`.
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; recontagem dedup (§2) = **145 avisos em 8 códigos** (WebAPI deixou de aparecer na lista por projeto). Nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Códigos CS86xx permanecem no gate (globais — saem na §7). Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json).
+- **Testes:** `Mvp24Hours.WebAPI.Test` (`Category!=Integration`): **5 aprovados, 0 falhas**.
 
 [ ] 5.6 - Nullable em `Mvp24Hours.Infrastructure.Pipe` (após 4.1)
 - **Padrão:** §1.A. Restante do Pipe após LOGGEN002 (4.1).

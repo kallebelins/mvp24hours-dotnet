@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
         private readonly DbContext _dbContext;
         private readonly Dictionary<Type, object> _repositories;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider? _serviceProvider;
         private readonly IDomainEventDispatcherEFCore? _eventDispatcher;
         private readonly ILogger<UnitOfWorkWithEventsAsync>? _logger;
 
@@ -131,6 +131,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!_repositories.ContainsKey(typeof(T)))
             {
+                if (_serviceProvider is null)
+                {
+                    throw new InvalidOperationException("This UnitOfWork instance was created without a service provider; repositories must be supplied explicitly.");
+                }
                 _repositories.Add(typeof(T), _serviceProvider.GetService<IRepositoryAsync<T>>()!);
             }
             return (_repositories[typeof(T)] as IRepositoryAsync<T>)!;

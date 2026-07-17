@@ -20,7 +20,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
         private readonly IConnectionFactory _connectionFactory;
         private readonly RabbitMQConnectionOptions _options;
         private readonly ILogger<MvpRabbitMQConnection>? _logger;
-        private IConnection _connection;
+        private IConnection? _connection;
         private bool _disposed;
         private readonly object sync_root = new();
 
@@ -68,7 +68,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         public IModel CreateModel()
         {
-            if (!IsConnected)
+            if (!IsConnected || _connection is null)
             {
                 throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
             }
@@ -105,7 +105,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                     }
                 });
 
-                if (IsConnected)
+                if (IsConnected && _connection is not null)
                 {
                     _connection.ConnectionShutdown += OnConnectionShutdown;
                     _connection.CallbackException += OnCallbackException;
@@ -126,7 +126,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
 
         #region [ Events ]
 
-        private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+        private void OnConnectionBlocked(object? sender, ConnectionBlockedEventArgs e)
         {
             if (_disposed) return;
 
@@ -135,7 +135,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             TryConnect();
         }
 
-        void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+        void OnCallbackException(object? sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
 
@@ -144,7 +144,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
             TryConnect();
         }
 
-        void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+        void OnConnectionShutdown(object? sender, ShutdownEventArgs reason)
         {
             if (_disposed) return;
 
@@ -172,10 +172,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ
                 _disposed = true;
                 try
                 {
-                    _connection.ConnectionShutdown -= OnConnectionShutdown;
-                    _connection.CallbackException -= OnCallbackException;
-                    _connection.ConnectionBlocked -= OnConnectionBlocked;
-                    _connection.Dispose();
+                    if (_connection is not null)
+                    {
+                        _connection.ConnectionShutdown -= OnConnectionShutdown;
+                        _connection.CallbackException -= OnCallbackException;
+                        _connection.ConnectionBlocked -= OnConnectionBlocked;
+                        _connection.Dispose();
+                    }
                 }
                 catch (IOException ex)
                 {

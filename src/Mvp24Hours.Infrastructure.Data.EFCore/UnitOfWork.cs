@@ -44,7 +44,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         #region [ Properties ]
 
         protected DbContext DbContext { get; private set; }
-        private readonly IServiceProvider serviceProvider;
+        private readonly IServiceProvider? serviceProvider;
         private readonly ILogger<UnitOfWork>? _logger;
 
         readonly Dictionary<Type, object> repositories;
@@ -54,6 +54,10 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         {
             if (!this.repositories.ContainsKey(typeof(T)))
             {
+                if (serviceProvider is null)
+                {
+                    throw new InvalidOperationException("This UnitOfWork instance was created without a service provider; repositories must be supplied explicitly.");
+                }
                 IRepository<T> repository = serviceProvider.GetService<IRepository<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 this.repositories.Add(typeof(T), repository);

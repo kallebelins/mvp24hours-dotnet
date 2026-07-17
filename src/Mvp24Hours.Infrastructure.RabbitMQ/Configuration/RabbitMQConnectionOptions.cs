@@ -11,7 +11,7 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration
     public sealed class RabbitMQConnectionOptions
     {
         public string ConnectionString { get; set; } = "amqp://guest:guest@localhost:5672";
-        public RabbitMQConnection Configuration { get; set; }
+        public RabbitMQConnection? Configuration { get; set; }
         public int RetryCount { get; set; } = 3;
         public bool DispatchConsumersAsync { get; set; } = true;
     }

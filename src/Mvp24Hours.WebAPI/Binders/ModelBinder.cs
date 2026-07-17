@@ -49,7 +49,7 @@ namespace Mvp24Hours.WebAPI.Binders
         /// <summary>
         /// Gets the bound data model.
         /// </summary>
-        public T Data { get; private set; }
+        public T Data { get; private set; } = new();
 
         /// <summary>
         /// Gets the binding exception, if any occurred during binding.

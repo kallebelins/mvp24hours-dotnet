@@ -11,8 +11,8 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration
     [Serializable]
     public sealed class RabbitMQHostedOptions
     {
-        public TimerCallback Callback { get; set; }
-        public object State { get; set; }
+        public required TimerCallback Callback { get; set; }
+        public object? State { get; set; }
         public TimeSpan DueTime { get; set; } = TimeSpan.Zero;
         public TimeSpan Period { get; set; } = TimeSpan.FromSeconds(3);
     }

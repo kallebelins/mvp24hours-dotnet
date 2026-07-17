@@ -203,8 +203,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
         /// <param name="builder">The property builder.</param>
         /// <param name="encryptionProvider">The extended encryption provider.</param>
         /// <returns>The property builder for chaining.</returns>
-        public static PropertyBuilder<byte[]> HasEncryptedConversion(
-            this PropertyBuilder<byte[]> builder,
+        public static PropertyBuilder<byte[]?> HasEncryptedConversion(
+            this PropertyBuilder<byte[]?> builder,
             IExtendedEncryptionProvider encryptionProvider)
         {
             return builder.HasConversion(new EncryptedBinaryConverter(encryptionProvider));
@@ -217,8 +217,8 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
         /// <param name="builder">The property builder.</param>
         /// <param name="encryptionProvider">The encryption provider.</param>
         /// <returns>The property builder for chaining.</returns>
-        public static PropertyBuilder<T> HasEncryptedJsonConversion<T>(
-            this PropertyBuilder<T> builder,
+        public static PropertyBuilder<T?> HasEncryptedJsonConversion<T>(
+            this PropertyBuilder<T?> builder,
             IEncryptionProvider encryptionProvider) where T : class
         {
             return builder.HasConversion(new EncryptedJsonConverter<T>(encryptionProvider));
@@ -351,7 +351,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Converters
         /// Gets or sets the name of the blind index property.
         /// If not specified, defaults to "{PropertyName}Index".
         /// </summary>
-        public string BlindIndexPropertyName { get; set; }
+        public string? BlindIndexPropertyName { get; set; }
     }
 }
 

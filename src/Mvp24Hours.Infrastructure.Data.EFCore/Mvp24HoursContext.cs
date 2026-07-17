@@ -104,7 +104,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                     if (hasUserBy)
                     {
-                        e.CreatedBy = (dynamic)EntityLogBy;
+                        e.CreatedBy = (dynamic?)EntityLogBy;
                         e.ModifiedBy = null;
                         e.RemovedBy = null;
                     }
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
 
                         if (hasUserBy)
                         {
-                            e.ModifiedBy = (dynamic)EntityLogBy;
+                            e.ModifiedBy = (dynamic?)EntityLogBy;
                         }
                     }
                 }
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         /// <summary>
         /// Gets the value of the user logged in the context or logged into the database
         /// </summary>
-        public virtual object EntityLogBy { get; }
+        public virtual object? EntityLogBy { get; }
 
         #endregion
     }

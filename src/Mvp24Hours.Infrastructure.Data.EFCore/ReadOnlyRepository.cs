@@ -151,7 +151,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public void LoadRelation<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression)
             where TProperty : class
         {
-            dbContext.Entry(entity).Reference(propertyExpression).Load();
+            dbContext.Entry(entity).Reference(Expression.Lambda<Func<T, TProperty?>>(propertyExpression.Body, propertyExpression.Parameters)).Load();
         }
 
         /// <inheritdoc />

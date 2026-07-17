@@ -15,13 +15,13 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Configuration
     {
         public string Exchange { get; set; } = "amq.direct";
         public MvpRabbitMQExchangeType ExchangeType { get; set; } = MvpRabbitMQExchangeType.direct;
-        public string RoutingKey { get; set; }
-        public string QueueName { get; set; }
+        public string RoutingKey { get; set; } = string.Empty;
+        public string QueueName { get; set; } = string.Empty;
         public bool Durable { get; set; } = true;
         public bool Exclusive { get; set; }
         public bool AutoDelete { get; set; }
-        public Dictionary<string, object> ExchangeArguments { get; set; }
-        public Dictionary<string, object> QueueArguments { get; set; }
-        public IBasicProperties BasicProperties { get; set; }
+        public Dictionary<string, object>? ExchangeArguments { get; set; }
+        public Dictionary<string, object>? QueueArguments { get; set; }
+        public IBasicProperties? BasicProperties { get; set; }
     }
 }

@@ -154,7 +154,7 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
         public Task LoadRelationAsync<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression, CancellationToken cancellationToken = default)
             where TProperty : class
         {
-            return dbContext.Entry(entity).Reference(propertyExpression).LoadAsync(cancellationToken);
+            return dbContext.Entry(entity).Reference(Expression.Lambda<Func<T, TProperty?>>(propertyExpression.Body, propertyExpression.Parameters)).LoadAsync(cancellationToken);
         }
 
         /// <inheritdoc />
