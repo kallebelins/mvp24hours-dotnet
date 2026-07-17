@@ -5,6 +5,82 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [10.0.0] - 2026-07 🚀 Major Release
+
+> **Migração para .NET 10** — Esta versão alinha toda a solução ao .NET 10 / C# 14, habilita
+> Nullable Reference Types em todos os projetos e remove/substitui APIs obsoletas. Consumidores
+> dos pacotes NuGet devem revisar as mudanças de **assinatura de nulidade** e os membros que
+> passaram a exigir `required` antes de atualizar.
+
+### Mudado
+
+- **TargetFramework**: todos os projetos (produção e testes) migrados para `net10.0`. Não há mais
+  multi-targeting nem projetos remanescentes em `net9.0`.
+- **LangVersion**: padronizado em `latest` (C# 14) para toda a solução.
+- **Nullable Reference Types habilitado em todos os projetos**: várias APIs públicas tiveram a
+  anotação de nulidade ajustada para refletir o comportamento real (parâmetros/retornos passaram a
+  ser `T?` onde o valor pode ser nulo). Código consumidor que já compilava com `<Nullable>enable</Nullable>`
+  pode passar a receber novos avisos de nulidade — recomendado revisar chamadas afetadas.
+- **Membros que passaram a exigir `required`** (breaking em cenários de inicialização por objeto):
+  - `SetPropertyCall.Property`
+  - `EncryptionOptions.Key`
+- **Assinaturas de nulidade ajustadas** em overrides e implementações de interface:
+  `EntityIdNewtonsoftConverters.ReadJson` (`TId? existingValue`), `Enumeration.Equals`/`CompareTo`/`object.Equals`,
+  `IValueProvider.SetValue(..., object?)`, `AnonymousTypeContractResolver` e converters de value object.
+- **Gerenciamento centralizado de pacotes (CPM)**: versões de pacotes agora vivem em
+  `src/Directory.Packages.props`; propriedades comuns de build (`TargetFramework`, `LangVersion`,
+  `Nullable`, `ImplicitUsings`) foram centralizadas em `src/Directory.Build.props`.
+
+### Segurança
+
+- **NU1903 — `System.Security.Cryptography.Xml`**: fixado em `10.0.10` para mitigar as advisories
+  [GHSA-37gx-xxp4-5rgx](https://github.com/advisories/GHSA-37gx-xxp4-5rgx) e
+  [GHSA-w3x6-4m5h-cxqf](https://github.com/advisories/GHSA-w3x6-4m5h-cxqf) (trazido transitivamente
+  via `System.ServiceModel.*`). `dotnet list package --vulnerable --include-transitive` → 0 projetos
+  vulneráveis.
+- Workflow `security-scan` corrigido para apontar à solução (`.sln`) e falhar em advisories.
+
+### Substituído (APIs obsoletas modernizadas)
+
+- **`CircuitBreaker<T>` (interno, `[Obsolete]`)** → `NativeResiliencePipeline` (Polly v8 via
+  `Microsoft.Extensions.Resilience`) em `ResilientCacheProvider`.
+- **`SqlServerDistributedLockProvider`**: `System.Data.SqlClient` → `Microsoft.Data.SqlClient`.
+- **`CertificateHelper`**: construtores obsoletos de `X509Certificate2` → `X509CertificateLoader`
+  (`LoadCertificateFromFile`/`LoadPkcs12FromFile`/`LoadCertificate`/`LoadPkcs12`) — SYSLIB0057.
+- **`SmtpEmailProvider`**: removido `ServicePointManager.ServerCertificateValidationCallback`
+  (SYSLIB0014). **Mudança de comportamento**: o `ServerCertificateValidationCallback` configurado em
+  `SmtpEmailOptions` não é mais aplicado por conexão (o `SmtpClient` não expõe esse hook e o callback
+  global era obsoleto e afetava também o HTTP) — passa a valer a validação de certificado padrão do SO,
+  com log de warning quando o callback estiver configurado.
+- **`FieldEncryption`/`EncryptionKeyHelper`**: `new Rfc2898DeriveBytes(...)` → `Rfc2898DeriveBytes.Pbkdf2(...)`
+  (SYSLIB0060), com equivalência byte-a-byte validada.
+- **`AwsSecretsManagerProvider`**: `FallbackCredentialsFactory` → `DefaultAWSCredentialsIdentityResolver`
+  (AWSSDK.Core v4).
+
+### Corrigido
+
+- Redução de avisos de build de **~4235 → 969** em Release (−77%), com o residual explicitamente
+  documentado e aceito para a v2.
+- Diversos avisos de qualidade eliminados: CS0168 (variável de exceção não usada), CS0219
+  (variável nunca usada), CS1718 (comparação consigo mesma), CS0108 (ocultação de membro herdado),
+  CA2022 (leitura incompleta de `Stream`), xUnit1031 (bloqueio síncrono em teste assíncrono).
+- Removidos `PackageReference` redundantes (NU1510) já providos via `FrameworkReference`.
+
+### Testes
+
+- Suíte completa executada em .NET 10: **2298 aprovados · 0 falhas · 4 ignorados** (unitários +
+  integração via Testcontainers para MongoDB, SQL Server, Redis e RabbitMQ).
+- Testes categorizados com `[Trait("Category", "Unit")]` / `[Trait("Category", "Integration")]`
+  para execução seletiva no CI e localmente sem Docker.
+
+### CI/CD
+
+- Workflows `ci.yml` e `codeql-analysis.yml` atualizados para o SDK **.NET 10** (`10.0.x`).
+- Gate `TreatWarningsAsErrors=true` reativado no job `code-quality`, escopado via
+  `WarningsNotAsErrors` para o residual aceito (redução progressiva planejada para a v2).
+
+---
+
 ## [9.1.210] - 2026-01
 
 ### Corrigido

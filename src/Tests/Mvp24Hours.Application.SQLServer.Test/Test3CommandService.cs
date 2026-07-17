@@ -29,7 +29,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize(false);
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             var customer = new Customer
             {
@@ -47,7 +47,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize(false);
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             List<Customer> customers = [];
             for (int i = 2; i <= 10; i++)
@@ -69,10 +69,10 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize();
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             Customer? customer = service.GetById(1).GetDataValue();
-            customer.Name = "Test Updated";
+            customer?.Name = "Test Updated";
             service.Modify(customer);
             customer = service.GetById(1).GetDataValue();
             // assert
@@ -85,7 +85,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize();
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             var paging = new PagingCriteria(1, 0);
             IList<Customer>? customers = service.List(paging)
@@ -104,7 +104,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize();
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             Customer? customer = service.GetById(1).GetDataValue();
             service.RemoveById(customer.Id);
@@ -119,7 +119,7 @@ namespace Mvp24Hours.Application.SQLServer.Test
         {
             // arrange
             IServiceProvider serviceProvider = Startup.Initialize();
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+            CustomerService service = serviceProvider.GetRequiredService<CustomerService>();
             // act
             IList<Customer>? customers = service.List().Data;
             service.Remove(customers);
