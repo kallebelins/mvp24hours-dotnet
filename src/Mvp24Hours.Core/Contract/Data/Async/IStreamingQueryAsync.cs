@@ -76,7 +76,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// Useful for ordered streaming or including related data.
         /// </para>
         /// </remarks>
-        IAsyncEnumerable<TEntity> StreamAllAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TEntity> StreamAllAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Streams entities matching the specified filter.
@@ -101,7 +101,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// <param name="criteria">Paging criteria (ordering, navigation).</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>An async enumerable of filtered entities.</returns>
-        IAsyncEnumerable<TEntity> StreamByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TEntity> StreamByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Streams entities in batches for efficient processing.

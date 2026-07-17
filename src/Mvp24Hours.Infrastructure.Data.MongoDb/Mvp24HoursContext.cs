@@ -64,17 +64,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         /// <summary>
         /// Gets the MongoDB database instance.
         /// </summary>
-        public virtual IMongoDatabase Database { get; private set; }
+        public virtual IMongoDatabase Database { get; private set; } = null!; // set by Configure(...) during construction
 
         /// <summary>
         /// Gets the MongoDB client instance.
         /// </summary>
-        public MongoClient MongoClient { get; private set; }
+        public MongoClient MongoClient { get; private set; } = null!; // set by Configure(...) during construction
 
         /// <summary>
         /// Gets the current session handle for transactions.
         /// </summary>
-        public IClientSessionHandle Session { get; private set; }
+        public IClientSessionHandle Session { get; private set; } = null!; // set by StartSession(...)
 
         /// <summary>
         /// Gets the tenant provider for multi-tenancy support.
@@ -155,6 +155,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
             EnableTls = enableTls;
             EnableTransaction = enableTransaction;
             _logger = logger;
+            RowLevelSecurity = new MongoDbRowLevelSecurity(null, null);
 
             Options = new MongoDbOptions
             {

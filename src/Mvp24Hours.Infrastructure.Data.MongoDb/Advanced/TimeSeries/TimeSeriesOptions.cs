@@ -31,13 +31,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries
         /// Gets or sets the name of the field that contains the timestamp.
         /// This field is required and must be of type DateTime.
         /// </summary>
-        public string TimeField { get; set; }
+        public string TimeField { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the name of the field that contains metadata.
         /// Metadata is used to identify data sources (e.g., sensor ID, device ID).
         /// </summary>
-        public string MetaField { get; set; }
+        public string? MetaField { get; set; }
 
         /// <summary>
         /// Gets or sets the granularity of the time series data.

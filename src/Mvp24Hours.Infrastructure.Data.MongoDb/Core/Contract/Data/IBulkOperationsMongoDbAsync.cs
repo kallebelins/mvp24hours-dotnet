@@ -287,7 +287,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data
         /// <summary>
         /// Error message if the operation failed.
         /// </summary>
-        public string ErrorMessage { get; init; }
+        public string ErrorMessage { get; init; } = string.Empty;
 
         /// <summary>
         /// Number of write errors that occurred (for unordered operations).

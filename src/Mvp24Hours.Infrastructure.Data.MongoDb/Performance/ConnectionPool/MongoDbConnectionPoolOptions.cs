@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.ConnectionPool
         /// Options: "zstd", "zlib", "snappy".
         /// Compression reduces network bandwidth at the cost of CPU.
         /// </remarks>
-        public string[] Compressors { get; set; }
+        public string[]? Compressors { get; set; }
 
         /// <summary>
         /// Gets or sets the local threshold for server selection (in milliseconds).

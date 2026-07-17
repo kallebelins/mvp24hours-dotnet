@@ -109,7 +109,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// </list>
         /// </para>
         /// </remarks>
-        public string WriteConcern { get; set; }
+        public string WriteConcern { get; set; } = string.Empty;
 
         /// <summary>
         /// Maximum number of retry attempts for transient errors.

@@ -75,7 +75,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// <remarks>
         /// If not specified, MongoDB generates a name based on the indexed fields.
         /// </remarks>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets the order of this field in a compound index.
@@ -93,7 +93,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// Properties with the same group name will be combined into a compound index.
         /// Use this with <see cref="Order"/> to control field order in the compound index.
         /// </remarks>
-        public string CompoundIndexGroup { get; set; }
+        public string? CompoundIndexGroup { get; set; }
 
         /// <summary>
         /// Gets or sets the partial filter expression as a JSON string.
@@ -107,13 +107,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// public string Email { get; set; }
         /// </code>
         /// </example>
-        public string PartialFilterExpression { get; set; }
+        public string? PartialFilterExpression { get; set; }
 
         /// <summary>
         /// Gets or sets the collation locale for string comparisons.
         /// </summary>
         /// <example>"en", "pt", "fr"</example>
-        public string CollationLocale { get; set; }
+        public string? CollationLocale { get; set; }
 
         /// <summary>
         /// Gets or sets whether the collation should be case-insensitive.

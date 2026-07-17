@@ -54,7 +54,7 @@ namespace Mvp24Hours.Extensions
     /// </example>
     public static class MongoDbBulkOperationsExtensions
     {
-        private static ILogger _logger;
+        private static ILogger? _logger;
 
         /// <summary>
         /// Sets the logger instance for bulk operations extension methods.

@@ -73,7 +73,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// </summary>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing entities matching the criteria.</returns>
-        IBusinessResult<IList<TEntity>> List(IPagingCriteria criteria);
+        IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria);
 
         /// <summary>
         /// Checks whether any records match the specified filter.
@@ -102,14 +102,14 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="clause">The filter expression.</param>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing matching entities.</returns>
-        IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria);
+        IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
 
         /// <summary>
         /// Gets a single entity by its identifier.
         /// </summary>
         /// <param name="id">The entity identifier.</param>
         /// <returns>A business result containing the entity, or null if not found.</returns>
-        IBusinessResult<TEntity> GetById(object id);
+        IBusinessResult<TEntity?> GetById(object id);
 
         /// <summary>
         /// Gets a single entity by its identifier with paging criteria (for includes/navigation properties).
@@ -117,7 +117,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="id">The entity identifier.</param>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing the entity, or null if not found.</returns>
-        IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria);
+        IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria);
 
         #region [ Specification Pattern Methods ]
 

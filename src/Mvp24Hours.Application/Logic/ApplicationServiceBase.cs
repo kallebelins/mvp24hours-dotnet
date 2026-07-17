@@ -149,7 +149,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TEntity>> List()
         {
-            return List(null!);
+            return List(null);
         }
 
         /// <inheritdoc/>
@@ -176,7 +176,7 @@ namespace Mvp24Hours.Application.Logic
         /// <inheritdoc/>
         public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause)
         {
-            return GetBy(clause, null!);
+            return GetBy(clause, null);
         }
 
         /// <inheritdoc/>
@@ -187,13 +187,13 @@ namespace Mvp24Hours.Application.Logic
         }
 
         /// <inheritdoc/>
-        public virtual IBusinessResult<TEntity> GetById(object id)
+        public virtual IBusinessResult<TEntity?> GetById(object id)
         {
-            return GetById(id, null!);
+            return GetById(id, null);
         }
 
         /// <inheritdoc/>
-        public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria? criteria)
+        public virtual IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria)
         {
             _logger?.LogDebug("[{ServiceName}] Executing GetById for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             return _repository.GetById(id, criteria).ToBusiness();
@@ -428,7 +428,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take single
-            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
+            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
             TEntity? entity = result?.SingleOrDefault();
             return entity.ToBusiness();
         }
@@ -441,7 +441,7 @@ namespace Mvp24Hours.Application.Logic
 
             if (specification == null)
             {
-                return ((TEntity?)null!).ToBusiness();
+                return ((TEntity?)null).ToBusiness();
             }
 
             // Try to use repository's specification method if available
@@ -451,7 +451,7 @@ namespace Mvp24Hours.Application.Logic
             }
 
             // Fallback: get by expression and take first
-            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null!);
+            IList<TEntity> result = _repository.GetBy(specification.IsSatisfiedByExpression, null);
             TEntity? entity = result?.FirstOrDefault();
             return entity.ToBusiness();
         }

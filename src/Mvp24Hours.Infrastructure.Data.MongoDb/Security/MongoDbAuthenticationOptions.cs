@@ -164,7 +164,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// <summary>
         /// Gets or sets the LDAP bind DN for LDAP authentication.
         /// </summary>
-        public string LdapBindDn { get; set; }
+        public string? LdapBindDn { get; set; }
 
         /// <summary>
         /// Gets or sets the Kerberos service name for GSSAPI.

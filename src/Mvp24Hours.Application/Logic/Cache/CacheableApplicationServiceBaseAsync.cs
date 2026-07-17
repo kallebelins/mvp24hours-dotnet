@@ -264,13 +264,13 @@ namespace Mvp24Hours.Application.Logic.Cache
         }
 
         /// <inheritdoc/>
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return GetByIdAsync(id, null, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+        public virtual async Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             if (!CacheEnabled)
             {
@@ -376,7 +376,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             if (!CacheEnabled)
             {
                 IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-                return result?.SingleOrDefault().ToBusiness();
+                return result.SingleOrDefault().ToBusiness();
             }
 
             var cacheKey = GenerateCacheKey($"GetSingleBySpec_{specification.GetType().Name}", specification.GetHashCode());
@@ -385,7 +385,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-                    return result?.SingleOrDefault().ToBusiness();
+                    return result.SingleOrDefault().ToBusiness();
                 },
                 _defaultCacheOptions,
                 cancellationToken);
@@ -405,7 +405,7 @@ namespace Mvp24Hours.Application.Logic.Cache
             if (!CacheEnabled)
             {
                 IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-                return result?.FirstOrDefault().ToBusiness();
+                return result.FirstOrDefault().ToBusiness();
             }
 
             var cacheKey = GenerateCacheKey($"GetFirstBySpec_{specification.GetType().Name}", specification.GetHashCode());
@@ -414,7 +414,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: cancellationToken);
-                    return result?.FirstOrDefault().ToBusiness();
+                    return result.FirstOrDefault().ToBusiness();
                 },
                 _defaultCacheOptions,
                 cancellationToken);

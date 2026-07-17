@@ -74,7 +74,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// </summary>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing entities as DTOs matching the criteria.</returns>
-        IBusinessResult<IList<TDto>> List(IPagingCriteria criteria);
+        IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria);
 
         /// <summary>
         /// Checks whether any records match the specified filter.
@@ -103,7 +103,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="clause">The filter expression (on entity type).</param>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing matching entities as DTOs.</returns>
-        IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria);
+        IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
 
         /// <summary>
         /// Gets a single entity by its identifier, mapped to DTO.
@@ -118,7 +118,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="id">The entity identifier.</param>
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <returns>A business result containing the entity as DTO, or null if not found.</returns>
-        IBusinessResult<TDto> GetById(object id, IPagingCriteria criteria);
+        IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria);
 
         #endregion
 
@@ -219,7 +219,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Gets all entities from the data source with paging criteria, mapped to DTOs.
         /// </summary>
-        IBusinessResult<IList<TDto>> List(IPagingCriteria criteria);
+        IBusinessResult<IList<TDto>> List(IPagingCriteria? criteria);
 
         /// <summary>
         /// Checks whether any records match the specified filter.
@@ -239,7 +239,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Gets entities matching the specified filter with paging criteria, mapped to DTOs.
         /// </summary>
-        IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria);
+        IBusinessResult<IList<TDto>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
 
         /// <summary>
         /// Gets a single entity by its identifier, mapped to DTO.
@@ -249,7 +249,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Gets a single entity by its identifier with paging criteria, mapped to DTO.
         /// </summary>
-        IBusinessResult<TDto> GetById(object id, IPagingCriteria criteria);
+        IBusinessResult<TDto> GetById(object id, IPagingCriteria? criteria);
     }
 }
 

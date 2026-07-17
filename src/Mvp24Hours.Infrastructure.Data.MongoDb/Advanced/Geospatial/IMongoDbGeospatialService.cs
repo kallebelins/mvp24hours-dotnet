@@ -179,7 +179,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
         /// <summary>
         /// Gets or sets the document.
         /// </summary>
-        public TDocument Document { get; set; }
+        public TDocument Document { get; set; } = default!; // set by geospatial query service
 
         /// <summary>
         /// Gets or sets the distance from the search point in meters.

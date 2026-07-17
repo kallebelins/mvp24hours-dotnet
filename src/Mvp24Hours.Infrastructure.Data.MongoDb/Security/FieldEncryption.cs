@@ -320,18 +320,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         }
 
         /// <inheritdoc />
-        public override string? Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             BsonType bsonType = context.Reader.GetCurrentBsonType();
 
             if (bsonType == BsonType.Null)
             {
                 context.Reader.ReadNull();
-                return null;
+                return null!; // BSON null maps to a null string value by design
             }
 
             var encrypted = context.Reader.ReadString();
-            return _encryptor.Decrypt(encrypted);
+            return _encryptor.Decrypt(encrypted)!; // non-null cipher text always decrypts to a non-null value
         }
     }
 
@@ -364,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
         /// Gets or sets the encryption key name to use for this field.
         /// If null, the default key is used.
         /// </summary>
-        public string KeyName { get; set; }
+        public string? KeyName { get; set; }
 
         /// <summary>
         /// Gets or sets the algorithm to use. Default is "AES-256".

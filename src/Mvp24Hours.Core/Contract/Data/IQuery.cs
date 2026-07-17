@@ -128,7 +128,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// var customers = repository.List(criteria);
         /// </code>
         /// </example>
-        IList<TEntity> List(IPagingCriteria criteria);
+        IList<TEntity> List(IPagingCriteria? criteria);
         /// <summary>
         /// Checks whether any records matching the specified filter exist in the data store.
         /// </summary>
@@ -198,7 +198,7 @@ namespace Mvp24Hours.Core.Contract.Data
         /// var customers = repository.GetBy(c => c.IsActive, criteria);
         /// </code>
         /// </example>
-        IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria);
+        IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
 
         /// <summary>
         /// Retrieves a single entity by its unique identifier.
@@ -240,6 +240,6 @@ namespace Mvp24Hours.Core.Contract.Data
         /// // customer.Orders and customer.Orders[*].Items are now loaded
         /// </code>
         /// </example>
-        TEntity? GetById(object id, IPagingCriteria criteria);
+        TEntity? GetById(object id, IPagingCriteria? criteria);
     }
 }

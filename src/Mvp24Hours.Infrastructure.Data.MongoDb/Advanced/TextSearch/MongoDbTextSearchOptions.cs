@@ -18,7 +18,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// Common values: "english", "portuguese", "spanish", "french", "german", "none".
         /// Use "none" for language-agnostic searches.
         /// </remarks>
-        public string Language { get; set; }
+        public string? Language { get; set; }
 
         /// <summary>
         /// Gets or sets whether the search is case-sensitive.

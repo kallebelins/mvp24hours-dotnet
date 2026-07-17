@@ -95,7 +95,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> List()
         {
-            return this.List(null!);
+            return this.List(null);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Mvp24Hours.Application.Logic
         /// </summary>
         public virtual IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause)
         {
-            return GetBy(clause, null!);
+            return GetBy(clause, null);
         }
 
         /// <summary>
@@ -157,15 +157,15 @@ namespace Mvp24Hours.Application.Logic
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(int)"/>
         /// </summary>
-        public virtual IBusinessResult<TEntity> GetById(object id)
+        public virtual IBusinessResult<TEntity?> GetById(object id)
         {
-            return this.GetById(id, null!);
+            return this.GetById(id, null);
         }
 
         /// <summary>
         /// <see cref="Mvp24Hours.Core.Contract.Logic.IQueryService{T}.GetById(int, IPagingCriteria)"/>
         /// </summary>
-        public virtual IBusinessResult<TEntity> GetById(object id, IPagingCriteria? criteria)
+        public virtual IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria)
         {
             _logger.LogDebug("application-repositoryservice-getbyid");
             return this.UnitOfWork

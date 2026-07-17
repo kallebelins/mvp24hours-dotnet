@@ -100,7 +100,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// <summary>
         /// Gets or sets the validation errors.
         /// </summary>
-        public string[] Errors { get; set; }
+        public string[] Errors { get; set; } = [];
 
         /// <summary>
         /// Creates a successful validation result.

@@ -65,7 +65,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// <summary>
         /// Gets or sets the custom name for the index.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets whether the index should be built in the background.

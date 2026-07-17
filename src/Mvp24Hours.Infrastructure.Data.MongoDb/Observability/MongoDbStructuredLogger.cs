@@ -412,11 +412,11 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         private class CommandLogContext
         {
             public int RequestId { get; set; }
-            public string CommandName { get; set; }
+            public string CommandName { get; set; } = string.Empty;
             public string? DatabaseName { get; set; }
             public string? CollectionName { get; set; }
             public BsonDocument? Command { get; set; }
-            public Stopwatch Stopwatch { get; set; }
+            public Stopwatch Stopwatch { get; set; } = new();
             public TimeSpan Duration { get; set; }
             public DateTimeOffset Timestamp { get; set; }
             public bool Success { get; set; }
@@ -429,9 +429,9 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private class StructuredLog
         {
-            public string Level { get; set; }
-            public string Category { get; set; }
-            public string EventName { get; set; }
+            public string Level { get; set; } = string.Empty;
+            public string Category { get; set; } = string.Empty;
+            public string EventName { get; set; } = string.Empty;
             public DateTimeOffset Timestamp { get; set; }
             public Dictionary<string, object?> Properties { get; set; } = [];
         }

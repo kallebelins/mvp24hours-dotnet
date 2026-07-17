@@ -106,7 +106,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         private readonly Dictionary<Type, object> repositories;
 
         protected Mvp24HoursContext? DbContext { get; private set; }
-        private readonly IServiceProvider serviceProvider;
+        private readonly IServiceProvider? serviceProvider;
 
         /// <summary>
         ///  <see cref="IUnitOfWorkAsync"/>
@@ -116,6 +116,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb
         {
             if (!repositories.ContainsKey(typeof(T)))
             {
+                if (serviceProvider is null)
+                {
+                    throw new InvalidOperationException("This UnitOfWorkAsync instance was created without a service provider; repositories must be supplied explicitly.");
+                }
                 IRepositoryAsync<T> repo = serviceProvider.GetService<IRepositoryAsync<T>>()
                     ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
                 repositories.Add(typeof(T), repo);

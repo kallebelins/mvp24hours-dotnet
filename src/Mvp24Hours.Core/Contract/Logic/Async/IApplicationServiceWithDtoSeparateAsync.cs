@@ -82,7 +82,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with entities as read DTOs matching the criteria.</returns>
-        Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously checks whether any records match the specified filter.
@@ -115,7 +115,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with matching entities as read DTOs.</returns>
-        Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously gets a single entity by its identifier, mapped to read DTO.
@@ -132,7 +132,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with the entity as read DTO, or null if not found.</returns>
-        Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         #endregion
 
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Asynchronously gets all entities from the data source with paging criteria, mapped to read DTOs.
         /// </summary>
-        Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TDto>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously checks whether any records match the specified filter.
@@ -255,7 +255,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Asynchronously gets entities matching the specified filter with paging criteria, mapped to read DTOs.
         /// </summary>
-        Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TDto>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously gets a single entity by its identifier, mapped to read DTO.
@@ -265,7 +265,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <summary>
         /// Asynchronously gets a single entity by its identifier with paging criteria, mapped to read DTO.
         /// </summary>
-        Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<TDto>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
     }
 }
 

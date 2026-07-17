@@ -42,12 +42,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <summary>
         /// Occurs when the connection state changes.
         /// </summary>
-        public event EventHandler<ConnectionStateChangedEventArgs> ConnectionStateChanged;
+        public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
 
         /// <summary>
         /// Occurs when a reconnection attempt is made.
         /// </summary>
-        public event EventHandler<ReconnectAttemptEventArgs> ReconnectAttempt;
+        public event EventHandler<ReconnectAttemptEventArgs>? ReconnectAttempt;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbConnectionManager"/> class.

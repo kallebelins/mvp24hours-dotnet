@@ -190,13 +190,13 @@ namespace Mvp24Hours.Application.Logic
         }
 
         /// <inheritdoc/>
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             return GetByIdAsync(id, null, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger?.LogDebug("[{ServiceName}] Executing GetByIdAsync for {EntityType} with Id={Id}", GetType().Name, typeof(TEntity).Name, id);
             return _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken).ToBusinessAsync();

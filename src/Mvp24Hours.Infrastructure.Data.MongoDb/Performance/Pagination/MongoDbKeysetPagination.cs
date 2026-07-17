@@ -51,7 +51,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Pagination
         private FilterDefinition<T> _filter = Builders<T>.Filter.Empty;
         private SortDefinition<T>? _sort;
         private readonly List<(string FieldName, bool Descending)> _sortFields = [];
-        private ProjectionDefinition<T> _projection;
+        private ProjectionDefinition<T>? _projection;
 
         private MongoDbKeysetPagination(IMongoCollection<T> collection)
         {

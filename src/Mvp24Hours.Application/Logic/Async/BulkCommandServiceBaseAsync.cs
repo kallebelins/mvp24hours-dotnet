@@ -139,8 +139,10 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(entities);
+
             _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
-                entities?.Count ?? 0, options.BatchSize);
+                entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -195,8 +197,10 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(entities);
+
             _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
-                entities?.Count ?? 0, options.BatchSize);
+                entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -251,8 +255,10 @@ namespace Mvp24Hours.Application.Logic
             BulkOperationOptions options,
             CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(entities);
+
             _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
-                entities?.Count ?? 0, options.BatchSize);
+                entities.Count, options.BatchSize);
 
             var stopwatch = Stopwatch.StartNew();
 

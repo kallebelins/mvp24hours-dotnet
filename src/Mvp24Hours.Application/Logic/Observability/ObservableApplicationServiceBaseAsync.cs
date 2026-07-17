@@ -223,13 +223,13 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     }
 
     /// <inheritdoc />
-    public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+    public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
     {
         return GetByIdAsync(id, null, cancellationToken);
     }
 
     /// <inheritdoc />
-    public virtual async Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+    public virtual async Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
     {
         return await ExecuteQueryAsync(
             "GetById",

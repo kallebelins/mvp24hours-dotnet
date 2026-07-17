@@ -89,7 +89,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(CancellationToken cancellationToken = default)
         {
-            return this.ListAsync(null!, cancellationToken: cancellationToken);
+            return this.ListAsync(null, cancellationToken: cancellationToken);
         }
 
         public virtual Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default)
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Application.Logic
 
         public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default)
         {
-            return GetByAsync(clause, null!, cancellationToken: cancellationToken);
+            return GetByAsync(clause, null, cancellationToken: cancellationToken);
         }
 
         public virtual Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
@@ -133,12 +133,12 @@ namespace Mvp24Hours.Application.Logic
                 .ToBusinessAsync();
         }
 
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
-            return this.GetByIdAsync(id, null!, cancellationToken: cancellationToken);
+            return this.GetByIdAsync(id, null, cancellationToken: cancellationToken);
         }
 
-        public virtual Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+        public virtual Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("application-repositoryserviceasync-getbyidasync");
             return this.UnitOfWork

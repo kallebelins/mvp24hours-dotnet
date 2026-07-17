@@ -91,7 +91,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
                 return;
 
             var collection = ExtractCollectionName(e.Command, e.CommandName);
-            _pending.TryAdd(e.RequestId, (e.CommandName, collection, Stopwatch.StartNew()));
+            _pending.TryAdd(e.RequestId, (e.CommandName, collection ?? string.Empty, Stopwatch.StartNew()));
         }
 
         private void OnCommandSucceeded(CommandSucceededEvent e)

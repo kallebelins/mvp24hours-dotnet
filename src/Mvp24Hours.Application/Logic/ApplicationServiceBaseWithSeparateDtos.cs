@@ -242,6 +242,10 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger.LogDebug("application-separatedtos-getbyid");
             TEntity? entity = _repository.GetById(id, criteria);
+            if (entity is null)
+            {
+                return new BusinessResult<TDto>();
+            }
             TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }

@@ -196,7 +196,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Projections
     {
         private readonly List<string> _includeFields = [];
         private readonly List<string> _excludeFields = [];
-        private Expression<Func<TSource, TDestination>> _projectionExpression;
+        private Expression<Func<TSource, TDestination>>? _projectionExpression;
 
         /// <summary>
         /// Includes the specified fields in the projection.

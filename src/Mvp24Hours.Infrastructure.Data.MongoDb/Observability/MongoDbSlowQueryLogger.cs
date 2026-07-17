@@ -333,10 +333,10 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
 
         private class CommandInfo
         {
-            public string CommandName { get; set; }
+            public string CommandName { get; set; } = string.Empty;
             public string? DatabaseName { get; set; }
             public string? CollectionName { get; set; }
-            public Stopwatch Stopwatch { get; set; }
+            public Stopwatch Stopwatch { get; set; } = new();
             public BsonDocument? Command { get; set; }
         }
 
@@ -345,7 +345,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// </summary>
         public class SlowQueryDetails
         {
-            public string CommandName { get; set; }
+            public string CommandName { get; set; } = string.Empty;
             public string? DatabaseName { get; set; }
             public string? CollectionName { get; set; }
             public double DurationMs { get; set; }
@@ -360,7 +360,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// </summary>
         public class CommandFailureDetails
         {
-            public string CommandName { get; set; }
+            public string CommandName { get; set; } = string.Empty;
             public string? DatabaseName { get; set; }
             public string? CollectionName { get; set; }
             public double DurationMs { get; set; }

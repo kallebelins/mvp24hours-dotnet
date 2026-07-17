@@ -69,7 +69,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets the field name.
         /// </summary>
-        public string FieldName { get; set; }
+        public string FieldName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the sort order (1 for ascending, -1 for descending, "hashed" for hashed).

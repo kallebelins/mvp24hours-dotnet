@@ -234,13 +234,13 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// Gets or sets the service name for metrics and traces.
         /// Default is null (uses application name).
         /// </summary>
-        public string ServiceName { get; set; }
+        public string? ServiceName { get; set; }
 
         /// <summary>
         /// Gets or sets the environment name (e.g., "production", "staging").
         /// Default is null (uses ASPNETCORE_ENVIRONMENT).
         /// </summary>
-        public string Environment { get; set; }
+        public string? Environment { get; set; }
 
         #endregion
     }

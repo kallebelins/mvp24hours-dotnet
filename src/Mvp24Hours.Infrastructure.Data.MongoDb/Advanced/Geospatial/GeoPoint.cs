@@ -157,7 +157,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial
         /// Each ring is an array of [longitude, latitude] points.
         /// </summary>
         [BsonElement("coordinates")]
-        public double[][][] Coordinates { get; set; }
+        public double[][][] Coordinates { get; set; } = [];
 
         /// <summary>
         /// Creates a simple polygon from an array of points.

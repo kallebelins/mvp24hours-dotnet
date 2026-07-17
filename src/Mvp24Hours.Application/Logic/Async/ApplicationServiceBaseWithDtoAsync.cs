@@ -17,6 +17,7 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Logic
@@ -226,6 +227,10 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger.LogDebug("application-applicationservicebasewithdtoasync-getbyidasync");
             TEntity? entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
+            if (entity is null)
+            {
+                return new BusinessResult<TDto>();
+            }
             TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }

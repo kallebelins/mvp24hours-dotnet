@@ -396,7 +396,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Indexes
             };
         }
 
-        private static CreateIndexOptions<T> CreateIndexOptions<T>(string name, bool unique, bool sparse, bool background)
+        private static CreateIndexOptions<T> CreateIndexOptions<T>(string? name, bool unique, bool sparse, bool background)
         {
             return new CreateIndexOptions<T>
             {

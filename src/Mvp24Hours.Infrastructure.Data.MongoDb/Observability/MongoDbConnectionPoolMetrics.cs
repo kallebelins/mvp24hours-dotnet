@@ -364,7 +364,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
             }
         }
 
-        private void CollectMetrics(object state)
+        private void CollectMetrics(object? state)
         {
             try
             {

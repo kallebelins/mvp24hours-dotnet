@@ -58,12 +58,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// <example>
         /// "Status:1,CreatedAt:-1" creates an ascending index on Status and descending on CreatedAt.
         /// </example>
-        public string Fields { get; set; }
+        public string Fields { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the custom name for the index.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets whether the index enforces uniqueness.
@@ -88,12 +88,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Attributes
         /// [MongoCompoundIndex(Fields = "Email:1", PartialFilterExpression = "{ \"IsActive\": true }")]
         /// </code>
         /// </example>
-        public string PartialFilterExpression { get; set; }
+        public string? PartialFilterExpression { get; set; }
 
         /// <summary>
         /// Gets or sets the collation locale for string comparisons.
         /// </summary>
-        public string CollationLocale { get; set; }
+        public string? CollationLocale { get; set; }
 
         /// <summary>
         /// Gets or sets whether the collation should be case-insensitive.

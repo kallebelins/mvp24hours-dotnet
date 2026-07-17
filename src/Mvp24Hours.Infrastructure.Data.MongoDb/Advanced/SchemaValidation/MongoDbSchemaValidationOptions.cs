@@ -45,7 +45,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
         /// <summary>
         /// Gets or sets the JSON Schema validator.
         /// </summary>
-        public BsonDocument JsonSchema { get; set; }
+        public BsonDocument? JsonSchema { get; set; }
     }
 
     /// <summary>

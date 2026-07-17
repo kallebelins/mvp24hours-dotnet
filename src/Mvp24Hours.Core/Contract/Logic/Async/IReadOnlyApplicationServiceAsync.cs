@@ -80,7 +80,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with entities matching the criteria.</returns>
-        Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TEntity>>> ListAsync(IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously checks whether any records match the specified filter.
@@ -113,7 +113,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with matching entities.</returns>
-        Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously gets a single entity by its identifier.
@@ -121,7 +121,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="id">The entity identifier.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with the entity, or null if not found.</returns>
-        Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously gets a single entity by its identifier with paging criteria (for includes/navigation properties).
@@ -130,7 +130,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// <param name="criteria">The paging criteria for the query.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task containing a business result with the entity, or null if not found.</returns>
-        Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria criteria, CancellationToken cancellationToken = default);
+        Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 
         #region [ Specification Pattern Methods ]
 

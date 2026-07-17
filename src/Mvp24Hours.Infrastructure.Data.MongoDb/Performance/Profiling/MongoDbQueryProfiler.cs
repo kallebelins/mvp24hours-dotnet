@@ -371,27 +371,27 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <summary>
         /// Gets or sets the raw BSON output from explain.
         /// </summary>
-        public BsonDocument RawOutput { get; set; }
+        public BsonDocument RawOutput { get; set; } = new(); // set by ParseExplainResult
 
         /// <summary>
         /// Gets or sets the winning plan document.
         /// </summary>
-        public BsonDocument WinningPlan { get; set; }
+        public BsonDocument? WinningPlan { get; set; }
 
         /// <summary>
         /// Gets or sets the execution stage (e.g., "COLLSCAN", "IXSCAN").
         /// </summary>
-        public string Stage { get; set; }
+        public string Stage { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the name of the index used (if any).
         /// </summary>
-        public string IndexName { get; set; }
+        public string IndexName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the index bounds used.
         /// </summary>
-        public BsonDocument IndexBounds { get; set; }
+        public BsonDocument? IndexBounds { get; set; }
 
         /// <summary>
         /// Gets or sets whether execution was successful.
@@ -447,12 +447,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <summary>
         /// Gets or sets the index name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the index keys document.
         /// </summary>
-        public BsonDocument Keys { get; set; }
+        public BsonDocument Keys { get; set; } = new();
 
         /// <summary>
         /// Gets or sets whether the index is unique.
@@ -488,7 +488,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <summary>
         /// Gets or sets the full namespace.
         /// </summary>
-        public string Namespace { get; set; }
+        public string Namespace { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the document count.
@@ -518,7 +518,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Performance.Profiling
         /// <summary>
         /// Gets or sets the individual index sizes.
         /// </summary>
-        public BsonDocument IndexSizes { get; set; }
+        public BsonDocument IndexSizes { get; set; } = new();
 
         /// <summary>
         /// Gets or sets whether the collection is capped.

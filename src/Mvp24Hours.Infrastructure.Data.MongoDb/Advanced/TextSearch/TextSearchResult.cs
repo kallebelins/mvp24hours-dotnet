@@ -14,7 +14,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch
         /// <summary>
         /// Gets or sets the document.
         /// </summary>
-        public TDocument Document { get; set; }
+        public TDocument Document { get; set; } = default!; // set by text search service
 
         /// <summary>
         /// Gets or sets the text search score.

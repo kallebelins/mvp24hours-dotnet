@@ -246,6 +246,10 @@ namespace Mvp24Hours.Application.Logic
         {
             _logger.LogDebug("application-separatedtos-getbyidasync");
             TEntity? entity = await _repository.GetByIdAsync(id, criteria, cancellationToken: cancellationToken);
+            if (entity is null)
+            {
+                return new BusinessResult<TDto>();
+            }
             TDto dto = MapToDto(entity);
             return dto.ToBusiness();
         }

@@ -35,7 +35,7 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// Gets all representations of the entity typed with criteria.
         /// </summary>
         /// <returns>List of entities</returns>
-        IBusinessResult<IList<TEntity>> List(IPagingCriteria criteria);
+        IBusinessResult<IList<TEntity>> List(IPagingCriteria? criteria);
         /// <summary>
         /// Checks whether any records returned by the GetBy() method.
         /// </summary>
@@ -57,18 +57,18 @@ namespace Mvp24Hours.Core.Contract.Logic
         /// </summary>
         /// <param name="clause">Filter</param>
         /// <returns>Number of representations</returns>
-        IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria);
+        IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
         /// <summary>
         /// Gets a representation of the typed entity.
         /// </summary>
         /// <param name="id">Identifier of entity</param>
         /// <returns>A representation of the entity</returns>
-        IBusinessResult<TEntity> GetById(object id);
+        IBusinessResult<TEntity?> GetById(object id);
         /// <summary>
         /// Gets a representation of the entity typed with criteria.
         /// </summary>
         /// <param name="id">Identifier of entity</param>
         /// <returns>A representation of the entity</returns>
-        IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria);
+        IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria);
     }
 }

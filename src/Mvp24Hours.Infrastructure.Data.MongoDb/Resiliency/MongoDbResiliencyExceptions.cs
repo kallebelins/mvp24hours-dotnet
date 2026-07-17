@@ -148,7 +148,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
         /// <summary>
         /// Gets the type of operation that timed out.
         /// </summary>
-        public string OperationType { get; }
+        public string? OperationType { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDbOperationTimeoutException"/> class.

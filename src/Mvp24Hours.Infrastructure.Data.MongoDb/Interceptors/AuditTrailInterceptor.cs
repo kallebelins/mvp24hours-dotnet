@@ -171,12 +171,12 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors
         /// <summary>
         /// Gets or sets the type of operation performed.
         /// </summary>
-        public string Operation { get; set; }
+        public string Operation { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the type name of the entity.
         /// </summary>
-        public string EntityType { get; set; }
+        public string EntityType { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the ID of the entity.

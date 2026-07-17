@@ -143,17 +143,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets the shard ID.
         /// </summary>
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the shard host address.
         /// </summary>
-        public string Host { get; set; }
+        public string Host { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the shard state.
         /// </summary>
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets additional shard tags.
@@ -169,7 +169,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets the collection namespace.
         /// </summary>
-        public string Namespace { get; set; }
+        public string Namespace { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the total document count.
@@ -200,7 +200,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding
         /// <summary>
         /// Gets or sets the shard ID.
         /// </summary>
-        public string ShardId { get; set; }
+        public string ShardId { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the document count on this shard.

@@ -199,7 +199,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         }
 
         /// <inheritdoc/>
-        public override async Task<IBusinessResult<TEntity>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public override async Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default)
         {
             if (!CacheEnabled)
             {
@@ -213,7 +213,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-getbyidasync-cache-miss CacheKey={CacheKey}", cacheKey);
-                    IBusinessResult<TEntity> result = await base.GetByIdAsync(id, cancellationToken);
+                    IBusinessResult<TEntity?> result = await base.GetByIdAsync(id, cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -221,7 +221,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         }
 
         /// <inheritdoc/>
-        public override async Task<IBusinessResult<TEntity>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
+        public override async Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default)
         {
             if (!CacheEnabled)
             {
@@ -235,7 +235,7 @@ namespace Mvp24Hours.Application.Logic.Cache
                 async () =>
                 {
                     _logger.LogDebug("cacheable-queryservice-getbyidasync-paged-cache-miss CacheKey={CacheKey}", cacheKey);
-                    IBusinessResult<TEntity> result = await base.GetByIdAsync(id, criteria, cancellationToken);
+                    IBusinessResult<TEntity?> result = await base.GetByIdAsync(id, criteria, cancellationToken);
                     return result;
                 },
                 _defaultCacheOptions,
@@ -288,7 +288,7 @@ namespace Mvp24Hours.Application.Logic.Cache
         /// <summary>
         /// Gets an entity by ID with custom cache options.
         /// </summary>
-        protected async Task<IBusinessResult<TEntity>> GetByIdWithCacheAsync(
+        protected async Task<IBusinessResult<TEntity?>> GetByIdWithCacheAsync(
             object id,
             QueryCacheEntryOptions cacheOptions,
             CancellationToken cancellationToken = default)

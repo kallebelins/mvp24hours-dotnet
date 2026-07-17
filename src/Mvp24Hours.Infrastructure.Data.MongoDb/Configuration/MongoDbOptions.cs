@@ -53,7 +53,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// <summary>
         /// Gets or sets the database name.
         /// </summary>
-        public string DatabaseName { get; set; }
+        public string DatabaseName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the MongoDB connection string.
@@ -62,7 +62,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Can include authentication credentials in the connection string,
         /// or use the <see cref="Authentication"/> property for more control.
         /// </remarks>
-        public string ConnectionString { get; set; }
+        public string ConnectionString { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets whether to enable TLS/SSL for the connection.
@@ -89,7 +89,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Supports SCRAM-SHA-1, SCRAM-SHA-256, X.509, AWS IAM, LDAP, and Kerberos authentication.
         /// If null, authentication credentials from the connection string are used.
         /// </remarks>
-        public MongoDbAuthenticationOptions Authentication { get; set; }
+        public MongoDbAuthenticationOptions? Authentication { get; set; }
 
         /// <summary>
         /// Gets or sets whether to enable automatic multi-tenancy filtering.
@@ -125,7 +125,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Used for client-side field-level encryption of sensitive data.
         /// The key must be 256 bits (32 bytes) before Base64 encoding.
         /// </remarks>
-        public string EncryptionKey { get; set; }
+        public string? EncryptionKey { get; set; }
 
         /// <summary>
         /// Gets or sets the read preference for read operations.
@@ -134,7 +134,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Options: "primary", "primaryPreferred", "secondary", "secondaryPreferred", "nearest".
         /// Default is null (uses primary).
         /// </remarks>
-        public string ReadPreference { get; set; }
+        public string? ReadPreference { get; set; }
 
         /// <summary>
         /// Gets or sets the write concern level.
@@ -143,7 +143,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Options: "w1", "w2", "w3", "majority", "acknowledged", "unacknowledged".
         /// Default is null (uses w1).
         /// </remarks>
-        public string WriteConcern { get; set; }
+        public string? WriteConcern { get; set; }
 
         /// <summary>
         /// Gets or sets the read concern level.
@@ -152,7 +152,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
         /// Options: "local", "available", "majority", "linearizable", "snapshot".
         /// Default is null (uses local).
         /// </remarks>
-        public string ReadConcern { get; set; }
+        public string? ReadConcern { get; set; }
 
         /// <summary>
         /// Gets or sets the connection timeout in seconds.

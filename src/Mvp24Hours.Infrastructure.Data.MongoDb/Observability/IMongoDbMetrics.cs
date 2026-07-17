@@ -90,7 +90,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets the server endpoint.
         /// </summary>
-        public string Endpoint { get; set; }
+        public string Endpoint { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the current number of connections in the pool.
@@ -227,7 +227,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Observability
         /// <summary>
         /// Gets or sets the command name.
         /// </summary>
-        public string CommandName { get; set; }
+        public string CommandName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the sample count.
