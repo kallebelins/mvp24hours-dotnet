@@ -1,72 +1,17 @@
 ﻿{
-    "generatedAt":  "2026-07-17T16:53:27-03:00",
-    "total":  90,
+    "generatedAt":  "2026-07-18T15:13:03-03:00",
+    "total":  4,
     "byCode":  {
-                   "CS8618":  21,
-                   "CS8619":  20,
-                   "CS8602":  17,
-                   "CS8604":  16,
-                   "CS8600":  10,
-                   "CS0618":  4,
-                   "CS8625":  1,
-                   "CS8603":  1
+                   "CS0618":  4
                },
     "byProject":  {
-                      "Mvp24Hours.Application.PostgreSql.Test":  20,
-                      "Mvp24Hours.Application.MySql.Test":  20,
-                      "Mvp24Hours.Application.Redis.Test":  14,
-                      "Mvp24Hours.Application.MongoDb.Test":  8,
-                      "Mvp24Hours.Application.Pipe.Test":  7,
-                      "Mvp24Hours.Patterns.Test":  5,
-                      "Mvp24Hours.Application.Integration.Test":  5,
                       "Mvp24Hours.Infrastructure.Data.EFCore":  3,
-                      "Mvp24Hours.Infrastructure.Cqrs.Test":  3,
-                      "Mvp24Hours.Infrastructure.CronJob.Test":  2,
-                      "Mvp24Hours.Application.RabbitMQ.Test":  2,
                       "Mvp24Hours.Infrastructure.Data.MongoDb":  1
                   },
     "byCodeProject":  {
                           "CS0618":  {
                                          "Mvp24Hours.Infrastructure.Data.EFCore":  3,
                                          "Mvp24Hours.Infrastructure.Data.MongoDb":  1
-                                     },
-                          "CS8600":  {
-                                         "Mvp24Hours.Application.Redis.Test":  8,
-                                         "Mvp24Hours.Application.Pipe.Test":  2
-                                     },
-                          "CS8602":  {
-                                         "Mvp24Hours.Application.MySql.Test":  8,
-                                         "Mvp24Hours.Application.PostgreSql.Test":  8,
-                                         "Mvp24Hours.Application.MongoDb.Test":  1
-                                     },
-                          "CS8603":  {
-                                         "Mvp24Hours.Patterns.Test":  1
-                                     },
-                          "CS8604":  {
-                                         "Mvp24Hours.Application.PostgreSql.Test":  4,
-                                         "Mvp24Hours.Application.MySql.Test":  4,
-                                         "Mvp24Hours.Infrastructure.Cqrs.Test":  3,
-                                         "Mvp24Hours.Infrastructure.CronJob.Test":  2,
-                                         "Mvp24Hours.Patterns.Test":  2,
-                                         "Mvp24Hours.Application.Redis.Test":  1
-                                     },
-                          "CS8618":  {
-                                         "Mvp24Hours.Application.Pipe.Test":  5,
-                                         "Mvp24Hours.Application.Redis.Test":  5,
-                                         "Mvp24Hours.Application.MongoDb.Test":  4,
-                                         "Mvp24Hours.Application.PostgreSql.Test":  2,
-                                         "Mvp24Hours.Application.RabbitMQ.Test":  2,
-                                         "Mvp24Hours.Application.MySql.Test":  2,
-                                         "Mvp24Hours.Patterns.Test":  1
-                                     },
-                          "CS8619":  {
-                                         "Mvp24Hours.Application.PostgreSql.Test":  6,
-                                         "Mvp24Hours.Application.MySql.Test":  6,
-                                         "Mvp24Hours.Application.Integration.Test":  5,
-                                         "Mvp24Hours.Application.MongoDb.Test":  3
-                                     },
-                          "CS8625":  {
-                                         "Mvp24Hours.Patterns.Test":  1
                                      }
                       }
 }

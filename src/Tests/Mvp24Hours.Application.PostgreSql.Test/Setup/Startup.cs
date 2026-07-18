@@ -64,7 +64,9 @@ namespace Mvp24Hours.Application.PostgreSql.Test.Setup
                     .AddSingleton(ConfigurationHelper.AppSettings);
 
                 services.AddDbContext<DataContext>(
-                    options => options.UseNpgsql(ConfigurationHelper.AppSettings.GetConnectionString("DataContext").Format(StringHelper.GenerateKey(10)),
+                    options => options.UseNpgsql((ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                        ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
+                        .Format(StringHelper.GenerateKey(10)),
                     options => options.SetPostgresVersion(new Version(9, 6)))
                 );
 #endif

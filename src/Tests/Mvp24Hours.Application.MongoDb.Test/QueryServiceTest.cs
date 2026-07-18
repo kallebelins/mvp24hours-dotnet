@@ -36,14 +36,10 @@ namespace Mvp24Hours.Application.MongoDb.Test
             => await _mongoDbContainer.DisposeAsync().ConfigureAwait(false);
         #endregion
 
-        #region [ Fields ]
-        private IServiceProvider serviceProvider;
-        #endregion
-
         #region [ Configure ]
         public QueryServiceTest() { }
 
-        private void Setup()
+        private IServiceProvider Setup()
         {
             var services = new ServiceCollection();
             services.AddMvp24HoursDbContext(options =>
@@ -53,12 +49,13 @@ namespace Mvp24Hours.Application.MongoDb.Test
             });
             services.AddMvp24HoursRepository(repositoryOptions: null);
             services.AddScoped<CustomerService, CustomerService>();
-            serviceProvider = services.BuildServiceProvider();
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            CreateManyCustomers();
+            CreateManyCustomers(serviceProvider);
+            return serviceProvider;
         }
 
-        private void CreateManyCustomers()
+        private static void CreateManyCustomers(IServiceProvider serviceProvider)
         {
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             for (int i = 0; i < 3; i++)
@@ -77,7 +74,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerList()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             IBusinessResult<IList<Customer>> result = service.List();
             Assert.True(result.GetDataCount() > 0);
@@ -86,7 +83,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListAny()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             IBusinessResult<bool> result = service.ListAny();
             Assert.True(result.GetDataValue());
@@ -95,7 +92,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListCount()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             IBusinessResult<int> result = service.ListCount();
             Assert.True(result.GetDataValue() > 0);
@@ -104,7 +101,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListPaging()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0);
             IBusinessResult<IList<Customer>> result = service.List(paging);
@@ -114,7 +111,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListOrder()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
             IBusinessResult<IList<Customer>> result = service.List(paging);
@@ -124,7 +121,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListOrderExpression()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             paging.OrderByDescendingExpr.Add(x => x.Name);
@@ -135,7 +132,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerListPagingExpression()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             var paging = new PagingCriteriaExpression<Customer>(3, 0);
             IBusinessResult<IList<Customer>> result = service.List(paging);
@@ -145,7 +142,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void GetFilterCustomerByName()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
             IBusinessResult<IList<Customer>> result = service.GetBy(x => x.Name == "Test 2");
             Assert.True(result.HasData());

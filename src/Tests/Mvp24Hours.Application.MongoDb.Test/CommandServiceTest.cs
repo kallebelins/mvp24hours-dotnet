@@ -36,14 +36,13 @@ namespace Mvp24Hours.Application.MongoDb.Test
         #endregion
 
         #region [ Fields ]
-        private IServiceProvider serviceProvider;
         private ObjectId oid;
         #endregion
 
         public CommandServiceTest() { }
 
         #region [ Configure ]
-        private void Setup()
+        private IServiceProvider Setup()
         {
             var services = new ServiceCollection();
             services.AddMvp24HoursDbContext(options =>
@@ -53,8 +52,8 @@ namespace Mvp24Hours.Application.MongoDb.Test
             });
             services.AddMvp24HoursRepository(repositoryOptions: null);
             services.AddScoped<CustomerService, CustomerService>();
-            serviceProvider = services.BuildServiceProvider();
             oid = ObjectId.GenerateNewId();
+            return services.BuildServiceProvider();
         }
         #endregion
 
@@ -62,7 +61,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void CreateCustomer()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
             service.Add(new Customer
@@ -73,7 +72,7 @@ namespace Mvp24Hours.Application.MongoDb.Test
                 Active = true
             });
 
-            IBusinessResult<Customer> result = service.GetById(oid);
+            IBusinessResult<Customer?> result = service.GetById(oid);
 
             Assert.True(result.HasData());
         }
@@ -81,17 +80,18 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void UpdateCustomer()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             CreateCustomer();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
             Customer? customer = service.GetById(oid).GetDataValue();
+            Assert.NotNull(customer);
 
             customer.Name = "Test Updated";
 
             service.Modify(customer);
 
-            IBusinessResult<Customer> boCustomer = service.GetById(oid);
+            IBusinessResult<Customer?> boCustomer = service.GetById(oid);
 
             Assert.True(boCustomer != null && boCustomer.Data?.Name == "Test Updated");
         }
@@ -99,13 +99,13 @@ namespace Mvp24Hours.Application.MongoDb.Test
         [Fact]
         public void DeleteCustomer()
         {
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             UpdateCustomer();
             CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
 
             service.RemoveById(oid);
 
-            IBusinessResult<Customer> result = service.GetById(oid);
+            IBusinessResult<Customer?> result = service.GetById(oid);
 
             Assert.False(result.HasData());
         }

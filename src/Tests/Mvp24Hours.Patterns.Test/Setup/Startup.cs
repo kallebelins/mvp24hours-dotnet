@@ -15,7 +15,7 @@ namespace Mvp24Hours.Patterns.Test.Setup
 {
     public static class Startup
     {
-        private static WireMockServer _server;
+        private static WireMockServer? _server;
         private static readonly object _lock = new object();
 
         public static WireMockServer GetMockServer()
@@ -31,7 +31,8 @@ namespace Mvp24Hours.Patterns.Test.Setup
                     });
                     ConfigureMockEndpoints(_server);
                 }
-                return _server;
+                return _server
+                    ?? throw new InvalidOperationException("WireMock server failed to start.");
             }
         }
 
@@ -103,7 +104,8 @@ namespace Mvp24Hours.Patterns.Test.Setup
         public static IServiceProvider InitializeHttp()
         {
             WireMockServer server = GetMockServer();
-            var baseUrl = server.Url;
+            string baseUrl = server.Url
+                ?? throw new InvalidOperationException("WireMock server URL is not available.");
 
             IServiceCollection services = new ServiceCollection()
                             .AddSingleton(ConfigurationHelper.AppSettings);

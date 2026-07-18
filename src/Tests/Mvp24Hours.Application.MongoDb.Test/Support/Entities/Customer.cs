@@ -30,7 +30,7 @@ namespace Mvp24Hours.Application.MongoDb.Test.Support.Entities
 
         [BsonElement("name")]
         [BsonRequired()]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BsonElement("active")]
         [BsonRequired()]

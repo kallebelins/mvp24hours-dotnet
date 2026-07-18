@@ -141,16 +141,18 @@ public class TestCronJobService<T> : IAsyncDisposable
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        ILogger<ResilientCronJobService<TJob>> logger = _serviceProvider!.GetRequiredService<ILogger<ResilientCronJobService<TJob>>>()
+        IServiceProvider serviceProvider = _serviceProvider
+            ?? throw new InvalidOperationException("Service provider was not built.");
+        ILogger<ResilientCronJobService<TJob>> logger = serviceProvider.GetRequiredService<ILogger<ResilientCronJobService<TJob>>>()
             ?? NullLogger<ResilientCronJobService<TJob>>.Instance;
-        ICronJobExecutionLock executionLock = _serviceProvider.GetRequiredService<ICronJobExecutionLock>();
-        CronJobCircuitBreaker circuitBreaker = _serviceProvider.GetRequiredService<CronJobCircuitBreaker>();
+        ICronJobExecutionLock executionLock = serviceProvider.GetRequiredService<ICronJobExecutionLock>();
+        CronJobCircuitBreaker circuitBreaker = serviceProvider.GetRequiredService<CronJobCircuitBreaker>();
 
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
             config,
             _hostLifetimeMock.Object,
-            _serviceProvider,
+            serviceProvider,
             executionLock,
             circuitBreaker,
             logger,

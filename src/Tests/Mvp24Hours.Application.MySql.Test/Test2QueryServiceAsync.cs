@@ -168,7 +168,7 @@ namespace Mvp24Hours.Application.MySql.Test
             // arrange
             CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             // act
-            IBusinessResult<Customer> result = await service.GetByIdAsync(1);
+            IBusinessResult<Customer?> result = await service.GetByIdAsync(1);
             // assert
             Assert.NotNull(result.GetDataValue());
         }
@@ -179,9 +179,11 @@ namespace Mvp24Hours.Application.MySql.Test
             CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
             var paging = new PagingCriteria(1, 0, navigation: new List<string> { "Contacts" });
             // act
-            IBusinessResult<Customer> result = await service.GetByIdAsync(1, paging);
+            IBusinessResult<Customer?> result = await service.GetByIdAsync(1, paging);
             // assert
-            Assert.True(result.GetDataValue().Contacts.AnyOrNotNull());
+            Customer? data = result.GetDataValue();
+            Assert.NotNull(data);
+            Assert.True(data.Contacts.AnyOrNotNull());
         }
         [Fact, Priority(14)]
         public async Task GetFilterCustomerGetBy()

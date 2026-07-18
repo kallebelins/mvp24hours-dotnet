@@ -38,14 +38,10 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
             => await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
         #endregion
 
-        #region [ Fields ]
-        private IServiceProvider serviceProvider;
-        #endregion
-
         #region [ Configure ]
         public Test1RabbitMQ() { }
 
-        private void SetupTypeAssembly()
+        private IServiceProvider SetupTypeAssembly()
         {
             var services = new ServiceCollection();
 
@@ -66,10 +62,10 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
                     clientOptions.MaxRedeliveredCount = 1;
                 }
             );
-            serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
 
-        private void SetupTypeAssemblyWithoutInjection()
+        private IServiceProvider SetupTypeAssemblyWithoutInjection()
         {
             var services = new ServiceCollection();
 
@@ -86,10 +82,10 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
                     clientOptions.MaxRedeliveredCount = 1;
                 }
             );
-            serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
 
-        private void SetupTypeDefined()
+        private IServiceProvider SetupTypeDefined()
         {
             var services = new ServiceCollection();
 
@@ -109,10 +105,10 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
                     clientOptions.MaxRedeliveredCount = 1;
                 }
             );
-            serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
 
-        private void SetupTypeDefinedList()
+        private IServiceProvider SetupTypeDefinedList()
         {
             var services = new ServiceCollection();
 
@@ -138,14 +134,14 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
                     clientOptions.MaxRedeliveredCount = 1;
                 }
             );
-            serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
         #endregion
 
         [Fact]
         public void CreateProducerAssembly()
         {
-            SetupTypeAssembly();
+            IServiceProvider serviceProvider = SetupTypeAssembly();
             // arrange
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
@@ -164,7 +160,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         [Fact]
         public void CreateConsumerAssembly()
         {
-            SetupTypeAssembly();
+            IServiceProvider serviceProvider = SetupTypeAssembly();
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
@@ -186,7 +182,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         [Fact]
         public void CreateConsumerWithoutInjection()
         {
-            SetupTypeAssemblyWithoutInjection();
+            IServiceProvider serviceProvider = SetupTypeAssemblyWithoutInjection();
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
@@ -208,7 +204,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         [Fact]
         public void CreateProducerDefined()
         {
-            SetupTypeDefined();
+            IServiceProvider serviceProvider = SetupTypeDefined();
             // arrange
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
@@ -227,7 +223,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         [Fact]
         public void CreateConsumerDefined()
         {
-            SetupTypeDefined();
+            IServiceProvider serviceProvider = SetupTypeDefined();
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange
@@ -249,7 +245,7 @@ namespace Mvp24Hours.Application.RabbitMQ.Test
         [Fact]
         public void CreateConsumerDefinedList()
         {
-            SetupTypeDefinedList();
+            IServiceProvider serviceProvider = SetupTypeDefinedList();
             MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
             // arrange

@@ -749,8 +749,8 @@ namespace Mvp24Hours.Application.Pipe.Test
         {
             // arrange
             IPipelineMessage input = new PipelineMessage();
-            ArgumentNullException setExceptionNull = default;
-            ArgumentOutOfRangeException getExceptionOutOfRange = default;
+            ArgumentNullException? setExceptionNull = null;
+            ArgumentOutOfRangeException? getExceptionOutOfRange = null;
 
             // operations
             try
@@ -778,15 +778,15 @@ namespace Mvp24Hours.Application.Pipe.Test
 
         class Person
         {
-            public string Name { get; set; }
-            public CC CC { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public CC CC { get; set; } = new();
         }
 
         class CC
         {
-            public string Number { get; set; }
-            public string CVV { get; set; }
-            public string ExpirationDate { get; set; }
+            public string Number { get; set; } = string.Empty;
+            public string CVV { get; set; } = string.Empty;
+            public string ExpirationDate { get; set; } = string.Empty;
         }
     }
 }

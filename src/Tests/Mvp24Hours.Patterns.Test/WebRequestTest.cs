@@ -19,7 +19,9 @@ namespace Mvp24Hours.Patterns.Test
     [Trait("Category", "Unit")]
     public class WebRequestTest
     {
-        private static string GetBaseUrl() => Startup.GetMockServer().Url;
+        private static string GetBaseUrl() =>
+            Startup.GetMockServer().Url
+            ?? throw new InvalidOperationException("WireMock server URL is not available.");
 
         [Fact, Priority(1)]
         public async Task GetPostsAsync()

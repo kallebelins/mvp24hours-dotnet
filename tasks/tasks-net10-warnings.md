@@ -318,14 +318,32 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 - **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json) (`Mvp24Hours.Core.Test` deixou de aparecer na lista por projeto). Códigos CS86xx permanecem no gate (globais — saem na §7).
 - **Testes:** `Mvp24Hours.Core.Test` (`Category!=Integration`): **788 aprovados, 0 falhas**.
 
-[ ] 6.3 - Nullable em `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (parte nullable, após 4.3)
+[x] 6.3 - Nullable em `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (parte nullable, após 4.3)
 - **Padrão:** §1.A. `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/**`
+- **Concluído 2026-07-18:** build isolado do projeto (§2) acusou **0 avisos próprios** — nenhuma correção de código necessária. O residual histórico do projeto (baseline v1: ~10 linhas "MongoDb.Test(unit)" + 32 CS0618) já havia sido zerado nas tarefas anteriores: CS0618 na **4.3** (realocação `MongoDbResiliencyPolicyTests` → `NativeMongoDbResilienceExtensionsTests`) e o nullable residual absorvido pelas assinaturas de produção da Fase 5 / baseline pós-6.2 (o projeto **não aparece** em `byProject` de [`warnings-baseline-v2.json`](./warnings-baseline-v2.json)). O único aviso do log é `CS0618` em `Infrastructure.Data.MongoDb/Extensions/MongoDbResiliencyExtensions.cs:126` — projeto **referenciado**, shim conhecido da 4.3/5.1, a sair na Fase 7. **Nota:** os 8 avisos nullable de `Mvp24Hours.Application.MongoDb.Test` (baseline) ficam no escopo da **6.5** (`MongoDb.Test`).
+- **Build/gate:** sem mudança de código ⇒ gate inalterado (permanece verde com `/p:TreatWarningsAsErrors=true`). Códigos CS86xx seguem no gate (globais — saem na §7).
+- **Testes** `Category=Unit`: **129 aprovados, 0 falhas**.
 
-[ ] 6.4 - Nullable em `Mvp24Hours.Application.MySql.Test` / `.PostgreSql.Test` / `.Redis.Test` (~28 cada)
+[x] 6.4 - Nullable em `Mvp24Hours.Application.MySql.Test` / `.PostgreSql.Test` / `.Redis.Test` (~28 cada)
 - **Padrão:** §1.A. Fixtures e dados de teste compartilham o mesmo formato entre os três; aplicar a mesma correção. `src/Tests/Mvp24Hours.Application.MySql.Test/**`, `.PostgreSql.Test/**`, `.Redis.Test/**`
+- **Concluído 2026-07-18:** builds isolados foram de **20/20/14 → 0** avisos próprios (MySql/PostgreSql/Redis; os 3 CS0618 residuais nos logs MySql/PostgreSql vêm do `MvpExecutionStrategy` auto-obsoleto em EFCore referenciado — Fase 7). Mesmo padrão da 6.1 (SQLServer) aplicado nos três:
+  - **MySql + PostgreSql (espelhados):** CS8618 `Customer.Name`/`Contact.Description` → `= string.Empty;`; CS8604 connection string → `?? throw new InvalidOperationException(...)` em `Startup`/`StartupAsync`; CS8619 `IBusinessResult<Customer>` → `IBusinessResult<Customer?>` + `Assert.NotNull(data)` antes de deref de navegação em `Test1`/`Test2`; CS8602/CS8604 em `Test3`/`Test4` → `Assert.NotNull(...)` antes de `Modify`/`Remove`/`RemoveById`.
+  - **Redis:** CS8618 `Customer.Name` → `= string.Empty;`; CS8604 `GetSettings(...)` → `?? throw`; CS8618 `serviceProvider` → `Setup()` passa a **retornar** `IServiceProvider` (local por teste, sem campo); CS8600 `GetString`/`GetStringAsync` → alvo `string?`.
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; recontagem dedup (§2) = **36 avisos em 8 códigos** (MySql/PostgreSql/Redis deixaram de aparecer em `byProject`). Nenhum código novo fora do gate; `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json). Códigos CS86xx permanecem no gate (globais — saem na §7).
+- **Testes** (Debug/InMemory, `Category!=Integration`): `MySql.Test` **96 aprovados, 0 falhas**; `PostgreSql.Test` **96 aprovados, 0 falhas**. `Redis.Test`: todos os testes são `Category=Integration` (exigem Redis/Docker) — compilação verde é o sinal de não-regressão.
 
-[ ] 6.5 - Nullable nos testes restantes (`Pipe.Test`, `Patterns.Test`, `MongoDb.Test`, `Cqrs.Test`, `RabbitMQ.Test`, `CronJob.Test`)
+[x] 6.5 - Nullable nos testes restantes (`Pipe.Test`, `Patterns.Test`, `MongoDb.Test`, `Cqrs.Test`, `RabbitMQ.Test`, `CronJob.Test`)
 - **Padrão:** §1.A. Volumes pequenos (≤14 cada). `src/Tests/**`
+- **Concluído 2026-07-18:** builds isolados foram de **7/5/8/3/2/2 → 0** avisos próprios (Pipe/Patterns/MongoDb/Cqrs/RabbitMQ/CronJob). Incluído também `Application.Integration.Test` (5 CS8619 residuais no baseline pós-6.4, mesmo padrão CS8619 da 6.1). Correção **na causa/guarda**:
+  - **Pipe.Test:** CS8600 `default` → exceções anuláveis (`ArgumentNullException?`/`ArgumentOutOfRangeException?`); CS8618 em DTOs locais `Person`/`CC` → `= string.Empty;` / `= new();`.
+  - **Patterns.Test:** CS8618 `_server` → `WireMockServer?`; CS8604/CS8603 `server.Url` → `?? throw new InvalidOperationException(...)`; CS8625 `_server = null` resolvido pelo tipo anulável.
+  - **MongoDb.Test:** CS8618 `Customer.Name`/`Contact.Description` → `= string.Empty;`; CS8618 `serviceProvider` → `Setup()` retorna `IServiceProvider` (local por teste, padrão Redis/6.4); CS8619 `IBusinessResult<Customer>` → `IBusinessResult<Customer?>` + `Assert.NotNull(customer)` antes de deref.
+  - **Cqrs.Test:** CS8604 `Assert.Contains` em `OrderBy`/`Navigation`/`Includes` anuláveis → `Assert.NotNull(...)` antes (estreita nulidade).
+  - **RabbitMQ.Test:** CS8618 `CustomerEvent.Name` → `= string.Empty;`; CS8618 `serviceProvider` → setups retornam `IServiceProvider`.
+  - **CronJob.Test:** CS8604 `_serviceProvider` anulável → `ArgumentNullException.ThrowIfNull` / local não-nulo após `EnsureServiceProvider()`.
+  - **Integration.Test (bônus):** CS8619 `IBusinessResult<Category>` → `IBusinessResult<Category?>` (5 ocorrências).
+- **Build/gate:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental` → **0 erro(s)**; recontagem dedup (§2) = **4 avisos em 1 código** (só `CS0618` residual conhecido da 4.8/Fase 7 em EFCore×3 + MongoDb×1). Todos os CS86xx da solução **zerados**. `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s)**. Baseline atualizado em [`warnings-baseline-v2.json`](./warnings-baseline-v2.json). Códigos CS86xx permanecem no gate até a §7 (já em 0 na solução). **Com a 6.5, a Fase 6 (nullable de testes) está concluída.**
+- **Testes** (Debug, `Category!=Integration`): `Pipe.Test` **78 aprovados, 0 falhas**; `Patterns.Test` **20 aprovados, 0 falhas**; `Cqrs.Test` **346 aprovados, 1 falha flaky** (`DispatchEventsAsync_WithMultipleEntities_ShouldDispatchFromAll` — passou em reexecução isolada); `CronJob.Test` **89 aprovados, 2 falhas pré-existentes** (`TestResilientCronJob` exige `ExecutionTracker` no DI em testes que não o registram — independente desta tarefa). MongoDb/RabbitMQ/Integration: todos `Category=Integration` (exigem Docker) — compilação verde é o sinal de não-regressão.
 
 ---
 

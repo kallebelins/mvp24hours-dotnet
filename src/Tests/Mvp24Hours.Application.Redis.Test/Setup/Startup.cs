@@ -26,7 +26,8 @@ namespace Mvp24Hours.Application.Redis.Test.Setup
 
             // caching.redis
             services.AddMvp24HoursCaching();
-            services.AddMvp24HoursCachingRedis(ConfigurationHelper.GetSettings("ConnectionStrings:RedisDbContext"));
+            services.AddMvp24HoursCachingRedis(ConfigurationHelper.GetSettings("ConnectionStrings:RedisDbContext")
+                ?? throw new InvalidOperationException("Connection string 'RedisDbContext' not found."));
 
             return services.BuildServiceProvider();
         }

@@ -25,8 +25,9 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs
         public override Task DoWork(CancellationToken cancellationToken)
         {
             Console.WriteLine("CronJob started counting");
-            TimerService? timerService = _serviceProvider.GetRequiredService<TimerService>();
-            timerService?.CountTime();
+            ArgumentNullException.ThrowIfNull(_serviceProvider);
+            TimerService timerService = _serviceProvider.GetRequiredService<TimerService>();
+            timerService.CountTime();
             return Task.CompletedTask;
         }
     }

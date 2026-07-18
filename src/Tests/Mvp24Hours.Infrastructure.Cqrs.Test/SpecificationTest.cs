@@ -532,8 +532,10 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
                 .WithNavigation("Category");
 
             // Assert
+            Assert.NotNull(query.OrderBy);
             Assert.Contains("Name", query.OrderBy);
             Assert.Contains("-Price", query.OrderBy);
+            Assert.NotNull(query.Navigation);
             Assert.Contains("Category", query.Navigation);
         }
 
@@ -636,6 +638,7 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test
                 .WithIncludes("Category", "Supplier");
 
             // Assert
+            Assert.NotNull(query.Includes);
             Assert.Contains("Category", query.Includes);
             Assert.Contains("Supplier", query.Includes);
         }

@@ -136,7 +136,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         await categoryService.AddAsync(category);
 
         // Act
-        IBusinessResult<Category> result = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category?> result = await categoryService.GetByIdAsync(category.Id);
 
         // Assert
         result.Should().NotBeNull();
@@ -154,7 +154,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         // Act
-        IBusinessResult<Category> result = await categoryService.GetByIdAsync(999999);
+        IBusinessResult<Category?> result = await categoryService.GetByIdAsync(999999);
 
         // Assert
         result.Should().NotBeNull();
@@ -240,7 +240,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         result.HasErrors.Should().BeFalse();
 
         // Verify in database
-        IBusinessResult<Category> updatedResult = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category?> updatedResult = await categoryService.GetByIdAsync(category.Id);
         updatedResult.GetDataValue()!.Name.Should().Be("Updated Name");
         updatedResult.GetDataValue()!.Description.Should().Be("Updated Description");
     }
@@ -302,7 +302,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         result.HasErrors.Should().BeFalse();
 
         // Verify deletion
-        IBusinessResult<Category> getResult = await categoryService.GetByIdAsync(categoryId);
+        IBusinessResult<Category?> getResult = await categoryService.GetByIdAsync(categoryId);
         getResult.HasData().Should().BeFalse();
     }
 
@@ -328,7 +328,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         result.HasErrors.Should().BeFalse();
 
         // Verify deletion
-        IBusinessResult<Category> getResult = await categoryService.GetByIdAsync(category.Id);
+        IBusinessResult<Category?> getResult = await categoryService.GetByIdAsync(category.Id);
         getResult.HasData().Should().BeFalse();
     }
 

@@ -37,13 +37,8 @@ namespace Mvp24Hours.Application.Redis.Test
 
         private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
         private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
-        private IServiceProvider serviceProvider;
 
-        public Test2CacheAsyncTest()
-        {
-        }
-
-        private void Setup()
+        private IServiceProvider Setup()
         {
             var services = new ServiceCollection();
             // caching
@@ -53,7 +48,7 @@ namespace Mvp24Hours.Application.Redis.Test
             // caching.redis
             services.AddMvp24HoursCaching();
             services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
-            serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
 
 
@@ -61,7 +56,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task SetStringAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
@@ -84,12 +79,12 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task GetStringAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
 
             // act
             await cache.SetStringAsync(keyString, "Test");
-            string content = await cache.GetStringAsync(keyString);
+            string? content = await cache.GetStringAsync(keyString);
 
             // assert
             Assert.True(content.HasValue());
@@ -99,14 +94,14 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task RemoveStringAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
 
             //  act
             await cache.RemoveAsync(keyString);
 
             // assert
-            string content = await cache.GetStringAsync(keyString);
+            string? content = await cache.GetStringAsync(keyString);
             Assert.False(content.HasValue());
         }
 
@@ -114,7 +109,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task SetObjectAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
@@ -136,7 +131,7 @@ namespace Mvp24Hours.Application.Redis.Test
         public async Task GetObjectAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
@@ -148,17 +143,17 @@ namespace Mvp24Hours.Application.Redis.Test
             await cache.SetObjectAsync(keyObject, customer);
 
             //  act
-            customer = await cache.GetObjectAsync<Customer>(keyObject);
+            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
 
             // assert
-            Assert.NotNull(customer);
+            Assert.NotNull(result);
         }
 
         [Fact, Priority(6)]
         public async Task RemoveObjectAsync()
         {
             // arrange
-            Setup();
+            IServiceProvider serviceProvider = Setup();
             IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
             var customer = new Customer
             {
@@ -173,8 +168,8 @@ namespace Mvp24Hours.Application.Redis.Test
             await cache.RemoveAsync(keyObject);
 
             // assert
-            customer = await cache.GetObjectAsync<Customer>(keyObject);
-            Assert.Null(customer);
+            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
+            Assert.Null(result);
         }
     }
 }

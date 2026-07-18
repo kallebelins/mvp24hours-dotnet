@@ -13,7 +13,7 @@ namespace Mvp24Hours.Application.Redis.Test.Support.Entities
 
         public DateTime Created { get; set; }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public bool Active { get; set; }
     }
