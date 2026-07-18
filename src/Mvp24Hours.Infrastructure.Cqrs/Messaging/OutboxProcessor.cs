@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Messaging;
 
@@ -44,24 +43,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Messaging;
 /// });
 /// </code>
 /// </example>
-public sealed class OutboxProcessor : BackgroundService
+/// <remarks>
+/// Creates a new instance of the OutboxProcessor.
+/// </remarks>
+public sealed class OutboxProcessor(
+    IServiceProvider serviceProvider,
+    IOptions<InboxOutboxOptions> options,
+    ILogger<OutboxProcessor>? logger = null) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly InboxOutboxOptions _options;
-    private readonly ILogger<OutboxProcessor>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the OutboxProcessor.
-    /// </summary>
-    public OutboxProcessor(
-        IServiceProvider serviceProvider,
-        IOptions<InboxOutboxOptions> options,
-        ILogger<OutboxProcessor>? logger = null)
-    {
-        _serviceProvider = serviceProvider;
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly InboxOutboxOptions _options = options.Value;
+    private readonly ILogger<OutboxProcessor>? _logger = logger;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -225,14 +217,14 @@ public sealed class OutboxProcessor : BackgroundService
     {
         // Exponential backoff: baseDelay * 2^retryCount
         // With jitter to prevent thundering herd
-        var baseDelayMs = _options.RetryBaseDelayMilliseconds;
-        var exponentialDelay = baseDelayMs * Math.Pow(2, retryCount);
-        var maxDelay = _options.RetryMaxDelayMilliseconds;
+        int baseDelayMs = _options.RetryBaseDelayMilliseconds;
+        double exponentialDelay = baseDelayMs * Math.Pow(2, retryCount);
+        int maxDelay = _options.RetryMaxDelayMilliseconds;
 
-        var delay = Math.Min(exponentialDelay, maxDelay);
+        double delay = Math.Min(exponentialDelay, maxDelay);
 
         // Add jitter (±20%)
-        var jitter = delay * 0.2 * (Random.Shared.NextDouble() * 2 - 1);
+        double jitter = delay * 0.2 * (Random.Shared.NextDouble() * 2 - 1);
 
         return TimeSpan.FromMilliseconds(delay + jitter);
     }
@@ -247,24 +239,17 @@ public sealed class OutboxProcessor : BackgroundService
 /// Task.Delay for modern async/await patterns with proper cancellation support.
 /// </para>
 /// </remarks>
-public sealed class OutboxCleanupService : BackgroundService
+/// <remarks>
+/// Creates a new instance of the OutboxCleanupService.
+/// </remarks>
+public sealed class OutboxCleanupService(
+    IServiceProvider serviceProvider,
+    IOptions<InboxOutboxOptions> options,
+    ILogger<OutboxCleanupService>? logger = null) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly InboxOutboxOptions _options;
-    private readonly ILogger<OutboxCleanupService>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the OutboxCleanupService.
-    /// </summary>
-    public OutboxCleanupService(
-        IServiceProvider serviceProvider,
-        IOptions<InboxOutboxOptions> options,
-        ILogger<OutboxCleanupService>? logger = null)
-    {
-        _serviceProvider = serviceProvider;
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly InboxOutboxOptions _options = options.Value;
+    private readonly ILogger<OutboxCleanupService>? _logger = logger;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -284,7 +269,7 @@ public sealed class OutboxCleanupService : BackgroundService
                     if (outbox != null)
                     {
                         DateTime cutoffDate = DateTime.UtcNow.AddDays(-_options.OutboxRetentionDays);
-                        var deletedCount = await outbox.CleanupAsync(cutoffDate, stoppingToken);
+                        int deletedCount = await outbox.CleanupAsync(cutoffDate, stoppingToken);
 
                         if (deletedCount > 0)
                         {

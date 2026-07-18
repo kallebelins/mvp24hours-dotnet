@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
 
 /// <summary>
@@ -149,18 +144,13 @@ public interface IMongoEntitySeeder<TEntity>
 /// using var context = factory.CreateContextWithData(compositeSeeder);
 /// </code>
 /// </example>
-public class CompositeMongoDataSeeder : IMongoDataSeeder
+/// <remarks>
+/// Initializes a new instance with the specified seeders.
+/// </remarks>
+/// <param name="seeders">The seeders to compose.</param>
+public class CompositeMongoDataSeeder(params IMongoDataSeeder[] seeders) : IMongoDataSeeder
 {
-    private readonly IMongoDataSeeder[] _seeders;
-
-    /// <summary>
-    /// Initializes a new instance with the specified seeders.
-    /// </summary>
-    /// <param name="seeders">The seeders to compose.</param>
-    public CompositeMongoDataSeeder(params IMongoDataSeeder[] seeders)
-    {
-        _seeders = seeders ?? throw new ArgumentNullException(nameof(seeders));
-    }
+    private readonly IMongoDataSeeder[] _seeders = seeders ?? throw new ArgumentNullException(nameof(seeders));
 
     /// <inheritdoc />
     public void Seed(Mvp24HoursContext context)
@@ -191,18 +181,13 @@ public class CompositeMongoDataSeeder : IMongoDataSeeder
 /// using var context = factory.CreateContextWithData(seeder);
 /// </code>
 /// </example>
-public class ActionMongoDataSeeder : IMongoDataSeeder
+/// <remarks>
+/// Initializes a new instance with the specified seed action.
+/// </remarks>
+/// <param name="seedAction">The action to execute for seeding.</param>
+public class ActionMongoDataSeeder(Action<Mvp24HoursContext> seedAction) : IMongoDataSeeder
 {
-    private readonly Action<Mvp24HoursContext> _seedAction;
-
-    /// <summary>
-    /// Initializes a new instance with the specified seed action.
-    /// </summary>
-    /// <param name="seedAction">The action to execute for seeding.</param>
-    public ActionMongoDataSeeder(Action<Mvp24HoursContext> seedAction)
-    {
-        _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
-    }
+    private readonly Action<Mvp24HoursContext> _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
 
     /// <inheritdoc />
     public void Seed(Mvp24HoursContext context)
@@ -230,18 +215,13 @@ public class ActionMongoDataSeeder : IMongoDataSeeder
 /// using var context = await factory.CreateContextWithDataAsync(seeder);
 /// </code>
 /// </example>
-public class ActionMongoDataSeederAsync : IMongoDataSeederAsync
+/// <remarks>
+/// Initializes a new instance with the specified seed action.
+/// </remarks>
+/// <param name="seedAction">The action to execute for seeding.</param>
+public class ActionMongoDataSeederAsync(Func<Mvp24HoursContext, CancellationToken, Task> seedAction) : IMongoDataSeederAsync
 {
-    private readonly Func<Mvp24HoursContext, CancellationToken, Task> _seedAction;
-
-    /// <summary>
-    /// Initializes a new instance with the specified seed action.
-    /// </summary>
-    /// <param name="seedAction">The action to execute for seeding.</param>
-    public ActionMongoDataSeederAsync(Func<Mvp24HoursContext, CancellationToken, Task> seedAction)
-    {
-        _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
-    }
+    private readonly Func<Mvp24HoursContext, CancellationToken, Task> _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
 
     /// <inheritdoc />
     public async Task SeedAsync(Mvp24HoursContext context, CancellationToken cancellationToken = default)

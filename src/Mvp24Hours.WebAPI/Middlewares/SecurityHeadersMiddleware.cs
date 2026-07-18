@@ -4,10 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -53,27 +50,20 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursSecurityHeaders();
 /// </code>
 /// </example>
-public class SecurityHeadersMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="SecurityHeadersMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The security headers options.</param>
+/// <param name="logger">The logger.</param>
+public class SecurityHeadersMiddleware(
+    RequestDelegate next,
+    IOptions<SecurityHeadersOptions> options,
+    ILogger<SecurityHeadersMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly SecurityHeadersOptions _options;
-    private readonly ILogger<SecurityHeadersMiddleware> _logger;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="SecurityHeadersMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The security headers options.</param>
-    /// <param name="logger">The logger.</param>
-    public SecurityHeadersMiddleware(
-        RequestDelegate next,
-        IOptions<SecurityHeadersOptions> options,
-        ILogger<SecurityHeadersMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly SecurityHeadersOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<SecurityHeadersMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Processes the HTTP request and adds security headers to the response.
@@ -171,7 +161,7 @@ public class SecurityHeadersMiddleware
 
     private void RemoveHeaders(HttpResponse response)
     {
-        foreach (var header in _options.HeadersToRemove)
+        foreach (string header in _options.HeadersToRemove)
         {
             if (response.Headers.ContainsKey(header))
             {
@@ -182,7 +172,7 @@ public class SecurityHeadersMiddleware
 
     private void AddHstsHeader(HttpResponse response)
     {
-        var hstsValue = $"max-age={_options.HstsMaxAgeSeconds}";
+        string hstsValue = $"max-age={_options.HstsMaxAgeSeconds}";
 
         if (_options.HstsIncludeSubDomains)
         {
@@ -199,14 +189,14 @@ public class SecurityHeadersMiddleware
 
     private void AddContentSecurityPolicyHeader(HttpResponse response)
     {
-        var cspValue = _options.ContentSecurityPolicy;
+        string cspValue = _options.ContentSecurityPolicy;
 
         if (!string.IsNullOrEmpty(_options.ContentSecurityPolicyReportUri))
         {
             cspValue += $"; report-uri {_options.ContentSecurityPolicyReportUri}";
         }
 
-        var headerName = _options.ContentSecurityPolicyReportOnly
+        string headerName = _options.ContentSecurityPolicyReportOnly
             ? "Content-Security-Policy-Report-Only"
             : "Content-Security-Policy";
 
@@ -215,7 +205,7 @@ public class SecurityHeadersMiddleware
 
     private void AddXFrameOptionsHeader(HttpResponse response)
     {
-        var value = _options.XFrameOptions switch
+        string value = _options.XFrameOptions switch
         {
             XFrameOptionsValue.Deny => "DENY",
             XFrameOptionsValue.SameOrigin => "SAMEORIGIN",
@@ -228,7 +218,7 @@ public class SecurityHeadersMiddleware
 
     private void AddXXssProtectionHeader(HttpResponse response)
     {
-        var value = _options.XXssProtection switch
+        string value = _options.XXssProtection switch
         {
             XssProtectionMode.Disabled => "0",
             XssProtectionMode.Enabled => "1",
@@ -241,7 +231,7 @@ public class SecurityHeadersMiddleware
 
     private void AddReferrerPolicyHeader(HttpResponse response)
     {
-        var value = _options.ReferrerPolicy switch
+        string value = _options.ReferrerPolicy switch
         {
             ReferrerPolicyValue.NoReferrer => "no-referrer",
             ReferrerPolicyValue.NoReferrerWhenDowngrade => "no-referrer-when-downgrade",
@@ -259,7 +249,7 @@ public class SecurityHeadersMiddleware
 
     private void AddCacheControlForSensitivePaths(HttpContext context, HttpResponse response)
     {
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
 
         if (_options.SensitivePaths.Any(pattern => MatchesPattern(path, pattern)))
         {
@@ -271,13 +261,13 @@ public class SecurityHeadersMiddleware
 
     private bool ShouldApplySecurityHeaders(HttpContext context)
     {
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
         return !_options.ExcludedPaths.Any(pattern => MatchesPattern(path, pattern));
     }
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

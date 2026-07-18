@@ -199,10 +199,7 @@ public class MongoDbResiliencyExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddMongoDbResiliency(options =>
-        {
-            options.RetryCount = 7;
-        });
+        services.AddMongoDbResiliency(options => options.RetryCount = 7);
         ServiceProvider provider = services.BuildServiceProvider();
 
         // Act
@@ -228,15 +225,18 @@ public class MongoDbResiliencyExtensionsTests
         ServiceProvider provider = services.BuildServiceProvider();
         IMongoDbResiliencyPolicy policy = provider.GetRequiredService<IMongoDbResiliencyPolicy>();
 
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
+        string result = await policy.ExecuteAsync(async ct =>
         {
             executionCount++;
             await Task.Delay(1, ct);
             if (executionCount < 2)
+            {
                 throw new TimeoutException("Transient");
+            }
+
             return "success";
         });
 

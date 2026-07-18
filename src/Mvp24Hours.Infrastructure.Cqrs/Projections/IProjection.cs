@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
 
 /// <summary>
@@ -226,7 +224,7 @@ public class ProjectionInfo
     /// <summary>
     /// Gets or sets the event types this projection handles.
     /// </summary>
-    public IReadOnlyList<string> HandledEventTypes { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> HandledEventTypes { get; set; } = [];
 }
 
 

@@ -3,11 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
@@ -126,7 +123,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         CommandExecutedEventData eventData,
         int result)
     {
-        var operation = DetectOperation(command.CommandText);
+        string operation = DetectOperation(command.CommandText);
         CheckSlowQuery(command, eventData.Duration, operation, isWrite: true);
         return base.NonQueryExecuted(command, eventData, result);
     }
@@ -138,7 +135,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         int result,
         CancellationToken cancellationToken = default)
     {
-        var operation = DetectOperation(command.CommandText);
+        string operation = DetectOperation(command.CommandText);
         CheckSlowQuery(command, eventData.Duration, operation, isWrite: true);
         return base.NonQueryExecutedAsync(command, eventData, result, cancellationToken);
     }
@@ -175,12 +172,14 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         TimeSpan threshold = isWrite ? _writeSlowQueryThreshold : _slowQueryThreshold;
 
         if (duration < threshold)
+        {
             return;
+        }
 
-        var durationMs = duration.TotalMilliseconds;
-        var thresholdMs = threshold.TotalMilliseconds;
-        var commandText = command.CommandText;
-        var dbName = command.Connection?.Database;
+        double durationMs = duration.TotalMilliseconds;
+        double thresholdMs = threshold.TotalMilliseconds;
+        string commandText = command.CommandText;
+        string? dbName = command.Connection?.Database;
 
         // Record metrics
         _metrics?.RecordSlowQuery(durationMs, thresholdMs, dbName);
@@ -193,7 +192,10 @@ public class SlowQueryInterceptor : DbCommandInterceptor
             {
                 activity.SetTag(EFCoreActivitySource.TagNames.DbOperation, operation);
                 if (!string.IsNullOrEmpty(dbName))
+                {
                     activity.SetTag(EFCoreActivitySource.TagNames.DbName, dbName);
+                }
+
                 EFCoreActivitySource.SetSuccess(activity);
             }
         }
@@ -213,8 +215,8 @@ public class SlowQueryInterceptor : DbCommandInterceptor
         string? dbName,
         DbParameterCollection parameters)
     {
-        var durationMs = duration.TotalMilliseconds;
-        var thresholdMs = threshold.TotalMilliseconds;
+        double durationMs = duration.TotalMilliseconds;
+        double thresholdMs = threshold.TotalMilliseconds;
 
         _logger?.LogWarning(
             "⚠️ SLOW QUERY DETECTED - Operation: {Operation}, Duration: {DurationMs:F2}ms (Threshold: {ThresholdMs}ms), " +
@@ -228,25 +230,59 @@ public class SlowQueryInterceptor : DbCommandInterceptor
 
     private static string DetectOperation(string commandText)
     {
-        if (string.IsNullOrEmpty(commandText)) return "UNKNOWN";
+        if (string.IsNullOrEmpty(commandText))
+        {
+            return "UNKNOWN";
+        }
 
-        var normalized = commandText.TrimStart().ToUpperInvariant();
+        string normalized = commandText.TrimStart().ToUpperInvariant();
 
-        if (normalized.StartsWith("INSERT")) return "INSERT";
-        if (normalized.StartsWith("UPDATE")) return "UPDATE";
-        if (normalized.StartsWith("DELETE")) return "DELETE";
-        if (normalized.StartsWith("MERGE")) return "MERGE";
-        if (normalized.StartsWith("SELECT")) return "SELECT";
-        if (normalized.StartsWith("EXEC") || normalized.StartsWith("CALL")) return "PROCEDURE";
+        if (normalized.StartsWith("INSERT"))
+        {
+            return "INSERT";
+        }
+
+        if (normalized.StartsWith("UPDATE"))
+        {
+            return "UPDATE";
+        }
+
+        if (normalized.StartsWith("DELETE"))
+        {
+            return "DELETE";
+        }
+
+        if (normalized.StartsWith("MERGE"))
+        {
+            return "MERGE";
+        }
+
+        if (normalized.StartsWith("SELECT"))
+        {
+            return "SELECT";
+        }
+
+        if (normalized.StartsWith("EXEC") || normalized.StartsWith("CALL"))
+        {
+            return "PROCEDURE";
+        }
 
         return "UNKNOWN";
     }
 
     private static string TruncateSql(string sql, int maxLength = 500)
     {
-        if (string.IsNullOrEmpty(sql)) return sql;
-        if (sql.Length <= maxLength) return sql;
-        return sql.Substring(0, maxLength) + "...";
+        if (string.IsNullOrEmpty(sql))
+        {
+            return sql;
+        }
+
+        if (sql.Length <= maxLength)
+        {
+            return sql;
+        }
+
+        return sql[..maxLength] + "...";
     }
 }
 

@@ -4,12 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Mvp24Hours.Infrastructure.Cqrs.Saga;
-using Xunit;
-using Xunit.Priority;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -81,7 +76,7 @@ public class SagaTest
 
         public override Task ExecuteAsync(OrderSagaData data, CancellationToken cancellationToken = default)
         {
-            data.TrackingNumber = $"TRK-{Guid.NewGuid():N}".Substring(0, 15);
+            data.TrackingNumber = $"TRK-{Guid.NewGuid():N}"[..15];
             data.ExecutedSteps.Add(Name);
             return Task.CompletedTask;
         }
@@ -420,7 +415,7 @@ public class SagaTest
         });
 
         // Act
-        var cleaned = await store.CleanupAsync(DateTime.UtcNow.AddDays(-5));
+        int cleaned = await store.CleanupAsync(DateTime.UtcNow.AddDays(-5));
 
         // Assert
         Assert.Equal(1, cleaned);

@@ -4,11 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
@@ -49,27 +46,20 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursRequestSizeLimit();
 /// </code>
 /// </example>
-public class RequestSizeLimitMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="RequestSizeLimitMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The request size limit options.</param>
+/// <param name="logger">The logger.</param>
+public class RequestSizeLimitMiddleware(
+    RequestDelegate next,
+    IOptions<RequestSizeLimitOptions> options,
+    ILogger<RequestSizeLimitMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly RequestSizeLimitOptions _options;
-    private readonly ILogger<RequestSizeLimitMiddleware> _logger;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="RequestSizeLimitMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The request size limit options.</param>
-    /// <param name="logger">The logger.</param>
-    public RequestSizeLimitMiddleware(
-        RequestDelegate next,
-        IOptions<RequestSizeLimitOptions> options,
-        ILogger<RequestSizeLimitMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly RequestSizeLimitOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<RequestSizeLimitMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Processes the HTTP request with size limiting.
@@ -85,7 +75,7 @@ public class RequestSizeLimitMiddleware
         }
 
         // Determine the applicable limit
-        var maxBodySize = GetApplicableLimit(context);
+        long? maxBodySize = GetApplicableLimit(context);
 
         // If limit is null, no limit applies
         if (!maxBodySize.HasValue)
@@ -95,7 +85,7 @@ public class RequestSizeLimitMiddleware
         }
 
         // Check Content-Length header first (quick check)
-        var contentLength = context.Request.ContentLength;
+        long? contentLength = context.Request.ContentLength;
         if (contentLength.HasValue && contentLength.Value > maxBodySize.Value)
         {
             if (_options.LogRejectedRequests)
@@ -137,7 +127,7 @@ public class RequestSizeLimitMiddleware
         }
 
         // Check if path is excluded
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
         if (_options.ExcludedPaths.Any(pattern => MatchesPattern(path, pattern)))
         {
             return false;
@@ -148,8 +138,8 @@ public class RequestSizeLimitMiddleware
 
     private long? GetApplicableLimit(HttpContext context)
     {
-        var path = context.Request.Path.Value ?? "/";
-        var contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
+        string path = context.Request.Path.Value ?? "/";
+        string? contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
 
         // Check endpoint-specific limits first (most specific)
         foreach (KeyValuePair<string, long> endpointLimit in _options.EndpointLimits)
@@ -162,7 +152,7 @@ public class RequestSizeLimitMiddleware
 
         // Check content-type specific limits
         if (!string.IsNullOrEmpty(contentType) &&
-            _options.ContentTypeLimits.TryGetValue(contentType, out var contentTypeLimit))
+            _options.ContentTypeLimits.TryGetValue(contentType, out long contentTypeLimit))
         {
             return contentTypeLimit;
         }
@@ -196,7 +186,7 @@ public class RequestSizeLimitMiddleware
 
     private static string FormatBytes(long bytes)
     {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
         int counter = 0;
         decimal number = bytes;
 
@@ -211,7 +201,7 @@ public class RequestSizeLimitMiddleware
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

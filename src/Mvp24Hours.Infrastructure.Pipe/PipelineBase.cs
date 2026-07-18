@@ -5,38 +5,33 @@
 //=====================================================================================
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe
+namespace Mvp24Hours.Infrastructure.Pipe;
+
+/// <summary>
+/// Defines pipeline engine base
+/// </summary>
+public abstract class PipelineBase(bool isBreakOnFail, bool forceRollbackOnFalure)
 {
-    /// <summary>
-    /// Defines pipeline engine base
-    /// </summary>
-    public abstract class PipelineBase
+    #region [ Ctor ]
+    protected PipelineBase()
+        : this(false, false)
     {
-        #region [ Ctor ]
-        protected PipelineBase()
-            : this(false, false)
-        {
-        }
-
-        protected PipelineBase(bool isBreakOnFail, bool forceRollbackOnFalure)
-        {
-            this.IsBreakOnFail = isBreakOnFail;
-            this.ForceRollbackOnFalure = forceRollbackOnFalure;
-            this.Message = new PipelineMessage();
-        }
-        #endregion
-
-        #region [ Fields / Properties ]
-        protected bool IsBreakOnFail { get; set; }
-        public bool AllowPropagateException { get; set; }
-        public bool ForceRollbackOnFalure { get; set; }
-        protected IPipelineMessage Message { get; set; }
-        #endregion
-
-        #region [ Methods ]
-
-        public IPipelineMessage GetMessage() => Message;
-
-        #endregion
     }
+    #endregion
+
+    #region [ Fields / Properties ]
+    protected bool IsBreakOnFail { get; set; } = isBreakOnFail;
+    public bool AllowPropagateException { get; set; }
+    public bool ForceRollbackOnFalure { get; set; } = forceRollbackOnFalure;
+    protected IPipelineMessage Message { get; set; } = new PipelineMessage();
+    #endregion
+
+    #region [ Methods ]
+
+    public IPipelineMessage GetMessage()
+    {
+        return Message;
+    }
+
+    #endregion
 }

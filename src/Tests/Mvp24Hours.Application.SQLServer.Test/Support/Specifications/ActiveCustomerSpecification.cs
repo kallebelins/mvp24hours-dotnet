@@ -3,85 +3,78 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Linq.Expressions;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Core.Domain.Specifications;
 
-namespace Mvp24Hours.Application.SQLServer.Test.Support.Specifications
+namespace Mvp24Hours.Application.SQLServer.Test.Support.Specifications;
+
+/// <summary>
+/// Specification that filters active customers.
+/// </summary>
+public class ActiveCustomerSpecification : Specification<Customer>
 {
-    /// <summary>
-    /// Specification that filters active customers.
-    /// </summary>
-    public class ActiveCustomerSpecification : Specification<Customer>
-    {
-        protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
+    protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
 
-        public ActiveCustomerSpecification()
-        {
-            // Add default ordering by name
-            AddOrderBy(c => c.Name);
-        }
+    public ActiveCustomerSpecification()
+    {
+        // Add default ordering by name
+        AddOrderBy(c => c.Name);
     }
+}
 
-    /// <summary>
-    /// Specification that filters customers by name containing a search term.
-    /// </summary>
-    public class CustomerByNameSpecification : Specification<Customer>
+/// <summary>
+/// Specification that filters customers by name containing a search term.
+/// </summary>
+public class CustomerByNameSpecification(string searchTerm) : Specification<Customer>
+{
+    private readonly string _searchTerm = searchTerm ?? throw new ArgumentNullException(nameof(searchTerm));
+
+    protected override Expression<Func<Customer, bool>> Criteria => c => c.Name.Contains(_searchTerm);
+}
+
+/// <summary>
+/// Specification that filters active customers with contacts loaded.
+/// </summary>
+public class ActiveCustomerWithContactsSpecification : Specification<Customer>
+{
+    protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
+
+    public ActiveCustomerWithContactsSpecification()
     {
-        private readonly string _searchTerm;
+        // Include contacts navigation property
+        AddInclude(c => c.Contacts);
 
-        public CustomerByNameSpecification(string searchTerm)
-        {
-            _searchTerm = searchTerm ?? throw new ArgumentNullException(nameof(searchTerm));
-        }
-
-        protected override Expression<Func<Customer, bool>> Criteria => c => c.Name.Contains(_searchTerm);
+        // Order by name descending
+        AddOrderByDescending(c => c.Name);
     }
+}
 
-    /// <summary>
-    /// Specification that filters active customers with contacts loaded.
-    /// </summary>
-    public class ActiveCustomerWithContactsSpecification : Specification<Customer>
+/// <summary>
+/// Specification with pagination for active customers.
+/// </summary>
+public class PaginatedActiveCustomerSpecification : Specification<Customer>
+{
+    protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
+
+    public PaginatedActiveCustomerSpecification(int skip, int take)
     {
-        protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
-
-        public ActiveCustomerWithContactsSpecification()
-        {
-            // Include contacts navigation property
-            AddInclude(c => c.Contacts);
-
-            // Order by name descending
-            AddOrderByDescending(c => c.Name);
-        }
+        ApplyPaging(skip, take);
+        AddOrderBy(c => c.Id);
     }
+}
 
-    /// <summary>
-    /// Specification with pagination for active customers.
-    /// </summary>
-    public class PaginatedActiveCustomerSpecification : Specification<Customer>
+/// <summary>
+/// Specification that uses string-based include for multi-level loading.
+/// </summary>
+public class CustomerWithContactsStringIncludeSpecification : Specification<Customer>
+{
+    protected override Expression<Func<Customer, bool>> Criteria => c => true;
+
+    public CustomerWithContactsStringIncludeSpecification()
     {
-        protected override Expression<Func<Customer, bool>> Criteria => c => c.Active;
-
-        public PaginatedActiveCustomerSpecification(int skip, int take)
-        {
-            ApplyPaging(skip, take);
-            AddOrderBy(c => c.Id);
-        }
-    }
-
-    /// <summary>
-    /// Specification that uses string-based include for multi-level loading.
-    /// </summary>
-    public class CustomerWithContactsStringIncludeSpecification : Specification<Customer>
-    {
-        protected override Expression<Func<Customer, bool>> Criteria => c => true;
-
-        public CustomerWithContactsStringIncludeSpecification()
-        {
-            // Using string-based include for navigation
-            AddInclude("Contacts");
-        }
+        // Using string-based include for navigation
+        AddInclude("Contacts");
     }
 }
 

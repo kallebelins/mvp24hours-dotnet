@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -79,28 +78,21 @@ public interface IUserRequired
 /// services.AddScoped&lt;ICurrentUserAccessor, CurrentUserAccessor&gt;();
 /// </code>
 /// </example>
-public sealed class CurrentUserBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the CurrentUserBehavior.
+/// </remarks>
+/// <param name="currentUserAccessor">The current user accessor.</param>
+/// <param name="currentUserFactory">Optional factory for creating the current user.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class CurrentUserBehavior<TRequest, TResponse>(
+    ICurrentUserAccessor currentUserAccessor,
+    ICurrentUserFactory? currentUserFactory = null,
+    ILogger<CurrentUserBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly ICurrentUserFactory? _currentUserFactory;
-    private readonly ILogger<CurrentUserBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the CurrentUserBehavior.
-    /// </summary>
-    /// <param name="currentUserAccessor">The current user accessor.</param>
-    /// <param name="currentUserFactory">Optional factory for creating the current user.</param>
-    /// <param name="logger">Optional logger.</param>
-    public CurrentUserBehavior(
-        ICurrentUserAccessor currentUserAccessor,
-        ICurrentUserFactory? currentUserFactory = null,
-        ILogger<CurrentUserBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _currentUserAccessor = currentUserAccessor ?? throw new ArgumentNullException(nameof(currentUserAccessor));
-        _currentUserFactory = currentUserFactory;
-        _logger = logger;
-    }
+    private readonly ICurrentUserAccessor _currentUserAccessor = currentUserAccessor ?? throw new ArgumentNullException(nameof(currentUserAccessor));
+    private readonly ICurrentUserFactory? _currentUserFactory = currentUserFactory;
+    private readonly ILogger<CurrentUserBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
@@ -108,7 +100,7 @@ public sealed class CurrentUserBehavior<TRequest, TResponse> : IPipelineBehavior
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
         ICurrentUser? previousUser = _currentUserAccessor.User;
 
         try

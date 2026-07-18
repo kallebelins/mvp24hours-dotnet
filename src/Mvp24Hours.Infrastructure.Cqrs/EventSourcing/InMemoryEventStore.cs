@@ -35,27 +35,21 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 /// Assert.Single(events);
 /// </code>
 /// </example>
-public class InMemoryEventStore : IEventStoreWithSubscription
+/// <remarks>
+/// Initializes a new instance with custom serializer.
+/// </remarks>
+/// <param name="serializer">The event serializer.</param>
+public class InMemoryEventStore(IEventSerializer serializer) : IEventStoreWithSubscription
 {
     private readonly ConcurrentDictionary<Guid, List<StoredEvent>> _eventStreams = new();
     private readonly List<StoredEvent> _allEvents = [];
-    private readonly IEventSerializer _serializer;
+    private readonly IEventSerializer _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
     private readonly object _lock = new();
-    private long _globalPosition;
 
     /// <summary>
     /// Initializes a new instance with default JSON serializer.
     /// </summary>
     public InMemoryEventStore() : this(new JsonEventSerializer()) { }
-
-    /// <summary>
-    /// Initializes a new instance with custom serializer.
-    /// </summary>
-    /// <param name="serializer">The event serializer.</param>
-    public InMemoryEventStore(IEventSerializer serializer)
-    {
-        _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-    }
 
     /// <inheritdoc />
     public Task AppendEventsAsync(
@@ -74,7 +68,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
 
         lock (_lock)
         {
-            var currentVersion = GetCurrentVersionInternal(aggregateId);
+            long currentVersion = GetCurrentVersionInternal(aggregateId);
 
             if (currentVersion != expectedVersion)
             {
@@ -83,17 +77,17 @@ public class InMemoryEventStore : IEventStoreWithSubscription
             }
 
             List<StoredEvent> stream = _eventStreams.GetOrAdd(aggregateId, _ => []);
-            var version = currentVersion;
+            long version = currentVersion;
 
             foreach (CoreDomainEvent? @event in eventList)
             {
                 version++;
-                _globalPosition++;
+                GlobalPosition++;
 
                 var storedEvent = new StoredEvent
                 {
                     Id = Guid.NewGuid(),
-                    GlobalPosition = _globalPosition,
+                    GlobalPosition = GlobalPosition,
                     AggregateId = aggregateId,
                     AggregateType = @event.GetType().DeclaringType?.Name ?? "Unknown",
                     Version = version,
@@ -120,7 +114,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         {
             if (!_eventStreams.TryGetValue(aggregateId, out List<StoredEvent>? stream))
             {
-                return Task.FromResult<IReadOnlyList<CoreDomainEvent>>(Array.Empty<CoreDomainEvent>());
+                return Task.FromResult<IReadOnlyList<CoreDomainEvent>>([]);
             }
 
             var events = stream
@@ -157,7 +151,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         long fromPosition,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var position = fromPosition;
+        long position = fromPosition;
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -165,10 +159,9 @@ public class InMemoryEventStore : IEventStoreWithSubscription
 
             lock (_lock)
             {
-                newEvents = _allEvents
+                newEvents = [.. _allEvents
                     .Where(e => e.GlobalPosition > position)
-                    .OrderBy(e => e.GlobalPosition)
-                    .ToArray();
+                    .OrderBy(e => e.GlobalPosition)];
             }
 
             foreach (StoredEvent @event in newEvents)
@@ -219,7 +212,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
         {
             _eventStreams.Clear();
             _allEvents.Clear();
-            _globalPosition = 0;
+            GlobalPosition = 0;
         }
     }
 
@@ -240,7 +233,7 @@ public class InMemoryEventStore : IEventStoreWithSubscription
     /// <summary>
     /// Gets the current global position.
     /// </summary>
-    public long GlobalPosition => _globalPosition;
+    public long GlobalPosition { get; private set; }
 
     private long GetCurrentVersionInternal(Guid aggregateId)
     {

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -119,7 +118,7 @@ public sealed class HttpMetrics
         int requestSize = 0,
         int responseSize = 0)
     {
-        var success = statusCode < 400;
+        bool success = statusCode < 400;
         var tags = new TagList
         {
             { MetricTags.HttpMethod, method },
@@ -245,7 +244,10 @@ public sealed class HttpMetrics
         /// Sets the status code for the request.
         /// </summary>
         /// <param name="statusCode">HTTP status code.</param>
-        public void SetStatusCode(int statusCode) => StatusCode = statusCode;
+        public void SetStatusCode(int statusCode)
+        {
+            StatusCode = statusCode;
+        }
 
         /// <summary>
         /// Sets the request and response sizes.

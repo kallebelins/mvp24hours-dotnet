@@ -210,7 +210,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         }
 
         // Calculate expected version (current version minus uncommitted events)
-        var expectedVersion = aggregate.Version - uncommittedEvents.Count;
+        long expectedVersion = aggregate.Version - uncommittedEvents.Count;
 
         // Append events
         await _eventStore.AppendEventsAsync(
@@ -222,7 +222,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
         // Check if we should take a snapshot
         if (_snapshotStore != null && _snapshotStrategy != null)
         {
-            var lastSnapshotVersion = await GetLastSnapshotVersionAsync(aggregate.Id, cancellationToken);
+            long lastSnapshotVersion = await GetLastSnapshotVersionAsync(aggregate.Id, cancellationToken);
 
             if (_snapshotStrategy.ShouldTakeSnapshot(aggregate, lastSnapshotVersion))
             {
@@ -273,13 +273,13 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
             return;
         }
 
-        var snapshotData = createSnapshotMethod.Invoke(aggregate, null);
+        object? snapshotData = createSnapshotMethod.Invoke(aggregate, null);
         if (snapshotData == null)
         {
             return;
         }
 
-        var serializedData = _eventSerializer?.Serialize(snapshotData)
+        string serializedData = _eventSerializer?.Serialize(snapshotData)
             ?? System.Text.Json.JsonSerializer.Serialize(snapshotData);
 
         var snapshot = new Snapshot
@@ -314,7 +314,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
                 return default;
             }
 
-            var snapshotData = _eventSerializer?.Deserialize(snapshotType, snapshot.Data)
+            object? snapshotData = _eventSerializer?.Deserialize(snapshotType, snapshot.Data)
                 ?? System.Text.Json.JsonSerializer.Deserialize(snapshot.Data, snapshotType);
 
             if (snapshotData == null)
@@ -324,7 +324,7 @@ public class EventStoreRepository<TAggregate> : IEventStoreRepository<TAggregate
 
             var aggregate = new TAggregate();
             MethodInfo? restoreMethod = typeof(TAggregate).GetMethod("RestoreFromSnapshot");
-            restoreMethod?.Invoke(aggregate, new[] { snapshotData, snapshot.Version });
+            restoreMethod?.Invoke(aggregate, [snapshotData, snapshot.Version]);
 
             return aggregate;
         }

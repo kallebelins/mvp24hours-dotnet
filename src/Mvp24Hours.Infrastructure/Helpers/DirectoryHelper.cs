@@ -3,80 +3,72 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 
-namespace Mvp24Hours.Infrastructure.Helpers
-{
-    /// <summary>
-    /// Contains functions to handle files
-    /// </summary>
-    public static class DirectoryHelper
-    {
-        public static string GetExecutingDirectory()
-        {
-            UriBuilder uri = new(uri: Assembly.GetExecutingAssembly().Location);
-            string path = Uri.UnescapeDataString(uri.Path);
-            return Path.GetDirectoryName(path) ?? string.Empty;
-        }
+namespace Mvp24Hours.Infrastructure.Helpers;
 
-        /// <summary>
-        /// Checks if directory exists or creates it if it doesn't exist.
-        /// </summary>
-        /// <param name="path">The directory path to check or create.</param>
-        /// <param name="logger">Optional logger for telemetry. If null, no logging is performed.</param>
-        /// <returns>True if directory exists or was created successfully; otherwise, false.</returns>
-        public static bool ExistsOrCreate(string path, ILogger? logger = null)
-        {
-            if (path == null) { return false; }
-            try
-            {
-                if (!Directory.Exists(path))
-                {
-                    logger?.LogDebug("Creating directory. Path: {DirectoryPath}", path);
-                    Directory.CreateDirectory(path);
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "Failed to create directory. Path: {DirectoryPath}", path);
-            }
-            return false;
-        }
+/// <summary>
+/// Contains functions to handle files
+/// </summary>
+public static class DirectoryHelper
+{
+    public static string GetExecutingDirectory()
+    {
+        UriBuilder uri = new(uri: Assembly.GetExecutingAssembly().Location);
+        string path = Uri.UnescapeDataString(uri.Path);
+        return Path.GetDirectoryName(path) ?? string.Empty;
     }
 
     /// <summary>
-    /// Injectable service for directory operations with logging support.
+    /// Checks if directory exists or creates it if it doesn't exist.
     /// </summary>
-    public class DirectoryService
+    /// <param name="path">The directory path to check or create.</param>
+    /// <param name="logger">Optional logger for telemetry. If null, no logging is performed.</param>
+    /// <returns>True if directory exists or was created successfully; otherwise, false.</returns>
+    public static bool ExistsOrCreate(string path, ILogger? logger = null)
     {
-        private readonly ILogger<DirectoryService> _logger;
-
-        public DirectoryService(ILogger<DirectoryService> logger)
+        if (path == null) { return false; }
+        try
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (!Directory.Exists(path))
+            {
+                logger?.LogDebug("Creating directory. Path: {DirectoryPath}", path);
+                Directory.CreateDirectory(path);
+            }
+            return true;
         }
-
-        /// <summary>
-        /// Checks if directory exists or creates it if it doesn't exist.
-        /// </summary>
-        /// <param name="path">The directory path to check or create.</param>
-        /// <returns>True if directory exists or was created successfully; otherwise, false.</returns>
-        public bool ExistsOrCreate(string path)
+        catch (Exception ex)
         {
-            return DirectoryHelper.ExistsOrCreate(path, _logger);
+            logger?.LogError(ex, "Failed to create directory. Path: {DirectoryPath}", path);
         }
+        return false;
+    }
+}
 
-        /// <summary>
-        /// Gets the executing directory.
-        /// </summary>
-        /// <returns>The directory path where the executing assembly is located.</returns>
-        public string GetExecutingDirectory()
-        {
-            return DirectoryHelper.GetExecutingDirectory();
-        }
+/// <summary>
+/// Injectable service for directory operations with logging support.
+/// </summary>
+public class DirectoryService(ILogger<DirectoryService> logger)
+{
+    private readonly ILogger<DirectoryService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    /// <summary>
+    /// Checks if directory exists or creates it if it doesn't exist.
+    /// </summary>
+    /// <param name="path">The directory path to check or create.</param>
+    /// <returns>True if directory exists or was created successfully; otherwise, false.</returns>
+    public bool ExistsOrCreate(string path)
+    {
+        return DirectoryHelper.ExistsOrCreate(path, _logger);
+    }
+
+    /// <summary>
+    /// Gets the executing directory.
+    /// </summary>
+    /// <returns>The directory path where the executing assembly is located.</returns>
+    public string GetExecutingDirectory()
+    {
+        return DirectoryHelper.GetExecutingDirectory();
     }
 }

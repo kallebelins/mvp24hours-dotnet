@@ -8,7 +8,6 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
@@ -1000,24 +999,19 @@ public static class MediatorExtensibilityExtensions
         where TInterface : class
         where TDecorator : class, TInterface
     {
-        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
-        if (wrappedDescriptor == null)
-        {
-            throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
-        }
-
+        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface)) ?? throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
         ObjectFactory objectFactory = ActivatorUtilities.CreateFactory(
             typeof(TDecorator),
-            new[] { typeof(TInterface) });
+            [typeof(TInterface)]);
 
         services.Replace(ServiceDescriptor.Describe(
             typeof(TInterface),
             sp =>
             {
-                var inner = wrappedDescriptor.ImplementationInstance
+                object inner = wrappedDescriptor.ImplementationInstance
                     ?? (wrappedDescriptor.ImplementationFactory?.Invoke(sp)
                         ?? ActivatorUtilities.GetServiceOrCreateInstance(sp, wrappedDescriptor.ImplementationType!));
-                return (TInterface)objectFactory(sp, new[] { inner });
+                return (TInterface)objectFactory(sp, [inner]);
             },
             wrappedDescriptor.Lifetime));
     }

@@ -7,11 +7,10 @@ using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Application.MySql.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 
-namespace Mvp24Hours.Application.MySql.Test.Support.Services
-{
-    public class CustomerPagingService(IUnitOfWork unitOfWork) : RepositoryPagingService<Customer, IUnitOfWork>(unitOfWork)
-    {
+namespace Mvp24Hours.Application.MySql.Test.Support.Services;
 
-        // custom methods
-    }
+public class CustomerPagingService(IUnitOfWork unitOfWork) : RepositoryPagingService<Customer, IUnitOfWork>(unitOfWork)
+{
+
+    // custom methods
 }

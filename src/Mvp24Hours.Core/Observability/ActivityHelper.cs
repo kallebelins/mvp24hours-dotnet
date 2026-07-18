@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Mvp24Hours.Core.Observability;
@@ -68,7 +65,10 @@ public static class ActivityHelper
         IEnumerable<ActivityLink>? links = null,
         ActivityContext parentContext = default)
     {
-        if (source == null) return null;
+        if (source == null)
+        {
+            return null;
+        }
 
         Activity? activity = source.StartActivity(
             name,
@@ -211,7 +211,7 @@ public static class ActivityHelper
         string operationName,
         [CallerMemberName] string? callerName = null)
     {
-        var name = string.IsNullOrEmpty(callerName)
+        string name = string.IsNullOrEmpty(callerName)
             ? operationName
             : $"{operationName}.{callerName}";
 
@@ -385,7 +385,7 @@ public static class ActivityHelper
         string cacheKey,
         string? cacheSystem = null)
     {
-        var activityName = operation.ToUpperInvariant() switch
+        string activityName = operation.ToUpperInvariant() switch
         {
             "GET" => Mvp24HoursActivitySources.Caching.Activities.Get,
             "SET" => Mvp24HoursActivitySources.Caching.Activities.Set,
@@ -464,18 +464,24 @@ public static class ActivityHelper
     public static ActivityContext ParseTraceContext(string? traceparent, string? tracestate = null)
     {
         if (string.IsNullOrEmpty(traceparent))
+        {
             return default;
+        }
 
         try
         {
             // Format: 00-{traceId}-{spanId}-{flags}
-            var parts = traceparent.Split('-');
+            string[] parts = traceparent.Split('-');
             if (parts.Length < 4)
+            {
                 return default;
+            }
 
             // Validate format: version should be 00, traceId 32 chars, spanId 16 chars
             if (parts[1].Length != 32 || parts[2].Length != 16)
+            {
                 return default;
+            }
 
             var traceId = ActivityTraceId.CreateFromString(parts[1].AsSpan());
             var spanId = ActivitySpanId.CreateFromString(parts[2].AsSpan());

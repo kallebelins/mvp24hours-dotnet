@@ -4,12 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -49,31 +44,23 @@ namespace Mvp24Hours.Application.Logic.Events;
 /// await _dispatcher.DispatchAsync(new EntityCreatedEvent&lt;Customer&gt;(customer));
 /// </code>
 /// </example>
-public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
+/// <remarks>
+/// Creates a new instance of the ApplicationEventDispatcher.
+/// </remarks>
+/// <param name="serviceProvider">The service provider for resolving handlers.</param>
+/// <param name="options">The dispatcher options.</param>
+/// <param name="outbox">Optional outbox for reliable delivery.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class ApplicationEventDispatcher(
+    IServiceProvider serviceProvider,
+    IOptions<ApplicationEventDispatcherOptions>? options = null,
+    IApplicationEventOutbox? outbox = null,
+    ILogger<ApplicationEventDispatcher>? logger = null) : IApplicationEventDispatcher
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ApplicationEventDispatcherOptions _options;
-    private readonly IApplicationEventOutbox? _outbox;
-    private readonly ILogger<ApplicationEventDispatcher>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the ApplicationEventDispatcher.
-    /// </summary>
-    /// <param name="serviceProvider">The service provider for resolving handlers.</param>
-    /// <param name="options">The dispatcher options.</param>
-    /// <param name="outbox">Optional outbox for reliable delivery.</param>
-    /// <param name="logger">Optional logger.</param>
-    public ApplicationEventDispatcher(
-        IServiceProvider serviceProvider,
-        IOptions<ApplicationEventDispatcherOptions>? options = null,
-        IApplicationEventOutbox? outbox = null,
-        ILogger<ApplicationEventDispatcher>? logger = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _options = options?.Value ?? new ApplicationEventDispatcherOptions();
-        _outbox = outbox;
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ApplicationEventDispatcherOptions _options = options?.Value ?? new ApplicationEventDispatcherOptions();
+    private readonly IApplicationEventOutbox? _outbox = outbox;
+    private readonly ILogger<ApplicationEventDispatcher>? _logger = logger;
 
     /// <inheritdoc />
     public async Task DispatchAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
@@ -163,8 +150,7 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
 
             if (genericMethod != null)
             {
-                var task = genericMethod.Invoke(this, [@event, cancellationToken]) as Task;
-                if (task != null)
+                if (genericMethod.Invoke(this, [@event, cancellationToken]) is Task task)
                 {
                     await task;
                 }
@@ -180,9 +166,12 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
     {
         var exceptions = new List<Exception>();
 
-        foreach (var handler in handlers)
+        foreach (object? handler in handlers)
         {
-            if (handler == null) continue;
+            if (handler == null)
+            {
+                continue;
+            }
 
             try
             {
@@ -299,19 +288,18 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
 
             if (publisherType != null)
             {
-                var publisher = _serviceProvider.GetService(publisherType);
+                object? publisher = _serviceProvider.GetService(publisherType);
                 if (publisher != null)
                 {
                     // Create a wrapper notification and publish
                     Type wrapperType = typeof(ApplicationEventNotification<>).MakeGenericType(typeof(TEvent));
-                    var wrapper = Activator.CreateInstance(wrapperType, @event);
+                    object? wrapper = Activator.CreateInstance(wrapperType, @event);
 
                     MethodInfo? publishMethod = publisherType.GetMethod("Publish");
                     if (publishMethod != null && wrapper != null)
                     {
                         MethodInfo genericPublish = publishMethod.MakeGenericMethod(wrapperType);
-                        var task = genericPublish.Invoke(publisher, [wrapper, cancellationToken]) as Task;
-                        if (task != null)
+                        if (genericPublish.Invoke(publisher, [wrapper, cancellationToken]) is Task task)
                         {
                             await task;
                         }
@@ -333,21 +321,17 @@ public sealed class ApplicationEventDispatcher : IApplicationEventDispatcher
 /// Wrapper to publish application events as Mediator notifications.
 /// </summary>
 /// <typeparam name="TEvent">The type of application event.</typeparam>
-public class ApplicationEventNotification<TEvent>
+/// <remarks>
+/// Creates a new notification wrapper.
+/// </remarks>
+/// <param name="event">The application event.</param>
+public class ApplicationEventNotification<TEvent>(TEvent @event)
     where TEvent : IApplicationEvent
 {
-    /// <summary>
-    /// Creates a new notification wrapper.
-    /// </summary>
-    /// <param name="event">The application event.</param>
-    public ApplicationEventNotification(TEvent @event)
-    {
-        Event = @event;
-    }
 
     /// <summary>
     /// The wrapped application event.
     /// </summary>
-    public TEvent Event { get; }
+    public TEvent Event { get; } = @event;
 }
 

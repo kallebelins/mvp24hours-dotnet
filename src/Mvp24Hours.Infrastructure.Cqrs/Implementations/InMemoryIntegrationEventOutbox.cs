@@ -7,7 +7,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -76,7 +75,7 @@ public sealed class InMemoryIntegrationEventOutbox : IIntegrationEventOutbox
     public Task<IReadOnlyList<OutboxMessage>> GetPendingAsync(int batchSize = 100, CancellationToken cancellationToken = default)
     {
         var pending = _messages.Values
-            .Where(m => m.Status == OutboxMessageStatus.Pending || m.Status == OutboxMessageStatus.Failed)
+            .Where(m => m.Status is OutboxMessageStatus.Pending or OutboxMessageStatus.Failed)
             .OrderBy(m => m.CreatedAt)
             .Take(batchSize)
             .ToList();

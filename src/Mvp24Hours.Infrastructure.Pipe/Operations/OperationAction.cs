@@ -3,44 +3,32 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using static System.Collections.Specialized.BitVector32;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Operations
+namespace Mvp24Hours.Infrastructure.Pipe.Operations;
+
+/// <summary>  
+/// Action operation
+/// </summary>
+public class OperationAction(Action<IPipelineMessage> action, Action<IPipelineMessage>? rollbackAction = null, bool isRequired = false) : IOperation
 {
-    /// <summary>  
-    /// Action operation
-    /// </summary>
-    public class OperationAction : IOperation
+    private readonly Action<IPipelineMessage> _action = action;
+    private readonly Action<IPipelineMessage>? _rollbackAction = rollbackAction;
+
+    public bool IsRequired { get; } = isRequired;
+
+    public OperationAction(Action<IPipelineMessage> action, bool isRequired)
+        : this(action, null, isRequired)
     {
-        private readonly Action<IPipelineMessage> _action;
-        private readonly Action<IPipelineMessage>? _rollbackAction;
-        private readonly bool _isRequired;
+    }
 
-        public bool IsRequired => _isRequired;
+    public virtual void Execute(IPipelineMessage input)
+    {
+        _action?.Invoke(input);
+    }
 
-        public OperationAction(Action<IPipelineMessage> action, Action<IPipelineMessage>? rollbackAction = null, bool isRequired = false)
-        {
-            _action = action;
-            _rollbackAction = rollbackAction;
-            _isRequired = isRequired;
-        }
-
-        public OperationAction(Action<IPipelineMessage> action, bool isRequired)
-            : this(action, null, isRequired)
-        {
-        }
-
-        public virtual void Execute(IPipelineMessage input)
-        {
-            _action?.Invoke(input);
-        }
-
-        public virtual void Rollback(IPipelineMessage input)
-        {
-            this._rollbackAction?.Invoke(input);
-        }
+    public virtual void Rollback(IPipelineMessage input)
+    {
+        _rollbackAction?.Invoke(input);
     }
 }

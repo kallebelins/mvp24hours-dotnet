@@ -4,11 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Events;
@@ -54,17 +49,28 @@ namespace Mvp24Hours.Application.Logic.Events;
 /// </code>
 /// </para>
 /// </remarks>
-public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
+/// <remarks>
+/// Initializes a new instance of the EventAwareCommandServiceBaseAsync.
+/// </remarks>
+/// <param name="unitOfWork">The unit of work for transaction management.</param>
+/// <param name="eventDispatcher">The event dispatcher for dispatching events.</param>
+/// <param name="validator">Optional validator for entity validation.</param>
+/// <param name="logger">Optional logger.</param>
+public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>(
+    TUoW unitOfWork,
+    IApplicationEventDispatcher eventDispatcher,
+    IValidator<TEntity>? validator = null,
+    ILogger? logger = null)
     where TEntity : class, IEntityBase
     where TUoW : class, IUnitOfWorkAsync
 {
     #region [ Fields ]
 
-    private readonly IRepositoryAsync<TEntity> _repository;
-    private readonly TUoW _unitOfWork;
-    private readonly IValidator<TEntity>? _validator;
-    private readonly IApplicationEventDispatcher _eventDispatcher;
-    private readonly ILogger? _logger;
+    private readonly IRepositoryAsync<TEntity> _repository = unitOfWork.GetRepository<TEntity>();
+    private readonly TUoW _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+    private readonly IValidator<TEntity>? _validator = validator;
+    private readonly IApplicationEventDispatcher _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
+    private readonly ILogger? _logger = logger;
 
     #endregion
 
@@ -101,28 +107,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     protected virtual string? CorrelationId { get; set; }
 
     #endregion
-
     #region [ Constructors ]
-
-    /// <summary>
-    /// Initializes a new instance of the EventAwareCommandServiceBaseAsync.
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work for transaction management.</param>
-    /// <param name="eventDispatcher">The event dispatcher for dispatching events.</param>
-    /// <param name="validator">Optional validator for entity validation.</param>
-    /// <param name="logger">Optional logger.</param>
-    protected EventAwareCommandServiceBaseAsync(
-        TUoW unitOfWork,
-        IApplicationEventDispatcher eventDispatcher,
-        IValidator<TEntity>? validator = null,
-        ILogger? logger = null)
-    {
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
-        _repository = unitOfWork.GetRepository<TEntity>();
-        _validator = validator;
-        _logger = logger;
-    }
 
     #endregion
 
@@ -145,7 +130,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         }
 
         await _repository.AddAsync(entity, cancellationToken: cancellationToken);
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -180,7 +165,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         }
 
         await Task.WhenAll(entities.Select(entity => _repository.AddAsync(entity, cancellationToken: cancellationToken)));
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -211,7 +196,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         }
 
         await _repository.ModifyAsync(entity, cancellationToken: cancellationToken);
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -246,7 +231,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         }
 
         await Task.WhenAll(entities.Select(entity => _repository.ModifyAsync(entity, cancellationToken: cancellationToken)));
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -271,7 +256,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         _logger?.LogDebug("application-eventaware-commandservice-removeasync");
 
         await _repository.RemoveAsync(entity, cancellationToken: cancellationToken);
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -297,7 +282,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         }
 
         await Task.WhenAll(entities.Select(entity => _repository.RemoveAsync(entity, cancellationToken: cancellationToken)));
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result > 0 && DispatchEvents)
         {
@@ -319,7 +304,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
         _logger?.LogDebug("application-eventaware-commandservice-removebyidasync");
 
         await _repository.RemoveByIdAsync(id, cancellationToken: cancellationToken);
-        var result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        int result = await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         // Note: Cannot dispatch EntityDeletedEvent without loading the entity first
         // If you need the event, use RemoveAsync(entity) instead
@@ -357,7 +342,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <param name="cancellationToken">Cancellation token.</param>
     protected virtual async Task DispatchCreatedEventsAsync(IList<TEntity> entities, CancellationToken cancellationToken)
     {
-        var @event = new EntitiesCreatedEvent<TEntity>(entities.ToList())
+        var @event = new EntitiesCreatedEvent<TEntity>([.. entities])
         {
             CorrelationId = CorrelationId
         };
@@ -396,7 +381,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <param name="cancellationToken">Cancellation token.</param>
     protected virtual async Task DispatchUpdatedEventsAsync(IList<TEntity> entities, CancellationToken cancellationToken)
     {
-        var @event = new EntitiesUpdatedEvent<TEntity>(entities.ToList())
+        var @event = new EntitiesUpdatedEvent<TEntity>([.. entities])
         {
             CorrelationId = CorrelationId
         };
@@ -435,7 +420,7 @@ public abstract class EventAwareCommandServiceBaseAsync<TEntity, TUoW>
     /// <param name="cancellationToken">Cancellation token.</param>
     protected virtual async Task DispatchDeletedEventsAsync(IList<TEntity> entities, CancellationToken cancellationToken)
     {
-        var @event = new EntitiesDeletedEvent<TEntity>(entities.ToList())
+        var @event = new EntitiesDeletedEvent<TEntity>([.. entities])
         {
             CorrelationId = CorrelationId
         };

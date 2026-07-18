@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Mvp24Hours.Core.Test.Extensions;
 
 /// <summary>
@@ -17,7 +15,7 @@ public class EnumerableExtensionsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.IsList();
+        bool result = list.IsList();
 
         // Assert
         result.Should().BeTrue();
@@ -27,10 +25,10 @@ public class EnumerableExtensionsTest
     public void IsList_WithArray_ReturnsTrue()
     {
         // Arrange
-        var array = new[] { 1, 2, 3 };
+        int[] array = [1, 2, 3];
 
         // Act
-        var result = array.IsList();
+        bool result = array.IsList();
 
         // Assert
         result.Should().BeTrue();
@@ -43,7 +41,7 @@ public class EnumerableExtensionsTest
         object? obj = null;
 
         // Act
-        var result = obj.IsList();
+        bool result = obj.IsList();
 
         // Assert
         result.Should().BeFalse();
@@ -53,10 +51,10 @@ public class EnumerableExtensionsTest
     public void IsList_WithNonList_ReturnsFalse()
     {
         // Arrange
-        var number = 42;
+        int number = 42;
 
         // Act
-        var result = number.IsList();
+        bool result = number.IsList();
 
         // Assert
         result.Should().BeFalse();
@@ -73,7 +71,7 @@ public class EnumerableExtensionsTest
         var dict = new Dictionary<string, int> { { "one", 1 }, { "two", 2 } };
 
         // Act
-        var result = dict.IsDictionary();
+        bool result = dict.IsDictionary();
 
         // Assert
         result.Should().BeTrue();
@@ -86,7 +84,7 @@ public class EnumerableExtensionsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.IsDictionary();
+        bool result = list.IsDictionary();
 
         // Assert
         result.Should().BeFalse();
@@ -99,7 +97,7 @@ public class EnumerableExtensionsTest
         object? obj = null;
 
         // Act
-        var result = obj.IsDictionary();
+        bool result = obj.IsDictionary();
 
         // Assert
         result.Should().BeFalse();
@@ -113,7 +111,7 @@ public class EnumerableExtensionsTest
     public void ForEach_ExecutesActionForEachElement()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3, 4, 5 };
+        int[] collection = [1, 2, 3, 4, 5];
         var results = new List<int>();
 
         // Act
@@ -127,8 +125,8 @@ public class EnumerableExtensionsTest
     public void ForEach_WithEmptyCollection_DoesNotExecuteAction()
     {
         // Arrange
-        IEnumerable<int> collection = Enumerable.Empty<int>();
-        var counter = 0;
+        IEnumerable<int> collection = [];
+        int counter = 0;
 
         // Act
         collection.ForEach(x => counter++).ToList();
@@ -141,8 +139,8 @@ public class EnumerableExtensionsTest
     public void ForEach_IsLazy_OnlyExecutesWhenEnumerated()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3 };
-        var counter = 0;
+        int[] collection = [1, 2, 3];
+        int counter = 0;
 
         // Act (nÃ£o chama ToList())
         IEnumerable<int> query = collection.ForEach(x => counter++);
@@ -168,7 +166,7 @@ public class EnumerableExtensionsTest
         IEnumerable<int>? collection = null;
 
         // Act
-        var result = collection.AnyOrNotNull();
+        bool result = collection.AnyOrNotNull();
 
         // Assert
         result.Should().BeFalse();
@@ -178,10 +176,10 @@ public class EnumerableExtensionsTest
     public void AnyOrNotNull_WithEmptyCollection_ReturnsFalse()
     {
         // Arrange
-        IEnumerable<int> collection = Enumerable.Empty<int>();
+        IEnumerable<int> collection = [];
 
         // Act
-        var result = collection.AnyOrNotNull();
+        bool result = collection.AnyOrNotNull();
 
         // Assert
         result.Should().BeFalse();
@@ -191,10 +189,10 @@ public class EnumerableExtensionsTest
     public void AnyOrNotNull_WithPopulatedCollection_ReturnsTrue()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3 };
+        int[] collection = [1, 2, 3];
 
         // Act
-        var result = collection.AnyOrNotNull();
+        bool result = collection.AnyOrNotNull();
 
         // Assert
         result.Should().BeTrue();
@@ -204,10 +202,10 @@ public class EnumerableExtensionsTest
     public void AnyOrNotNull_WithPredicate_AppliesFilter()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3, 4, 5 };
+        int[] collection = [1, 2, 3, 4, 5];
 
         // Act
-        var result = collection.AnyOrNotNull(x => x > 3);
+        bool result = collection.AnyOrNotNull(x => x > 3);
 
         // Assert
         result.Should().BeTrue();
@@ -217,10 +215,10 @@ public class EnumerableExtensionsTest
     public void AnyOrNotNull_WithPredicateNoMatch_ReturnsFalse()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3 };
+        int[] collection = [1, 2, 3];
 
         // Act
-        var result = collection.AnyOrNotNull(x => x > 10);
+        bool result = collection.AnyOrNotNull(x => x > 10);
 
         // Assert
         result.Should().BeFalse();
@@ -237,7 +235,7 @@ public class EnumerableExtensionsTest
         IEnumerable<int>? collection = null;
 
         // Act
-        var result = collection.AnySafe();
+        bool result = collection.AnySafe();
 
         // Assert
         result.Should().BeFalse();
@@ -247,10 +245,10 @@ public class EnumerableExtensionsTest
     public void AnySafe_WithEmptyCollection_ReturnsFalse()
     {
         // Arrange
-        IEnumerable<int> collection = Enumerable.Empty<int>();
+        IEnumerable<int> collection = [];
 
         // Act
-        var result = collection.AnySafe();
+        bool result = collection.AnySafe();
 
         // Assert
         result.Should().BeFalse();
@@ -260,10 +258,10 @@ public class EnumerableExtensionsTest
     public void AnySafe_WithPopulatedCollection_ReturnsTrue()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3 };
+        int[] collection = [1, 2, 3];
 
         // Act
-        var result = collection.AnySafe();
+        bool result = collection.AnySafe();
 
         // Assert
         result.Should().BeTrue();
@@ -273,10 +271,10 @@ public class EnumerableExtensionsTest
     public void AnySafe_WithPredicate_AppliesFilter()
     {
         // Arrange
-        var collection = new[] { 1, 2, 3 };
+        int[] collection = [1, 2, 3];
 
         // Act
-        var result = collection.AnySafe(x => x > 2);
+        bool result = collection.AnySafe(x => x > 2);
 
         // Assert
         result.Should().BeTrue();
@@ -293,7 +291,7 @@ public class EnumerableExtensionsTest
         Dictionary<string, int>? dict = null;
 
         // Act
-        var result = dict.ContainsKeySafe("key");
+        bool result = dict.ContainsKeySafe("key");
 
         // Assert
         result.Should().BeFalse();
@@ -306,7 +304,7 @@ public class EnumerableExtensionsTest
         var dict = new Dictionary<string, int> { { "one", 1 }, { "two", 2 } };
 
         // Act
-        var result = dict.ContainsKeySafe("one");
+        bool result = dict.ContainsKeySafe("one");
 
         // Assert
         result.Should().BeTrue();
@@ -319,7 +317,7 @@ public class EnumerableExtensionsTest
         var dict = new Dictionary<string, int> { { "one", 1 }, { "two", 2 } };
 
         // Act
-        var result = dict.ContainsKeySafe("three");
+        bool result = dict.ContainsKeySafe("three");
 
         // Assert
         result.Should().BeFalse();
@@ -333,10 +331,10 @@ public class EnumerableExtensionsTest
     public async Task FirstOrDefaultAsync_ReturnsFirstElement()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.FirstOrDefaultAsync();
+        int result = await task.FirstOrDefaultAsync();
 
         // Assert
         result.Should().Be(1);
@@ -346,10 +344,10 @@ public class EnumerableExtensionsTest
     public async Task FirstOrDefaultAsync_WithPredicate_ReturnsMatch()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3, 4, 5]);
 
         // Act
-        var result = await task.FirstOrDefaultAsync(x => x > 3);
+        int result = await task.FirstOrDefaultAsync(x => x > 3);
 
         // Assert
         result.Should().Be(4);
@@ -362,7 +360,7 @@ public class EnumerableExtensionsTest
         Task<IEnumerable<int>> task = Task.FromResult(Enumerable.Empty<int>());
 
         // Act
-        var result = await task.FirstOrDefaultAsync();
+        int result = await task.FirstOrDefaultAsync();
 
         // Assert
         result.Should().Be(0);
@@ -372,10 +370,10 @@ public class EnumerableExtensionsTest
     public async Task LastOrDefaultAsync_ReturnsLastElement()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.LastOrDefaultAsync();
+        int result = await task.LastOrDefaultAsync();
 
         // Assert
         result.Should().Be(3);
@@ -385,10 +383,10 @@ public class EnumerableExtensionsTest
     public async Task LastOrDefaultAsync_WithPredicate_ReturnsMatch()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3, 4, 5]);
 
         // Act
-        var result = await task.LastOrDefaultAsync(x => x < 4);
+        int result = await task.LastOrDefaultAsync(x => x < 4);
 
         // Assert
         result.Should().Be(3);
@@ -398,10 +396,10 @@ public class EnumerableExtensionsTest
     public async Task ElementAtOrDefaultAsync_ReturnsElementAtIndex()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3, 4, 5 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3, 4, 5]);
 
         // Act
-        var result = await task.ElementAtOrDefaultAsync(2);
+        int result = await task.ElementAtOrDefaultAsync(2);
 
         // Assert
         result.Should().Be(3);
@@ -411,10 +409,10 @@ public class EnumerableExtensionsTest
     public async Task ElementAtOrDefaultAsync_WithInvalidIndex_ReturnsDefault()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new[] { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.ElementAtOrDefaultAsync(10);
+        int result = await task.ElementAtOrDefaultAsync(10);
 
         // Assert
         result.Should().Be(0);
@@ -432,7 +430,7 @@ public class EnumerableExtensionsTest
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = collection.AnySafe(x => x > 500000);
+        bool result = collection.AnySafe(x => x > 500000);
         stopwatch.Stop();
 
         // Assert

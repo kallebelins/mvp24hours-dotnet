@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
@@ -277,7 +276,7 @@ public static class MongoDbTestingExtensions
         string connectionString,
         Action<MongoDbOptions>? configureOptions = null)
     {
-        var databaseName = $"TestDb_{Guid.NewGuid():N}";
+        string databaseName = $"TestDb_{Guid.NewGuid():N}";
 
         services.AddMvp24HoursDbContext(options =>
         {

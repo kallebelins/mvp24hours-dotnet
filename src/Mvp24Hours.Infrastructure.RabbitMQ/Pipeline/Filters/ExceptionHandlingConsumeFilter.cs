@@ -3,225 +3,221 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
+
+/// <summary>
+/// Consume filter that provides automatic exception handling with retry and dead letter queue support.
+/// </summary>
+/// <remarks>
+/// Creates a new exception handling consume filter.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+/// <param name="options">Exception handling options.</param>
+public class ExceptionHandlingConsumeFilter(
+    ILogger<ExceptionHandlingConsumeFilter>? logger = null,
+    IOptions<ExceptionHandlingFilterOptions>? options = null) : IConsumeFilter
 {
-    /// <summary>
-    /// Consume filter that provides automatic exception handling with retry and dead letter queue support.
-    /// </summary>
-    public class ExceptionHandlingConsumeFilter : IConsumeFilter
+    private readonly ILogger<ExceptionHandlingConsumeFilter>? _logger = logger;
+    private readonly ExceptionHandlingFilterOptions _options = options?.Value ?? new ExceptionHandlingFilterOptions();
+
+    /// <inheritdoc />
+    public async Task ConsumeAsync<TMessage>(
+        IConsumeFilterContext<TMessage> context,
+        ConsumeFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
     {
-        private readonly ILogger<ExceptionHandlingConsumeFilter>? _logger;
-        private readonly ExceptionHandlingFilterOptions _options;
+        string messageType = typeof(TMessage).Name;
+        string messageId = context.MessageId;
 
-        /// <summary>
-        /// Creates a new exception handling consume filter.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        /// <param name="options">Exception handling options.</param>
-        public ExceptionHandlingConsumeFilter(
-            ILogger<ExceptionHandlingConsumeFilter>? logger = null,
-            IOptions<ExceptionHandlingFilterOptions>? options = null)
+        try
         {
-            _logger = logger;
-            _options = options?.Value ?? new ExceptionHandlingFilterOptions();
+            await next(context, cancellationToken);
         }
-
-        /// <inheritdoc />
-        public async Task ConsumeAsync<TMessage>(
-            IConsumeFilterContext<TMessage> context,
-            ConsumeFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
+        catch (Exception ex) when (ShouldHandleException(ex))
         {
-            var messageType = typeof(TMessage).Name;
-            var messageId = context.MessageId;
+            context.SetException(ex);
 
-            try
+            LogException(messageType, messageId, context.RedeliveryCount, ex);
+
+            // Check if we should retry
+            if (context.RedeliveryCount < _options.MaxRetries)
             {
-                await next(context, cancellationToken);
+                TimeSpan retryDelay = CalculateRetryDelay(context.RedeliveryCount);
+                context.SetRetry(retryDelay);
+
+                LogRetry(messageType, messageId, context.RedeliveryCount + 1, _options.MaxRetries, retryDelay);
             }
-            catch (Exception ex) when (ShouldHandleException(ex))
+            else
             {
-                context.SetException(ex);
+                // Max retries exceeded - send to dead letter queue
+                string reason = $"Max retries ({_options.MaxRetries}) exceeded. Last error: {ex.Message}";
+                context.SendToDeadLetter(reason);
 
-                LogException(messageType, messageId, context.RedeliveryCount, ex);
-
-                // Check if we should retry
-                if (context.RedeliveryCount < _options.MaxRetries)
-                {
-                    TimeSpan retryDelay = CalculateRetryDelay(context.RedeliveryCount);
-                    context.SetRetry(retryDelay);
-
-                    LogRetry(messageType, messageId, context.RedeliveryCount + 1, _options.MaxRetries, retryDelay);
-                }
-                else
-                {
-                    // Max retries exceeded - send to dead letter queue
-                    var reason = $"Max retries ({_options.MaxRetries}) exceeded. Last error: {ex.Message}";
-                    context.SendToDeadLetter(reason);
-
-                    LogDeadLetter(messageType, messageId, reason);
-                }
-
-                // Re-throw if configured to do so
-                if (_options.RethrowException)
-                {
-                    throw;
-                }
+                LogDeadLetter(messageType, messageId, reason);
             }
-            catch (Exception ex) when (!ShouldHandleException(ex))
+
+            // Re-throw if configured to do so
+            if (_options.RethrowException)
             {
-                // Exception types that should not be handled (e.g., OperationCanceledException)
-                context.SetException(ex);
-
-                if (_options.SendUnhandledToDeadLetter)
-                {
-                    var reason = $"Unhandled exception type {ex.GetType().Name}: {ex.Message}";
-                    context.SendToDeadLetter(reason);
-                    LogDeadLetter(messageType, messageId, reason);
-                }
-
                 throw;
             }
         }
-
-        private bool ShouldHandleException(Exception ex)
+        catch (Exception ex) when (!ShouldHandleException(ex))
         {
-            // Don't handle cancellation
-            if (ex is OperationCanceledException)
-                return false;
+            // Exception types that should not be handled (e.g., OperationCanceledException)
+            context.SetException(ex);
 
-            // Check if exception type is in the ignore list
-            if (_options.ExceptionsToIgnore != null)
+            if (_options.SendUnhandledToDeadLetter)
             {
-                foreach (Type ignoreType in _options.ExceptionsToIgnore)
-                {
-                    if (ignoreType.IsInstanceOfType(ex))
-                        return false;
-                }
+                string reason = $"Unhandled exception type {ex.GetType().Name}: {ex.Message}";
+                context.SendToDeadLetter(reason);
+                LogDeadLetter(messageType, messageId, reason);
             }
 
-            // Check if we should only handle specific exceptions
-            if (_options.ExceptionsToHandle != null && _options.ExceptionsToHandle.Length > 0)
-            {
-                foreach (Type handleType in _options.ExceptionsToHandle)
-                {
-                    if (handleType.IsInstanceOfType(ex))
-                        return true;
-                }
-                return false;
-            }
-
-            return true;
-        }
-
-        private TimeSpan CalculateRetryDelay(int currentRetryCount)
-        {
-            if (!_options.UseExponentialBackoff)
-            {
-                return _options.RetryDelay;
-            }
-
-            // Exponential backoff: delay * 2^retryCount
-            var baseDelay = _options.RetryDelay.TotalMilliseconds;
-            var exponentialDelay = baseDelay * Math.Pow(2, currentRetryCount);
-
-            // Apply max delay cap
-            var maxDelay = _options.MaxRetryDelay.TotalMilliseconds;
-            var finalDelay = Math.Min(exponentialDelay, maxDelay);
-
-            // Add jitter if configured
-            if (_options.AddJitter)
-            {
-                var jitter = Random.Shared.NextDouble() * _options.JitterFactor * finalDelay;
-                finalDelay += jitter;
-            }
-
-            return TimeSpan.FromMilliseconds(finalDelay);
-        }
-
-        private void LogException(string messageType, string messageId, int redeliveryCount, Exception ex)
-        {
-            _logger?.LogWarning(ex,
-                "Exception during message processing. Type={MessageType}, MessageId={MessageId}, RedeliveryCount={RedeliveryCount}",
-                messageType, messageId, redeliveryCount);
-        }
-
-        private void LogRetry(string messageType, string messageId, int retryNumber, int maxRetries, TimeSpan delay)
-        {
-            _logger?.LogInformation(
-                "Scheduling retry. Type={MessageType}, MessageId={MessageId}, Retry={RetryNumber}/{MaxRetries}, Delay={Delay}ms",
-                messageType, messageId, retryNumber, maxRetries, delay.TotalMilliseconds);
-        }
-
-        private void LogDeadLetter(string messageType, string messageId, string reason)
-        {
-            _logger?.LogError(
-                "Sending to dead letter queue. Type={MessageType}, MessageId={MessageId}, Reason={Reason}",
-                messageType, messageId, reason);
+            throw;
         }
     }
+
+    private bool ShouldHandleException(Exception ex)
+    {
+        // Don't handle cancellation
+        if (ex is OperationCanceledException)
+        {
+            return false;
+        }
+
+        // Check if exception type is in the ignore list
+        if (_options.ExceptionsToIgnore != null)
+        {
+            foreach (Type ignoreType in _options.ExceptionsToIgnore)
+            {
+                if (ignoreType.IsInstanceOfType(ex))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // Check if we should only handle specific exceptions
+        if (_options.ExceptionsToHandle != null && _options.ExceptionsToHandle.Length > 0)
+        {
+            foreach (Type handleType in _options.ExceptionsToHandle)
+            {
+                if (handleType.IsInstanceOfType(ex))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    private TimeSpan CalculateRetryDelay(int currentRetryCount)
+    {
+        if (!_options.UseExponentialBackoff)
+        {
+            return _options.RetryDelay;
+        }
+
+        // Exponential backoff: delay * 2^retryCount
+        double baseDelay = _options.RetryDelay.TotalMilliseconds;
+        double exponentialDelay = baseDelay * Math.Pow(2, currentRetryCount);
+
+        // Apply max delay cap
+        double maxDelay = _options.MaxRetryDelay.TotalMilliseconds;
+        double finalDelay = Math.Min(exponentialDelay, maxDelay);
+
+        // Add jitter if configured
+        if (_options.AddJitter)
+        {
+            double jitter = Random.Shared.NextDouble() * _options.JitterFactor * finalDelay;
+            finalDelay += jitter;
+        }
+
+        return TimeSpan.FromMilliseconds(finalDelay);
+    }
+
+    private void LogException(string messageType, string messageId, int redeliveryCount, Exception ex)
+    {
+        _logger?.LogWarning(ex,
+            "Exception during message processing. Type={MessageType}, MessageId={MessageId}, RedeliveryCount={RedeliveryCount}",
+            messageType, messageId, redeliveryCount);
+    }
+
+    private void LogRetry(string messageType, string messageId, int retryNumber, int maxRetries, TimeSpan delay)
+    {
+        _logger?.LogInformation(
+            "Scheduling retry. Type={MessageType}, MessageId={MessageId}, Retry={RetryNumber}/{MaxRetries}, Delay={Delay}ms",
+            messageType, messageId, retryNumber, maxRetries, delay.TotalMilliseconds);
+    }
+
+    private void LogDeadLetter(string messageType, string messageId, string reason)
+    {
+        _logger?.LogError(
+            "Sending to dead letter queue. Type={MessageType}, MessageId={MessageId}, Reason={Reason}",
+            messageType, messageId, reason);
+    }
+}
+
+/// <summary>
+/// Options for the exception handling filter.
+/// </summary>
+public class ExceptionHandlingFilterOptions
+{
+    /// <summary>
+    /// Gets or sets the maximum number of retries before sending to DLQ. Default is 3.
+    /// </summary>
+    public int MaxRetries { get; set; } = 3;
 
     /// <summary>
-    /// Options for the exception handling filter.
+    /// Gets or sets the base retry delay. Default is 1 second.
     /// </summary>
-    public class ExceptionHandlingFilterOptions
-    {
-        /// <summary>
-        /// Gets or sets the maximum number of retries before sending to DLQ. Default is 3.
-        /// </summary>
-        public int MaxRetries { get; set; } = 3;
+    public TimeSpan RetryDelay { get; set; } = TimeSpan.FromSeconds(1);
 
-        /// <summary>
-        /// Gets or sets the base retry delay. Default is 1 second.
-        /// </summary>
-        public TimeSpan RetryDelay { get; set; } = TimeSpan.FromSeconds(1);
+    /// <summary>
+    /// Gets or sets the maximum retry delay when using exponential backoff. Default is 30 seconds.
+    /// </summary>
+    public TimeSpan MaxRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
-        /// <summary>
-        /// Gets or sets the maximum retry delay when using exponential backoff. Default is 30 seconds.
-        /// </summary>
-        public TimeSpan MaxRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
+    /// <summary>
+    /// Gets or sets whether to use exponential backoff for retries. Default is true.
+    /// </summary>
+    public bool UseExponentialBackoff { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets whether to use exponential backoff for retries. Default is true.
-        /// </summary>
-        public bool UseExponentialBackoff { get; set; } = true;
+    /// <summary>
+    /// Gets or sets whether to add jitter to retry delays. Default is true.
+    /// </summary>
+    public bool AddJitter { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets whether to add jitter to retry delays. Default is true.
-        /// </summary>
-        public bool AddJitter { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the jitter factor (0.0 to 1.0). Default is 0.1 (10%).
+    /// </summary>
+    public double JitterFactor { get; set; } = 0.1;
 
-        /// <summary>
-        /// Gets or sets the jitter factor (0.0 to 1.0). Default is 0.1 (10%).
-        /// </summary>
-        public double JitterFactor { get; set; } = 0.1;
+    /// <summary>
+    /// Gets or sets whether to rethrow the exception after handling. Default is false.
+    /// </summary>
+    public bool RethrowException { get; set; } = false;
 
-        /// <summary>
-        /// Gets or sets whether to rethrow the exception after handling. Default is false.
-        /// </summary>
-        public bool RethrowException { get; set; } = false;
+    /// <summary>
+    /// Gets or sets whether to send unhandled exception types to DLQ. Default is true.
+    /// </summary>
+    public bool SendUnhandledToDeadLetter { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets whether to send unhandled exception types to DLQ. Default is true.
-        /// </summary>
-        public bool SendUnhandledToDeadLetter { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the exception types to handle. If null or empty, all exceptions are handled.
+    /// </summary>
+    public Type[]? ExceptionsToHandle { get; set; }
 
-        /// <summary>
-        /// Gets or sets the exception types to handle. If null or empty, all exceptions are handled.
-        /// </summary>
-        public Type[]? ExceptionsToHandle { get; set; }
-
-        /// <summary>
-        /// Gets or sets the exception types to ignore (not retry, send directly to DLQ).
-        /// </summary>
-        public Type[]? ExceptionsToIgnore { get; set; }
-    }
+    /// <summary>
+    /// Gets or sets the exception types to ignore (not retry, send directly to DLQ).
+    /// </summary>
+    public Type[]? ExceptionsToIgnore { get; set; }
 }
 

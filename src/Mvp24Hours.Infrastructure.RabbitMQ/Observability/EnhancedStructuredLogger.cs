@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
@@ -43,31 +40,23 @@ namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 /// }, TimeSpan.FromMilliseconds(5));
 /// </code>
 /// </example>
-public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
+/// <remarks>
+/// Creates a new EnhancedStructuredLogger.
+/// </remarks>
+/// <param name="logger">The logger instance.</param>
+/// <param name="logPayload">Whether to log message payloads (use with caution in production).</param>
+/// <param name="maxPayloadLength">Maximum payload length to log.</param>
+/// <param name="sensitiveHeaders">Headers that should be masked in logs.</param>
+public class EnhancedStructuredLogger(
+    ILogger<EnhancedStructuredLogger> logger,
+    bool logPayload = false,
+    int maxPayloadLength = 1000,
+    IEnumerable<string>? sensitiveHeaders = null) : IRabbitMQStructuredLogger
 {
-    private readonly ILogger<EnhancedStructuredLogger> _logger;
-    private readonly bool _logPayload;
-    private readonly int _maxPayloadLength;
-    private readonly HashSet<string> _sensitiveHeaders;
-
-    /// <summary>
-    /// Creates a new EnhancedStructuredLogger.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="logPayload">Whether to log message payloads (use with caution in production).</param>
-    /// <param name="maxPayloadLength">Maximum payload length to log.</param>
-    /// <param name="sensitiveHeaders">Headers that should be masked in logs.</param>
-    public EnhancedStructuredLogger(
-        ILogger<EnhancedStructuredLogger> logger,
-        bool logPayload = false,
-        int maxPayloadLength = 1000,
-        IEnumerable<string>? sensitiveHeaders = null)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _logPayload = logPayload;
-        _maxPayloadLength = maxPayloadLength;
-        _sensitiveHeaders = new HashSet<string>(sensitiveHeaders ?? new[] { "Authorization", "x-api-key", "password" }, StringComparer.OrdinalIgnoreCase);
-    }
+    private readonly ILogger<EnhancedStructuredLogger> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly bool _logPayload = logPayload;
+    private readonly int _maxPayloadLength = maxPayloadLength;
+    private readonly HashSet<string> _sensitiveHeaders = new(sensitiveHeaders ?? ["Authorization", "x-api-key", "password"], StringComparer.OrdinalIgnoreCase);
 
     #region Enhanced Logging Methods
 
@@ -157,7 +146,10 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
     /// </summary>
     public void LogMessageEnvelopeDebug(string operation, MessageEnvelope envelope)
     {
-        if (!_logger.IsEnabled(LogLevel.Debug)) return;
+        if (!_logger.IsEnabled(LogLevel.Debug))
+        {
+            return;
+        }
 
         Dictionary<string, object?>? sanitizedHeaders = SanitizeHeaders(envelope.Headers);
 
@@ -421,7 +413,10 @@ public class EnhancedStructuredLogger : IRabbitMQStructuredLogger
 
     private Dictionary<string, object?>? SanitizeHeaders(IDictionary<string, object>? headers)
     {
-        if (headers == null || headers.Count == 0) return null;
+        if (headers == null || headers.Count == 0)
+        {
+            return null;
+        }
 
         var sanitized = new Dictionary<string, object?>();
         foreach (KeyValuePair<string, object> kvp in headers)

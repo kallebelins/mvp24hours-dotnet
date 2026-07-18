@@ -3,74 +3,65 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Infrastructure.Http.Contract;
 using Newtonsoft.Json;
 
-namespace Mvp24Hours.Infrastructure.Http.Serializers
+namespace Mvp24Hours.Infrastructure.Http.Serializers;
+
+/// <summary>
+/// JSON serializer for HTTP content using Newtonsoft.Json.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance with custom JSON settings.
+/// </remarks>
+public class NewtonsoftHttpClientSerializer(JsonSerializerSettings settings) : IHttpContentSerializer
 {
+    private readonly JsonSerializerSettings _settings = settings ?? new JsonSerializerSettings();
+
     /// <summary>
-    /// JSON serializer for HTTP content using Newtonsoft.Json.
+    /// Initializes a new instance with default JSON settings.
     /// </summary>
-    public class NewtonsoftHttpClientSerializer : IHttpContentSerializer
+    public NewtonsoftHttpClientSerializer()
+        : this(new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
+        })
     {
-        private readonly JsonSerializerSettings _settings;
+    }
 
-        /// <summary>
-        /// Initializes a new instance with default JSON settings.
-        /// </summary>
-        public NewtonsoftHttpClientSerializer()
-            : this(new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                DateTimeZoneHandling = DateTimeZoneHandling.Utc
-            })
+    /// <inheritdoc />
+    public string MediaType => "application/json";
+
+    /// <inheritdoc />
+    public HttpContent Serialize(object? value)
+    {
+        if (value == null)
         {
+            return new StringContent(string.Empty, Encoding.UTF8, MediaType);
         }
 
-        /// <summary>
-        /// Initializes a new instance with custom JSON settings.
-        /// </summary>
-        public NewtonsoftHttpClientSerializer(JsonSerializerSettings settings)
+        string json = JsonConvert.SerializeObject(value, _settings);
+        return new StringContent(json, Encoding.UTF8, MediaType);
+    }
+
+    /// <inheritdoc />
+    public async Task<T?> DeserializeAsync<T>(HttpContent content, CancellationToken cancellationToken = default) where T : class
+    {
+        string json = await content.ReadAsStringAsync(cancellationToken);
+        return Deserialize<T>(json);
+    }
+
+    /// <inheritdoc />
+    public T? Deserialize<T>(string content) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(content))
         {
-            _settings = settings ?? new JsonSerializerSettings();
+            return default;
         }
 
-        /// <inheritdoc />
-        public string MediaType => "application/json";
-
-        /// <inheritdoc />
-        public HttpContent Serialize(object? value)
-        {
-            if (value == null)
-            {
-                return new StringContent(string.Empty, Encoding.UTF8, MediaType);
-            }
-
-            var json = JsonConvert.SerializeObject(value, _settings);
-            return new StringContent(json, Encoding.UTF8, MediaType);
-        }
-
-        /// <inheritdoc />
-        public async Task<T?> DeserializeAsync<T>(HttpContent content, CancellationToken cancellationToken = default) where T : class
-        {
-            var json = await content.ReadAsStringAsync(cancellationToken);
-            return Deserialize<T>(json);
-        }
-
-        /// <inheritdoc />
-        public T? Deserialize<T>(string content) where T : class
-        {
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                return default;
-            }
-
-            return JsonConvert.DeserializeObject<T>(content, _settings);
-        }
+        return JsonConvert.DeserializeObject<T>(content, _settings);
     }
 }
 

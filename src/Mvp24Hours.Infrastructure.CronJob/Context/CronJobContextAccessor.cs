@@ -5,85 +5,78 @@
 //=====================================================================================
 using System.Threading;
 
-namespace Mvp24Hours.Infrastructure.CronJob.Context
+namespace Mvp24Hours.Infrastructure.CronJob.Context;
+
+/// <summary>
+/// Interface for accessing the current CronJob execution context.
+/// </summary>
+public interface ICronJobContextAccessor
 {
     /// <summary>
-    /// Interface for accessing the current CronJob execution context.
+    /// Gets the current CronJob execution context.
+    /// Returns null if not in a CronJob execution context.
     /// </summary>
-    public interface ICronJobContextAccessor
+    ICronJobContext? Context { get; }
+}
+
+/// <summary>
+/// Default implementation of <see cref="ICronJobContextAccessor"/> using AsyncLocal storage.
+/// Thread-safe and async-aware context storage.
+/// </summary>
+public sealed class CronJobContextAccessor : ICronJobContextAccessor
+{
+    private static readonly AsyncLocal<CronJobContextHolder> _contextCurrent = new();
+
+    /// <inheritdoc />
+    public ICronJobContext? Context
     {
-        /// <summary>
-        /// Gets the current CronJob execution context.
-        /// Returns null if not in a CronJob execution context.
-        /// </summary>
-        ICronJobContext? Context { get; }
+        get => _contextCurrent.Value?.Context;
+        internal set
+        {
+            CronJobContextHolder? holder = _contextCurrent.Value;
+            holder?.Context = null;
+
+            if (value != null)
+            {
+                _contextCurrent.Value = new CronJobContextHolder { Context = value };
+            }
+        }
     }
 
     /// <summary>
-    /// Default implementation of <see cref="ICronJobContextAccessor"/> using AsyncLocal storage.
-    /// Thread-safe and async-aware context storage.
+    /// Sets the current context. For internal use only.
     /// </summary>
-    public sealed class CronJobContextAccessor : ICronJobContextAccessor
+    internal static void SetContext(ICronJobContext? context)
     {
-        private static readonly AsyncLocal<CronJobContextHolder> _contextCurrent = new();
+        CronJobContextHolder? holder = _contextCurrent.Value;
+        holder?.Context = null;
 
-        /// <inheritdoc />
-        public ICronJobContext? Context
+        if (context != null)
         {
-            get => _contextCurrent.Value?.Context;
-            internal set
-            {
-                CronJobContextHolder? holder = _contextCurrent.Value;
-                if (holder != null)
-                {
-                    holder.Context = null;
-                }
-
-                if (value != null)
-                {
-                    _contextCurrent.Value = new CronJobContextHolder { Context = value };
-                }
-            }
+            _contextCurrent.Value = new CronJobContextHolder { Context = context };
         }
+    }
 
-        /// <summary>
-        /// Sets the current context. For internal use only.
-        /// </summary>
-        internal static void SetContext(ICronJobContext? context)
-        {
-            CronJobContextHolder? holder = _contextCurrent.Value;
-            if (holder != null)
-            {
-                holder.Context = null;
-            }
+    /// <summary>
+    /// Gets the current context statically. For internal use only.
+    /// </summary>
+    internal static ICronJobContext? GetContext()
+    {
+        return _contextCurrent.Value?.Context;
+    }
 
-            if (context != null)
-            {
-                _contextCurrent.Value = new CronJobContextHolder { Context = context };
-            }
-        }
+    /// <summary>
+    /// Clears the current context. For internal use only.
+    /// </summary>
+    internal static void ClearContext()
+    {
+        CronJobContextHolder? holder = _contextCurrent.Value;
+        holder?.Context = null;
+    }
 
-        /// <summary>
-        /// Gets the current context statically. For internal use only.
-        /// </summary>
-        internal static ICronJobContext? GetContext() => _contextCurrent.Value?.Context;
-
-        /// <summary>
-        /// Clears the current context. For internal use only.
-        /// </summary>
-        internal static void ClearContext()
-        {
-            CronJobContextHolder? holder = _contextCurrent.Value;
-            if (holder != null)
-            {
-                holder.Context = null;
-            }
-        }
-
-        private sealed class CronJobContextHolder
-        {
-            public ICronJobContext? Context { get; set; }
-        }
+    private sealed class CronJobContextHolder
+    {
+        public ICronJobContext? Context { get; set; }
     }
 }
 

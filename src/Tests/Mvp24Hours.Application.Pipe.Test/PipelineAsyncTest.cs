@@ -3,9 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Rollbacks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
@@ -16,669 +14,557 @@ using Mvp24Hours.Infrastructure.Pipe;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.Pipe.Test
+namespace Mvp24Hours.Application.Pipe.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class PipelineAsyncTest
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class PipelineAsyncTest
+    [Fact, Priority(1)]
+    public async Task PipelineStarted()
     {
-        [Fact, Priority(1)]
-        public async Task PipelineStarted()
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+        pipeline.Add(_ => Trace.WriteLine("Test 1"));
+        pipeline.Add(_ => Trace.WriteLine("Test 2"));
+        pipeline.Add(_ => Trace.WriteLine("Test 3"));
+        await pipeline.ExecuteAsync();
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(2)]
+    public async Task PipelineMessageContentGet()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 1");
-            });
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 2");
-            });
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 3");
-            });
-            await pipeline.ExecuteAsync();
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(2)]
-        public async Task PipelineMessageContentGet()
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 1 - {param}");
+        });
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 1 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 2 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 3 - {param}");
-            });
-
-            // define param
-            IPipelineMessage message = "Parameter received.".ToMessage();
-
-            await pipeline.ExecuteAsync(message);
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(3)]
-        public async Task PipelineMessageContentAdd()
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 2 - {param}");
+        });
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 3 - {param}");
+        });
 
-            // act
+        // define param
+        IPipelineMessage message = "Parameter received.".ToMessage();
 
-            // add operations
-            pipeline.Add(input =>
+        await pipeline.ExecuteAsync(message);
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(3)]
+    public async Task PipelineMessageContentAdd()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            input.AddContent("teste1", $"Test 1 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            input.AddContent("teste2", $"Test 2 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            input.AddContent("teste3", $"Test 3 - {param}");
+        });
+
+        // define attachment for message 
+        IPipelineMessage message = "Parameter received.".ToMessage();
+
+        await pipeline.ExecuteAsync(message);
+
+        // get content from result
+        foreach (object item in pipeline.GetMessage().GetContentAll())
+        {
+            if (item is string)
             {
-                string param = input.GetContent<string>();
-                input.AddContent("teste1", $"Test 1 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                input.AddContent("teste2", $"Test 2 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                input.AddContent("teste3", $"Test 3 - {param}");
-            });
-
-            // define attachment for message 
-            IPipelineMessage message = "Parameter received.".ToMessage();
-
-            await pipeline.ExecuteAsync(message);
-
-            // get content from result
-            foreach (var item in pipeline.GetMessage().GetContentAll())
-            {
-                if (item is string)
-                {
-                    Trace.WriteLine(item);
-                }
+                Trace.WriteLine(item);
             }
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
         }
 
-        [Fact, Priority(4)]
-        public async Task PipelineMessageContentValidate()
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(4)]
+    public async Task PipelineMessageContentValidate()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
-            {
-                if (input.HasContent<string>())
-                {
-                    string param = input.GetContent<string>();
-                    Trace.WriteLine($"Content - {param}");
-                }
-                else
-                {
-                    Trace.WriteLine("Content not found");
-                }
-            });
-            await pipeline.ExecuteAsync();
-            IPipelineMessage result1 = pipeline.GetMessage();
-            await pipeline.ExecuteAsync("Parameter received.".ToMessage());
-            IPipelineMessage result2 = pipeline.GetMessage();
-
-            // assert
-            Assert.True(result1 != null && result2 != null);
-        }
-
-        [Fact, Priority(5)]
-        public async Task PipelineOperationLock()
-        {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
+            if (input.HasContent<string>())
             {
                 string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 1 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 2 - {param}");
-                Trace.WriteLine($"Locking....");
-                input.SetLock();
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 3 - {param}");
-            });
-
-            await pipeline.ExecuteAsync("Parameter received.".ToMessage());
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(5)]
-        public async Task PipelineOperationLockExecuteForce()
-        {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 1 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 2 - {param}");
-                Trace.WriteLine($"Locking....");
-                input.SetLock();
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 3 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Required - {param}");
-            }, true);
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 4 - {param}");
-            });
-
-            // interceptors -> locked-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Locked-Operation, only one time.");
-            }, PipelineInterceptorType.Locked);
-
-            await pipeline.ExecuteAsync("Parameter received.".ToMessage());
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(6)]
-        public async Task PipelineOperationFailure()
-        {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 1 - {param}");
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 2 - {param}");
-                Trace.WriteLine($"Failure....");
-                input.SetFailure();
-            });
-            pipeline.Add(input =>
-            {
-                string param = input.GetContent<string>();
-                Trace.WriteLine($"Test 3 - {param}");
-            });
-
-            // interceptors -> locked-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Faulty-Operation, only one time.");
-            }, PipelineInterceptorType.Faulty);
-
-            await pipeline.ExecuteAsync("Parameter received.".ToMessage());
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(7)]
-        public async Task PipelineOperationLockWithNotification()
-        {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // add operations
-            pipeline.Add(input =>
-            {
-                input.Messages.AddMessage("Content not found", Core.Enums.MessageType.Error);
-            });
-            pipeline.Add(input =>
-            {
-                Trace.WriteLine("Operation blocked by 'Error' notification.");
-            });
-
-            // interceptors -> locked-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Locked-Operation, only one time.");
-            }, PipelineInterceptorType.Locked);
-
-            await pipeline.ExecuteAsync();
-
-            IPipelineMessage message = pipeline.GetMessage();
-
-            foreach (IMessageResult item in message.Messages)
-            {
-                Trace.WriteLine(item.Message);
+                Trace.WriteLine($"Content - {param}");
             }
+            else
+            {
+                Trace.WriteLine("Content not found");
+            }
+        });
+        await pipeline.ExecuteAsync();
+        IPipelineMessage result1 = pipeline.GetMessage();
+        await pipeline.ExecuteAsync("Parameter received.".ToMessage());
+        IPipelineMessage result2 = pipeline.GetMessage();
 
-            // assert
-            Assert.True(message.IsFaulty);
+        // assert
+        Assert.True(result1 != null && result2 != null);
+    }
+
+    [Fact, Priority(5)]
+    public async Task PipelineOperationLock()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 1 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 2 - {param}");
+            Trace.WriteLine($"Locking....");
+            input.SetLock();
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 3 - {param}");
+        });
+
+        await pipeline.ExecuteAsync("Parameter received.".ToMessage());
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(5)]
+    public async Task PipelineOperationLockExecuteForce()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 1 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 2 - {param}");
+            Trace.WriteLine($"Locking....");
+            input.SetLock();
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 3 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Required - {param}");
+        }, true);
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 4 - {param}");
+        });
+
+        // interceptors -> locked-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Locked-Operation, only one time."), PipelineInterceptorType.Locked);
+
+        await pipeline.ExecuteAsync("Parameter received.".ToMessage());
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(6)]
+    public async Task PipelineOperationFailure()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 1 - {param}");
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 2 - {param}");
+            Trace.WriteLine($"Failure....");
+            input.SetFailure();
+        });
+        pipeline.Add(input =>
+        {
+            string param = input.GetContent<string>();
+            Trace.WriteLine($"Test 3 - {param}");
+        });
+
+        // interceptors -> locked-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Faulty-Operation, only one time."), PipelineInterceptorType.Faulty);
+
+        await pipeline.ExecuteAsync("Parameter received.".ToMessage());
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(7)]
+    public async Task PipelineOperationLockWithNotification()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // add operations
+        pipeline.Add(input => input.Messages.AddMessage("Content not found", Core.Enums.MessageType.Error));
+        pipeline.Add(input => Trace.WriteLine("Operation blocked by 'Error' notification."));
+
+        // interceptors -> locked-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Locked-Operation, only one time."), PipelineInterceptorType.Locked);
+
+        await pipeline.ExecuteAsync();
+
+        IPipelineMessage message = pipeline.GetMessage();
+
+        foreach (IMessageResult item in message.Messages)
+        {
+            Trace.WriteLine(item.Message);
         }
 
-        [Fact, Priority(8)]
-        public async Task PipelineInterceptors()
+        // assert
+        Assert.True(message.IsFaulty);
+    }
+
+    [Fact, Priority(8)]
+    public async Task PipelineInterceptors()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+
+        // operations
+        pipeline.Add(_ => Trace.WriteLine("Test 1"));
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
+            Trace.WriteLine("Test 2");
+            Trace.WriteLine("Adding value to conditional interceptor test...");
+            input.AddContent(1);
+        });
+        pipeline.Add(_ => Trace.WriteLine("Test 3"));
 
-            // act
+        // interceptors -> first-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("First-Operation, only one time."), PipelineInterceptorType.FirstOperation);
 
-            // operations
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 1");
-            });
-            pipeline.Add(input =>
-            {
-                Trace.WriteLine("Test 2");
-                Trace.WriteLine("Adding value to conditional interceptor test...");
-                input.AddContent(1);
-            });
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 3");
-            });
+        // interceptors -> pre-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Pre-Operation"), PipelineInterceptorType.PreOperation);
 
-            // interceptors -> first-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("First-Operation, only one time.");
-            }, PipelineInterceptorType.FirstOperation);
+        // interceptors -> post-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Post-Operation"), PipelineInterceptorType.PostOperation);
 
-            // interceptors -> pre-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Pre-Operation");
-            }, PipelineInterceptorType.PreOperation);
+        // interceptors -> last-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Last-Operation, only one time."), PipelineInterceptorType.LastOperation);
 
-            // interceptors -> post-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Post-Operation");
-            }, PipelineInterceptorType.PostOperation);
+        // interceptors -> locked-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Locked-Operation, only one time."), PipelineInterceptorType.Locked);
 
-            // interceptors -> last-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Last-Operation, only one time.");
-            }, PipelineInterceptorType.LastOperation);
+        // interceptors -> faulty-operation
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Faulty-Operation, only one time."), PipelineInterceptorType.Faulty);
 
-            // interceptors -> locked-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Locked-Operation, only one time.");
-            }, PipelineInterceptorType.Locked);
+        // interceptors -> conditional
+        pipeline.AddInterceptors(_ => Trace.WriteLine("Conditional-Operation."),
+        input => input.HasContent<int>());
 
-            // interceptors -> faulty-operation
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Faulty-Operation, only one time.");
-            }, PipelineInterceptorType.Faulty);
+        await pipeline.ExecuteAsync();
 
-            // interceptors -> conditional
-            pipeline.AddInterceptors(_ =>
-            {
-                Trace.WriteLine("Conditional-Operation.");
-            },
-            input =>
-            {
-                return input.HasContent<int>();
-            });
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
 
-            await pipeline.ExecuteAsync();
+    [Fact, Priority(9)]
+    public async Task PipelineEventInterceptors()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
 
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
+        // act
 
-        [Fact, Priority(9)]
-        public async Task PipelineEventInterceptors()
+        // operations
+        pipeline.Add(_ => Trace.WriteLine("Test 1"));
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
+            Trace.WriteLine("Test 2");
+            Trace.WriteLine("Adding value to conditional interceptor test...");
+            input.AddContent(1);
+        });
+        pipeline.Add(_ => Trace.WriteLine("Test 3"));
 
-            // act
+        // event interceptors -> first-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("First-Operation, event."), PipelineInterceptorType.FirstOperation);
 
-            // operations
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 1");
-            });
-            pipeline.Add(input =>
-            {
-                Trace.WriteLine("Test 2");
-                Trace.WriteLine("Adding value to conditional interceptor test...");
-                input.AddContent(1);
-            });
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 3");
-            });
+        // event interceptors -> pre-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Pre-Operation, event."), PipelineInterceptorType.PreOperation);
 
-            // event interceptors -> first-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("First-Operation, event.");
-            }, PipelineInterceptorType.FirstOperation);
+        // event interceptors -> post-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Post-Operation, event."), PipelineInterceptorType.PostOperation);
 
-            // event interceptors -> pre-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Pre-Operation, event.");
-            }, PipelineInterceptorType.PreOperation);
+        // event interceptors -> last-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Last-Operation, event."), PipelineInterceptorType.LastOperation);
 
-            // event interceptors -> post-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Post-Operation, event.");
-            }, PipelineInterceptorType.PostOperation);
+        // event interceptors -> locked-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Locked-Operation, event."), PipelineInterceptorType.Locked);
 
-            // event interceptors -> last-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Last-Operation, event.");
-            }, PipelineInterceptorType.LastOperation);
+        // event interceptors -> faulty-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Faulty-Operation, event."), PipelineInterceptorType.Faulty);
 
-            // event interceptors -> locked-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Locked-Operation, event.");
-            }, PipelineInterceptorType.Locked);
+        // event interceptors -> conditional
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Conditional-Operation, event."),
+        input => input.HasContent<int>());
 
-            // event interceptors -> faulty-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Faulty-Operation, event.");
-            }, PipelineInterceptorType.Faulty);
+        await pipeline.ExecuteAsync();
 
-            // event interceptors -> conditional
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Conditional-Operation, event.");
-            },
-            input =>
-            {
-                return input.HasContent<int>();
-            });
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
 
-            await pipeline.ExecuteAsync();
+    [Fact, Priority(10)]
+    public async Task PipelineEventInterceptorsWithLock()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
 
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
+        // act
 
-        [Fact, Priority(10)]
-        public async Task PipelineEventInterceptorsWithLock()
+        // operations
+        pipeline.Add(_ => Trace.WriteLine("Test 1"));
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
-
-            // act
-
-            // operations
-            pipeline.Add(_ =>
-            {
-                Trace.WriteLine("Test 1");
-            });
-            pipeline.Add(input =>
-            {
-                Trace.WriteLine("Test 2");
-                Trace.WriteLine("Adding value to conditional interceptor test...");
-                input.AddContent(1);
-            });
-            pipeline.Add(input =>
-            {
-                Trace.WriteLine("Test 3");
-                Trace.WriteLine("Locking...");
-                input.SetLock();
-            });
-
-            // event interceptors -> first-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("First-Operation, event.");
-            }, PipelineInterceptorType.FirstOperation);
-
-            // event interceptors -> pre-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Pre-Operation, event.");
-            }, PipelineInterceptorType.PreOperation);
-
-            // event interceptors -> post-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Post-Operation, event.");
-            }, PipelineInterceptorType.PostOperation);
-
-            // event interceptors -> last-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Last-Operation, event.");
-            }, PipelineInterceptorType.LastOperation);
-
-            // event interceptors -> locked-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Locked-Operation, event.");
-            }, PipelineInterceptorType.Locked);
-
-            // event interceptors -> faulty-operation
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Faulty-Operation, event.");
-            }, PipelineInterceptorType.Faulty);
-
-            // event interceptors -> conditional
-            pipeline.AddInterceptors((input, e) =>
-            {
-                Trace.WriteLine("Conditional-Operation, event.");
-            },
-            input =>
-            {
-                return input.HasContent<int>();
-            });
-
-            await pipeline.ExecuteAsync();
-
-            // assert
-            Assert.NotNull(pipeline.GetMessage());
-        }
-
-        [Fact, Priority(11)]
-        public async Task PipelineWithOperation()
+            Trace.WriteLine("Test 2");
+            Trace.WriteLine("Adding value to conditional interceptor test...");
+            input.AddContent(1);
+        });
+        pipeline.Add(input =>
         {
-            // arrange
-            PipelineAsync pipeline = new();
+            Trace.WriteLine("Test 3");
+            Trace.WriteLine("Locking...");
+            input.SetLock();
+        });
 
-            // act
-            pipeline.Add<OperationTestAsync>();
+        // event interceptors -> first-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("First-Operation, event."), PipelineInterceptorType.FirstOperation);
 
+        // event interceptors -> pre-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Pre-Operation, event."), PipelineInterceptorType.PreOperation);
+
+        // event interceptors -> post-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Post-Operation, event."), PipelineInterceptorType.PostOperation);
+
+        // event interceptors -> last-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Last-Operation, event."), PipelineInterceptorType.LastOperation);
+
+        // event interceptors -> locked-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Locked-Operation, event."), PipelineInterceptorType.Locked);
+
+        // event interceptors -> faulty-operation
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Faulty-Operation, event."), PipelineInterceptorType.Faulty);
+
+        // event interceptors -> conditional
+        pipeline.AddInterceptors((input, e) => Trace.WriteLine("Conditional-Operation, event."),
+        input => input.HasContent<int>());
+
+        await pipeline.ExecuteAsync();
+
+        // assert
+        Assert.NotNull(pipeline.GetMessage());
+    }
+
+    [Fact, Priority(11)]
+    public async Task PipelineWithOperation()
+    {
+        // arrange
+        PipelineAsync pipeline = new();
+
+        // act
+        pipeline.Add<OperationTestAsync>();
+
+        // operations
+        await pipeline.ExecuteAsync();
+        int result = pipeline.GetMessage().GetContent<int>("key-test");
+
+        // assert
+        Assert.Equal(1, result);
+    }
+
+    [Fact, Priority(12)]
+    public async Task PipelineWithRollbackOperations()
+    {
+        // arrange
+        PipelineAsync pipeline = new() { ForceRollbackOnFalure = true };
+        RollbackTestContext.Results.Clear();
+
+        // act
+        pipeline.Add<RollbackOperationTestAsyncStep1>();
+        pipeline.Add<RollbackOperationTestAsyncStep2>();
+        pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+        // operations
+        await pipeline.ExecuteAsync();
+        int resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+        int resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
+        int resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
+        int resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");
+        int resultRollbackStep2 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step2");
+        bool resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
+
+        int resultIndexStep1 = RollbackTestContext.Results.IndexOf("key-test-rollback-step1");
+        int resultIndexStep2 = RollbackTestContext.Results.IndexOf("key-test-rollback-step2");
+
+        // assert
+        Assert.Equal(1, resultExecutionStep1);
+        Assert.Equal(10, resultRollbackStep1);
+        Assert.Equal(2, resultExecutionStep2);
+        Assert.Equal(20, resultRollbackStep2);
+        Assert.Equal(3, resultExecutionStep3);
+        Assert.False(resultRollbackStep3);
+
+        Assert.Equal(1, resultIndexStep1); //Step 1 must be after step 2 because all rollbacks are executed top-down
+        Assert.Equal(0, resultIndexStep2);
+    }
+
+    [Fact, Priority(13)]
+    public async Task PipelineWithRollbackOperationsWithoutForceRollbackOnFalure()
+    {
+        // arrange
+        PipelineAsync pipeline = new() { ForceRollbackOnFalure = false };
+
+        // act
+        pipeline.Add<RollbackOperationTestAsyncStep1>();
+        pipeline.Add<RollbackOperationTestAsyncStep2>();
+        pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+        // operations
+        await pipeline.ExecuteAsync();
+        int resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
+        int resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
+        int resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
+        bool resultRollbackStep1 = pipeline.GetMessage().HasContent("key-test-rollback-step1");
+        bool resultRollbackStep2 = pipeline.GetMessage().HasContent("key-test-rollback-step2");
+        bool resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
+
+        // assert
+        Assert.Equal(1, resultExecutionStep1);
+        Assert.Equal(2, resultExecutionStep2);
+        Assert.Equal(3, resultExecutionStep3);
+        Assert.False(resultRollbackStep1);
+        Assert.False(resultRollbackStep2);
+        Assert.False(resultRollbackStep3);
+    }
+
+    [Fact, Priority(14)]
+    public async Task PipelineWithWithAllowPropagateException()
+    {
+        // arrange
+        var pipeline = new PipelineAsync() { AllowPropagateException = true };
+        var exception = default(Exception);
+
+        // act
+        pipeline.Add<RollbackOperationTestAsyncStep1>();
+        pipeline.Add<RollbackOperationTestAsyncStep2>();
+        pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+        try
+        {
             // operations
             await pipeline.ExecuteAsync();
-            var result = pipeline.GetMessage().GetContent<int>("key-test");
-
-            // assert
-            Assert.Equal(1, result);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
         }
 
-        [Fact, Priority(12)]
-        public async Task PipelineWithRollbackOperations()
+        // assert
+        Assert.NotNull(exception);
+        Assert.Equal("My Exception 123", exception.Message);
+        Assert.Equal(typeof(InvalidOperationException), exception.GetType());
+    }
+
+    [Fact, Priority(15)]
+    public async Task PipelineWithWithoutAllowPropagateException()
+    {
+        // arrange
+        var pipeline = new PipelineAsync(); //AllowPropagateException = false
+        var exception = default(Exception);
+
+        // act
+        pipeline.Add<RollbackOperationTestAsyncStep1>();
+        pipeline.Add<RollbackOperationTestAsyncStep2>();
+        pipeline.Add<RollbackOperationTestAsyncStep3>();
+
+        try
         {
-            // arrange
-            PipelineAsync pipeline = new() { ForceRollbackOnFalure = true };
-            RollbackTestContext.Results.Clear();
-
-            // act
-            pipeline.Add<RollbackOperationTestAsyncStep1>();
-            pipeline.Add<RollbackOperationTestAsyncStep2>();
-            pipeline.Add<RollbackOperationTestAsyncStep3>();
-
             // operations
             await pipeline.ExecuteAsync();
-            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
-            var resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
-            var resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
-            var resultRollbackStep1 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step1");
-            var resultRollbackStep2 = pipeline.GetMessage().GetContent<int>("key-test-rollback-step2");
-            var resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
-
-            var resultIndexStep1 = RollbackTestContext.Results.IndexOf("key-test-rollback-step1");
-            var resultIndexStep2 = RollbackTestContext.Results.IndexOf("key-test-rollback-step2");
-
-            // assert
-            Assert.Equal(1, resultExecutionStep1);
-            Assert.Equal(10, resultRollbackStep1);
-            Assert.Equal(2, resultExecutionStep2);
-            Assert.Equal(20, resultRollbackStep2);
-            Assert.Equal(3, resultExecutionStep3);
-            Assert.False(resultRollbackStep3);
-
-            Assert.Equal(1, resultIndexStep1); //Step 1 must be after step 2 because all rollbacks are executed top-down
-            Assert.Equal(0, resultIndexStep2);
         }
-
-        [Fact, Priority(13)]
-        public async Task PipelineWithRollbackOperationsWithoutForceRollbackOnFalure()
+        catch (Exception ex)
         {
-            // arrange
-            PipelineAsync pipeline = new() { ForceRollbackOnFalure = false };
-
-            // act
-            pipeline.Add<RollbackOperationTestAsyncStep1>();
-            pipeline.Add<RollbackOperationTestAsyncStep2>();
-            pipeline.Add<RollbackOperationTestAsyncStep3>();
-
-            // operations
-            await pipeline.ExecuteAsync();
-            var resultExecutionStep1 = pipeline.GetMessage().GetContent<int>("key-test-step1");
-            var resultExecutionStep2 = pipeline.GetMessage().GetContent<int>("key-test-step2");
-            var resultExecutionStep3 = pipeline.GetMessage().GetContent<int>("key-test-step3");
-            var resultRollbackStep1 = pipeline.GetMessage().HasContent("key-test-rollback-step1");
-            var resultRollbackStep2 = pipeline.GetMessage().HasContent("key-test-rollback-step2");
-            var resultRollbackStep3 = pipeline.GetMessage().HasContent("key-test-rollback-step3");
-
-            // assert
-            Assert.Equal(1, resultExecutionStep1);
-            Assert.Equal(2, resultExecutionStep2);
-            Assert.Equal(3, resultExecutionStep3);
-            Assert.False(resultRollbackStep1);
-            Assert.False(resultRollbackStep2);
-            Assert.False(resultRollbackStep3);
+            exception = ex;
         }
 
-        [Fact, Priority(14)]
-        public async Task PipelineWithWithAllowPropagateException()
-        {
-            // arrange
-            var pipeline = new PipelineAsync() { AllowPropagateException = true };
-            var exception = default(Exception);
-
-            // act
-            pipeline.Add<RollbackOperationTestAsyncStep1>();
-            pipeline.Add<RollbackOperationTestAsyncStep2>();
-            pipeline.Add<RollbackOperationTestAsyncStep3>();
-
-            try
-            {
-                // operations
-                await pipeline.ExecuteAsync();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-
-            // assert
-            Assert.NotNull(exception);
-            Assert.Equal("My Exception 123", exception.Message);
-            Assert.Equal(typeof(InvalidOperationException), exception.GetType());
-        }
-
-        [Fact, Priority(15)]
-        public async Task PipelineWithWithoutAllowPropagateException()
-        {
-            // arrange
-            var pipeline = new PipelineAsync(); //AllowPropagateException = false
-            var exception = default(Exception);
-
-            // act
-            pipeline.Add<RollbackOperationTestAsyncStep1>();
-            pipeline.Add<RollbackOperationTestAsyncStep2>();
-            pipeline.Add<RollbackOperationTestAsyncStep3>();
-
-            try
-            {
-                // operations
-                await pipeline.ExecuteAsync();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-
-            // assert
-            Assert.Null(exception);
-        }
+        // assert
+        Assert.Null(exception);
     }
 }

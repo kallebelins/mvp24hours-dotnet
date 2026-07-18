@@ -3,448 +3,430 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Security;
+
+/// <summary>
+/// Provides field-level encryption for MongoDB documents using AES-256 encryption.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This is a client-side field-level encryption implementation that encrypts
+/// sensitive data before it's sent to MongoDB and decrypts it when retrieved.
+/// </para>
+/// <para>
+/// <strong>Important Security Notes:</strong>
+/// <list type="bullet">
+///   <item>Store encryption keys securely (use Azure Key Vault, AWS KMS, etc.)</item>
+///   <item>Use different keys for different tenants in multi-tenant scenarios</item>
+///   <item>Rotate keys periodically</item>
+///   <item>This is NOT the same as MongoDB's native CSFLE (Client-Side Field Level Encryption)</item>
+/// </list>
+/// </para>
+/// <para>
+/// For production environments with strict compliance requirements, consider using
+/// MongoDB's native CSFLE with automatic encryption. This implementation provides
+/// a simpler alternative for basic encryption needs.
+/// </para>
+/// </remarks>
+/// <example>
+/// <code>
+/// // Configure encryption:
+/// var encryptor = new FieldEncryptor(Convert.FromBase64String("your-32-byte-key-base64"));
+/// 
+/// // Encrypt data:
+/// var encrypted = encryptor.Encrypt("sensitive-data");
+/// 
+/// // Decrypt data:
+/// var decrypted = encryptor.Decrypt(encrypted);
+/// 
+/// // Use with serializer:
+/// BsonClassMap.RegisterClassMap&lt;MyEntity&gt;(cm =>
+/// {
+///     cm.AutoMap();
+///     cm.MapMember(c => c.SensitiveField)
+///       .SetSerializer(new EncryptedStringSerializer(encryptor));
+/// });
+/// </code>
+/// </example>
+public interface IFieldEncryptor
 {
     /// <summary>
-    /// Provides field-level encryption for MongoDB documents using AES-256 encryption.
+    /// Encrypts a plaintext string.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This is a client-side field-level encryption implementation that encrypts
-    /// sensitive data before it's sent to MongoDB and decrypts it when retrieved.
-    /// </para>
-    /// <para>
-    /// <strong>Important Security Notes:</strong>
-    /// <list type="bullet">
-    ///   <item>Store encryption keys securely (use Azure Key Vault, AWS KMS, etc.)</item>
-    ///   <item>Use different keys for different tenants in multi-tenant scenarios</item>
-    ///   <item>Rotate keys periodically</item>
-    ///   <item>This is NOT the same as MongoDB's native CSFLE (Client-Side Field Level Encryption)</item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// For production environments with strict compliance requirements, consider using
-    /// MongoDB's native CSFLE with automatic encryption. This implementation provides
-    /// a simpler alternative for basic encryption needs.
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// // Configure encryption:
-    /// var encryptor = new FieldEncryptor(Convert.FromBase64String("your-32-byte-key-base64"));
-    /// 
-    /// // Encrypt data:
-    /// var encrypted = encryptor.Encrypt("sensitive-data");
-    /// 
-    /// // Decrypt data:
-    /// var decrypted = encryptor.Decrypt(encrypted);
-    /// 
-    /// // Use with serializer:
-    /// BsonClassMap.RegisterClassMap&lt;MyEntity&gt;(cm =>
-    /// {
-    ///     cm.AutoMap();
-    ///     cm.MapMember(c => c.SensitiveField)
-    ///       .SetSerializer(new EncryptedStringSerializer(encryptor));
-    /// });
-    /// </code>
-    /// </example>
-    public interface IFieldEncryptor
+    /// <param name="plainText">The text to encrypt.</param>
+    /// <returns>The encrypted text as a Base64 string.</returns>
+    string? Encrypt(string? plainText);
+
+    /// <summary>
+    /// Decrypts an encrypted string.
+    /// </summary>
+    /// <param name="cipherText">The encrypted text (Base64).</param>
+    /// <returns>The decrypted plaintext.</returns>
+    string? Decrypt(string? cipherText);
+
+    /// <summary>
+    /// Encrypts binary data.
+    /// </summary>
+    /// <param name="data">The data to encrypt.</param>
+    /// <returns>The encrypted data.</returns>
+    byte[]? EncryptBytes(byte[]? data);
+
+    /// <summary>
+    /// Decrypts binary data.
+    /// </summary>
+    /// <param name="encryptedData">The encrypted data.</param>
+    /// <returns>The decrypted data.</returns>
+    byte[]? DecryptBytes(byte[]? encryptedData);
+}
+
+/// <summary>
+/// AES-256 field encryptor implementation.
+/// </summary>
+public class AesFieldEncryptor : IFieldEncryptor, IDisposable
+{
+    private readonly byte[] _key;
+    private bool _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesFieldEncryptor"/> class.
+    /// </summary>
+    /// <param name="key">The 256-bit (32 bytes) encryption key.</param>
+    /// <exception cref="ArgumentNullException">Thrown when key is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when key is not 32 bytes.</exception>
+    public AesFieldEncryptor(byte[] key)
     {
-        /// <summary>
-        /// Encrypts a plaintext string.
-        /// </summary>
-        /// <param name="plainText">The text to encrypt.</param>
-        /// <returns>The encrypted text as a Base64 string.</returns>
-        string? Encrypt(string? plainText);
+        if (key == null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
 
-        /// <summary>
-        /// Decrypts an encrypted string.
-        /// </summary>
-        /// <param name="cipherText">The encrypted text (Base64).</param>
-        /// <returns>The decrypted plaintext.</returns>
-        string? Decrypt(string? cipherText);
+        if (key.Length != 32)
+        {
+            throw new ArgumentException("Key must be 256 bits (32 bytes).", nameof(key));
+        }
 
-        /// <summary>
-        /// Encrypts binary data.
-        /// </summary>
-        /// <param name="data">The data to encrypt.</param>
-        /// <returns>The encrypted data.</returns>
-        byte[]? EncryptBytes(byte[]? data);
-
-        /// <summary>
-        /// Decrypts binary data.
-        /// </summary>
-        /// <param name="encryptedData">The encrypted data.</param>
-        /// <returns>The decrypted data.</returns>
-        byte[]? DecryptBytes(byte[]? encryptedData);
+        _key = new byte[key.Length];
+        Array.Copy(key, _key, key.Length);
     }
 
     /// <summary>
-    /// AES-256 field encryptor implementation.
+    /// Creates a new encryptor from a Base64-encoded key.
     /// </summary>
-    public class AesFieldEncryptor : IFieldEncryptor, IDisposable
+    /// <param name="base64Key">The Base64-encoded 256-bit key.</param>
+    /// <returns>A new <see cref="AesFieldEncryptor"/> instance.</returns>
+    public static AesFieldEncryptor FromBase64Key(string base64Key)
     {
-        private readonly byte[] _key;
-        private bool _disposed;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AesFieldEncryptor"/> class.
-        /// </summary>
-        /// <param name="key">The 256-bit (32 bytes) encryption key.</param>
-        /// <exception cref="ArgumentNullException">Thrown when key is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when key is not 32 bytes.</exception>
-        public AesFieldEncryptor(byte[] key)
+        if (string.IsNullOrEmpty(base64Key))
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-
-            if (key.Length != 32)
-            {
-                throw new ArgumentException("Key must be 256 bits (32 bytes).", nameof(key));
-            }
-
-            _key = new byte[key.Length];
-            Array.Copy(key, _key, key.Length);
+            throw new ArgumentNullException(nameof(base64Key));
         }
 
-        /// <summary>
-        /// Creates a new encryptor from a Base64-encoded key.
-        /// </summary>
-        /// <param name="base64Key">The Base64-encoded 256-bit key.</param>
-        /// <returns>A new <see cref="AesFieldEncryptor"/> instance.</returns>
-        public static AesFieldEncryptor FromBase64Key(string base64Key)
-        {
-            if (string.IsNullOrEmpty(base64Key))
-            {
-                throw new ArgumentNullException(nameof(base64Key));
-            }
+        byte[] key = Convert.FromBase64String(base64Key);
+        return new AesFieldEncryptor(key);
+    }
 
-            var key = Convert.FromBase64String(base64Key);
-            return new AesFieldEncryptor(key);
+    /// <summary>
+    /// Generates a new random 256-bit encryption key.
+    /// </summary>
+    /// <returns>A new random key as a byte array.</returns>
+    public static byte[] GenerateKey()
+    {
+        byte[] key = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(key);
+        }
+        return key;
+    }
+
+    /// <summary>
+    /// Generates a new random 256-bit encryption key as Base64.
+    /// </summary>
+    /// <returns>A new random key as a Base64 string.</returns>
+    public static string GenerateKeyAsBase64()
+    {
+        return Convert.ToBase64String(GenerateKey());
+    }
+
+    /// <inheritdoc />
+    public string? Encrypt(string? plainText)
+    {
+        if (string.IsNullOrEmpty(plainText))
+        {
+            return plainText;
         }
 
-        /// <summary>
-        /// Generates a new random 256-bit encryption key.
-        /// </summary>
-        /// <returns>A new random key as a byte array.</returns>
-        public static byte[] GenerateKey()
+        byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+        byte[] encryptedBytes = EncryptBytes(plainBytes) ?? [];
+        return Convert.ToBase64String(encryptedBytes);
+    }
+
+    /// <inheritdoc />
+    public string? Decrypt(string? cipherText)
+    {
+        if (string.IsNullOrEmpty(cipherText))
         {
-            var key = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(key);
-            }
-            return key;
+            return cipherText;
         }
 
-        /// <summary>
-        /// Generates a new random 256-bit encryption key as Base64.
-        /// </summary>
-        /// <returns>A new random key as a Base64 string.</returns>
-        public static string GenerateKeyAsBase64()
+        byte[] encryptedBytes = Convert.FromBase64String(cipherText);
+        byte[] decryptedBytes = DecryptBytes(encryptedBytes) ?? [];
+        return Encoding.UTF8.GetString(decryptedBytes);
+    }
+
+    /// <inheritdoc />
+    public byte[]? EncryptBytes(byte[]? data)
+    {
+        if (data == null || data.Length == 0)
         {
-            return Convert.ToBase64String(GenerateKey());
+            return data;
         }
 
-        /// <inheritdoc />
-        public string? Encrypt(string? plainText)
-        {
-            if (string.IsNullOrEmpty(plainText))
-            {
-                return plainText;
-            }
+        using var aes = Aes.Create();
+        aes.Key = _key;
+        aes.GenerateIV();
 
-            var plainBytes = Encoding.UTF8.GetBytes(plainText);
-            var encryptedBytes = EncryptBytes(plainBytes) ?? Array.Empty<byte>();
-            return Convert.ToBase64String(encryptedBytes);
+        using ICryptoTransform encryptor = aes.CreateEncryptor();
+        using var ms = new MemoryStream();
+        // Write IV first (16 bytes for AES)
+        ms.Write(aes.IV, 0, aes.IV.Length);
+
+        using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+        {
+            cs.Write(data, 0, data.Length);
+            cs.FlushFinalBlock();
         }
 
-        /// <inheritdoc />
-        public string? Decrypt(string? cipherText)
-        {
-            if (string.IsNullOrEmpty(cipherText))
-            {
-                return cipherText;
-            }
+        return ms.ToArray();
+    }
 
-            var encryptedBytes = Convert.FromBase64String(cipherText);
-            var decryptedBytes = DecryptBytes(encryptedBytes) ?? Array.Empty<byte>();
-            return Encoding.UTF8.GetString(decryptedBytes);
+    /// <inheritdoc />
+    public byte[]? DecryptBytes(byte[]? encryptedData)
+    {
+        if (encryptedData == null || encryptedData.Length <= 16)
+        {
+            return encryptedData;
         }
 
-        /// <inheritdoc />
-        public byte[]? EncryptBytes(byte[]? data)
+        using var aes = Aes.Create();
+        aes.Key = _key;
+
+        // Extract IV from the beginning of the data
+        byte[] iv = new byte[16];
+        Array.Copy(encryptedData, 0, iv, 0, 16);
+        aes.IV = iv;
+
+        using ICryptoTransform decryptor = aes.CreateDecryptor();
+        using var ms = new MemoryStream();
+        using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
         {
-            if (data == null || data.Length == 0)
-            {
-                return data;
-            }
+            cs.Write(encryptedData, 16, encryptedData.Length - 16);
+            cs.FlushFinalBlock();
+        }
 
-            using (var aes = Aes.Create())
-            {
-                aes.Key = _key;
-                aes.GenerateIV();
+        return ms.ToArray();
+    }
 
-                using (ICryptoTransform encryptor = aes.CreateEncryptor())
-                using (var ms = new MemoryStream())
+    /// <summary>
+    /// Releases all resources used by the encryptor.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">True to release both managed and unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Clear the key from memory
+                if (_key != null)
                 {
-                    // Write IV first (16 bytes for AES)
-                    ms.Write(aes.IV, 0, aes.IV.Length);
-
-                    using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-                    {
-                        cs.Write(data, 0, data.Length);
-                        cs.FlushFinalBlock();
-                    }
-
-                    return ms.ToArray();
+                    Array.Clear(_key, 0, _key.Length);
                 }
             }
+            _disposed = true;
         }
+    }
+}
 
-        /// <inheritdoc />
-        public byte[]? DecryptBytes(byte[]? encryptedData)
+/// <summary>
+/// MongoDB serializer for encrypted string fields.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This serializer automatically encrypts values when writing to MongoDB
+/// and decrypts them when reading.
+/// </para>
+/// </remarks>
+/// <example>
+/// <code>
+/// // Register class map with encrypted field:
+/// BsonClassMap.RegisterClassMap&lt;User&gt;(cm =>
+/// {
+///     cm.AutoMap();
+///     cm.MapMember(c => c.SocialSecurityNumber)
+///       .SetSerializer(new EncryptedStringSerializer(encryptor));
+/// });
+/// </code>
+/// </example>
+/// <remarks>
+/// Initializes a new instance of the <see cref="EncryptedStringSerializer"/> class.
+/// </remarks>
+/// <param name="encryptor">The field encryptor to use.</param>
+public class EncryptedStringSerializer(IFieldEncryptor encryptor) : SerializerBase<string>
+{
+    private readonly IFieldEncryptor _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
+
+    /// <inheritdoc />
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, string value)
+    {
+        if (value == null)
         {
-            if (encryptedData == null || encryptedData.Length <= 16)
-            {
-                return encryptedData;
-            }
-
-            using (var aes = Aes.Create())
-            {
-                aes.Key = _key;
-
-                // Extract IV from the beginning of the data
-                var iv = new byte[16];
-                Array.Copy(encryptedData, 0, iv, 0, 16);
-                aes.IV = iv;
-
-                using (ICryptoTransform decryptor = aes.CreateDecryptor())
-                using (var ms = new MemoryStream())
-                {
-                    using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
-                    {
-                        cs.Write(encryptedData, 16, encryptedData.Length - 16);
-                        cs.FlushFinalBlock();
-                    }
-
-                    return ms.ToArray();
-                }
-            }
+            context.Writer.WriteNull();
+            return;
         }
 
-        /// <summary>
-        /// Releases all resources used by the encryptor.
-        /// </summary>
-        public void Dispose()
+        string? encrypted = _encryptor.Encrypt(value);
+        context.Writer.WriteString(encrypted);
+    }
+
+    /// <inheritdoc />
+    public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    {
+        BsonType bsonType = context.Reader.GetCurrentBsonType();
+
+        if (bsonType == BsonType.Null)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            context.Reader.ReadNull();
+            return null!; // BSON null maps to a null string value by design
         }
 
-        /// <summary>
-        /// Releases the unmanaged resources and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">True to release both managed and unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        string encrypted = context.Reader.ReadString();
+        return _encryptor.Decrypt(encrypted)!; // non-null cipher text always decrypts to a non-null value
+    }
+}
+
+/// <summary>
+/// Attribute to mark fields for encryption.
+/// </summary>
+/// <remarks>
+/// Use this attribute to mark properties that should be encrypted.
+/// Register the <see cref="EncryptedFieldConvention"/> to automatically
+/// apply encryption to marked properties.
+/// </remarks>
+/// <example>
+/// <code>
+/// public class User
+/// {
+///     public string Id { get; set; }
+///     
+///     [EncryptedField]
+///     public string SocialSecurityNumber { get; set; }
+///     
+///     [EncryptedField]
+///     public string CreditCardNumber { get; set; }
+/// }
+/// </code>
+/// </example>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+public class EncryptedFieldAttribute : Attribute
+{
+    /// <summary>
+    /// Gets or sets the encryption key name to use for this field.
+    /// If null, the default key is used.
+    /// </summary>
+    public string? KeyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the algorithm to use. Default is "AES-256".
+    /// </summary>
+    public string Algorithm { get; set; } = "AES-256";
+}
+
+/// <summary>
+/// Provides helper methods for encryption key management.
+/// </summary>
+public static class EncryptionKeyHelper
+{
+    /// <summary>
+    /// Derives a key from a password using PBKDF2.
+    /// </summary>
+    /// <param name="password">The password to derive the key from.</param>
+    /// <param name="salt">The salt (should be at least 16 bytes, unique per key).</param>
+    /// <param name="iterations">Number of iterations (default 100,000 for security).</param>
+    /// <returns>A 256-bit key derived from the password.</returns>
+    public static byte[] DeriveKeyFromPassword(string password, byte[] salt, int iterations = 100000)
+    {
+        if (string.IsNullOrEmpty(password))
         {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // Clear the key from memory
-                    if (_key != null)
-                    {
-                        Array.Clear(_key, 0, _key.Length);
-                    }
-                }
-                _disposed = true;
-            }
+            throw new ArgumentNullException(nameof(password));
         }
+
+        if (salt == null || salt.Length < 16)
+        {
+            throw new ArgumentException("Salt must be at least 16 bytes.", nameof(salt));
+        }
+
+        return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, 32); // 256 bits
     }
 
     /// <summary>
-    /// MongoDB serializer for encrypted string fields.
+    /// Generates a random salt.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This serializer automatically encrypts values when writing to MongoDB
-    /// and decrypts them when reading.
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// // Register class map with encrypted field:
-    /// BsonClassMap.RegisterClassMap&lt;User&gt;(cm =>
-    /// {
-    ///     cm.AutoMap();
-    ///     cm.MapMember(c => c.SocialSecurityNumber)
-    ///       .SetSerializer(new EncryptedStringSerializer(encryptor));
-    /// });
-    /// </code>
-    /// </example>
-    public class EncryptedStringSerializer : SerializerBase<string>
+    /// <param name="length">The length of the salt in bytes (default 32).</param>
+    /// <returns>A random salt.</returns>
+    public static byte[] GenerateSalt(int length = 32)
     {
-        private readonly IFieldEncryptor _encryptor;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EncryptedStringSerializer"/> class.
-        /// </summary>
-        /// <param name="encryptor">The field encryptor to use.</param>
-        public EncryptedStringSerializer(IFieldEncryptor encryptor)
+        byte[] salt = new byte[length];
+        using (var rng = RandomNumberGenerator.Create())
         {
-            _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
+            rng.GetBytes(salt);
         }
-
-        /// <inheritdoc />
-        public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, string value)
-        {
-            if (value == null)
-            {
-                context.Writer.WriteNull();
-                return;
-            }
-
-            var encrypted = _encryptor.Encrypt(value);
-            context.Writer.WriteString(encrypted);
-        }
-
-        /// <inheritdoc />
-        public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
-        {
-            BsonType bsonType = context.Reader.GetCurrentBsonType();
-
-            if (bsonType == BsonType.Null)
-            {
-                context.Reader.ReadNull();
-                return null!; // BSON null maps to a null string value by design
-            }
-
-            var encrypted = context.Reader.ReadString();
-            return _encryptor.Decrypt(encrypted)!; // non-null cipher text always decrypts to a non-null value
-        }
+        return salt;
     }
 
     /// <summary>
-    /// Attribute to mark fields for encryption.
+    /// Creates a per-tenant encryption key by combining a master key with tenant ID.
     /// </summary>
-    /// <remarks>
-    /// Use this attribute to mark properties that should be encrypted.
-    /// Register the <see cref="EncryptedFieldConvention"/> to automatically
-    /// apply encryption to marked properties.
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// public class User
-    /// {
-    ///     public string Id { get; set; }
-    ///     
-    ///     [EncryptedField]
-    ///     public string SocialSecurityNumber { get; set; }
-    ///     
-    ///     [EncryptedField]
-    ///     public string CreditCardNumber { get; set; }
-    /// }
-    /// </code>
-    /// </example>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public class EncryptedFieldAttribute : Attribute
+    /// <param name="masterKey">The master encryption key.</param>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>A tenant-specific 256-bit key.</returns>
+    public static byte[] DerivePerTenantKey(byte[] masterKey, string tenantId)
     {
-        /// <summary>
-        /// Gets or sets the encryption key name to use for this field.
-        /// If null, the default key is used.
-        /// </summary>
-        public string? KeyName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the algorithm to use. Default is "AES-256".
-        /// </summary>
-        public string Algorithm { get; set; } = "AES-256";
-    }
-
-    /// <summary>
-    /// Provides helper methods for encryption key management.
-    /// </summary>
-    public static class EncryptionKeyHelper
-    {
-        /// <summary>
-        /// Derives a key from a password using PBKDF2.
-        /// </summary>
-        /// <param name="password">The password to derive the key from.</param>
-        /// <param name="salt">The salt (should be at least 16 bytes, unique per key).</param>
-        /// <param name="iterations">Number of iterations (default 100,000 for security).</param>
-        /// <returns>A 256-bit key derived from the password.</returns>
-        public static byte[] DeriveKeyFromPassword(string password, byte[] salt, int iterations = 100000)
+        if (masterKey == null || masterKey.Length < 16)
         {
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
-
-            if (salt == null || salt.Length < 16)
-            {
-                throw new ArgumentException("Salt must be at least 16 bytes.", nameof(salt));
-            }
-
-            return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, 32); // 256 bits
+            throw new ArgumentException("Master key must be at least 16 bytes.", nameof(masterKey));
         }
 
-        /// <summary>
-        /// Generates a random salt.
-        /// </summary>
-        /// <param name="length">The length of the salt in bytes (default 32).</param>
-        /// <returns>A random salt.</returns>
-        public static byte[] GenerateSalt(int length = 32)
+        if (string.IsNullOrEmpty(tenantId))
         {
-            var salt = new byte[length];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-            return salt;
+            throw new ArgumentNullException(nameof(tenantId));
         }
 
-        /// <summary>
-        /// Creates a per-tenant encryption key by combining a master key with tenant ID.
-        /// </summary>
-        /// <param name="masterKey">The master encryption key.</param>
-        /// <param name="tenantId">The tenant identifier.</param>
-        /// <returns>A tenant-specific 256-bit key.</returns>
-        public static byte[] DerivePerTenantKey(byte[] masterKey, string tenantId)
-        {
-            if (masterKey == null || masterKey.Length < 16)
-            {
-                throw new ArgumentException("Master key must be at least 16 bytes.", nameof(masterKey));
-            }
+        // Use HKDF-like derivation (simplified version using HMAC)
+        byte[] tenantBytes = Encoding.UTF8.GetBytes(tenantId);
 
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                throw new ArgumentNullException(nameof(tenantId));
-            }
+        using var hmac = new HMACSHA256(masterKey);
+        // Derive tenant-specific key
+        byte[] info = new byte[tenantBytes.Length + 4];
+        Array.Copy(tenantBytes, 0, info, 0, tenantBytes.Length);
+        BitConverter.GetBytes(1).CopyTo(info, tenantBytes.Length);
 
-            // Use HKDF-like derivation (simplified version using HMAC)
-            var tenantBytes = Encoding.UTF8.GetBytes(tenantId);
-
-            using (var hmac = new HMACSHA256(masterKey))
-            {
-                // Derive tenant-specific key
-                var info = new byte[tenantBytes.Length + 4];
-                Array.Copy(tenantBytes, 0, info, 0, tenantBytes.Length);
-                BitConverter.GetBytes(1).CopyTo(info, tenantBytes.Length);
-
-                return hmac.ComputeHash(info);
-            }
-        }
+        return hmac.ComputeHash(info);
     }
 }
 

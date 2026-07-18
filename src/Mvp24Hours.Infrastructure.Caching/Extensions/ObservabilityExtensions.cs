@@ -4,9 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -66,17 +63,12 @@ public static class ObservabilityExtensions
         where TInterface : class
         where TDecorator : class, TInterface
     {
-        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface));
-        if (wrappedDescriptor == null)
-        {
-            throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
-        }
-
+        ServiceDescriptor? wrappedDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TInterface)) ?? throw new InvalidOperationException($"Service {typeof(TInterface).Name} is not registered. Register it before decorating.");
         services.Replace(ServiceDescriptor.Describe(
             typeof(TInterface),
             sp =>
             {
-                var inner = wrappedDescriptor.ImplementationInstance
+                object inner = wrappedDescriptor.ImplementationInstance
                     ?? (wrappedDescriptor.ImplementationFactory?.Invoke(sp)
                         ?? ActivatorUtilities.GetServiceOrCreateInstance(sp, wrappedDescriptor.ImplementationType!));
 

@@ -4,10 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Events;
 
@@ -33,24 +30,18 @@ namespace Mvp24Hours.Application.Logic.Events;
 /// </para>
 /// </remarks>
 /// <typeparam name="TEvent">The type of application event to bridge.</typeparam>
-public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<TEvent>
+/// <remarks>
+/// Creates a new instance of the MediatorApplicationEventAdapter.
+/// </remarks>
+/// <param name="serviceProvider">The service provider for resolving the Mediator publisher.</param>
+/// <param name="logger">Optional logger.</param>
+public class MediatorApplicationEventAdapter<TEvent>(
+    IServiceProvider serviceProvider,
+    ILogger<MediatorApplicationEventAdapter<TEvent>>? logger = null) : IApplicationEventHandler<TEvent>
     where TEvent : IApplicationEvent
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<MediatorApplicationEventAdapter<TEvent>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the MediatorApplicationEventAdapter.
-    /// </summary>
-    /// <param name="serviceProvider">The service provider for resolving the Mediator publisher.</param>
-    /// <param name="logger">Optional logger.</param>
-    public MediatorApplicationEventAdapter(
-        IServiceProvider serviceProvider,
-        ILogger<MediatorApplicationEventAdapter<TEvent>>? logger = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<MediatorApplicationEventAdapter<TEvent>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task HandleAsync(TEvent @event, CancellationToken cancellationToken = default)
@@ -68,7 +59,7 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
                 return;
             }
 
-            var publisher = _serviceProvider.GetService(publisherType);
+            object? publisher = _serviceProvider.GetService(publisherType);
             if (publisher == null)
             {
                 _logger?.LogDebug(
@@ -94,8 +85,7 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
             MethodInfo genericPublish = publishMethod.MakeGenericMethod(notificationType);
 
             // Invoke
-            var task = genericPublish.Invoke(publisher, [notification, cancellationToken]) as Task;
-            if (task != null)
+            if (genericPublish.Invoke(publisher, [notification, cancellationToken]) is Task task)
             {
                 await task;
             }
@@ -124,22 +114,18 @@ public class MediatorApplicationEventAdapter<TEvent> : IApplicationEventHandler<
 /// This class is designed to implement IMediatorNotification dynamically,
 /// allowing it to work even when the CQRS module is not referenced directly.
 /// </remarks>
-public class ApplicationEventMediatorNotification<TEvent>
+/// <remarks>
+/// Creates a new notification wrapper.
+/// </remarks>
+/// <param name="event">The application event.</param>
+public class ApplicationEventMediatorNotification<TEvent>(TEvent @event)
     where TEvent : IApplicationEvent
 {
-    /// <summary>
-    /// Creates a new notification wrapper.
-    /// </summary>
-    /// <param name="event">The application event.</param>
-    public ApplicationEventMediatorNotification(TEvent @event)
-    {
-        Event = @event ?? throw new ArgumentNullException(nameof(@event));
-    }
 
     /// <summary>
     /// The wrapped application event.
     /// </summary>
-    public TEvent Event { get; }
+    public TEvent Event { get; } = @event ?? throw new ArgumentNullException(nameof(@event));
 
     /// <summary>
     /// The event ID from the wrapped event.

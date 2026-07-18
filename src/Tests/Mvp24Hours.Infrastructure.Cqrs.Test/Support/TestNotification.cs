@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
 /// <summary>

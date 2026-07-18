@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Application.Contract.Transaction;
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Logic.Transaction;
@@ -72,7 +70,7 @@ public class TransactionScopeTest
         await scope.BeginAsync();
 
         // Act
-        var result = await scope.CommitAsync();
+        int result = await scope.CommitAsync();
 
         // Assert
         result.Should().Be(5);
@@ -162,10 +160,10 @@ public class TransactionScopeTest
         var unitOfWork = new MockUnitOfWorkAsync();
         unitOfWork.SetSaveChangesResult(3);
         await using var scope = new TransactionScope(unitOfWork);
-        var executed = false;
+        bool executed = false;
 
         // Act
-        var result = await scope.ExecuteAsync(async () =>
+        int result = await scope.ExecuteAsync(async () =>
         {
             executed = true;
             await Task.Delay(1);
@@ -333,7 +331,7 @@ public class TransactionScopeTest
 
         // Act
         scope.Begin();
-        var result = scope.Commit();
+        int result = scope.Commit();
 
         // Assert
         result.Should().Be(4);
@@ -348,10 +346,10 @@ public class TransactionScopeTest
         var unitOfWork = new MockUnitOfWork();
         unitOfWork.SetSaveChangesResult(2);
         using var scope = new TransactionScopeSync(unitOfWork);
-        var executed = false;
+        bool executed = false;
 
         // Act
-        var result = scope.Execute(() => { executed = true; });
+        int result = scope.Execute(() => { executed = true; });
 
         // Assert
         executed.Should().BeTrue();

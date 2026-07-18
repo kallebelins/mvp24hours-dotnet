@@ -51,25 +51,20 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 ///     });
 /// </code>
 /// </example>
-public sealed class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TracingBehavior.
+/// </remarks>
+/// <param name="contextAccessor">Optional request context accessor for tracing context.</param>
+public sealed class TracingBehavior<TRequest, TResponse>(IRequestContextAccessor? contextAccessor = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IRequestContextAccessor? _contextAccessor;
-
-    /// <summary>
-    /// Creates a new instance of the TracingBehavior.
-    /// </summary>
-    /// <param name="contextAccessor">Optional request context accessor for tracing context.</param>
-    public TracingBehavior(IRequestContextAccessor? contextAccessor = null)
-    {
-        _contextAccessor = contextAccessor;
-    }
+    private readonly IRequestContextAccessor? _contextAccessor = contextAccessor;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-        var requestType = GetRequestType();
+        string requestName = typeof(TRequest).Name;
+        string requestType = GetRequestType();
         IRequestContext? context = _contextAccessor?.Context;
 
         using Activity? activity = MediatorActivitySource.StartRequestActivity(requestName, requestType, context);

@@ -4,13 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 using Mvp24Hours.Infrastructure.Cqrs.Projections;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -107,8 +102,8 @@ public class ProjectionTest
         await repository.InsertAsync(new TestReadModel { Id = Guid.NewGuid(), Name = "Item3", Status = "Inactive" });
 
         // Act
-        var totalCount = await repository.CountAsync();
-        var activeCount = await repository.CountAsync(x => x.Status == "Active");
+        long totalCount = await repository.CountAsync();
+        long activeCount = await repository.CountAsync(x => x.Status == "Active");
 
         // Assert
         Assert.Equal(3, totalCount);
@@ -126,7 +121,7 @@ public class ProjectionTest
 
         // Act
         await repository.BulkInsertAsync(items);
-        var count = await repository.CountAsync();
+        long count = await repository.CountAsync();
 
         // Assert
         Assert.Equal(100, count);
@@ -142,7 +137,7 @@ public class ProjectionTest
 
         // Act
         await repository.DeleteAllAsync();
-        var count = await repository.CountAsync();
+        long count = await repository.CountAsync();
 
         // Assert
         Assert.Equal(0, count);
@@ -156,8 +151,8 @@ public class ProjectionTest
         await repository.InsertAsync(new TestReadModel { Id = Guid.NewGuid(), Name = "Item1", Status = "Active" });
 
         // Act
-        var exists = await repository.ExistsAsync(x => x.Name == "Item1");
-        var notExists = await repository.ExistsAsync(x => x.Name == "NonExistent");
+        bool exists = await repository.ExistsAsync(x => x.Name == "Item1");
+        bool notExists = await repository.ExistsAsync(x => x.Name == "NonExistent");
 
         // Assert
         Assert.True(exists);
@@ -218,11 +213,11 @@ public class ProjectionTest
     {
         // Arrange
         var store = new InMemoryProjectionPositionStore();
-        var projectionName = "TestProjection";
+        string projectionName = "TestProjection";
 
         // Act
         await store.SavePositionAsync(projectionName, 100);
-        var position = await store.GetPositionAsync(projectionName);
+        long position = await store.GetPositionAsync(projectionName);
 
         // Assert
         Assert.Equal(100, position);
@@ -235,7 +230,7 @@ public class ProjectionTest
         var store = new InMemoryProjectionPositionStore();
 
         // Act
-        var position = await store.GetPositionAsync("UnknownProjection");
+        long position = await store.GetPositionAsync("UnknownProjection");
 
         // Assert
         Assert.Equal(0, position);
@@ -388,10 +383,7 @@ public class ProjectionTest
         services.AddEventSourcingInMemory();
 
         // Act
-        services.AddProjections(options =>
-        {
-            options.AddInMemoryRepository<TestReadModel>();
-        });
+        services.AddProjections(options => options.AddInMemoryRepository<TestReadModel>());
 
         ServiceProvider provider = services.BuildServiceProvider();
 
@@ -435,14 +427,9 @@ public class ProjectionTest
     public record TestProjectionEvent(Guid ItemId, string Name) : MediatorDomainEventBase;
 
     [Trait("Category", "Unit")]
-    public class TestProjectionHandler : IProjectionHandler<TestProjectionEvent>
+    public class TestProjectionHandler(IReadModelRepository<ProjectionTest.TestReadModel> repository) : IProjectionHandler<TestProjectionEvent>
     {
-        private readonly IReadModelRepository<TestReadModel> _repository;
-
-        public TestProjectionHandler(IReadModelRepository<TestReadModel> repository)
-        {
-            _repository = repository;
-        }
+        private readonly IReadModelRepository<TestReadModel> _repository = repository;
 
         public async Task HandleAsync(TestProjectionEvent @event, ProjectionContext context, CancellationToken cancellationToken = default)
         {

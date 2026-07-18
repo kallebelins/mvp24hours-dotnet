@@ -3,97 +3,88 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
+
+/// <summary>
+/// Publish filter that provides automatic logging for message publishing.
+/// Logs message publish, processing time, success/failure status.
+/// </summary>
+/// <remarks>
+/// Creates a new logging publish filter.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class LoggingPublishFilter(ILogger<LoggingPublishFilter>? logger = null) : IPublishFilter
 {
-    /// <summary>
-    /// Publish filter that provides automatic logging for message publishing.
-    /// Logs message publish, processing time, success/failure status.
-    /// </summary>
-    public class LoggingPublishFilter : IPublishFilter
+    private readonly ILogger<LoggingPublishFilter>? _logger = logger;
+
+    /// <inheritdoc />
+    public async Task PublishAsync<TMessage>(
+        IPublishFilterContext<TMessage> context,
+        PublishFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
     {
-        private readonly ILogger<LoggingPublishFilter>? _logger;
+        string messageType = typeof(TMessage).Name;
+        string messageId = context.MessageId;
+        string? correlationId = context.CorrelationId;
+        string exchange = context.Exchange;
+        string routingKey = context.RoutingKey;
+        var stopwatch = Stopwatch.StartNew();
 
-        /// <summary>
-        /// Creates a new logging publish filter.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public LoggingPublishFilter(ILogger<LoggingPublishFilter>? logger = null)
+        LogMessagePublishing(messageType, messageId, correlationId, exchange, routingKey);
+
+        try
         {
-            _logger = logger;
-        }
+            await next(context, cancellationToken);
 
-        /// <inheritdoc />
-        public async Task PublishAsync<TMessage>(
-            IPublishFilterContext<TMessage> context,
-            PublishFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
-        {
-            var messageType = typeof(TMessage).Name;
-            var messageId = context.MessageId;
-            var correlationId = context.CorrelationId;
-            var exchange = context.Exchange;
-            var routingKey = context.RoutingKey;
-            var stopwatch = Stopwatch.StartNew();
+            stopwatch.Stop();
 
-            LogMessagePublishing(messageType, messageId, correlationId, exchange, routingKey);
-
-            try
+            if (context.ShouldCancelPublish)
             {
-                await next(context, cancellationToken);
-
-                stopwatch.Stop();
-
-                if (context.ShouldCancelPublish)
-                {
-                    LogMessageCancelled(messageType, messageId, correlationId, context.CancellationReason);
-                }
-                else
-                {
-                    LogMessagePublished(messageType, messageId, correlationId, stopwatch.ElapsedMilliseconds);
-                }
+                LogMessageCancelled(messageType, messageId, correlationId, context.CancellationReason);
             }
-            catch (Exception ex)
+            else
             {
-                stopwatch.Stop();
-                LogMessagePublishFailed(messageType, messageId, correlationId, stopwatch.ElapsedMilliseconds, ex);
-                throw;
+                LogMessagePublished(messageType, messageId, correlationId, stopwatch.ElapsedMilliseconds);
             }
         }
-
-        private void LogMessagePublishing(string messageType, string messageId, string? correlationId, string exchange, string routingKey)
+        catch (Exception ex)
         {
-            _logger?.LogDebug(
-                "Publishing message. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Exchange={Exchange}, RoutingKey={RoutingKey}",
-                messageType, messageId, correlationId, exchange, routingKey);
+            stopwatch.Stop();
+            LogMessagePublishFailed(messageType, messageId, correlationId, stopwatch.ElapsedMilliseconds, ex);
+            throw;
         }
+    }
 
-        private void LogMessagePublished(string messageType, string messageId, string? correlationId, long elapsedMs)
-        {
-            _logger?.LogInformation(
-                "Message published successfully. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
-                messageType, messageId, correlationId, elapsedMs);
-        }
+    private void LogMessagePublishing(string messageType, string messageId, string? correlationId, string exchange, string routingKey)
+    {
+        _logger?.LogDebug(
+            "Publishing message. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Exchange={Exchange}, RoutingKey={RoutingKey}",
+            messageType, messageId, correlationId, exchange, routingKey);
+    }
 
-        private void LogMessageCancelled(string messageType, string messageId, string? correlationId, string? reason)
-        {
-            _logger?.LogWarning(
-                "Message publish cancelled. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Reason={Reason}",
-                messageType, messageId, correlationId, reason);
-        }
+    private void LogMessagePublished(string messageType, string messageId, string? correlationId, long elapsedMs)
+    {
+        _logger?.LogInformation(
+            "Message published successfully. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+            messageType, messageId, correlationId, elapsedMs);
+    }
 
-        private void LogMessagePublishFailed(string messageType, string messageId, string? correlationId, long elapsedMs, Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Message publish failed. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
-                messageType, messageId, correlationId, elapsedMs);
-        }
+    private void LogMessageCancelled(string messageType, string messageId, string? correlationId, string? reason)
+    {
+        _logger?.LogWarning(
+            "Message publish cancelled. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Reason={Reason}",
+            messageType, messageId, correlationId, reason);
+    }
+
+    private void LogMessagePublishFailed(string messageType, string messageId, string? correlationId, long elapsedMs, Exception ex)
+    {
+        _logger?.LogError(ex,
+            "Message publish failed. Type={MessageType}, MessageId={MessageId}, CorrelationId={CorrelationId}, Duration={ElapsedMs}ms",
+            messageType, messageId, correlationId, elapsedMs);
     }
 }
 

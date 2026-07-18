@@ -3,10 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
@@ -17,251 +13,237 @@ using Testcontainers.RabbitMq;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.RabbitMQ.Test
+namespace Mvp24Hours.Application.RabbitMQ.Test;
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class Test1RabbitMQ : IAsyncLifetime
 {
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Integration")]
-    public class Test1RabbitMQ : IAsyncLifetime
+    #region [ Container ]
+    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-management")
+        .WithExposedPort(5672)
+        .WithUsername("guest")
+        .WithPassword("guest")
+        .WithCleanUp(true)
+        .Build();
+
+    public async Task InitializeAsync()
     {
-        #region [ Container ]
-        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-management")
-            .WithExposedPort(5672)
-            .WithUsername("guest")
-            .WithPassword("guest")
-            .WithCleanUp(true)
-            .Build();
+        await _rabbitMqContainer.StartAsync().ConfigureAwait(false);
+    }
 
-        public async Task InitializeAsync()
-            => await _rabbitMqContainer.StartAsync().ConfigureAwait(false);
+    public async Task DisposeAsync()
+    {
+        await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
+    }
+    #endregion
 
-        public async Task DisposeAsync()
-            => await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
-        #endregion
+    #region [ Configure ]
+    public Test1RabbitMQ() { }
 
-        #region [ Configure ]
-        public Test1RabbitMQ() { }
+    private IServiceProvider SetupTypeAssembly()
+    {
+        var services = new ServiceCollection();
 
-        private IServiceProvider SetupTypeAssembly()
-        {
-            var services = new ServiceCollection();
+        services.AddScoped<CustomerConsumer, CustomerConsumer>();
+        services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
+        services.AddTransient(x => new CustomerEvent() { Name = "event" });
 
-            services.AddScoped<CustomerConsumer, CustomerConsumer>();
-            services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
-            services.AddTransient(x => new CustomerEvent() { Name = "event" });
-
-            services.AddMvp24HoursRabbitMQ(
-                typeof(CustomerConsumer).Assembly,
-                connectionOptions =>
-                {
-                    connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
-                    connectionOptions.DispatchConsumersAsync = true;
-                    connectionOptions.RetryCount = 3;
-                },
-                clientOptions =>
-                {
-                    clientOptions.MaxRedeliveredCount = 1;
-                }
-            );
-            return services.BuildServiceProvider();
-        }
-
-        private IServiceProvider SetupTypeAssemblyWithoutInjection()
-        {
-            var services = new ServiceCollection();
-
-            services.AddMvp24HoursRabbitMQ(
-                [typeof(CustomerConsumer)],
-                connectionOptions =>
-                {
-                    connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
-                    connectionOptions.DispatchConsumersAsync = true;
-                    connectionOptions.RetryCount = 3;
-                },
-                clientOptions =>
-                {
-                    clientOptions.MaxRedeliveredCount = 1;
-                }
-            );
-            return services.BuildServiceProvider();
-        }
-
-        private IServiceProvider SetupTypeDefined()
-        {
-            var services = new ServiceCollection();
-
-            services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
-            services.AddTransient(x => new CustomerEvent() { Name = "event" });
-
-            services.AddMvp24HoursRabbitMQ(
-                [typeof(CustomerWithCtorConsumer)],
-                connectionOptions =>
-                {
-                    connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
-                    connectionOptions.DispatchConsumersAsync = true;
-                    connectionOptions.RetryCount = 3;
-                },
-                clientOptions =>
-                {
-                    clientOptions.MaxRedeliveredCount = 1;
-                }
-            );
-            return services.BuildServiceProvider();
-        }
-
-        private IServiceProvider SetupTypeDefinedList()
-        {
-            var services = new ServiceCollection();
-
-            services.AddScoped<CustomerConsumer, CustomerConsumer>();
-            services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
-            services.AddTransient(x => new CustomerEvent() { Name = "event" });
-
-            Type[] consumers = typeof(Test1RabbitMQ).Assembly
-                    .GetExportedTypes()
-                    .Where(t => t.InheritsOrImplements(typeof(IMvpRabbitMQConsumer)))
-                    .ToArray();
-
-            services.AddMvp24HoursRabbitMQ(
-                consumers,
-                connectionOptions =>
-                {
-                    connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
-                    connectionOptions.DispatchConsumersAsync = true;
-                    connectionOptions.RetryCount = 3;
-                },
-                clientOptions =>
-                {
-                    clientOptions.MaxRedeliveredCount = 1;
-                }
-            );
-            return services.BuildServiceProvider();
-        }
-        #endregion
-
-        [Fact]
-        public void CreateProducerAssembly()
-        {
-            IServiceProvider serviceProvider = SetupTypeAssembly();
-            // arrange
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
-
-            // act
-            string result = client.Publish(new CustomerEvent
+        services.AddMvp24HoursRabbitMQ(
+            typeof(CustomerConsumer).Assembly,
+            connectionOptions =>
             {
-                Id = 1,
-                Name = "Test 1",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.DispatchConsumersAsync = true;
+                connectionOptions.RetryCount = 3;
+            },
+            clientOptions => clientOptions.MaxRedeliveredCount = 1);
+        return services.BuildServiceProvider();
+    }
 
-            // assert
-            Assert.True(result.HasValue());
-        }
+    private IServiceProvider SetupTypeAssemblyWithoutInjection()
+    {
+        var services = new ServiceCollection();
 
-        [Fact]
-        public void CreateConsumerAssembly()
-        {
-            IServiceProvider serviceProvider = SetupTypeAssembly();
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
-
-            // arrange
-            client.Publish(new CustomerEvent
+        services.AddMvp24HoursRabbitMQ(
+            [typeof(CustomerConsumer)],
+            connectionOptions =>
             {
-                Id = 2,
-                Name = "Test 2",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.DispatchConsumersAsync = true;
+                connectionOptions.RetryCount = 3;
+            },
+            clientOptions => clientOptions.MaxRedeliveredCount = 1);
+        return services.BuildServiceProvider();
+    }
 
+    private IServiceProvider SetupTypeDefined()
+    {
+        var services = new ServiceCollection();
 
-            // act
-            client.Consume();
+        services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
+        services.AddTransient(x => new CustomerEvent() { Name = "event" });
 
-            // assert
-            Assert.True(true);
-        }
-
-        [Fact]
-        public void CreateConsumerWithoutInjection()
-        {
-            IServiceProvider serviceProvider = SetupTypeAssemblyWithoutInjection();
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
-
-            // arrange
-            client.Publish(new CustomerEvent
+        services.AddMvp24HoursRabbitMQ(
+            [typeof(CustomerWithCtorConsumer)],
+            connectionOptions =>
             {
-                Id = 2,
-                Name = "Test 2",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.DispatchConsumersAsync = true;
+                connectionOptions.RetryCount = 3;
+            },
+            clientOptions => clientOptions.MaxRedeliveredCount = 1);
+        return services.BuildServiceProvider();
+    }
 
+    private IServiceProvider SetupTypeDefinedList()
+    {
+        var services = new ServiceCollection();
 
-            // act
-            client.Consume();
+        services.AddScoped<CustomerConsumer, CustomerConsumer>();
+        services.AddScoped<CustomerWithCtorConsumer, CustomerWithCtorConsumer>();
+        services.AddTransient(x => new CustomerEvent() { Name = "event" });
 
-            // assert
-            Assert.True(true);
-        }
+        Type[] consumers = [.. typeof(Test1RabbitMQ).Assembly
+                .GetExportedTypes()
+                .Where(t => t.InheritsOrImplements(typeof(IMvpRabbitMQConsumer)))];
 
-        [Fact]
-        public void CreateProducerDefined()
-        {
-            IServiceProvider serviceProvider = SetupTypeDefined();
-            // arrange
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
-
-            // act
-            string result = client.Publish(new CustomerEvent
+        services.AddMvp24HoursRabbitMQ(
+            consumers,
+            connectionOptions =>
             {
-                Id = 1,
-                Name = "Test 1",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.DispatchConsumersAsync = true;
+                connectionOptions.RetryCount = 3;
+            },
+            clientOptions => clientOptions.MaxRedeliveredCount = 1);
+        return services.BuildServiceProvider();
+    }
+    #endregion
 
-            // assert
-            Assert.True(result.HasValue());
-        }
+    [Fact]
+    public void CreateProducerAssembly()
+    {
+        IServiceProvider serviceProvider = SetupTypeAssembly();
+        // arrange
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
-        [Fact]
-        public void CreateConsumerDefined()
+        // act
+        string result = client.Publish(new CustomerEvent
         {
-            IServiceProvider serviceProvider = SetupTypeDefined();
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
+            Id = 1,
+            Name = "Test 1",
+            Active = true
+        }, typeof(CustomerEvent).Name);
 
-            // arrange
-            client.Publish(new CustomerEvent
-            {
-                Id = 2,
-                Name = "Test 2",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+        // assert
+        Assert.True(result.HasValue());
+    }
 
+    [Fact]
+    public void CreateConsumerAssembly()
+    {
+        IServiceProvider serviceProvider = SetupTypeAssembly();
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
-            // act
-            client.Consume();
-
-            // assert
-            Assert.True(true);
-        }
-
-        [Fact]
-        public void CreateConsumerDefinedList()
+        // arrange
+        client.Publish(new CustomerEvent
         {
-            IServiceProvider serviceProvider = SetupTypeDefinedList();
-            MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
-
-            // arrange
-            client.Publish(new CustomerEvent
-            {
-                Id = 2,
-                Name = "Test 2",
-                Active = true
-            }, typeof(CustomerEvent).Name);
+            Id = 2,
+            Name = "Test 2",
+            Active = true
+        }, typeof(CustomerEvent).Name);
 
 
-            // act
-            client.Consume();
+        // act
+        client.Consume();
 
-            // assert
-            Assert.True(true);
-        }
+        // assert
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void CreateConsumerWithoutInjection()
+    {
+        IServiceProvider serviceProvider = SetupTypeAssemblyWithoutInjection();
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
+
+        // arrange
+        client.Publish(new CustomerEvent
+        {
+            Id = 2,
+            Name = "Test 2",
+            Active = true
+        }, typeof(CustomerEvent).Name);
+
+
+        // act
+        client.Consume();
+
+        // assert
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void CreateProducerDefined()
+    {
+        IServiceProvider serviceProvider = SetupTypeDefined();
+        // arrange
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
+
+        // act
+        string result = client.Publish(new CustomerEvent
+        {
+            Id = 1,
+            Name = "Test 1",
+            Active = true
+        }, typeof(CustomerEvent).Name);
+
+        // assert
+        Assert.True(result.HasValue());
+    }
+
+    [Fact]
+    public void CreateConsumerDefined()
+    {
+        IServiceProvider serviceProvider = SetupTypeDefined();
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
+
+        // arrange
+        client.Publish(new CustomerEvent
+        {
+            Id = 2,
+            Name = "Test 2",
+            Active = true
+        }, typeof(CustomerEvent).Name);
+
+
+        // act
+        client.Consume();
+
+        // assert
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void CreateConsumerDefinedList()
+    {
+        IServiceProvider serviceProvider = SetupTypeDefinedList();
+        MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
+
+        // arrange
+        client.Publish(new CustomerEvent
+        {
+            Id = 2,
+            Name = "Test 2",
+            Active = true
+        }, typeof(CustomerEvent).Name);
+
+
+        // act
+        client.Consume();
+
+        // assert
+        Assert.True(true);
     }
 }

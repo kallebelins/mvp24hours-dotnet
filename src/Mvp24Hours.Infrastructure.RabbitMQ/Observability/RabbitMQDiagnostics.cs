@@ -3,10 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 
@@ -376,34 +372,28 @@ public class QueueStats
 /// <summary>
 /// Default implementation of IRabbitMQDiagnostics.
 /// </summary>
-public class RabbitMQDiagnostics : IRabbitMQDiagnostics
+/// <remarks>
+/// Creates a new RabbitMQDiagnostics instance.
+/// </remarks>
+/// <param name="metrics">Optional metrics instance.</param>
+/// <param name="maxErrorHistory">Maximum number of errors to keep in history.</param>
+public class RabbitMQDiagnostics(IRabbitMQMetrics? metrics = null, int maxErrorHistory = 100) : IRabbitMQDiagnostics
 {
-    private readonly IRabbitMQMetrics? _metrics;
+    private readonly IRabbitMQMetrics? _metrics = metrics;
     private readonly List<ConsumerInfo> _consumers = [];
     private readonly List<ErrorInfo> _errorHistory = [];
     private readonly object _errorLock = new();
-    private readonly int _maxErrorHistory;
+    private readonly int _maxErrorHistory = maxErrorHistory;
 
     private ConnectionInfo? _connectionInfo;
     private DateTimeOffset? _connectedAt;
-
-    /// <summary>
-    /// Creates a new RabbitMQDiagnostics instance.
-    /// </summary>
-    /// <param name="metrics">Optional metrics instance.</param>
-    /// <param name="maxErrorHistory">Maximum number of errors to keep in history.</param>
-    public RabbitMQDiagnostics(IRabbitMQMetrics? metrics = null, int maxErrorHistory = 100)
-    {
-        _metrics = metrics;
-        _maxErrorHistory = maxErrorHistory;
-    }
 
     /// <inheritdoc />
     public Task<RabbitMQHealthStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         RabbitMQMetricsSnapshot? metrics = _metrics?.GetSnapshot();
         ConnectionStatus connectionStatus = _connectionInfo?.Status ?? ConnectionStatus.Unknown;
-        var isHealthy = connectionStatus == ConnectionStatus.Connected;
+        bool isHealthy = connectionStatus == ConnectionStatus.Connected;
 
         ErrorInfo? lastError;
         lock (_errorLock)
@@ -430,7 +420,10 @@ public class RabbitMQDiagnostics : IRabbitMQDiagnostics
     }
 
     /// <inheritdoc />
-    public ConnectionInfo? GetConnectionInfo() => _connectionInfo;
+    public ConnectionInfo? GetConnectionInfo()
+    {
+        return _connectionInfo;
+    }
 
     /// <inheritdoc />
     public RabbitMQMetricsSnapshot GetMetrics()
@@ -439,14 +432,17 @@ public class RabbitMQDiagnostics : IRabbitMQDiagnostics
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<ConsumerInfo> GetActiveConsumers() => _consumers.AsReadOnly();
+    public IReadOnlyList<ConsumerInfo> GetActiveConsumers()
+    {
+        return _consumers.AsReadOnly();
+    }
 
     /// <inheritdoc />
     public IReadOnlyList<ErrorInfo> GetErrorHistory(int maxCount = 10)
     {
         lock (_errorLock)
         {
-            var count = Math.Min(maxCount, _errorHistory.Count);
+            int count = Math.Min(maxCount, _errorHistory.Count);
             return _errorHistory.GetRange(_errorHistory.Count - count, count).AsReadOnly();
         }
     }

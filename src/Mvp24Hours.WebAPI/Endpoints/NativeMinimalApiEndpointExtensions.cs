@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -355,8 +350,8 @@ public static class NativeMinimalApiEndpointExtensions
                         return result.ToCreatedTypedResult();
                     }
 
-                    var id = idSelector(result.Data!);
-                    var location = string.Format(locationPattern, id);
+                    object id = idSelector(result.Data!);
+                    string location = string.Format(locationPattern, id);
                     return TypedResults.Created(location, result.Data!);
                 }
                 catch (ValidationException ex)
@@ -763,10 +758,14 @@ public static class NativeMinimalApiEndpointExtensions
         };
 
         if (entityName is not null)
+        {
             problemDetails.Extensions["entityName"] = entityName;
+        }
 
         if (entityId is not null)
+        {
             problemDetails.Extensions["entityId"] = entityId;
+        }
 
         return problemDetails;
     }
@@ -787,7 +786,7 @@ public static class NativeMinimalApiEndpointExtensions
             var errors = new System.Collections.Generic.Dictionary<string, string[]>();
             foreach (IGrouping<string, IMessageResult> group in ex.ValidationErrors.GroupBy(e => e.Key ?? ""))
             {
-                errors[group.Key] = group.Select(e => e.Message ?? "").ToArray();
+                errors[group.Key] = [.. group.Select(e => e.Message ?? "")];
             }
             problemDetails.Extensions["errors"] = errors;
         }

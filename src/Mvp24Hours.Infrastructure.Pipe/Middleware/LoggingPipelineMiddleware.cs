@@ -3,110 +3,96 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Middleware
+namespace Mvp24Hours.Infrastructure.Pipe.Middleware;
+
+/// <summary>
+/// Middleware that logs operation execution with timing.
+/// </summary>
+/// <remarks>
+/// Creates a new instance of LoggingPipelineMiddleware.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class LoggingPipelineMiddleware(ILogger<LoggingPipelineMiddleware>? logger = null) : IPipelineMiddleware
 {
-    /// <summary>
-    /// Middleware that logs operation execution with timing.
-    /// </summary>
-    public class LoggingPipelineMiddleware : IPipelineMiddleware
+    private readonly ILogger<LoggingPipelineMiddleware>? _logger = logger;
+
+    /// <inheritdoc />
+    public int Order => -1000; // Run early (outer middleware)
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
     {
-        private readonly ILogger<LoggingPipelineMiddleware>? _logger;
+        var stopwatch = Stopwatch.StartNew();
+        string operationId = Guid.NewGuid().ToString("N")[..8];
 
-        /// <summary>
-        /// Creates a new instance of LoggingPipelineMiddleware.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public LoggingPipelineMiddleware(ILogger<LoggingPipelineMiddleware>? logger = null)
+        _logger?.LogDebug("Pipeline operation {OperationId} starting", operationId);
+
+        try
         {
-            _logger = logger;
+            await next();
+
+            stopwatch.Stop();
+            _logger?.LogDebug(
+                "Pipeline operation {OperationId} completed in {ElapsedMs}ms. IsFaulty: {IsFaulty}, IsLocked: {IsLocked}",
+                operationId,
+                stopwatch.ElapsedMilliseconds,
+                message.IsFaulty,
+                message.IsLocked);
         }
-
-        /// <inheritdoc />
-        public int Order => -1000; // Run early (outer middleware)
-
-        /// <inheritdoc />
-        public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
+        catch (Exception ex)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var operationId = Guid.NewGuid().ToString("N")[..8];
-
-            _logger?.LogDebug("Pipeline operation {OperationId} starting", operationId);
-
-            try
-            {
-                await next();
-
-                stopwatch.Stop();
-                _logger?.LogDebug(
-                    "Pipeline operation {OperationId} completed in {ElapsedMs}ms. IsFaulty: {IsFaulty}, IsLocked: {IsLocked}",
-                    operationId,
-                    stopwatch.ElapsedMilliseconds,
-                    message.IsFaulty,
-                    message.IsLocked);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                _logger?.LogError(
-                    ex,
-                    "Pipeline operation {OperationId} failed after {ElapsedMs}ms",
-                    operationId,
-                    stopwatch.ElapsedMilliseconds);
-                throw;
-            }
+            stopwatch.Stop();
+            _logger?.LogError(
+                ex,
+                "Pipeline operation {OperationId} failed after {ElapsedMs}ms",
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
         }
     }
+}
 
-    /// <summary>
-    /// Sync version of logging middleware.
-    /// </summary>
-    public class LoggingPipelineMiddlewareSync : IPipelineMiddlewareSync
+/// <summary>
+/// Sync version of logging middleware.
+/// </summary>
+public class LoggingPipelineMiddlewareSync(ILogger<LoggingPipelineMiddlewareSync>? logger = null) : IPipelineMiddlewareSync
+{
+    private readonly ILogger<LoggingPipelineMiddlewareSync>? _logger = logger;
+
+    public int Order => -1000;
+
+    public void Execute(IPipelineMessage message, Action next)
     {
-        private readonly ILogger<LoggingPipelineMiddlewareSync>? _logger;
+        var stopwatch = Stopwatch.StartNew();
+        string operationId = Guid.NewGuid().ToString("N")[..8];
 
-        public LoggingPipelineMiddlewareSync(ILogger<LoggingPipelineMiddlewareSync>? logger = null)
+        _logger?.LogDebug("Pipeline operation {OperationId} starting", operationId);
+
+        try
         {
-            _logger = logger;
+            next();
+
+            stopwatch.Stop();
+            _logger?.LogDebug(
+                "Pipeline operation {OperationId} completed in {ElapsedMs}ms. IsFaulty: {IsFaulty}, IsLocked: {IsLocked}",
+                operationId,
+                stopwatch.ElapsedMilliseconds,
+                message.IsFaulty,
+                message.IsLocked);
         }
-
-        public int Order => -1000;
-
-        public void Execute(IPipelineMessage message, Action next)
+        catch (Exception ex)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var operationId = Guid.NewGuid().ToString("N")[..8];
-
-            _logger?.LogDebug("Pipeline operation {OperationId} starting", operationId);
-
-            try
-            {
-                next();
-
-                stopwatch.Stop();
-                _logger?.LogDebug(
-                    "Pipeline operation {OperationId} completed in {ElapsedMs}ms. IsFaulty: {IsFaulty}, IsLocked: {IsLocked}",
-                    operationId,
-                    stopwatch.ElapsedMilliseconds,
-                    message.IsFaulty,
-                    message.IsLocked);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                _logger?.LogError(
-                    ex,
-                    "Pipeline operation {OperationId} failed after {ElapsedMs}ms",
-                    operationId,
-                    stopwatch.ElapsedMilliseconds);
-                throw;
-            }
+            stopwatch.Stop();
+            _logger?.LogError(
+                ex,
+                "Pipeline operation {OperationId} failed after {ElapsedMs}ms",
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
         }
     }
 }

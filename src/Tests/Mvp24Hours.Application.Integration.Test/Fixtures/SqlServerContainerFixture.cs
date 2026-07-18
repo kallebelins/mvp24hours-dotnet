@@ -18,8 +18,6 @@ public class SqlServerContainerFixture : IAsyncLifetime
 {
     private const string DatabaseName = "Mvp24HoursIntegrationTest";
     private readonly MsSqlContainer _container;
-    private IServiceProvider _serviceProvider = null!;
-    private string _connectionString = null!;
 
     public SqlServerContainerFixture()
     {
@@ -30,8 +28,8 @@ public class SqlServerContainerFixture : IAsyncLifetime
             .Build();
     }
 
-    public IServiceProvider ServiceProvider => _serviceProvider;
-    public string ConnectionString => _connectionString;
+    public IServiceProvider ServiceProvider { get; private set; } = null!;
+    public string ConnectionString { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
@@ -44,31 +42,28 @@ public class SqlServerContainerFixture : IAsyncLifetime
             InitialCatalog = DatabaseName,
             TrustServerCertificate = true
         };
-        _connectionString = builder.ConnectionString;
+        ConnectionString = builder.ConnectionString;
 
         // Configure services
         var services = new ServiceCollection();
 
         // Add DbContext with SQL Server
         services.AddDbContext<TestDbContext>(options =>
-            options.UseSqlServer(_connectionString));
+            options.UseSqlServer(ConnectionString));
 
         // Add Mvp24Hours EFCore integration
         services.AddMvp24HoursDbContext<TestDbContext>();
-        services.AddMvp24HoursRepositoryAsync(options =>
-        {
-            options.MaxQtyByQueryPage = 100;
-        });
+        services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
 
         // Register services
         services.AddScoped<ProductService>();
         services.AddScoped<ProductPagingService>();
         services.AddScoped<CategoryService>();
 
-        _serviceProvider = services.BuildServiceProvider();
+        ServiceProvider = services.BuildServiceProvider();
 
         // Ensure database is created
-        using IServiceScope scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = ServiceProvider.CreateScope();
         TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
         await dbContext.Database.EnsureCreatedAsync();
     }
@@ -84,14 +79,17 @@ public class SqlServerContainerFixture : IAsyncLifetime
     /// <summary>
     /// Creates a new scope for test isolation.
     /// </summary>
-    public IServiceScope CreateScope() => _serviceProvider.CreateScope();
+    public IServiceScope CreateScope()
+    {
+        return ServiceProvider.CreateScope();
+    }
 
     /// <summary>
     /// Clears all data from the database (for test isolation).
     /// </summary>
     public async Task ClearDatabaseAsync()
     {
-        using IServiceScope scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = ServiceProvider.CreateScope();
         TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
         // Remove all entities (order matters for foreign keys)

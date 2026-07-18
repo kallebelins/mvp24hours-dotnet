@@ -5,28 +5,27 @@
 //=====================================================================================
 using Mvp24Hours.Core.Enums;
 
-namespace Mvp24Hours.Core.Contract.ValueObjects.Logic
+namespace Mvp24Hours.Core.Contract.ValueObjects.Logic;
+
+/// <summary>
+/// Reply message template
+/// </summary>
+public interface IMessageResult
 {
     /// <summary>
-    /// Reply message template
+    /// Reference key
     /// </summary>
-    public interface IMessageResult
-    {
-        /// <summary>
-        /// Reference key
-        /// </summary>
-        string? Key { get; }
-        /// <summary>
-        /// Message to user
-        /// </summary>
-        string Message { get; }
-        /// <summary>
-        /// User feedback type categorized
-        /// </summary>
-        MessageType Type { get; }
-        /// <summary>
-        /// Customized feedback message
-        /// </summary>
-        string CustomType { get; }
-    }
+    string? Key { get; }
+    /// <summary>
+    /// Message to user
+    /// </summary>
+    string Message { get; }
+    /// <summary>
+    /// User feedback type categorized
+    /// </summary>
+    MessageType Type { get; }
+    /// <summary>
+    /// Customized feedback message
+    /// </summary>
+    string CustomType { get; }
 }

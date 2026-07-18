@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,30 +16,23 @@ namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 /// <summary>
 /// Test CronJob that uses ResilientCronJobService for testing resilience features.
 /// </summary>
-public class TestResilientCronJob : ResilientCronJobService<TestResilientCronJob>
+public class TestResilientCronJob(
+    IResilientScheduleConfig<TestResilientCronJob> config,
+    IHostApplicationLifetime hostApplication,
+    IServiceProvider serviceProvider,
+    ICronJobExecutionLock executionLock,
+    CronJobCircuitBreaker circuitBreaker,
+    ILogger<ResilientCronJobService<TestResilientCronJob>> logger,
+    TimeProvider? timeProvider = null,
+    Func<CancellationToken, Task>? workAction = null) : ResilientCronJobService<TestResilientCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
-    private readonly Func<CancellationToken, Task>? _workAction;
-    private readonly ExecutionTracker? _tracker;
+    private readonly Func<CancellationToken, Task>? _workAction = workAction;
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.
     /// </summary>
     public int DoWorkInvocationCount { get; private set; }
-
-    public TestResilientCronJob(
-        IResilientScheduleConfig<TestResilientCronJob> config,
-        IHostApplicationLifetime hostApplication,
-        IServiceProvider serviceProvider,
-        ICronJobExecutionLock executionLock,
-        CronJobCircuitBreaker circuitBreaker,
-        ILogger<ResilientCronJobService<TestResilientCronJob>> logger,
-        TimeProvider? timeProvider = null,
-        Func<CancellationToken, Task>? workAction = null)
-        : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
-    {
-        _workAction = workAction;
-        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
-    }
 
     public override async Task DoWork(CancellationToken cancellationToken)
     {
@@ -71,30 +61,23 @@ public class TestResilientCronJob : ResilientCronJobService<TestResilientCronJob
 /// <summary>
 /// Test CronJob that always fails after a configurable number of attempts.
 /// </summary>
-public class FailingCronJob : ResilientCronJobService<FailingCronJob>
+public class FailingCronJob(
+    IResilientScheduleConfig<FailingCronJob> config,
+    IHostApplicationLifetime hostApplication,
+    IServiceProvider serviceProvider,
+    ICronJobExecutionLock executionLock,
+    CronJobCircuitBreaker circuitBreaker,
+    ILogger<ResilientCronJobService<FailingCronJob>> logger,
+    TimeProvider? timeProvider = null,
+    int failUntilAttempt = int.MaxValue) : ResilientCronJobService<FailingCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
-    private readonly int _failUntilAttempt;
-    private readonly ExecutionTracker? _tracker;
+    private readonly int _failUntilAttempt = failUntilAttempt;
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.
     /// </summary>
     public int DoWorkInvocationCount { get; private set; }
-
-    public FailingCronJob(
-        IResilientScheduleConfig<FailingCronJob> config,
-        IHostApplicationLifetime hostApplication,
-        IServiceProvider serviceProvider,
-        ICronJobExecutionLock executionLock,
-        CronJobCircuitBreaker circuitBreaker,
-        ILogger<ResilientCronJobService<FailingCronJob>> logger,
-        TimeProvider? timeProvider = null,
-        int failUntilAttempt = int.MaxValue)
-        : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
-    {
-        _failUntilAttempt = failUntilAttempt;
-        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
-    }
 
     public override Task DoWork(CancellationToken cancellationToken)
     {
@@ -115,30 +98,23 @@ public class FailingCronJob : ResilientCronJobService<FailingCronJob>
 /// <summary>
 /// Test CronJob that delays execution for simulating long-running tasks.
 /// </summary>
-public class SlowCronJob : ResilientCronJobService<SlowCronJob>
+public class SlowCronJob(
+    IResilientScheduleConfig<SlowCronJob> config,
+    IHostApplicationLifetime hostApplication,
+    IServiceProvider serviceProvider,
+    ICronJobExecutionLock executionLock,
+    CronJobCircuitBreaker circuitBreaker,
+    ILogger<ResilientCronJobService<SlowCronJob>> logger,
+    TimeProvider? timeProvider = null,
+    TimeSpan? executionDuration = null) : ResilientCronJobService<SlowCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
-    private readonly TimeSpan _executionDuration;
-    private readonly ExecutionTracker? _tracker;
+    private readonly TimeSpan _executionDuration = executionDuration ?? TimeSpan.FromSeconds(5);
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.
     /// </summary>
     public int DoWorkInvocationCount { get; private set; }
-
-    public SlowCronJob(
-        IResilientScheduleConfig<SlowCronJob> config,
-        IHostApplicationLifetime hostApplication,
-        IServiceProvider serviceProvider,
-        ICronJobExecutionLock executionLock,
-        CronJobCircuitBreaker circuitBreaker,
-        ILogger<ResilientCronJobService<SlowCronJob>> logger,
-        TimeProvider? timeProvider = null,
-        TimeSpan? executionDuration = null)
-        : base(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
-    {
-        _executionDuration = executionDuration ?? TimeSpan.FromSeconds(5);
-        _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
-    }
 
     public override async Task DoWork(CancellationToken cancellationToken)
     {

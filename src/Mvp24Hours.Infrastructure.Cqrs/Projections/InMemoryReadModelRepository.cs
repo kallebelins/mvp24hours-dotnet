@@ -63,7 +63,10 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     /// <inheritdoc />
     public Task<T?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default)
     {
-        if (id == null) return Task.FromResult<T?>(null);
+        if (id == null)
+        {
+            return Task.FromResult<T?>(null);
+        }
 
         _store.TryGetValue(id, out T? entity);
         return Task.FromResult(entity);
@@ -71,11 +74,15 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
 
     /// <inheritdoc />
     public Task<T?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
-        => GetByIdAsync<string>(id, cancellationToken);
+    {
+        return GetByIdAsync<string>(id, cancellationToken);
+    }
 
     /// <inheritdoc />
     public Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => GetByIdAsync<Guid>(id, cancellationToken);
+    {
+        return GetByIdAsync<Guid>(id, cancellationToken);
+    }
 
     /// <inheritdoc />
     public Task<IReadOnlyList<T>> FindAsync(
@@ -116,7 +123,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     /// <inheritdoc />
     public Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyList<T>>(_store.Values.ToList());
+        return Task.FromResult<IReadOnlyList<T>>([.. _store.Values]);
     }
 
     /// <inheritdoc />
@@ -163,7 +170,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
             ? filtered.OrderByDescending(compiledOrderBy)
             : filtered.OrderBy(compiledOrderBy);
 
-        return Task.FromResult<IReadOnlyList<T>>(ordered.ToList());
+        return Task.FromResult<IReadOnlyList<T>>([.. ordered]);
     }
 
     /// <inheritdoc />
@@ -183,7 +190,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
             ? filtered.OrderByDescending(compiledOrderBy)
             : filtered.OrderBy(compiledOrderBy);
 
-        return Task.FromResult<IReadOnlyList<T>>(ordered.Skip(skip).Take(take).ToList());
+        return Task.FromResult<IReadOnlyList<T>>([.. ordered.Skip(skip).Take(take)]);
     }
 
     /// <inheritdoc />
@@ -212,7 +219,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        var key = _keySelector(entity);
+        object key = _keySelector(entity);
         if (!_store.TryAdd(key, entity))
         {
             throw new InvalidOperationException($"Entity with key '{key}' already exists.");
@@ -226,7 +233,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        var key = _keySelector(entity);
+        object key = _keySelector(entity);
         if (!_store.ContainsKey(key))
         {
             throw new InvalidOperationException($"Entity with key '{key}' not found.");
@@ -241,7 +248,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        var key = _keySelector(entity);
+        object key = _keySelector(entity);
         _store[key] = entity;
         return Task.CompletedTask;
     }
@@ -265,7 +272,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
         Func<T, bool> compiled = predicate.Compile();
         var toDelete = _store.Where(kvp => compiled(kvp.Value)).Select(kvp => kvp.Key).ToList();
 
-        foreach (var key in toDelete)
+        foreach (object? key in toDelete)
         {
             _store.TryRemove(key, out _);
         }
@@ -291,7 +298,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
 
         foreach (T entity in entities)
         {
-            var key = _keySelector(entity);
+            object key = _keySelector(entity);
             _store.TryAdd(key, entity);
         }
 
@@ -305,7 +312,7 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
 
         foreach (T entity in entities)
         {
-            var key = _keySelector(entity);
+            object key = _keySelector(entity);
             _store[key] = entity;
         }
 
@@ -324,31 +331,23 @@ public class InMemoryReadModelRepository<T> : IAdvancedReadModelRepository<T> wh
     /// <summary>
     /// Clears all data from the store.
     /// </summary>
-    public void Clear() => _store.Clear();
+    public void Clear()
+    {
+        _store.Clear();
+    }
 
     private static Func<T, object> CreateDefaultKeySelector()
     {
         Type type = typeof(T);
 
         // Look for "Id" property
-        PropertyInfo? idProperty = type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
-
         // Look for "{TypeName}Id" property
-        if (idProperty == null)
-        {
-            idProperty = type.GetProperty($"{type.Name}Id", BindingFlags.Public | BindingFlags.Instance);
-        }
-
-        if (idProperty == null)
-        {
-            throw new InvalidOperationException(
+        PropertyInfo? idProperty = (type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance) ?? type.GetProperty($"{type.Name}Id", BindingFlags.Public | BindingFlags.Instance)) ?? throw new InvalidOperationException(
                 $"Cannot find Id property on type {type.Name}. " +
                 "Please provide a custom key selector.");
-        }
-
         return entity =>
         {
-            var value = idProperty.GetValue(entity);
+            object? value = idProperty.GetValue(entity);
             return value ?? throw new InvalidOperationException(
                 $"Id property on entity of type {type.Name} returned null.");
         };

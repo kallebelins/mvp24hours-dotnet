@@ -7,26 +7,25 @@ using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files
+namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files;
+
+/// <summary>
+/// Operation to read file log token
+/// </summary>
+public class FileTokenReadOperation<T>(string _filePath) : OperationBase where T : class
 {
-    /// <summary>
-    /// Operation to read file log token
-    /// </summary>
-    public class FileTokenReadOperation<T>(string _filePath) : OperationBase where T : class
+    public override bool IsRequired => true;
+
+    public virtual string FilePath => _filePath;
+
+    public override void Execute(IPipelineMessage input)
     {
-        public override bool IsRequired => true;
-
-        public virtual string FilePath => _filePath;
-
-        public override void Execute(IPipelineMessage input)
+        if (FilePath.HasValue())
         {
-            if (FilePath.HasValue())
+            T? dto = FileLogHelper.ReadLogToken<T>(input.Token, typeof(T).Name.ToLower(), FilePath);
+            if (dto != null)
             {
-                T? dto = FileLogHelper.ReadLogToken<T>(input.Token, typeof(T).Name.ToLower(), FilePath);
-                if (dto != null)
-                {
-                    input.AddContent(dto);
-                }
+                input.AddContent(dto);
             }
         }
     }

@@ -65,10 +65,14 @@ public class EventStream
     public EventStream(Guid aggregateId, string aggregateType)
     {
         if (aggregateId == Guid.Empty)
+        {
             throw new ArgumentException("Aggregate ID cannot be empty.", nameof(aggregateId));
+        }
 
         if (string.IsNullOrWhiteSpace(aggregateType))
+        {
             throw new ArgumentException("Aggregate type cannot be null or empty.", nameof(aggregateType));
+        }
 
         AggregateId = aggregateId;
         AggregateType = aggregateType;
@@ -113,10 +117,14 @@ public class EventStream
     public IReadOnlyList<CoreDomainEvent> GetEventsAfterVersion(long afterVersion)
     {
         if (afterVersion < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(afterVersion), "Version cannot be negative.");
+        }
 
         if (afterVersion >= Version)
-            return Array.Empty<CoreDomainEvent>();
+        {
+            return [];
+        }
 
         return _events.Skip((int)afterVersion).ToList().AsReadOnly();
     }

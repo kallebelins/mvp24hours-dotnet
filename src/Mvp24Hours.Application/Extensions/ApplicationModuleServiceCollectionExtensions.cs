@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Reflection;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -157,8 +156,16 @@ public static class ApplicationModuleServiceCollectionExtensions
         Action<ApplicationModuleOptions> configure,
         params Assembly[] assemblies)
     {
-        if (services == null) throw new ArgumentNullException(nameof(services));
-        if (configure == null) throw new ArgumentNullException(nameof(configure));
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
         if (assemblies == null || assemblies.Length == 0)
         {
             throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));

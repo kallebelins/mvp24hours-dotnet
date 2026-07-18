@@ -5,17 +5,16 @@
 //=====================================================================================
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
-namespace Mvp24Hours.Core.Contract.Data
+namespace Mvp24Hours.Core.Contract.Data;
+
+/// <summary>
+/// Design Pattern: Repository
+/// Description: Mediation between domain and data mapping layers using a collection as 
+/// an interface for accessing domain objects. (Martin Fowler)
+/// Learn more: http://martinfowler.com/eaaCatalog/repository.html
+/// </summary>
+/// <typeparam name="T">Represents an entity</typeparam>
+public interface IRepositoryAsync<T> : IQueryAsync<T>, ICommandAsync<T>, IQueryRelationAsync<T>
+    where T : IEntityBase
 {
-    /// <summary>
-    /// Design Pattern: Repository
-    /// Description: Mediation between domain and data mapping layers using a collection as 
-    /// an interface for accessing domain objects. (Martin Fowler)
-    /// Learn more: http://martinfowler.com/eaaCatalog/repository.html
-    /// </summary>
-    /// <typeparam name="T">Represents an entity</typeparam>
-    public interface IRepositoryAsync<T> : IQueryAsync<T>, ICommandAsync<T>, IQueryRelationAsync<T>
-        where T : IEntityBase
-    {
-    }
 }

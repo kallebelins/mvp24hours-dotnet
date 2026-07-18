@@ -4,12 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -51,27 +48,20 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursIpFiltering();
 /// </code>
 /// </example>
-public class IpFilteringMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="IpFilteringMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The IP filtering options.</param>
+/// <param name="logger">The logger.</param>
+public class IpFilteringMiddleware(
+    RequestDelegate next,
+    IOptions<IpFilteringOptions> options,
+    ILogger<IpFilteringMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly IpFilteringOptions _options;
-    private readonly ILogger<IpFilteringMiddleware> _logger;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="IpFilteringMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The IP filtering options.</param>
-    /// <param name="logger">The logger.</param>
-    public IpFilteringMiddleware(
-        RequestDelegate next,
-        IOptions<IpFilteringOptions> options,
-        ILogger<IpFilteringMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly IpFilteringOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<IpFilteringMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Processes the HTTP request with IP filtering.
@@ -87,7 +77,7 @@ public class IpFilteringMiddleware
         }
 
         // Check if path is excluded
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
         if (IsExcludedPath(path))
         {
             await _next(context);
@@ -111,7 +101,7 @@ public class IpFilteringMiddleware
         }
 
         // Check path-specific rules first
-        var pathAllowed = CheckPathSpecificRules(path, clientIp);
+        bool? pathAllowed = CheckPathSpecificRules(path, clientIp);
         if (pathAllowed.HasValue)
         {
             if (pathAllowed.Value)
@@ -127,7 +117,7 @@ public class IpFilteringMiddleware
         }
 
         // Check global rules
-        var isAllowed = _options.Mode switch
+        bool isAllowed = _options.Mode switch
         {
             IpFilteringMode.Whitelist => IsIpAllowed(clientIp, _options.WhitelistedIps),
             IpFilteringMode.Blacklist => !IsIpAllowed(clientIp, _options.BlacklistedIps),
@@ -154,10 +144,7 @@ public class IpFilteringMiddleware
         }
 
         // Fall back to connection remote IP
-        if (clientIp == null)
-        {
-            clientIp = context.Connection.RemoteIpAddress;
-        }
+        clientIp ??= context.Connection.RemoteIpAddress;
 
         // Handle IPv4-mapped IPv6 addresses
         if (clientIp?.IsIPv4MappedToIPv6 == true)
@@ -174,15 +161,18 @@ public class IpFilteringMiddleware
         if (context.Request.Headers.TryGetValue(_options.ForwardedHeaderName, out StringValues forwardedFor))
         {
             IPAddress? ip = ParseForwardedForHeader(forwardedFor.ToString());
-            if (ip != null) return ip;
+            if (ip != null)
+            {
+                return ip;
+            }
         }
 
         // Try alternative headers
-        foreach (var header in _options.AlternativeIpHeaders)
+        foreach (string header in _options.AlternativeIpHeaders)
         {
             if (context.Request.Headers.TryGetValue(header, out StringValues headerValue))
             {
-                var ipString = headerValue.ToString().Split(',').FirstOrDefault()?.Trim();
+                string? ipString = headerValue.ToString().Split(',').FirstOrDefault()?.Trim();
                 if (!string.IsNullOrEmpty(ipString) && IPAddress.TryParse(ipString, out IPAddress? ip))
                 {
                     return ip;
@@ -201,7 +191,7 @@ public class IpFilteringMiddleware
             .ToList();
 
         // Find the first IP that's not a trusted proxy
-        foreach (var ipString in ips)
+        foreach (string? ipString in ips)
         {
             if (IPAddress.TryParse(ipString, out IPAddress? ip))
             {
@@ -247,7 +237,7 @@ public class IpFilteringMiddleware
 
     private static bool IsIpAllowed(IPAddress clientIp, System.Collections.Generic.IEnumerable<string> ipList)
     {
-        foreach (var entry in ipList)
+        foreach (string entry in ipList)
         {
             if (MatchesIpOrRange(clientIp, entry))
             {
@@ -279,8 +269,8 @@ public class IpFilteringMiddleware
     {
         try
         {
-            var parts = cidr.Split('/');
-            if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out IPAddress? networkAddress) || !int.TryParse(parts[1], out var prefixLength))
+            string[] parts = cidr.Split('/');
+            if (parts.Length != 2 || !IPAddress.TryParse(parts[0], out IPAddress? networkAddress) || !int.TryParse(parts[1], out int prefixLength))
             {
                 return false;
             }
@@ -304,8 +294,8 @@ public class IpFilteringMiddleware
                 }
             }
 
-            var networkBytes = networkAddress.GetAddressBytes();
-            var clientBytes = clientIp.GetAddressBytes();
+            byte[] networkBytes = networkAddress.GetAddressBytes();
+            byte[] clientBytes = clientIp.GetAddressBytes();
 
             if (networkBytes.Length != clientBytes.Length)
             {
@@ -390,7 +380,7 @@ public class IpFilteringMiddleware
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

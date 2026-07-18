@@ -3,101 +3,98 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class ServiceCollectionExtentions
 {
     /// <summary>
-    /// 
+    /// Checks if the type has already been added to the service collection
     /// </summary>
-    public static class ServiceCollectionExtentions
+    public static bool Exists<T>(this IServiceCollection services)
     {
-        /// <summary>
-        /// Checks if the type has already been added to the service collection
-        /// </summary>
-        public static bool Exists<T>(this IServiceCollection services)
+        return services.Exists(typeof(T));
+    }
+
+    /// <summary>
+    /// Checks if the type has already been added to the service collection
+    /// </summary>
+    public static bool Exists(this IServiceCollection services, Type type)
+    {
+        return services.Any(descriptor => descriptor.ServiceType == type);
+    }
+
+    /// <summary>
+    /// Remove type added to service collection
+    /// </summary>
+    public static IServiceCollection Remove<T>(this IServiceCollection services)
+    {
+        services.Remove(typeof(T));
+        return services;
+    }
+
+    /// <summary>
+    /// Remove type added to service collection
+    /// </summary>
+    public static IServiceCollection Remove(this IServiceCollection services, Type type)
+    {
+        ServiceDescriptor? serviceDescriptor = services.FirstOrDefault(descriptor => descriptor.ServiceType == type);
+        if (serviceDescriptor != null)
         {
-            return services.Exists(typeof(T));
+            services.Remove(serviceDescriptor);
         }
 
-        /// <summary>
-        /// Checks if the type has already been added to the service collection
-        /// </summary>
-        public static bool Exists(this IServiceCollection services, Type type)
-        {
-            return services.Any(descriptor => descriptor.ServiceType == type);
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Remove type added to service collection
-        /// </summary>
-        public static IServiceCollection Remove<T>(this IServiceCollection services)
+    /// <summary>
+    /// Search and add all instances defined by the type entered
+    /// <code>services.AddAllTypes<IGenerator>(new[] { typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly }</code>
+    /// </summary>
+    public static void AddAllTypes<T>(this IServiceCollection services
+        , Assembly[] assemblies
+        , bool additionalRegisterTypesByThemself = false
+        , ServiceLifetime lifetime = ServiceLifetime.Transient
+    )
+    {
+        IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a =>
+            a.DefinedTypes.Where(x => x.GetInterfaces().AnySafe(i => i == typeof(T))));
+        foreach (TypeInfo? type in typesFromAssemblies)
         {
-            services.Remove(typeof(T));
-            return services;
-        }
-
-        /// <summary>
-        /// Remove type added to service collection
-        /// </summary>
-        public static IServiceCollection Remove(this IServiceCollection services, Type type)
-        {
-            ServiceDescriptor? serviceDescriptor = services.FirstOrDefault(descriptor => descriptor.ServiceType == type);
-            if (serviceDescriptor != null)
+            services.Add(new ServiceDescriptor(typeof(T), type, lifetime));
+            if (additionalRegisterTypesByThemself)
             {
-                services.Remove(serviceDescriptor);
-            }
-
-            return services;
-        }
-
-        /// <summary>
-        /// Search and add all instances defined by the type entered
-        /// <code>services.AddAllTypes<IGenerator>(new[] { typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly }</code>
-        /// </summary>
-        public static void AddAllTypes<T>(this IServiceCollection services
-            , Assembly[] assemblies
-            , bool additionalRegisterTypesByThemself = false
-            , ServiceLifetime lifetime = ServiceLifetime.Transient
-        )
-        {
-            IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a =>
-                a.DefinedTypes.Where(x => x.GetInterfaces().AnySafe(i => i == typeof(T))));
-            foreach (TypeInfo? type in typesFromAssemblies)
-            {
-                services.Add(new ServiceDescriptor(typeof(T), type, lifetime));
-                if (additionalRegisterTypesByThemself)
-                {
-                    services.Add(new ServiceDescriptor(type, type, lifetime));
-                }
+                services.Add(new ServiceDescriptor(type, type, lifetime));
             }
         }
+    }
 
-        /// <summary>
-        /// Search and add all instances defined by the type entered
-        /// <code>services.AddAllGenericTypes(typeof(IRequest<>), new[] {typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly})</code>
-        /// </summary>
-        public static void AddAllGenericTypes(this IServiceCollection services
-            , Type t
-            , Assembly[] assemblies
-            , bool additionalRegisterTypesByThemself = false
-            , ServiceLifetime lifetime = ServiceLifetime.Transient
-        )
+    /// <summary>
+    /// Search and add all instances defined by the type entered
+    /// <code>services.AddAllGenericTypes(typeof(IRequest<>), new[] {typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly})</code>
+    /// </summary>
+    public static void AddAllGenericTypes(this IServiceCollection services
+        , Type t
+        , Assembly[] assemblies
+        , bool additionalRegisterTypesByThemself = false
+        , ServiceLifetime lifetime = ServiceLifetime.Transient
+    )
+    {
+        Type genericType = t;
+        IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a => a.DefinedTypes.Where(x => x.GetInterfaces()
+            .AnySafe(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericType)));
+
+        foreach (TypeInfo? type in typesFromAssemblies)
         {
-            Type genericType = t;
-            IEnumerable<TypeInfo> typesFromAssemblies = assemblies.SelectMany(a => a.DefinedTypes.Where(x => x.GetInterfaces()
-                .AnySafe(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericType)));
-
-            foreach (TypeInfo? type in typesFromAssemblies)
+            services.Add(new ServiceDescriptor(t, type, lifetime));
+            if (additionalRegisterTypesByThemself)
             {
-                services.Add(new ServiceDescriptor(t, type, lifetime));
-                if (additionalRegisterTypesByThemself)
-                {
-                    services.Add(new ServiceDescriptor(type, type, lifetime));
-                }
+                services.Add(new ServiceDescriptor(type, type, lifetime));
             }
         }
     }

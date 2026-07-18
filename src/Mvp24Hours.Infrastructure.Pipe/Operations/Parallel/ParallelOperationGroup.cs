@@ -3,264 +3,244 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Core.Enums;
 using ParallelTasks = System.Threading.Tasks.Parallel;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel
+namespace Mvp24Hours.Infrastructure.Pipe.Operations.Parallel;
+
+/// <summary>
+/// Represents a group of synchronous operations to be executed in parallel.
+/// </summary>
+/// <remarks>
+/// Creates a new parallel operation group.
+/// </remarks>
+/// <param name="operations">Operations to execute in parallel.</param>
+/// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
+/// <param name="requireAllSuccess">Whether all operations must succeed.</param>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class ParallelOperationGroup(
+    IEnumerable<IOperation> operations,
+    int? maxDegreeOfParallelism = null,
+    bool requireAllSuccess = true,
+    ILogger<ParallelOperationGroup>? logger = null) : IParallelOperationGroup, IOperation
 {
-    /// <summary>
-    /// Represents a group of synchronous operations to be executed in parallel.
-    /// </summary>
-    public class ParallelOperationGroup : IParallelOperationGroup, IOperation
+    private readonly List<IOperation> _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
+    private readonly ILogger<ParallelOperationGroup>? _logger = logger;
+
+    /// <inheritdoc />
+    public IReadOnlyList<IOperation> Operations => _operations.AsReadOnly();
+
+    /// <inheritdoc />
+    public int? MaxDegreeOfParallelism { get; } = maxDegreeOfParallelism;
+
+    /// <inheritdoc />
+    public bool RequireAllSuccess { get; } = requireAllSuccess;
+
+    /// <inheritdoc />
+    public bool IsRequired => false;
+
+    /// <inheritdoc />
+    public void Execute(IPipelineMessage input)
     {
-        private readonly List<IOperation> _operations;
-        private readonly ILogger<ParallelOperationGroup>? _logger;
+        _logger?.LogDebug("ParallelOperationGroup: Execute started with {OperationCount} operations", _operations.Count);
 
-        /// <summary>
-        /// Creates a new parallel operation group.
-        /// </summary>
-        /// <param name="operations">Operations to execute in parallel.</param>
-        /// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
-        /// <param name="requireAllSuccess">Whether all operations must succeed.</param>
-        /// <param name="logger">Optional logger for diagnostics.</param>
-        public ParallelOperationGroup(
-            IEnumerable<IOperation> operations,
-            int? maxDegreeOfParallelism = null,
-            bool requireAllSuccess = true,
-            ILogger<ParallelOperationGroup>? logger = null)
+        var exceptions = new List<Exception>();
+        ParallelOptions parallelOptions = MaxDegreeOfParallelism.HasValue
+            ? new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism.Value }
+            : new System.Threading.Tasks.ParallelOptions();
+
+        try
         {
-            _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
-            MaxDegreeOfParallelism = maxDegreeOfParallelism;
-            RequireAllSuccess = requireAllSuccess;
-            _logger = logger;
-        }
-
-        /// <inheritdoc />
-        public IReadOnlyList<IOperation> Operations => _operations.AsReadOnly();
-
-        /// <inheritdoc />
-        public int? MaxDegreeOfParallelism { get; }
-
-        /// <inheritdoc />
-        public bool RequireAllSuccess { get; }
-
-        /// <inheritdoc />
-        public bool IsRequired => false;
-
-        /// <inheritdoc />
-        public void Execute(IPipelineMessage input)
-        {
-            _logger?.LogDebug("ParallelOperationGroup: Execute started with {OperationCount} operations", _operations.Count);
-
-            var exceptions = new List<Exception>();
-            ParallelOptions parallelOptions = MaxDegreeOfParallelism.HasValue
-                ? new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism.Value }
-                : new System.Threading.Tasks.ParallelOptions();
-
-            try
-            {
-                ParallelTasks.ForEach(_operations, parallelOptions, operation =>
-                {
-                    try
-                    {
-                        _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' started", operation.GetType().Name);
-                        operation.Execute(input);
-                        _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' finished", operation.GetType().Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        lock (exceptions)
-                        {
-                            exceptions.Add(ex);
-                        }
-                        _logger?.LogError(ex, "ParallelOperationGroup: Operation '{OperationName}' failed", operation.GetType().Name);
-
-                        if (RequireAllSuccess)
-                        {
-                            throw; // Will be caught by Parallel.ForEach
-                        }
-                    }
-                });
-            }
-            catch (AggregateException)
-            {
-                // Expected when RequireAllSuccess is true and an operation fails
-            }
-
-            if (exceptions.Count > 0)
-            {
-                if (RequireAllSuccess)
-                {
-                    throw new AggregateException("One or more parallel operations failed", exceptions);
-                }
-                // Store exceptions in message for later inspection
-                input.AddContent("ParallelOperationExceptions", exceptions);
-            }
-
-            _logger?.LogDebug("ParallelOperationGroup: Execute finished with {OperationCount} operations", _operations.Count);
-        }
-
-        /// <inheritdoc />
-        public void Rollback(IPipelineMessage input)
-        {
-            // Rollback all operations in reverse order
-            foreach (IOperation operation in _operations.Reverse<IOperation>())
+            ParallelTasks.ForEach(_operations, parallelOptions, operation =>
             {
                 try
                 {
-                    operation.Rollback(input);
+                    _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' started", operation.GetType().Name);
+                    operation.Execute(input);
+                    _logger?.LogDebug("ParallelOperationGroup: Operation '{OperationName}' finished", operation.GetType().Name);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "ParallelOperationGroup: Rollback failed");
+                    lock (exceptions)
+                    {
+                        exceptions.Add(ex);
+                    }
+                    _logger?.LogError(ex, "ParallelOperationGroup: Operation '{OperationName}' failed", operation.GetType().Name);
+
+                    if (RequireAllSuccess)
+                    {
+                        throw; // Will be caught by Parallel.ForEach
+                    }
                 }
+            });
+        }
+        catch (AggregateException)
+        {
+            // Expected when RequireAllSuccess is true and an operation fails
+        }
+
+        if (exceptions.Count > 0)
+        {
+            if (RequireAllSuccess)
+            {
+                throw new AggregateException("One or more parallel operations failed", exceptions);
+            }
+            // Store exceptions in message for later inspection
+            input.AddContent("ParallelOperationExceptions", exceptions);
+        }
+
+        _logger?.LogDebug("ParallelOperationGroup: Execute finished with {OperationCount} operations", _operations.Count);
+    }
+
+    /// <inheritdoc />
+    public void Rollback(IPipelineMessage input)
+    {
+        // Rollback all operations in reverse order
+        foreach (IOperation operation in _operations.Reverse<IOperation>())
+        {
+            try
+            {
+                operation.Rollback(input);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "ParallelOperationGroup: Rollback failed");
+            }
+        }
+    }
+}
+
+/// <summary>
+/// Represents a group of async operations to be executed in parallel.
+/// </summary>
+/// <remarks>
+/// Creates a new async parallel operation group.
+/// </remarks>
+/// <param name="operations">Operations to execute in parallel.</param>
+/// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
+/// <param name="requireAllSuccess">Whether all operations must succeed.</param>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class ParallelOperationGroupAsync(
+    IEnumerable<IOperationAsync> operations,
+    int? maxDegreeOfParallelism = null,
+    bool requireAllSuccess = true,
+    ILogger<ParallelOperationGroupAsync>? logger = null) : IParallelOperationGroupAsync, IOperationAsync
+{
+    private readonly List<IOperationAsync> _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
+    private readonly ILogger<ParallelOperationGroupAsync>? _logger = logger;
+
+    /// <inheritdoc />
+    public IReadOnlyList<IOperationAsync> Operations => _operations.AsReadOnly();
+
+    /// <inheritdoc />
+    public int? MaxDegreeOfParallelism { get; } = maxDegreeOfParallelism;
+
+    /// <inheritdoc />
+    public bool RequireAllSuccess { get; } = requireAllSuccess;
+
+    /// <inheritdoc />
+    public bool IsRequired => false;
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync(IPipelineMessage message, CancellationToken cancellationToken = default)
+    {
+        _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync started with {OperationCount} operations", _operations.Count);
+
+        var exceptions = new List<Exception>();
+
+        if (MaxDegreeOfParallelism.HasValue)
+        {
+            using var semaphore = new SemaphoreSlim(MaxDegreeOfParallelism.Value);
+            IEnumerable<Task> tasks = _operations.Select(async operation =>
+            {
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    await ExecuteOperationAsync(operation, message, exceptions, cancellationToken);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+        }
+        else
+        {
+            IEnumerable<Task> tasks = _operations.Select(operation =>
+                ExecuteOperationAsync(operation, message, exceptions, cancellationToken));
+
+            await Task.WhenAll(tasks);
+        }
+
+        if (exceptions.Count > 0)
+        {
+            if (RequireAllSuccess)
+            {
+                throw new AggregateException("One or more parallel operations failed", exceptions);
+            }
+            message.AddContent("ParallelOperationExceptions", exceptions);
+        }
+
+        _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync finished with {OperationCount} operations", _operations.Count);
+    }
+
+    private async Task ExecuteOperationAsync(
+        IOperationAsync operation,
+        IPipelineMessage message,
+        List<Exception> exceptions,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' started", operation.GetType().Name);
+
+            if (operation is IOperationAsyncWithCancellation operationWithCancellation)
+            {
+                await operationWithCancellation.ExecuteAsync(message, cancellationToken);
+            }
+            else
+            {
+                await operation.ExecuteAsync(message);
+            }
+
+            _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' finished", operation.GetType().Name);
+        }
+        catch (Exception ex)
+        {
+            lock (exceptions)
+            {
+                exceptions.Add(ex);
+            }
+            _logger?.LogError(ex, "ParallelOperationGroupAsync: Operation '{OperationName}' failed", operation.GetType().Name);
+
+            if (RequireAllSuccess)
+            {
+                throw;
             }
         }
     }
 
-    /// <summary>
-    /// Represents a group of async operations to be executed in parallel.
-    /// </summary>
-    public class ParallelOperationGroupAsync : IParallelOperationGroupAsync, IOperationAsync
+    /// <inheritdoc />
+    Task IOperationAsync.ExecuteAsync(IPipelineMessage input)
     {
-        private readonly List<IOperationAsync> _operations;
-        private readonly ILogger<ParallelOperationGroupAsync>? _logger;
+        return ExecuteAsync(input, CancellationToken.None);
+    }
 
-        /// <summary>
-        /// Creates a new async parallel operation group.
-        /// </summary>
-        /// <param name="operations">Operations to execute in parallel.</param>
-        /// <param name="maxDegreeOfParallelism">Maximum parallel operations.</param>
-        /// <param name="requireAllSuccess">Whether all operations must succeed.</param>
-        /// <param name="logger">Optional logger for diagnostics.</param>
-        public ParallelOperationGroupAsync(
-            IEnumerable<IOperationAsync> operations,
-            int? maxDegreeOfParallelism = null,
-            bool requireAllSuccess = true,
-            ILogger<ParallelOperationGroupAsync>? logger = null)
-        {
-            _operations = operations?.ToList() ?? throw new ArgumentNullException(nameof(operations));
-            MaxDegreeOfParallelism = maxDegreeOfParallelism;
-            RequireAllSuccess = requireAllSuccess;
-            _logger = logger;
-        }
-
-        /// <inheritdoc />
-        public IReadOnlyList<IOperationAsync> Operations => _operations.AsReadOnly();
-
-        /// <inheritdoc />
-        public int? MaxDegreeOfParallelism { get; }
-
-        /// <inheritdoc />
-        public bool RequireAllSuccess { get; }
-
-        /// <inheritdoc />
-        public bool IsRequired => false;
-
-        /// <inheritdoc />
-        public async Task ExecuteAsync(IPipelineMessage message, CancellationToken cancellationToken = default)
-        {
-            _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync started with {OperationCount} operations", _operations.Count);
-
-            var exceptions = new List<Exception>();
-
-            if (MaxDegreeOfParallelism.HasValue)
-            {
-                using var semaphore = new SemaphoreSlim(MaxDegreeOfParallelism.Value);
-                IEnumerable<Task> tasks = _operations.Select(async operation =>
-                {
-                    await semaphore.WaitAsync(cancellationToken);
-                    try
-                    {
-                        await ExecuteOperationAsync(operation, message, exceptions, cancellationToken);
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                });
-
-                await Task.WhenAll(tasks);
-            }
-            else
-            {
-                IEnumerable<Task> tasks = _operations.Select(operation =>
-                    ExecuteOperationAsync(operation, message, exceptions, cancellationToken));
-
-                await Task.WhenAll(tasks);
-            }
-
-            if (exceptions.Count > 0)
-            {
-                if (RequireAllSuccess)
-                {
-                    throw new AggregateException("One or more parallel operations failed", exceptions);
-                }
-                message.AddContent("ParallelOperationExceptions", exceptions);
-            }
-
-            _logger?.LogDebug("ParallelOperationGroupAsync: ExecuteAsync finished with {OperationCount} operations", _operations.Count);
-        }
-
-        private async Task ExecuteOperationAsync(
-            IOperationAsync operation,
-            IPipelineMessage message,
-            List<Exception> exceptions,
-            CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task RollbackAsync(IPipelineMessage input)
+    {
+        foreach (IOperationAsync operation in _operations.Reverse<IOperationAsync>())
         {
             try
             {
-                _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' started", operation.GetType().Name);
-
-                if (operation is IOperationAsyncWithCancellation operationWithCancellation)
-                {
-                    await operationWithCancellation.ExecuteAsync(message, cancellationToken);
-                }
-                else
-                {
-                    await operation.ExecuteAsync(message);
-                }
-
-                _logger?.LogDebug("ParallelOperationGroupAsync: Operation '{OperationName}' finished", operation.GetType().Name);
+                await operation.RollbackAsync(input);
             }
             catch (Exception ex)
             {
-                lock (exceptions)
-                {
-                    exceptions.Add(ex);
-                }
-                _logger?.LogError(ex, "ParallelOperationGroupAsync: Operation '{OperationName}' failed", operation.GetType().Name);
-
-                if (RequireAllSuccess)
-                {
-                    throw;
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        Task IOperationAsync.ExecuteAsync(IPipelineMessage input) => ExecuteAsync(input, CancellationToken.None);
-
-        /// <inheritdoc />
-        public async Task RollbackAsync(IPipelineMessage input)
-        {
-            foreach (IOperationAsync operation in _operations.Reverse<IOperationAsync>())
-            {
-                try
-                {
-                    await operation.RollbackAsync(input);
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "ParallelOperationGroupAsync: RollbackAsync failed");
-                }
+                _logger?.LogError(ex, "ParallelOperationGroupAsync: RollbackAsync failed");
             }
         }
     }

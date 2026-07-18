@@ -1,9 +1,6 @@
-using System.Collections.Generic;
+namespace Mvp24Hours.Application.Pipe.Test.Rollbacks;
 
-namespace Mvp24Hours.Application.Pipe.Test.Rollbacks
+public static class RollbackTestContext
 {
-    public static class RollbackTestContext
-    {
-        public static List<string> Results { get; set; } = [];
-    }
+    public static List<string> Results { get; set; } = [];
 }

@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -174,15 +172,12 @@ public static class ObservabilityServiceExtensions
         // Configure activity tracking for trace correlation
         if (options.EnableTraceCorrelation)
         {
-            builder.Configure(loggerOptions =>
-            {
-                loggerOptions.ActivityTrackingOptions =
+            builder.Configure(loggerOptions => loggerOptions.ActivityTrackingOptions =
                     ActivityTrackingOptions.TraceId |
                     ActivityTrackingOptions.SpanId |
                     ActivityTrackingOptions.ParentId |
                     ActivityTrackingOptions.Baggage |
-                    ActivityTrackingOptions.Tags;
-            });
+                    ActivityTrackingOptions.Tags);
         }
 
         return builder;

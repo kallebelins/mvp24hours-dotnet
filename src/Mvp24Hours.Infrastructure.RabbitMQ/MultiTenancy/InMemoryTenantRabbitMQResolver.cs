@@ -4,128 +4,119 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
-{
-    /// <summary>
-    /// In-memory implementation of tenant RabbitMQ configuration resolver.
-    /// Useful for development, testing, and simple scenarios.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This resolver uses both static configuration from <see cref="TenantRabbitMQOptions"/>
-    /// and dynamic configurations added at runtime.
-    /// </para>
-    /// <para>
-    /// For production scenarios with dynamic tenant configuration, implement
-    /// <see cref="ITenantRabbitMQResolver"/> backed by a database or configuration service.
-    /// </para>
-    /// </remarks>
-    public class InMemoryTenantRabbitMQResolver : ITenantRabbitMQResolver
-    {
-        private readonly TenantRabbitMQOptions _options;
-        private readonly ConcurrentDictionary<string, TenantRabbitMQConfiguration> _configurations = new();
+namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
 
-        /// <summary>
-        /// Creates a new in-memory tenant resolver.
-        /// </summary>
-        /// <param name="options">Multi-tenancy options.</param>
-        public InMemoryTenantRabbitMQResolver(IOptions<TenantRabbitMQOptions> options)
+/// <summary>
+/// In-memory implementation of tenant RabbitMQ configuration resolver.
+/// Useful for development, testing, and simple scenarios.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This resolver uses both static configuration from <see cref="TenantRabbitMQOptions"/>
+/// and dynamic configurations added at runtime.
+/// </para>
+/// <para>
+/// For production scenarios with dynamic tenant configuration, implement
+/// <see cref="ITenantRabbitMQResolver"/> backed by a database or configuration service.
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Creates a new in-memory tenant resolver.
+/// </remarks>
+/// <param name="options">Multi-tenancy options.</param>
+public class InMemoryTenantRabbitMQResolver(IOptions<TenantRabbitMQOptions> options) : ITenantRabbitMQResolver
+{
+    private readonly TenantRabbitMQOptions _options = options?.Value ?? new TenantRabbitMQOptions();
+    private readonly ConcurrentDictionary<string, TenantRabbitMQConfiguration> _configurations = new();
+
+    /// <inheritdoc />
+    public Task<TenantRabbitMQConfiguration?> ResolveAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(tenantId))
         {
-            _options = options?.Value ?? new TenantRabbitMQOptions();
+            return Task.FromResult<TenantRabbitMQConfiguration?>(null);
         }
 
-        /// <inheritdoc />
-        public Task<TenantRabbitMQConfiguration?> ResolveAsync(string tenantId, CancellationToken cancellationToken = default)
+        // Check dynamic configurations first
+        if (_configurations.TryGetValue(tenantId, out TenantRabbitMQConfiguration? config))
         {
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                return Task.FromResult<TenantRabbitMQConfiguration?>(null);
-            }
+            return Task.FromResult<TenantRabbitMQConfiguration?>(config);
+        }
 
-            // Check dynamic configurations first
-            if (_configurations.TryGetValue(tenantId, out TenantRabbitMQConfiguration? config))
-            {
-                return Task.FromResult<TenantRabbitMQConfiguration?>(config);
-            }
-
-            // Check static configuration from options
-            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
-            {
-                return Task.FromResult<TenantRabbitMQConfiguration?>(new TenantRabbitMQConfiguration
-                {
-                    TenantId = tenantId,
-                    VirtualHost = staticConfig.VirtualHost ?? _options.GetVirtualHost(tenantId),
-                    ConnectionString = staticConfig.ConnectionString,
-                    Username = staticConfig.Username,
-                    Password = staticConfig.Password,
-                    QueuePrefix = _options.GetQueuePrefix(tenantId),
-                    ExchangePrefix = _options.GetExchangePrefix(tenantId),
-                    DeadLetterQueue = _options.GetDeadLetterQueue(tenantId),
-                    DeadLetterExchange = _options.GetDeadLetterExchange(tenantId),
-                    IsEnabled = staticConfig.IsEnabled
-                });
-            }
-
-            // Return default configuration based on tenant ID
+        // Check static configuration from options
+        if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
+        {
             return Task.FromResult<TenantRabbitMQConfiguration?>(new TenantRabbitMQConfiguration
             {
                 TenantId = tenantId,
-                VirtualHost = _options.GetVirtualHost(tenantId),
+                VirtualHost = staticConfig.VirtualHost ?? _options.GetVirtualHost(tenantId),
+                ConnectionString = staticConfig.ConnectionString,
+                Username = staticConfig.Username,
+                Password = staticConfig.Password,
                 QueuePrefix = _options.GetQueuePrefix(tenantId),
                 ExchangePrefix = _options.GetExchangePrefix(tenantId),
                 DeadLetterQueue = _options.GetDeadLetterQueue(tenantId),
                 DeadLetterExchange = _options.GetDeadLetterExchange(tenantId),
-                IsEnabled = true
+                IsEnabled = staticConfig.IsEnabled
             });
         }
 
-        /// <summary>
-        /// Adds or updates a tenant configuration dynamically.
-        /// </summary>
-        /// <param name="config">The tenant configuration.</param>
-        public void AddOrUpdate(TenantRabbitMQConfiguration config)
+        // Return default configuration based on tenant ID
+        return Task.FromResult<TenantRabbitMQConfiguration?>(new TenantRabbitMQConfiguration
         {
-            if (config == null || string.IsNullOrEmpty(config.TenantId))
-            {
-                return;
-            }
+            TenantId = tenantId,
+            VirtualHost = _options.GetVirtualHost(tenantId),
+            QueuePrefix = _options.GetQueuePrefix(tenantId),
+            ExchangePrefix = _options.GetExchangePrefix(tenantId),
+            DeadLetterQueue = _options.GetDeadLetterQueue(tenantId),
+            DeadLetterExchange = _options.GetDeadLetterExchange(tenantId),
+            IsEnabled = true
+        });
+    }
 
-            _configurations[config.TenantId] = config;
+    /// <summary>
+    /// Adds or updates a tenant configuration dynamically.
+    /// </summary>
+    /// <param name="config">The tenant configuration.</param>
+    public void AddOrUpdate(TenantRabbitMQConfiguration config)
+    {
+        if (config == null || string.IsNullOrEmpty(config.TenantId))
+        {
+            return;
         }
 
-        /// <summary>
-        /// Removes a tenant configuration.
-        /// </summary>
-        /// <param name="tenantId">The tenant identifier.</param>
-        /// <returns>True if the configuration was removed, false otherwise.</returns>
-        public bool Remove(string tenantId)
-        {
-            return _configurations.TryRemove(tenantId, out _);
-        }
+        _configurations[config.TenantId] = config;
+    }
 
-        /// <summary>
-        /// Gets all dynamic tenant configurations.
-        /// </summary>
-        /// <returns>All tenant configurations.</returns>
-        public IReadOnlyDictionary<string, TenantRabbitMQConfiguration> GetAll()
-        {
-            return _configurations;
-        }
+    /// <summary>
+    /// Removes a tenant configuration.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>True if the configuration was removed, false otherwise.</returns>
+    public bool Remove(string tenantId)
+    {
+        return _configurations.TryRemove(tenantId, out _);
+    }
 
-        /// <summary>
-        /// Clears all dynamic tenant configurations.
-        /// </summary>
-        public void Clear()
-        {
-            _configurations.Clear();
-        }
+    /// <summary>
+    /// Gets all dynamic tenant configurations.
+    /// </summary>
+    /// <returns>All tenant configurations.</returns>
+    public IReadOnlyDictionary<string, TenantRabbitMQConfiguration> GetAll()
+    {
+        return _configurations;
+    }
+
+    /// <summary>
+    /// Clears all dynamic tenant configurations.
+    /// </summary>
+    public void Clear()
+    {
+        _configurations.Clear();
     }
 }
 

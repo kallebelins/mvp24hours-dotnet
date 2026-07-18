@@ -6,9 +6,6 @@
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -97,7 +94,7 @@ public interface ICircuitBreakerPolicy
     /// Gets the exceptions that should be counted as failures.
     /// If empty, all exceptions are counted.
     /// </summary>
-    IEnumerable<Type> FailureExceptions => Enumerable.Empty<Type>();
+    IEnumerable<Type> FailureExceptions => [];
 }
 
 /// <summary>
@@ -119,7 +116,7 @@ public sealed record CircuitBreakerPolicy : ICircuitBreakerPolicy
         SamplingDurationSeconds = samplingDurationSeconds;
         MinimumThroughput = minimumThroughput;
         DurationOfBreakSeconds = durationOfBreakSeconds;
-        FailureExceptions = failureExceptions ?? Enumerable.Empty<Type>();
+        FailureExceptions = failureExceptions ?? [];
     }
 
     /// <inheritdoc />
@@ -244,7 +241,7 @@ internal sealed class CircuitBreakerState
         _samplingDuration = TimeSpan.FromSeconds(policy.SamplingDurationSeconds);
         _minimumThroughput = policy.MinimumThroughput;
         _durationOfBreak = TimeSpan.FromSeconds(policy.DurationOfBreakSeconds);
-        _failureExceptions = new HashSet<Type>(policy.FailureExceptions);
+        _failureExceptions = [.. policy.FailureExceptions];
     }
 
     public CircuitBreakerState(ICircuitBreakerProtected request)
@@ -322,8 +319,8 @@ internal sealed class CircuitBreakerState
             }
 
             // Check if we should trip the circuit
-            var failures = _requests.Count(r => !r.IsSuccess);
-            var total = _requests.Count;
+            int failures = _requests.Count(r => !r.IsSuccess);
+            int total = _requests.Count;
 
             if (total >= _minimumThroughput && failures >= _failureThreshold)
             {
@@ -418,22 +415,17 @@ internal sealed class CircuitBreakerState
 /// }
 /// </code>
 /// </example>
-public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the CircuitBreakerBehavior.
+/// </remarks>
+/// <param name="logger">Optional logger.</param>
+public sealed class CircuitBreakerBehavior<TRequest, TResponse>(
+    ILogger<CircuitBreakerBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
     private static readonly ConcurrentDictionary<string, CircuitBreakerState> _circuits = new();
 
-    private readonly ILogger<CircuitBreakerBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the CircuitBreakerBehavior.
-    /// </summary>
-    /// <param name="logger">Optional logger.</param>
-    public CircuitBreakerBehavior(
-        ILogger<CircuitBreakerBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<CircuitBreakerBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
@@ -447,8 +439,8 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
-        var circuitKey = protectedRequest.CircuitBreakerKey ?? requestName;
+        string requestName = typeof(TRequest).Name;
+        string circuitKey = protectedRequest.CircuitBreakerKey ?? requestName;
         CircuitBreakerState circuitState = _circuits.GetOrAdd(circuitKey, _ => new CircuitBreakerState(protectedRequest));
 
         // Check if circuit allows the request
@@ -541,35 +533,27 @@ public sealed class CircuitBreakerBehavior<TRequest, TResponse> : IPipelineBehav
 /// <summary>
 /// Exception thrown when a circuit breaker is open and rejecting requests.
 /// </summary>
-public sealed class CircuitBreakerOpenException : Exception
+/// <remarks>
+/// Creates a new instance of CircuitBreakerOpenException.
+/// </remarks>
+/// <param name="circuitKey">The circuit key.</param>
+/// <param name="requestName">The request name.</param>
+/// <param name="metrics">The current metrics.</param>
+public sealed class CircuitBreakerOpenException(string circuitKey, string requestName, CircuitBreakerMetrics metrics) : Exception($"Circuit breaker '{circuitKey}' is open. Request '{requestName}' was rejected.")
 {
     /// <summary>
     /// Gets the circuit breaker key.
     /// </summary>
-    public string CircuitKey { get; }
+    public string CircuitKey { get; } = circuitKey;
 
     /// <summary>
     /// Gets the name of the request that was rejected.
     /// </summary>
-    public string RequestName { get; }
+    public string RequestName { get; } = requestName;
 
     /// <summary>
     /// Gets the circuit breaker metrics at the time of rejection.
     /// </summary>
-    public CircuitBreakerMetrics Metrics { get; }
-
-    /// <summary>
-    /// Creates a new instance of CircuitBreakerOpenException.
-    /// </summary>
-    /// <param name="circuitKey">The circuit key.</param>
-    /// <param name="requestName">The request name.</param>
-    /// <param name="metrics">The current metrics.</param>
-    public CircuitBreakerOpenException(string circuitKey, string requestName, CircuitBreakerMetrics metrics)
-        : base($"Circuit breaker '{circuitKey}' is open. Request '{requestName}' was rejected.")
-    {
-        CircuitKey = circuitKey;
-        RequestName = requestName;
-        Metrics = metrics;
-    }
+    public CircuitBreakerMetrics Metrics { get; } = metrics;
 }
 

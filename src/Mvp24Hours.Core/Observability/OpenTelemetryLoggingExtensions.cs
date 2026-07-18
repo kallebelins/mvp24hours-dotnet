@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
@@ -90,7 +88,7 @@ public static class OpenTelemetryLoggingExtensions
         else
         {
             // Try to get from ASPNETCORE_ENVIRONMENT or DOTNET_ENVIRONMENT
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            string? env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
                       ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
             if (!string.IsNullOrEmpty(env))
             {

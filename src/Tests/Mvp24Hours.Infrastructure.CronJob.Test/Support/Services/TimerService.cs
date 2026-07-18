@@ -1,36 +1,33 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.Services
+namespace Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
+
+/// <summary>
+/// Helper service for tracking CronJob execution times during tests.
+/// </summary>
+public class TimerService
 {
+    private readonly Stopwatch _stopwatch = new();
+
     /// <summary>
-    /// Helper service for tracking CronJob execution times during tests.
+    /// Gets the list of recorded execution times.
     /// </summary>
-    public class TimerService
+    public List<TimeSpan> Counters { get; } = [];
+
+    /// <summary>
+    /// Starts the internal stopwatch.
+    /// </summary>
+    public void Start()
     {
-        private readonly Stopwatch _stopwatch = new();
+        _stopwatch.Start();
+    }
 
-        /// <summary>
-        /// Gets the list of recorded execution times.
-        /// </summary>
-        public List<TimeSpan> Counters { get; } = [];
-
-        /// <summary>
-        /// Starts the internal stopwatch.
-        /// </summary>
-        public void Start()
-        {
-            _stopwatch.Start();
-        }
-
-        /// <summary>
-        /// Records the current elapsed time.
-        /// </summary>
-        public void CountTime()
-        {
-            Counters.Add(_stopwatch.Elapsed);
-        }
+    /// <summary>
+    /// Records the current elapsed time.
+    /// </summary>
+    public void CountTime()
+    {
+        Counters.Add(_stopwatch.Elapsed);
     }
 }
 

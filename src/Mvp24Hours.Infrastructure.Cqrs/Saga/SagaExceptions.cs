@@ -81,68 +81,50 @@ public class SagaStepException : SagaException
 /// <summary>
 /// Exception thrown when saga compensation fails.
 /// </summary>
-public class SagaCompensationException : SagaException
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaCompensationException"/> class.
+/// </remarks>
+public class SagaCompensationException(Guid sagaId, IEnumerable<string> failedSteps, IEnumerable<Exception> errors) : SagaException(sagaId, $"Compensation failed for steps: {string.Join(", ", failedSteps)}", "SAGA_COMPENSATION_FAILED")
 {
     /// <summary>
     /// Gets the steps that failed compensation.
     /// </summary>
-    public IReadOnlyList<string> FailedSteps { get; }
+    public IReadOnlyList<string> FailedSteps { get; } = failedSteps.ToList().AsReadOnly();
 
     /// <summary>
     /// Gets the compensation errors for each failed step.
     /// </summary>
-    public IReadOnlyList<Exception> CompensationErrors { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaCompensationException"/> class.
-    /// </summary>
-    public SagaCompensationException(Guid sagaId, IEnumerable<string> failedSteps, IEnumerable<Exception> errors)
-        : base(sagaId, $"Compensation failed for steps: {string.Join(", ", failedSteps)}", "SAGA_COMPENSATION_FAILED")
-    {
-        FailedSteps = failedSteps.ToList().AsReadOnly();
-        CompensationErrors = errors.ToList().AsReadOnly();
-    }
+    public IReadOnlyList<Exception> CompensationErrors { get; } = errors.ToList().AsReadOnly();
 }
 
 /// <summary>
 /// Exception thrown when a saga times out.
 /// </summary>
-public class SagaTimeoutException : SagaException
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaTimeoutException"/> class.
+/// </remarks>
+public class SagaTimeoutException(Guid sagaId, TimeSpan timeout, string? stepName = null) : SagaException(sagaId, $"Saga timed out after {timeout.TotalSeconds} seconds" +
+            (stepName != null ? $" at step '{stepName}'" : ""), "SAGA_TIMEOUT")
 {
     /// <summary>
     /// Gets the timeout duration.
     /// </summary>
-    public TimeSpan Timeout { get; }
+    public TimeSpan Timeout { get; } = timeout;
 
     /// <summary>
     /// Gets the step where timeout occurred.
     /// </summary>
-    public string? StepName { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaTimeoutException"/> class.
-    /// </summary>
-    public SagaTimeoutException(Guid sagaId, TimeSpan timeout, string? stepName = null)
-        : base(sagaId, $"Saga timed out after {timeout.TotalSeconds} seconds" +
-            (stepName != null ? $" at step '{stepName}'" : ""), "SAGA_TIMEOUT")
-    {
-        Timeout = timeout;
-        StepName = stepName;
-    }
+    public string? StepName { get; } = stepName;
 }
 
 /// <summary>
 /// Exception thrown when a saga is not found.
 /// </summary>
-public class SagaNotFoundException : SagaException
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaNotFoundException"/> class.
+/// </remarks>
+public class SagaNotFoundException(Guid sagaId) : SagaException(sagaId, $"Saga with ID '{sagaId}' was not found", "SAGA_NOT_FOUND")
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaNotFoundException"/> class.
-    /// </summary>
-    public SagaNotFoundException(Guid sagaId)
-        : base(sagaId, $"Saga with ID '{sagaId}' was not found", "SAGA_NOT_FOUND")
-    {
-    }
 }
 
 /// <summary>
@@ -184,28 +166,21 @@ public class SagaInvalidStateException : SagaException
 /// <summary>
 /// Exception thrown when maximum retry attempts are exceeded.
 /// </summary>
-public class SagaMaxRetriesExceededException : SagaException
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaMaxRetriesExceededException"/> class.
+/// </remarks>
+public class SagaMaxRetriesExceededException(Guid sagaId, int maxRetries, string? stepName = null, Exception? innerException = null) : SagaException(sagaId, $"Maximum retry attempts ({maxRetries}) exceeded" +
+            (stepName != null ? $" for step '{stepName}'" : ""),
+        innerException!, "SAGA_MAX_RETRIES_EXCEEDED")
 {
     /// <summary>
     /// Gets the maximum number of retries.
     /// </summary>
-    public int MaxRetries { get; }
+    public int MaxRetries { get; } = maxRetries;
 
     /// <summary>
     /// Gets the step where retries were exhausted.
     /// </summary>
-    public string? StepName { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaMaxRetriesExceededException"/> class.
-    /// </summary>
-    public SagaMaxRetriesExceededException(Guid sagaId, int maxRetries, string? stepName = null, Exception? innerException = null)
-        : base(sagaId, $"Maximum retry attempts ({maxRetries}) exceeded" +
-            (stepName != null ? $" for step '{stepName}'" : ""),
-            innerException!, "SAGA_MAX_RETRIES_EXCEEDED")
-    {
-        MaxRetries = maxRetries;
-        StepName = stepName;
-    }
+    public string? StepName { get; } = stepName;
 }
 

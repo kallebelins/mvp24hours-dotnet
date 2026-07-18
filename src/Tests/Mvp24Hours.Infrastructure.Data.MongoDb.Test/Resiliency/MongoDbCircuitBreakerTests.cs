@@ -10,14 +10,17 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 [Trait("Category", "Unit")]
 public class MongoDbCircuitBreakerTests
 {
-    private MongoDbResiliencyOptions CreateDefaultOptions() => new()
+    private MongoDbResiliencyOptions CreateDefaultOptions()
     {
-        EnableCircuitBreaker = true,
-        CircuitBreakerFailureThreshold = 3,
-        CircuitBreakerSamplingDurationSeconds = 60,
-        CircuitBreakerDurationSeconds = 5,
-        CircuitBreakerMinimumThroughput = 1
-    };
+        return new()
+        {
+            EnableCircuitBreaker = true,
+            CircuitBreakerFailureThreshold = 3,
+            CircuitBreakerSamplingDurationSeconds = 60,
+            CircuitBreakerDurationSeconds = 5,
+            CircuitBreakerMinimumThroughput = 1
+        };
+    }
 
     [Fact]
     public void Should_Start_In_Closed_State()
@@ -38,7 +41,7 @@ public class MongoDbCircuitBreakerTests
         var circuitBreaker = new MongoDbCircuitBreaker(options);
 
         // Act
-        var allowed = circuitBreaker.AllowRequest();
+        bool allowed = circuitBreaker.AllowRequest();
 
         // Assert
         allowed.Should().BeTrue();
@@ -96,7 +99,7 @@ public class MongoDbCircuitBreakerTests
         circuitBreaker.RecordFailure(new Exception("Failure 2"));
 
         // Act
-        var allowed = circuitBreaker.AllowRequest();
+        bool allowed = circuitBreaker.AllowRequest();
 
         // Assert
         allowed.Should().BeFalse();

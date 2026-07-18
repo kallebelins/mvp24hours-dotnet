@@ -34,7 +34,7 @@ public class MediatorTest
         var command = new TestCommand { Name = "Test", Value = 42 };
 
         // Act
-        var result = await _mediator.SendAsync(command);
+        string result = await _mediator.SendAsync(command);
 
         // Assert
         Assert.NotNull(result);
@@ -145,7 +145,7 @@ public class MediatorTest
         var command = new TestCommand { Name = "Sender Test", Value = 100 };
 
         // Act
-        var result = await sender.SendAsync(command);
+        string result = await sender.SendAsync(command);
 
         // Assert
         Assert.NotNull(result);

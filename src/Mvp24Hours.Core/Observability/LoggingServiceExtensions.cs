@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -134,15 +132,13 @@ public static class LoggingServiceExtensions
         if (options.EnableTraceCorrelation)
         {
             builder.Configure(loggerOptions =>
-            {
                 // Configure activity tracking
                 loggerOptions.ActivityTrackingOptions =
                     ActivityTrackingOptions.TraceId |
                     ActivityTrackingOptions.SpanId |
                     ActivityTrackingOptions.ParentId |
                     ActivityTrackingOptions.Baggage |
-                    ActivityTrackingOptions.Tags;
-            });
+                    ActivityTrackingOptions.Tags);
         }
 
         return builder;
@@ -278,14 +274,14 @@ public class TraceContextLogEnricher : ILogEnricher
             properties["ParentSpanId"] = activity.ParentSpanId.ToString();
 
             // Add correlation ID from baggage if available
-            var correlationId = activity.GetBaggageItem("correlation.id");
+            string? correlationId = activity.GetBaggageItem("correlation.id");
             if (!string.IsNullOrEmpty(correlationId))
             {
                 properties[SemanticTags.CorrelationId] = correlationId;
             }
 
             // Add causation ID from baggage if available
-            var causationId = activity.GetBaggageItem("causation.id");
+            string? causationId = activity.GetBaggageItem("causation.id");
             if (!string.IsNullOrEmpty(causationId))
             {
                 properties[SemanticTags.CausationId] = causationId;
@@ -309,19 +305,19 @@ public class UserContextLogEnricher : ILogEnricher
 
         if (activity != null)
         {
-            var userId = activity.GetBaggageItem("enduser.id");
+            string? userId = activity.GetBaggageItem("enduser.id");
             if (!string.IsNullOrEmpty(userId))
             {
                 properties[SemanticTags.EnduserId] = userId;
             }
 
-            var userName = activity.GetBaggageItem("enduser.name");
+            string? userName = activity.GetBaggageItem("enduser.name");
             if (!string.IsNullOrEmpty(userName))
             {
                 properties[SemanticTags.EnduserName] = userName;
             }
 
-            var userRoles = activity.GetBaggageItem("enduser.roles");
+            string? userRoles = activity.GetBaggageItem("enduser.roles");
             if (!string.IsNullOrEmpty(userRoles))
             {
                 properties[SemanticTags.EnduserRoles] = userRoles;
@@ -345,13 +341,13 @@ public class TenantContextLogEnricher : ILogEnricher
 
         if (activity != null)
         {
-            var tenantId = activity.GetBaggageItem("tenant.id");
+            string? tenantId = activity.GetBaggageItem("tenant.id");
             if (!string.IsNullOrEmpty(tenantId))
             {
                 properties[SemanticTags.TenantId] = tenantId;
             }
 
-            var tenantName = activity.GetBaggageItem("tenant.name");
+            string? tenantName = activity.GetBaggageItem("tenant.name");
             if (!string.IsNullOrEmpty(tenantName))
             {
                 properties[SemanticTags.TenantName] = tenantName;
@@ -365,18 +361,13 @@ public class TenantContextLogEnricher : ILogEnricher
 /// <summary>
 /// Composite log enricher that combines multiple enrichers.
 /// </summary>
-public class CompositeLogEnricher : ILogEnricher
+/// <remarks>
+/// Initializes a new instance of <see cref="CompositeLogEnricher"/>.
+/// </remarks>
+/// <param name="enrichers">The enrichers to compose.</param>
+public class CompositeLogEnricher(IEnumerable<ILogEnricher> enrichers) : ILogEnricher
 {
-    private readonly IEnumerable<ILogEnricher> _enrichers;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="CompositeLogEnricher"/>.
-    /// </summary>
-    /// <param name="enrichers">The enrichers to compose.</param>
-    public CompositeLogEnricher(IEnumerable<ILogEnricher> enrichers)
-    {
-        _enrichers = enrichers;
-    }
+    private readonly IEnumerable<ILogEnricher> _enrichers = enrichers;
 
     /// <inheritdoc />
     public Dictionary<string, object?> GetEnrichmentProperties()
@@ -463,7 +454,10 @@ public class LogContextAccessor : ILogContextAccessor
         get
         {
             Activity? activity = Activity.Current;
-            if (activity == null) return null;
+            if (activity == null)
+            {
+                return null;
+            }
 
             return activity.GetBaggageItem("correlation.id")
                    ?? activity.TraceId.ToString();
@@ -474,7 +468,10 @@ public class LogContextAccessor : ILogContextAccessor
     public IDisposable? BeginTraceScope(ILogger logger)
     {
         Dictionary<string, object?> properties = GetEnrichmentProperties();
-        if (properties.Count == 0) return null;
+        if (properties.Count == 0)
+        {
+            return null;
+        }
 
         return logger.BeginScope(properties)!;
     }
@@ -510,19 +507,14 @@ public interface ILogSampler
 /// based on the configured ratio.
 /// </para>
 /// </remarks>
-public class RatioBasedLogSampler : ILogSampler
+/// <remarks>
+/// Initializes a new instance of <see cref="RatioBasedLogSampler"/>.
+/// </remarks>
+/// <param name="ratio">The sampling ratio (0.0 to 1.0).</param>
+public class RatioBasedLogSampler(double ratio) : ILogSampler
 {
-    private readonly double _ratio;
+    private readonly double _ratio = Math.Clamp(ratio, 0.0, 1.0);
     private readonly Random _random = new();
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="RatioBasedLogSampler"/>.
-    /// </summary>
-    /// <param name="ratio">The sampling ratio (0.0 to 1.0).</param>
-    public RatioBasedLogSampler(double ratio)
-    {
-        _ratio = Math.Clamp(ratio, 0.0, 1.0);
-    }
 
     /// <inheritdoc />
     public bool ShouldSample(LogLevel logLevel, string categoryName)
@@ -548,21 +540,16 @@ public class RatioBasedLogSampler : ILogSampler
 /// This ensures consistent observability for sampled traces.
 /// </para>
 /// </remarks>
-public class TraceContextLogSampler : ILogSampler
+/// <remarks>
+/// Initializes a new instance of <see cref="TraceContextLogSampler"/>.
+/// </remarks>
+/// <param name="fallbackRatio">
+/// The sampling ratio to use when no trace context is available.
+/// </param>
+public class TraceContextLogSampler(double fallbackRatio = 1.0) : ILogSampler
 {
-    private readonly double _fallbackRatio;
+    private readonly double _fallbackRatio = Math.Clamp(fallbackRatio, 0.0, 1.0);
     private readonly Random _random = new();
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="TraceContextLogSampler"/>.
-    /// </summary>
-    /// <param name="fallbackRatio">
-    /// The sampling ratio to use when no trace context is available.
-    /// </param>
-    public TraceContextLogSampler(double fallbackRatio = 1.0)
-    {
-        _fallbackRatio = Math.Clamp(fallbackRatio, 0.0, 1.0);
-    }
 
     /// <inheritdoc />
     public bool ShouldSample(LogLevel logLevel, string categoryName)
@@ -588,19 +575,14 @@ public class TraceContextLogSampler : ILogSampler
 /// <summary>
 /// Log sampler that applies different rates per log level.
 /// </summary>
-public class LevelBasedLogSampler : ILogSampler
+/// <remarks>
+/// Initializes a new instance of <see cref="LevelBasedLogSampler"/>.
+/// </remarks>
+/// <param name="levelRatios">Dictionary of log level to sampling ratio.</param>
+public class LevelBasedLogSampler(Dictionary<LogLevel, double> levelRatios) : ILogSampler
 {
-    private readonly Dictionary<LogLevel, double> _levelRatios;
+    private readonly Dictionary<LogLevel, double> _levelRatios = levelRatios;
     private readonly Random _random = new();
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="LevelBasedLogSampler"/>.
-    /// </summary>
-    /// <param name="levelRatios">Dictionary of log level to sampling ratio.</param>
-    public LevelBasedLogSampler(Dictionary<LogLevel, double> levelRatios)
-    {
-        _levelRatios = levelRatios;
-    }
 
     /// <summary>
     /// Creates a sampler with common defaults for high-load environments.
@@ -622,7 +604,7 @@ public class LevelBasedLogSampler : ILogSampler
     /// <inheritdoc />
     public bool ShouldSample(LogLevel logLevel, string categoryName)
     {
-        if (_levelRatios.TryGetValue(logLevel, out var ratio))
+        if (_levelRatios.TryGetValue(logLevel, out double ratio))
         {
             return _random.NextDouble() < ratio;
         }
@@ -711,9 +693,12 @@ public static class LoggerTraceContextExtensions
     public static IDisposable? BeginTraceScope(this ILogger logger)
     {
         Activity? activity = Activity.Current;
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
-        var correlationId = activity.GetBaggageItem("correlation.id") ?? activity.TraceId.ToString();
+        string correlationId = activity.GetBaggageItem("correlation.id") ?? activity.TraceId.ToString();
 
         return logger.BeginScope(new Dictionary<string, object>
         {

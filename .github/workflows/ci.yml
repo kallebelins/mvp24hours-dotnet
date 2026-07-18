@@ -72,19 +72,16 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Formatting-only gate (whitespace + import ordering). `--severity error` skips
-    # warning-level analyzer code fixes (CS8625/CS0618/CA*), whose churn is deferred to
-    # v2 together with the residual warnings accepted in task 10.1. Solution lives under
-    # src/ — a bare `dotnet format` from repo root cannot find a project/solution.
+    # Full style gate (task 7.2 / v2): whitespace + imports + analyzer code-style fixes.
+    # Exclusions: IDE0130 crashes MSBuildWorkspace (dotnet/format#2192); IDE1006 has no
+    # Fix All (NamingStyleCodeFixProvider) and stays suggestion in .editorconfig.
+    # Solution lives under src/ — a bare `dotnet format` from repo root cannot find a .sln.
     - name: 🎨 Check code formatting
-      run: dotnet format src/Mvp24Hours.sln --severity error --verify-no-changes --verbosity diagnostic
+      run: dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes --verbosity diagnostic
 
-    # Scoped quality gate (task 10.3): TreatWarningsAsErrors=true promotes any NEW
-    # warning category to an error, while the residual warnings accepted in task 10.1
-    # stay warnings via WarningsNotAsErrors (MvpResidualWarnings in src/Directory.Build.props).
-    # --no-incremental forces a full recompile so warnings are actually re-emitted
-    # (an incremental build would skip compilation and hide them).
-    # See tasks/phase10-gate-treatwarningsaserrors-net10-v1.md.
+    # Strict quality gate (task 7.1 / v2): TreatWarningsAsErrors=true. Residual list is
+    # only NU1510 (MvpResidualWarnings in src/Directory.Build.props).
+    # --no-incremental forces a full recompile so warnings are actually re-emitted.
     - name: 🔍 Run static code analysis
       run: dotnet build src/Mvp24Hours.sln --configuration Release --no-incremental /p:TreatWarningsAsErrors=true
 

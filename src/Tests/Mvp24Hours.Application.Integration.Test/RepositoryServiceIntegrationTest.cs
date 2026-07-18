@@ -18,17 +18,19 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// </summary>
 [Collection("SqlServer")]
 [Trait("Category", "Integration")]
-public class RepositoryServiceIntegrationTest : IAsyncLifetime
+public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture) : IAsyncLifetime
 {
-    private readonly SqlServerContainerFixture _fixture;
+    private readonly SqlServerContainerFixture _fixture = fixture;
 
-    public RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
+    public Task InitializeAsync()
     {
-        _fixture = fixture;
+        return _fixture.ClearDatabaseAsync();
     }
 
-    public Task InitializeAsync() => _fixture.ClearDatabaseAsync();
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     #region [ Add Operations ]
 
@@ -292,7 +294,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
             IsActive = true
         };
         await categoryService.AddAsync(category);
-        var categoryId = category.Id;
+        int categoryId = category.Id;
 
         // Act
         IBusinessResult<int> result = await categoryService.RemoveByIdAsync(categoryId);
@@ -382,7 +384,7 @@ public class RepositoryServiceIntegrationTest : IAsyncLifetime
         CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         IBusinessResult<int> initialCountResult = await categoryService.ListCountAsync();
-        var initialCount = initialCountResult.GetDataValue();
+        int initialCount = initialCountResult.GetDataValue();
 
         var categories = new List<Category>
         {

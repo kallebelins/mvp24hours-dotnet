@@ -1,8 +1,8 @@
 # EditorConfig for Mvp24Hours (.NET 10 / C# latest)
 # Aligns with CONTRIBUTING.md "C# Style Guide" and enables consistent
 # `dotnet format --verify-no-changes` (CI job code-quality).
-# Style modernization preferences use suggestion severity so EnforceCodeStyleInBuild
-# does not flood the build until the codebase is aligned (see Fase 10 / task 10.2).
+# Style rules are warning-level so EnforceCodeStyleInBuild + TreatWarningsAsErrors
+# keep the codebase aligned (elevated in task 7.2 / v2 after residual CS86xx/CS0618 = 0).
 
 root = true
 
@@ -32,43 +32,49 @@ end_of_line = lf
 [*.{cs,vb}]
 
 #### Core EditorConfig naming / qualification ####
-dotnet_style_qualification_for_field = false:suggestion
-dotnet_style_qualification_for_property = false:suggestion
-dotnet_style_qualification_for_method = false:suggestion
-dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
 
-dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
-dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning
+dotnet_style_predefined_type_for_member_access = true:warning
 
-dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
-dotnet_style_readonly_field = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+dotnet_style_readonly_field = true:warning
 
 #### Expression-level preferences ####
-dotnet_style_object_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
-dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
-dotnet_style_explicit_tuple_names = true:suggestion
-dotnet_style_prefer_inferred_tuple_names = true:suggestion
-dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
-dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_object_initializer = true:warning
+dotnet_style_collection_initializer = true:warning
+dotnet_style_prefer_collection_expression = when_types_loosely_match:warning
+dotnet_style_explicit_tuple_names = true:warning
+dotnet_style_prefer_inferred_tuple_names = true:warning
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:warning
+dotnet_style_prefer_auto_properties = true:warning
 dotnet_style_prefer_conditional_expression_over_assignment = true:silent
 dotnet_style_prefer_conditional_expression_over_return = true:silent
-dotnet_style_prefer_compound_assignment = true:suggestion
-dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
-dotnet_style_prefer_simplified_interpolation = true:suggestion
+dotnet_style_prefer_compound_assignment = true:warning
+dotnet_style_prefer_simplified_boolean_expressions = true:warning
+dotnet_style_prefer_simplified_interpolation = true:warning
 
-dotnet_style_coalesce_expression = true:suggestion
-dotnet_style_null_propagation = true:suggestion
-dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+dotnet_style_coalesce_expression = true:warning
+dotnet_style_null_propagation = true:warning
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 
-dotnet_style_namespace_match_folder = true:suggestion
+# IDE0130 code fix crashes MSBuildWorkspace ("Changing document properties is not
+# supported") — keep disabled for `dotnet format` / EnforceCodeStyleInBuild.
+# See https://github.com/dotnet/format/issues/2192
+dotnet_style_namespace_match_folder = false:silent
+dotnet_diagnostic.IDE0130.severity = none
 
 #### Using directives ####
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
 #### Naming: types and members (CONTRIBUTING.md) ####
+# Naming stays suggestion: NamingStyleCodeFixProvider does not support Fix All
+# (IDE1006), so warning severity would break `dotnet format --verify-no-changes`.
 # Interfaces: I + PascalCase
 dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
 dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
@@ -124,6 +130,9 @@ dotnet_naming_rule.locals_should_be_camel_case.style = camel_case
 dotnet_naming_symbols.locals_and_parameters.applicable_kinds = parameter, local
 dotnet_naming_style.camel_case.capitalization = camel_case
 
+# Explicit: keep IDE1006 out of the format/CI gate (no Fix All support).
+dotnet_diagnostic.IDE1006.severity = suggestion
+
 #### Analyzer severity (nullable + code quality) ####
 # Nullable Reference Types diagnostics stay as warnings (gate TreatWarningsAsErrors in CI).
 dotnet_diagnostic.CS8600.severity = warning
@@ -140,6 +149,8 @@ dotnet_diagnostic.CS8765.severity = warning
 dotnet_diagnostic.CS8767.severity = warning
 
 # Quality / reliability rules relevant to this solution (AnalysisLevel=latest).
+# CA2022 = warning (build gate). Remaining CA* stay suggestion: they need manual
+# fixes and are outside the style-elevation scope of task 7.2 (dotnet format).
 dotnet_diagnostic.CA2022.severity = warning
 dotnet_diagnostic.CA1859.severity = suggestion
 dotnet_diagnostic.CA1861.severity = suggestion
@@ -156,6 +167,7 @@ dotnet_diagnostic.NU1901.severity = warning
 dotnet_diagnostic.NU1902.severity = warning
 dotnet_diagnostic.NU1903.severity = warning
 dotnet_diagnostic.NU1904.severity = warning
+# Intentional residual gate pin (System.Security.Cryptography.Xml) — see MvpResidualWarnings.
 dotnet_diagnostic.NU1510.severity = suggestion
 
 ##########################################
@@ -181,56 +193,56 @@ csharp_indent_braces = false
 csharp_indent_case_contents_when_block = true
 
 #### var preferences (CONTRIBUTING.md uses var when clear) ####
-csharp_style_var_for_built_in_types = false:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_when_type_is_apparent = true:warning
+csharp_style_var_elsewhere = false:warning
 
 #### Expression-bodied members ####
-csharp_style_expression_bodied_methods = false:suggestion
-csharp_style_expression_bodied_constructors = false:suggestion
-csharp_style_expression_bodied_operators = false:suggestion
-csharp_style_expression_bodied_properties = true:suggestion
-csharp_style_expression_bodied_indexers = true:suggestion
-csharp_style_expression_bodied_accessors = true:suggestion
-csharp_style_expression_bodied_lambdas = true:suggestion
-csharp_style_expression_bodied_local_functions = false:suggestion
+csharp_style_expression_bodied_methods = false:warning
+csharp_style_expression_bodied_constructors = false:warning
+csharp_style_expression_bodied_operators = false:warning
+csharp_style_expression_bodied_properties = true:warning
+csharp_style_expression_bodied_indexers = true:warning
+csharp_style_expression_bodied_accessors = true:warning
+csharp_style_expression_bodied_lambdas = true:warning
+csharp_style_expression_bodied_local_functions = false:warning
 
 #### Pattern matching ####
-csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
-csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
-csharp_style_prefer_switch_expression = true:suggestion
-csharp_style_prefer_pattern_matching = true:suggestion
-csharp_style_prefer_not_pattern = true:suggestion
-csharp_style_prefer_extended_property_pattern = true:suggestion
-csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+csharp_style_prefer_switch_expression = true:warning
+csharp_style_prefer_pattern_matching = true:warning
+csharp_style_prefer_not_pattern = true:warning
+csharp_style_prefer_extended_property_pattern = true:warning
+csharp_style_inlined_variable_declaration = true:warning
 
 #### Null checking ####
-csharp_style_throw_expression = true:suggestion
-csharp_style_conditional_delegate_call = true:suggestion
-csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_style_throw_expression = true:warning
+csharp_style_conditional_delegate_call = true:warning
+csharp_style_prefer_null_check_over_type_check = true:warning
 
 #### Modifier / code-block preferences ####
-csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async:suggestion
-csharp_prefer_braces = true:suggestion
-csharp_prefer_simple_using_statement = true:suggestion
-csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async:warning
+csharp_prefer_braces = true:warning
+csharp_prefer_simple_using_statement = true:warning
+csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
-csharp_style_prefer_primary_constructors = true:suggestion
-csharp_prefer_static_local_function = true:suggestion
-csharp_prefer_simple_default_expression = true:suggestion
+csharp_style_prefer_primary_constructors = true:warning
+csharp_prefer_static_local_function = true:warning
+csharp_prefer_simple_default_expression = true:warning
 
 #### Using directive placement ####
-csharp_using_directive_placement = outside_namespace:suggestion
+csharp_using_directive_placement = outside_namespace:warning
 
 #### Other C# 12–14 preferences ####
-csharp_style_prefer_index_operator = true:suggestion
-csharp_style_prefer_range_operator = true:suggestion
-csharp_style_prefer_utf8_string_literals = true:suggestion
-csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
-csharp_style_prefer_local_over_anonymous_function = true:suggestion
-csharp_style_prefer_tuple_swap = true:suggestion
-csharp_style_unused_value_assignment_preference = discard_variable:suggestion
+csharp_style_prefer_index_operator = true:warning
+csharp_style_prefer_range_operator = true:warning
+csharp_style_prefer_utf8_string_literals = true:warning
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+csharp_style_prefer_local_over_anonymous_function = true:warning
+csharp_style_prefer_tuple_swap = true:warning
+csharp_style_unused_value_assignment_preference = discard_variable:warning
 csharp_style_unused_value_expression_statement_preference = discard_variable:silent
 
 #### Space preferences ####
@@ -258,21 +270,26 @@ csharp_space_before_colon_in_inheritance_clause = true
 csharp_space_after_colon_in_inheritance_clause = true
 
 #### IDE style rules tied to options above (explicit for EnforceCodeStyleInBuild) ####
-# Prefer file-scoped namespaces / primary constructors / collection expressions as suggestions
-# until a focused format pass (task 10.2) elevates them if desired.
+# Elevated to warning in task 7.2 so style drifts fail the build and `dotnet format`
+# (without --severity error) applies the matching code fixes.
+# IDE0005 stays suggestion: EnforceCodeStyleInBuild requires GenerateDocumentationFile
+# for unused-usings analysis (roslyn#41640); enabling docs globally surfaces CS1570 on
+# existing XML samples. Unused usings are still enforced by `dotnet format` in CI.
 dotnet_diagnostic.IDE0005.severity = suggestion
-dotnet_diagnostic.IDE0007.severity = suggestion
-dotnet_diagnostic.IDE0008.severity = suggestion
-dotnet_diagnostic.IDE0011.severity = suggestion
-dotnet_diagnostic.IDE0028.severity = suggestion
-dotnet_diagnostic.IDE0040.severity = suggestion
-# Formatting is gated by `dotnet format --verify-no-changes` in CI (not build warnings).
-dotnet_diagnostic.IDE0055.severity = suggestion
-dotnet_diagnostic.IDE0161.severity = suggestion
-dotnet_diagnostic.IDE0290.severity = suggestion
-dotnet_diagnostic.IDE0300.severity = suggestion
-dotnet_diagnostic.IDE0301.severity = suggestion
-dotnet_diagnostic.IDE0305.severity = suggestion
+dotnet_diagnostic.IDE0007.severity = warning
+dotnet_diagnostic.IDE0008.severity = warning
+dotnet_diagnostic.IDE0011.severity = warning
+dotnet_diagnostic.IDE0028.severity = warning
+dotnet_diagnostic.IDE0040.severity = warning
+dotnet_diagnostic.IDE0055.severity = warning
+# IDE0078 pattern-matching rewrite of bitwise expressions is unsafe (see ValidatorExtensions);
+# keep suggestion until the fixer is reliable with operator precedence.
+dotnet_diagnostic.IDE0078.severity = suggestion
+dotnet_diagnostic.IDE0161.severity = warning
+dotnet_diagnostic.IDE0290.severity = warning
+dotnet_diagnostic.IDE0300.severity = warning
+dotnet_diagnostic.IDE0301.severity = warning
+dotnet_diagnostic.IDE0305.severity = warning
 
 ##########################################
 # Generated / designer files

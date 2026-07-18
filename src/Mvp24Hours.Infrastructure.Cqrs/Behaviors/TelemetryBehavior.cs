@@ -34,30 +34,24 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// services.AddMvpMediator(typeof(MyAssembly));
 /// </code>
 /// </example>
-public sealed class TelemetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TelemetryBehavior.
+/// </remarks>
+/// <param name="logger">Logger instance for telemetry.</param>
+/// <param name="contextAccessor">Optional request context accessor for including context in telemetry.</param>
+public sealed class TelemetryBehavior<TRequest, TResponse>(
+    ILogger<TelemetryBehavior<TRequest, TResponse>> logger,
+    IRequestContextAccessor? contextAccessor = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IRequestContextAccessor? _contextAccessor;
-    private readonly ILogger<TelemetryBehavior<TRequest, TResponse>> _logger;
-
-    /// <summary>
-    /// Creates a new instance of the TelemetryBehavior.
-    /// </summary>
-    /// <param name="logger">Logger instance for telemetry.</param>
-    /// <param name="contextAccessor">Optional request context accessor for including context in telemetry.</param>
-    public TelemetryBehavior(
-        ILogger<TelemetryBehavior<TRequest, TResponse>> logger,
-        IRequestContextAccessor? contextAccessor = null)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _contextAccessor = contextAccessor;
-    }
+    private readonly IRequestContextAccessor? _contextAccessor = contextAccessor;
+    private readonly ILogger<TelemetryBehavior<TRequest, TResponse>> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-        var requestType = GetRequestType();
+        string requestName = typeof(TRequest).Name;
+        string requestType = GetRequestType();
         IRequestContext? context = _contextAccessor?.Context;
 
         // Emit start event

@@ -3,86 +3,83 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.Events;
 
-namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe
+namespace Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+
+/// <summary>
+/// Defines pipeline engine async
+/// </summary>
+/// <example>
+/// <code>
+///     IPipelineAsync pipeline = new PipelineAsync();
+///     pipeline.AddAsync(new FileLogWriteOperation());
+///     await pipeline.Execute(filter.ToMessage());
+///     return pipeline.GetMessage().ToBusinessAsync{Product}();
+/// </code>
+/// </example>
+public interface IPipelineAsync
 {
     /// <summary>
-    /// Defines pipeline engine async
+    /// Force the pipeline to call rollback operations for each operations executed previously
     /// </summary>
-    /// <example>
-    /// <code>
-    ///     IPipelineAsync pipeline = new PipelineAsync();
-    ///     pipeline.AddAsync(new FileLogWriteOperation());
-    ///     await pipeline.Execute(filter.ToMessage());
-    ///     return pipeline.GetMessage().ToBusinessAsync{Product}();
-    /// </code>
-    /// </example>
-    public interface IPipelineAsync
-    {
-        /// <summary>
-        /// Force the pipeline to call rollback operations for each operations executed previously
-        /// </summary>
-        bool ForceRollbackOnFalure { get; set; }
-        /// <summary>
-        /// Force the pipeline to call rollback operations for each operations executed previously
-        /// </summary>
-        bool AllowPropagateException { get; set; }
-        /// <summary>
-        /// Get message package
-        /// </summary>
-        /// <returns></returns>
-        IPipelineMessage GetMessage();
-        /// <summary>
-        /// Records operations
-        /// </summary>
-        IPipelineAsync Add<T>() where T : class, IOperationAsync;
-        /// <summary>
-        /// Records operations
-        /// </summary>
-        IPipelineAsync Add(IOperationAsync operation);
-        /// <summary>
-        /// Records operations
-        /// </summary>
-        IPipelineAsync Add(Action<IPipelineMessage> action, bool isRequired = false);
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors<T>(PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation) where T : class, IOperationAsync;
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(IOperationAsync operation, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(Action<IPipelineMessage> action, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors<T>(Func<IPipelineMessage, bool> condition, bool postOperation = true) where T : class, IOperationAsync;
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(IOperationAsync operation, Func<IPipelineMessage, bool> condition, bool postOperation = true);
-        /// <summary>
-        /// Records operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(Action<IPipelineMessage> action, Func<IPipelineMessage, bool> condition, bool postOperation = true);
-        /// <summary>
-        /// Records event operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(MvpEventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
-        /// <summary>
-        /// Records event operations interceptors
-        /// </summary>
-        IPipelineAsync AddInterceptors(MvpEventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true);
-        /// <summary>
-        /// Performs async operations
-        /// </summary>
-        Task ExecuteAsync(IPipelineMessage? input = null);
-    }
+    bool ForceRollbackOnFalure { get; set; }
+    /// <summary>
+    /// Force the pipeline to call rollback operations for each operations executed previously
+    /// </summary>
+    bool AllowPropagateException { get; set; }
+    /// <summary>
+    /// Get message package
+    /// </summary>
+    /// <returns></returns>
+    IPipelineMessage GetMessage();
+    /// <summary>
+    /// Records operations
+    /// </summary>
+    IPipelineAsync Add<T>() where T : class, IOperationAsync;
+    /// <summary>
+    /// Records operations
+    /// </summary>
+    IPipelineAsync Add(IOperationAsync operation);
+    /// <summary>
+    /// Records operations
+    /// </summary>
+    IPipelineAsync Add(Action<IPipelineMessage> action, bool isRequired = false);
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors<T>(PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation) where T : class, IOperationAsync;
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(IOperationAsync operation, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(Action<IPipelineMessage> action, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors<T>(Func<IPipelineMessage, bool> condition, bool postOperation = true) where T : class, IOperationAsync;
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(IOperationAsync operation, Func<IPipelineMessage, bool> condition, bool postOperation = true);
+    /// <summary>
+    /// Records operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(Action<IPipelineMessage> action, Func<IPipelineMessage, bool> condition, bool postOperation = true);
+    /// <summary>
+    /// Records event operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(MvpEventHandler<IPipelineMessage, EventArgs> handler, PipelineInterceptorType pipelineInterceptor = PipelineInterceptorType.PostOperation);
+    /// <summary>
+    /// Records event operations interceptors
+    /// </summary>
+    IPipelineAsync AddInterceptors(MvpEventHandler<IPipelineMessage, EventArgs> handler, Func<IPipelineMessage, bool> condition, bool postOperation = true);
+    /// <summary>
+    /// Performs async operations
+    /// </summary>
+    Task ExecuteAsync(IPipelineMessage? input = null);
 }

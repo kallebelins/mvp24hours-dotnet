@@ -3,12 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
@@ -50,14 +46,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
 /// Assert.Single(customers);
 /// </code>
 /// </example>
-public class MongoDbContextFactory : IDisposable
+/// <remarks>
+/// Initializes a new instance with the specified options.
+/// </remarks>
+/// <param name="options">The configuration options.</param>
+/// <param name="logger">The logger instance.</param>
+public class MongoDbContextFactory(MongoDbInMemoryOptions options, ILogger<MongoDbContextFactory>? logger = null) : IDisposable
 {
-    private readonly MongoDbInMemoryOptions _options;
+    private readonly MongoDbInMemoryOptions _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ConcurrentBag<Mvp24HoursContext> _createdContexts = [];
     private readonly Func<MongoDbOptions, Mvp24HoursContext>? _contextFactory;
     private readonly ITenantProvider? _tenantProvider;
     private readonly ICurrentUserProvider? _currentUserProvider;
-    private readonly ILogger<MongoDbContextFactory>? _logger;
+    private readonly ILogger<MongoDbContextFactory>? _logger = logger;
     private bool _disposed;
 
     /// <summary>
@@ -75,17 +76,6 @@ public class MongoDbContextFactory : IDisposable
     public MongoDbContextFactory()
         : this(new MongoDbInMemoryOptions())
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance with the specified options.
-    /// </summary>
-    /// <param name="options">The configuration options.</param>
-    /// <param name="logger">The logger instance.</param>
-    public MongoDbContextFactory(MongoDbInMemoryOptions options, ILogger<MongoDbContextFactory>? logger = null)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger;
     }
 
     /// <summary>
@@ -340,7 +330,10 @@ public class MongoDbContextFactory : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
@@ -386,7 +379,7 @@ public static class MongoDbContextHelper
     /// <returns>A new MongoDB context.</returns>
     public static Mvp24HoursContext CreateContext(string connectionString, string? databaseName = null)
     {
-        var effectiveName = databaseName ?? $"TestDb_{Guid.NewGuid():N}";
+        string effectiveName = databaseName ?? $"TestDb_{Guid.NewGuid():N}";
 
         var options = new MongoDbOptions
         {
@@ -406,7 +399,7 @@ public static class MongoDbContextHelper
     /// <returns>The configured options.</returns>
     public static MongoDbOptions CreateOptions(string connectionString, string? databaseName = null)
     {
-        var effectiveName = databaseName ?? $"TestDb_{Guid.NewGuid():N}";
+        string effectiveName = databaseName ?? $"TestDb_{Guid.NewGuid():N}";
 
         return new MongoDbOptions
         {

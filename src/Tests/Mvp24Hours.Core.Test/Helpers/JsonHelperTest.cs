@@ -15,7 +15,7 @@ public class JsonHelperTest
         var obj = new Person { Id = 1, Name = "John", Age = 30 };
 
         // Act
-        var json = JsonHelper.Serialize(obj);
+        string json = JsonHelper.Serialize(obj);
 
         // Assert
         json.Should().NotBeNullOrEmpty();
@@ -28,7 +28,7 @@ public class JsonHelperTest
     public void Serialize_WithNull_ReturnsNull()
     {
         // Act
-        var json = JsonHelper.Serialize<Person>(null);
+        string json = JsonHelper.Serialize<Person>(null);
 
         // Assert
         json.Should().Be("null");
@@ -50,7 +50,7 @@ public class JsonHelperTest
         };
 
         // Act
-        var json = JsonHelper.Serialize(obj);
+        string json = JsonHelper.Serialize(obj);
 
         // Assert
         json.Should().NotBeNullOrEmpty();
@@ -67,7 +67,7 @@ public class JsonHelperTest
     public void Deserialize_WithValidJson_ReturnsObject()
     {
         // Arrange
-        var json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
+        string json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
 
         // Act
         Person? result = JsonHelper.Deserialize<Person>(json);
@@ -83,7 +83,7 @@ public class JsonHelperTest
     public void Deserialize_WithComplexObject_DeserializesCorrectly()
     {
         // Arrange
-        var json = "{\"id\":1,\"name\":\"Acme Corp\",\"employees\":[{\"id\":1,\"name\":\"John\",\"age\":30}]}";
+        string json = "{\"id\":1,\"name\":\"Acme Corp\",\"employees\":[{\"id\":1,\"name\":\"John\",\"age\":30}]}";
 
         // Act
         Company? result = JsonHelper.Deserialize<Company>(json);
@@ -100,11 +100,11 @@ public class JsonHelperTest
     public void Deserialize_WithType_ReturnsObject()
     {
         // Arrange
-        var json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
+        string json = "{\"id\":1,\"name\":\"John\",\"age\":30}";
         Type type = typeof(Person);
 
         // Act
-        var result = JsonHelper.Deserialize(json, type);
+        object? result = JsonHelper.Deserialize(json, type);
 
         // Assert
         result.Should().NotBeNull();
@@ -123,7 +123,7 @@ public class JsonHelperTest
         var original = new Person { Id = 42, Name = "Alice", Age = 28 };
 
         // Act
-        var json = JsonHelper.Serialize(original);
+        string json = JsonHelper.Serialize(original);
         Person? deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
@@ -150,7 +150,7 @@ public class JsonHelperTest
         };
 
         // Act
-        var json = JsonHelper.Serialize(original);
+        string json = JsonHelper.Serialize(original);
         Company? deserialized = JsonHelper.Deserialize<Company>(json);
 
         // Assert
@@ -167,7 +167,7 @@ public class JsonHelperTest
     public void DeserializeAnonymous_WithAnonymousType_ReturnsObject()
     {
         // Arrange
-        var json = "{\"id\":1,\"name\":\"John\"}";
+        string json = "{\"id\":1,\"name\":\"John\"}";
         var template = new { id = 0, name = "" };
 
         // Act
@@ -190,7 +190,7 @@ public class JsonHelperTest
         var obj = new Person { Id = 1, Name = "JosÃ© ä¸–ç•Œ ðŸŒ", Age = 30 };
 
         // Act
-        var json = JsonHelper.Serialize(obj);
+        string json = JsonHelper.Serialize(obj);
         Person? deserialized = JsonHelper.Deserialize<Person>(json);
 
         // Assert
@@ -205,7 +205,7 @@ public class JsonHelperTest
         var obj = new Event { Id = 1, Name = "Meeting", Date = new DateTime(2025, 1, 2) };
 
         // Act
-        var json = JsonHelper.Serialize(obj);
+        string json = JsonHelper.Serialize(obj);
         Event? deserialized = JsonHelper.Deserialize<Event>(json);
 
         // Assert
@@ -222,7 +222,7 @@ public class JsonHelperTest
         var obj = new Order { Id = 1, Status = Status.Active };
 
         // Act
-        var json = JsonHelper.Serialize(obj);
+        string json = JsonHelper.Serialize(obj);
         Order? deserialized = JsonHelper.Deserialize<Order>(json);
 
         // Assert
@@ -239,7 +239,7 @@ public class JsonHelperTest
         parent.Child = child;
 
         // Act (nÃ£o deve lanÃ§ar exceÃ§Ã£o)
-        var json = JsonHelper.Serialize(parent);
+        string json = JsonHelper.Serialize(parent);
 
         // Assert
         json.Should().NotBeNullOrEmpty();
@@ -259,7 +259,7 @@ public class JsonHelperTest
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var json = JsonHelper.Serialize(largeList);
+        string json = JsonHelper.Serialize(largeList);
         stopwatch.Stop();
 
         // Assert
@@ -274,7 +274,7 @@ public class JsonHelperTest
         var largeList = Enumerable.Range(1, 10000)
             .Select(i => new Person { Id = i, Name = $"Person{i}", Age = i % 100 })
             .ToList();
-        var json = JsonHelper.Serialize(largeList);
+        string json = JsonHelper.Serialize(largeList);
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

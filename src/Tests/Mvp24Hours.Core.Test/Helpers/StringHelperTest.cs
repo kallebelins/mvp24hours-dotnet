@@ -16,7 +16,7 @@ public class StringHelperTest
     public void GenerateKey_ReturnsStringOfCorrectLength(int length)
     {
         // Act
-        var result = StringHelper.GenerateKey(length);
+        string result = StringHelper.GenerateKey(length);
 
         // Assert
         result.Should().HaveLength(length);
@@ -27,7 +27,7 @@ public class StringHelperTest
     public void GenerateKey_WithZeroLength_ReturnsEmpty()
     {
         // Act
-        var result = StringHelper.GenerateKey(0);
+        string result = StringHelper.GenerateKey(0);
 
         // Assert
         result.Should().BeEmpty();
@@ -37,9 +37,9 @@ public class StringHelperTest
     public void GenerateKey_MultipleCallsProduceDifferentResults()
     {
         // Act
-        var result1 = StringHelper.GenerateKey(20);
-        var result2 = StringHelper.GenerateKey(20);
-        var result3 = StringHelper.GenerateKey(20);
+        string result1 = StringHelper.GenerateKey(20);
+        string result2 = StringHelper.GenerateKey(20);
+        string result3 = StringHelper.GenerateKey(20);
 
         // Assert
         result1.Should().NotBe(result2);
@@ -51,7 +51,7 @@ public class StringHelperTest
     public void GenerateKey_OnlyUpperCaseAndNumbers()
     {
         // Act
-        var result = StringHelper.GenerateKey(100);
+        string result = StringHelper.GenerateKey(100);
 
         // Assert
         result.Should().MatchRegex("^[A-Z0-9]+$");
@@ -70,7 +70,7 @@ public class StringHelperTest
         {
             tasks.Add(Task.Run(() =>
             {
-                var key = StringHelper.GenerateKey(20);
+                string key = StringHelper.GenerateKey(20);
                 results.Add(key);
             }));
         }
@@ -87,7 +87,7 @@ public class StringHelperTest
     {
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = StringHelper.GenerateKey(10000);
+        string result = StringHelper.GenerateKey(10000);
         stopwatch.Stop();
 
         // Assert
@@ -99,13 +99,13 @@ public class StringHelperTest
     public void GenerateKey_ContainsOnlyValidCharacters()
     {
         // Arrange
-        var validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
         // Act
-        var result = StringHelper.GenerateKey(1000);
+        string result = StringHelper.GenerateKey(1000);
 
         // Assert
-        foreach (var ch in result)
+        foreach (char ch in result)
         {
             validChars.Should().Contain(ch.ToString());
         }
@@ -123,7 +123,7 @@ public class StringHelperTest
             keys.Add(StringHelper.GenerateKey(50));
         }
 
-        var allChars = string.Join("", keys);
+        string allChars = string.Join("", keys);
 
         // Assert - Deve conter variedade de caracteres
         allChars.Should().Contain("A");

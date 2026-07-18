@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -102,8 +101,10 @@ public class MultiTenancyTest
     public void TenantContextAccessor_ShouldClearContext()
     {
         // Arrange
-        var accessor = new TenantContextAccessor();
-        accessor.Context = TenantContext.FromId("tenant-1");
+        var accessor = new TenantContextAccessor
+        {
+            Context = TenantContext.FromId("tenant-1")
+        };
 
         // Act
         accessor.Context = null;
@@ -185,7 +186,7 @@ public class MultiTenancyTest
         store.AddOrUpdate(new TenantContext("tenant-1", "Tenant One"));
 
         // Act
-        var removed = store.Remove("tenant-1");
+        bool removed = store.Remove("tenant-1");
 
         // Assert
         Assert.True(removed);
@@ -324,7 +325,7 @@ public class MultiTenancyTest
     public void CurrentUser_ShouldStoreAndRetrieveValues()
     {
         // Arrange
-        var roles = new[] { "Admin", "User" };
+        string[] roles = ["Admin", "User"];
         var claims = new Dictionary<string, string?> { { "Department", "IT" }, { "Level", "Senior" } };
         var user = new CurrentUser(
             id: "user-123",
@@ -359,7 +360,7 @@ public class MultiTenancyTest
     public void CurrentUser_IsInRole_ShouldCheckRoleCaseInsensitive()
     {
         // Arrange
-        var user = CurrentUser.Create("user-1", "John", roles: new[] { "Admin", "User" });
+        var user = CurrentUser.Create("user-1", "John", roles: ["Admin", "User"]);
 
         // Assert
         Assert.True(user.IsInRole("admin"));
@@ -407,7 +408,7 @@ public class MultiTenancyTest
         var command = new TenantTestCommand { Name = "Test" };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("fixed-tenant", result);
@@ -462,7 +463,7 @@ public class MultiTenancyTest
         };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("override-tenant", result);
@@ -491,7 +492,7 @@ public class MultiTenancyTest
         var command = new UserTestCommand();
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("fixed-user-123", result);
@@ -587,14 +588,9 @@ internal record TenantTestCommand : IMediatorCommand<string>
     public string Name { get; init; } = default!;
 }
 
-internal class TenantTestCommandHandler : IMediatorCommandHandler<TenantTestCommand, string>
+internal class TenantTestCommandHandler(ITenantContextAccessor tenantContextAccessor) : IMediatorCommandHandler<TenantTestCommand, string>
 {
-    private readonly ITenantContextAccessor _tenantContextAccessor;
-
-    public TenantTestCommandHandler(ITenantContextAccessor tenantContextAccessor)
-    {
-        _tenantContextAccessor = tenantContextAccessor;
-    }
+    private readonly ITenantContextAccessor _tenantContextAccessor = tenantContextAccessor;
 
     public Task<string> Handle(TenantTestCommand request, CancellationToken cancellationToken)
     {
@@ -610,14 +606,9 @@ internal record TenantRequiredTestCommand : IMediatorCommand<string>, ITenantReq
     public string Name { get; init; } = default!;
 }
 
-internal class TenantRequiredTestCommandHandler : IMediatorCommandHandler<TenantRequiredTestCommand, string>
+internal class TenantRequiredTestCommandHandler(ITenantContextAccessor tenantContextAccessor) : IMediatorCommandHandler<TenantRequiredTestCommand, string>
 {
-    private readonly ITenantContextAccessor _tenantContextAccessor;
-
-    public TenantRequiredTestCommandHandler(ITenantContextAccessor tenantContextAccessor)
-    {
-        _tenantContextAccessor = tenantContextAccessor;
-    }
+    private readonly ITenantContextAccessor _tenantContextAccessor = tenantContextAccessor;
 
     public Task<string> Handle(TenantRequiredTestCommand request, CancellationToken cancellationToken)
     {
@@ -636,14 +627,9 @@ internal record TenantAwareTestCommand : IMediatorCommand<string>, ITenantAware
     public string? OverrideTenantId => TenantOverride;
 }
 
-internal class TenantAwareTestCommandHandler : IMediatorCommandHandler<TenantAwareTestCommand, string>
+internal class TenantAwareTestCommandHandler(ITenantContextAccessor tenantContextAccessor) : IMediatorCommandHandler<TenantAwareTestCommand, string>
 {
-    private readonly ITenantContextAccessor _tenantContextAccessor;
-
-    public TenantAwareTestCommandHandler(ITenantContextAccessor tenantContextAccessor)
-    {
-        _tenantContextAccessor = tenantContextAccessor;
-    }
+    private readonly ITenantContextAccessor _tenantContextAccessor = tenantContextAccessor;
 
     public Task<string> Handle(TenantAwareTestCommand request, CancellationToken cancellationToken)
     {
@@ -656,14 +642,9 @@ internal class TenantAwareTestCommandHandler : IMediatorCommandHandler<TenantAwa
 /// </summary>
 internal record UserTestCommand : IMediatorCommand<string>;
 
-internal class UserTestCommandHandler : IMediatorCommandHandler<UserTestCommand, string>
+internal class UserTestCommandHandler(ICurrentUserAccessor currentUserAccessor) : IMediatorCommandHandler<UserTestCommand, string>
 {
-    private readonly ICurrentUserAccessor _currentUserAccessor;
-
-    public UserTestCommandHandler(ICurrentUserAccessor currentUserAccessor)
-    {
-        _currentUserAccessor = currentUserAccessor;
-    }
+    private readonly ICurrentUserAccessor _currentUserAccessor = currentUserAccessor;
 
     public Task<string> Handle(UserTestCommand request, CancellationToken cancellationToken)
     {
@@ -676,14 +657,9 @@ internal class UserTestCommandHandler : IMediatorCommandHandler<UserTestCommand,
 /// </summary>
 internal record UserRequiredTestCommand : IMediatorCommand<string>, IUserRequired;
 
-internal class UserRequiredTestCommandHandler : IMediatorCommandHandler<UserRequiredTestCommand, string>
+internal class UserRequiredTestCommandHandler(ICurrentUserAccessor currentUserAccessor) : IMediatorCommandHandler<UserRequiredTestCommand, string>
 {
-    private readonly ICurrentUserAccessor _currentUserAccessor;
-
-    public UserRequiredTestCommandHandler(ICurrentUserAccessor currentUserAccessor)
-    {
-        _currentUserAccessor = currentUserAccessor;
-    }
+    private readonly ICurrentUserAccessor _currentUserAccessor = currentUserAccessor;
 
     public Task<string> Handle(UserRequiredTestCommand request, CancellationToken cancellationToken)
     {

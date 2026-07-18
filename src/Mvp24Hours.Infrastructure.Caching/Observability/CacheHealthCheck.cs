@@ -4,9 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
@@ -47,35 +44,28 @@ namespace Mvp24Hours.Infrastructure.Caching.Observability;
 /// app.MapHealthChecks("/health/cache");
 /// </code>
 /// </example>
-public class CacheHealthCheck : IHealthCheck
+/// <remarks>
+/// Creates a new instance of CacheHealthCheck.
+/// </remarks>
+/// <param name="cacheProvider">The cache provider to check.</param>
+/// <param name="options">Health check options (optional).</param>
+/// <param name="logger">Optional logger.</param>
+public class CacheHealthCheck(
+    ICacheProvider cacheProvider,
+    CacheHealthCheckOptions? options = null,
+    ILogger<CacheHealthCheck>? logger = null) : IHealthCheck
 {
-    private readonly ICacheProvider _cacheProvider;
-    private readonly ILogger<CacheHealthCheck>? _logger;
-    private readonly CacheHealthCheckOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of CacheHealthCheck.
-    /// </summary>
-    /// <param name="cacheProvider">The cache provider to check.</param>
-    /// <param name="options">Health check options (optional).</param>
-    /// <param name="logger">Optional logger.</param>
-    public CacheHealthCheck(
-        ICacheProvider cacheProvider,
-        CacheHealthCheckOptions? options = null,
-        ILogger<CacheHealthCheck>? logger = null)
-    {
-        _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-        _options = options ?? new CacheHealthCheckOptions();
-        _logger = logger;
-    }
+    private readonly ICacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+    private readonly ILogger<CacheHealthCheck>? _logger = logger;
+    private readonly CacheHealthCheckOptions _options = options ?? new CacheHealthCheckOptions();
 
     /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        var testKey = $"{_options.TestKeyPrefix}{Guid.NewGuid():N}";
-        var testValue = "health_check_test_value";
+        string testKey = $"{_options.TestKeyPrefix}{Guid.NewGuid():N}";
+        string testValue = "health_check_test_value";
         DateTime startTime = DateTime.UtcNow;
 
         try
@@ -83,7 +73,7 @@ public class CacheHealthCheck : IHealthCheck
             // Test 1: Write operation
             DateTime setStartTime = DateTime.UtcNow;
             await _cacheProvider.SetStringAsync(testKey, testValue, cancellationToken: cancellationToken);
-            var setDuration = (DateTime.UtcNow - setStartTime).TotalMilliseconds;
+            double setDuration = (DateTime.UtcNow - setStartTime).TotalMilliseconds;
 
             if (setDuration > _options.MaxOperationDurationMs)
             {
@@ -94,8 +84,8 @@ public class CacheHealthCheck : IHealthCheck
 
             // Test 2: Read operation
             DateTime getStartTime = DateTime.UtcNow;
-            var retrievedValue = await _cacheProvider.GetStringAsync(testKey, cancellationToken);
-            var getDuration = (DateTime.UtcNow - getStartTime).TotalMilliseconds;
+            string? retrievedValue = await _cacheProvider.GetStringAsync(testKey, cancellationToken);
+            double getDuration = (DateTime.UtcNow - getStartTime).TotalMilliseconds;
 
             if (getDuration > _options.MaxOperationDurationMs)
             {
@@ -116,7 +106,7 @@ public class CacheHealthCheck : IHealthCheck
             // Test 3: Delete operation
             DateTime removeStartTime = DateTime.UtcNow;
             await _cacheProvider.RemoveAsync(testKey, cancellationToken);
-            var removeDuration = (DateTime.UtcNow - removeStartTime).TotalMilliseconds;
+            double removeDuration = (DateTime.UtcNow - removeStartTime).TotalMilliseconds;
 
             if (removeDuration > _options.MaxOperationDurationMs)
             {
@@ -126,7 +116,7 @@ public class CacheHealthCheck : IHealthCheck
             }
 
             // Verify key was removed
-            var existsAfterRemove = await _cacheProvider.ExistsAsync(testKey, cancellationToken);
+            bool existsAfterRemove = await _cacheProvider.ExistsAsync(testKey, cancellationToken);
             if (existsAfterRemove)
             {
                 return HealthCheckResult.Degraded(
@@ -134,7 +124,7 @@ public class CacheHealthCheck : IHealthCheck
                     data: CreateHealthData("key_exists_after_remove", true));
             }
 
-            var totalDuration = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            double totalDuration = (DateTime.UtcNow - startTime).TotalMilliseconds;
 
             var data = new System.Collections.Generic.Dictionary<string, object>
             {

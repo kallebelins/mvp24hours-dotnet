@@ -99,14 +99,20 @@ public interface ICurrentUser
     /// </summary>
     /// <param name="role">The role to check.</param>
     /// <returns>True if the user has the role, false otherwise.</returns>
-    bool IsInRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    bool IsInRole(string role)
+    {
+        return Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Gets a claim value by type.
     /// </summary>
     /// <param name="claimType">The claim type.</param>
     /// <returns>The claim value, or null if not found.</returns>
-    string? GetClaim(string claimType) => Claims.TryGetValue(claimType, out var value) ? value : null;
+    string? GetClaim(string claimType)
+    {
+        return Claims.TryGetValue(claimType, out string? value) ? value : null;
+    }
 }
 
 /// <summary>

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
 
@@ -36,18 +35,13 @@ namespace Mvp24Hours.Core.Infrastructure.Channels;
 /// }
 /// </code>
 /// </example>
-public sealed class ChannelFactory : IChannelFactory
+/// <remarks>
+/// Creates a new channel factory.
+/// </remarks>
+/// <param name="logger">Optional logger for channel operations.</param>
+public sealed class ChannelFactory(ILogger<ChannelFactory>? logger = null) : IChannelFactory
 {
-    private readonly ILogger<ChannelFactory>? _logger;
-
-    /// <summary>
-    /// Creates a new channel factory.
-    /// </summary>
-    /// <param name="logger">Optional logger for channel operations.</param>
-    public ChannelFactory(ILogger<ChannelFactory>? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<ChannelFactory>? _logger = logger;
 
     /// <inheritdoc />
     public IChannel<T> Create<T>(MvpChannelOptions? options = null)
@@ -74,7 +68,9 @@ public sealed class ChannelFactory : IChannelFactory
     public IChannel<T> CreateBounded<T>(int capacity)
     {
         if (capacity <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than 0.");
+        }
 
         _logger?.LogDebug(
             "Creating bounded channel of type {Type}, capacity={Capacity}",
@@ -97,7 +93,9 @@ public static class Channels
     /// <param name="options">Channel options.</param>
     /// <returns>A new channel instance.</returns>
     public static IChannel<T> Create<T>(MvpChannelOptions? options = null)
-        => new MvpChannel<T>(options);
+    {
+        return new MvpChannel<T>(options);
+    }
 
     /// <summary>
     /// Creates a new unbounded channel.
@@ -105,7 +103,9 @@ public static class Channels
     /// <typeparam name="T">The type of items in the channel.</typeparam>
     /// <returns>A new unbounded channel.</returns>
     public static IChannel<T> CreateUnbounded<T>()
-        => new MvpChannel<T>(MvpChannelOptions.Unbounded());
+    {
+        return new MvpChannel<T>(MvpChannelOptions.Unbounded());
+    }
 
     /// <summary>
     /// Creates a new bounded channel with the specified capacity.
@@ -114,7 +114,9 @@ public static class Channels
     /// <param name="capacity">The maximum capacity.</param>
     /// <returns>A new bounded channel.</returns>
     public static IChannel<T> CreateBounded<T>(int capacity)
-        => new MvpChannel<T>(MvpChannelOptions.Bounded(capacity));
+    {
+        return new MvpChannel<T>(MvpChannelOptions.Bounded(capacity));
+    }
 
     /// <summary>
     /// Creates a channel optimized for high-throughput scenarios.
@@ -123,7 +125,9 @@ public static class Channels
     /// <param name="capacity">The maximum capacity.</param>
     /// <returns>A high-throughput channel.</returns>
     public static IChannel<T> CreateHighThroughput<T>(int capacity = 1000)
-        => new MvpChannel<T>(MvpChannelOptions.HighThroughput(capacity));
+    {
+        return new MvpChannel<T>(MvpChannelOptions.HighThroughput(capacity));
+    }
 
     /// <summary>
     /// Creates a channel that drops oldest items when full.
@@ -132,7 +136,9 @@ public static class Channels
     /// <param name="capacity">The maximum capacity.</param>
     /// <returns>A drop-oldest channel.</returns>
     public static IChannel<T> CreateDropOldest<T>(int capacity = 100)
-        => new MvpChannel<T>(MvpChannelOptions.DropOldest(capacity));
+    {
+        return new MvpChannel<T>(MvpChannelOptions.DropOldest(capacity));
+    }
 
     /// <summary>
     /// Creates a channel that drops newest items when full.
@@ -141,6 +147,8 @@ public static class Channels
     /// <param name="capacity">The maximum capacity.</param>
     /// <returns>A drop-newest channel.</returns>
     public static IChannel<T> CreateDropNewest<T>(int capacity = 100)
-        => new MvpChannel<T>(MvpChannelOptions.DropNewest(capacity));
+    {
+        return new MvpChannel<T>(MvpChannelOptions.DropNewest(capacity));
+    }
 }
 

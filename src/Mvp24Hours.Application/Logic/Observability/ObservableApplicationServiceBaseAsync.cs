@@ -4,15 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Observability;
@@ -69,8 +64,6 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
     private readonly IRepositoryAsync<TEntity> _repository;
     private readonly TUoW _unitOfWork;
-    private readonly ILogger _logger;
-    private readonly ICorrelationIdAccessor _correlationId;
     private readonly IOperationMetrics _metrics;
     private readonly IApplicationAuditStore? _auditStore;
     private readonly IValidator<TEntity>? _validator;
@@ -102,12 +95,12 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     /// <summary>
     /// Gets the logger instance.
     /// </summary>
-    protected ILogger Logger => _logger;
+    protected ILogger Logger { get; }
 
     /// <summary>
     /// Gets the correlation ID accessor.
     /// </summary>
-    protected ICorrelationIdAccessor CorrelationIdAccessor => _correlationId;
+    protected ICorrelationIdAccessor CorrelationIdAccessor { get; }
 
     #endregion
 
@@ -131,8 +124,8 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
         IValidator<TEntity>? validator = null)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _correlationId = correlationId ?? throw new ArgumentNullException(nameof(correlationId));
+        Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        CorrelationIdAccessor = correlationId ?? throw new ArgumentNullException(nameof(correlationId));
         _metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
         _auditStore = auditStore;
         _validator = validator;
@@ -181,7 +174,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
                 return result ?? [];
             },
             cancellationToken,
-            metadata: criteria != null ? new { Offset = criteria.Offset, Limit = criteria.Limit } : null);
+            metadata: criteria != null ? new { criteria.Offset, criteria.Limit } : null);
     }
 
     /// <inheritdoc />
@@ -219,7 +212,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
                 return result ?? [];
             },
             cancellationToken,
-            metadata: criteria != null ? new { Offset = criteria.Offset, Limit = criteria.Limit } : null);
+            metadata: criteria != null ? new { criteria.Offset, criteria.Limit } : null);
     }
 
     /// <inheritdoc />
@@ -423,10 +416,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
+                {
                     return false;
+                }
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+                {
                     return await readOnlyRepo.AnyBySpecificationAsync(specification, ct);
+                }
 
                 return await _repository.GetByAnyAsync(specification.IsSatisfiedByExpression, cancellationToken: ct);
             },
@@ -442,10 +439,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
+                {
                     return 0;
+                }
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+                {
                     return await readOnlyRepo.CountBySpecificationAsync(specification, ct);
+                }
 
                 return await _repository.GetByCountAsync(specification.IsSatisfiedByExpression, cancellationToken: ct);
             },
@@ -461,10 +462,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
+                {
                     return (IList<TEntity>)[];
+                }
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+                {
                     return await readOnlyRepo.GetBySpecificationAsync(specification, ct);
+                }
 
                 IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
                 return result ?? [];
@@ -481,10 +486,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
+                {
                     return (TEntity?)null;
+                }
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+                {
                     return await readOnlyRepo.GetSingleBySpecificationAsync(specification, ct);
+                }
 
                 IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
                 return result?.SingleOrDefault();
@@ -501,10 +510,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             async ct =>
             {
                 if (specification == null)
+                {
                     return (TEntity?)null;
+                }
 
                 if (_repository is IReadOnlyRepositoryAsync<TEntity> readOnlyRepo)
+                {
                     return await readOnlyRepo.GetFirstBySpecificationAsync(specification, ct);
+                }
 
                 IList<TEntity> result = await _repository.GetByAsync(specification.IsSatisfiedByExpression, null, cancellationToken: ct);
                 return result?.FirstOrDefault();
@@ -580,7 +593,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
             LogOperationStart(operationName, "Command", entityId);
 
-            var result = await operation(cancellationToken);
+            int result = await operation(cancellationToken);
             stopwatch.Stop();
 
             ApplicationActivitySource.SetAffectedRows(activity, result);
@@ -626,17 +639,21 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     {
         ApplicationActivitySource.SetCorrelationContext(
             activity,
-            _correlationId.CorrelationId,
-            _correlationId.CausationId);
+            CorrelationIdAccessor.CorrelationId,
+            CorrelationIdAccessor.CausationId);
 
         if (entityId != null)
+        {
             ApplicationActivitySource.SetEntityId(activity, entityId);
+        }
     }
 
     private ApplicationAuditEntry? CreateAuditEntry(string operationName, object? entityId, object? inputData)
     {
         if (_auditStore == null)
+        {
             return null;
+        }
 
         return new ApplicationAuditEntry
         {
@@ -645,8 +662,8 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
             ServiceName = _serviceName,
             EntityType = _entityTypeName,
             EntityIds = entityId?.ToString(),
-            CorrelationId = _correlationId.CorrelationId,
-            CausationId = _correlationId.CausationId,
+            CorrelationId = CorrelationIdAccessor.CorrelationId,
+            CausationId = CorrelationIdAccessor.CausationId,
             InputData = inputData != null ? SafeSerialize(inputData) : null,
             Timestamp = DateTimeOffset.UtcNow
         };
@@ -655,7 +672,9 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     private async Task SaveAuditEntryAsync(ApplicationAuditEntry entry, CancellationToken cancellationToken)
     {
         if (_auditStore == null)
+        {
             return;
+        }
 
         try
         {
@@ -663,7 +682,7 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
+            Logger.LogWarning(
                 ex,
                 "[{ServiceName}] Failed to save audit entry for {OperationName}: {Message}",
                 _serviceName, entry.OperationName, ex.Message);
@@ -672,9 +691,9 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
     private void LogOperationStart(string operationName, string operationType, object? entityId = null, object? metadata = null)
     {
-        using (_logger.BeginScope(new Dictionary<string, object?>
+        using (Logger.BeginScope(new Dictionary<string, object?>
         {
-            ["CorrelationId"] = _correlationId.CorrelationId,
+            ["CorrelationId"] = CorrelationIdAccessor.CorrelationId,
             ["ServiceName"] = _serviceName,
             ["EntityType"] = _entityTypeName,
             ["OperationType"] = operationType
@@ -682,13 +701,13 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
         {
             if (entityId != null)
             {
-                _logger.LogDebug(
+                Logger.LogDebug(
                     "Starting {OperationType} operation {ServiceName}.{OperationName} for entity {EntityId}",
                     operationType, _serviceName, operationName, entityId);
             }
             else
             {
-                _logger.LogDebug(
+                Logger.LogDebug(
                     "Starting {OperationType} operation {ServiceName}.{OperationName}",
                     operationType, _serviceName, operationName);
             }
@@ -697,14 +716,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
     private void LogOperationSuccess(string operationName, string operationType, long durationMs, object? resultInfo = null)
     {
-        using (_logger.BeginScope(new Dictionary<string, object?>
+        using (Logger.BeginScope(new Dictionary<string, object?>
         {
-            ["CorrelationId"] = _correlationId.CorrelationId,
+            ["CorrelationId"] = CorrelationIdAccessor.CorrelationId,
             ["ServiceName"] = _serviceName,
             ["DurationMs"] = durationMs
         }))
         {
-            _logger.LogInformation(
+            Logger.LogInformation(
                 "Completed {OperationType} operation {ServiceName}.{OperationName} in {DurationMs}ms. Result: {ResultInfo}",
                 operationType, _serviceName, operationName, durationMs, resultInfo ?? "N/A");
         }
@@ -712,14 +731,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
     private void LogOperationFailure(string operationName, string operationType, long durationMs, Exception ex)
     {
-        using (_logger.BeginScope(new Dictionary<string, object?>
+        using (Logger.BeginScope(new Dictionary<string, object?>
         {
-            ["CorrelationId"] = _correlationId.CorrelationId,
+            ["CorrelationId"] = CorrelationIdAccessor.CorrelationId,
             ["ServiceName"] = _serviceName,
             ["DurationMs"] = durationMs
         }))
         {
-            _logger.LogError(
+            Logger.LogError(
                 ex,
                 "Failed {OperationType} operation {ServiceName}.{OperationName} after {DurationMs}ms: {ErrorMessage}",
                 operationType, _serviceName, operationName, durationMs, ex.Message);
@@ -728,14 +747,14 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
 
     private void LogValidationFailure(string operationName, IList<Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult> errors)
     {
-        using (_logger.BeginScope(new Dictionary<string, object?>
+        using (Logger.BeginScope(new Dictionary<string, object?>
         {
-            ["CorrelationId"] = _correlationId.CorrelationId,
+            ["CorrelationId"] = CorrelationIdAccessor.CorrelationId,
             ["ServiceName"] = _serviceName
         }))
         {
             IEnumerable<string> errorMessages = errors.Select(e => e.Message);
-            _logger.LogWarning(
+            Logger.LogWarning(
                 "Validation failed for {ServiceName}.{OperationName}: {Errors}",
                 _serviceName, operationName, string.Join(", ", errorMessages));
         }
@@ -754,14 +773,19 @@ public abstract class ObservableApplicationServiceBaseAsync<TEntity, TUoW>
     private static int? GetResultCount<T>(T result)
     {
         if (result is System.Collections.ICollection collection)
+        {
             return collection.Count;
+        }
+
         return null;
     }
 
     private string? SafeSerialize<T>(T obj)
     {
         if (obj == null)
+        {
             return null;
+        }
 
         try
         {

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -133,7 +132,7 @@ public class InMemoryDbContextOptions
     /// <returns>The database name to use.</returns>
     public string GetEffectiveDatabaseName()
     {
-        var baseName = DatabaseName ?? "InMemoryTestDb";
+        string baseName = DatabaseName ?? "InMemoryTestDb";
         return UseUniqueDatabaseName
             ? $"{baseName}_{Guid.NewGuid():N}"
             : baseName;

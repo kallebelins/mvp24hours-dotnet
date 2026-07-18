@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -108,17 +107,17 @@ public sealed class DefaultIdempotencyKeyGenerator : IIdempotencyKeyGenerator
     /// <inheritdoc />
     public string GenerateKey<TRequest>(TRequest request)
     {
-        var typeName = typeof(TRequest).FullName ?? typeof(TRequest).Name;
-        var requestJson = JsonSerializer.Serialize(request, _jsonOptions);
-        var hash = ComputeHash(requestJson);
+        string typeName = typeof(TRequest).FullName ?? typeof(TRequest).Name;
+        string requestJson = JsonSerializer.Serialize(request, _jsonOptions);
+        string hash = ComputeHash(requestJson);
 
         return $"idempotency:{typeName}:{hash}";
     }
 
     private static string ComputeHash(string input)
     {
-        var bytes = Encoding.UTF8.GetBytes(input);
-        var hashBytes = SHA256.HashData(bytes);
+        byte[] bytes = Encoding.UTF8.GetBytes(input);
+        byte[] hashBytes = SHA256.HashData(bytes);
         return Convert.ToBase64String(hashBytes)[..16]; // Use first 16 chars
     }
 }
@@ -189,13 +188,13 @@ public sealed class IdempotencyBehavior<TRequest, TResponse> : IPipelineBehavior
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
-        var idempotencyKey = GetIdempotencyKey(request, idempotent);
+        string requestName = typeof(TRequest).Name;
+        string idempotencyKey = GetIdempotencyKey(request, idempotent);
 
         // Try to get cached response
         try
         {
-            var cachedValue = await _cache.GetStringAsync(idempotencyKey, cancellationToken);
+            string? cachedValue = await _cache.GetStringAsync(idempotencyKey, cancellationToken);
 
             if (!string.IsNullOrEmpty(cachedValue))
             {
@@ -235,7 +234,7 @@ public sealed class IdempotencyBehavior<TRequest, TResponse> : IPipelineBehavior
             if (response != null)
             {
                 TimeSpan duration = idempotent.IdempotencyDuration ?? _defaultDuration;
-                var serialized = JsonSerializer.Serialize(response, _jsonOptions);
+                string serialized = JsonSerializer.Serialize(response, _jsonOptions);
 
                 var options = new DistributedCacheEntryOptions
                 {

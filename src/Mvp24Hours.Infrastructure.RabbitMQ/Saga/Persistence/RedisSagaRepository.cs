@@ -3,377 +3,374 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence;
+
+/// <summary>
+/// Redis-based implementation of saga repository using IDistributedCache.
+/// Provides fast, distributed saga state storage.
+/// </summary>
+/// <typeparam name="TData">The type of saga data.</typeparam>
+/// <remarks>
+/// <para>
+/// <strong>Features:</strong>
+/// <list type="bullet">
+/// <item>Fast read/write operations</item>
+/// <item>Automatic expiration of old sagas</item>
+/// <item>Distributed across multiple instances</item>
+/// </list>
+/// </para>
+/// </remarks>
+public class RedisSagaRepository<TData> : ISagaRepository<TData> where TData : class, new()
 {
-    /// <summary>
-    /// Redis-based implementation of saga repository using IDistributedCache.
-    /// Provides fast, distributed saga state storage.
-    /// </summary>
-    /// <typeparam name="TData">The type of saga data.</typeparam>
-    /// <remarks>
-    /// <para>
-    /// <strong>Features:</strong>
-    /// <list type="bullet">
-    /// <item>Fast read/write operations</item>
-    /// <item>Automatic expiration of old sagas</item>
-    /// <item>Distributed across multiple instances</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    public class RedisSagaRepository<TData> : ISagaRepository<TData> where TData : class, new()
+    private readonly IDistributedCache _cache;
+    private readonly RedisSagaRepositoryOptions _options;
+    private readonly ILogger<RedisSagaRepository<TData>>? _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    private string KeyPrefix => $"saga:{typeof(TData).Name}:";
+    private string IndexKey => $"saga:{typeof(TData).Name}:index";
+    private string StateIndexKey(string state)
     {
-        private readonly IDistributedCache _cache;
-        private readonly RedisSagaRepositoryOptions _options;
-        private readonly ILogger<RedisSagaRepository<TData>>? _logger;
-        private readonly JsonSerializerOptions _jsonOptions;
+        return $"saga:{typeof(TData).Name}:state:{state}";
+    }
 
-        private string KeyPrefix => $"saga:{typeof(TData).Name}:";
-        private string IndexKey => $"saga:{typeof(TData).Name}:index";
-        private string StateIndexKey(string state) => $"saga:{typeof(TData).Name}:state:{state}";
-
-        /// <summary>
-        /// Creates a new Redis saga repository.
-        /// </summary>
-        public RedisSagaRepository(
-            IDistributedCache cache,
-            RedisSagaRepositoryOptions? options = null,
-            ILogger<RedisSagaRepository<TData>>? logger = null)
+    /// <summary>
+    /// Creates a new Redis saga repository.
+    /// </summary>
+    public RedisSagaRepository(
+        IDistributedCache cache,
+        RedisSagaRepositoryOptions? options = null,
+        ILogger<RedisSagaRepository<TData>>? logger = null)
+    {
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _options = options ?? new RedisSagaRepositoryOptions();
+        _logger = logger;
+        _jsonOptions = new JsonSerializerOptions
         {
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            _options = options ?? new RedisSagaRepositoryOptions();
-            _logger = logger;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false
-            };
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<SagaInstance<TData>?> FindAsync(
+        Guid correlationId,
+        CancellationToken cancellationToken = default)
+    {
+        string key = KeyPrefix + correlationId;
+        string? json = await _cache.GetStringAsync(key, cancellationToken);
+
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
         }
 
-        /// <inheritdoc />
-        public async Task<SagaInstance<TData>?> FindAsync(
-            Guid correlationId,
-            CancellationToken cancellationToken = default)
+        try
         {
-            var key = KeyPrefix + correlationId;
-            var json = await _cache.GetStringAsync(key, cancellationToken);
+            return JsonSerializer.Deserialize<SagaInstance<TData>>(json, _jsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            _logger?.LogError(ex, "Failed to deserialize saga instance {SagaId}", correlationId);
+            return null;
+        }
+    }
 
-            if (string.IsNullOrEmpty(json))
-            {
-                return null;
-            }
+    /// <inheritdoc />
+    public async Task<SagaInstance<TData>> CreateAsync(
+        Guid correlationId,
+        string initialState,
+        TData? initialData = null,
+        CancellationToken cancellationToken = default)
+    {
+        string key = KeyPrefix + correlationId;
 
-            try
+        // Check if already exists
+        string? existing = await _cache.GetStringAsync(key, cancellationToken);
+        if (!string.IsNullOrEmpty(existing))
+        {
+            throw new InvalidOperationException(
+                $"Saga instance with correlation ID {correlationId} already exists.");
+        }
+
+        var instance = new SagaInstance<TData>
+        {
+            CorrelationId = correlationId,
+            CurrentState = initialState,
+            Data = initialData ?? new TData(),
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow,
+            Version = 1
+        };
+
+        instance.StateHistory.Add(new SagaStateTransition
+        {
+            FromState = string.Empty,
+            ToState = initialState,
+            Timestamp = DateTime.UtcNow,
+            Reason = "Saga created"
+        });
+
+        string json = JsonSerializer.Serialize(instance, _jsonOptions);
+        var options = new DistributedCacheEntryOptions
+        {
+            SlidingExpiration = _options.DefaultExpiration
+        };
+
+        await _cache.SetStringAsync(key, json, options, cancellationToken);
+
+        // Update state index
+        await AddToStateIndexAsync(correlationId, initialState, cancellationToken);
+
+        _logger?.LogDebug("Created saga instance {SagaId} in Redis", correlationId);
+
+        return instance;
+    }
+
+    /// <inheritdoc />
+    public async Task SaveAsync(SagaInstance<TData> instance, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+
+        string key = KeyPrefix + instance.CorrelationId;
+        string? previousState = await GetPreviousStateAsync(instance.CorrelationId, cancellationToken);
+
+        instance.LastUpdatedAt = DateTime.UtcNow;
+        instance.Version++;
+
+        string json = JsonSerializer.Serialize(instance, _jsonOptions);
+
+        // Set appropriate expiration based on state
+        TimeSpan expiration = instance.IsCompleted || instance.IsFaulted
+            ? _options.CompletedExpiration
+            : _options.DefaultExpiration;
+
+        var options = new DistributedCacheEntryOptions
+        {
+            SlidingExpiration = expiration
+        };
+
+        await _cache.SetStringAsync(key, json, options, cancellationToken);
+
+        // Update state indexes if state changed
+        if (previousState != instance.CurrentState)
+        {
+            await RemoveFromStateIndexAsync(instance.CorrelationId, previousState, cancellationToken);
+            await AddToStateIndexAsync(instance.CorrelationId, instance.CurrentState, cancellationToken);
+        }
+
+        _logger?.LogDebug("Saved saga instance {SagaId} to Redis", instance.CorrelationId);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    {
+        string key = KeyPrefix + correlationId;
+        SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
+
+        if (instance == null)
+        {
+            return false;
+        }
+
+        await _cache.RemoveAsync(key, cancellationToken);
+        await RemoveFromStateIndexAsync(correlationId, instance.CurrentState, cancellationToken);
+
+        _logger?.LogDebug("Deleted saga instance {SagaId} from Redis", correlationId);
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SagaInstance<TData>>> FindByStateAsync(
+        string state,
+        CancellationToken cancellationToken = default)
+    {
+        string indexKey = StateIndexKey(state);
+        string? idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
+
+        if (string.IsNullOrEmpty(idsJson))
+        {
+            return [];
+        }
+
+        List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
+        var results = new List<SagaInstance<TData>>();
+
+        foreach (Guid id in ids)
+        {
+            SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
+            if (instance != null && instance.CurrentState == state)
             {
-                return JsonSerializer.Deserialize<SagaInstance<TData>>(json, _jsonOptions);
-            }
-            catch (JsonException ex)
-            {
-                _logger?.LogError(ex, "Failed to deserialize saga instance {SagaId}", correlationId);
-                return null;
+                results.Add(instance);
             }
         }
 
-        /// <inheritdoc />
-        public async Task<SagaInstance<TData>> CreateAsync(
-            Guid correlationId,
-            string initialState,
-            TData? initialData = null,
-            CancellationToken cancellationToken = default)
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SagaInstance<TData>>> FindTimedOutAsync(
+        TimeSpan timeoutThreshold,
+        CancellationToken cancellationToken = default)
+    {
+        // This is less efficient in Redis - consider using sorted sets for production
+        string? indexJson = await _cache.GetStringAsync(IndexKey, cancellationToken);
+        if (string.IsNullOrEmpty(indexJson))
         {
-            var key = KeyPrefix + correlationId;
-
-            // Check if already exists
-            var existing = await _cache.GetStringAsync(key, cancellationToken);
-            if (!string.IsNullOrEmpty(existing))
-            {
-                throw new InvalidOperationException(
-                    $"Saga instance with correlation ID {correlationId} already exists.");
-            }
-
-            var instance = new SagaInstance<TData>
-            {
-                CorrelationId = correlationId,
-                CurrentState = initialState,
-                Data = initialData ?? new TData(),
-                CreatedAt = DateTime.UtcNow,
-                LastUpdatedAt = DateTime.UtcNow,
-                Version = 1
-            };
-
-            instance.StateHistory.Add(new SagaStateTransition
-            {
-                FromState = string.Empty,
-                ToState = initialState,
-                Timestamp = DateTime.UtcNow,
-                Reason = "Saga created"
-            });
-
-            var json = JsonSerializer.Serialize(instance, _jsonOptions);
-            var options = new DistributedCacheEntryOptions
-            {
-                SlidingExpiration = _options.DefaultExpiration
-            };
-
-            await _cache.SetStringAsync(key, json, options, cancellationToken);
-
-            // Update state index
-            await AddToStateIndexAsync(correlationId, initialState, cancellationToken);
-
-            _logger?.LogDebug("Created saga instance {SagaId} in Redis", correlationId);
-
-            return instance;
+            return [];
         }
 
-        /// <inheritdoc />
-        public async Task SaveAsync(SagaInstance<TData> instance, CancellationToken cancellationToken = default)
+        List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(indexJson, _jsonOptions) ?? [];
+        DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
+        var results = new List<SagaInstance<TData>>();
+
+        foreach (Guid id in ids)
         {
-            ArgumentNullException.ThrowIfNull(instance);
-
-            var key = KeyPrefix + instance.CorrelationId;
-            var previousState = await GetPreviousStateAsync(instance.CorrelationId, cancellationToken);
-
-            instance.LastUpdatedAt = DateTime.UtcNow;
-            instance.Version++;
-
-            var json = JsonSerializer.Serialize(instance, _jsonOptions);
-
-            // Set appropriate expiration based on state
-            TimeSpan expiration = instance.IsCompleted || instance.IsFaulted
-                ? _options.CompletedExpiration
-                : _options.DefaultExpiration;
-
-            var options = new DistributedCacheEntryOptions
+            SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
+            if (instance != null && instance.IsActive && instance.LastUpdatedAt < threshold)
             {
-                SlidingExpiration = expiration
-            };
-
-            await _cache.SetStringAsync(key, json, options, cancellationToken);
-
-            // Update state indexes if state changed
-            if (previousState != instance.CurrentState)
-            {
-                await RemoveFromStateIndexAsync(instance.CorrelationId, previousState, cancellationToken);
-                await AddToStateIndexAsync(instance.CorrelationId, instance.CurrentState, cancellationToken);
+                results.Add(instance);
             }
-
-            _logger?.LogDebug("Saved saga instance {SagaId} to Redis", instance.CorrelationId);
         }
 
-        /// <inheritdoc />
-        public async Task<bool> DeleteAsync(Guid correlationId, CancellationToken cancellationToken = default)
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SagaInstance<TData>>> FindFaultedAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await FindByStateAsync("Faulted", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
+    {
+        DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
+        IReadOnlyList<SagaInstance<TData>> completed = await FindByStateAsync("Completed", cancellationToken);
+        IReadOnlyList<SagaInstance<TData>> faulted = await FindByStateAsync("Faulted", cancellationToken);
+
+        var toCleanup = completed.Concat(faulted)
+            .Where(s => s.LastUpdatedAt < threshold)
+            .ToList();
+
+        int cleaned = 0;
+        foreach (SagaInstance<TData>? instance in toCleanup)
         {
-            var key = KeyPrefix + correlationId;
-            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
-
-            if (instance == null)
+            if (await DeleteAsync(instance.CorrelationId, cancellationToken))
             {
-                return false;
+                cleaned++;
             }
-
-            await _cache.RemoveAsync(key, cancellationToken);
-            await RemoveFromStateIndexAsync(correlationId, instance.CurrentState, cancellationToken);
-
-            _logger?.LogDebug("Deleted saga instance {SagaId} from Redis", correlationId);
-
-            return true;
         }
 
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<SagaInstance<TData>>> FindByStateAsync(
-            string state,
-            CancellationToken cancellationToken = default)
+        _logger?.LogInformation("Cleaned up {Count} old saga instances from Redis", cleaned);
+
+        return cleaned;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UpdateAsync(
+        Guid correlationId,
+        int expectedVersion,
+        Action<SagaInstance<TData>> update,
+        CancellationToken cancellationToken = default)
+    {
+        SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
+        if (instance == null)
         {
-            var indexKey = StateIndexKey(state);
-            var idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
+            return false;
+        }
 
-            if (string.IsNullOrEmpty(idsJson))
-            {
-                return Array.Empty<SagaInstance<TData>>();
-            }
+        if (instance.Version != expectedVersion)
+        {
+            return false;
+        }
 
+        update(instance);
+        await SaveAsync(instance, cancellationToken);
+        return true;
+    }
+
+    private async Task<string?> GetPreviousStateAsync(Guid correlationId, CancellationToken cancellationToken)
+    {
+        SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
+        return instance?.CurrentState;
+    }
+
+    private async Task AddToStateIndexAsync(Guid correlationId, string state, CancellationToken cancellationToken)
+    {
+        string indexKey = StateIndexKey(state);
+        string? idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
+        List<Guid> ids = string.IsNullOrEmpty(idsJson)
+            ? []
+            : JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
+
+        if (!ids.Contains(correlationId))
+        {
+            ids.Add(correlationId);
+            await _cache.SetStringAsync(indexKey, JsonSerializer.Serialize(ids, _jsonOptions), cancellationToken);
+        }
+
+        // Also maintain main index
+        string? mainIndexJson = await _cache.GetStringAsync(IndexKey, cancellationToken);
+        List<Guid> mainIds = string.IsNullOrEmpty(mainIndexJson)
+            ? []
+            : JsonSerializer.Deserialize<List<Guid>>(mainIndexJson, _jsonOptions) ?? [];
+
+        if (!mainIds.Contains(correlationId))
+        {
+            mainIds.Add(correlationId);
+            await _cache.SetStringAsync(IndexKey, JsonSerializer.Serialize(mainIds, _jsonOptions), cancellationToken);
+        }
+    }
+
+    private async Task RemoveFromStateIndexAsync(Guid correlationId, string? state, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(state))
+        {
+            return;
+        }
+
+        string indexKey = StateIndexKey(state);
+        string? idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
+
+        if (!string.IsNullOrEmpty(idsJson))
+        {
             List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
-            var results = new List<SagaInstance<TData>>();
-
-            foreach (Guid id in ids)
+            if (ids.Remove(correlationId))
             {
-                SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
-                if (instance != null && instance.CurrentState == state)
-                {
-                    results.Add(instance);
-                }
-            }
-
-            return results;
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<SagaInstance<TData>>> FindTimedOutAsync(
-            TimeSpan timeoutThreshold,
-            CancellationToken cancellationToken = default)
-        {
-            // This is less efficient in Redis - consider using sorted sets for production
-            var indexJson = await _cache.GetStringAsync(IndexKey, cancellationToken);
-            if (string.IsNullOrEmpty(indexJson))
-            {
-                return Array.Empty<SagaInstance<TData>>();
-            }
-
-            List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(indexJson, _jsonOptions) ?? [];
-            DateTime threshold = DateTime.UtcNow.Subtract(timeoutThreshold);
-            var results = new List<SagaInstance<TData>>();
-
-            foreach (Guid id in ids)
-            {
-                SagaInstance<TData>? instance = await FindAsync(id, cancellationToken);
-                if (instance != null && instance.IsActive && instance.LastUpdatedAt < threshold)
-                {
-                    results.Add(instance);
-                }
-            }
-
-            return results;
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<SagaInstance<TData>>> FindFaultedAsync(
-            CancellationToken cancellationToken = default)
-        {
-            return await FindByStateAsync("Faulted", cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public async Task<int> CleanupAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
-        {
-            DateTime threshold = DateTime.UtcNow.Subtract(olderThan);
-            IReadOnlyList<SagaInstance<TData>> completed = await FindByStateAsync("Completed", cancellationToken);
-            IReadOnlyList<SagaInstance<TData>> faulted = await FindByStateAsync("Faulted", cancellationToken);
-
-            var toCleanup = completed.Concat(faulted)
-                .Where(s => s.LastUpdatedAt < threshold)
-                .ToList();
-
-            var cleaned = 0;
-            foreach (SagaInstance<TData>? instance in toCleanup)
-            {
-                if (await DeleteAsync(instance.CorrelationId, cancellationToken))
-                {
-                    cleaned++;
-                }
-            }
-
-            _logger?.LogInformation("Cleaned up {Count} old saga instances from Redis", cleaned);
-
-            return cleaned;
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> UpdateAsync(
-            Guid correlationId,
-            int expectedVersion,
-            Action<SagaInstance<TData>> update,
-            CancellationToken cancellationToken = default)
-        {
-            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
-            if (instance == null)
-            {
-                return false;
-            }
-
-            if (instance.Version != expectedVersion)
-            {
-                return false;
-            }
-
-            update(instance);
-            await SaveAsync(instance, cancellationToken);
-            return true;
-        }
-
-        private async Task<string?> GetPreviousStateAsync(Guid correlationId, CancellationToken cancellationToken)
-        {
-            SagaInstance<TData>? instance = await FindAsync(correlationId, cancellationToken);
-            return instance?.CurrentState;
-        }
-
-        private async Task AddToStateIndexAsync(Guid correlationId, string state, CancellationToken cancellationToken)
-        {
-            var indexKey = StateIndexKey(state);
-            var idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
-            List<Guid> ids = string.IsNullOrEmpty(idsJson)
-                ? []
-                : JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
-
-            if (!ids.Contains(correlationId))
-            {
-                ids.Add(correlationId);
                 await _cache.SetStringAsync(indexKey, JsonSerializer.Serialize(ids, _jsonOptions), cancellationToken);
             }
-
-            // Also maintain main index
-            var mainIndexJson = await _cache.GetStringAsync(IndexKey, cancellationToken);
-            List<Guid> mainIds = string.IsNullOrEmpty(mainIndexJson)
-                ? []
-                : JsonSerializer.Deserialize<List<Guid>>(mainIndexJson, _jsonOptions) ?? [];
-
-            if (!mainIds.Contains(correlationId))
-            {
-                mainIds.Add(correlationId);
-                await _cache.SetStringAsync(IndexKey, JsonSerializer.Serialize(mainIds, _jsonOptions), cancellationToken);
-            }
-        }
-
-        private async Task RemoveFromStateIndexAsync(Guid correlationId, string? state, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(state))
-            {
-                return;
-            }
-
-            var indexKey = StateIndexKey(state);
-            var idsJson = await _cache.GetStringAsync(indexKey, cancellationToken);
-
-            if (!string.IsNullOrEmpty(idsJson))
-            {
-                List<Guid> ids = JsonSerializer.Deserialize<List<Guid>>(idsJson, _jsonOptions) ?? [];
-                if (ids.Remove(correlationId))
-                {
-                    await _cache.SetStringAsync(indexKey, JsonSerializer.Serialize(ids, _jsonOptions), cancellationToken);
-                }
-            }
         }
     }
+}
+
+/// <summary>
+/// Configuration options for RedisSagaRepository.
+/// </summary>
+public class RedisSagaRepositoryOptions
+{
+    /// <summary>
+    /// Default expiration time for active sagas.
+    /// Default: 24 hours.
+    /// </summary>
+    public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromHours(24);
 
     /// <summary>
-    /// Configuration options for RedisSagaRepository.
+    /// Expiration time for completed/faulted sagas.
+    /// Default: 1 hour.
     /// </summary>
-    public class RedisSagaRepositoryOptions
-    {
-        /// <summary>
-        /// Default expiration time for active sagas.
-        /// Default: 24 hours.
-        /// </summary>
-        public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromHours(24);
+    public TimeSpan CompletedExpiration { get; set; } = TimeSpan.FromHours(1);
 
-        /// <summary>
-        /// Expiration time for completed/faulted sagas.
-        /// Default: 1 hour.
-        /// </summary>
-        public TimeSpan CompletedExpiration { get; set; } = TimeSpan.FromHours(1);
-
-        /// <summary>
-        /// Key prefix for saga keys.
-        /// </summary>
-        public string? KeyPrefix { get; set; }
-    }
+    /// <summary>
+    /// Key prefix for saga keys.
+    /// </summary>
+    public string? KeyPrefix { get; set; }
 }
 

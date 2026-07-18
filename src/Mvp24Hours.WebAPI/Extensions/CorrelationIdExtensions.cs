@@ -3,39 +3,37 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Middlewares;
 
-namespace Mvp24Hours.WebAPI.Extensions
+namespace Mvp24Hours.WebAPI.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class CorrelationIdExtensions
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class CorrelationIdExtensions
+    public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app)
     {
-        public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app)
-        {
-            ArgumentNullException.ThrowIfNull(app);
-            return app.UseMiddleware<CorrelationIdMiddleware>();
-        }
+        ArgumentNullException.ThrowIfNull(app);
+        return app.UseMiddleware<CorrelationIdMiddleware>();
+    }
 
-        public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app, string header)
+    public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app, string header)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        return app.UseMvp24HoursCorrelationId(new CorrelationIdOptions
         {
-            ArgumentNullException.ThrowIfNull(app);
-            return app.UseMvp24HoursCorrelationId(new CorrelationIdOptions
-            {
-                Header = header
-            });
-        }
+            Header = header
+        });
+    }
 
-        public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app, CorrelationIdOptions options)
-        {
-            ArgumentNullException.ThrowIfNull(app);
-            ArgumentNullException.ThrowIfNull(options);
-            return app.UseMiddleware<CorrelationIdMiddleware>(Options.Create(options));
-        }
+    public static IApplicationBuilder UseMvp24HoursCorrelationId(this IApplicationBuilder app, CorrelationIdOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        ArgumentNullException.ThrowIfNull(options);
+        return app.UseMiddleware<CorrelationIdMiddleware>(Options.Create(options));
     }
 }

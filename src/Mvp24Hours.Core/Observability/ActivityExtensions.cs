@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Mvp24Hours.Core.Observability;
 
@@ -30,7 +27,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? SetSuccess(this Activity? activity)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.OperationSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
@@ -45,7 +45,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? SetSuccess(this Activity? activity, params (string Key, object? Value)[] tags)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.OperationSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
@@ -67,7 +70,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? SetError(this Activity? activity, Exception exception, bool escaped = true)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.OperationSuccess, false);
         activity.SetTag(SemanticTags.ErrorType, exception.GetType().FullName);
@@ -89,7 +95,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? SetError(this Activity? activity, string errorMessage, string? errorCode = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.OperationSuccess, false);
         activity.SetTag(SemanticTags.ErrorMessage, errorMessage);
@@ -116,7 +125,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? RecordException(this Activity? activity, Exception exception, bool escaped = true)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         var tags = new ActivityTagsCollection
         {
@@ -147,7 +159,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? RecordEvent(this Activity? activity, string eventName, params (string Key, object? Value)[] tags)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         var activityTags = new ActivityTagsCollection();
         foreach ((string? key, object? value) in tags)
@@ -173,7 +188,10 @@ public static class ActivityExtensions
         TimeSpan? delay = null,
         string? reason = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         var tags = new ActivityTagsCollection
         {
@@ -202,7 +220,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? RecordCacheHit(this Activity? activity, string cacheKey)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.CacheHit, true);
         activity.AddEvent(new ActivityEvent(SemanticEvents.CacheHit, tags: new ActivityTagsCollection
@@ -220,7 +241,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? RecordCacheMiss(this Activity? activity, string cacheKey)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.CacheHit, false);
         activity.AddEvent(new ActivityEvent(SemanticEvents.CacheMiss, tags: new ActivityTagsCollection
@@ -244,7 +268,10 @@ public static class ActivityExtensions
         double thresholdMs,
         string? statement = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         var tags = new ActivityTagsCollection
         {
@@ -271,7 +298,10 @@ public static class ActivityExtensions
         this Activity? activity,
         IEnumerable<string> errors)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         var errorList = errors.ToList();
         var tags = new ActivityTagsCollection
@@ -296,7 +326,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? WithCorrelationId(this Activity? activity, string? correlationId)
     {
-        if (activity == null || string.IsNullOrEmpty(correlationId)) return activity;
+        if (activity == null || string.IsNullOrEmpty(correlationId))
+        {
+            return activity;
+        }
 
         activity.SetTag(SemanticTags.CorrelationId, correlationId);
         activity.SetBaggage("correlation.id", correlationId);
@@ -311,7 +344,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? WithCausationId(this Activity? activity, string? causationId)
     {
-        if (activity == null || string.IsNullOrEmpty(causationId)) return activity;
+        if (activity == null || string.IsNullOrEmpty(causationId))
+        {
+            return activity;
+        }
 
         activity.SetTag(SemanticTags.CausationId, causationId);
         return activity;
@@ -326,7 +362,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? WithUser(this Activity? activity, string? userId, string? userName = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(userId))
         {
@@ -350,7 +389,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? WithTenant(this Activity? activity, string? tenantId, string? tenantName = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(tenantId))
         {
@@ -374,7 +416,10 @@ public static class ActivityExtensions
     /// <returns>The activity for method chaining.</returns>
     public static Activity? WithDuration(this Activity? activity, double durationMs)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(SemanticTags.OperationDurationMs, durationMs);
         return activity;
@@ -394,16 +439,25 @@ public static class ActivityExtensions
         string? dbName = null,
         string? operation = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(dbSystem))
+        {
             activity.SetTag(SemanticTags.DbSystem, dbSystem);
+        }
 
         if (!string.IsNullOrEmpty(dbName))
+        {
             activity.SetTag(SemanticTags.DbName, dbName);
+        }
 
         if (!string.IsNullOrEmpty(operation))
+        {
             activity.SetTag(SemanticTags.DbOperation, operation);
+        }
 
         return activity;
     }
@@ -422,16 +476,25 @@ public static class ActivityExtensions
         string? destination = null,
         string? messageId = null)
     {
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(system))
+        {
             activity.SetTag(SemanticTags.MessagingSystem, system);
+        }
 
         if (!string.IsNullOrEmpty(destination))
+        {
             activity.SetTag(SemanticTags.MessagingDestinationName, destination);
+        }
 
         if (!string.IsNullOrEmpty(messageId))
+        {
             activity.SetTag(SemanticTags.MessagingMessageId, messageId);
+        }
 
         return activity;
     }
@@ -481,25 +544,19 @@ public static class ActivityExtensions
 /// }
 /// </code>
 /// </remarks>
-public sealed class ScopedActivity : IDisposable
+/// <remarks>
+/// Initializes a new instance of <see cref="ScopedActivity"/>.
+/// </remarks>
+/// <param name="activity">The activity to wrap.</param>
+public sealed class ScopedActivity(Activity? activity) : IDisposable
 {
-    private readonly Activity? _activity;
     private Exception? _exception;
     private bool _disposed;
 
     /// <summary>
     /// Gets the underlying activity.
     /// </summary>
-    public Activity? Activity => _activity;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="ScopedActivity"/>.
-    /// </summary>
-    /// <param name="activity">The activity to wrap.</param>
-    public ScopedActivity(Activity? activity)
-    {
-        _activity = activity;
-    }
+    public Activity? Activity { get; } = activity;
 
     /// <summary>
     /// Sets an exception to be recorded when the scope is disposed.
@@ -515,7 +572,7 @@ public sealed class ScopedActivity : IDisposable
     /// </summary>
     public ScopedActivity SetTag(string key, object? value)
     {
-        _activity?.SetTag(key, value);
+        Activity?.SetTag(key, value);
         return this;
     }
 
@@ -524,28 +581,35 @@ public sealed class ScopedActivity : IDisposable
     /// </summary>
     public ScopedActivity RecordEvent(string name, params (string Key, object? Value)[] tags)
     {
-        _activity?.RecordEvent(name, tags);
+        Activity?.RecordEvent(name, tags);
         return this;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
-        if (_activity == null) return;
+        if (Activity == null)
+        {
+            return;
+        }
 
         if (_exception != null)
         {
-            _activity.SetError(_exception);
+            Activity.SetError(_exception);
         }
         else
         {
-            _activity.SetSuccess();
+            Activity.SetSuccess();
         }
 
-        _activity.Dispose();
+        Activity.Dispose();
     }
 }
 

@@ -3,269 +3,260 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Resiliency
+namespace Mvp24Hours.Infrastructure.Pipe.Resiliency;
+
+/// <summary>
+/// In-memory implementation of <see cref="IDeadLetterStore"/>.
+/// Useful for testing and single-instance scenarios.
+/// </summary>
+/// <remarks>
+/// Creates a new instance with a maximum item limit.
+/// </remarks>
+/// <param name="maxItems">Maximum number of items to store.</param>
+public class InMemoryDeadLetterStore(int maxItems) : IDeadLetterStore
 {
+    private readonly ConcurrentDictionary<Guid, DeadLetterOperation> _store = new();
+    private readonly int _maxItems = maxItems > 0 ? maxItems : throw new ArgumentOutOfRangeException(nameof(maxItems));
+
     /// <summary>
-    /// In-memory implementation of <see cref="IDeadLetterStore"/>.
-    /// Useful for testing and single-instance scenarios.
+    /// Creates a new instance with default settings.
     /// </summary>
-    public class InMemoryDeadLetterStore : IDeadLetterStore
+    public InMemoryDeadLetterStore()
+        : this(10000)
     {
-        private readonly ConcurrentDictionary<Guid, DeadLetterOperation> _store = new();
-        private readonly int _maxItems;
+    }
 
-        /// <summary>
-        /// Creates a new instance with default settings.
-        /// </summary>
-        public InMemoryDeadLetterStore()
-            : this(10000)
+    /// <inheritdoc />
+    public Task StoreAsync(DeadLetterOperation deadLetter, CancellationToken cancellationToken = default)
+    {
+        if (deadLetter == null)
         {
+            throw new ArgumentNullException(nameof(deadLetter));
         }
 
-        /// <summary>
-        /// Creates a new instance with a maximum item limit.
-        /// </summary>
-        /// <param name="maxItems">Maximum number of items to store.</param>
-        public InMemoryDeadLetterStore(int maxItems)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Enforce max items limit by removing oldest acknowledged items
+        while (_store.Count >= _maxItems)
         {
-            _maxItems = maxItems > 0 ? maxItems : throw new ArgumentOutOfRangeException(nameof(maxItems));
-        }
+            DeadLetterOperation? oldestAcknowledged = _store.Values
+                .Where(x => x.IsAcknowledged)
+                .OrderBy(x => x.AcknowledgedAt ?? x.FailedAt)
+                .FirstOrDefault();
 
-        /// <inheritdoc />
-        public Task StoreAsync(DeadLetterOperation deadLetter, CancellationToken cancellationToken = default)
-        {
-            if (deadLetter == null)
-                throw new ArgumentNullException(nameof(deadLetter));
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Enforce max items limit by removing oldest acknowledged items
-            while (_store.Count >= _maxItems)
+            if (oldestAcknowledged != null)
             {
-                DeadLetterOperation? oldestAcknowledged = _store.Values
-                    .Where(x => x.IsAcknowledged)
-                    .OrderBy(x => x.AcknowledgedAt ?? x.FailedAt)
+                _store.TryRemove(oldestAcknowledged.Id, out _);
+            }
+            else
+            {
+                // Remove oldest unacknowledged if no acknowledged items
+                DeadLetterOperation? oldest = _store.Values
+                    .OrderBy(x => x.FailedAt)
                     .FirstOrDefault();
 
-                if (oldestAcknowledged != null)
+                if (oldest != null)
                 {
-                    _store.TryRemove(oldestAcknowledged.Id, out _);
+                    _store.TryRemove(oldest.Id, out _);
                 }
                 else
                 {
-                    // Remove oldest unacknowledged if no acknowledged items
-                    DeadLetterOperation? oldest = _store.Values
-                        .OrderBy(x => x.FailedAt)
-                        .FirstOrDefault();
-
-                    if (oldest != null)
-                    {
-                        _store.TryRemove(oldest.Id, out _);
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
-
-            _store[deadLetter.Id] = deadLetter;
-            return Task.CompletedTask;
         }
 
-        /// <inheritdoc />
-        public Task<DeadLetterOperation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        _store[deadLetter.Id] = deadLetter;
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<DeadLetterOperation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _store.TryGetValue(id, out DeadLetterOperation? result);
+        return Task.FromResult(result);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<DeadLetterOperation>> GetAllAsync(
+        string? operationName = null,
+        DeadLetterReason? reason = null,
+        DateTimeOffset? fromDate = null,
+        DateTimeOffset? toDate = null,
+        bool includeAcknowledged = false,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
+
+        if (!includeAcknowledged)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            _store.TryGetValue(id, out DeadLetterOperation? result);
-            return Task.FromResult(result);
+            query = query.Where(x => !x.IsAcknowledged);
         }
 
-        /// <inheritdoc />
-        public Task<IReadOnlyList<DeadLetterOperation>> GetAllAsync(
-            string? operationName = null,
-            DeadLetterReason? reason = null,
-            DateTimeOffset? fromDate = null,
-            DateTimeOffset? toDate = null,
-            bool includeAcknowledged = false,
-            int skip = 0,
-            int take = 100,
-            CancellationToken cancellationToken = default)
+        if (!string.IsNullOrEmpty(operationName))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
-
-            if (!includeAcknowledged)
-            {
-                query = query.Where(x => !x.IsAcknowledged);
-            }
-
-            if (!string.IsNullOrEmpty(operationName))
-            {
-                query = query.Where(x => x.OperationName == operationName);
-            }
-
-            if (reason.HasValue)
-            {
-                query = query.Where(x => x.Reason == reason.Value);
-            }
-
-            if (fromDate.HasValue)
-            {
-                query = query.Where(x => x.FailedAt >= fromDate.Value);
-            }
-
-            if (toDate.HasValue)
-            {
-                query = query.Where(x => x.FailedAt <= toDate.Value);
-            }
-
-            var result = query
-                .OrderByDescending(x => x.FailedAt)
-                .Skip(skip)
-                .Take(take)
-                .ToList();
-
-            return Task.FromResult<IReadOnlyList<DeadLetterOperation>>(result);
+            query = query.Where(x => x.OperationName == operationName);
         }
 
-        /// <inheritdoc />
-        public Task<long> GetCountAsync(
-            string? operationName = null,
-            DeadLetterReason? reason = null,
-            bool includeAcknowledged = false,
-            CancellationToken cancellationToken = default)
+        if (reason.HasValue)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            query = query.Where(x => x.Reason == reason.Value);
+        }
 
-            IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
+        if (fromDate.HasValue)
+        {
+            query = query.Where(x => x.FailedAt >= fromDate.Value);
+        }
 
-            if (!includeAcknowledged)
+        if (toDate.HasValue)
+        {
+            query = query.Where(x => x.FailedAt <= toDate.Value);
+        }
+
+        var result = query
+            .OrderByDescending(x => x.FailedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<DeadLetterOperation>>(result);
+    }
+
+    /// <inheritdoc />
+    public Task<long> GetCountAsync(
+        string? operationName = null,
+        DeadLetterReason? reason = null,
+        bool includeAcknowledged = false,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        IEnumerable<DeadLetterOperation> query = _store.Values.AsEnumerable();
+
+        if (!includeAcknowledged)
+        {
+            query = query.Where(x => !x.IsAcknowledged);
+        }
+
+        if (!string.IsNullOrEmpty(operationName))
+        {
+            query = query.Where(x => x.OperationName == operationName);
+        }
+
+        if (reason.HasValue)
+        {
+            query = query.Where(x => x.Reason == reason.Value);
+        }
+
+        return Task.FromResult((long)query.Count());
+    }
+
+    /// <inheritdoc />
+    public Task<bool> AcknowledgeAsync(Guid id, string? acknowledgedBy = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
+        {
+            deadLetter.IsAcknowledged = true;
+            deadLetter.AcknowledgedAt = DateTimeOffset.UtcNow;
+            deadLetter.AcknowledgedBy = acknowledgedBy;
+            return Task.FromResult(true);
+        }
+
+        return Task.FromResult(false);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> MarkReprocessedAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
+        {
+            deadLetter.ReprocessCount++;
+            deadLetter.LastReprocessAt = DateTimeOffset.UtcNow;
+            return Task.FromResult(true);
+        }
+
+        return Task.FromResult(false);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(_store.TryRemove(id, out _));
+    }
+
+    /// <inheritdoc />
+    public Task<int> PurgeAcknowledgedAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        DateTimeOffset cutoff = DateTimeOffset.UtcNow.Subtract(olderThan);
+        var toRemove = _store.Values
+            .Where(x => x.IsAcknowledged && x.AcknowledgedAt.HasValue && x.AcknowledgedAt.Value < cutoff)
+            .Select(x => x.Id)
+            .ToList();
+
+        int count = 0;
+        foreach (Guid id in toRemove)
+        {
+            if (_store.TryRemove(id, out _))
             {
-                query = query.Where(x => !x.IsAcknowledged);
+                count++;
             }
-
-            if (!string.IsNullOrEmpty(operationName))
-            {
-                query = query.Where(x => x.OperationName == operationName);
-            }
-
-            if (reason.HasValue)
-            {
-                query = query.Where(x => x.Reason == reason.Value);
-            }
-
-            return Task.FromResult((long)query.Count());
         }
 
-        /// <inheritdoc />
-        public Task<bool> AcknowledgeAsync(Guid id, string? acknowledgedBy = null, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(count);
+    }
 
-            if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
-            {
-                deadLetter.IsAcknowledged = true;
-                deadLetter.AcknowledgedAt = DateTimeOffset.UtcNow;
-                deadLetter.AcknowledgedBy = acknowledgedBy;
-                return Task.FromResult(true);
-            }
+    /// <inheritdoc />
+    public Task<IReadOnlyList<DeadLetterOperation>> GetForReprocessingAsync(
+        int maxReprocessAttempts = 3,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
 
-            return Task.FromResult(false);
-        }
+        var result = _store.Values
+            .Where(x => !x.IsAcknowledged && x.ReprocessCount < maxReprocessAttempts)
+            .OrderBy(x => x.ReprocessCount)
+            .ThenBy(x => x.FailedAt)
+            .Take(take)
+            .ToList();
 
-        /// <inheritdoc />
-        public Task<bool> MarkReprocessedAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<IReadOnlyList<DeadLetterOperation>>(result);
+    }
 
-            if (_store.TryGetValue(id, out DeadLetterOperation? deadLetter))
-            {
-                deadLetter.ReprocessCount++;
-                deadLetter.LastReprocessAt = DateTimeOffset.UtcNow;
-                return Task.FromResult(true);
-            }
+    /// <summary>
+    /// Clears all dead letters from the store.
+    /// </summary>
+    public void Clear()
+    {
+        _store.Clear();
+    }
 
-            return Task.FromResult(false);
-        }
+    /// <summary>
+    /// Gets the current count of all items in the store.
+    /// </summary>
+    public int Count => _store.Count;
 
-        /// <inheritdoc />
-        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(_store.TryRemove(id, out _));
-        }
-
-        /// <inheritdoc />
-        public Task<int> PurgeAcknowledgedAsync(TimeSpan olderThan, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            DateTimeOffset cutoff = DateTimeOffset.UtcNow.Subtract(olderThan);
-            var toRemove = _store.Values
-                .Where(x => x.IsAcknowledged && x.AcknowledgedAt.HasValue && x.AcknowledgedAt.Value < cutoff)
-                .Select(x => x.Id)
-                .ToList();
-
-            var count = 0;
-            foreach (Guid id in toRemove)
-            {
-                if (_store.TryRemove(id, out _))
-                {
-                    count++;
-                }
-            }
-
-            return Task.FromResult(count);
-        }
-
-        /// <inheritdoc />
-        public Task<IReadOnlyList<DeadLetterOperation>> GetForReprocessingAsync(
-            int maxReprocessAttempts = 3,
-            int take = 100,
-            CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var result = _store.Values
-                .Where(x => !x.IsAcknowledged && x.ReprocessCount < maxReprocessAttempts)
-                .OrderBy(x => x.ReprocessCount)
-                .ThenBy(x => x.FailedAt)
-                .Take(take)
-                .ToList();
-
-            return Task.FromResult<IReadOnlyList<DeadLetterOperation>>(result);
-        }
-
-        /// <summary>
-        /// Clears all dead letters from the store.
-        /// </summary>
-        public void Clear()
-        {
-            _store.Clear();
-        }
-
-        /// <summary>
-        /// Gets the current count of all items in the store.
-        /// </summary>
-        public int Count => _store.Count;
-
-        /// <summary>
-        /// Gets all dead letters as a list (for testing/debugging).
-        /// </summary>
-        public IReadOnlyList<DeadLetterOperation> GetAllSync()
-        {
-            return _store.Values.OrderByDescending(x => x.FailedAt).ToList();
-        }
+    /// <summary>
+    /// Gets all dead letters as a list (for testing/debugging).
+    /// </summary>
+    public IReadOnlyList<DeadLetterOperation> GetAllSync()
+    {
+        return [.. _store.Values.OrderByDescending(x => x.FailedAt)];
     }
 }
 

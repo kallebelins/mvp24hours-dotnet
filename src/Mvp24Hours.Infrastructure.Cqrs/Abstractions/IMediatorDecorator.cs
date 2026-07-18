@@ -124,22 +124,17 @@ public interface IMediatorDecorator : IMediator
 /// }
 /// </code>
 /// </example>
-public abstract class MediatorDecoratorBase : IMediatorDecorator
+/// <remarks>
+/// Creates a new mediator decorator wrapping the specified inner mediator.
+/// </remarks>
+/// <param name="inner">The mediator to decorate.</param>
+/// <exception cref="ArgumentNullException">Thrown when inner is null.</exception>
+public abstract class MediatorDecoratorBase(IMediator inner) : IMediatorDecorator
 {
     /// <summary>
     /// Gets the inner mediator being decorated.
     /// </summary>
-    public IMediator InnerMediator { get; }
-
-    /// <summary>
-    /// Creates a new mediator decorator wrapping the specified inner mediator.
-    /// </summary>
-    /// <param name="inner">The mediator to decorate.</param>
-    /// <exception cref="ArgumentNullException">Thrown when inner is null.</exception>
-    protected MediatorDecoratorBase(IMediator inner)
-    {
-        InnerMediator = inner ?? throw new ArgumentNullException(nameof(inner));
-    }
+    public IMediator InnerMediator { get; } = inner ?? throw new ArgumentNullException(nameof(inner));
 
     /// <summary>
     /// Sends a request to its handler. Override to intercept Send operations.

@@ -3,43 +3,41 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities.BasicLogs;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
-namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
+namespace Mvp24Hours.Application.SQLServer.Test.Support.Services;
+
+public class CustomerLogService(IUnitOfWork unitOfWork) : RepositoryService<CustomerBasicLog, IUnitOfWork>(unitOfWork)
 {
-    public class CustomerLogService(IUnitOfWork unitOfWork) : RepositoryService<CustomerBasicLog, IUnitOfWork>(unitOfWork)
+
+    // custom methods here
+
+    public IList<CustomerBasicLog> GetWithContacts()
     {
+        var paging = new PagingCriteria(3, 0);
 
-        // custom methods here
+        IList<CustomerBasicLog> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
 
-        public IList<CustomerBasicLog> GetWithContacts()
+        foreach (CustomerBasicLog customer in customers)
         {
-            var paging = new PagingCriteria(3, 0);
-
-            IList<CustomerBasicLog> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
-
-            foreach (CustomerBasicLog customer in customers)
-            {
-                Repository.LoadRelation(customer, x => x.Contacts);
-            }
-            return customers;
+            Repository.LoadRelation(customer, x => x.Contacts);
         }
+        return customers;
+    }
 
-        public IList<CustomerBasicLog> GetWithPagedContacts()
+    public IList<CustomerBasicLog> GetWithPagedContacts()
+    {
+        var paging = new PagingCriteria(3, 0);
+
+        IList<CustomerBasicLog> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
+
+        foreach (CustomerBasicLog customer in customers)
         {
-            var paging = new PagingCriteria(3, 0);
-
-            IList<CustomerBasicLog> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
-
-            foreach (CustomerBasicLog customer in customers)
-            {
-                Repository.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 1);
-            }
-            return customers;
+            Repository.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 1);
         }
+        return customers;
     }
 }

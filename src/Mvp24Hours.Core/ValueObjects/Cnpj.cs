@@ -3,191 +3,208 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Mvp24Hours.Core.Helpers;
 
-namespace Mvp24Hours.Core.ValueObjects
+namespace Mvp24Hours.Core.ValueObjects;
+
+/// <summary>
+/// Value Object representing a valid Brazilian CNPJ (Cadastro Nacional da Pessoa Jurídica).
+/// </summary>
+/// <example>
+/// <code>
+/// var cnpj = Cnpj.Create("11.222.333/0001-81");
+/// Console.WriteLine(cnpj.Value); // 11222333000181 (unformatted)
+/// Console.WriteLine(cnpj.Formatted); // 11.222.333/0001-81
+/// 
+/// // Using TryParse
+/// if (Cnpj.TryParse("11222333000181", out var result))
+/// {
+///     Console.WriteLine(result.Formatted);
+/// }
+/// </code>
+/// </example>
+public sealed class Cnpj : BaseVO, IEquatable<Cnpj>, IComparable<Cnpj>
 {
+    private static readonly Regex OnlyDigitsRegex = new(@"[^\d]", RegexOptions.Compiled);
+
     /// <summary>
-    /// Value Object representing a valid Brazilian CNPJ (Cadastro Nacional da Pessoa Jurídica).
+    /// Gets the CNPJ value without formatting (14 digits only).
     /// </summary>
-    /// <example>
-    /// <code>
-    /// var cnpj = Cnpj.Create("11.222.333/0001-81");
-    /// Console.WriteLine(cnpj.Value); // 11222333000181 (unformatted)
-    /// Console.WriteLine(cnpj.Formatted); // 11.222.333/0001-81
-    /// 
-    /// // Using TryParse
-    /// if (Cnpj.TryParse("11222333000181", out var result))
-    /// {
-    ///     Console.WriteLine(result.Formatted);
-    /// }
-    /// </code>
-    /// </example>
-    public sealed class Cnpj : BaseVO, IEquatable<Cnpj>, IComparable<Cnpj>
+    public string Value { get; }
+
+    /// <summary>
+    /// Gets the CNPJ with standard formatting (XX.XXX.XXX/XXXX-XX).
+    /// </summary>
+    public string Formatted => FormatCnpj(Value);
+
+    private Cnpj(string value)
     {
-        private static readonly Regex OnlyDigitsRegex = new(@"[^\d]", RegexOptions.Compiled);
+        Value = value;
+    }
 
-        /// <summary>
-        /// Gets the CNPJ value without formatting (14 digits only).
-        /// </summary>
-        public string Value { get; }
+    /// <summary>
+    /// Creates a new CNPJ instance.
+    /// </summary>
+    /// <param name="cnpj">The CNPJ string (with or without formatting).</param>
+    /// <returns>A valid CNPJ instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when CNPJ is invalid.</exception>
+    public static Cnpj Create(string cnpj)
+    {
+        Guard.Against.NullOrWhiteSpace(cnpj, nameof(cnpj));
 
-        /// <summary>
-        /// Gets the CNPJ with standard formatting (XX.XXX.XXX/XXXX-XX).
-        /// </summary>
-        public string Formatted => FormatCnpj(Value);
+        string digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
 
-        private Cnpj(string value)
+        if (!IsValid(digitsOnly))
         {
-            Value = value;
+            throw new ArgumentException($"'{cnpj}' is not a valid CNPJ.", nameof(cnpj));
         }
 
-        /// <summary>
-        /// Creates a new CNPJ instance.
-        /// </summary>
-        /// <param name="cnpj">The CNPJ string (with or without formatting).</param>
-        /// <returns>A valid CNPJ instance.</returns>
-        /// <exception cref="ArgumentException">Thrown when CNPJ is invalid.</exception>
-        public static Cnpj Create(string cnpj)
+        return new Cnpj(digitsOnly);
+    }
+
+    /// <summary>
+    /// Tries to parse a string into a CNPJ instance.
+    /// </summary>
+    /// <param name="cnpj">The CNPJ string.</param>
+    /// <param name="result">The resulting CNPJ if successful.</param>
+    /// <returns>True if parsing was successful; otherwise, false.</returns>
+    public static bool TryParse(string cnpj, out Cnpj result)
+    {
+        result = null!;
+
+        if (string.IsNullOrWhiteSpace(cnpj))
         {
-            Guard.Against.NullOrWhiteSpace(cnpj, nameof(cnpj));
-
-            var digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
-
-            if (!IsValid(digitsOnly))
-            {
-                throw new ArgumentException($"'{cnpj}' is not a valid CNPJ.", nameof(cnpj));
-            }
-
-            return new Cnpj(digitsOnly);
+            return false;
         }
 
-        /// <summary>
-        /// Tries to parse a string into a CNPJ instance.
-        /// </summary>
-        /// <param name="cnpj">The CNPJ string.</param>
-        /// <param name="result">The resulting CNPJ if successful.</param>
-        /// <returns>True if parsing was successful; otherwise, false.</returns>
-        public static bool TryParse(string cnpj, out Cnpj result)
+        string digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
+
+        if (!IsValid(digitsOnly))
         {
-            result = null!;
-
-            if (string.IsNullOrWhiteSpace(cnpj))
-            {
-                return false;
-            }
-
-            var digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
-
-            if (!IsValid(digitsOnly))
-            {
-                return false;
-            }
-
-            result = new Cnpj(digitsOnly);
-            return true;
+            return false;
         }
 
-        /// <summary>
-        /// Checks if a string is a valid CNPJ.
-        /// </summary>
-        /// <param name="cnpj">The CNPJ to validate.</param>
-        /// <returns>True if valid; otherwise, false.</returns>
-        public static bool IsValid(string cnpj)
+        result = new Cnpj(digitsOnly);
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if a string is a valid CNPJ.
+    /// </summary>
+    /// <param name="cnpj">The CNPJ to validate.</param>
+    /// <returns>True if valid; otherwise, false.</returns>
+    public static bool IsValid(string cnpj)
+    {
+        if (string.IsNullOrWhiteSpace(cnpj))
         {
-            if (string.IsNullOrWhiteSpace(cnpj))
-            {
-                return false;
-            }
-
-            var digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
-
-            if (digitsOnly.Length != 14)
-            {
-                return false;
-            }
-
-            // Check for known invalid CNPJs (all same digits)
-            if (digitsOnly.All(c => c == digitsOnly[0]))
-            {
-                return false;
-            }
-
-            return ValidateCheckDigits(digitsOnly);
+            return false;
         }
 
-        private static bool ValidateCheckDigits(string cnpj)
+        string digitsOnly = OnlyDigitsRegex.Replace(cnpj, "");
+
+        if (digitsOnly.Length != 14)
         {
-            // First check digit
-            int[] weights1 = { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
-            var sum = 0;
-            for (var i = 0; i < 12; i++)
-            {
-                sum += (cnpj[i] - '0') * weights1[i];
-            }
-            var remainder = sum % 11;
-            var firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
-
-            if (cnpj[12] - '0' != firstCheckDigit)
-            {
-                return false;
-            }
-
-            // Second check digit
-            int[] weights2 = { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
-            sum = 0;
-            for (var i = 0; i < 13; i++)
-            {
-                sum += (cnpj[i] - '0') * weights2[i];
-            }
-            remainder = sum % 11;
-            var secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
-
-            return cnpj[13] - '0' == secondCheckDigit;
+            return false;
         }
 
-        private static string FormatCnpj(string cnpj)
+        // Check for known invalid CNPJs (all same digits)
+        if (digitsOnly.All(c => c == digitsOnly[0]))
         {
-            if (cnpj.Length != 14) return cnpj;
-            return $"{cnpj.Substring(0, 2)}.{cnpj.Substring(2, 3)}.{cnpj.Substring(5, 3)}/{cnpj.Substring(8, 4)}-{cnpj.Substring(12, 2)}";
+            return false;
         }
 
-        /// <inheritdoc />
-        protected override IEnumerable<object> GetEqualityComponents()
+        return ValidateCheckDigits(digitsOnly);
+    }
+
+    private static bool ValidateCheckDigits(string cnpj)
+    {
+        // First check digit
+        int[] weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        int sum = 0;
+        for (int i = 0; i < 12; i++)
         {
-            yield return Value;
+            sum += (cnpj[i] - '0') * weights1[i];
+        }
+        int remainder = sum % 11;
+        int firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+
+        if (cnpj[12] - '0' != firstCheckDigit)
+        {
+            return false;
         }
 
-        /// <inheritdoc />
-        public bool Equals(Cnpj? other)
+        // Second check digit
+        int[] weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        sum = 0;
+        for (int i = 0; i < 13; i++)
         {
-            if (other is null) return false;
-            return Value == other.Value;
+            sum += (cnpj[i] - '0') * weights2[i];
+        }
+        remainder = sum % 11;
+        int secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+
+        return cnpj[13] - '0' == secondCheckDigit;
+    }
+
+    private static string FormatCnpj(string cnpj)
+    {
+        if (cnpj.Length != 14)
+        {
+            return cnpj;
         }
 
-        /// <inheritdoc />
-        public int CompareTo(Cnpj? other)
+        return $"{cnpj[..2]}.{cnpj.Substring(2, 3)}.{cnpj.Substring(5, 3)}/{cnpj.Substring(8, 4)}-{cnpj.Substring(12, 2)}";
+    }
+
+    /// <inheritdoc />
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(Cnpj? other)
+    {
+        if (other is null)
         {
-            if (other is null) return 1;
-            return string.Compare(Value, other.Value, StringComparison.Ordinal);
+            return false;
         }
 
-        /// <inheritdoc />
-        public override string ToString() => Formatted;
+        return Value == other.Value;
+    }
 
-        /// <summary>
-        /// Implicit conversion from CNPJ to string (returns formatted).
-        /// </summary>
-        public static implicit operator string(Cnpj cnpj) => cnpj?.Formatted ?? string.Empty;
+    /// <inheritdoc />
+    public int CompareTo(Cnpj? other)
+    {
+        if (other is null)
+        {
+            return 1;
+        }
 
-        /// <summary>
-        /// Explicit conversion from string to CNPJ.
-        /// </summary>
-        public static explicit operator Cnpj(string cnpj) => Create(cnpj);
+        return string.Compare(Value, other.Value, StringComparison.Ordinal);
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return Formatted;
+    }
+
+    /// <summary>
+    /// Implicit conversion from CNPJ to string (returns formatted).
+    /// </summary>
+    public static implicit operator string(Cnpj cnpj)
+    {
+        return cnpj?.Formatted ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Explicit conversion from string to CNPJ.
+    /// </summary>
+    public static explicit operator Cnpj(string cnpj)
+    {
+        return Create(cnpj);
     }
 }
 

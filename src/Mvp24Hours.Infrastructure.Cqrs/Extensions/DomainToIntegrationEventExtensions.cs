@@ -7,7 +7,6 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
@@ -84,30 +83,46 @@ public static class DomainToIntegrationEventExtensions
         // Look for IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>
         Type converterInterfaceType = typeof(IDomainToIntegrationEventConverter<,>);
 
-        foreach (var service in serviceProvider.GetServices<object>())
+        foreach (object service in serviceProvider.GetServices<object>())
         {
-            if (service == null) continue;
+            if (service == null)
+            {
+                continue;
+            }
 
             Type serviceType = service.GetType();
             Type[] interfaces = serviceType.GetInterfaces();
 
             foreach (Type @interface in interfaces)
             {
-                if (!@interface.IsGenericType) continue;
-                if (@interface.GetGenericTypeDefinition() != converterInterfaceType) continue;
+                if (!@interface.IsGenericType)
+                {
+                    continue;
+                }
+
+                if (@interface.GetGenericTypeDefinition() != converterInterfaceType)
+                {
+                    continue;
+                }
 
                 Type[] genericArgs = @interface.GetGenericArguments();
-                if (genericArgs.Length != 2) continue;
+                if (genericArgs.Length != 2)
+                {
+                    continue;
+                }
 
                 Type converterDomainEventType = genericArgs[0];
 
-                if (!converterDomainEventType.IsAssignableFrom(domainEventType)) continue;
+                if (!converterDomainEventType.IsAssignableFrom(domainEventType))
+                {
+                    continue;
+                }
 
                 // Found a matching converter, invoke the Convert method
                 MethodInfo? convertMethod = @interface.GetMethod("Convert");
                 if (convertMethod != null)
                 {
-                    var result = convertMethod.Invoke(service, new object[] { domainEvent });
+                    object? result = convertMethod.Invoke(service, [domainEvent]);
                     return result as IIntegrationEvent;
                 }
             }
@@ -141,26 +156,19 @@ public static class DomainToIntegrationEventExtensions
 ///     OrderCreatedDomainToIntegrationConverter&gt;();
 /// </code>
 /// </example>
-public sealed class AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent> : IMediatorDomainEventHandler<TDomainEvent>
+/// <remarks>
+/// Creates a new instance of the AutoIntegrationEventHandler.
+/// </remarks>
+public sealed class AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>(
+    IIntegrationEventOutbox outbox,
+    IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>? converter = null,
+    ILogger<AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>>? logger = null) : IMediatorDomainEventHandler<TDomainEvent>
     where TDomainEvent : IMediatorDomainEvent
     where TIntegrationEvent : class, IIntegrationEvent
 {
-    private readonly IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>? _converter;
-    private readonly IIntegrationEventOutbox _outbox;
-    private readonly ILogger<AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the AutoIntegrationEventHandler.
-    /// </summary>
-    public AutoIntegrationEventHandler(
-        IIntegrationEventOutbox outbox,
-        IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>? converter = null,
-        ILogger<AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>>? logger = null)
-    {
-        _outbox = outbox ?? throw new ArgumentNullException(nameof(outbox));
-        _converter = converter;
-        _logger = logger;
-    }
+    private readonly IDomainToIntegrationEventConverter<TDomainEvent, TIntegrationEvent>? _converter = converter;
+    private readonly IIntegrationEventOutbox _outbox = outbox ?? throw new ArgumentNullException(nameof(outbox));
+    private readonly ILogger<AutoIntegrationEventHandler<TDomainEvent, TIntegrationEvent>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task Handle(TDomainEvent notification, CancellationToken cancellationToken)

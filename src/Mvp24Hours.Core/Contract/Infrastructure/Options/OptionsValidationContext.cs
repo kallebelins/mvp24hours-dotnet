@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Mvp24Hours.Core.Contract.Infrastructure.Options;
@@ -30,19 +28,14 @@ namespace Mvp24Hours.Core.Contract.Infrastructure.Options;
 /// return context.ToResult();
 /// </code>
 /// </remarks>
-public sealed class OptionsValidationContext<TOptions> where TOptions : class
+/// <remarks>
+/// Initializes a new instance of the validation context.
+/// </remarks>
+/// <param name="optionsName">Optional name for the options (for error messages).</param>
+public sealed class OptionsValidationContext<TOptions>(string? optionsName = null) where TOptions : class
 {
     private readonly List<string> _errors = [];
-    private readonly string _optionsName;
-
-    /// <summary>
-    /// Initializes a new instance of the validation context.
-    /// </summary>
-    /// <param name="optionsName">Optional name for the options (for error messages).</param>
-    public OptionsValidationContext(string? optionsName = null)
-    {
-        _optionsName = optionsName ?? typeof(TOptions).Name;
-    }
+    private readonly string _optionsName = optionsName ?? typeof(TOptions).Name;
 
     /// <summary>
     /// Gets the list of validation errors.
@@ -140,9 +133,12 @@ public sealed class OptionsValidationContext<TOptions> where TOptions : class
     /// <returns>This context for chaining.</returns>
     public OptionsValidationContext<TOptions> AtLeastOne(string errorMessage, params bool[] conditions)
     {
-        foreach (var condition in conditions)
+        foreach (bool condition in conditions)
         {
-            if (condition) return this;
+            if (condition)
+            {
+                return this;
+            }
         }
         AddError($"{_optionsName}: {errorMessage}");
         return this;
@@ -157,9 +153,12 @@ public sealed class OptionsValidationContext<TOptions> where TOptions : class
     public OptionsValidationContext<TOptions> ExactlyOne(string errorMessage, params bool[] conditions)
     {
         int count = 0;
-        foreach (var condition in conditions)
+        foreach (bool condition in conditions)
         {
-            if (condition) count++;
+            if (condition)
+            {
+                count++;
+            }
         }
         if (count != 1)
         {
@@ -612,8 +611,8 @@ public sealed class UriPropertyValidator
     {
         if (_value != null)
         {
-            var hasValidScheme = false;
-            foreach (var scheme in allowedSchemes)
+            bool hasValidScheme = false;
+            foreach (string scheme in allowedSchemes)
             {
                 if (string.Equals(_value.Scheme, scheme, StringComparison.OrdinalIgnoreCase))
                 {

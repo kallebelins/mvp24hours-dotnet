@@ -3,11 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
 
@@ -93,30 +88,21 @@ public interface IObserverManager
 /// <summary>
 /// Default implementation of the observer manager.
 /// </summary>
-public class ObserverManager : IObserverManager
+/// <remarks>
+/// Creates a new ObserverManager with the specified observers.
+/// </remarks>
+public class ObserverManager(
+    IEnumerable<IConsumeObserver>? consumeObservers = null,
+    IEnumerable<IPublishObserver>? publishObservers = null,
+    IEnumerable<ISendObserver>? sendObservers = null,
+    IEnumerable<IConnectionObserver>? connectionObservers = null,
+    ILogger<ObserverManager>? logger = null) : IObserverManager
 {
-    private readonly IEnumerable<IConsumeObserver> _consumeObservers;
-    private readonly IEnumerable<IPublishObserver> _publishObservers;
-    private readonly IEnumerable<ISendObserver> _sendObservers;
-    private readonly IEnumerable<IConnectionObserver> _connectionObservers;
-    private readonly ILogger<ObserverManager>? _logger;
-
-    /// <summary>
-    /// Creates a new ObserverManager with the specified observers.
-    /// </summary>
-    public ObserverManager(
-        IEnumerable<IConsumeObserver>? consumeObservers = null,
-        IEnumerable<IPublishObserver>? publishObservers = null,
-        IEnumerable<ISendObserver>? sendObservers = null,
-        IEnumerable<IConnectionObserver>? connectionObservers = null,
-        ILogger<ObserverManager>? logger = null)
-    {
-        _consumeObservers = consumeObservers ?? Enumerable.Empty<IConsumeObserver>();
-        _publishObservers = publishObservers ?? Enumerable.Empty<IPublishObserver>();
-        _sendObservers = sendObservers ?? Enumerable.Empty<ISendObserver>();
-        _connectionObservers = connectionObservers ?? Enumerable.Empty<IConnectionObserver>();
-        _logger = logger;
-    }
+    private readonly IEnumerable<IConsumeObserver> _consumeObservers = consumeObservers ?? [];
+    private readonly IEnumerable<IPublishObserver> _publishObservers = publishObservers ?? [];
+    private readonly IEnumerable<ISendObserver> _sendObservers = sendObservers ?? [];
+    private readonly IEnumerable<IConnectionObserver> _connectionObservers = connectionObservers ?? [];
+    private readonly ILogger<ObserverManager>? _logger = logger;
 
     /// <inheritdoc />
     public async Task NotifyPreConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
@@ -316,46 +302,68 @@ public class NullObserverManager : IObserverManager
 
     /// <inheritdoc />
     public Task NotifyPreConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPostConsumeAsync(ConsumeObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyConsumeFaultAsync(ConsumeObserverContext context, Exception exception, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPrePublishAsync(PublishObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPostPublishAsync(PublishObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPublishFaultAsync(PublishObserverContext context, Exception exception, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPreSendAsync(SendObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyPostSendAsync(SendObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifySendFaultAsync(SendObserverContext context, Exception exception, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyConnectedAsync(ConnectionObserverContext context, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task NotifyDisconnectedAsync(ConnectionObserverContext context, string? reason, CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        return Task.CompletedTask;
+    }
 }
 

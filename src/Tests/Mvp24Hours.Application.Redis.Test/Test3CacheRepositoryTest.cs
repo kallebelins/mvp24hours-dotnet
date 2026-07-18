@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
@@ -15,113 +13,116 @@ using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.Redis.Test
+namespace Mvp24Hours.Application.Redis.Test;
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class Test3CacheRepositoryTest : IAsyncLifetime
 {
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Integration")]
-    public class Test3CacheRepositoryTest : IAsyncLifetime
+    #region [ Container ]
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
+        .WithExposedPort(6379)
+        .WithCleanUp(true)
+        .Build();
+
+    public async Task InitializeAsync()
     {
-        #region [ Container ]
-        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
-            .WithExposedPort(6379)
-            .WithCleanUp(true)
-            .Build();
+        await _redisContainer.StartAsync().ConfigureAwait(false);
+    }
 
-        public async Task InitializeAsync()
-            => await _redisContainer.StartAsync().ConfigureAwait(false);
+    public async Task DisposeAsync()
+    {
+        await _redisContainer.DisposeAsync().ConfigureAwait(false);
+    }
+    #endregion
 
-        public async Task DisposeAsync()
-            => await _redisContainer.DisposeAsync().ConfigureAwait(false);
-        #endregion
+    private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
+    private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
 
-        private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
-        private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
+    private IServiceProvider Setup()
+    {
+        var services = new ServiceCollection();
+        // caching
+        services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
+        services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
 
-        private IServiceProvider Setup()
+        // caching.redis
+        services.AddMvp24HoursCaching();
+        services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
+        return services.BuildServiceProvider();
+    }
+
+    [Fact, Priority(1)]
+    public void SetContentCache()
+    {
+        IServiceProvider serviceProvider = Setup();
+        var customer = new Customer
         {
-            var services = new ServiceCollection();
-            // caching
-            services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
-            services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        string content = customer.ToSerialize();
 
-            // caching.redis
-            services.AddMvp24HoursCaching();
-            services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
-            return services.BuildServiceProvider();
-        }
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.SetString(keyString, content);
+        Assert.True(true);
+    }
 
-        [Fact, Priority(1)]
-        public void SetContentCache()
+    [Fact, Priority(2)]
+    public void GetString()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.SetString(keyString, "Test");
+        string? content = repo.GetString(keyString);
+        Assert.True(content.HasValue());
+    }
+
+    [Fact, Priority(3)]
+    public void RemoveString()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Remove(keyString);
+        string? content = repo.GetString(keyString);
+        Assert.True(string.IsNullOrEmpty(content));
+    }
+
+    [Fact, Priority(4)]
+    public void SetObjectContentCache()
+    {
+        IServiceProvider serviceProvider = Setup();
+        var customer = new Customer
         {
-            IServiceProvider serviceProvider = Setup();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            string content = customer.ToSerialize();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Set(keyObject, customer);
+        Assert.True(true);
+    }
 
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.SetString(keyString, content);
-            Assert.True(true);
-        }
+    [Fact, Priority(5)]
+    public void GetObject()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Set(keyObject, new Customer { });
+        Customer? customer = repo.Get(keyObject);
+        Assert.NotNull(customer);
+    }
 
-        [Fact, Priority(2)]
-        public void GetString()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.SetString(keyString, "Test");
-            string? content = repo.GetString(keyString);
-            Assert.True(content.HasValue());
-        }
-
-        [Fact, Priority(3)]
-        public void RemoveString()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.Remove(keyString);
-            string? content = repo.GetString(keyString);
-            Assert.True(string.IsNullOrEmpty(content));
-        }
-
-        [Fact, Priority(4)]
-        public void SetObjectContentCache()
-        {
-            IServiceProvider serviceProvider = Setup();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.Set(keyObject, customer);
-            Assert.True(true);
-        }
-
-        [Fact, Priority(5)]
-        public void GetObject()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.Set(keyObject, new Customer { });
-            Customer? customer = repo.Get(keyObject);
-            Assert.NotNull(customer);
-        }
-
-        [Fact, Priority(6)]
-        public void RemoveObject()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-            repo.Remove(keyObject);
-            Customer? customer = repo.Get(keyObject);
-            Assert.Null(customer);
-        }
+    [Fact, Priority(6)]
+    public void RemoveObject()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Remove(keyObject);
+        Customer? customer = repo.Get(keyObject);
+        Assert.Null(customer);
     }
 }

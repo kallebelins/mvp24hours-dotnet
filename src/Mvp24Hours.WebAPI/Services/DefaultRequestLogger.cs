@@ -4,15 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -37,29 +32,25 @@ namespace Mvp24Hours.WebAPI.Services;
 /// </list>
 /// </para>
 /// </remarks>
-public class DefaultRequestLogger : IRequestLogger
+/// <remarks>
+/// Creates a new instance of <see cref="DefaultRequestLogger"/>.
+/// </remarks>
+/// <param name="logger">The logger instance.</param>
+/// <param name="options">The logging options.</param>
+public class DefaultRequestLogger(
+    ILogger<DefaultRequestLogger> logger,
+    IOptions<RequestLoggingOptions> options) : IRequestLogger
 {
-    private readonly ILogger<DefaultRequestLogger> _logger;
-    private readonly RequestLoggingOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="DefaultRequestLogger"/>.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="options">The logging options.</param>
-    public DefaultRequestLogger(
-        ILogger<DefaultRequestLogger> logger,
-        IOptions<RequestLoggingOptions> options)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly ILogger<DefaultRequestLogger> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly RequestLoggingOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     /// <inheritdoc />
     public async Task LogRequestAsync(HttpContext context)
     {
         if (_options.LoggingLevel == RequestLoggingLevel.None)
+        {
             return;
+        }
 
         RequestLogData requestData = await BuildRequestLogDataAsync(context);
 
@@ -93,7 +84,9 @@ public class DefaultRequestLogger : IRequestLogger
     public Task LogResponseAsync(HttpContext context, double durationMs)
     {
         if (_options.LoggingLevel == RequestLoggingLevel.None)
+        {
             return Task.CompletedTask;
+        }
 
         ResponseLogData responseData = BuildResponseLogData(context, durationMs);
         LogLevel logLevel = GetLogLevelForStatusCode(responseData.StatusCode);
@@ -141,9 +134,9 @@ public class DefaultRequestLogger : IRequestLogger
     /// <inheritdoc />
     public Task LogSlowRequestAsync(HttpContext context, double durationMs, int thresholdMs)
     {
-        var correlationId = context.TraceIdentifier;
-        var method = context.Request.Method;
-        var path = context.Request.Path.Value ?? "/";
+        string correlationId = context.TraceIdentifier;
+        string method = context.Request.Method;
+        string path = context.Request.Path.Value ?? "/";
 
         _logger.LogWarning(
             "SLOW REQUEST | HTTP {Method} {Path} | CorrelationId: {CorrelationId} | Duration: {DurationMs:F2}ms | Threshold: {ThresholdMs}ms",
@@ -161,7 +154,7 @@ public class DefaultRequestLogger : IRequestLogger
     private async Task<RequestLogData> BuildRequestLogDataAsync(HttpContext context)
     {
         HttpRequest request = context.Request;
-        var correlationId = context.TraceIdentifier;
+        string correlationId = context.TraceIdentifier;
 
         string? body = null;
         if (_options.LogRequestBody && ShouldLogBody(request.ContentType))
@@ -193,8 +186,8 @@ public class DefaultRequestLogger : IRequestLogger
     private ResponseLogData BuildResponseLogData(HttpContext context, double durationMs)
     {
         HttpResponse response = context.Response;
-        var correlationId = context.TraceIdentifier;
-        var statusCode = response.StatusCode;
+        string correlationId = context.TraceIdentifier;
+        int statusCode = response.StatusCode;
 
         return new ResponseLogData
         {
@@ -207,14 +200,14 @@ public class DefaultRequestLogger : IRequestLogger
             ContentLength = response.ContentLength,
             Headers = _options.LogResponseHeaders ? MaskHeaders(response.Headers) : null,
             Timestamp = DateTimeOffset.UtcNow,
-            IsSuccess = statusCode >= 200 && statusCode < 300,
+            IsSuccess = statusCode is >= 200 and < 300,
             IsSlow = durationMs > _options.SlowRequestThresholdMs
         };
     }
 
     private ExceptionLogData BuildExceptionLogData(HttpContext context, Exception exception, double durationMs)
     {
-        var correlationId = context.TraceIdentifier;
+        string correlationId = context.TraceIdentifier;
 
         return new ExceptionLogData
         {
@@ -246,7 +239,7 @@ public class DefaultRequestLogger : IRequestLogger
             bufferSize: 1024,
             leaveOpen: true);
 
-        var body = await reader.ReadToEndAsync();
+        string body = await reader.ReadToEndAsync();
         request.Body.Position = 0;
 
         if (body.Length > _options.MaxRequestBodySize)
@@ -279,16 +272,20 @@ public class DefaultRequestLogger : IRequestLogger
     private string? MaskQueryString(string? queryString)
     {
         if (string.IsNullOrEmpty(queryString))
+        {
             return null;
+        }
 
         if (!_options.LogQueryString)
-            return "[REDACTED]";
-
-        var result = queryString;
-
-        foreach (var param in _options.SensitiveQueryParameters)
         {
-            var pattern = $@"({param}=)([^&]*)";
+            return "[REDACTED]";
+        }
+
+        string result = queryString;
+
+        foreach (string param in _options.SensitiveQueryParameters)
+        {
+            string pattern = $@"({param}=)([^&]*)";
             result = Regex.Replace(result, pattern, $"$1{_options.MaskValue}", RegexOptions.IgnoreCase);
         }
 
@@ -298,15 +295,19 @@ public class DefaultRequestLogger : IRequestLogger
     private string? MaskSensitiveData(string? content)
     {
         if (string.IsNullOrEmpty(content))
+        {
             return content;
+        }
 
         if (_options.LoggingLevel == RequestLoggingLevel.Full)
+        {
             return content;
+        }
 
         try
         {
             using var doc = JsonDocument.Parse(content);
-            var maskedJson = MaskJsonElement(doc.RootElement);
+            string maskedJson = MaskJsonElement(doc.RootElement);
             return maskedJson;
         }
         catch
@@ -386,7 +387,9 @@ public class DefaultRequestLogger : IRequestLogger
     private bool ShouldLogBody(string? contentType)
     {
         if (string.IsNullOrEmpty(contentType))
+        {
             return false;
+        }
 
         return _options.LoggableContentTypes.Any(ct =>
             contentType.StartsWith(ct, StringComparison.OrdinalIgnoreCase));
@@ -395,13 +398,13 @@ public class DefaultRequestLogger : IRequestLogger
     private static string? GetClientIp(HttpContext context)
     {
         // Check for forwarded headers (when behind proxy/load balancer)
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        string? forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(forwardedFor))
         {
             return forwardedFor.Split(',')[0].Trim();
         }
 
-        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+        string? realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
         if (!string.IsNullOrEmpty(realIp))
         {
             return realIp;
@@ -414,7 +417,9 @@ public class DefaultRequestLogger : IRequestLogger
     {
         ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
+        {
             return null;
+        }
 
         return user.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? user.FindFirstValue("sub")
@@ -424,9 +429,11 @@ public class DefaultRequestLogger : IRequestLogger
     private static string? GetTenantId(HttpContext context)
     {
         // Check header first
-        var tenantHeader = context.Request.Headers["X-Tenant-ID"].FirstOrDefault();
+        string? tenantHeader = context.Request.Headers["X-Tenant-ID"].FirstOrDefault();
         if (!string.IsNullOrEmpty(tenantHeader))
+        {
             return tenantHeader;
+        }
 
         // Check claims
         return context.User?.FindFirstValue("tenant_id")

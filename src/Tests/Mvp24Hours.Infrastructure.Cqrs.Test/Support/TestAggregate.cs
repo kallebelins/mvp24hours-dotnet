@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 
@@ -97,7 +96,9 @@ public class TestOrder : AggregateRoot<Guid>, IAggregate
     public void AddItem(Guid productId, string productName, int quantity, decimal unitPrice)
     {
         if (Status != OrderStatus.Created)
+        {
             throw new InvalidOperationException("Cannot add items to a non-pending order");
+        }
 
         Raise(new OrderItemAddedEvent
         {
@@ -112,10 +113,14 @@ public class TestOrder : AggregateRoot<Guid>, IAggregate
     public void Pay(Guid paymentId)
     {
         if (Status != OrderStatus.Created)
+        {
             throw new InvalidOperationException("Order is not in a payable state");
+        }
 
         if (!_items.Any())
+        {
             throw new InvalidOperationException("Cannot pay for an empty order");
+        }
 
         Raise(new OrderPaidEvent
         {
@@ -128,7 +133,9 @@ public class TestOrder : AggregateRoot<Guid>, IAggregate
     public void Ship(string trackingNumber)
     {
         if (Status != OrderStatus.Paid)
+        {
             throw new InvalidOperationException("Order must be paid before shipping");
+        }
 
         Raise(new OrderShippedEvent
         {
@@ -140,7 +147,9 @@ public class TestOrder : AggregateRoot<Guid>, IAggregate
     public void Cancel(string reason)
     {
         if (Status == OrderStatus.Shipped)
+        {
             throw new InvalidOperationException("Cannot cancel a shipped order");
+        }
 
         Raise(new OrderCancelledEvent
         {
@@ -266,7 +275,7 @@ public class TestOrderWithSnapshot : SnapshotAggregateRoot<OrderSnapshot>
             CustomerEmail = CustomerEmail,
             Status = Status,
             TotalAmount = TotalAmount,
-            Items = _items.ToList()
+            Items = [.. _items]
         };
     }
 

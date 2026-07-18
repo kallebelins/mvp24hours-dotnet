@@ -3,15 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
-using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Infrastructure.Channels;
-using Mvp24Hours.Infrastructure.Pipe.Typed;
 using MvpChannels = Mvp24Hours.Core.Infrastructure.Channels.Channels;
 
 namespace Mvp24Hours.Infrastructure.Pipe.Channels;
@@ -54,26 +48,20 @@ namespace Mvp24Hours.Infrastructure.Pipe.Channels;
 /// }
 /// </code>
 /// </example>
-public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
+/// <remarks>
+/// Creates a new channel pipeline.
+/// </remarks>
+/// <param name="options">Pipeline options.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class ChannelPipeline<TInput, TOutput>(
+    ChannelPipelineOptions? options = null,
+    ILogger<ChannelPipeline<TInput, TOutput>>? logger = null) : IAsyncDisposable
 {
-    private readonly ChannelPipelineOptions _options;
-    private readonly ILogger<ChannelPipeline<TInput, TOutput>>? _logger;
+    private readonly ChannelPipelineOptions _options = options ?? new ChannelPipelineOptions();
+    private readonly ILogger<ChannelPipeline<TInput, TOutput>>? _logger = logger;
     private readonly List<Func<object, CancellationToken, Task<object>>> _stages = [];
     private readonly List<IChannel<object>> _stageChannels = [];
     private bool _disposed;
-
-    /// <summary>
-    /// Creates a new channel pipeline.
-    /// </summary>
-    /// <param name="options">Pipeline options.</param>
-    /// <param name="logger">Optional logger.</param>
-    public ChannelPipeline(
-        ChannelPipelineOptions? options = null,
-        ILogger<ChannelPipeline<TInput, TOutput>>? logger = null)
-    {
-        _options = options ?? new ChannelPipelineOptions();
-        _logger = logger;
-    }
 
     /// <summary>
     /// Adds a processing stage to the pipeline.
@@ -149,7 +137,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
 
         object current = input!;
 
-        for (var i = 0; i < _stages.Count; i++)
+        for (int i = 0; i < _stages.Count; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -232,7 +220,7 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
 
         // Start workers
         var workerTasks = new List<Task>();
-        for (var i = 0; i < maxDegreeOfParallelism; i++)
+        for (int i = 0; i < maxDegreeOfParallelism; i++)
         {
             workerTasks.Add(Task.Run(async () =>
             {
@@ -260,7 +248,11 @@ public sealed class ChannelPipeline<TInput, TOutput> : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         foreach (IChannel<object> channel in _stageChannels)
@@ -305,18 +297,13 @@ public class ChannelPipelineOptions
 /// Builder for creating channel pipelines with fluent API.
 /// </summary>
 /// <typeparam name="TInput">The input type.</typeparam>
-public class ChannelPipelineBuilder<TInput>
+/// <remarks>
+/// Creates a new pipeline builder.
+/// </remarks>
+/// <param name="options">Optional pipeline options.</param>
+public class ChannelPipelineBuilder<TInput>(ChannelPipelineOptions? options = null)
 {
-    private readonly ChannelPipelineOptions _options;
-
-    /// <summary>
-    /// Creates a new pipeline builder.
-    /// </summary>
-    /// <param name="options">Optional pipeline options.</param>
-    public ChannelPipelineBuilder(ChannelPipelineOptions? options = null)
-    {
-        _options = options ?? new ChannelPipelineOptions();
-    }
+    private readonly ChannelPipelineOptions _options = options ?? new ChannelPipelineOptions();
 
     /// <summary>
     /// Adds the first stage and returns a builder for chaining more stages.
@@ -438,6 +425,8 @@ public static class ChannelPipeline
     /// <returns>A pipeline builder.</returns>
     public static ChannelPipelineBuilder<TInput> Create<TInput>(
         ChannelPipelineOptions? options = null)
-        => new(options);
+    {
+        return new(options);
+    }
 }
 

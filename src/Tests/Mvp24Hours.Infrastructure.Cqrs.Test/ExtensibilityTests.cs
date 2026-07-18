@@ -4,11 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.Extensions;
-using Xunit;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
 /// <summary>
@@ -88,7 +83,7 @@ public class ExtensibilityTests
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new TestCommand("test"));
+        string result = await mediator.SendAsync(new TestCommand("test"));
 
         // Assert
         Assert.Equal("Processed: test", result);
@@ -169,7 +164,7 @@ public class ExtensibilityTests
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new TestCommand("test"));
+        string result = await mediator.SendAsync(new TestCommand("test"));
 
         // Assert
         Assert.Equal("Processed: test", result);
@@ -264,7 +259,7 @@ public class ExtensibilityTests
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new FailingCommand("test"));
+        string result = await mediator.SendAsync(new FailingCommand("test"));
 
         // Assert
         Assert.Equal("Handled: Command failed", result);
@@ -444,11 +439,9 @@ public class ExtensibilityTests
     #region [ Mediator Decorator Tests ]
 
     [Trait("Category", "Unit")]
-    public class TestMediatorDecorator : MediatorDecoratorBase
+    public class TestMediatorDecorator(IMediator inner) : MediatorDecoratorBase(inner)
     {
         public static List<string> ExecutionLog { get; } = [];
-
-        public TestMediatorDecorator(IMediator inner) : base(inner) { }
 
         public override async Task<TResponse> SendAsync<TResponse>(
             IMediatorRequest<TResponse> request,
@@ -462,11 +455,9 @@ public class ExtensibilityTests
     }
 
     [Trait("Category", "Unit")]
-    public class AnotherMediatorDecorator : MediatorDecoratorBase
+    public class AnotherMediatorDecorator(IMediator inner) : MediatorDecoratorBase(inner)
     {
         public static List<string> ExecutionLog { get; } = [];
-
-        public AnotherMediatorDecorator(IMediator inner) : base(inner) { }
 
         public override async Task<TResponse> SendAsync<TResponse>(
             IMediatorRequest<TResponse> request,
@@ -487,17 +478,14 @@ public class ExtensibilityTests
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>());
         services.AddMediatorDecorator<TestMediatorDecorator>();
 
         ServiceProvider provider = services.BuildServiceProvider();
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new TestCommand("test"));
+        string result = await mediator.SendAsync(new TestCommand("test"));
 
         // Assert
         Assert.Equal("Processed: test", result);
@@ -515,10 +503,7 @@ public class ExtensibilityTests
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>();
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssemblyContaining<ExtensibilityTests>());
         services.AddMediatorDecorator<TestMediatorDecorator>();
         services.AddMediatorDecorator<AnotherMediatorDecorator>();
 
@@ -526,7 +511,7 @@ public class ExtensibilityTests
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new TestCommand("test"));
+        string result = await mediator.SendAsync(new TestCommand("test"));
 
         // Assert
         Assert.Equal("Processed: test", result);
@@ -567,7 +552,7 @@ public class ExtensibilityTests
         IMediator mediator = provider.GetRequiredService<IMediator>();
 
         // Act
-        var result = await mediator.SendAsync(new TestCommand("integration"));
+        string result = await mediator.SendAsync(new TestCommand("integration"));
 
         // Assert
         Assert.Equal("Processed: integration", result);

@@ -3,64 +3,54 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
-namespace Mvp24Hours.Infrastructure.Caching.Warming
+namespace Mvp24Hours.Infrastructure.Caching.Warming;
+
+/// <summary>
+/// Hosted service that executes cache warmup on application startup.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This hosted service automatically executes cache warmup operations when the application starts.
+/// It runs after the application has fully initialized but before accepting requests.
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Creates a new instance of CacheWarmupHostedService.
+/// </remarks>
+/// <param name="cacheWarmer">The cache warmer to use.</param>
+/// <param name="logger">Optional logger.</param>
+public class CacheWarmupHostedService(
+    ICacheWarmer cacheWarmer,
+    ILogger<CacheWarmupHostedService>? logger = null) : IHostedService
 {
-    /// <summary>
-    /// Hosted service that executes cache warmup on application startup.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This hosted service automatically executes cache warmup operations when the application starts.
-    /// It runs after the application has fully initialized but before accepting requests.
-    /// </para>
-    /// </remarks>
-    public class CacheWarmupHostedService : IHostedService
+    private readonly ICacheWarmer _cacheWarmer = cacheWarmer ?? throw new ArgumentNullException(nameof(cacheWarmer));
+    private readonly ILogger<CacheWarmupHostedService>? _logger = logger;
+
+    /// <inheritdoc />
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        private readonly ICacheWarmer _cacheWarmer;
-        private readonly ILogger<CacheWarmupHostedService>? _logger;
+        _logger?.LogInformation("Starting cache warmup hosted service");
 
-        /// <summary>
-        /// Creates a new instance of CacheWarmupHostedService.
-        /// </summary>
-        /// <param name="cacheWarmer">The cache warmer to use.</param>
-        /// <param name="logger">Optional logger.</param>
-        public CacheWarmupHostedService(
-            ICacheWarmer cacheWarmer,
-            ILogger<CacheWarmupHostedService>? logger = null)
+        try
         {
-            _cacheWarmer = cacheWarmer ?? throw new ArgumentNullException(nameof(cacheWarmer));
-            _logger = logger;
+            await _cacheWarmer.WarmUpAsync(cancellationToken);
         }
-
-        /// <inheritdoc />
-        public async Task StartAsync(CancellationToken cancellationToken)
+        catch (Exception ex)
         {
-            _logger?.LogInformation("Starting cache warmup hosted service");
-
-            try
-            {
-                await _cacheWarmer.WarmUpAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error during cache warmup");
-                // Don't throw - warmup failures shouldn't prevent application startup
-            }
+            _logger?.LogError(ex, "Error during cache warmup");
+            // Don't throw - warmup failures shouldn't prevent application startup
         }
+    }
 
-        /// <inheritdoc />
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger?.LogInformation("Stopping cache warmup hosted service");
-            return Task.CompletedTask;
-        }
+    /// <inheritdoc />
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger?.LogInformation("Stopping cache warmup hosted service");
+        return Task.CompletedTask;
     }
 }
 

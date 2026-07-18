@@ -18,14 +18,9 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// </summary>
 [Collection("SqlServer")]
 [Trait("Category", "Integration")]
-public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
+public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fixture) : IAsyncLifetime
 {
-    private readonly SqlServerContainerFixture _fixture;
-
-    public RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fixture)
-    {
-        _fixture = fixture;
-    }
+    private readonly SqlServerContainerFixture _fixture = fixture;
 
     public async Task InitializeAsync()
     {
@@ -33,7 +28,10 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
         await SeedTestDataAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     private async Task SeedTestDataAsync()
     {
@@ -187,7 +185,7 @@ public class RepositoryPagingServiceIntegrationTest : IAsyncLifetime
         CategoryService categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
 
         IBusinessResult<IList<Category>> categoriesResult = await categoryService.GetByAsync(c => c.Name == "Electronics");
-        var electronicsId = categoriesResult.GetDataValue()!.First().Id;
+        int electronicsId = categoriesResult.GetDataValue()!.First().Id;
 
         var pagingCriteria = new PagingCriteria(10, 0);
 

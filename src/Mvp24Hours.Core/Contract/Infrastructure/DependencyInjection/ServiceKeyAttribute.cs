@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-
 namespace Mvp24Hours.Core.Contract.Infrastructure.DependencyInjection;
 
 /// <summary>
@@ -93,22 +91,18 @@ public sealed class ServiceKeyAttribute : Attribute
 /// </code>
 /// </para>
 /// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ServiceOrderAttribute"/> class.
+/// </remarks>
+/// <param name="order">The registration order. Lower values are registered first.</param>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-public sealed class ServiceOrderAttribute : Attribute
+public sealed class ServiceOrderAttribute(int order) : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ServiceOrderAttribute"/> class.
-    /// </summary>
-    /// <param name="order">The registration order. Lower values are registered first.</param>
-    public ServiceOrderAttribute(int order)
-    {
-        Order = order;
-    }
 
     /// <summary>
     /// Gets the registration order.
     /// </summary>
-    public int Order { get; }
+    public int Order { get; } = order;
 }
 
 /// <summary>

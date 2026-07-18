@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -94,19 +93,14 @@ public interface IRetryable
 /// services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(RetryBehavior&lt;,&gt;));
 /// </code>
 /// </example>
-public sealed class RetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the RetryBehavior.
+/// </remarks>
+/// <param name="logger">Optional logger for recording retry operations.</param>
+public sealed class RetryBehavior<TRequest, TResponse>(ILogger<RetryBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ILogger<RetryBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the RetryBehavior.
-    /// </summary>
-    /// <param name="logger">Optional logger for recording retry operations.</param>
-    public RetryBehavior(ILogger<RetryBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<RetryBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -117,14 +111,14 @@ public sealed class RetryBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
-        var maxAttempts = retryable.MaxRetryAttempts;
+        string requestName = typeof(TRequest).Name;
+        int maxAttempts = retryable.MaxRetryAttempts;
         TimeSpan baseDelay = retryable.RetryDelay;
-        var useExponentialBackoff = retryable.UseExponentialBackoff;
+        bool useExponentialBackoff = retryable.UseExponentialBackoff;
 
         Exception? lastException = null;
 
-        for (var attempt = 1; attempt <= maxAttempts + 1; attempt++)
+        for (int attempt = 1; attempt <= maxAttempts + 1; attempt++)
         {
             try
             {
@@ -184,7 +178,7 @@ public static class RetryPolicyExtensions
     /// </summary>
     public static bool IsDatabaseTimeout(this Exception exception)
     {
-        var message = exception.Message?.ToLowerInvariant() ?? string.Empty;
+        string message = exception.Message?.ToLowerInvariant() ?? string.Empty;
         return message.Contains("timeout") && (message.Contains("sql") || message.Contains("database"));
     }
 
@@ -193,7 +187,7 @@ public static class RetryPolicyExtensions
     /// </summary>
     public static bool IsNetworkError(this Exception exception)
     {
-        var message = exception.Message?.ToLowerInvariant() ?? string.Empty;
+        string message = exception.Message?.ToLowerInvariant() ?? string.Empty;
         return exception is System.Net.Http.HttpRequestException
             || message.Contains("network")
             || message.Contains("connection");

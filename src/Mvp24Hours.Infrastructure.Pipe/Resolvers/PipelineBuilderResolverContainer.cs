@@ -3,75 +3,73 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
 using Mvp24Hours.Extensions;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
+namespace Mvp24Hours.Infrastructure.Pipe.Resolvers;
+
+/// <summary>
+/// 
+/// </summary>
+public class PipelineBuilderResolverContainer<TService>
 {
+    private readonly Dictionary<string, PipelineBuilderResolver> _resolvers;
+    private readonly string? _keyDefault;
+
     /// <summary>
     /// 
     /// </summary>
-    public class PipelineBuilderResolverContainer<TService>
+    public PipelineBuilderResolverContainer()
+    : this((string?)null)
     {
-        private readonly Dictionary<string, PipelineBuilderResolver> _resolvers;
-        private readonly string? _keyDefault;
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolverContainer()
-        : this((string?)null)
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolverContainer(string? keyDefault)
+    {
+        _resolvers = [];
+
+        if (keyDefault.HasValue())
         {
+            _keyDefault = keyDefault!;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolverContainer<TService> Add(string key, PipelineBuilderResolver obj)
+    {
+        if (!_resolvers.TryAdd(key, obj))
+        {
+            _resolvers[key] = obj;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolverContainer(string? keyDefault)
+        return this;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver? GetDefault()
+    {
+        if (_keyDefault.HasValue())
         {
-            _resolvers = [];
-
-            if (keyDefault.HasValue())
-            {
-                _keyDefault = keyDefault!;
-            }
+            return Get(_keyDefault!);
         }
+        return default;
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolverContainer<TService> Add(string key, PipelineBuilderResolver obj)
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver? Get(string key)
+    {
+        if (_resolvers.TryGetValue(key, out PipelineBuilderResolver? value))
         {
-            if (!_resolvers.TryAdd(key, obj))
-            {
-                _resolvers[key] = obj;
-            }
-
-            return this;
+            return value;
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver? GetDefault()
-        {
-            if (_keyDefault.HasValue())
-            {
-                return Get(_keyDefault!);
-            }
-            return default;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver? Get(string key)
-        {
-            if (_resolvers.TryGetValue(key, out PipelineBuilderResolver? value))
-            {
-                return value;
-            }
-            return default;
-        }
+        return default;
     }
 }

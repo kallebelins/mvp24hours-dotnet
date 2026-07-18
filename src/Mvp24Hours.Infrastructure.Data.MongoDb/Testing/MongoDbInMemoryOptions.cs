@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
 
 /// <summary>
@@ -113,7 +111,7 @@ public class MongoDbInMemoryOptions
     /// <returns>The database name to use.</returns>
     public string GetEffectiveDatabaseName()
     {
-        var baseName = DatabaseName ?? DatabaseNamePrefix;
+        string baseName = DatabaseName ?? DatabaseNamePrefix;
         return UseUniqueDatabaseName
             ? $"{baseName}_{Guid.NewGuid():N}"
             : baseName;

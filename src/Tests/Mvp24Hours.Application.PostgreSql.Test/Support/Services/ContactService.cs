@@ -7,11 +7,10 @@ using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 
-namespace Mvp24Hours.Application.PostgreSql.Test.Support.Services
-{
-    public class ContactService(IUnitOfWork unitOfWork) : RepositoryService<Customer, IUnitOfWork>(unitOfWork)
-    {
+namespace Mvp24Hours.Application.PostgreSql.Test.Support.Services;
 
-        // custom methods here
-    }
+public class ContactService(IUnitOfWork unitOfWork) : RepositoryService<Customer, IUnitOfWork>(unitOfWork)
+{
+
+    // custom methods here
 }

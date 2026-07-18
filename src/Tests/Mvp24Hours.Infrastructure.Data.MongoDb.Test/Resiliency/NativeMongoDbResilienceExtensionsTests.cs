@@ -4,9 +4,6 @@
 // part of task 4.3 (net10 warnings cleanup) to exercise the native Polly v8 pipeline
 // via Microsoft.Extensions.Resilience instead of the obsolete API.
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
@@ -98,7 +95,7 @@ public class NativeMongoDbResilienceExtensionsTests
         ResiliencePipeline pipeline = GetPipeline(services);
 
         // Act
-        var result = await pipeline.ExecuteAsync(async ct =>
+        string result = await pipeline.ExecuteAsync(async ct =>
         {
             await Task.Delay(1, ct);
             return "success";
@@ -124,10 +121,10 @@ public class NativeMongoDbResilienceExtensionsTests
             options.EnableTimeout = false;
         });
         ResiliencePipeline pipeline = GetPipeline(services);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        var result = await pipeline.ExecuteAsync(async ct =>
+        string result = await pipeline.ExecuteAsync(async ct =>
         {
             executionCount++;
             await Task.Delay(1, ct);
@@ -147,7 +144,7 @@ public class NativeMongoDbResilienceExtensionsTests
     public async Task Should_Invoke_OnRetry_Callback()
     {
         // Arrange
-        var retries = 0;
+        int retries = 0;
         var services = new ServiceCollection();
         services.AddNativeMongoDbResilience(options =>
         {
@@ -163,14 +160,11 @@ public class NativeMongoDbResilienceExtensionsTests
         ResiliencePipeline pipeline = GetPipeline(services);
 
         // Act
-        await Assert.ThrowsAsync<TimeoutException>(async () =>
-        {
-            await pipeline.ExecuteAsync(async ct =>
+        await Assert.ThrowsAsync<TimeoutException>(async () => await pipeline.ExecuteAsync(async ct =>
             {
                 await Task.Delay(1, ct);
                 throw new TimeoutException("Always fails");
-            });
-        });
+            }));
 
         // Assert
         retries.Should().Be(2);
@@ -191,14 +185,11 @@ public class NativeMongoDbResilienceExtensionsTests
         ResiliencePipeline pipeline = GetPipeline(services);
 
         // Act & Assert
-        await Assert.ThrowsAsync<TimeoutRejectedException>(async () =>
-        {
-            await pipeline.ExecuteAsync(async ct =>
+        await Assert.ThrowsAsync<TimeoutRejectedException>(async () => await pipeline.ExecuteAsync(async ct =>
             {
                 await Task.Delay(5000, ct);
                 return "should not complete";
-            });
-        });
+            }));
     }
 
     [Fact]

@@ -301,16 +301,13 @@ public class DependencyInjectionTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssemblyContaining<TestCommand>();
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssemblyContaining<TestCommand>());
         ServiceProvider sp = services.BuildServiceProvider();
         IMediator mediator = sp.GetRequiredService<IMediator>();
         var command = new TestCommand { Name = "AssemblyContainingTest", Value = 99 };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Contains("AssemblyContainingTest", result);

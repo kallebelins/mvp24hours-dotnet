@@ -103,7 +103,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.ValueOr(0);
+        int result = maybe.ValueOr(0);
 
         // Assert
         result.Should().Be(42);
@@ -116,7 +116,7 @@ public class FunctionalPatternsTest
         Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.ValueOr(100);
+        int result = maybe.ValueOr(100);
 
         // Assert
         result.Should().Be(100);
@@ -127,10 +127,10 @@ public class FunctionalPatternsTest
     {
         // Arrange
         Maybe<int> maybe = Maybe<int>.None;
-        var factoryCalled = false;
+        bool factoryCalled = false;
 
         // Act
-        var result = maybe.ValueOr(() =>
+        int result = maybe.ValueOr(() =>
         {
             factoryCalled = true;
             return 100;
@@ -146,10 +146,10 @@ public class FunctionalPatternsTest
     {
         // Arrange
         var maybe = Maybe<int>.Some(42);
-        var factoryCalled = false;
+        bool factoryCalled = false;
 
         // Act
-        var result = maybe.ValueOr(() =>
+        int result = maybe.ValueOr(() =>
         {
             factoryCalled = true;
             return 100;
@@ -263,7 +263,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.Match(
+        string result = maybe.Match(
             some: value => $"Found: {value}",
             none: () => "Not found"
         );
@@ -279,7 +279,7 @@ public class FunctionalPatternsTest
         Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.Match(
+        string result = maybe.Match(
             some: value => $"Found: {value}",
             none: () => "Not found"
         );
@@ -293,8 +293,8 @@ public class FunctionalPatternsTest
     {
         // Arrange
         var maybe = Maybe<int>.Some(42);
-        var someExecuted = false;
-        var noneExecuted = false;
+        bool someExecuted = false;
+        bool noneExecuted = false;
 
         // Act
         maybe.Match(
@@ -312,8 +312,8 @@ public class FunctionalPatternsTest
     {
         // Arrange
         Maybe<int> maybe = Maybe<int>.None;
-        var someExecuted = false;
-        var noneExecuted = false;
+        bool someExecuted = false;
+        bool noneExecuted = false;
 
         // Act
         maybe.Match(
@@ -379,8 +379,8 @@ public class FunctionalPatternsTest
     {
         // Arrange
         var maybe = Maybe<int>.Some(42);
-        var actionExecuted = false;
-        var capturedValue = 0;
+        bool actionExecuted = false;
+        int capturedValue = 0;
 
         // Act
         Maybe<int> result = maybe.Tap(x =>
@@ -400,7 +400,7 @@ public class FunctionalPatternsTest
     {
         // Arrange
         Maybe<int> maybe = Maybe<int>.None;
-        var actionExecuted = false;
+        bool actionExecuted = false;
 
         // Act
         Maybe<int> result = maybe.Tap(_ => actionExecuted = true);
@@ -534,7 +534,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.Match(
+        string result = either.Match(
             left: error => $"Error: {error}",
             right: value => $"Success: {value}"
         );
@@ -550,7 +550,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Something went wrong");
 
         // Act
-        var result = either.Match(
+        string result = either.Match(
             left: error => $"Error: {error}",
             right: value => $"Success: {value}"
         );
@@ -564,8 +564,8 @@ public class FunctionalPatternsTest
     {
         // Arrange
         var either = Either<string, int>.Right(42);
-        var leftExecuted = false;
-        var rightExecuted = false;
+        bool leftExecuted = false;
+        bool rightExecuted = false;
 
         // Act
         either.Match(
@@ -689,7 +689,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.RightOr(0);
+        int result = either.RightOr(0);
 
         // Assert
         result.Should().Be(42);
@@ -702,7 +702,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Error");
 
         // Act
-        var result = either.RightOr(100);
+        int result = either.RightOr(100);
 
         // Assert
         result.Should().Be(100);
@@ -837,7 +837,7 @@ public class FunctionalPatternsTest
         var maybe = Maybe<int>.Some(42);
 
         // Act
-        var result = maybe.ToString();
+        string result = maybe.ToString();
 
         // Assert
         result.Should().Be("Some(42)");
@@ -850,7 +850,7 @@ public class FunctionalPatternsTest
         Maybe<int> maybe = Maybe<int>.None;
 
         // Act
-        var result = maybe.ToString();
+        string result = maybe.ToString();
 
         // Assert
         result.Should().Be("None");
@@ -863,7 +863,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Right(42);
 
         // Act
-        var result = either.ToString();
+        string result = either.ToString();
 
         // Assert
         result.Should().Be("Right(42)");
@@ -876,7 +876,7 @@ public class FunctionalPatternsTest
         var either = Either<string, int>.Left("Error");
 
         // Act
-        var result = either.ToString();
+        string result = either.ToString();
 
         // Assert
         result.Should().Be("Left(Error)");

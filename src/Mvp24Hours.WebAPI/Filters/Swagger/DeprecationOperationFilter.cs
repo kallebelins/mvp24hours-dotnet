@@ -3,106 +3,99 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Mvp24Hours.WebAPI.Filters.Swagger
+namespace Mvp24Hours.WebAPI.Filters.Swagger;
+
+/// <summary>
+/// Operation filter that adds deprecation warnings to deprecated API endpoints.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This filter checks for the [ApiVersion] attribute with Deprecated = true
+/// and adds deprecation information to the OpenAPI operation.
+/// </para>
+/// </remarks>
+public class DeprecationOperationFilter : IOperationFilter
 {
     /// <summary>
-    /// Operation filter that adds deprecation warnings to deprecated API endpoints.
+    /// Applies deprecation information to the operation if the endpoint is deprecated.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This filter checks for the [ApiVersion] attribute with Deprecated = true
-    /// and adds deprecation information to the OpenAPI operation.
-    /// </para>
-    /// </remarks>
-    public class DeprecationOperationFilter : IOperationFilter
+    /// <param name="operation">The OpenAPI operation.</param>
+    /// <param name="context">The operation filter context.</param>
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        /// <summary>
-        /// Applies deprecation information to the operation if the endpoint is deprecated.
-        /// </summary>
-        /// <param name="operation">The OpenAPI operation.</param>
-        /// <param name="context">The operation filter context.</param>
-        public void Apply(OpenApiOperation operation, OperationFilterContext context)
+        // Check for deprecated API version on controller
+        ApiVersionAttribute? controllerApiVersion = context.MethodInfo.DeclaringType?
+            .GetCustomAttributes(typeof(ApiVersionAttribute), false)
+            .Cast<ApiVersionAttribute>()
+            .FirstOrDefault();
+
+        if (controllerApiVersion?.Deprecated == true)
         {
-            // Check for deprecated API version on controller
-            ApiVersionAttribute? controllerApiVersion = context.MethodInfo.DeclaringType?
-                .GetCustomAttributes(typeof(ApiVersionAttribute), false)
-                .Cast<ApiVersionAttribute>()
-                .FirstOrDefault();
-
-            if (controllerApiVersion?.Deprecated == true)
-            {
-                operation.Deprecated = true;
-                AddDeprecationWarning(operation, controllerApiVersion);
-            }
-
-            // Check for deprecated API version on action
-            ApiVersionAttribute? actionApiVersion = context.MethodInfo
-                .GetCustomAttributes(typeof(ApiVersionAttribute), false)
-                .Cast<ApiVersionAttribute>()
-                .FirstOrDefault();
-
-            if (actionApiVersion?.Deprecated == true)
-            {
-                operation.Deprecated = true;
-                AddDeprecationWarning(operation, actionApiVersion);
-            }
-
-            // Check for [Obsolete] attribute
-            ObsoleteAttribute? obsoleteAttribute = context.MethodInfo
-                .GetCustomAttributes(typeof(ObsoleteAttribute), false)
-                .Cast<ObsoleteAttribute>()
-                .FirstOrDefault();
-
-            if (obsoleteAttribute != null)
-            {
-                operation.Deprecated = true;
-                if (!string.IsNullOrWhiteSpace(obsoleteAttribute.Message))
-                {
-                    AddDeprecationWarning(operation, obsoleteAttribute.Message);
-                }
-            }
+            operation.Deprecated = true;
+            AddDeprecationWarning(operation, controllerApiVersion);
         }
 
-        private static void AddDeprecationWarning(OpenApiOperation operation, ApiVersionAttribute apiVersion)
+        // Check for deprecated API version on action
+        ApiVersionAttribute? actionApiVersion = context.MethodInfo
+            .GetCustomAttributes(typeof(ApiVersionAttribute), false)
+            .Cast<ApiVersionAttribute>()
+            .FirstOrDefault();
+
+        if (actionApiVersion?.Deprecated == true)
         {
-            var message = "This API version is deprecated.";
-
-            if (apiVersion.Deprecated)
-            {
-                message = $"API version {apiVersion.Versions.FirstOrDefault()} is deprecated.";
-            }
-
-            AddDeprecationWarning(operation, message);
+            operation.Deprecated = true;
+            AddDeprecationWarning(operation, actionApiVersion);
         }
 
-        private static void AddDeprecationWarning(OpenApiOperation operation, string message)
+        // Check for [Obsolete] attribute
+        ObsoleteAttribute? obsoleteAttribute = context.MethodInfo
+            .GetCustomAttributes(typeof(ObsoleteAttribute), false)
+            .Cast<ObsoleteAttribute>()
+            .FirstOrDefault();
+
+        if (obsoleteAttribute != null)
         {
-            if (operation.Extensions == null)
+            operation.Deprecated = true;
+            if (!string.IsNullOrWhiteSpace(obsoleteAttribute.Message))
             {
-                operation.Extensions = new Dictionary<string, IOpenApiExtension>();
+                AddDeprecationWarning(operation, obsoleteAttribute.Message);
             }
-
-            // Add deprecation warning to operation description
-            if (string.IsNullOrWhiteSpace(operation.Description))
-            {
-                operation.Description = $"⚠️ **DEPRECATED**: {message}";
-            }
-            else
-            {
-                operation.Description = $"⚠️ **DEPRECATED**: {message}\n\n{operation.Description}";
-            }
-
-            // Add x-deprecation-warning extension
-            operation.Extensions["x-deprecation-warning"] = new JsonNodeExtension(JsonValue.Create(message));
         }
+    }
+
+    private static void AddDeprecationWarning(OpenApiOperation operation, ApiVersionAttribute apiVersion)
+    {
+        string message = "This API version is deprecated.";
+
+        if (apiVersion.Deprecated)
+        {
+            message = $"API version {apiVersion.Versions.FirstOrDefault()} is deprecated.";
+        }
+
+        AddDeprecationWarning(operation, message);
+    }
+
+    private static void AddDeprecationWarning(OpenApiOperation operation, string message)
+    {
+        operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+
+        // Add deprecation warning to operation description
+        if (string.IsNullOrWhiteSpace(operation.Description))
+        {
+            operation.Description = $"⚠️ **DEPRECATED**: {message}";
+        }
+        else
+        {
+            operation.Description = $"⚠️ **DEPRECATED**: {message}\n\n{operation.Description}";
+        }
+
+        // Add x-deprecation-warning extension
+        operation.Extensions["x-deprecation-warning"] = new JsonNodeExtension(JsonValue.Create(message));
     }
 }
 

@@ -12,183 +12,176 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.CronJob.Context;
 
-namespace Mvp24Hours.Infrastructure.CronJob.Events
+namespace Mvp24Hours.Infrastructure.CronJob.Events;
+
+/// <summary>
+/// Interface for dispatching CronJob lifecycle events to handlers.
+/// </summary>
+public interface ICronJobEventDispatcher
 {
     /// <summary>
-    /// Interface for dispatching CronJob lifecycle events to handlers.
+    /// Dispatches the job starting event to all registered handlers.
     /// </summary>
-    public interface ICronJobEventDispatcher
-    {
-        /// <summary>
-        /// Dispatches the job starting event to all registered handlers.
-        /// </summary>
-        Task DispatchStartingAsync(ICronJobContext context, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Dispatches the job completed event to all registered handlers.
-        /// </summary>
-        Task DispatchCompletedAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Dispatches the job failed event to all registered handlers.
-        /// </summary>
-        Task DispatchFailedAsync(ICronJobContext context, Exception exception, TimeSpan duration, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Dispatches the job cancelled event to all registered handlers.
-        /// </summary>
-        Task DispatchCancelledAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Dispatches the job retry event to all registered handlers.
-        /// </summary>
-        Task DispatchRetryAsync(ICronJobContext context, Exception exception, TimeSpan delay, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Dispatches the job skipped event to all registered handlers.
-        /// </summary>
-        Task DispatchSkippedAsync(string jobName, SkipReason reason, CancellationToken cancellationToken);
-    }
+    Task DispatchStartingAsync(ICronJobContext context, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Default implementation of <see cref="ICronJobEventDispatcher"/>.
-    /// Resolves handlers from DI and dispatches events in order.
+    /// Dispatches the job completed event to all registered handlers.
     /// </summary>
-    public sealed class CronJobEventDispatcher : ICronJobEventDispatcher
+    Task DispatchCompletedAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dispatches the job failed event to all registered handlers.
+    /// </summary>
+    Task DispatchFailedAsync(ICronJobContext context, Exception exception, TimeSpan duration, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dispatches the job cancelled event to all registered handlers.
+    /// </summary>
+    Task DispatchCancelledAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dispatches the job retry event to all registered handlers.
+    /// </summary>
+    Task DispatchRetryAsync(ICronJobContext context, Exception exception, TimeSpan delay, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dispatches the job skipped event to all registered handlers.
+    /// </summary>
+    Task DispatchSkippedAsync(string jobName, SkipReason reason, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Default implementation of <see cref="ICronJobEventDispatcher"/>.
+/// Resolves handlers from DI and dispatches events in order.
+/// </summary>
+/// <remarks>
+/// Creates a new instance of <see cref="CronJobEventDispatcher"/>.
+/// </remarks>
+/// <param name="serviceProvider">The service provider for resolving handlers.</param>
+/// <param name="logger">The logger.</param>
+public sealed class CronJobEventDispatcher(IServiceProvider serviceProvider, ILogger<CronJobEventDispatcher> logger) : ICronJobEventDispatcher
+{
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<CronJobEventDispatcher> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    /// <inheritdoc />
+    public async Task DispatchStartingAsync(ICronJobContext context, CancellationToken cancellationToken)
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<CronJobEventDispatcher> _logger;
+        IEnumerable<ICronJobStartingHandler> handlers = GetOrderedHandlers<ICronJobStartingHandler>();
 
-        /// <summary>
-        /// Creates a new instance of <see cref="CronJobEventDispatcher"/>.
-        /// </summary>
-        /// <param name="serviceProvider">The service provider for resolving handlers.</param>
-        /// <param name="logger">The logger.</param>
-        public CronJobEventDispatcher(IServiceProvider serviceProvider, ILogger<CronJobEventDispatcher> logger)
+        foreach (ICronJobStartingHandler handler in handlers)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        /// <inheritdoc />
-        public async Task DispatchStartingAsync(ICronJobContext context, CancellationToken cancellationToken)
-        {
-            IEnumerable<ICronJobStartingHandler> handlers = GetOrderedHandlers<ICronJobStartingHandler>();
-
-            foreach (ICronJobStartingHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobStartingAsync(context, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob starting handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, context.JobName);
-                }
+                await handler.OnJobStartingAsync(context, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob starting handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, context.JobName);
             }
         }
+    }
 
-        /// <inheritdoc />
-        public async Task DispatchCompletedAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task DispatchCompletedAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
+    {
+        IEnumerable<ICronJobCompletedHandler> handlers = GetOrderedHandlers<ICronJobCompletedHandler>();
+
+        foreach (ICronJobCompletedHandler handler in handlers)
         {
-            IEnumerable<ICronJobCompletedHandler> handlers = GetOrderedHandlers<ICronJobCompletedHandler>();
-
-            foreach (ICronJobCompletedHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobCompletedAsync(context, duration, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob completed handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, context.JobName);
-                }
+                await handler.OnJobCompletedAsync(context, duration, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob completed handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, context.JobName);
             }
         }
+    }
 
-        /// <inheritdoc />
-        public async Task DispatchFailedAsync(ICronJobContext context, Exception exception, TimeSpan duration, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task DispatchFailedAsync(ICronJobContext context, Exception exception, TimeSpan duration, CancellationToken cancellationToken)
+    {
+        IEnumerable<ICronJobFailedHandler> handlers = GetOrderedHandlers<ICronJobFailedHandler>();
+
+        foreach (ICronJobFailedHandler handler in handlers)
         {
-            IEnumerable<ICronJobFailedHandler> handlers = GetOrderedHandlers<ICronJobFailedHandler>();
-
-            foreach (ICronJobFailedHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobFailedAsync(context, exception, duration, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob failed handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, context.JobName);
-                }
+                await handler.OnJobFailedAsync(context, exception, duration, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob failed handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, context.JobName);
             }
         }
+    }
 
-        /// <inheritdoc />
-        public async Task DispatchCancelledAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task DispatchCancelledAsync(ICronJobContext context, TimeSpan duration, CancellationToken cancellationToken)
+    {
+        IEnumerable<ICronJobCancelledHandler> handlers = GetOrderedHandlers<ICronJobCancelledHandler>();
+
+        foreach (ICronJobCancelledHandler handler in handlers)
         {
-            IEnumerable<ICronJobCancelledHandler> handlers = GetOrderedHandlers<ICronJobCancelledHandler>();
-
-            foreach (ICronJobCancelledHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobCancelledAsync(context, duration, CancellationToken.None); // Use new token since we're cancelled
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob cancelled handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, context.JobName);
-                }
+                await handler.OnJobCancelledAsync(context, duration, CancellationToken.None); // Use new token since we're cancelled
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob cancelled handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, context.JobName);
             }
         }
+    }
 
-        /// <inheritdoc />
-        public async Task DispatchRetryAsync(ICronJobContext context, Exception exception, TimeSpan delay, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task DispatchRetryAsync(ICronJobContext context, Exception exception, TimeSpan delay, CancellationToken cancellationToken)
+    {
+        IEnumerable<ICronJobRetryHandler> handlers = GetOrderedHandlers<ICronJobRetryHandler>();
+
+        foreach (ICronJobRetryHandler handler in handlers)
         {
-            IEnumerable<ICronJobRetryHandler> handlers = GetOrderedHandlers<ICronJobRetryHandler>();
-
-            foreach (ICronJobRetryHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobRetryAsync(context, exception, delay, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob retry handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, context.JobName);
-                }
+                await handler.OnJobRetryAsync(context, exception, delay, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob retry handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, context.JobName);
             }
         }
+    }
 
-        /// <inheritdoc />
-        public async Task DispatchSkippedAsync(string jobName, SkipReason reason, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task DispatchSkippedAsync(string jobName, SkipReason reason, CancellationToken cancellationToken)
+    {
+        IEnumerable<ICronJobSkippedHandler> handlers = GetOrderedHandlers<ICronJobSkippedHandler>();
+
+        foreach (ICronJobSkippedHandler handler in handlers)
         {
-            IEnumerable<ICronJobSkippedHandler> handlers = GetOrderedHandlers<ICronJobSkippedHandler>();
-
-            foreach (ICronJobSkippedHandler handler in handlers)
+            try
             {
-                try
-                {
-                    await handler.OnJobSkippedAsync(jobName, reason, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in CronJob skipped handler {HandlerType} for job {JobName}",
-                        handler.GetType().Name, jobName);
-                }
+                await handler.OnJobSkippedAsync(jobName, reason, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CronJob skipped handler {HandlerType} for job {JobName}",
+                    handler.GetType().Name, jobName);
             }
         }
+    }
 
-        private IEnumerable<T> GetOrderedHandlers<T>() where T : ICronJobEventHandler
-        {
-            return _serviceProvider.GetServices<T>()
-                .OrderBy(h => h.Order);
-        }
+    private IEnumerable<T> GetOrderedHandlers<T>() where T : ICronJobEventHandler
+    {
+        return _serviceProvider.GetServices<T>()
+            .OrderBy(h => h.Order);
     }
 }
 

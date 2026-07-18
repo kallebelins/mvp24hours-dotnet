@@ -9,28 +9,27 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
-namespace Mvp24Hours.Core.Entities
+namespace Mvp24Hours.Core.Entities;
+
+/// <summary>
+/// Represents an entity
+/// </summary>
+public abstract class EntityBase<TKey> : IEntityBase
 {
+    #region [ Primitive members ]
+
     /// <summary>
-    /// Represents an entity
+    /// Entity identifier used as a reference by the interface
     /// </summary>
-    public abstract class EntityBase<TKey> : IEntityBase
-    {
-        #region [ Primitive members ]
+    [JsonIgnore]
+    [IgnoreDataMember]
+    public virtual object? EntityKey => Id;
+    /// <summary>
+    /// Entity identifier
+    /// </summary>
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [DataMember]
+    public virtual TKey Id { get; set; } = default!;
 
-        /// <summary>
-        /// Entity identifier used as a reference by the interface
-        /// </summary>
-        [JsonIgnore]
-        [IgnoreDataMember]
-        public virtual object? EntityKey => this.Id;
-        /// <summary>
-        /// Entity identifier
-        /// </summary>
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [DataMember]
-        public virtual TKey Id { get; set; } = default!;
-
-        #endregion
-    }
+    #endregion
 }

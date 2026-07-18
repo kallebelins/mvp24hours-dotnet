@@ -4,10 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Mvp24Hours.WebAPI.Configuration;
 
 /// <summary>
@@ -211,12 +207,16 @@ public class ApiKeyValidationResult
     /// Creates a successful validation result.
     /// </summary>
     public static ApiKeyValidationResult Success(string? keyIdentifier = null, string? clientId = null)
-        => new() { IsValid = true, KeyIdentifier = keyIdentifier, ClientId = clientId };
+    {
+        return new() { IsValid = true, KeyIdentifier = keyIdentifier, ClientId = clientId };
+    }
 
     /// <summary>
     /// Creates a failed validation result.
     /// </summary>
     public static ApiKeyValidationResult Failure(string reason)
-        => new() { IsValid = false, FailureReason = reason };
+    {
+        return new() { IsValid = false, FailureReason = reason };
+    }
 }
 

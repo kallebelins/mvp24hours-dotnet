@@ -59,9 +59,9 @@ public class InMemorySagaStateStore : ISagaStateStore
             CompletedAt = state.CompletedAt,
             TimeoutSeconds = state.Timeout.HasValue ? (int)state.Timeout.Value.TotalSeconds : null,
             ExpiresAt = state.ExpiresAt,
-            ExecutedSteps = new List<string>(state.ExecutedSteps),
-            Errors = new List<string>(state.Errors),
-            CompensationErrors = new List<string>(state.CompensationErrors),
+            ExecutedSteps = [.. state.ExecutedSteps],
+            Errors = [.. state.Errors],
+            CompensationErrors = [.. state.CompensationErrors],
             CorrelationId = state.CorrelationId,
             RetryCount = state.RetryCount,
             MaxRetries = state.MaxRetries,
@@ -84,11 +84,15 @@ public class InMemorySagaStateStore : ISagaStateStore
         where TData : class
     {
         if (!_states.TryGetValue(sagaId, out SagaState? state))
+        {
             return Task.FromResult<SagaState<TData>?>(null);
+        }
 
         TData? data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
         if (data == null)
+        {
             return Task.FromResult<SagaState<TData>?>(null);
+        }
 
         var typedState = new SagaState<TData>
         {
@@ -103,9 +107,9 @@ public class InMemorySagaStateStore : ISagaStateStore
             CompletedAt = state.CompletedAt,
             Timeout = state.TimeoutSeconds.HasValue ? TimeSpan.FromSeconds(state.TimeoutSeconds.Value) : null,
             ExpiresAt = state.ExpiresAt,
-            ExecutedSteps = new List<string>(state.ExecutedSteps),
-            Errors = new List<string>(state.Errors),
-            CompensationErrors = new List<string>(state.CompensationErrors),
+            ExecutedSteps = [.. state.ExecutedSteps],
+            Errors = [.. state.Errors],
+            CompensationErrors = [.. state.CompensationErrors],
             CorrelationId = state.CorrelationId,
             RetryCount = state.RetryCount,
             MaxRetries = state.MaxRetries,
@@ -133,11 +137,15 @@ public class InMemorySagaStateStore : ISagaStateStore
         where TData : class
     {
         if (!_states.TryGetValue(sagaId, out SagaState? state))
+        {
             return Task.CompletedTask;
+        }
 
         TData? data = JsonSerializer.Deserialize<TData>(state.DataJson, _jsonOptions);
         if (data == null)
+        {
             return Task.CompletedTask;
+        }
 
         var typedState = new SagaState<TData>
         {
@@ -281,9 +289,9 @@ public class InMemorySagaStateStore : ISagaStateStore
             CompletedAt = state.CompletedAt,
             TimeoutSeconds = state.TimeoutSeconds,
             ExpiresAt = state.ExpiresAt,
-            ExecutedSteps = new List<string>(state.ExecutedSteps),
-            Errors = new List<string>(state.Errors),
-            CompensationErrors = new List<string>(state.CompensationErrors),
+            ExecutedSteps = [.. state.ExecutedSteps],
+            Errors = [.. state.Errors],
+            CompensationErrors = [.. state.CompensationErrors],
             CorrelationId = state.CorrelationId,
             RetryCount = state.RetryCount,
             MaxRetries = state.MaxRetries,

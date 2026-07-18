@@ -5,53 +5,52 @@
 //=====================================================================================
 using System.Diagnostics;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class ActivityExtensions
 {
-    public static class ActivityExtensions
+    public static string GetTraceId(this Activity activity)
     {
-        public static string GetTraceId(this Activity activity)
+        if (activity == null)
         {
-            if (activity == null)
-            {
-                return string.Empty;
-            }
-
-            return activity.IdFormat switch
-            {
-                ActivityIdFormat.Hierarchical => activity.RootId,
-                ActivityIdFormat.W3C => activity.TraceId.ToHexString(),
-                _ => null,
-            } ?? string.Empty;
+            return string.Empty;
         }
 
-        public static string GetSpanId(this Activity activity)
+        return activity.IdFormat switch
         {
-            if (activity == null)
-            {
-                return string.Empty;
-            }
+            ActivityIdFormat.Hierarchical => activity.RootId,
+            ActivityIdFormat.W3C => activity.TraceId.ToHexString(),
+            _ => null,
+        } ?? string.Empty;
+    }
 
-            return activity.IdFormat switch
-            {
-                ActivityIdFormat.Hierarchical => activity.Id,
-                ActivityIdFormat.W3C => activity.SpanId.ToHexString(),
-                _ => null,
-            } ?? string.Empty;
+    public static string GetSpanId(this Activity activity)
+    {
+        if (activity == null)
+        {
+            return string.Empty;
         }
 
-        public static string GetParentId(this Activity activity)
+        return activity.IdFormat switch
         {
-            if (activity == null)
-            {
-                return string.Empty;
-            }
+            ActivityIdFormat.Hierarchical => activity.Id,
+            ActivityIdFormat.W3C => activity.SpanId.ToHexString(),
+            _ => null,
+        } ?? string.Empty;
+    }
 
-            return activity.IdFormat switch
-            {
-                ActivityIdFormat.Hierarchical => activity.ParentId,
-                ActivityIdFormat.W3C => activity.ParentSpanId.ToHexString(),
-                _ => null,
-            } ?? string.Empty;
+    public static string GetParentId(this Activity activity)
+    {
+        if (activity == null)
+        {
+            return string.Empty;
         }
+
+        return activity.IdFormat switch
+        {
+            ActivityIdFormat.Hierarchical => activity.ParentId,
+            ActivityIdFormat.W3C => activity.ParentSpanId.ToHexString(),
+            _ => null,
+        } ?? string.Empty;
     }
 }

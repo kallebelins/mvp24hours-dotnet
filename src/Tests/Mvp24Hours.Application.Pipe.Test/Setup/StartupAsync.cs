@@ -3,47 +3,42 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Application.Pipe.Test.Setup
+namespace Mvp24Hours.Application.Pipe.Test.Setup;
+
+public static class StartupAsync
 {
-    public static class StartupAsync
+    public static IServiceProvider SetupInjectionAsync()
     {
-        public static IServiceProvider SetupInjectionAsync()
-        {
-            IServiceCollection services = new ServiceCollection()
-                           .AddSingleton(ConfigurationHelper.AppSettings);
+        IServiceCollection services = new ServiceCollection()
+                       .AddSingleton(ConfigurationHelper.AppSettings);
 
-            services.AddMvp24HoursPipelineAsync(options =>
-            {
-                options.IsBreakOnFail = false;
-            });
+        services.AddMvp24HoursPipelineAsync(options => options.IsBreakOnFail = false);
 
-            return services.BuildServiceProvider();
-        }
-
-        public static IServiceProvider SetupInjectionFactoryAsync()
-        {
-            IServiceCollection services = new ServiceCollection()
-                           .AddSingleton(ConfigurationHelper.AppSettings);
-
-            services.AddMvp24HoursPipelineAsync(factory: (sp) =>
-            {
-                var pipeline = new PipelineAsync(sp);
-                pipeline.AddInterceptors(input =>
-                {
-                    input.AddContent<int>("factory", 1);
-                    System.Diagnostics.Trace.WriteLine("Interceptor factory.");
-                }, Core.Enums.Infrastructure.PipelineInterceptorType.PostOperation);
-                return pipeline;
-            });
-
-            return services.BuildServiceProvider();
-        }
-
+        return services.BuildServiceProvider();
     }
+
+    public static IServiceProvider SetupInjectionFactoryAsync()
+    {
+        IServiceCollection services = new ServiceCollection()
+                       .AddSingleton(ConfigurationHelper.AppSettings);
+
+        services.AddMvp24HoursPipelineAsync(factory: (sp) =>
+        {
+            var pipeline = new PipelineAsync(sp);
+            pipeline.AddInterceptors(input =>
+            {
+                input.AddContent<int>("factory", 1);
+                System.Diagnostics.Trace.WriteLine("Interceptor factory.");
+            }, Core.Enums.Infrastructure.PipelineInterceptorType.PostOperation);
+            return pipeline;
+        });
+
+        return services.BuildServiceProvider();
+    }
+
 }

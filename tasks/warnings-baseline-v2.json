@@ -1,17 +1,13 @@
 ﻿{
-    "generatedAt":  "2026-07-18T15:13:03-03:00",
-    "total":  4,
+    "generatedAt":  "2026-07-18T15:39:56-03:00",
+    "total":  0,
     "byCode":  {
-                   "CS0618":  4
+
                },
     "byProject":  {
-                      "Mvp24Hours.Infrastructure.Data.EFCore":  3,
-                      "Mvp24Hours.Infrastructure.Data.MongoDb":  1
+
                   },
     "byCodeProject":  {
-                          "CS0618":  {
-                                         "Mvp24Hours.Infrastructure.Data.EFCore":  3,
-                                         "Mvp24Hours.Infrastructure.Data.MongoDb":  1
-                                     }
+
                       }
 }

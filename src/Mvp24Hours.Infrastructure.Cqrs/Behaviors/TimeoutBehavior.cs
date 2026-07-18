@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Extensions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -141,24 +140,18 @@ public sealed record TimeoutPolicy : ITimeoutPolicy
 /// }
 /// </code>
 /// </example>
-public sealed class TimeoutBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TimeoutBehavior.
+/// </remarks>
+/// <param name="options">The mediator options.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class TimeoutBehavior<TRequest, TResponse>(
+    IOptions<MediatorOptions>? options = null,
+    ILogger<TimeoutBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IOptions<MediatorOptions>? _options;
-    private readonly ILogger<TimeoutBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the TimeoutBehavior.
-    /// </summary>
-    /// <param name="options">The mediator options.</param>
-    /// <param name="logger">Optional logger.</param>
-    public TimeoutBehavior(
-        IOptions<MediatorOptions>? options = null,
-        ILogger<TimeoutBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _options = options;
-        _logger = logger;
-    }
+    private readonly IOptions<MediatorOptions>? _options = options;
+    private readonly ILogger<TimeoutBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
@@ -166,8 +159,8 @@ public sealed class TimeoutBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-        var timeout = GetTimeout(request);
+        string requestName = typeof(TRequest).Name;
+        int timeout = GetTimeout(request);
 
         // No timeout configured
         if (timeout <= 0)

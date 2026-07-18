@@ -5,8 +5,6 @@
 //=====================================================================================
 
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.MultiTenancy;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -100,32 +98,24 @@ public interface ITenantAware
 /// services.AddScoped&lt;ITenantContextAccessor, TenantContextAccessor&gt;();
 /// </code>
 /// </example>
-public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TenantBehavior.
+/// </remarks>
+/// <param name="tenantContextAccessor">The tenant context accessor.</param>
+/// <param name="tenantResolver">Optional tenant resolver.</param>
+/// <param name="tenantStore">Optional tenant store for override lookups.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class TenantBehavior<TRequest, TResponse>(
+    ITenantContextAccessor tenantContextAccessor,
+    ITenantResolver? tenantResolver = null,
+    ITenantStore? tenantStore = null,
+    ILogger<TenantBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ITenantContextAccessor _tenantContextAccessor;
-    private readonly ITenantResolver? _tenantResolver;
-    private readonly ITenantStore? _tenantStore;
-    private readonly ILogger<TenantBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the TenantBehavior.
-    /// </summary>
-    /// <param name="tenantContextAccessor">The tenant context accessor.</param>
-    /// <param name="tenantResolver">Optional tenant resolver.</param>
-    /// <param name="tenantStore">Optional tenant store for override lookups.</param>
-    /// <param name="logger">Optional logger.</param>
-    public TenantBehavior(
-        ITenantContextAccessor tenantContextAccessor,
-        ITenantResolver? tenantResolver = null,
-        ITenantStore? tenantStore = null,
-        ILogger<TenantBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
-        _tenantResolver = tenantResolver;
-        _tenantStore = tenantStore;
-        _logger = logger;
-    }
+    private readonly ITenantContextAccessor _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
+    private readonly ITenantResolver? _tenantResolver = tenantResolver;
+    private readonly ITenantStore? _tenantStore = tenantStore;
+    private readonly ILogger<TenantBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
@@ -133,7 +123,7 @@ public sealed class TenantBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
         ITenantContext? tenantContext = null;
         ITenantContext? previousContext = _tenantContextAccessor.Context;
 

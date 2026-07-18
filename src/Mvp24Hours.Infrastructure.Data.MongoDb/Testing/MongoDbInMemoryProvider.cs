@@ -3,17 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using MongoDB.Bson;
-using MongoDB.Driver;
-using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
@@ -71,7 +64,6 @@ public class MongoDbInMemoryProvider : IDisposable
 {
     private readonly MongoDbInMemoryOptions _options;
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _databases;
-    private readonly string _currentDatabaseName;
     private readonly ILogger<MongoDbInMemoryProvider>? _logger;
     private bool _disposed;
 
@@ -93,16 +85,16 @@ public class MongoDbInMemoryProvider : IDisposable
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _databases = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
-        _currentDatabaseName = options.GetEffectiveDatabaseName();
+        DatabaseName = options.GetEffectiveDatabaseName();
         _logger = logger;
 
-        _logger?.LogDebug("MongoDB in-memory provider created: DatabaseName={DatabaseName}", _currentDatabaseName);
+        _logger?.LogDebug("MongoDB in-memory provider created: DatabaseName={DatabaseName}", DatabaseName);
     }
 
     /// <summary>
     /// Gets the current database name.
     /// </summary>
-    public string DatabaseName => _currentDatabaseName;
+    public string DatabaseName { get; }
 
     /// <summary>
     /// Gets an in-memory collection for the specified entity type.
@@ -124,10 +116,10 @@ public class MongoDbInMemoryProvider : IDisposable
     public InMemoryMongoCollection<TEntity> GetCollection<TEntity>(string collectionName)
         where TEntity : class
     {
-        ConcurrentDictionary<string, object> database = _databases.GetOrAdd(_currentDatabaseName,
+        ConcurrentDictionary<string, object> database = _databases.GetOrAdd(DatabaseName,
             _ => new ConcurrentDictionary<string, object>());
 
-        var collection = database.GetOrAdd(collectionName,
+        object collection = database.GetOrAdd(collectionName,
             _ => new InMemoryMongoCollection<TEntity>(collectionName));
 
         return (InMemoryMongoCollection<TEntity>)collection;
@@ -139,7 +131,7 @@ public class MongoDbInMemoryProvider : IDisposable
     /// <param name="collectionName">The collection name to drop.</param>
     public void DropCollection(string collectionName)
     {
-        if (_databases.TryGetValue(_currentDatabaseName, out ConcurrentDictionary<string, object>? database))
+        if (_databases.TryGetValue(DatabaseName, out ConcurrentDictionary<string, object>? database))
         {
             database.TryRemove(collectionName, out _);
         }
@@ -150,7 +142,7 @@ public class MongoDbInMemoryProvider : IDisposable
     /// </summary>
     public void DropDatabase()
     {
-        _databases.TryRemove(_currentDatabaseName, out _);
+        _databases.TryRemove(DatabaseName, out _);
     }
 
     /// <summary>
@@ -159,7 +151,7 @@ public class MongoDbInMemoryProvider : IDisposable
     /// <returns>A list of collection names.</returns>
     public IEnumerable<string> GetCollectionNames()
     {
-        if (_databases.TryGetValue(_currentDatabaseName, out ConcurrentDictionary<string, object>? database))
+        if (_databases.TryGetValue(DatabaseName, out ConcurrentDictionary<string, object>? database))
         {
             return database.Keys;
         }
@@ -177,7 +169,7 @@ public class MongoDbInMemoryProvider : IDisposable
         // For true in-memory testing, use MongoDbRepositoryFake instead
         var options = new MongoDbOptions
         {
-            DatabaseName = _currentDatabaseName,
+            DatabaseName = DatabaseName,
             ConnectionString = _options.ConnectionString ?? "mongodb://localhost:27017",
             EnableTransaction = _options.EnableTransaction,
             EnableMultiTenancy = _options.EnableMultiTenancy
@@ -200,12 +192,15 @@ public class MongoDbInMemoryProvider : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
             _databases.Clear();
-            _logger?.LogDebug("MongoDB in-memory provider disposed: DatabaseName={DatabaseName}", _currentDatabaseName);
+            _logger?.LogDebug("MongoDB in-memory provider disposed: DatabaseName={DatabaseName}", DatabaseName);
         }
 
         _disposed = true;
@@ -222,12 +217,16 @@ public class MongoDbInMemoryProvider : IDisposable
 /// operations for unit testing without a real database.
 /// </para>
 /// </remarks>
-public class InMemoryMongoCollection<TEntity>
+/// <remarks>
+/// Initializes a new instance with the specified collection name and key selector.
+/// </remarks>
+/// <param name="collectionName">The collection name.</param>
+/// <param name="keySelector">Function to extract the document key.</param>
+public class InMemoryMongoCollection<TEntity>(string collectionName, Func<TEntity, object> keySelector)
     where TEntity : class
 {
-    private readonly ConcurrentDictionary<object, TEntity> _documents;
-    private readonly string _collectionName;
-    private readonly Func<TEntity, object> _keySelector;
+    private readonly ConcurrentDictionary<object, TEntity> _documents = new();
+    private readonly Func<TEntity, object> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
     /// <summary>
     /// Initializes a new instance with the specified collection name.
@@ -239,21 +238,9 @@ public class InMemoryMongoCollection<TEntity>
     }
 
     /// <summary>
-    /// Initializes a new instance with the specified collection name and key selector.
-    /// </summary>
-    /// <param name="collectionName">The collection name.</param>
-    /// <param name="keySelector">Function to extract the document key.</param>
-    public InMemoryMongoCollection(string collectionName, Func<TEntity, object> keySelector)
-    {
-        _collectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));
-        _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-        _documents = new ConcurrentDictionary<object, TEntity>();
-    }
-
-    /// <summary>
     /// Gets the collection name.
     /// </summary>
-    public string CollectionName => _collectionName;
+    public string CollectionName { get; } = collectionName ?? throw new ArgumentNullException(nameof(collectionName));
 
     /// <summary>
     /// Gets the count of documents in the collection.
@@ -274,7 +261,7 @@ public class InMemoryMongoCollection<TEntity>
         ArgumentNullException.ThrowIfNull(document);
 
         EnsureIdSet(document);
-        var key = _keySelector(document);
+        object key = _keySelector(document);
         if (!_documents.TryAdd(key, document))
         {
             throw new InvalidOperationException($"Document with key '{key}' already exists.");
@@ -326,7 +313,7 @@ public class InMemoryMongoCollection<TEntity>
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        var key = _keySelector(document);
+        object key = _keySelector(document);
         if (_documents.ContainsKey(key))
         {
             _documents[key] = document;
@@ -375,7 +362,7 @@ public class InMemoryMongoCollection<TEntity>
     public bool DeleteOne(TEntity document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        var key = _keySelector(document);
+        object key = _keySelector(document);
         return DeleteOne(key);
     }
 
@@ -438,7 +425,7 @@ public class InMemoryMongoCollection<TEntity>
     /// <returns>A list of all documents.</returns>
     public IList<TEntity> FindAll()
     {
-        return new List<TEntity>(_documents.Values);
+        return [.. _documents.Values];
     }
 
     /// <summary>
@@ -531,9 +518,12 @@ public class InMemoryMongoCollection<TEntity>
         PropertyInfo? idProperty = typeof(TEntity).GetProperty("Id")
             ?? typeof(TEntity).GetProperty("_id");
 
-        if (idProperty == null) return;
+        if (idProperty == null)
+        {
+            return;
+        }
 
-        var currentValue = idProperty.GetValue(document);
+        object? currentValue = idProperty.GetValue(document);
 
         // Auto-generate ObjectId if not set
         if (idProperty.PropertyType == typeof(ObjectId))

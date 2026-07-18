@@ -3,28 +3,26 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files
-{
-    /// <summary>
-    /// Log writing operation
-    /// </summary>
-    public class FileLogWriteOperationAsync(string _filePath) : OperationBaseAsync
-    {
-        public override bool IsRequired => true;
-        public virtual string FilePath => _filePath;
+namespace Mvp24Hours.Infrastructure.Pipe.Operations.Custom.Files;
 
-        public override async Task ExecuteAsync(IPipelineMessage input)
+/// <summary>
+/// Log writing operation
+/// </summary>
+public class FileLogWriteOperationAsync(string _filePath) : OperationBaseAsync
+{
+    public override bool IsRequired => true;
+    public virtual string FilePath => _filePath;
+
+    public override async Task ExecuteAsync(IPipelineMessage input)
+    {
+        if (FilePath.HasValue())
         {
-            if (FilePath.HasValue())
-            {
-                FileLogHelper.WriteLog(input.GetContentAll(), FilePath, "message", $"Token: {input.Token} / IsSuccess: {input.IsFaulty} / Warnings: {string.Join('/', input.Messages)}");
-            }
-            await Task.CompletedTask;
+            FileLogHelper.WriteLog(input.GetContentAll(), FilePath, "message", $"Token: {input.Token} / IsSuccess: {input.IsFaulty} / Warnings: {string.Join('/', input.Messages)}");
         }
+        await Task.CompletedTask;
     }
 }

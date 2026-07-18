@@ -12,24 +12,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Saga;
 /// <summary>
 /// Default implementation of the saga orchestrator.
 /// </summary>
-public class SagaOrchestrator : ISagaOrchestrator
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaOrchestrator"/> class.
+/// </remarks>
+public class SagaOrchestrator(
+    IServiceProvider serviceProvider,
+    ISagaStateStore stateStore,
+    ILogger<SagaOrchestrator> logger) : ISagaOrchestrator
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ISagaStateStore _stateStore;
-    private readonly ILogger<SagaOrchestrator> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaOrchestrator"/> class.
-    /// </summary>
-    public SagaOrchestrator(
-        IServiceProvider serviceProvider,
-        ISagaStateStore stateStore,
-        ILogger<SagaOrchestrator> logger)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ISagaStateStore _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
+    private readonly ILogger<SagaOrchestrator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task<SagaResult<TData>> ExecuteAsync<TSaga, TData>(
@@ -83,12 +76,7 @@ public class SagaOrchestrator : ISagaOrchestrator
         where TSaga : ISaga<TData>
         where TData : class
     {
-        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
-        if (state == null)
-        {
-            throw new SagaNotFoundException(sagaId);
-        }
-
+        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken) ?? throw new SagaNotFoundException(sagaId);
         TSaga saga = ActivatorUtilities.CreateInstance<TSaga>(_serviceProvider);
 
         _logger.LogInformation("Resuming saga {SagaId} of type {SagaType}", sagaId, typeof(TSaga).Name);
@@ -131,13 +119,8 @@ public class SagaOrchestrator : ISagaOrchestrator
         where TSaga : ISaga<TData>
         where TData : class
     {
-        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken);
-        if (state == null)
-        {
-            throw new SagaNotFoundException(sagaId);
-        }
-
-        if (state.Status != SagaStatus.Failed && state.Status != SagaStatus.Running)
+        SagaState<TData>? state = await _stateStore.GetAsync<TData>(sagaId, cancellationToken) ?? throw new SagaNotFoundException(sagaId);
+        if (state.Status is not SagaStatus.Failed and not SagaStatus.Running)
         {
             throw new SagaInvalidStateException(sagaId, state.Status, SagaStatus.Failed);
         }
@@ -185,13 +168,8 @@ public class SagaOrchestrator : ISagaOrchestrator
     /// <inheritdoc />
     public async Task<SagaResult> CancelAsync(Guid sagaId, bool compensate = true, CancellationToken cancellationToken = default)
     {
-        SagaState? state = await _stateStore.GetAsync(sagaId, cancellationToken);
-        if (state == null)
-        {
-            throw new SagaNotFoundException(sagaId);
-        }
-
-        if (state.Status != SagaStatus.Running && state.Status != SagaStatus.Suspended)
+        SagaState? state = await _stateStore.GetAsync(sagaId, cancellationToken) ?? throw new SagaNotFoundException(sagaId);
+        if (state.Status is not SagaStatus.Running and not SagaStatus.Suspended)
         {
             throw new SagaInvalidStateException(sagaId, state.Status,
                 "Saga can only be cancelled when Running or Suspended");
@@ -215,12 +193,14 @@ public class SagaOrchestrator : ISagaOrchestrator
     public async Task<int> ProcessRetryQueueAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<SagaState> readyForRetry = await _stateStore.GetReadyForRetryAsync(cancellationToken);
-        var processed = 0;
+        int processed = 0;
 
         foreach (SagaState state in readyForRetry)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 break;
+            }
 
             try
             {
@@ -260,12 +240,14 @@ public class SagaOrchestrator : ISagaOrchestrator
     public async Task<int> ProcessTimeoutsAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<SagaState> timedOut = await _stateStore.GetTimedOutSagasAsync(cancellationToken);
-        var processed = 0;
+        int processed = 0;
 
         foreach (SagaState state in timedOut)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 break;
+            }
 
             try
             {

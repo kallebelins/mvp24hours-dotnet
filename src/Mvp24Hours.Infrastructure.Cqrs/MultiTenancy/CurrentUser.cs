@@ -52,10 +52,16 @@ public sealed record CurrentUser : ICurrentUser
     public IReadOnlyDictionary<string, string?> Claims { get; }
 
     /// <inheritdoc />
-    public bool IsInRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    public bool IsInRole(string role)
+    {
+        return Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <inheritdoc />
-    public string? GetClaim(string claimType) => Claims.TryGetValue(claimType, out var value) ? value : null;
+    public string? GetClaim(string claimType)
+    {
+        return Claims.TryGetValue(claimType, out string? value) ? value : null;
+    }
 
     /// <summary>
     /// Creates an anonymous (non-authenticated) user.
@@ -65,14 +71,18 @@ public sealed record CurrentUser : ICurrentUser
     /// <summary>
     /// Creates an authenticated user with the specified ID.
     /// </summary>
-    public static CurrentUser FromId(string id, string? name = null) =>
-        new(id: id, name: name, isAuthenticated: true);
+    public static CurrentUser FromId(string id, string? name = null)
+    {
+        return new(id: id, name: name, isAuthenticated: true);
+    }
 
     /// <summary>
     /// Creates an authenticated user with ID, name, and email.
     /// </summary>
-    public static CurrentUser Create(string id, string name, string? email = null, IEnumerable<string>? roles = null) =>
-        new(id: id, name: name, email: email, isAuthenticated: true, roles: roles);
+    public static CurrentUser Create(string id, string name, string? email = null, IEnumerable<string>? roles = null)
+    {
+        return new(id: id, name: name, email: email, isAuthenticated: true, roles: roles);
+    }
 }
 
 /// <summary>
@@ -95,10 +105,7 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
         set
         {
             UserHolder? holder = _userHolder.Value;
-            if (holder != null)
-            {
-                holder.User = null;
-            }
+            holder?.User = null;
 
             if (value != null)
             {

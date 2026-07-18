@@ -3,10 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,7 +23,6 @@ public class TestCronJobService<T> : IAsyncDisposable
     where T : class
 {
     private readonly ServiceCollection _services = new();
-    private readonly Mock<IHostApplicationLifetime> _hostLifetimeMock = new();
     private ServiceProvider? _serviceProvider;
     private CancellationTokenSource? _cts;
     private bool _disposed;
@@ -40,7 +35,7 @@ public class TestCronJobService<T> : IAsyncDisposable
     /// <summary>
     /// Gets the mock IHostApplicationLifetime.
     /// </summary>
-    public Mock<IHostApplicationLifetime> HostLifetimeMock => _hostLifetimeMock;
+    public Mock<IHostApplicationLifetime> HostLifetimeMock { get; } = new();
 
     /// <summary>
     /// Gets the service collection for additional registrations.
@@ -62,7 +57,7 @@ public class TestCronJobService<T> : IAsyncDisposable
     /// </summary>
     public TestCronJobService<T> ConfigureHostLifetime(Action<Mock<IHostApplicationLifetime>> configure)
     {
-        configure(_hostLifetimeMock);
+        configure(HostLifetimeMock);
         return this;
     }
 
@@ -92,7 +87,7 @@ public class TestCronJobService<T> : IAsyncDisposable
         // Add default services if not already registered
         _services.AddSingleton(TimeProvider);
         _services.AddSingleton(Tracker);
-        _services.AddSingleton(_hostLifetimeMock.Object);
+        _services.AddSingleton(HostLifetimeMock.Object);
         _services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
         _services.AddSingleton<ICronJobExecutionLock, InMemoryCronJobExecutionLock>();
         _services.AddSingleton<CronJobCircuitBreaker>();
@@ -120,7 +115,7 @@ public class TestCronJobService<T> : IAsyncDisposable
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
             config,
-            _hostLifetimeMock.Object,
+            HostLifetimeMock.Object,
             _serviceProvider!,
             logger,
             TimeProvider)!;
@@ -151,7 +146,7 @@ public class TestCronJobService<T> : IAsyncDisposable
         var job = (TJob)Activator.CreateInstance(
             typeof(TJob),
             config,
-            _hostLifetimeMock.Object,
+            HostLifetimeMock.Object,
             serviceProvider,
             executionLock,
             circuitBreaker,
@@ -244,7 +239,10 @@ public class TestCronJobService<T> : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         _cts?.Cancel();
         _cts?.Dispose();

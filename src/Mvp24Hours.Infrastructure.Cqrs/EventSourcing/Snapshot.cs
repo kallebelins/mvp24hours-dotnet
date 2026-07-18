@@ -154,7 +154,9 @@ public class EventCountSnapshotStrategy : ISnapshotStrategy
     public EventCountSnapshotStrategy(int threshold)
     {
         if (threshold <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(threshold), "Threshold must be positive.");
+        }
 
         _threshold = threshold;
     }
@@ -170,18 +172,13 @@ public class EventCountSnapshotStrategy : ISnapshotStrategy
 /// <summary>
 /// Composite snapshot strategy that combines multiple strategies with OR logic.
 /// </summary>
-public class CompositeSnapshotStrategy : ISnapshotStrategy
+/// <remarks>
+/// Initializes a new instance with multiple strategies.
+/// </remarks>
+/// <param name="strategies">The strategies to combine.</param>
+public class CompositeSnapshotStrategy(IEnumerable<ISnapshotStrategy> strategies) : ISnapshotStrategy
 {
-    private readonly IEnumerable<ISnapshotStrategy> _strategies;
-
-    /// <summary>
-    /// Initializes a new instance with multiple strategies.
-    /// </summary>
-    /// <param name="strategies">The strategies to combine.</param>
-    public CompositeSnapshotStrategy(IEnumerable<ISnapshotStrategy> strategies)
-    {
-        _strategies = strategies ?? throw new ArgumentNullException(nameof(strategies));
-    }
+    private readonly IEnumerable<ISnapshotStrategy> _strategies = strategies ?? throw new ArgumentNullException(nameof(strategies));
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
@@ -205,7 +202,10 @@ public class NeverSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IEventSourcedAggregate => false;
+        where TAggregate : IEventSourcedAggregate
+    {
+        return false;
+    }
 }
 
 /// <summary>
@@ -223,6 +223,9 @@ public class AlwaysSnapshotStrategy : ISnapshotStrategy
 
     /// <inheritdoc />
     public bool ShouldTakeSnapshot<TAggregate>(TAggregate aggregate, long lastSnapshotVersion)
-        where TAggregate : IEventSourcedAggregate => aggregate.Version > lastSnapshotVersion;
+        where TAggregate : IEventSourcedAggregate
+    {
+        return aggregate.Version > lastSnapshotVersion;
+    }
 }
 

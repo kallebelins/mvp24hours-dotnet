@@ -3,341 +3,324 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority
+namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Priority;
+
+/// <summary>
+/// A pipeline that automatically sorts and executes operations by priority.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Operations with higher priority values execute first.
+/// Operations can specify priority via:
+/// <list type="bullet">
+/// <item>Implementing <see cref="IPrioritizedOperation"/></item>
+/// <item>Using <see cref="OperationPriorityAttribute"/></item>
+/// <item>Wrapping with <see cref="PrioritizedOperation{T}"/></item>
+/// </list>
+/// </para>
+/// </remarks>
+/// <example>
+/// <code>
+/// var pipeline = new PriorityPipeline();
+/// 
+/// // These will be automatically sorted by priority
+/// pipeline.Add(new LoggingOperation(), PriorityLevel.Lowest);
+/// pipeline.Add(new ValidationOperation(), PriorityLevel.Critical);
+/// pipeline.Add(new ProcessingOperation(), PriorityLevel.Normal);
+/// 
+/// // Execution order: Validation (150) -> Processing (50) -> Logging (0)
+/// pipeline.Execute(message);
+/// </code>
+/// </example>
+/// <remarks>
+/// Creates a new priority pipeline.
+/// </remarks>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class PriorityPipeline(ILogger<PriorityPipeline>? logger = null)
 {
+    private readonly List<PrioritizedOperation<IOperation>> _operations = [];
+    private readonly List<PrioritizedOperation<IOperationAsync>> _asyncOperations = [];
+    private readonly ILogger<PriorityPipeline>? _logger = logger;
+    private bool _needsSorting = true;
+
     /// <summary>
-    /// A pipeline that automatically sorts and executes operations by priority.
+    /// Gets or sets whether to break on fail.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Operations with higher priority values execute first.
-    /// Operations can specify priority via:
-    /// <list type="bullet">
-    /// <item>Implementing <see cref="IPrioritizedOperation"/></item>
-    /// <item>Using <see cref="OperationPriorityAttribute"/></item>
-    /// <item>Wrapping with <see cref="PrioritizedOperation{T}"/></item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// var pipeline = new PriorityPipeline();
-    /// 
-    /// // These will be automatically sorted by priority
-    /// pipeline.Add(new LoggingOperation(), PriorityLevel.Lowest);
-    /// pipeline.Add(new ValidationOperation(), PriorityLevel.Critical);
-    /// pipeline.Add(new ProcessingOperation(), PriorityLevel.Normal);
-    /// 
-    /// // Execution order: Validation (150) -> Processing (50) -> Logging (0)
-    /// pipeline.Execute(message);
-    /// </code>
-    /// </example>
-    public class PriorityPipeline
+    public bool IsBreakOnFail { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to allow exception propagation.
+    /// </summary>
+    public bool AllowPropagateException { get; set; }
+
+    /// <summary>
+    /// Adds a synchronous operation with auto-detected priority.
+    /// </summary>
+    /// <param name="operation">The operation to add.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline Add(IOperation operation)
     {
-        private readonly List<PrioritizedOperation<IOperation>> _operations = [];
-        private readonly List<PrioritizedOperation<IOperationAsync>> _asyncOperations = [];
-        private readonly ILogger<PriorityPipeline>? _logger;
-        private bool _needsSorting = true;
+        int priority = OperationPriorityHelper.GetPriority(operation);
+        string? group = OperationPriorityHelper.GetGroup(operation);
+        _operations.Add(new PrioritizedOperation<IOperation>(operation, priority, group));
+        _needsSorting = true;
+        return this;
+    }
 
-        /// <summary>
-        /// Creates a new priority pipeline.
-        /// </summary>
-        /// <param name="logger">Optional logger for diagnostics.</param>
-        public PriorityPipeline(ILogger<PriorityPipeline>? logger = null)
+    /// <summary>
+    /// Adds a synchronous operation with explicit priority.
+    /// </summary>
+    /// <param name="operation">The operation to add.</param>
+    /// <param name="priority">The priority value.</param>
+    /// <param name="group">Optional group name.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline Add(IOperation operation, int priority, string? group = null)
+    {
+        _operations.Add(new PrioritizedOperation<IOperation>(operation, priority, group));
+        _needsSorting = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a synchronous operation with a priority level.
+    /// </summary>
+    /// <param name="operation">The operation to add.</param>
+    /// <param name="level">The priority level.</param>
+    /// <param name="group">Optional group name.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline Add(IOperation operation, PriorityLevel level, string? group = null)
+    {
+        return Add(operation, (int)level, group);
+    }
+
+    /// <summary>
+    /// Adds an async operation with auto-detected priority.
+    /// </summary>
+    /// <param name="operation">The async operation to add.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline AddAsync(IOperationAsync operation)
+    {
+        int priority = OperationPriorityHelper.GetPriority(operation);
+        string? group = OperationPriorityHelper.GetGroup(operation);
+        _asyncOperations.Add(new PrioritizedOperation<IOperationAsync>(operation, priority, group));
+        _needsSorting = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds an async operation with explicit priority.
+    /// </summary>
+    /// <param name="operation">The async operation to add.</param>
+    /// <param name="priority">The priority value.</param>
+    /// <param name="group">Optional group name.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline AddAsync(IOperationAsync operation, int priority, string? group = null)
+    {
+        _asyncOperations.Add(new PrioritizedOperation<IOperationAsync>(operation, priority, group));
+        _needsSorting = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds an async operation with a priority level.
+    /// </summary>
+    /// <param name="operation">The async operation to add.</param>
+    /// <param name="level">The priority level.</param>
+    /// <param name="group">Optional group name.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline AddAsync(IOperationAsync operation, PriorityLevel level, string? group = null)
+    {
+        return AddAsync(operation, (int)level, group);
+    }
+
+    /// <summary>
+    /// Executes the pipeline with the given input message.
+    /// </summary>
+    /// <param name="input">The pipeline message to process.</param>
+    /// <returns>The processed message.</returns>
+    public IPipelineMessage Execute(IPipelineMessage input)
+    {
+        EnsureSorted();
+
+        _logger?.LogDebug("PriorityPipeline: Execute started with {OperationCount} operations", _operations.Count);
+
+        foreach (PrioritizedOperation<IOperation> prioritized in _operations)
         {
-            _logger = logger;
-        }
-
-        /// <summary>
-        /// Gets or sets whether to break on fail.
-        /// </summary>
-        public bool IsBreakOnFail { get; set; }
-
-        /// <summary>
-        /// Gets or sets whether to allow exception propagation.
-        /// </summary>
-        public bool AllowPropagateException { get; set; }
-
-        /// <summary>
-        /// Adds a synchronous operation with auto-detected priority.
-        /// </summary>
-        /// <param name="operation">The operation to add.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline Add(IOperation operation)
-        {
-            var priority = OperationPriorityHelper.GetPriority(operation);
-            var group = OperationPriorityHelper.GetGroup(operation);
-            _operations.Add(new PrioritizedOperation<IOperation>(operation, priority, group));
-            _needsSorting = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a synchronous operation with explicit priority.
-        /// </summary>
-        /// <param name="operation">The operation to add.</param>
-        /// <param name="priority">The priority value.</param>
-        /// <param name="group">Optional group name.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline Add(IOperation operation, int priority, string? group = null)
-        {
-            _operations.Add(new PrioritizedOperation<IOperation>(operation, priority, group));
-            _needsSorting = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a synchronous operation with a priority level.
-        /// </summary>
-        /// <param name="operation">The operation to add.</param>
-        /// <param name="level">The priority level.</param>
-        /// <param name="group">Optional group name.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline Add(IOperation operation, PriorityLevel level, string? group = null)
-        {
-            return Add(operation, (int)level, group);
-        }
-
-        /// <summary>
-        /// Adds an async operation with auto-detected priority.
-        /// </summary>
-        /// <param name="operation">The async operation to add.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline AddAsync(IOperationAsync operation)
-        {
-            var priority = OperationPriorityHelper.GetPriority(operation);
-            var group = OperationPriorityHelper.GetGroup(operation);
-            _asyncOperations.Add(new PrioritizedOperation<IOperationAsync>(operation, priority, group));
-            _needsSorting = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds an async operation with explicit priority.
-        /// </summary>
-        /// <param name="operation">The async operation to add.</param>
-        /// <param name="priority">The priority value.</param>
-        /// <param name="group">Optional group name.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline AddAsync(IOperationAsync operation, int priority, string? group = null)
-        {
-            _asyncOperations.Add(new PrioritizedOperation<IOperationAsync>(operation, priority, group));
-            _needsSorting = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds an async operation with a priority level.
-        /// </summary>
-        /// <param name="operation">The async operation to add.</param>
-        /// <param name="level">The priority level.</param>
-        /// <param name="group">Optional group name.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline AddAsync(IOperationAsync operation, PriorityLevel level, string? group = null)
-        {
-            return AddAsync(operation, (int)level, group);
-        }
-
-        /// <summary>
-        /// Executes the pipeline with the given input message.
-        /// </summary>
-        /// <param name="input">The pipeline message to process.</param>
-        /// <returns>The processed message.</returns>
-        public IPipelineMessage Execute(IPipelineMessage input)
-        {
-            EnsureSorted();
-
-            _logger?.LogDebug("PriorityPipeline: Execute started with {OperationCount} operations", _operations.Count);
-
-            foreach (PrioritizedOperation<IOperation> prioritized in _operations)
+            try
             {
-                try
+                _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' (Priority: {Priority}) started", prioritized.Operation.GetType().Name, prioritized.Priority);
+
+                prioritized.Operation.Execute(input);
+
+                _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' finished", prioritized.Operation.GetType().Name);
+
+                if (IsBreakOnFail && input.IsFaulty)
                 {
-                    _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' (Priority: {Priority}) started", prioritized.Operation.GetType().Name, prioritized.Priority);
-
-                    prioritized.Operation.Execute(input);
-
-                    _logger?.LogDebug("PriorityPipeline: Operation '{OperationName}' finished", prioritized.Operation.GetType().Name);
-
-                    if (IsBreakOnFail && input.IsFaulty)
-                    {
-                        _logger?.LogWarning("PriorityPipeline: Breaking on fail after operation '{OperationName}'", prioritized.Operation.GetType().Name);
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "PriorityPipeline: Operation failed");
-                    input.SetFailure();
-
-                    if (AllowPropagateException)
-                    {
-                        throw;
-                    }
-
-                    if (IsBreakOnFail)
-                    {
-                        break;
-                    }
+                    _logger?.LogWarning("PriorityPipeline: Breaking on fail after operation '{OperationName}'", prioritized.Operation.GetType().Name);
+                    break;
                 }
             }
-
-            _logger?.LogDebug("PriorityPipeline: Execute finished");
-            return input;
-        }
-
-        /// <summary>
-        /// Executes the pipeline asynchronously.
-        /// </summary>
-        /// <param name="input">The pipeline message.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The processed message.</returns>
-        public async Task<IPipelineMessage> ExecuteAsync(IPipelineMessage input, CancellationToken cancellationToken = default)
-        {
-            EnsureSorted();
-
-            _logger?.LogDebug("PriorityPipeline: ExecuteAsync started with {SyncOperationCount} sync and {AsyncOperationCount} async operations", _operations.Count, _asyncOperations.Count);
-
-            // Combine sync and async operations, sorted by priority
-            var allOperations = _operations
-                .Select(p => (p.Priority, p.Group, SyncOp: (IOperation?)p.Operation, AsyncOp: (IOperationAsync?)null))
-                .Concat(_asyncOperations
-                    .Select(p => (p.Priority, p.Group, SyncOp: (IOperation?)null, AsyncOp: (IOperationAsync?)p.Operation)))
-                .OrderByDescending(x => x.Priority)
-                .ToList();
-
-            foreach ((int Priority, string? Group, IOperation? SyncOp, IOperationAsync? AsyncOp) op in allOperations)
+            catch (Exception ex)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                _logger?.LogError(ex, "PriorityPipeline: Operation failed");
+                input.SetFailure();
 
-                try
+                if (AllowPropagateException)
                 {
-                    var opName = op.SyncOp?.GetType().Name ?? op.AsyncOp?.GetType().Name ?? "unknown";
-                    _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' (Priority: {Priority}) started", opName, op.Priority);
-
-                    if (op.AsyncOp != null)
-                    {
-                        await op.AsyncOp.ExecuteAsync(input);
-                    }
-                    else if (op.SyncOp != null)
-                    {
-                        op.SyncOp.Execute(input);
-                    }
-
-                    _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' finished", opName);
-
-                    if (IsBreakOnFail && input.IsFaulty)
-                    {
-                        _logger?.LogWarning("PriorityPipeline: Breaking on fail after async operation '{OperationName}'", opName);
-                        break;
-                    }
+                    throw;
                 }
-                catch (Exception ex)
+
+                if (IsBreakOnFail)
                 {
-                    _logger?.LogError(ex, "PriorityPipeline: Async operation failed");
-                    input.SetFailure();
-
-                    if (AllowPropagateException)
-                    {
-                        throw;
-                    }
-
-                    if (IsBreakOnFail)
-                    {
-                        break;
-                    }
+                    break;
                 }
-            }
-
-            _logger?.LogDebug("PriorityPipeline: ExecuteAsync finished");
-            return input;
-        }
-
-        /// <summary>
-        /// Gets the operations in priority order.
-        /// </summary>
-        /// <returns>Operations sorted by priority.</returns>
-        public IReadOnlyList<(IOperation Operation, int Priority, string? Group)> GetOperationsInOrder()
-        {
-            EnsureSorted();
-            return _operations
-                .Select(p => (p.Operation, p.Priority, p.Group))
-                .ToList();
-        }
-
-        /// <summary>
-        /// Gets the async operations in priority order.
-        /// </summary>
-        /// <returns>Async operations sorted by priority.</returns>
-        public IReadOnlyList<(IOperationAsync Operation, int Priority, string? Group)> GetAsyncOperationsInOrder()
-        {
-            EnsureSorted();
-            return _asyncOperations
-                .Select(p => (p.Operation, p.Priority, p.Group))
-                .ToList();
-        }
-
-        private void EnsureSorted()
-        {
-            if (_needsSorting)
-            {
-                _operations.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-                _asyncOperations.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-                _needsSorting = false;
             }
         }
 
-        /// <summary>
-        /// Adds an interceptor action with the highest priority.
-        /// </summary>
-        /// <param name="action">The action to execute.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline AddInterceptor(Action<IPipelineMessage> action)
+        _logger?.LogDebug("PriorityPipeline: Execute finished");
+        return input;
+    }
+
+    /// <summary>
+    /// Executes the pipeline asynchronously.
+    /// </summary>
+    /// <param name="input">The pipeline message.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The processed message.</returns>
+    public async Task<IPipelineMessage> ExecuteAsync(IPipelineMessage input, CancellationToken cancellationToken = default)
+    {
+        EnsureSorted();
+
+        _logger?.LogDebug("PriorityPipeline: ExecuteAsync started with {SyncOperationCount} sync and {AsyncOperationCount} async operations", _operations.Count, _asyncOperations.Count);
+
+        // Combine sync and async operations, sorted by priority
+        var allOperations = _operations
+            .Select(p => (p.Priority, p.Group, SyncOp: (IOperation?)p.Operation, AsyncOp: (IOperationAsync?)null))
+            .Concat(_asyncOperations
+                .Select(p => (p.Priority, p.Group, SyncOp: (IOperation?)null, AsyncOp: (IOperationAsync?)p.Operation)))
+            .OrderByDescending(x => x.Priority)
+            .ToList();
+
+        foreach ((int Priority, string? Group, IOperation? SyncOp, IOperationAsync? AsyncOp) op in allOperations)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                string opName = op.SyncOp?.GetType().Name ?? op.AsyncOp?.GetType().Name ?? "unknown";
+                _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' (Priority: {Priority}) started", opName, op.Priority);
+
+                if (op.AsyncOp != null)
+                {
+                    await op.AsyncOp.ExecuteAsync(input);
+                }
+                else
+                {
+                    op.SyncOp?.Execute(input);
+                }
+
+                _logger?.LogDebug("PriorityPipeline: Async Operation '{OperationName}' finished", opName);
+
+                if (IsBreakOnFail && input.IsFaulty)
+                {
+                    _logger?.LogWarning("PriorityPipeline: Breaking on fail after async operation '{OperationName}'", opName);
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "PriorityPipeline: Async operation failed");
+                input.SetFailure();
+
+                if (AllowPropagateException)
+                {
+                    throw;
+                }
+
+                if (IsBreakOnFail)
+                {
+                    break;
+                }
+            }
+        }
+
+        _logger?.LogDebug("PriorityPipeline: ExecuteAsync finished");
+        return input;
+    }
+
+    /// <summary>
+    /// Gets the operations in priority order.
+    /// </summary>
+    /// <returns>Operations sorted by priority.</returns>
+    public IReadOnlyList<(IOperation Operation, int Priority, string? Group)> GetOperationsInOrder()
+    {
+        EnsureSorted();
+        return [.. _operations.Select(p => (p.Operation, p.Priority, p.Group))];
+    }
+
+    /// <summary>
+    /// Gets the async operations in priority order.
+    /// </summary>
+    /// <returns>Async operations sorted by priority.</returns>
+    public IReadOnlyList<(IOperationAsync Operation, int Priority, string? Group)> GetAsyncOperationsInOrder()
+    {
+        EnsureSorted();
+        return [.. _asyncOperations.Select(p => (p.Operation, p.Priority, p.Group))];
+    }
+
+    private void EnsureSorted()
+    {
+        if (_needsSorting)
+        {
+            _operations.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+            _asyncOperations.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+            _needsSorting = false;
+        }
+    }
+
+    /// <summary>
+    /// Adds an interceptor action with the highest priority.
+    /// </summary>
+    /// <param name="action">The action to execute.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline AddInterceptor(Action<IPipelineMessage> action)
+    {
+        Add(new InterceptorOperation(action), PriorityLevel.Highest);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds multiple interceptor actions with the highest priority.
+    /// </summary>
+    /// <param name="actions">The actions to execute.</param>
+    /// <returns>This pipeline for chaining.</returns>
+    public PriorityPipeline AddInterceptors(params Action<IPipelineMessage>[] actions)
+    {
+        foreach (Action<IPipelineMessage> action in actions)
         {
             Add(new InterceptorOperation(action), PriorityLevel.Highest);
-            return this;
         }
-
-        /// <summary>
-        /// Adds multiple interceptor actions with the highest priority.
-        /// </summary>
-        /// <param name="actions">The actions to execute.</param>
-        /// <returns>This pipeline for chaining.</returns>
-        public PriorityPipeline AddInterceptors(params Action<IPipelineMessage>[] actions)
-        {
-            foreach (Action<IPipelineMessage> action in actions)
-            {
-                Add(new InterceptorOperation(action), PriorityLevel.Highest);
-            }
-            return this;
-        }
+        return this;
     }
+}
 
-    /// <summary>
-    /// Simple interceptor operation wrapper.
-    /// </summary>
-    internal sealed class InterceptorOperation : IOperation
+/// <summary>
+/// Simple interceptor operation wrapper.
+/// </summary>
+internal sealed class InterceptorOperation(Action<IPipelineMessage> action) : IOperation
+{
+    private readonly Action<IPipelineMessage> _action = action ?? throw new ArgumentNullException(nameof(action));
+
+    public bool IsRequired => false;
+
+    public void Execute(IPipelineMessage input)
     {
-        private readonly Action<IPipelineMessage> _action;
-
-        public InterceptorOperation(Action<IPipelineMessage> action)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-        }
-
-        public bool IsRequired => false;
-
-        public void Execute(IPipelineMessage input) => _action(input);
-
-        public void Rollback(IPipelineMessage input) { }
+        _action(input);
     }
+
+    public void Rollback(IPipelineMessage input) { }
 }
 

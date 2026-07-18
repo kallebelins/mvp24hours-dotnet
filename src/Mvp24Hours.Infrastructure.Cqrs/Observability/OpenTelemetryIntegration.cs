@@ -116,7 +116,7 @@ public static class MediatorActivitySource
         string requestType,
         IRequestContext? context = null)
     {
-        var activityName = requestType switch
+        string activityName = requestType switch
         {
             "Command" => ActivityNames.Command,
             "Query" => ActivityNames.Query,
@@ -126,7 +126,9 @@ public static class MediatorActivitySource
         Activity? activity = Source.StartActivity(activityName, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.RequestName, requestName);
         activity.SetTag(TagNames.RequestType, requestType);
@@ -137,13 +139,19 @@ public static class MediatorActivitySource
             activity.SetTag(TagNames.RequestId, context.RequestId);
 
             if (context.CausationId != null)
+            {
                 activity.SetTag(TagNames.CausationId, context.CausationId);
+            }
 
             if (context.UserId != null)
+            {
                 activity.SetTag(TagNames.UserId, context.UserId);
+            }
 
             if (context.TenantId != null)
+            {
                 activity.SetTag(TagNames.TenantId, context.TenantId);
+            }
         }
 
         return activity;
@@ -157,7 +165,9 @@ public static class MediatorActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Notification, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.RequestName, notificationName);
         activity.SetTag(TagNames.RequestType, "Notification");
@@ -179,7 +189,9 @@ public static class MediatorActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.DomainEvent, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.RequestName, eventName);
         activity.SetTag(TagNames.RequestType, "DomainEvent");
@@ -201,7 +213,9 @@ public static class MediatorActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.IntegrationEvent, ActivityKind.Producer);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.RequestName, eventName);
         activity.SetTag(TagNames.RequestType, "IntegrationEvent");
@@ -221,7 +235,9 @@ public static class MediatorActivitySource
     public static void SetSuccess(Activity? activity)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
@@ -233,7 +249,9 @@ public static class MediatorActivitySource
     public static void SetError(Activity? activity, Exception exception)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, false);
         activity.SetTag(TagNames.ErrorType, exception.GetType().FullName);
@@ -264,13 +282,19 @@ public static class ActivityExtensions
         activity.SetTag(MediatorActivitySource.TagNames.RequestId, context.RequestId);
 
         if (context.CausationId != null)
+        {
             activity.SetTag(MediatorActivitySource.TagNames.CausationId, context.CausationId);
+        }
 
         if (context.UserId != null)
+        {
             activity.SetTag(MediatorActivitySource.TagNames.UserId, context.UserId);
+        }
 
         if (context.TenantId != null)
+        {
             activity.SetTag(MediatorActivitySource.TagNames.TenantId, context.TenantId);
+        }
 
         return activity;
     }

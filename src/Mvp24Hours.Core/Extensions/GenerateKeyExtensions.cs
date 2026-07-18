@@ -3,75 +3,71 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class GenerateKeyExtensions
 {
-    public static class GenerateKeyExtensions
+    public static string ToKey<T>(this T entity)
     {
-        public static string ToKey<T>(this T entity)
-        {
-            var result = ToHash(entity);
-            return Encoding.UTF8.GetString(result);
-        }
+        byte[] result = ToHash(entity);
+        return Encoding.UTF8.GetString(result);
+    }
 
-        public static byte[] ToHash<T>(T entity)
-        {
-            var seen = new HashSet<object>();
-            IEnumerable<object> properties = GetAllSimpleProperties(entity, seen);
-            return properties.Select(p => BitConverter.GetBytes(p.GetHashCode()).AsEnumerable()).Aggregate((ag, next) => ag.Concat(next)).ToArray();
-        }
+    public static byte[] ToHash<T>(T entity)
+    {
+        var seen = new HashSet<object>();
+        IEnumerable<object> properties = GetAllSimpleProperties(entity, seen);
+        return [.. properties.Select(p => BitConverter.GetBytes(p.GetHashCode()).AsEnumerable()).Aggregate((ag, next) => ag.Concat(next))];
+    }
 
-        private static IEnumerable<object> GetAllSimpleProperties<T>(T entity, HashSet<object> seen)
+    private static IEnumerable<object> GetAllSimpleProperties<T>(T entity, HashSet<object> seen)
+    {
+        foreach (dynamic property in PropertiesOf<T>.All(entity))
         {
-            foreach (dynamic property in PropertiesOf<T>.All(entity))
+            if (property is short || property is int || property is long
+                || property is float || property is double || property is decimal || property is bool
+                || property is DateTime
+                || property is short? || property is int? || property is long?
+                || property is float? || property is double? || property is decimal? || property is bool?
+                || property is DateTime?
+                || property is string)
             {
-                if (property is short || property is int || property is long
-                    || property is float || property is double || property is decimal || property is bool
-                    || property is DateTime
-                    || property is short? || property is int? || property is long?
-                    || property is float? || property is double? || property is decimal? || property is bool?
-                    || property is DateTime?
-                    || property is string)
+                yield return property;
+            }
+            else if (seen.Add(property)) // Handle cyclic references
+            {
+                foreach (object? simple in GetAllSimpleProperties(property, seen))
                 {
-                    yield return property;
-                }
-                else if (seen.Add(property)) // Handle cyclic references
-                {
-                    foreach (var simple in GetAllSimpleProperties(property, seen))
-                    {
-                        yield return simple;
-                    }
+                    yield return simple;
                 }
             }
         }
+    }
 
-        private static class PropertiesOf<T>
+    private static class PropertiesOf<T>
+    {
+        private static readonly List<Func<T, dynamic>> Properties = [];
+
+        static PropertiesOf()
         {
-            private static readonly List<Func<T, dynamic>> Properties = [];
-
-            static PropertiesOf()
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
-                foreach (PropertyInfo property in typeof(T).GetProperties())
+                MethodInfo? getMethod = property.GetGetMethod();
+                if (getMethod == null)
                 {
-                    MethodInfo? getMethod = property.GetGetMethod();
-                    if (getMethod == null)
-                    {
-                        continue;
-                    }
-                    var function = (Func<T, dynamic>)Delegate.CreateDelegate(typeof(Func<T, dynamic>), getMethod);
-                    Properties.Add(function);
+                    continue;
                 }
+                var function = (Func<T, dynamic>)Delegate.CreateDelegate(typeof(Func<T, dynamic>), getMethod);
+                Properties.Add(function);
             }
+        }
 
-            public static IEnumerable<dynamic> All(T entity)
-            {
-                return Properties.Select(p => p(entity)).Where(v => v != null);
-            }
+        public static IEnumerable<dynamic> All(T entity)
+        {
+            return Properties.Select(p => p(entity)).Where(v => v != null);
         }
     }
 }

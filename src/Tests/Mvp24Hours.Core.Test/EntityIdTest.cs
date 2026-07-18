@@ -16,35 +16,37 @@ public class EntityIdTest
     #region Test ID Types
 
     // Define test ID types
-    public sealed class TestGuidId : GuidEntityId<TestGuidId>
+    public sealed class TestGuidId(Guid value) : GuidEntityId<TestGuidId>(value)
     {
-        public TestGuidId(Guid value) : base(value) { }
-        public static TestGuidId New() => new(Guid.NewGuid());
+        public static TestGuidId New()
+        {
+            return new(Guid.NewGuid());
+        }
+
         public static TestGuidId Empty => new(Guid.Empty);
     }
 
     [Trait("Category", "Unit")]
-    public sealed class AnotherGuidId : GuidEntityId<AnotherGuidId>
+    public sealed class AnotherGuidId(Guid value) : GuidEntityId<AnotherGuidId>(value)
     {
-        public AnotherGuidId(Guid value) : base(value) { }
-        public static AnotherGuidId New() => new(Guid.NewGuid());
+        public static AnotherGuidId New()
+        {
+            return new(Guid.NewGuid());
+        }
     }
 
     [Trait("Category", "Unit")]
-    public sealed class TestIntId : IntEntityId<TestIntId>
+    public sealed class TestIntId(int value) : IntEntityId<TestIntId>(value)
     {
-        public TestIntId(int value) : base(value) { }
     }
 
-    public sealed class TestLongId : LongEntityId<TestLongId>
+    public sealed class TestLongId(long value) : LongEntityId<TestLongId>(value)
     {
-        public TestLongId(long value) : base(value) { }
     }
 
     [Trait("Category", "Unit")]
-    public sealed class TestStringId : StringEntityId<TestStringId>
+    public sealed class TestStringId(string value) : StringEntityId<TestStringId>(value)
     {
-        public TestStringId(string value) : base(value) { }
     }
 
     #endregion
@@ -130,7 +132,7 @@ public class EntityIdTest
         var id2 = new TestGuidId(guid2);
 
         // Act
-        var comparison = id1.CompareTo(id2);
+        int comparison = id1.CompareTo(id2);
 
         // Assert
         comparison.Should().BeLessThan(0);
@@ -169,7 +171,7 @@ public class EntityIdTest
     public void IntEntityId_Creation_StoresValue()
     {
         // Arrange
-        var value = 42;
+        int value = 42;
 
         // Act
         var id = new TestIntId(value);
@@ -218,7 +220,7 @@ public class EntityIdTest
         var id2 = new TestIntId(20);
 
         // Act
-        var comparison = id1.CompareTo(id2);
+        int comparison = id1.CompareTo(id2);
 
         // Assert
         comparison.Should().BeLessThan(0);
@@ -245,7 +247,7 @@ public class EntityIdTest
     public void LongEntityId_Creation_StoresValue()
     {
         // Arrange
-        var value = 9999999999L;
+        long value = 9999999999L;
 
         // Act
         var id = new TestLongId(value);
@@ -306,7 +308,7 @@ public class EntityIdTest
     public void StringEntityId_Creation_StoresValue()
     {
         // Arrange
-        var value = "ABC-123";
+        string value = "ABC-123";
 
         // Act
         var id = new TestStringId(value);

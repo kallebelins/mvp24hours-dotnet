@@ -3,10 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-namespace Mvp24Hours.Core.Contract.Data
+namespace Mvp24Hours.Core.Contract.Data;
+
+public interface IBsonClassMap
 {
-    public interface IBsonClassMap
-    {
-        void Configure();
-    }
+    void Configure();
 }

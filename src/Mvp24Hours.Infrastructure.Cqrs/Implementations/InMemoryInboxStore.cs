@@ -6,7 +6,6 @@
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -27,24 +26,19 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 /// services.AddSingleton&lt;IInboxStore, InMemoryInboxStore&gt;();
 /// </code>
 /// </example>
-public sealed class InMemoryInboxStore : IInboxStore
+/// <remarks>
+/// Creates a new instance of the InMemoryInboxStore.
+/// </remarks>
+/// <param name="logger">Optional logger for recording operations.</param>
+public sealed class InMemoryInboxStore(ILogger<InMemoryInboxStore>? logger = null) : IInboxStore
 {
     private readonly ConcurrentDictionary<Guid, InboxMessage> _messages = new();
-    private readonly ILogger<InMemoryInboxStore>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the InMemoryInboxStore.
-    /// </summary>
-    /// <param name="logger">Optional logger for recording operations.</param>
-    public InMemoryInboxStore(ILogger<InMemoryInboxStore>? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<InMemoryInboxStore>? _logger = logger;
 
     /// <inheritdoc />
     public Task<bool> ExistsAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
-        var exists = _messages.ContainsKey(messageId);
+        bool exists = _messages.ContainsKey(messageId);
 
         if (exists)
         {
@@ -124,7 +118,10 @@ public sealed class InMemoryInboxStore : IInboxStore
     /// Gets the total count of messages in the inbox.
     /// </summary>
     /// <returns>The number of messages stored.</returns>
-    public int GetCount() => _messages.Count;
+    public int GetCount()
+    {
+        return _messages.Count;
+    }
 }
 
 

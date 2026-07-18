@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,17 +60,14 @@ public static class TestingExtensions
         Action<DbContextOptionsBuilder>? configureOptions = null)
         where TContext : DbContext
     {
-        var effectiveName = databaseName ?? $"InMemoryTestDb_{StringHelper.GenerateKey(10)}";
+        string effectiveName = databaseName ?? $"InMemoryTestDb_{StringHelper.GenerateKey(10)}";
 
         services.AddDbContext<TContext>(options =>
         {
             options.UseInMemoryDatabase(effectiveName);
             options.EnableSensitiveDataLogging();
             options.EnableDetailedErrors();
-            options.ConfigureWarnings(warnings =>
-            {
-                warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning);
-            });
+            options.ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning));
 
             configureOptions?.Invoke(options);
         });
@@ -98,7 +94,7 @@ public static class TestingExtensions
         string databaseNamePrefix = "TestDb")
         where TContext : DbContext
     {
-        var uniqueName = $"{databaseNamePrefix}_{Guid.NewGuid():N}";
+        string uniqueName = $"{databaseNamePrefix}_{Guid.NewGuid():N}";
         return services.AddMvp24HoursInMemoryDbContext<TContext>(uniqueName);
     }
 

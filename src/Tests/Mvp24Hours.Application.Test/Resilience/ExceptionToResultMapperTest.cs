@@ -3,12 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Logic.Resilience;
 using Mvp24Hours.Core.Exceptions;
-using Xunit;
 
 namespace Mvp24Hours.Application.Test.Resilience;
 
@@ -217,7 +215,7 @@ public class ExceptionToResultMapperTest
     {
         // Arrange
         var exception = new NotFoundException("Original message");
-        var customMessage = "Custom error message";
+        string customMessage = "Custom error message";
 
         // Act
         IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception, customMessage);
@@ -275,7 +273,7 @@ public class ExceptionToResultMapperTest
         var exception = new NotFoundException("Not found");
 
         // Act
-        var errorCode = _mapper.GetErrorCode(exception);
+        string errorCode = _mapper.GetErrorCode(exception);
 
         // Assert
         errorCode.Should().Be("RESOURCE.NOT_FOUND");
@@ -288,7 +286,7 @@ public class ExceptionToResultMapperTest
         var exception = new UnauthorizedException("Not authorized");
 
         // Act
-        var errorCode = _mapper.GetErrorCode(exception);
+        string errorCode = _mapper.GetErrorCode(exception);
 
         // Assert
         errorCode.Should().Be("AUTH.UNAUTHORIZED");
@@ -301,7 +299,7 @@ public class ExceptionToResultMapperTest
         var exception = new Exception("Unknown");
 
         // Act
-        var errorCode = _mapper.GetErrorCode(exception);
+        string errorCode = _mapper.GetErrorCode(exception);
 
         // Assert
         errorCode.Should().Be("SYSTEM.INTERNAL_ERROR");
@@ -318,7 +316,7 @@ public class ExceptionToResultMapperTest
         var exception = new NotFoundException("Not found");
 
         // Act
-        var shouldLog = _mapper.ShouldLog(exception);
+        bool shouldLog = _mapper.ShouldLog(exception);
 
         // Assert
         shouldLog.Should().BeFalse();
@@ -331,7 +329,7 @@ public class ExceptionToResultMapperTest
         var exception = new TimeoutException("Timeout");
 
         // Act
-        var shouldLog = _mapper.ShouldLog(exception);
+        bool shouldLog = _mapper.ShouldLog(exception);
 
         // Assert
         shouldLog.Should().BeTrue();
@@ -344,7 +342,7 @@ public class ExceptionToResultMapperTest
         var exception = new NullReferenceException("Null reference");
 
         // Act
-        var shouldLog = _mapper.ShouldLog(exception);
+        bool shouldLog = _mapper.ShouldLog(exception);
 
         // Assert
         shouldLog.Should().BeTrue();
@@ -384,7 +382,7 @@ public class ExceptionToResultMapperTest
         var exception = new Exception("Test");
 
         // Act
-        var includeDetails = _mapper.ShouldIncludeDetails(exception);
+        bool includeDetails = _mapper.ShouldIncludeDetails(exception);
 
         // Assert
         includeDetails.Should().BeFalse();
@@ -458,14 +456,12 @@ public class ExceptionToResultMapperTest
 
     #region [ Test Support Classes ]
 
-    private class CustomTestException : Exception
+    private class CustomTestException(string message) : Exception(message)
     {
-        public CustomTestException(string message) : base(message) { }
     }
 
-    private class DerivedNotFoundException : NotFoundException
+    private class DerivedNotFoundException(string message) : NotFoundException(message)
     {
-        public DerivedNotFoundException(string message) : base(message) { }
     }
 
     #endregion

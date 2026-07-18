@@ -3,11 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.Infrastructure.Clock;
-using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Testing;
 
 namespace Mvp24Hours.Core.Test;

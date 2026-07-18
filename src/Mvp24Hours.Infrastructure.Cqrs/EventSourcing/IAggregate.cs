@@ -153,6 +153,9 @@ public class DefaultAggregateFactory<TAggregate> : IAggregateFactory<TAggregate>
     where TAggregate : IEventSourcedAggregate, new()
 {
     /// <inheritdoc />
-    public TAggregate Create() => new TAggregate();
+    public TAggregate Create()
+    {
+        return new();
+    }
 }
 

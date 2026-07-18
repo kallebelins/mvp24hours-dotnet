@@ -3,90 +3,88 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Middleware
+namespace Mvp24Hours.Infrastructure.Pipe.Middleware;
+
+/// <summary>
+/// Exception thrown when a pipeline operation times out.
+/// </summary>
+public class PipelineTimeoutException : TimeoutException
 {
     /// <summary>
-    /// Exception thrown when a pipeline operation times out.
+    /// The configured timeout duration.
     /// </summary>
-    public class PipelineTimeoutException : TimeoutException
+    public TimeSpan Timeout { get; }
+
+    public PipelineTimeoutException(TimeSpan timeout)
+        : base($"Pipeline operation timed out after {timeout.TotalMilliseconds}ms")
     {
-        /// <summary>
-        /// The configured timeout duration.
-        /// </summary>
-        public TimeSpan Timeout { get; }
-
-        public PipelineTimeoutException(TimeSpan timeout)
-            : base($"Pipeline operation timed out after {timeout.TotalMilliseconds}ms")
-        {
-            Timeout = timeout;
-        }
-
-        public PipelineTimeoutException(TimeSpan timeout, Exception innerException)
-            : base($"Pipeline operation timed out after {timeout.TotalMilliseconds}ms", innerException)
-        {
-            Timeout = timeout;
-        }
+        Timeout = timeout;
     }
 
-    /// <summary>
-    /// Middleware that enforces timeout on operations.
-    /// </summary>
-    public class TimeoutPipelineMiddleware : IPipelineMiddleware
+    public PipelineTimeoutException(TimeSpan timeout, Exception innerException)
+        : base($"Pipeline operation timed out after {timeout.TotalMilliseconds}ms", innerException)
     {
-        private readonly TimeSpan _defaultTimeout;
+        Timeout = timeout;
+    }
+}
 
-        /// <summary>
-        /// Creates a new instance with the specified default timeout.
-        /// </summary>
-        /// <param name="defaultTimeout">Default timeout for operations.</param>
-        public TimeoutPipelineMiddleware(TimeSpan defaultTimeout)
+/// <summary>
+/// Middleware that enforces timeout on operations.
+/// </summary>
+public class TimeoutPipelineMiddleware : IPipelineMiddleware
+{
+    private readonly TimeSpan _defaultTimeout;
+
+    /// <summary>
+    /// Creates a new instance with the specified default timeout.
+    /// </summary>
+    /// <param name="defaultTimeout">Default timeout for operations.</param>
+    public TimeoutPipelineMiddleware(TimeSpan defaultTimeout)
+    {
+        if (defaultTimeout <= TimeSpan.Zero)
         {
-            if (defaultTimeout <= TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(defaultTimeout), "Timeout must be positive");
-
-            _defaultTimeout = defaultTimeout;
+            throw new ArgumentOutOfRangeException(nameof(defaultTimeout), "Timeout must be positive");
         }
 
-        /// <inheritdoc />
-        public int Order => -500; // Run after logging, before most other middlewares
+        _defaultTimeout = defaultTimeout;
+    }
 
-        /// <inheritdoc />
-        public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public int Order => -500; // Run after logging, before most other middlewares
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync(IPipelineMessage message, Func<Task> next, CancellationToken cancellationToken = default)
+    {
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(_defaultTimeout);
+
+        try
         {
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(_defaultTimeout);
+            // Create a task that completes when next() completes or timeout occurs
+            Task nextTask = next();
+            var timeoutTask = Task.Delay(Timeout.Infinite, timeoutCts.Token);
 
-            try
+            Task completedTask = await Task.WhenAny(nextTask, timeoutTask);
+
+            if (completedTask == timeoutTask && timeoutCts.IsCancellationRequested)
             {
-                // Create a task that completes when next() completes or timeout occurs
-                Task nextTask = next();
-                var timeoutTask = Task.Delay(Timeout.Infinite, timeoutCts.Token);
-
-                Task completedTask = await Task.WhenAny(nextTask, timeoutTask);
-
-                if (completedTask == timeoutTask && timeoutCts.IsCancellationRequested)
+                // Original cancellation was requested
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    // Original cancellation was requested
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        throw new OperationCanceledException(cancellationToken);
-                    }
-                    // Timeout occurred
-                    throw new PipelineTimeoutException(_defaultTimeout);
+                    throw new OperationCanceledException(cancellationToken);
                 }
-
-                // Await the next task to propagate any exceptions
-                await nextTask;
-            }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
+                // Timeout occurred
                 throw new PipelineTimeoutException(_defaultTimeout);
             }
+
+            // Await the next task to propagate any exceptions
+            await nextTask;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new PipelineTimeoutException(_defaultTimeout);
         }
     }
 }

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -199,7 +198,7 @@ public sealed class InfrastructureMetrics
     /// <param name="durationMs">Duration in milliseconds.</param>
     public void RecordHttpClientRequest(string method, string host, int statusCode, double durationMs)
     {
-        var success = statusCode < 400;
+        bool success = statusCode < 400;
         var tags = new TagList
         {
             { MetricTags.HttpMethod, method },
@@ -435,7 +434,10 @@ public sealed class InfrastructureMetrics
         /// Sets the response status code.
         /// </summary>
         /// <param name="statusCode">HTTP status code.</param>
-        public void SetStatusCode(int statusCode) => StatusCode = statusCode;
+        public void SetStatusCode(int statusCode)
+        {
+            StatusCode = statusCode;
+        }
 
         /// <inheritdoc />
         public void Dispose()
@@ -494,12 +496,18 @@ public sealed class InfrastructureMetrics
         /// <summary>
         /// Marks the job as completed successfully.
         /// </summary>
-        public void Complete() => Succeeded = true;
+        public void Complete()
+        {
+            Succeeded = true;
+        }
 
         /// <summary>
         /// Marks the job as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()

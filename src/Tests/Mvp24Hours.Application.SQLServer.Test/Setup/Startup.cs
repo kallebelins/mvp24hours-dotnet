@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Support.Data;
@@ -19,233 +17,232 @@ using Mvp24Hours.Extensions;
 using Microsoft.Extensions.Configuration;
 #endif
 
-namespace Mvp24Hours.Application.SQLServer.Test.Setup
+namespace Mvp24Hours.Application.SQLServer.Test.Setup;
+
+public static class Startup
 {
-    public static class Startup
+    public static IServiceProvider Initialize(bool canLoadData = true)
     {
-        public static IServiceProvider Initialize(bool canLoadData = true)
+        IServiceProvider serviceProvider = ConfigureServices;
+
+        // ensure database
+        DataContext? db = serviceProvider.GetRequiredService<DataContext>();
+        db.Database?.EnsureCreated();
+
+        // load data
+        if (canLoadData)
         {
-            IServiceProvider serviceProvider = ConfigureServices;
-
-            // ensure database
-            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
-            db.Database?.EnsureCreated();
-
-            // load data
-            if (canLoadData)
-            {
-                LoadData(serviceProvider);
-            }
-            return serviceProvider;
+            LoadData(serviceProvider);
         }
+        return serviceProvider;
+    }
 
-        public static IServiceProvider InitializeBasic(bool canLoadData = true)
+    public static IServiceProvider InitializeBasic(bool canLoadData = true)
+    {
+        IServiceProvider serviceProvider = ConfigureServices;
+
+        // ensure database
+        DataContext? db = serviceProvider.GetRequiredService<DataContext>();
+        db.Database?.EnsureCreated();
+
+        // load data
+        if (canLoadData)
         {
-            IServiceProvider serviceProvider = ConfigureServices;
-
-            // ensure database
-            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
-            db.Database?.EnsureCreated();
-
-            // load data
-            if (canLoadData)
-            {
-                LoadDataBasic(serviceProvider);
-            }
-            return serviceProvider;
+            LoadDataBasic(serviceProvider);
         }
+        return serviceProvider;
+    }
 
-        public static IServiceProvider InitializeLog(bool canLoadData = true)
+    public static IServiceProvider InitializeLog(bool canLoadData = true)
+    {
+        IServiceProvider serviceProvider = ConfigureServices;
+
+        // ensure database
+        DataContext? db = serviceProvider.GetRequiredService<DataContext>();
+        db.Database?.EnsureCreated();
+
+        // load data
+        if (canLoadData)
         {
-            IServiceProvider serviceProvider = ConfigureServices;
-
-            // ensure database
-            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
-            db.Database?.EnsureCreated();
-
-            // load data
-            if (canLoadData)
-            {
-                LoadDataLog(serviceProvider);
-            }
-            return serviceProvider;
+            LoadDataLog(serviceProvider);
         }
+        return serviceProvider;
+    }
 
-        public static IServiceProvider InitializeBasicLog(bool canLoadData = true)
+    public static IServiceProvider InitializeBasicLog(bool canLoadData = true)
+    {
+        IServiceProvider serviceProvider = ConfigureServices;
+
+        // ensure database
+        DataContext? db = serviceProvider.GetRequiredService<DataContext>();
+        db.Database?.EnsureCreated();
+
+        // load data
+        if (canLoadData)
         {
-            IServiceProvider serviceProvider = ConfigureServices;
-
-            // ensure database
-            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
-            db.Database?.EnsureCreated();
-
-            // load data
-            if (canLoadData)
-            {
-                LoadDataBasicLog(serviceProvider);
-            }
-            return serviceProvider;
+            LoadDataBasicLog(serviceProvider);
         }
+        return serviceProvider;
+    }
 
-        public static void Cleanup(IServiceProvider serviceProvider)
+    public static void Cleanup(IServiceProvider serviceProvider)
+    {
+        // ensure database drop
+        DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
+        if (db != null)
         {
-            // ensure database drop
-            DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
-            if (db != null)
-            {
-                db.Database.EnsureDeleted();
-                db.Dispose();
-            }
+            db.Database.EnsureDeleted();
+            db.Dispose();
         }
+    }
 
-        private static IServiceProvider ConfigureServices
+    private static IServiceProvider ConfigureServices
+    {
+        get
         {
-            get
-            {
 #if InMemory
-                var services = new ServiceCollection();
-                services.AddDbContext<DataContext>(options =>
-                    options
-                        .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
+            var services = new ServiceCollection();
+            services.AddDbContext<DataContext>(options =>
+                options
+                    .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
 #else
-                var services = new ServiceCollection()
-                    .AddSingleton(Helpers.ConfigurationHelper.AppSettings);
+            IServiceCollection services = new ServiceCollection()
+                .AddSingleton(Helpers.ConfigurationHelper.AppSettings);
 
-                services.AddDbContext<DataContext>(options =>
-                    options
-                        .UseSqlServer((Helpers.ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
-                            ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
-                            .Format(StringHelper.GenerateKey(10))));
+            services.AddDbContext<DataContext>(options =>
+                options
+                    .UseSqlServer((Helpers.ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                        ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
+                        .Format(StringHelper.GenerateKey(10))));
 #endif
-                services.AddMvp24HoursDbContext<DataContext>();
-                services.AddMvp24HoursRepository(options: options =>
-                {
-                    options.MaxQtyByQueryPage = 100;
-                    options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
-                });
-
-                // register my services
-                services.AddScoped<CustomerService, CustomerService>();
-                services.AddScoped<ContactService, ContactService>();
-                services.AddScoped<CustomerBasicService, CustomerBasicService>();
-                services.AddScoped<CustomerLogService, CustomerLogService>();
-                services.AddScoped<CustomerBasicLogService, CustomerBasicLogService>();
-                services.AddScoped<CustomerPagingService, CustomerPagingService>();
-
-                return services.BuildServiceProvider();
-            }
-        }
-
-        private static void LoadData(IServiceProvider serviceProvider)
-        {
-            CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
-            List<Customer> customers = [];
-            for (int i = 1; i <= 10; i++)
+            services.AddMvp24HoursDbContext<DataContext>();
+            services.AddMvp24HoursRepository(options: options =>
             {
-                var customer = new Customer
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                };
-                customer.Contacts.Add(new Contact
-                {
-                    Description = $"202-555-014{i}",
-                    Type = ContactType.CellPhone,
-                    Active = true
-                });
-                customer.Contacts.Add(new Contact
-                {
-                    Description = $"test{i}@sample.com",
-                    Type = ContactType.Email,
-                    Active = true
-                });
-                customers.Add(customer);
-            }
-            service.Add(customers);
-        }
+                options.MaxQtyByQueryPage = 100;
+                options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
+            });
 
-        private static void LoadDataBasic(IServiceProvider serviceProvider)
-        {
-            CustomerBasicService? service = serviceProvider.GetRequiredService<CustomerBasicService>();
-            List<CustomerBasic> customers = [];
-            for (int i = 1; i <= 10; i++)
-            {
-                var customer = new CustomerBasic
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                };
-                customer.Contacts.Add(new ContactBasic
-                {
-                    Description = $"202-555-014{i}",
-                    Type = ContactType.CellPhone,
-                    Active = true
-                });
-                customer.Contacts.Add(new ContactBasic
-                {
-                    Description = $"test{i}@sample.com",
-                    Type = ContactType.Email,
-                    Active = true
-                });
-                customers.Add(customer);
-            }
-            service.Add(customers);
-        }
+            // register my services
+            services.AddScoped<CustomerService, CustomerService>();
+            services.AddScoped<ContactService, ContactService>();
+            services.AddScoped<CustomerBasicService, CustomerBasicService>();
+            services.AddScoped<CustomerLogService, CustomerLogService>();
+            services.AddScoped<CustomerBasicLogService, CustomerBasicLogService>();
+            services.AddScoped<CustomerPagingService, CustomerPagingService>();
 
-        private static void LoadDataLog(IServiceProvider serviceProvider)
-        {
-            CustomerLogService? service = serviceProvider.GetRequiredService<CustomerLogService>();
-            List<CustomerBasicLog> customers = [];
-            for (int i = 1; i <= 10; i++)
-            {
-                var customer = new CustomerBasicLog
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                };
-                customer.Contacts.Add(new ContactBasicLog
-                {
-                    Description = $"202-555-014{i}",
-                    Type = ContactType.CellPhone,
-                    Active = true
-                });
-                customer.Contacts.Add(new ContactBasicLog
-                {
-                    Description = $"test{i}@sample.com",
-                    Type = ContactType.Email,
-                    Active = true
-                });
-                customers.Add(customer);
-            }
-            service.Add(customers);
+            return services.BuildServiceProvider();
         }
+    }
 
-        private static void LoadDataBasicLog(IServiceProvider serviceProvider)
+    private static void LoadData(IServiceProvider serviceProvider)
+    {
+        CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+        List<Customer> customers = [];
+        for (int i = 1; i <= 10; i++)
         {
-            CustomerBasicLogService? service = serviceProvider.GetRequiredService<CustomerBasicLogService>();
-            List<CustomerBasicLog> customers = [];
-            for (int i = 1; i <= 10; i++)
+            var customer = new Customer
             {
-                var customer = new CustomerBasicLog
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                };
-                customer.Contacts.Add(new ContactBasicLog
-                {
-                    Description = $"202-555-014{i}",
-                    Type = ContactType.CellPhone,
-                    Active = true
-                });
-                customer.Contacts.Add(new ContactBasicLog
-                {
-                    Description = $"test{i}@sample.com",
-                    Type = ContactType.Email,
-                    Active = true
-                });
-                customers.Add(customer);
-            }
-            service.Add(customers);
+                Name = $"Test {i}",
+                Active = true
+            };
+            customer.Contacts.Add(new Contact
+            {
+                Description = $"202-555-014{i}",
+                Type = ContactType.CellPhone,
+                Active = true
+            });
+            customer.Contacts.Add(new Contact
+            {
+                Description = $"test{i}@sample.com",
+                Type = ContactType.Email,
+                Active = true
+            });
+            customers.Add(customer);
         }
+        service.Add(customers);
+    }
+
+    private static void LoadDataBasic(IServiceProvider serviceProvider)
+    {
+        CustomerBasicService? service = serviceProvider.GetRequiredService<CustomerBasicService>();
+        List<CustomerBasic> customers = [];
+        for (int i = 1; i <= 10; i++)
+        {
+            var customer = new CustomerBasic
+            {
+                Name = $"Test {i}",
+                Active = true
+            };
+            customer.Contacts.Add(new ContactBasic
+            {
+                Description = $"202-555-014{i}",
+                Type = ContactType.CellPhone,
+                Active = true
+            });
+            customer.Contacts.Add(new ContactBasic
+            {
+                Description = $"test{i}@sample.com",
+                Type = ContactType.Email,
+                Active = true
+            });
+            customers.Add(customer);
+        }
+        service.Add(customers);
+    }
+
+    private static void LoadDataLog(IServiceProvider serviceProvider)
+    {
+        CustomerLogService? service = serviceProvider.GetRequiredService<CustomerLogService>();
+        List<CustomerBasicLog> customers = [];
+        for (int i = 1; i <= 10; i++)
+        {
+            var customer = new CustomerBasicLog
+            {
+                Name = $"Test {i}",
+                Active = true
+            };
+            customer.Contacts.Add(new ContactBasicLog
+            {
+                Description = $"202-555-014{i}",
+                Type = ContactType.CellPhone,
+                Active = true
+            });
+            customer.Contacts.Add(new ContactBasicLog
+            {
+                Description = $"test{i}@sample.com",
+                Type = ContactType.Email,
+                Active = true
+            });
+            customers.Add(customer);
+        }
+        service.Add(customers);
+    }
+
+    private static void LoadDataBasicLog(IServiceProvider serviceProvider)
+    {
+        CustomerBasicLogService? service = serviceProvider.GetRequiredService<CustomerBasicLogService>();
+        List<CustomerBasicLog> customers = [];
+        for (int i = 1; i <= 10; i++)
+        {
+            var customer = new CustomerBasicLog
+            {
+                Name = $"Test {i}",
+                Active = true
+            };
+            customer.Contacts.Add(new ContactBasicLog
+            {
+                Description = $"202-555-014{i}",
+                Type = ContactType.CellPhone,
+                Active = true
+            });
+            customer.Contacts.Add(new ContactBasicLog
+            {
+                Description = $"test{i}@sample.com",
+                Type = ContactType.Email,
+                Active = true
+            });
+            customers.Add(customer);
+        }
+        service.Add(customers);
     }
 }

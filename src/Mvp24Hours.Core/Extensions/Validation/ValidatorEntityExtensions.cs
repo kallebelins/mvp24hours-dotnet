@@ -3,43 +3,36 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using FluentValidation;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class ValidatorEntityExtensions
 {
-    public static class ValidatorEntityExtensions
+    public static IList<IMessageResult> TryValidate<TEntity>(this TEntity entity, IValidator<TEntity>? _validator = null)
+        where TEntity : class
     {
-        public static IList<IMessageResult> TryValidate<TEntity>(this TEntity entity, IValidator<TEntity>? _validator = null)
-            where TEntity : class
+        IValidator<TEntity>? validator = _validator;
+        if (validator != null)
         {
-            IValidator<TEntity>? validator = _validator;
-            if (validator != null)
+            FluentValidation.Results.ValidationResult validationResult = validator.Validate(entity);
+            if (!validationResult.IsValid)
             {
-                FluentValidation.Results.ValidationResult validationResult = validator.Validate(entity);
-                if (!validationResult.IsValid)
-                {
-                    return validationResult.Errors
-                        .Select(x => (IMessageResult)new MessageResult(x.ErrorCode, x.ErrorMessage, Core.Enums.MessageType.Error))
-                        .ToList();
-                }
+                return [.. validationResult.Errors.Select(x => (IMessageResult)new MessageResult(x.ErrorCode, x.ErrorMessage, Core.Enums.MessageType.Error))];
             }
-            else
-            {
-                var validationRslts = new List<ValidationResult>();
-                var validationCntxt = new ValidationContext(entity, null, null);
-                if (!Validator.TryValidateObject(entity, validationCntxt, validationRslts, true))
-                {
-                    return validationRslts
-                        .Select(item => (IMessageResult)new MessageResult(string.Join("|", item.MemberNames), item.ErrorMessage ?? string.Empty, Core.Enums.MessageType.Error))
-                        .ToList();
-                }
-            }
-            return [];
         }
+        else
+        {
+            var validationRslts = new List<ValidationResult>();
+            var validationCntxt = new ValidationContext(entity, null, null);
+            if (!Validator.TryValidateObject(entity, validationCntxt, validationRslts, true))
+            {
+                return [.. validationRslts.Select(item => (IMessageResult)new MessageResult(string.Join("|", item.MemberNames), item.ErrorMessage ?? string.Empty, Core.Enums.MessageType.Error))];
+            }
+        }
+        return [];
     }
 }

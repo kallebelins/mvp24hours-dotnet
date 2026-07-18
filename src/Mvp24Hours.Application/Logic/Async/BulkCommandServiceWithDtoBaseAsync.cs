@@ -3,12 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -19,378 +14,365 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Logic;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 
-namespace Mvp24Hours.Application.Logic
+namespace Mvp24Hours.Application.Logic;
+
+/// <summary>
+/// Asynchronous command service base class with high-performance bulk operations and DTO support.
+/// Provides optimized batch processing with automatic Entity/DTO mapping.
+/// </summary>
+/// <typeparam name="TEntity">The entity type for persistence.</typeparam>
+/// <typeparam name="TDto">The DTO type for data transfer.</typeparam>
+/// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
+/// <remarks>
+/// <para>
+/// This class provides bulk operations with automatic DTO-to-Entity mapping,
+/// bypassing EF Core change tracking for significantly better performance
+/// when processing large datasets (1000+ entities).
+/// </para>
+/// <para>
+/// <strong>Features:</strong>
+/// <list type="bullet">
+/// <item>Automatic DTO to Entity mapping via AutoMapper</item>
+/// <item>Validation of DTOs before bulk operation</item>
+/// <item>Progress callback for long-running operations</item>
+/// <item>Configurable batch size and timeout</item>
+/// </list>
+/// </para>
+/// </remarks>
+/// <example>
+/// <code>
+/// public class CustomerBulkService : BulkCommandServiceWithDtoBaseAsync&lt;Customer, CustomerDto, MyDbContext&gt;
+/// {
+///     public CustomerBulkService(MyDbContext dbContext, IMapper mapper, IValidator&lt;CustomerDto&gt; validator) 
+///         : base(dbContext, mapper, validator) { }
+///     
+///     public async Task ImportFromCsvAsync(IList&lt;CustomerDto&gt; dtos, CancellationToken ct)
+///     {
+///         var options = new BulkOperationOptions
+///         {
+///             BatchSize = 5000,
+///             ProgressCallback = (processed, total) =&gt; 
+///                 Console.WriteLine($"Importing: {processed}/{total}")
+///         };
+///         
+///         var result = await BulkAddAsync(dtos, options, ct);
+///         Console.WriteLine($"Imported {result.Data.RowsAffected} in {result.Data.ElapsedTime}");
+///     }
+/// }
+/// </code>
+/// </example>
+/// <seealso cref="IBulkCommandServiceWithDtoAsync{TDto}"/>
+/// <seealso cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/>
+/// <remarks>
+/// Initializes a new instance with DbContext, mapper, and validators.
+/// </remarks>
+/// <param name="dbContext">The DbContext for database operations.</param>
+/// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
+/// <param name="dtoValidator">The validator for DTO validation.</param>
+/// <param name="entityValidator">The validator for entity validation.</param>
+/// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
+public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>(
+    TUoW dbContext,
+    IMapper mapper,
+    IValidator<TDto>? dtoValidator,
+    IValidator<TEntity>? entityValidator)
+    : BulkCommandServiceBaseAsync<TEntity, TUoW>(dbContext, entityValidator), IBulkCommandServiceWithDtoAsync<TDto>
+    where TEntity : class, IEntityBase
+    where TDto : class
+    where TUoW : DbContext, IUnitOfWorkAsync
 {
+    #region [ Properties / Fields ]
+
+    private readonly IValidator<TEntity>? _entityValidator = entityValidator;
+    private readonly ILogger _logger = NullLogger.Instance;
+
     /// <summary>
-    /// Asynchronous command service base class with high-performance bulk operations and DTO support.
-    /// Provides optimized batch processing with automatic Entity/DTO mapping.
+    /// Gets the AutoMapper instance for Entity/DTO mapping.
     /// </summary>
-    /// <typeparam name="TEntity">The entity type for persistence.</typeparam>
-    /// <typeparam name="TDto">The DTO type for data transfer.</typeparam>
-    /// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
-    /// <remarks>
-    /// <para>
-    /// This class provides bulk operations with automatic DTO-to-Entity mapping,
-    /// bypassing EF Core change tracking for significantly better performance
-    /// when processing large datasets (1000+ entities).
-    /// </para>
-    /// <para>
-    /// <strong>Features:</strong>
-    /// <list type="bullet">
-    /// <item>Automatic DTO to Entity mapping via AutoMapper</item>
-    /// <item>Validation of DTOs before bulk operation</item>
-    /// <item>Progress callback for long-running operations</item>
-    /// <item>Configurable batch size and timeout</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// public class CustomerBulkService : BulkCommandServiceWithDtoBaseAsync&lt;Customer, CustomerDto, MyDbContext&gt;
-    /// {
-    ///     public CustomerBulkService(MyDbContext dbContext, IMapper mapper, IValidator&lt;CustomerDto&gt; validator) 
-    ///         : base(dbContext, mapper, validator) { }
-    ///     
-    ///     public async Task ImportFromCsvAsync(IList&lt;CustomerDto&gt; dtos, CancellationToken ct)
-    ///     {
-    ///         var options = new BulkOperationOptions
-    ///         {
-    ///             BatchSize = 5000,
-    ///             ProgressCallback = (processed, total) =&gt; 
-    ///                 Console.WriteLine($"Importing: {processed}/{total}")
-    ///         };
-    ///         
-    ///         var result = await BulkAddAsync(dtos, options, ct);
-    ///         Console.WriteLine($"Imported {result.Data.RowsAffected} in {result.Data.ElapsedTime}");
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
-    /// <seealso cref="IBulkCommandServiceWithDtoAsync{TDto}"/>
-    /// <seealso cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/>
-    public abstract class BulkCommandServiceWithDtoBaseAsync<TEntity, TDto, TUoW>
-        : BulkCommandServiceBaseAsync<TEntity, TUoW>, IBulkCommandServiceWithDtoAsync<TDto>
-        where TEntity : class, IEntityBase
-        where TDto : class
-        where TUoW : DbContext, IUnitOfWorkAsync
+    protected IMapper Mapper { get; } = mapper ?? throw new ArgumentNullException(nameof(mapper));
+
+    /// <summary>
+    /// Gets the validator for DTO validation.
+    /// </summary>
+    protected IValidator<TDto>? DtoValidator { get; } = dtoValidator;
+
+    #endregion
+
+    #region [ Constructors ]
+
+    /// <summary>
+    /// Initializes a new instance with DbContext and mapper.
+    /// </summary>
+    /// <param name="dbContext">The DbContext for database operations.</param>
+    /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
+    /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
+    protected BulkCommandServiceWithDtoBaseAsync(TUoW dbContext, IMapper mapper)
+        : this(dbContext, mapper, null, null)
     {
-        #region [ Properties / Fields ]
-
-        private readonly IMapper _mapper;
-        private readonly IValidator<TDto>? _dtoValidator;
-        private readonly IValidator<TEntity>? _entityValidator;
-        private readonly ILogger _logger;
-
-        /// <summary>
-        /// Gets the AutoMapper instance for Entity/DTO mapping.
-        /// </summary>
-        protected IMapper Mapper => _mapper;
-
-        /// <summary>
-        /// Gets the validator for DTO validation.
-        /// </summary>
-        protected IValidator<TDto>? DtoValidator => _dtoValidator;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance with DbContext and mapper.
-        /// </summary>
-        /// <param name="dbContext">The DbContext for database operations.</param>
-        /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
-        /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
-        protected BulkCommandServiceWithDtoBaseAsync(TUoW dbContext, IMapper mapper)
-            : this(dbContext, mapper, null, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance with DbContext, mapper, and DTO validator.
-        /// </summary>
-        /// <param name="dbContext">The DbContext for database operations.</param>
-        /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
-        /// <param name="dtoValidator">The validator for DTO validation.</param>
-        /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
-        protected BulkCommandServiceWithDtoBaseAsync(TUoW dbContext, IMapper mapper, IValidator<TDto>? dtoValidator)
-            : this(dbContext, mapper, dtoValidator, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance with DbContext, mapper, and validators.
-        /// </summary>
-        /// <param name="dbContext">The DbContext for database operations.</param>
-        /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
-        /// <param name="dtoValidator">The validator for DTO validation.</param>
-        /// <param name="entityValidator">The validator for entity validation.</param>
-        /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
-        protected BulkCommandServiceWithDtoBaseAsync(
-            TUoW dbContext,
-            IMapper mapper,
-            IValidator<TDto>? dtoValidator,
-            IValidator<TEntity>? entityValidator)
-            : base(dbContext, entityValidator)
-        {
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _dtoValidator = dtoValidator;
-            _entityValidator = entityValidator;
-            _logger = NullLogger.Instance;
-        }
-
-        #endregion
-
-        #region [ IBulkCommandServiceWithDtoAsync - Bulk Add ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
-            IList<TDto> dtos,
-            CancellationToken cancellationToken = default)
-        {
-            return BulkAddAsync(dtos, new BulkOperationOptions(), cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
-            IList<TDto> dtos,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-        {
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
-                dtos?.Count ?? 0, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Validate and map DTOs to entities
-                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
-                if (!mappingResult.HasData() || mappingResult.Data == null)
-                {
-                    stopwatch.Stop();
-                    return BulkOperationResult.Failure(
-                        "One or more DTOs failed validation.",
-                        stopwatch.Elapsed).ToBusiness();
-                }
-
-                IList<TEntity> entities = mappingResult.Data;
-
-                // Execute bulk insert using base class
-                IBusinessResult<BulkOperationResult> result = await base.BulkAddAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
-            }
-        }
-
-        #endregion
-
-        #region [ IBulkCommandServiceWithDtoAsync - Bulk Modify ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
-            IList<TDto> dtos,
-            CancellationToken cancellationToken = default)
-        {
-            return BulkModifyAsync(dtos, new BulkOperationOptions(), cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
-            IList<TDto> dtos,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-        {
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
-                dtos?.Count ?? 0, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Validate and map DTOs to entities
-                IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
-                if (!mappingResult.HasData() || mappingResult.Data == null)
-                {
-                    stopwatch.Stop();
-                    return BulkOperationResult.Failure(
-                        "One or more DTOs failed validation.",
-                        stopwatch.Elapsed).ToBusiness();
-                }
-
-                IList<TEntity> entities = mappingResult.Data;
-
-                // Execute bulk update using base class
-                IBusinessResult<BulkOperationResult> result = await base.BulkModifyAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
-            }
-        }
-
-        #endregion
-
-        #region [ IBulkCommandServiceWithDtoAsync - Bulk Remove ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
-            IList<TDto> dtos,
-            CancellationToken cancellationToken = default)
-        {
-            return BulkRemoveAsync(dtos, new BulkOperationOptions(), cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
-            IList<TDto> dtos,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-        {
-            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
-                dtos?.Count ?? 0, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Map DTOs to entities (no validation needed for delete)
-                IList<TEntity> entities = MapDtosToEntities(dtos);
-
-                // Execute bulk delete using base class
-                IBusinessResult<BulkOperationResult> result = await base.BulkRemoveAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
-            }
-        }
-
-        #endregion
-
-        #region [ Protected Helpers ]
-
-        /// <summary>
-        /// Maps a DTO to its corresponding entity.
-        /// </summary>
-        /// <param name="dto">The DTO to map.</param>
-        /// <returns>The mapped entity.</returns>
-        protected virtual TEntity MapDtoToEntity(TDto dto)
-        {
-            return _mapper.Map<TEntity>(dto);
-        }
-
-        /// <summary>
-        /// Maps a collection of DTOs to entities.
-        /// </summary>
-        /// <param name="dtos">The DTOs to map.</param>
-        /// <returns>A list of mapped entities.</returns>
-        protected virtual IList<TEntity> MapDtosToEntities(IList<TDto>? dtos)
-        {
-            if (dtos == null || dtos.Count == 0)
-            {
-                return Array.Empty<TEntity>();
-            }
-
-            return dtos.Select(MapDtoToEntity).ToList();
-        }
-
-        /// <summary>
-        /// Validates all DTOs and maps them to entities.
-        /// </summary>
-        /// <param name="dtos">The DTOs to validate and map.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A business result containing the mapped entities if validation passes.</returns>
-        protected virtual Task<IBusinessResult<IList<TEntity>>> ValidateAndMapDtosAsync(
-            IList<TDto>? dtos,
-            CancellationToken cancellationToken = default)
-        {
-            if (dtos == null || dtos.Count == 0)
-            {
-                return Task.FromResult<IBusinessResult<IList<TEntity>>>(
-                    Array.Empty<TEntity>().ToList().ToBusiness<IList<TEntity>>());
-            }
-
-            var entities = new List<TEntity>(dtos.Count);
-
-            foreach (TDto dto in dtos)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // Validate DTO if validator is available
-                if (_dtoValidator != null)
-                {
-                    IList<IMessageResult> dtoErrors = dto.TryValidate(_dtoValidator);
-                    if (dtoErrors.AnySafe())
-                    {
-                        _logger.LogDebug("application-bulkcommandservicedtoasync-validatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
-                            typeof(TDto).Name, dtoErrors.Count);
-                        return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
-                    }
-                }
-
-                // Map DTO to Entity
-                TEntity entity = MapDtoToEntity(dto);
-
-                // Validate Entity if validator is available
-                if (_entityValidator != null)
-                {
-                    IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
-                    if (entityErrors.AnySafe())
-                    {
-                        _logger.LogDebug("application-bulkcommandservicedtoasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
-                            typeof(TEntity).Name, entityErrors.Count);
-                        return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
-                    }
-                }
-
-                entities.Add(entity);
-            }
-
-            return Task.FromResult<IBusinessResult<IList<TEntity>>>(entities.ToBusiness<IList<TEntity>>());
-        }
-
-        #endregion
     }
+
+    /// <summary>
+    /// Initializes a new instance with DbContext, mapper, and DTO validator.
+    /// </summary>
+    /// <param name="dbContext">The DbContext for database operations.</param>
+    /// <param name="mapper">The AutoMapper instance for Entity/DTO mapping.</param>
+    /// <param name="dtoValidator">The validator for DTO validation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when dbContext or mapper is null.</exception>
+    protected BulkCommandServiceWithDtoBaseAsync(TUoW dbContext, IMapper mapper, IValidator<TDto>? dtoValidator)
+        : this(dbContext, mapper, dtoValidator, null)
+    {
+    }
+
+    #endregion
+
+    #region [ IBulkCommandServiceWithDtoAsync - Bulk Add ]
+
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
+        IList<TDto> dtos,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkAddAsync(dtos, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
+        IList<TDto> dtos,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+            dtos?.Count ?? 0, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            // Validate and map DTOs to entities
+            IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
+            if (!mappingResult.HasData() || mappingResult.Data == null)
+            {
+                stopwatch.Stop();
+                return BulkOperationResult.Failure(
+                    "One or more DTOs failed validation.",
+                    stopwatch.Elapsed).ToBusiness();
+            }
+
+            IList<TEntity> entities = mappingResult.Data;
+
+            // Execute bulk insert using base class
+            IBusinessResult<BulkOperationResult> result = await base.BulkAddAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+        }
+    }
+
+    #endregion
+
+    #region [ IBulkCommandServiceWithDtoAsync - Bulk Modify ]
+
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
+        IList<TDto> dtos,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkModifyAsync(dtos, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
+        IList<TDto> dtos,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+            dtos?.Count ?? 0, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            // Validate and map DTOs to entities
+            IBusinessResult<IList<TEntity>> mappingResult = await ValidateAndMapDtosAsync(dtos, cancellationToken);
+            if (!mappingResult.HasData() || mappingResult.Data == null)
+            {
+                stopwatch.Stop();
+                return BulkOperationResult.Failure(
+                    "One or more DTOs failed validation.",
+                    stopwatch.Elapsed).ToBusiness();
+            }
+
+            IList<TEntity> entities = mappingResult.Data;
+
+            // Execute bulk update using base class
+            IBusinessResult<BulkOperationResult> result = await base.BulkModifyAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+        }
+    }
+
+    #endregion
+
+    #region [ IBulkCommandServiceWithDtoAsync - Bulk Remove ]
+
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
+        IList<TDto> dtos,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkRemoveAsync(dtos, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
+        IList<TDto> dtos,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
+            dtos?.Count ?? 0, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            // Map DTOs to entities (no validation needed for delete)
+            IList<TEntity> entities = MapDtosToEntities(dtos);
+
+            // Execute bulk delete using base class
+            IBusinessResult<BulkOperationResult> result = await base.BulkRemoveAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandservicedtoasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.Data?.RowsAffected ?? 0, stopwatch.ElapsedMilliseconds, result.Data?.IsSuccess ?? false);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex, "application-bulkcommandservicedtoasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+        }
+    }
+
+    #endregion
+
+    #region [ Protected Helpers ]
+
+    /// <summary>
+    /// Maps a DTO to its corresponding entity.
+    /// </summary>
+    /// <param name="dto">The DTO to map.</param>
+    /// <returns>The mapped entity.</returns>
+    protected virtual TEntity MapDtoToEntity(TDto dto)
+    {
+        return Mapper.Map<TEntity>(dto);
+    }
+
+    /// <summary>
+    /// Maps a collection of DTOs to entities.
+    /// </summary>
+    /// <param name="dtos">The DTOs to map.</param>
+    /// <returns>A list of mapped entities.</returns>
+    protected virtual IList<TEntity> MapDtosToEntities(IList<TDto>? dtos)
+    {
+        if (dtos == null || dtos.Count == 0)
+        {
+            return Array.Empty<TEntity>();
+        }
+
+        return [.. dtos.Select(MapDtoToEntity)];
+    }
+
+    /// <summary>
+    /// Validates all DTOs and maps them to entities.
+    /// </summary>
+    /// <param name="dtos">The DTOs to validate and map.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A business result containing the mapped entities if validation passes.</returns>
+    protected virtual Task<IBusinessResult<IList<TEntity>>> ValidateAndMapDtosAsync(
+        IList<TDto>? dtos,
+        CancellationToken cancellationToken = default)
+    {
+        if (dtos == null || dtos.Count == 0)
+        {
+            return Task.FromResult<IBusinessResult<IList<TEntity>>>(
+                Array.Empty<TEntity>().ToList().ToBusiness<IList<TEntity>>());
+        }
+
+        var entities = new List<TEntity>(dtos.Count);
+
+        foreach (TDto dto in dtos)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Validate DTO if validator is available
+            if (DtoValidator != null)
+            {
+                IList<IMessageResult> dtoErrors = dto.TryValidate(DtoValidator);
+                if (dtoErrors.AnySafe())
+                {
+                    _logger.LogDebug("application-bulkcommandservicedtoasync-validatedtos-failed DtoType={DtoType} ErrorCount={ErrorCount}",
+                        typeof(TDto).Name, dtoErrors.Count);
+                    return Task.FromResult(dtoErrors.ToBusiness<IList<TEntity>>());
+                }
+            }
+
+            // Map DTO to Entity
+            TEntity entity = MapDtoToEntity(dto);
+
+            // Validate Entity if validator is available
+            if (_entityValidator != null)
+            {
+                IList<IMessageResult> entityErrors = entity.TryValidate(_entityValidator);
+                if (entityErrors.AnySafe())
+                {
+                    _logger.LogDebug("application-bulkcommandservicedtoasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                        typeof(TEntity).Name, entityErrors.Count);
+                    return Task.FromResult(entityErrors.ToBusiness<IList<TEntity>>());
+                }
+            }
+
+            entities.Add(entity);
+        }
+
+        return Task.FromResult<IBusinessResult<IList<TEntity>>>(entities.ToBusiness<IList<TEntity>>());
+    }
+
+    #endregion
 }
 

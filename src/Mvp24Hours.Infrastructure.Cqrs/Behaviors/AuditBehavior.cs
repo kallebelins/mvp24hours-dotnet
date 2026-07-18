@@ -56,15 +56,30 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// }
 /// </code>
 /// </example>
-public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the AuditBehavior.
+/// </remarks>
+/// <param name="auditStore">Optional audit store for persisting entries.</param>
+/// <param name="contextAccessor">Optional request context accessor.</param>
+/// <param name="userContext">Optional user context.</param>
+/// <param name="httpContextAccessor">Optional HTTP context accessor.</param>
+/// <param name="logger">Optional logger.</param>
+/// <param name="auditAllCommands">Whether to audit all commands regardless of IAuditable.</param>
+public sealed class AuditBehavior<TRequest, TResponse>(
+    IAuditStore? auditStore = null,
+    IRequestContextAccessor? contextAccessor = null,
+    IUserContext? userContext = null,
+    IHttpContextAccessor? httpContextAccessor = null,
+    ILogger<AuditBehavior<TRequest, TResponse>>? logger = null,
+    bool auditAllCommands = false) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IAuditStore? _auditStore;
-    private readonly IRequestContextAccessor? _contextAccessor;
-    private readonly IUserContext? _userContext;
-    private readonly IHttpContextAccessor? _httpContextAccessor;
-    private readonly ILogger<AuditBehavior<TRequest, TResponse>>? _logger;
-    private readonly bool _auditAllCommands;
+    private readonly IAuditStore? _auditStore = auditStore;
+    private readonly IRequestContextAccessor? _contextAccessor = contextAccessor;
+    private readonly IUserContext? _userContext = userContext;
+    private readonly IHttpContextAccessor? _httpContextAccessor = httpContextAccessor;
+    private readonly ILogger<AuditBehavior<TRequest, TResponse>>? _logger = logger;
+    private readonly bool _auditAllCommands = auditAllCommands;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -72,31 +87,6 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         MaxDepth = 3,
         ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
     };
-
-    /// <summary>
-    /// Creates a new instance of the AuditBehavior.
-    /// </summary>
-    /// <param name="auditStore">Optional audit store for persisting entries.</param>
-    /// <param name="contextAccessor">Optional request context accessor.</param>
-    /// <param name="userContext">Optional user context.</param>
-    /// <param name="httpContextAccessor">Optional HTTP context accessor.</param>
-    /// <param name="logger">Optional logger.</param>
-    /// <param name="auditAllCommands">Whether to audit all commands regardless of IAuditable.</param>
-    public AuditBehavior(
-        IAuditStore? auditStore = null,
-        IRequestContextAccessor? contextAccessor = null,
-        IUserContext? userContext = null,
-        IHttpContextAccessor? httpContextAccessor = null,
-        ILogger<AuditBehavior<TRequest, TResponse>>? logger = null,
-        bool auditAllCommands = false)
-    {
-        _auditStore = auditStore;
-        _contextAccessor = contextAccessor;
-        _userContext = userContext;
-        _httpContextAccessor = httpContextAccessor;
-        _logger = logger;
-        _auditAllCommands = auditAllCommands;
-    }
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -108,7 +98,7 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         }
 
         var auditable = request as IAuditable;
-        var isCommand = IsCommand();
+        bool isCommand = IsCommand();
 
         // Skip if request is not auditable and we're not auditing all commands
         if (auditable == null && !(_auditAllCommands && isCommand))
@@ -116,8 +106,8 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
-        var requestType = GetRequestType();
+        string requestName = typeof(TRequest).Name;
+        string requestType = GetRequestType();
         IRequestContext? context = _contextAccessor?.Context;
 
         var entry = new AuditEntry
@@ -207,7 +197,9 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
     private string? SafeSerialize<T>(T obj)
     {
         if (obj == null)
+        {
             return null;
+        }
 
         try
         {
@@ -227,14 +219,18 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
     {
         HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
+        {
             return null;
+        }
 
         // Try X-Forwarded-For first
         if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwardedFor))
         {
-            var ips = forwardedFor.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
+            string[] ips = forwardedFor.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries);
             if (ips.Length > 0)
+            {
                 return ips[0].Trim();
+            }
         }
 
         return httpContext.Connection.RemoteIpAddress?.ToString();
@@ -244,7 +240,9 @@ public sealed class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
     {
         HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
+        {
             return null;
+        }
 
         if (httpContext.Request.Headers.TryGetValue("User-Agent", out StringValues userAgent))
         {

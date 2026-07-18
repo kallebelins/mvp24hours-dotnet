@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.Core.Observability;
@@ -599,7 +597,9 @@ public static class Mvp24HoursOpenTelemetryIntegrationExtensions
     public static string GetFormattedHeaders(this OtlpExporterOptions options)
     {
         if (options.Headers == null || options.Headers.Count == 0)
+        {
             return string.Empty;
+        }
 
         var parts = new List<string>();
         foreach (KeyValuePair<string, string> header in options.Headers)
@@ -619,19 +619,29 @@ public static class Mvp24HoursOpenTelemetryIntegrationExtensions
         var attributes = new Dictionary<string, object>();
 
         if (!string.IsNullOrEmpty(options.ServiceName))
+        {
             attributes["service.name"] = options.ServiceName;
+        }
 
         if (!string.IsNullOrEmpty(options.ServiceVersion))
+        {
             attributes["service.version"] = options.ServiceVersion;
+        }
 
         if (!string.IsNullOrEmpty(options.Environment))
+        {
             attributes["deployment.environment"] = options.Environment;
+        }
 
         if (!string.IsNullOrEmpty(options.ServiceNamespace))
+        {
             attributes["service.namespace"] = options.ServiceNamespace;
+        }
 
         if (!string.IsNullOrEmpty(options.ServiceInstanceId))
+        {
             attributes["service.instance.id"] = options.ServiceInstanceId;
+        }
 
         // Add custom attributes
         foreach (KeyValuePair<string, object> attr in options.ResourceAttributes)
@@ -654,16 +664,24 @@ public static class Mvp24HoursOpenTelemetryIntegrationExtensions
     public static void Validate(this OpenTelemetryExporterOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ServiceName))
+        {
             throw new ArgumentException("ServiceName is required for OpenTelemetry configuration.", nameof(options));
+        }
 
         if (options.Otlp.Enabled && string.IsNullOrWhiteSpace(options.Otlp.Endpoint))
+        {
             throw new ArgumentException("OTLP Endpoint is required when OTLP exporter is enabled.", nameof(options));
+        }
 
         if (options.Otlp.Enabled && !Uri.TryCreate(options.Otlp.Endpoint, UriKind.Absolute, out _))
+        {
             throw new ArgumentException($"OTLP Endpoint '{options.Otlp.Endpoint}' is not a valid URI.", nameof(options));
+        }
 
         if (options.Prometheus.Enabled && string.IsNullOrWhiteSpace(options.Prometheus.ScrapeEndpoint))
+        {
             throw new ArgumentException("Prometheus ScrapeEndpoint is required when Prometheus exporter is enabled.", nameof(options));
+        }
     }
 }
 

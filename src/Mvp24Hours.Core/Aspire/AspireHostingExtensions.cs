@@ -3,10 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -147,7 +145,7 @@ public static class AspireHostingExtensions
     {
         context.Response.ContentType = "application/json; charset=utf-8";
 
-        var statusCode = report.Status == HealthStatus.Healthy ? 200 :
+        int statusCode = report.Status == HealthStatus.Healthy ? 200 :
                         report.Status == HealthStatus.Degraded ? 200 : 503;
         context.Response.StatusCode = statusCode;
 
@@ -167,7 +165,7 @@ public static class AspireHostingExtensions
                 Duration = entry.Value.Duration.TotalMilliseconds,
                 Description = entry.Value.Description,
                 Exception = entry.Value.Exception?.Message,
-                Tags = entry.Value.Tags != null ? new List<string>(entry.Value.Tags) : null
+                Tags = entry.Value.Tags != null ? [.. entry.Value.Tags] : null
             });
         }
 

@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Mvp24Hours.Core.Contract.Data;
@@ -61,14 +58,23 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 /// Assert.Single(activeCustomers);
 /// </code>
 /// </example>
-public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDisposable
+/// <remarks>
+/// Initializes a new instance with a custom key selector.
+/// </remarks>
+/// <param name="keySelector">Function to extract the entity key.</param>
+/// <example>
+/// <code>
+/// var repository = new RepositoryFake&lt;Customer&gt;(c => c.Id);
+/// </code>
+/// </example>
+public class RepositoryFake<TEntity>(Func<TEntity, object?> keySelector) : IRepository<TEntity>, ICommitChanges, IDisposable
     where TEntity : class, IEntityBase
 {
     private readonly List<TEntity> _entities = [];
     private readonly List<TEntity> _pendingAdds = [];
     private readonly List<TEntity> _pendingModifies = [];
     private readonly List<TEntity> _pendingRemoves = [];
-    private readonly Func<TEntity, object?> _keySelector;
+    private readonly Func<TEntity, object?> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     private bool _disposed;
 
     /// <summary>
@@ -80,20 +86,6 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     public RepositoryFake()
         : this(e => e.EntityKey)
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance with a custom key selector.
-    /// </summary>
-    /// <param name="keySelector">Function to extract the entity key.</param>
-    /// <example>
-    /// <code>
-    /// var repository = new RepositoryFake&lt;Customer&gt;(c => c.Id);
-    /// </code>
-    /// </example>
-    public RepositoryFake(Func<TEntity, object?> keySelector)
-    {
-        _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     }
 
     /// <summary>
@@ -176,7 +168,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     public IList<TEntity> List(IPagingCriteria? criteria)
     {
         IQueryable<TEntity> query = _entities.AsQueryable();
-        return ApplyCriteria(query, criteria).ToList();
+        return [.. ApplyCriteria(query, criteria)];
     }
 
     /// <inheritdoc />
@@ -215,7 +207,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         {
             query = query.Where(clause);
         }
-        return ApplyCriteria(query, criteria).ToList();
+        return [.. ApplyCriteria(query, criteria)];
     }
 
     /// <inheritdoc />
@@ -283,7 +275,11 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public void Add(TEntity entity)
     {
-        if (entity == null) return;
+        if (entity == null)
+        {
+            return;
+        }
+
         _pendingAdds.Add(entity);
     }
 
@@ -302,7 +298,11 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public void Modify(TEntity entity)
     {
-        if (entity == null) return;
+        if (entity == null)
+        {
+            return;
+        }
+
         _pendingModifies.Add(entity);
     }
 
@@ -321,7 +321,11 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// <inheritdoc />
     public void Remove(TEntity entity)
     {
-        if (entity == null) return;
+        if (entity == null)
+        {
+            return;
+        }
+
         _pendingRemoves.Add(entity);
     }
 
@@ -352,7 +356,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     {
         if (ids.AnySafe())
         {
-            foreach (var id in ids)
+            foreach (object id in ids)
             {
                 RemoveById(id);
             }
@@ -380,7 +384,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// </example>
     public int CommitChanges()
     {
-        var changeCount = 0;
+        int changeCount = 0;
 
         // Process adds
         foreach (TEntity entity in _pendingAdds)
@@ -393,8 +397,8 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         // Process modifies
         foreach (TEntity modifiedEntity in _pendingModifies)
         {
-            var key = _keySelector(modifiedEntity);
-            var existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
+            object? key = _keySelector(modifiedEntity);
+            int existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
             if (existingIndex >= 0)
             {
                 _entities[existingIndex] = modifiedEntity;
@@ -406,7 +410,7 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
         // Process removes
         foreach (TEntity entity in _pendingRemoves)
         {
-            var key = _keySelector(entity);
+            object? key = _keySelector(entity);
             TEntity? existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
             if (existingEntity != null)
             {
@@ -484,24 +488,27 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// </summary>
     private static IQueryable<TEntity> ApplyCriteria(IQueryable<TEntity> query, IPagingCriteria? criteria)
     {
-        if (criteria == null) return query;
+        if (criteria == null)
+        {
+            return query;
+        }
 
         // Apply ordering
         if (criteria.OrderBy?.Count > 0)
         {
-            var isFirst = true;
-            foreach (var orderClause in criteria.OrderBy)
+            bool isFirst = true;
+            foreach (string orderClause in criteria.OrderBy)
             {
-                var parts = orderClause.Split(' ');
-                var propertyName = parts[0];
-                var isDescending = parts.Length > 1 &&
+                string[] parts = orderClause.Split(' ');
+                string propertyName = parts[0];
+                bool isDescending = parts.Length > 1 &&
                     parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
 
                 ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "e");
                 MemberExpression property = Expression.PropertyOrField(parameter, propertyName);
                 LambdaExpression lambda = Expression.Lambda(property, parameter);
 
-                var methodName = isFirst
+                string methodName = isFirst
                     ? (isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy))
                     : (isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy));
 
@@ -544,7 +551,10 @@ public class RepositoryFake<TEntity> : IRepository<TEntity>, ICommitChanges, IDi
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {

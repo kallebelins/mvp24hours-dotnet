@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
@@ -16,160 +14,163 @@ using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.Redis.Test
+namespace Mvp24Hours.Application.Redis.Test;
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class Test2CacheAsyncTest : IAsyncLifetime
 {
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Integration")]
-    public class Test2CacheAsyncTest : IAsyncLifetime
+    #region [ Container ]
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
+        .WithExposedPort(6379)
+        .WithCleanUp(true)
+        .Build();
+
+    public async Task InitializeAsync()
     {
-        #region [ Container ]
-        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
-            .WithExposedPort(6379)
-            .WithCleanUp(true)
-            .Build();
+        await _redisContainer.StartAsync().ConfigureAwait(false);
+    }
 
-        public async Task InitializeAsync()
-            => await _redisContainer.StartAsync().ConfigureAwait(false);
+    public async Task DisposeAsync()
+    {
+        await _redisContainer.DisposeAsync().ConfigureAwait(false);
+    }
+    #endregion
 
-        public async Task DisposeAsync()
-            => await _redisContainer.DisposeAsync().ConfigureAwait(false);
-        #endregion
+    private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
+    private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
 
-        private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
-        private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
+    private IServiceProvider Setup()
+    {
+        var services = new ServiceCollection();
+        // caching
+        services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
+        services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
 
-        private IServiceProvider Setup()
+        // caching.redis
+        services.AddMvp24HoursCaching();
+        services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
+        return services.BuildServiceProvider();
+    }
+
+
+    [Fact, Priority(1)]
+    public async Task SetStringAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            var services = new ServiceCollection();
-            // caching
-            services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
-            services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        string content = customer.ToSerialize();
 
-            // caching.redis
-            services.AddMvp24HoursCaching();
-            services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
-            return services.BuildServiceProvider();
-        }
+        // act
+        await cache.SetStringAsync(keyString, content);
 
+        // assert
+        string? result = await cache.GetStringAsync(keyString);
+        Assert.True(result.HasValue());
+    }
 
-        [Fact, Priority(1)]
-        public async Task SetStringAsync()
+    [Fact, Priority(2)]
+    public async Task GetStringAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        // act
+        await cache.SetStringAsync(keyString, "Test");
+        string? content = await cache.GetStringAsync(keyString);
+
+        // assert
+        Assert.True(content.HasValue());
+    }
+
+    [Fact, Priority(3)]
+    public async Task RemoveStringAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        //  act
+        await cache.RemoveAsync(keyString);
+
+        // assert
+        string? content = await cache.GetStringAsync(keyString);
+        Assert.False(content.HasValue());
+    }
+
+    [Fact, Priority(4)]
+    public async Task SetObjectAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            string content = customer.ToSerialize();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
 
-            // act
-            await cache.SetStringAsync(keyString, content);
+        //  act
+        await cache.SetObjectAsync(keyObject, customer);
 
-            // assert
-            var result = await cache.GetStringAsync(keyString);
-            Assert.True(result.HasValue());
-        }
+        // assert
+        Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(2)]
-        public async Task GetStringAsync()
+    [Fact, Priority(5)]
+    public async Task GetObjectAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        await cache.SetObjectAsync(keyObject, customer);
 
-            // act
-            await cache.SetStringAsync(keyString, "Test");
-            string? content = await cache.GetStringAsync(keyString);
+        //  act
+        Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
 
-            // assert
-            Assert.True(content.HasValue());
-        }
+        // assert
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(3)]
-        public async Task RemoveStringAsync()
+    [Fact, Priority(6)]
+    public async Task RemoveObjectAsync()
+    {
+        // arrange
+        IServiceProvider serviceProvider = Setup();
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        await cache.SetObjectAsync(keyObject, customer);
 
-            //  act
-            await cache.RemoveAsync(keyString);
+        //  act
+        await cache.RemoveAsync(keyObject);
 
-            // assert
-            string? content = await cache.GetStringAsync(keyString);
-            Assert.False(content.HasValue());
-        }
-
-        [Fact, Priority(4)]
-        public async Task SetObjectAsync()
-        {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-
-            //  act
-            await cache.SetObjectAsync(keyObject, customer);
-
-            // assert
-            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
-            Assert.NotNull(result);
-        }
-
-        [Fact, Priority(5)]
-        public async Task GetObjectAsync()
-        {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            await cache.SetObjectAsync(keyObject, customer);
-
-            //  act
-            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
-
-            // assert
-            Assert.NotNull(result);
-        }
-
-        [Fact, Priority(6)]
-        public async Task RemoveObjectAsync()
-        {
-            // arrange
-            IServiceProvider serviceProvider = Setup();
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            await cache.SetObjectAsync(keyObject, customer);
-
-            //  act
-            await cache.RemoveAsync(keyObject);
-
-            // assert
-            Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
-            Assert.Null(result);
-        }
+        // assert
+        Customer? result = await cache.GetObjectAsync<Customer>(keyObject);
+        Assert.Null(result);
     }
 }

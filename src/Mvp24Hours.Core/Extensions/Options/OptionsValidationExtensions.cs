@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -371,7 +368,7 @@ public static class OptionsValidationExtensions
 
             services.TryAddSingleton(validateOptionsType, sp =>
             {
-                var validator = sp.GetRequiredService(validatorType);
+                object validator = sp.GetRequiredService(validatorType);
                 return Activator.CreateInstance(adapterType, validator)!;
             });
         }
@@ -434,16 +431,11 @@ public static class OptionsValidationExtensions
 /// </summary>
 /// <typeparam name="TOptions">The options type.</typeparam>
 /// <typeparam name="TValidator">The validator type.</typeparam>
-internal sealed class OptionsValidatorAdapter<TOptions, TValidator> : IValidateOptions<TOptions>
+internal sealed class OptionsValidatorAdapter<TOptions, TValidator>(TValidator validator) : IValidateOptions<TOptions>
     where TOptions : class
     where TValidator : IOptionsValidator<TOptions>
 {
-    private readonly TValidator _validator;
-
-    public OptionsValidatorAdapter(TValidator validator)
-    {
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-    }
+    private readonly TValidator _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
     public ValidateOptionsResult Validate(string? name, TOptions options)
     {

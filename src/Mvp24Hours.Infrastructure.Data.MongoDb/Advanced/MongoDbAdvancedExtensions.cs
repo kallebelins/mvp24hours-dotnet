@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections;
@@ -16,228 +15,227 @@ using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced;
+
+/// <summary>
+/// Extension methods for registering MongoDB advanced features in DI.
+/// </summary>
+/// <remarks>
+/// <para>
+/// These extensions register the following advanced MongoDB features:
+/// <list type="bullet">
+///   <item>Transaction management</item>
+///   <item>GridFS file storage</item>
+///   <item>Change Streams for real-time events</item>
+///   <item>Full-text search</item>
+///   <item>Time Series collections</item>
+///   <item>Capped collections</item>
+///   <item>Geospatial queries</item>
+///   <item>Schema validation</item>
+///   <item>Sharding management</item>
+/// </list>
+/// </para>
+/// </remarks>
+public static class MongoDbAdvancedExtensions
 {
     /// <summary>
-    /// Extension methods for registering MongoDB advanced features in DI.
+    /// Adds all MongoDB advanced services to the service collection.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// These extensions register the following advanced MongoDB features:
-    /// <list type="bullet">
-    ///   <item>Transaction management</item>
-    ///   <item>GridFS file storage</item>
-    ///   <item>Change Streams for real-time events</item>
-    ///   <item>Full-text search</item>
-    ///   <item>Time Series collections</item>
-    ///   <item>Capped collections</item>
-    ///   <item>Geospatial queries</item>
-    ///   <item>Schema validation</item>
-    ///   <item>Sharding management</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    public static class MongoDbAdvancedExtensions
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbAdvanced(this IServiceCollection services)
     {
-        /// <summary>
-        /// Adds all MongoDB advanced services to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbAdvanced(this IServiceCollection services)
-        {
-            services.AddMvpMongoDbTransactions();
-            services.AddMvpMongoDbGridFs();
-            services.AddMvpMongoDbSchemaValidation();
-            services.AddMvpMongoDbSharding();
+        services.AddMvpMongoDbTransactions();
+        services.AddMvpMongoDbGridFs();
+        services.AddMvpMongoDbSchemaValidation();
+        services.AddMvpMongoDbSharding();
 
-            return services;
+        return services;
+    }
+
+    /// <summary>
+    /// Adds MongoDB transaction management services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional configuration for transaction options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbTransactions(
+        this IServiceCollection services,
+        Action<MongoDbTransactionOptions>? configureOptions = null)
+    {
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
         }
 
-        /// <summary>
-        /// Adds MongoDB transaction management services.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional configuration for transaction options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbTransactions(
-            this IServiceCollection services,
-            Action<MongoDbTransactionOptions>? configureOptions = null)
+        services.AddScoped<IMongoDbTransactionManager>(sp =>
         {
+            IMongoClient client = sp.GetRequiredService<IMongoClient>();
+            MongoDbTransactionOptions? options = null;
             if (configureOptions != null)
             {
-                services.Configure(configureOptions);
+                options = new MongoDbTransactionOptions();
+                configureOptions(options);
             }
+            return new MongoDbTransactionManager(client, options: options);
+        });
 
-            services.AddScoped<IMongoDbTransactionManager>(sp =>
-            {
-                IMongoClient client = sp.GetRequiredService<IMongoClient>();
-                MongoDbTransactionOptions? options = null;
-                if (configureOptions != null)
-                {
-                    options = new MongoDbTransactionOptions();
-                    configureOptions(options);
-                }
-                return new MongoDbTransactionManager(client, options: options);
-            });
+        return services;
+    }
 
-            return services;
-        }
-
-        /// <summary>
-        /// Adds MongoDB GridFS file storage services.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbGridFs(this IServiceCollection services)
+    /// <summary>
+    /// Adds MongoDB GridFS file storage services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbGridFs(this IServiceCollection services)
+    {
+        services.AddScoped<IMongoDbGridFsService>(sp =>
         {
-            services.AddScoped<IMongoDbGridFsService>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                return new MongoDbGridFsService(database);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            return new MongoDbGridFsService(database);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Change Stream services for a specific document type.
-        /// </summary>
-        /// <typeparam name="TDocument">The document type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbChangeStream<TDocument>(
-            this IServiceCollection services,
-            string? collectionName = null)
+    /// <summary>
+    /// Adds MongoDB Change Stream services for a specific document type.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbChangeStream<TDocument>(
+        this IServiceCollection services,
+        string? collectionName = null)
+    {
+        services.AddScoped<IMongoDbChangeStreamService<TDocument>>(sp =>
         {
-            services.AddScoped<IMongoDbChangeStreamService<TDocument>>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
-                return new MongoDbChangeStreamService<TDocument>(collection);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+            return new MongoDbChangeStreamService<TDocument>(collection);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB full-text search services for a specific document type.
-        /// </summary>
-        /// <typeparam name="TDocument">The document type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbTextSearch<TDocument>(
-            this IServiceCollection services,
-            string? collectionName = null)
+    /// <summary>
+    /// Adds MongoDB full-text search services for a specific document type.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbTextSearch<TDocument>(
+        this IServiceCollection services,
+        string? collectionName = null)
+    {
+        services.AddScoped<IMongoDbTextSearchService<TDocument>>(sp =>
         {
-            services.AddScoped<IMongoDbTextSearchService<TDocument>>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
-                return new MongoDbTextSearchService<TDocument>(collection);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+            return new MongoDbTextSearchService<TDocument>(collection);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Time Series services for a specific document type.
-        /// </summary>
-        /// <typeparam name="TDocument">The document type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <param name="timeField">The time field name.</param>
-        /// <param name="metaField">The metadata field name (optional).</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbTimeSeries<TDocument>(
-            this IServiceCollection services,
-            string collectionName,
-            string timeField,
-            string? metaField = null)
+    /// <summary>
+    /// Adds MongoDB Time Series services for a specific document type.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="collectionName">The collection name.</param>
+    /// <param name="timeField">The time field name.</param>
+    /// <param name="metaField">The metadata field name (optional).</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbTimeSeries<TDocument>(
+        this IServiceCollection services,
+        string collectionName,
+        string timeField,
+        string? metaField = null)
+    {
+        services.AddScoped<IMongoDbTimeSeriesService<TDocument>>(sp =>
         {
-            services.AddScoped<IMongoDbTimeSeriesService<TDocument>>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                return new MongoDbTimeSeriesService<TDocument>(database, collectionName, timeField, metaField);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            return new MongoDbTimeSeriesService<TDocument>(database, collectionName, timeField, metaField);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Capped Collection services for a specific document type.
-        /// </summary>
-        /// <typeparam name="TDocument">The document type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbCappedCollection<TDocument>(
-            this IServiceCollection services,
-            string collectionName)
+    /// <summary>
+    /// Adds MongoDB Capped Collection services for a specific document type.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbCappedCollection<TDocument>(
+        this IServiceCollection services,
+        string collectionName)
+    {
+        services.AddScoped<IMongoDbCappedCollectionService<TDocument>>(sp =>
         {
-            services.AddScoped<IMongoDbCappedCollectionService<TDocument>>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                return new MongoDbCappedCollectionService<TDocument>(database, collectionName);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            return new MongoDbCappedCollectionService<TDocument>(database, collectionName);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Geospatial services for a specific document type.
-        /// </summary>
-        /// <typeparam name="TDocument">The document type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbGeospatial<TDocument>(
-            this IServiceCollection services,
-            string? collectionName = null)
+    /// <summary>
+    /// Adds MongoDB Geospatial services for a specific document type.
+    /// </summary>
+    /// <typeparam name="TDocument">The document type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="collectionName">The collection name.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbGeospatial<TDocument>(
+        this IServiceCollection services,
+        string? collectionName = null)
+    {
+        services.AddScoped<IMongoDbGeospatialService<TDocument>>(sp =>
         {
-            services.AddScoped<IMongoDbGeospatialService<TDocument>>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
-                return new MongoDbGeospatialService<TDocument>(collection);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            IMongoCollection<TDocument> collection = database.GetCollection<TDocument>(collectionName ?? typeof(TDocument).Name);
+            return new MongoDbGeospatialService<TDocument>(collection);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Schema Validation services.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbSchemaValidation(this IServiceCollection services)
+    /// <summary>
+    /// Adds MongoDB Schema Validation services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbSchemaValidation(this IServiceCollection services)
+    {
+        services.AddScoped<IMongoDbSchemaValidationService>(sp =>
         {
-            services.AddScoped<IMongoDbSchemaValidationService>(sp =>
-            {
-                IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
-                return new MongoDbSchemaValidationService(database);
-            });
+            IMongoDatabase database = sp.GetRequiredService<IMongoDatabase>();
+            return new MongoDbSchemaValidationService(database);
+        });
 
-            return services;
-        }
+        return services;
+    }
 
-        /// <summary>
-        /// Adds MongoDB Sharding management services.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvpMongoDbSharding(this IServiceCollection services)
+    /// <summary>
+    /// Adds MongoDB Sharding management services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvpMongoDbSharding(this IServiceCollection services)
+    {
+        services.AddScoped<IMongoDbShardingService>(sp =>
         {
-            services.AddScoped<IMongoDbShardingService>(sp =>
-            {
-                IMongoClient client = sp.GetRequiredService<IMongoClient>();
-                return new MongoDbShardingService(client);
-            });
+            IMongoClient client = sp.GetRequiredService<IMongoClient>();
+            return new MongoDbShardingService(client);
+        });
 
-            return services;
-        }
+        return services;
     }
 }
 

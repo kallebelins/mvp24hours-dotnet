@@ -3,15 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Channels;
-using Mvp24Hours.Core.Infrastructure.Channels;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
@@ -119,7 +113,10 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
     /// </summary>
     public void Start()
     {
-        if (_processingTask != null) return;
+        if (_processingTask != null)
+        {
+            return;
+        }
 
         _processingTask = Task.Run(ProcessBatchesAsync, _cts.Token);
         _logger.LogInformation(
@@ -194,7 +191,10 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
 
             await foreach (List<BatchMessageItem<TMessage>> batch in ReadBatchesAsync(_cts.Token))
             {
-                if (batch.Count == 0) continue;
+                if (batch.Count == 0)
+                {
+                    continue;
+                }
 
                 await ProcessBatchAsync(batch, _cts.Token);
             }
@@ -217,14 +217,14 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
     {
         ChannelReader<BatchMessageItem<TMessage>> reader = _messageChannel.Reader;
         var batch = new List<BatchMessageItem<TMessage>>(_options.MaxBatchSize);
-        var shouldBreak = false;
+        bool shouldBreak = false;
         List<BatchMessageItem<TMessage>>? pendingBatch = null;
 
         while (!cancellationToken.IsCancellationRequested && !shouldBreak)
         {
             batch.Clear();
-            var channelCompleted = false;
-            var timedOut = false;
+            bool channelCompleted = false;
+            bool timedOut = false;
 
             var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -272,19 +272,19 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
             {
                 if (batch.Count > 0)
                 {
-                    pendingBatch = new List<BatchMessageItem<TMessage>>(batch);
+                    pendingBatch = [.. batch];
                 }
                 shouldBreak = true;
             }
             // Handle batch full
             else if (batch.Count >= _options.MaxBatchSize)
             {
-                pendingBatch = new List<BatchMessageItem<TMessage>>(batch);
+                pendingBatch = [.. batch];
             }
             // Handle timeout - yield partial batch if it meets minimum size
             else if (timedOut && batch.Count >= _options.MinBatchSize)
             {
-                pendingBatch = new List<BatchMessageItem<TMessage>>(batch);
+                pendingBatch = [.. batch];
             }
 
             // Yield outside try-catch
@@ -434,9 +434,13 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
                 if (resultsDict.TryGetValue(msg.DeliveryTag, out IBatchMessageResult? result))
                 {
                     if (result.Success)
+                    {
                         _channel.BasicAck(msg.DeliveryTag, multiple: false);
+                    }
                     else
+                    {
                         _channel.BasicNack(msg.DeliveryTag, multiple: false, requeue: result.Requeue);
+                    }
                 }
                 else
                 {
@@ -455,7 +459,11 @@ public sealed class ChannelBatchProcessor<TMessage> : IAsyncDisposable where TMe
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _messageChannel.Writer.TryComplete();

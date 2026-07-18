@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
-
 namespace Mvp24Hours.Core.Contract.Infrastructure.Options;
 
 /// <summary>
@@ -76,27 +74,36 @@ public sealed class OptionsValidationResult
     /// <summary>
     /// Creates a successful validation result.
     /// </summary>
-    public static OptionsValidationResult Success() => new(true);
+    public static OptionsValidationResult Success()
+    {
+        return new(true);
+    }
 
     /// <summary>
     /// Creates a failed validation result with a single failure message.
     /// </summary>
     /// <param name="failureMessage">The failure message.</param>
     public static OptionsValidationResult Fail(string failureMessage)
-        => new(false, new[] { failureMessage });
+    {
+        return new(false, [failureMessage]);
+    }
 
     /// <summary>
     /// Creates a failed validation result with multiple failure messages.
     /// </summary>
     /// <param name="failures">The failure messages.</param>
     public static OptionsValidationResult Fail(IReadOnlyList<string> failures)
-        => new(false, failures);
+    {
+        return new(false, failures);
+    }
 
     /// <summary>
     /// Creates a failed validation result with multiple failure messages.
     /// </summary>
     /// <param name="failures">The failure messages.</param>
     public static OptionsValidationResult Fail(IEnumerable<string> failures)
-        => new(false, new List<string>(failures));
+    {
+        return new(false, [.. failures]);
+    }
 }
 

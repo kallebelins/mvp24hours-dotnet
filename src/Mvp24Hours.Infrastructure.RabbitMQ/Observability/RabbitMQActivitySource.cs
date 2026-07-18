@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Observability;
@@ -300,7 +299,10 @@ public static class RabbitMQActivitySource
     /// <param name="exception">The exception that occurred.</param>
     public static void RecordException(Activity? activity, Exception exception)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         activity.SetStatus(ActivityStatusCode.Error, exception.Message);
         activity.SetTag(Tags.ErrorType, exception.GetType().FullName);
@@ -332,16 +334,25 @@ public static class RabbitMQActivitySource
     /// <param name="causationId">The causation ID.</param>
     public static void EnrichWithIds(Activity? activity, string? messageId, string? correlationId, string? causationId)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(messageId))
+        {
             activity.SetTag(Tags.MessagingMessageId, messageId);
+        }
 
         if (!string.IsNullOrEmpty(correlationId))
+        {
             activity.SetTag(Tags.MessagingCorrelationId, correlationId);
+        }
 
         if (!string.IsNullOrEmpty(causationId))
+        {
             activity.SetTag(Tags.MessagingCausationId, causationId);
+        }
     }
 
     /// <summary>
@@ -352,13 +363,20 @@ public static class RabbitMQActivitySource
     /// <param name="userId">The user ID.</param>
     public static void EnrichWithTenancy(Activity? activity, string? tenantId, string? userId)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(tenantId))
+        {
             activity.SetTag(Tags.TenantId, tenantId);
+        }
 
         if (!string.IsNullOrEmpty(userId))
+        {
             activity.SetTag(Tags.UserId, userId);
+        }
     }
 
     /// <summary>
@@ -369,7 +387,10 @@ public static class RabbitMQActivitySource
     /// <param name="redeliveryCount">The number of times the message was redelivered.</param>
     public static void EnrichWithDeliveryInfo(Activity? activity, bool redelivered, int redeliveryCount)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         activity.SetTag(Tags.MessagingRedelivered, redelivered);
         activity.SetTag(Tags.MessagingRedeliveryCount, redeliveryCount);

@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -59,24 +58,18 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// services.AddValidatorsFromAssemblyContaining&lt;CreateOrderCommandValidator&gt;();
 /// </code>
 /// </example>
-public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the ValidationBehavior.
+/// </remarks>
+/// <param name="validators">The collection of validators for the request type.</param>
+/// <param name="logger">Optional logger for recording validation failures.</param>
+public sealed class ValidationBehavior<TRequest, TResponse>(
+    IEnumerable<IValidator<TRequest>> validators,
+    ILogger<ValidationBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
-    private readonly ILogger<ValidationBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the ValidationBehavior.
-    /// </summary>
-    /// <param name="validators">The collection of validators for the request type.</param>
-    /// <param name="logger">Optional logger for recording validation failures.</param>
-    public ValidationBehavior(
-        IEnumerable<IValidator<TRequest>> validators,
-        ILogger<ValidationBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _validators = validators ?? Enumerable.Empty<IValidator<TRequest>>();
-        _logger = logger;
-    }
+    private readonly IEnumerable<IValidator<TRequest>> _validators = validators ?? [];
+    private readonly ILogger<ValidationBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -86,7 +79,7 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         // Create validation context
         var context = new ValidationContext<TRequest>(request);

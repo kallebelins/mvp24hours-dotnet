@@ -5,37 +5,36 @@
 //=====================================================================================
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Core.Contract.Application.Pipe
+namespace Mvp24Hours.Core.Contract.Application.Pipe;
+
+/// <summary>
+/// Strategic for aggregating operations in the pipeline
+/// </summary>
+/// <example>
+/// <code>
+/// // interface
+/// public interface IProductCategoryListBuilder : IPipelineBuilder { }
+/// 
+/// // implementation
+/// public class ProductCategoryListBuilder : IProductCategoryListBuilder
+/// {
+///     public IPipelineAsync Builder(IPipelineAsync pipeline)
+///     {
+///         return pipeline
+///             .Add<ProductCategoryFileOperation>()
+///             .Add<ProductCategoryResponseMapperOperation>();
+///     }
+/// }
+/// 
+/// // use
+/// var builder = ServiceProviderHelper.GetService{IProductGetByBuilder}();
+/// builder.Builder(pipeline);
+/// </code>
+/// </example>
+public interface IPipelineBuilder
 {
     /// <summary>
-    /// Strategic for aggregating operations in the pipeline
+    /// Operations aggregator
     /// </summary>
-    /// <example>
-    /// <code>
-    /// // interface
-    /// public interface IProductCategoryListBuilder : IPipelineBuilder { }
-    /// 
-    /// // implementation
-    /// public class ProductCategoryListBuilder : IProductCategoryListBuilder
-    /// {
-    ///     public IPipelineAsync Builder(IPipelineAsync pipeline)
-    ///     {
-    ///         return pipeline
-    ///             .Add<ProductCategoryFileOperation>()
-    ///             .Add<ProductCategoryResponseMapperOperation>();
-    ///     }
-    /// }
-    /// 
-    /// // use
-    /// var builder = ServiceProviderHelper.GetService{IProductGetByBuilder}();
-    /// builder.Builder(pipeline);
-    /// </code>
-    /// </example>
-    public interface IPipelineBuilder
-    {
-        /// <summary>
-        /// Operations aggregator
-        /// </summary>
-        IPipeline Builder(IPipeline pipeline);
-    }
+    IPipeline Builder(IPipeline pipeline);
 }

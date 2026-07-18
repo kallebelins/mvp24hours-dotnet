@@ -3,201 +3,175 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing;
+
+/// <summary>
+/// Test implementation of consume context for testing consumers.
+/// </summary>
+/// <typeparam name="TMessage">The type of the consumed message.</typeparam>
+/// <remarks>
+/// Creates a new test consume context.
+/// </remarks>
+public class TestConsumeContext<TMessage>(
+    TMessage message,
+    IServiceProvider serviceProvider,
+    string? messageId = null,
+    string? correlationId = null,
+    string? causationId = null,
+    string? exchange = null,
+    string? routingKey = null,
+    string? queueName = null,
+    IDictionary<string, object>? headers = null,
+    int redeliveryCount = 0,
+    DateTimeOffset? sentAt = null,
+    CancellationToken cancellationToken = default) : IConsumeContext<TMessage> where TMessage : class
 {
+    private readonly List<object> _publishedMessages = [];
+    private readonly List<object> _responses = [];
+
+    /// <inheritdoc />
+    public TMessage Message { get; } = message ?? throw new ArgumentNullException(nameof(message));
+
+    /// <inheritdoc />
+    public string MessageId { get; } = messageId ?? Guid.NewGuid().ToString();
+
+    /// <inheritdoc />
+    public string? CorrelationId { get; } = correlationId;
+
+    /// <inheritdoc />
+    public string? CausationId { get; } = causationId;
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, object> Headers { get; } = headers != null
+            ? new Dictionary<string, object>(headers)
+            : [];
+
+    /// <inheritdoc />
+    public string Exchange { get; } = exchange ?? "test-exchange";
+
+    /// <inheritdoc />
+    public string RoutingKey { get; } = routingKey ?? "test-routing-key";
+
+    /// <inheritdoc />
+    public string QueueName { get; } = queueName ?? "test-queue";
+
+    /// <inheritdoc />
+    public string ConsumerTag { get; } = $"test-consumer-{Guid.NewGuid():N}";
+
+    /// <inheritdoc />
+    public ulong DeliveryTag { get; } = (ulong)Random.Shared.Next(1, int.MaxValue);
+
+    /// <inheritdoc />
+    public bool Redelivered { get; } = redeliveryCount > 0;
+
+    /// <inheritdoc />
+    public int RedeliveryCount { get; } = redeliveryCount;
+
+    /// <inheritdoc />
+    public DateTimeOffset? SentAt { get; } = sentAt;
+
+    /// <inheritdoc />
+    public DateTimeOffset ReceivedAt { get; } = DateTimeOffset.UtcNow;
+
+    /// <inheritdoc />
+    public IServiceProvider ServiceProvider { get; } = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+
+    /// <inheritdoc />
+    public CancellationToken CancellationToken { get; } = cancellationToken;
+
     /// <summary>
-    /// Test implementation of consume context for testing consumers.
+    /// Gets the messages that were published during consumption.
     /// </summary>
-    /// <typeparam name="TMessage">The type of the consumed message.</typeparam>
-    public class TestConsumeContext<TMessage> : IConsumeContext<TMessage> where TMessage : class
+    public IReadOnlyList<object> PublishedMessages => _publishedMessages;
+
+    /// <summary>
+    /// Gets the responses that were sent during consumption.
+    /// </summary>
+    public IReadOnlyList<object> Responses => _responses;
+
+    /// <summary>
+    /// Gets a typed list of published messages.
+    /// </summary>
+    public IReadOnlyList<T> GetPublishedMessages<T>() where T : class
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly List<object> _publishedMessages = [];
-        private readonly List<object> _responses = [];
-
-        /// <summary>
-        /// Creates a new test consume context.
-        /// </summary>
-        public TestConsumeContext(
-            TMessage message,
-            IServiceProvider serviceProvider,
-            string? messageId = null,
-            string? correlationId = null,
-            string? causationId = null,
-            string? exchange = null,
-            string? routingKey = null,
-            string? queueName = null,
-            IDictionary<string, object>? headers = null,
-            int redeliveryCount = 0,
-            DateTimeOffset? sentAt = null,
-            CancellationToken cancellationToken = default)
+        var result = new List<T>();
+        foreach (object msg in _publishedMessages)
         {
-            Message = message ?? throw new ArgumentNullException(nameof(message));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-
-            MessageId = messageId ?? Guid.NewGuid().ToString();
-            CorrelationId = correlationId;
-            CausationId = causationId;
-            Exchange = exchange ?? "test-exchange";
-            RoutingKey = routingKey ?? "test-routing-key";
-            QueueName = queueName ?? "test-queue";
-            Headers = headers != null
-                ? new Dictionary<string, object>(headers)
-                : [];
-            RedeliveryCount = redeliveryCount;
-            Redelivered = redeliveryCount > 0;
-            SentAt = sentAt;
-            ReceivedAt = DateTimeOffset.UtcNow;
-            CancellationToken = cancellationToken;
-            ConsumerTag = $"test-consumer-{Guid.NewGuid():N}";
-            DeliveryTag = (ulong)Random.Shared.Next(1, int.MaxValue);
-        }
-
-        /// <inheritdoc />
-        public TMessage Message { get; }
-
-        /// <inheritdoc />
-        public string MessageId { get; }
-
-        /// <inheritdoc />
-        public string? CorrelationId { get; }
-
-        /// <inheritdoc />
-        public string? CausationId { get; }
-
-        /// <inheritdoc />
-        public IReadOnlyDictionary<string, object> Headers { get; }
-
-        /// <inheritdoc />
-        public string Exchange { get; }
-
-        /// <inheritdoc />
-        public string RoutingKey { get; }
-
-        /// <inheritdoc />
-        public string QueueName { get; }
-
-        /// <inheritdoc />
-        public string ConsumerTag { get; }
-
-        /// <inheritdoc />
-        public ulong DeliveryTag { get; }
-
-        /// <inheritdoc />
-        public bool Redelivered { get; }
-
-        /// <inheritdoc />
-        public int RedeliveryCount { get; }
-
-        /// <inheritdoc />
-        public DateTimeOffset? SentAt { get; }
-
-        /// <inheritdoc />
-        public DateTimeOffset ReceivedAt { get; }
-
-        /// <inheritdoc />
-        public IServiceProvider ServiceProvider => _serviceProvider;
-
-        /// <inheritdoc />
-        public CancellationToken CancellationToken { get; }
-
-        /// <summary>
-        /// Gets the messages that were published during consumption.
-        /// </summary>
-        public IReadOnlyList<object> PublishedMessages => _publishedMessages;
-
-        /// <summary>
-        /// Gets the responses that were sent during consumption.
-        /// </summary>
-        public IReadOnlyList<object> Responses => _responses;
-
-        /// <summary>
-        /// Gets a typed list of published messages.
-        /// </summary>
-        public IReadOnlyList<T> GetPublishedMessages<T>() where T : class
-        {
-            var result = new List<T>();
-            foreach (var msg in _publishedMessages)
+            if (msg is T typed)
             {
-                if (msg is T typed)
-                    result.Add(typed);
+                result.Add(typed);
             }
-            return result;
         }
+        return result;
+    }
 
-        /// <summary>
-        /// Gets a typed list of responses.
-        /// </summary>
-        public IReadOnlyList<T> GetResponses<T>() where T : class
+    /// <summary>
+    /// Gets a typed list of responses.
+    /// </summary>
+    public IReadOnlyList<T> GetResponses<T>() where T : class
+    {
+        var result = new List<T>();
+        foreach (object resp in _responses)
         {
-            var result = new List<T>();
-            foreach (var resp in _responses)
+            if (resp is T typed)
             {
-                if (resp is T typed)
-                    result.Add(typed);
+                result.Add(typed);
             }
-            return result;
         }
+        return result;
+    }
 
-        /// <inheritdoc />
-        public T? GetHeader<T>(string key)
+    /// <inheritdoc />
+    public T? GetHeader<T>(string key)
+    {
+        if (Headers.TryGetValue(key, out object? value))
         {
-            if (Headers.TryGetValue(key, out var value))
+            if (value is T typedValue)
             {
-                if (value is T typedValue)
-                    return typedValue;
-
-                try
-                {
-                    return (T)Convert.ChangeType(value, typeof(T));
-                }
-                catch
-                {
-                    return default;
-                }
-            }
-            return default;
-        }
-
-        /// <inheritdoc />
-        public Task PublishAsync<T>(T message, string? routingKey = null, CancellationToken cancellationToken = default) where T : class
-        {
-            _publishedMessages.Add(message);
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc />
-        public Task RespondAsync<T>(T response, CancellationToken cancellationToken = default) where T : class
-        {
-            _responses.Add(response);
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc />
-        public Core.Contract.IServiceScope CreateScope()
-        {
-            return new TestServiceScope(_serviceProvider);
-        }
-
-        private class TestServiceScope : Core.Contract.IServiceScope
-        {
-            public TestServiceScope(IServiceProvider serviceProvider)
-            {
-                ServiceProvider = serviceProvider;
+                return typedValue;
             }
 
-            public IServiceProvider ServiceProvider { get; }
-
-            public void Dispose()
+            try
             {
-                // No-op for test scope
+                return (T)Convert.ChangeType(value, typeof(T));
             }
+            catch
+            {
+                return default;
+            }
+        }
+        return default;
+    }
+
+    /// <inheritdoc />
+    public Task PublishAsync<T>(T message, string? routingKey = null, CancellationToken cancellationToken = default) where T : class
+    {
+        _publishedMessages.Add(message);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task RespondAsync<T>(T response, CancellationToken cancellationToken = default) where T : class
+    {
+        _responses.Add(response);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Core.Contract.IServiceScope CreateScope()
+    {
+        return new TestServiceScope(ServiceProvider);
+    }
+
+    private class TestServiceScope(IServiceProvider serviceProvider) : Core.Contract.IServiceScope
+    {
+        public IServiceProvider ServiceProvider { get; } = serviceProvider;
+
+        public void Dispose()
+        {
+            // No-op for test scope
         }
     }
 }

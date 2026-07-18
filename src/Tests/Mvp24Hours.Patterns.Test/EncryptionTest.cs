@@ -7,26 +7,25 @@ using Mvp24Hours.Infrastructure.Helpers;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Patterns.Test
+namespace Mvp24Hours.Patterns.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class EncryptionTest
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class EncryptionTest
+    [Fact, Priority(1)]
+    public void EncryptDecrypt()
     {
-        [Fact, Priority(1)]
-        public void EncryptDecrypt()
-        {
-            // arrange
-            string keyBase64 = EncryptionHelper.CreateKeyBase64();
-            string text = "test-test";
-            // act
-            string textEncrypt = EncryptionHelper.EncryptWithAes(text, keyBase64, out string vectorBase64);
-            string textDecrypt = EncryptionHelper.DecryptWithAes(textEncrypt, keyBase64, vectorBase64);
-            // assert
-            Assert.Equal(textDecrypt, text);
-        }
+        // arrange
+        string keyBase64 = EncryptionHelper.CreateKeyBase64();
+        string text = "test-test";
+        // act
+        string textEncrypt = EncryptionHelper.EncryptWithAes(text, keyBase64, out string vectorBase64);
+        string textDecrypt = EncryptionHelper.DecryptWithAes(textEncrypt, keyBase64, vectorBase64);
+        // assert
+        Assert.Equal(textDecrypt, text);
     }
 }

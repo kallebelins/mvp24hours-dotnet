@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -40,19 +39,19 @@ public interface IAuthorized
     /// Gets the roles required to execute this request.
     /// User must have at least one of the specified roles.
     /// </summary>
-    IEnumerable<string> RequiredRoles => Enumerable.Empty<string>();
+    IEnumerable<string> RequiredRoles => [];
 
     /// <summary>
     /// Gets the permissions required to execute this request.
     /// User must have all of the specified permissions.
     /// </summary>
-    IEnumerable<string> RequiredPermissions => Enumerable.Empty<string>();
+    IEnumerable<string> RequiredPermissions => [];
 
     /// <summary>
     /// Gets the policy names required to execute this request.
     /// All policies must be satisfied.
     /// </summary>
-    IEnumerable<string> RequiredPolicies => Enumerable.Empty<string>();
+    IEnumerable<string> RequiredPolicies => [];
 }
 
 /// <summary>
@@ -113,21 +112,27 @@ public interface IUserContext
     /// <summary>
     /// Gets the permissions granted to the current user.
     /// </summary>
-    IEnumerable<string> Permissions => Enumerable.Empty<string>();
+    IEnumerable<string> Permissions => [];
 
     /// <summary>
     /// Checks if the user is in the specified role.
     /// </summary>
     /// <param name="role">The role to check.</param>
     /// <returns>True if the user is in the role, false otherwise.</returns>
-    bool IsInRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    bool IsInRole(string role)
+    {
+        return Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Checks if the user has the specified permission.
     /// </summary>
     /// <param name="permission">The permission to check.</param>
     /// <returns>True if the user has the permission, false otherwise.</returns>
-    bool HasPermission(string permission) => Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    bool HasPermission(string permission)
+    {
+        return Permissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    }
 }
 
 /// <summary>
@@ -153,27 +158,21 @@ public interface IUserContext
 /// services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(AuthorizationBehavior&lt;,&gt;));
 /// </code>
 /// </example>
-public sealed class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the AuthorizationBehavior.
+/// </remarks>
+/// <param name="userContext">Optional user context for authorization checks.</param>
+/// <param name="logger">Optional logger for recording authorization operations.</param>
+/// <remarks>
+/// If no user context is provided, this behavior allows all requests.
+/// </remarks>
+public sealed class AuthorizationBehavior<TRequest, TResponse>(
+    IUserContext? userContext = null,
+    ILogger<AuthorizationBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IUserContext? _userContext;
-    private readonly ILogger<AuthorizationBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the AuthorizationBehavior.
-    /// </summary>
-    /// <param name="userContext">Optional user context for authorization checks.</param>
-    /// <param name="logger">Optional logger for recording authorization operations.</param>
-    /// <remarks>
-    /// If no user context is provided, this behavior allows all requests.
-    /// </remarks>
-    public AuthorizationBehavior(
-        IUserContext? userContext = null,
-        ILogger<AuthorizationBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _userContext = userContext;
-        _logger = logger;
-    }
+    private readonly IUserContext? _userContext = userContext;
+    private readonly ILogger<AuthorizationBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -184,7 +183,7 @@ public sealed class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavi
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         // Check if user is authenticated
         if (!_userContext.IsAuthenticated)
@@ -201,7 +200,7 @@ public sealed class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavi
         var requiredRoles = authorized.RequiredRoles.ToList();
         if (requiredRoles.Count > 0)
         {
-            var hasAnyRole = requiredRoles.Any(role => _userContext.IsInRole(role));
+            bool hasAnyRole = requiredRoles.Any(role => _userContext.IsInRole(role));
 
             if (!hasAnyRole)
             {

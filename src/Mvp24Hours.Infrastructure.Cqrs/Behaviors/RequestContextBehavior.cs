@@ -52,39 +52,30 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// }
 /// </code>
 /// </example>
-public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the RequestContextBehavior.
+/// </remarks>
+/// <param name="contextAccessor">The request context accessor.</param>
+/// <param name="contextFactory">The request context factory.</param>
+/// <param name="httpContextAccessor">Optional HTTP context accessor for web scenarios.</param>
+/// <param name="userContext">Optional user context for authentication scenarios.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class RequestContextBehavior<TRequest, TResponse>(
+    IRequestContextAccessor contextAccessor,
+    IRequestContextFactory contextFactory,
+    IHttpContextAccessor? httpContextAccessor = null,
+    IUserContext? userContext = null,
+    ILogger<RequestContextBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IRequestContextAccessor _contextAccessor;
-    private readonly IRequestContextFactory _contextFactory;
-    private readonly IHttpContextAccessor? _httpContextAccessor;
-    private readonly IUserContext? _userContext;
-    private readonly ILogger<RequestContextBehavior<TRequest, TResponse>>? _logger;
+    private readonly IRequestContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
+    private readonly IRequestContextFactory _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+    private readonly IHttpContextAccessor? _httpContextAccessor = httpContextAccessor;
+    private readonly IUserContext? _userContext = userContext;
+    private readonly ILogger<RequestContextBehavior<TRequest, TResponse>>? _logger = logger;
 
     private const string CorrelationIdHeader = "X-Correlation-Id";
     private const string CausationIdHeader = "X-Causation-Id";
-
-    /// <summary>
-    /// Creates a new instance of the RequestContextBehavior.
-    /// </summary>
-    /// <param name="contextAccessor">The request context accessor.</param>
-    /// <param name="contextFactory">The request context factory.</param>
-    /// <param name="httpContextAccessor">Optional HTTP context accessor for web scenarios.</param>
-    /// <param name="userContext">Optional user context for authentication scenarios.</param>
-    /// <param name="logger">Optional logger.</param>
-    public RequestContextBehavior(
-        IRequestContextAccessor contextAccessor,
-        IRequestContextFactory contextFactory,
-        IHttpContextAccessor? httpContextAccessor = null,
-        IUserContext? userContext = null,
-        ILogger<RequestContextBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
-        _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
-        _httpContextAccessor = httpContextAccessor;
-        _userContext = userContext;
-        _logger = logger;
-    }
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -115,10 +106,10 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
         }
 
         // Create a new root context
-        var correlationId = GetCorrelationIdFromHttpContext() ?? Guid.NewGuid().ToString("N");
-        var causationId = GetCausationIdFromHttpContext();
-        var userId = _userContext?.UserId;
-        var tenantId = GetTenantIdFromHttpContext();
+        string correlationId = GetCorrelationIdFromHttpContext() ?? Guid.NewGuid().ToString("N");
+        string? causationId = GetCausationIdFromHttpContext();
+        string? userId = _userContext?.UserId;
+        string? tenantId = GetTenantIdFromHttpContext();
 
         IRequestContext context = _contextFactory.Create(
             correlationId: correlationId,
@@ -149,7 +140,9 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
     {
         HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
+        {
             return null;
+        }
 
         // Try to get from header
         if (httpContext.Request.Headers.TryGetValue(CorrelationIdHeader, out StringValues headerValue))
@@ -165,7 +158,9 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
     {
         HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
+        {
             return null;
+        }
 
         if (httpContext.Request.Headers.TryGetValue(CausationIdHeader, out StringValues headerValue))
         {
@@ -179,12 +174,14 @@ public sealed class RequestContextBehavior<TRequest, TResponse> : IPipelineBehav
     {
         HttpContext? httpContext = _httpContextAccessor?.HttpContext;
         if (httpContext == null)
+        {
             return null;
+        }
 
         // Common tenant header names
         string[] tenantHeaders = ["X-Tenant-Id", "X-Tenant", "TenantId"];
 
-        foreach (var header in tenantHeaders)
+        foreach (string header in tenantHeaders)
         {
             if (httpContext.Request.Headers.TryGetValue(header, out StringValues headerValue))
             {

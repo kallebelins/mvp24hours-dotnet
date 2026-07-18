@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-
 namespace Mvp24Hours.Core.Contract.Infrastructure.Channels;
 
 /// <summary>

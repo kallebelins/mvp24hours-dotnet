@@ -3,43 +3,41 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
-namespace Mvp24Hours.Application.SQLServer.Test.Support.Services
+namespace Mvp24Hours.Application.SQLServer.Test.Support.Services;
+
+public class CustomerService(IUnitOfWork unitOfWork) : RepositoryService<Customer, IUnitOfWork>(unitOfWork)
 {
-    public class CustomerService(IUnitOfWork unitOfWork) : RepositoryService<Customer, IUnitOfWork>(unitOfWork)
+
+    // custom methods here
+
+    public IList<Customer> GetWithContacts()
     {
+        var paging = new PagingCriteria(3, 0);
 
-        // custom methods here
+        IList<Customer> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
 
-        public IList<Customer> GetWithContacts()
+        foreach (Customer customer in customers)
         {
-            var paging = new PagingCriteria(3, 0);
-
-            IList<Customer> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
-
-            foreach (Customer customer in customers)
-            {
-                Repository.LoadRelation(customer, x => x.Contacts);
-            }
-            return customers;
+            Repository.LoadRelation(customer, x => x.Contacts);
         }
+        return customers;
+    }
 
-        public IList<Customer> GetWithPagedContacts()
+    public IList<Customer> GetWithPagedContacts()
+    {
+        var paging = new PagingCriteria(3, 0);
+
+        IList<Customer> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
+
+        foreach (Customer customer in customers)
         {
-            var paging = new PagingCriteria(3, 0);
-
-            IList<Customer> customers = Repository.GetBy(x => x.Contacts.Count != 0, paging);
-
-            foreach (Customer customer in customers)
-            {
-                Repository.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 1);
-            }
-            return customers;
+            Repository.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 1);
         }
+        return customers;
     }
 }

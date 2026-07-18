@@ -12,10 +12,10 @@ public class StringExtensionsTest
     public void RegexReplace_WithSimplePattern_ReplacesCorrectly()
     {
         // Arrange
-        var input = "Hello World 123";
+        string input = "Hello World 123";
 
         // Act
-        var result = input.RegexReplace(@"\d+", "456");
+        string result = input.RegexReplace(@"\d+", "456");
 
         // Assert
         result.Should().Be("Hello World 456");
@@ -25,10 +25,10 @@ public class StringExtensionsTest
     public void RegexReplace_WithComplexPattern_ReplacesMultiple()
     {
         // Arrange
-        var input = "test123test456test";
+        string input = "test123test456test";
 
         // Act
-        var result = input.RegexReplace(@"\d+", "X");
+        string result = input.RegexReplace(@"\d+", "X");
 
         // Assert
         result.Should().Be("testXtestXtest");
@@ -45,7 +45,7 @@ public class StringExtensionsTest
     public void ReplaceEnd_ReplacesEndOfString(string input, string value, string replacement, string expected)
     {
         // Act
-        var result = input.ReplaceEnd(value, replacement);
+        string result = input.ReplaceEnd(value, replacement);
 
         // Assert
         result.Should().Be(expected);
@@ -55,10 +55,10 @@ public class StringExtensionsTest
     public void ReplaceEnd_WhenValueNotAtEnd_DoesNotReplace()
     {
         // Arrange
-        var input = "HelloWorld";
+        string input = "HelloWorld";
 
         // Act
-        var result = input.ReplaceEnd("Hello", "Hi");
+        string result = input.ReplaceEnd("Hello", "Hi");
 
         // Assert
         result.Should().Be("HelloWorld");
@@ -75,7 +75,7 @@ public class StringExtensionsTest
     public void RemoveEnd_RemovesEndOfString(string input, string value, string expected)
     {
         // Act
-        var result = input.RemoveEnd(value);
+        string result = input.RemoveEnd(value);
 
         // Assert
         result.Should().Be(expected);
@@ -93,7 +93,7 @@ public class StringExtensionsTest
     public void Truncate_ReturnsExpectedLength(string input, int size, string expected)
     {
         // Act
-        var result = input.Truncate(size);
+        string result = input.Truncate(size);
 
         // Assert
         result.Should().Be(expected);
@@ -106,7 +106,7 @@ public class StringExtensionsTest
         string? input = null;
 
         // Act
-        var result = input.Truncate(5);
+        string result = input.Truncate(5);
 
         // Assert
         result.Should().BeEmpty();
@@ -123,7 +123,7 @@ public class StringExtensionsTest
     public void Reticence_AddsEllipsisWhenTruncated(string input, int size, string expected)
     {
         // Act
-        var result = input.Reticence(size);
+        string result = input.Reticence(size);
 
         // Assert
         result.Should().Be(expected);
@@ -136,7 +136,7 @@ public class StringExtensionsTest
         string? input = null;
 
         // Act
-        var result = input.Reticence(10);
+        string result = input.Reticence(10);
 
         // Assert
         result.Should().BeEmpty();
@@ -150,10 +150,10 @@ public class StringExtensionsTest
     public void SubstringSafe_WithValidRange_ReturnsSubstring()
     {
         // Arrange
-        var input = "Hello World";
+        string input = "Hello World";
 
         // Act
-        var result = input.SubstringSafe(0, 5);
+        string result = input.SubstringSafe(0, 5);
 
         // Assert
         result.Should().Be("Hello");
@@ -163,10 +163,10 @@ public class StringExtensionsTest
     public void SubstringSafe_WhenStartBeyondLength_ReturnsEmpty()
     {
         // Arrange
-        var input = "Hello";
+        string input = "Hello";
 
         // Act
-        var result = input.SubstringSafe(10, 5);
+        string result = input.SubstringSafe(10, 5);
 
         // Assert
         result.Should().BeEmpty();
@@ -176,10 +176,10 @@ public class StringExtensionsTest
     public void SubstringSafe_WhenLengthExceedsString_ReturnsToEnd()
     {
         // Arrange
-        var input = "Hello World";
+        string input = "Hello World";
 
         // Act
-        var result = input.SubstringSafe(6, 100);
+        string result = input.SubstringSafe(6, 100);
 
         // Assert
         result.Should().Be("World");
@@ -189,10 +189,10 @@ public class StringExtensionsTest
     public void SubstringSafe_WithDefaultLength_ReturnsToEnd()
     {
         // Arrange
-        var input = "Hello World";
+        string input = "Hello World";
 
         // Act
-        var result = input.SubstringSafe(6);
+        string result = input.SubstringSafe(6);
 
         // Assert
         result.Should().Be("World");
@@ -210,7 +210,7 @@ public class StringExtensionsTest
     public void SqlSafe_SanitizesInput(string input, string expected)
     {
         // Act
-        var result = input.SqlSafe();
+        string result = input.SqlSafe();
 
         // Assert
         result.Should().Be(expected);
@@ -223,7 +223,7 @@ public class StringExtensionsTest
         string? input = null;
 
         // Act
-        var result = input.SqlSafe();
+        string result = input.SqlSafe();
 
         // Assert
         result.Should().BeEmpty();
@@ -237,10 +237,10 @@ public class StringExtensionsTest
     public void Format_WithValidPlaceholders_FormatsCorrectly()
     {
         // Arrange
-        var template = "Hello {0}, you are {1} years old";
+        string template = "Hello {0}, you are {1} years old";
 
         // Act
-        var result = template.Format("John", 30);
+        string result = template.Format("John", 30);
 
         // Assert
         result.Should().Be("Hello John, you are 30 years old");
@@ -250,10 +250,10 @@ public class StringExtensionsTest
     public void Format_WithMultiplePlaceholders_FormatsCorrectly()
     {
         // Arrange
-        var template = "{0} + {1} = {2}";
+        string template = "{0} + {1} = {2}";
 
         // Act
-        var result = template.Format(2, 3, 5);
+        string result = template.Format(2, 3, 5);
 
         // Assert
         result.Should().Be("2 + 3 = 5");
@@ -267,11 +267,11 @@ public class StringExtensionsTest
     public void StringExtensions_WithLargeString_ShouldPerformEfficiently()
     {
         // Arrange
-        var input = new string('a', 100000);
+        string input = new('a', 100000);
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = input.Truncate(50);
+        string result = input.Truncate(50);
         stopwatch.Stop();
 
         // Assert

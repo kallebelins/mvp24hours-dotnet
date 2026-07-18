@@ -10,16 +10,19 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 [Trait("Category", "Unit")]
 public class MongoDbConnectionManagerTests
 {
-    private MongoDbResiliencyOptions CreateDefaultOptions() => new()
+    private MongoDbResiliencyOptions CreateDefaultOptions()
     {
-        EnableAutoReconnect = true,
-        MaxReconnectAttempts = 3,
-        ReconnectDelayMilliseconds = 10, // Short delays for tests
-        MaxReconnectDelayMilliseconds = 100,
-        UseExponentialBackoffForReconnect = false,
-        ReconnectJitterFactor = 0,
-        LogConnectionEvents = false
-    };
+        return new()
+        {
+            EnableAutoReconnect = true,
+            MaxReconnectAttempts = 3,
+            ReconnectDelayMilliseconds = 10, // Short delays for tests
+            MaxReconnectDelayMilliseconds = 100,
+            UseExponentialBackoffForReconnect = false,
+            ReconnectJitterFactor = 0,
+            LogConnectionEvents = false
+        };
+    }
 
     [Fact]
     public void Should_Start_Not_Connected()
@@ -69,10 +72,10 @@ public class MongoDbConnectionManagerTests
         // Arrange
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
-        var attemptCount = 0;
+        int attemptCount = 0;
 
         // Act
-        var result = await manager.TryReconnectAsync(async ct =>
+        bool result = await manager.TryReconnectAsync(async ct =>
         {
             attemptCount++;
             await Task.Delay(1, ct);
@@ -92,10 +95,10 @@ public class MongoDbConnectionManagerTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.MaxReconnectAttempts = 3;
         var manager = new MongoDbConnectionManager(options);
-        var attemptCount = 0;
+        int attemptCount = 0;
 
         // Act
-        var result = await manager.TryReconnectAsync(async ct =>
+        bool result = await manager.TryReconnectAsync(async ct =>
         {
             attemptCount++;
             await Task.Delay(1, ct);
@@ -114,10 +117,10 @@ public class MongoDbConnectionManagerTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.EnableAutoReconnect = false;
         var manager = new MongoDbConnectionManager(options);
-        var attemptCount = 0;
+        int attemptCount = 0;
 
         // Act
-        var result = await manager.TryReconnectAsync(async ct =>
+        bool result = await manager.TryReconnectAsync(async ct =>
         {
             attemptCount++;
             await Task.Delay(1, ct);
@@ -205,7 +208,7 @@ public class MongoDbConnectionManagerTests
         });
 
         // Assert
-        attempts.Should().BeEquivalentTo(new[] { 1, 2 });
+        attempts.Should().BeEquivalentTo([1, 2]);
     }
 
     [Fact]
@@ -216,7 +219,7 @@ public class MongoDbConnectionManagerTests
         var manager = new MongoDbConnectionManager(options);
         manager.OnConnectionEstablished();
 
-        var eventCount = 0;
+        int eventCount = 0;
         manager.ConnectionStateChanged += (sender, args) => eventCount++;
 
         // Act - Call OnConnectionEstablished again
@@ -233,7 +236,7 @@ public class MongoDbConnectionManagerTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var manager = new MongoDbConnectionManager(options);
 
-        var eventCount = 0;
+        int eventCount = 0;
         manager.ConnectionStateChanged += (sender, args) => eventCount++;
 
         // Act - Call OnConnectionLost when already disconnected
@@ -257,7 +260,7 @@ public class MongoDbConnectionManagerTests
             return false;
         });
 
-        var attemptsAfterFailure = manager.ReconnectAttempts;
+        int attemptsAfterFailure = manager.ReconnectAttempts;
 
         // Act - Connection established
         manager.OnConnectionEstablished();

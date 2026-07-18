@@ -4,14 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -53,11 +48,20 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursInputSanitization();
 /// </code>
 /// </example>
-public class InputSanitizationMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="InputSanitizationMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The input sanitization options.</param>
+/// <param name="logger">The logger.</param>
+public class InputSanitizationMiddleware(
+    RequestDelegate next,
+    IOptions<InputSanitizationOptions> options,
+    ILogger<InputSanitizationMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly InputSanitizationOptions _options;
-    private readonly ILogger<InputSanitizationMiddleware> _logger;
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly InputSanitizationOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<InputSanitizationMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Pre-compiled regex patterns for performance
     private static readonly Regex XssPattern = new(
@@ -81,22 +85,6 @@ public class InputSanitizationMiddleware
         RegexOptions.Compiled);
 
     /// <summary>
-    /// Creates a new instance of <see cref="InputSanitizationMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The input sanitization options.</param>
-    /// <param name="logger">The logger.</param>
-    public InputSanitizationMiddleware(
-        RequestDelegate next,
-        IOptions<InputSanitizationOptions> options,
-        ILogger<InputSanitizationMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
     /// Processes the HTTP request with input sanitization.
     /// </summary>
     /// <param name="context">The HTTP context.</param>
@@ -110,7 +98,7 @@ public class InputSanitizationMiddleware
         }
 
         // Check if path is excluded
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
         if (IsExcludedPath(path))
         {
             await _next(context);
@@ -167,14 +155,18 @@ public class InputSanitizationMiddleware
         foreach (KeyValuePair<string, StringValues> param in context.Request.Query)
         {
             if (_options.ExcludedQueryParameters.Contains(param.Key))
+            {
                 continue;
+            }
 
-            foreach (var value in param.Value)
+            foreach (string? value in param.Value)
             {
                 if (string.IsNullOrEmpty(value) || value.Length > _options.MaxInputLengthToScan)
+                {
                     continue;
+                }
 
-                var decodedValue = HttpUtility.UrlDecode(value);
+                string decodedValue = HttpUtility.UrlDecode(value);
                 List<ThreatDetection> paramThreats = DetectThreats(decodedValue, $"QueryString[{param.Key}]");
                 threats.AddRange(paramThreats);
             }
@@ -190,12 +182,16 @@ public class InputSanitizationMiddleware
         foreach (KeyValuePair<string, StringValues> header in context.Request.Headers)
         {
             if (_options.ExcludedHeaders.Contains(header.Key))
+            {
                 continue;
+            }
 
-            foreach (var value in header.Value)
+            foreach (string? value in header.Value)
             {
                 if (string.IsNullOrEmpty(value) || value.Length > _options.MaxInputLengthToScan)
+                {
                     continue;
+                }
 
                 List<ThreatDetection> headerThreats = DetectThreats(value, $"Header[{header.Key}]");
                 threats.AddRange(headerThreats);
@@ -221,16 +217,18 @@ public class InputSanitizationMiddleware
                 bufferSize: 1024,
                 leaveOpen: true);
 
-            var body = await reader.ReadToEndAsync();
+            string body = await reader.ReadToEndAsync();
 
             // Reset position for downstream handlers
             context.Request.Body.Position = 0;
 
             if (string.IsNullOrEmpty(body) || body.Length > _options.MaxInputLengthToScan)
+            {
                 return threats;
+            }
 
             // For JSON content, parse and validate each field
-            var contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
+            string? contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
             if (contentType?.Equals("application/json", StringComparison.OrdinalIgnoreCase) == true)
             {
                 try
@@ -283,11 +281,13 @@ public class InputSanitizationMiddleware
             case JsonValueKind.Object:
                 foreach (JsonProperty property in element.EnumerateObject())
                 {
-                    var propertyPath = $"{path}.{property.Name}";
+                    string propertyPath = $"{path}.{property.Name}";
 
                     // Check if property is excluded
                     if (_options.ExcludedJsonProperties.Contains(property.Name))
+                    {
                         continue;
+                    }
 
                     ValidateJsonElement(property.Value, propertyPath, threats);
                 }
@@ -303,7 +303,7 @@ public class InputSanitizationMiddleware
                 break;
 
             case JsonValueKind.String:
-                var value = element.GetString();
+                string? value = element.GetString();
                 if (!string.IsNullOrEmpty(value) && value.Length <= _options.MaxInputLengthToScan)
                 {
                     List<ThreatDetection> elementThreats = DetectThreats(value, $"JSON{path}");
@@ -365,7 +365,7 @@ public class InputSanitizationMiddleware
                     threat.Type,
                     context.Connection.RemoteIpAddress,
                     threat.Location,
-                    threat.Input?.Substring(0, Math.Min(threat.Input.Length, 200)));
+                    threat.Input?[..Math.Min(threat.Input.Length, 200)]);
             }
             else
             {
@@ -380,7 +380,7 @@ public class InputSanitizationMiddleware
 
     private bool HasSanitizableBody(HttpContext context)
     {
-        var contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
+        string? contentType = context.Request.ContentType?.Split(';').FirstOrDefault()?.Trim();
         return !string.IsNullOrEmpty(contentType) &&
                _options.SanitizableContentTypes.Contains(contentType) &&
                context.Request.ContentLength > 0;
@@ -411,7 +411,7 @@ public class InputSanitizationMiddleware
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";
@@ -419,18 +419,11 @@ public class InputSanitizationMiddleware
         return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
     }
 
-    private class ThreatDetection
+    private class ThreatDetection(string type, string location, string? input)
     {
-        public string Type { get; }
-        public string Location { get; }
-        public string? Input { get; }
-
-        public ThreatDetection(string type, string location, string? input)
-        {
-            Type = type;
-            Location = location;
-            Input = input;
-        }
+        public string Type { get; } = type;
+        public string Location { get; } = location;
+        public string? Input { get; } = input;
     }
 }
 

@@ -3,12 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 using Mvp24Hours.Infrastructure.RabbitMQ.Observability.Contract;
 

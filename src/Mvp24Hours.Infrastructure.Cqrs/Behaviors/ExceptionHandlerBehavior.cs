@@ -7,7 +7,6 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -35,24 +34,18 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// (after UnhandledExceptionBehavior) to catch exceptions from subsequent behaviors.
 /// </para>
 /// </remarks>
-public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the exception handler behavior.
+/// </remarks>
+/// <param name="serviceProvider">Service provider for resolving exception handlers.</param>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class ExceptionHandlerBehavior<TRequest, TResponse>(
+    IServiceProvider serviceProvider,
+    ILogger<ExceptionHandlerBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ExceptionHandlerBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the exception handler behavior.
-    /// </summary>
-    /// <param name="serviceProvider">Service provider for resolving exception handlers.</param>
-    /// <param name="logger">Optional logger for diagnostics.</param>
-    public ExceptionHandlerBehavior(
-        IServiceProvider serviceProvider,
-        ILogger<ExceptionHandlerBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<ExceptionHandlerBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(
@@ -126,9 +119,12 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
 
         IEnumerable<object?> handlers = _serviceProvider.GetServices(handlerType);
 
-        foreach (var handler in handlers)
+        foreach (object? handler in handlers)
         {
-            if (handler is null) continue;
+            if (handler is null)
+            {
+                continue;
+            }
 
             _logger?.LogDebug("Trying exception handler {HandlerType} for {ExceptionType}",
                 handler.GetType().Name, exceptionType.Name);
@@ -137,18 +133,27 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
             {
                 // Use reflection to call HandleAsync
                 MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
-                if (handleMethod is null) continue;
+                if (handleMethod is null)
+                {
+                    continue;
+                }
 
-                var task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
-                if (task is null) continue;
+                object? task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
+                if (task is null)
+                {
+                    continue;
+                }
 
                 await (Task)task;
 
                 // Get the result using reflection
                 PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
-                if (resultProperty is null) continue;
+                if (resultProperty is null)
+                {
+                    continue;
+                }
 
-                var resultValue = resultProperty.GetValue(task);
+                object? resultValue = resultProperty.GetValue(task);
                 if (resultValue is not null)
                 {
                     ExceptionHandlingResult<TResponse> result = ConvertToTypedResult(resultValue);
@@ -182,9 +187,12 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
             Type handlerType = typeof(IExceptionHandlerGlobal<>).MakeGenericType(currentType);
             IEnumerable<object?> handlers = _serviceProvider.GetServices(handlerType);
 
-            foreach (var handler in handlers)
+            foreach (object? handler in handlers)
             {
-                if (handler is null) continue;
+                if (handler is null)
+                {
+                    continue;
+                }
 
                 _logger?.LogDebug("Trying global exception handler {HandlerType} for {ExceptionType}",
                     handler.GetType().Name, currentType.Name);
@@ -193,18 +201,27 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
                 {
                     // Use reflection to call HandleAsync
                     MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
-                    if (handleMethod is null) continue;
+                    if (handleMethod is null)
+                    {
+                        continue;
+                    }
 
-                    var task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
-                    if (task is null) continue;
+                    object? task = handleMethod.Invoke(handler, [request, exception, cancellationToken]);
+                    if (task is null)
+                    {
+                        continue;
+                    }
 
                     await (Task)task;
 
                     // Get the result using reflection
                     PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
-                    if (resultProperty is null) continue;
+                    if (resultProperty is null)
+                    {
+                        continue;
+                    }
 
-                    var resultValue = resultProperty.GetValue(task);
+                    object? resultValue = resultProperty.GetValue(task);
                     if (resultValue is not null)
                     {
                         ExceptionHandlingResult<TResponse> result = ConvertFromGlobalResult(resultValue);
@@ -236,8 +253,8 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
         PropertyInfo? responseProp = resultType.GetProperty("Response");
         PropertyInfo? exceptionProp = resultType.GetProperty("ExceptionToRethrow");
 
-        var isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
-        var response = responseProp?.GetValue(resultValue);
+        bool isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
+        object? response = responseProp?.GetValue(resultValue);
         var exceptionToRethrow = exceptionProp?.GetValue(resultValue) as Exception;
 
         if (exceptionToRethrow is not null)
@@ -261,8 +278,8 @@ public class ExceptionHandlerBehavior<TRequest, TResponse> : IPipelineBehavior<T
         PropertyInfo? responseProp = resultType.GetProperty("Response");
         PropertyInfo? exceptionProp = resultType.GetProperty("ExceptionToRethrow");
 
-        var isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
-        var response = responseProp?.GetValue(resultValue);
+        bool isHandled = isHandledProp?.GetValue(resultValue) as bool? ?? false;
+        object? response = responseProp?.GetValue(resultValue);
         var exceptionToRethrow = exceptionProp?.GetValue(resultValue) as Exception;
 
         if (exceptionToRethrow is not null)

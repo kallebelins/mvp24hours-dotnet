@@ -32,7 +32,7 @@ public class BehaviorTest
         var command = new TestCommand { Name = "LogTest", Value = 1 };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.NotNull(result);
@@ -56,7 +56,7 @@ public class BehaviorTest
         var command = new SlowCommand { DelayMs = 100 }; // Slower than threshold
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("Completed", result);
@@ -106,7 +106,7 @@ public class BehaviorTest
         };
 
         // Act
-        var result = await mediator.SendAsync(validCommand);
+        int result = await mediator.SendAsync(validCommand);
 
         // Assert
         Assert.True(result > 0);
@@ -158,7 +158,7 @@ public class BehaviorTest
         var command = new TestCommand { Name = "NoValidator", Value = 1 };
 
         // Act - Should not throw
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Contains("NoValidator", result);
@@ -192,10 +192,7 @@ public class BehaviorTest
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly));
 
         // Add custom tracking behavior
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
@@ -224,10 +221,7 @@ public class BehaviorTest
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly));
 
         // Add short-circuiting behavior
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ =>
@@ -238,7 +232,7 @@ public class BehaviorTest
         var command = new TestCommand { Name = "Should not reach", Value = 1 };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("Short-circuited!", result);
@@ -248,17 +242,11 @@ public class BehaviorTest
 /// <summary>
 /// Behavior for tracking execution order in tests.
 /// </summary>
-internal class TrackingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+internal class TrackingBehavior<TRequest, TResponse>(string name, List<string> tracker) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly string _name;
-    private readonly List<string> _tracker;
-
-    public TrackingBehavior(string name, List<string> tracker)
-    {
-        _name = name;
-        _tracker = tracker;
-    }
+    private readonly string _name = name;
+    private readonly List<string> _tracker = tracker;
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
@@ -272,15 +260,10 @@ internal class TrackingBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 /// <summary>
 /// Behavior that short-circuits the pipeline.
 /// </summary>
-internal class ShortCircuitBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+internal class ShortCircuitBehavior<TRequest, TResponse>(TResponse response) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly TResponse _response;
-
-    public ShortCircuitBehavior(TResponse response)
-    {
-        _response = response;
-    }
+    private readonly TResponse _response = response;
 
     public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {

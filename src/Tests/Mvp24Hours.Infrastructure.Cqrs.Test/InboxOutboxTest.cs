@@ -4,13 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.Extensions;
-using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.Messaging;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -28,13 +22,13 @@ public class InboxOutboxTest
         // Arrange
         var store = new InMemoryInboxStore();
         var messageId = Guid.NewGuid();
-        var messageType = "TestEvent";
+        string messageType = "TestEvent";
 
         // Act
         await store.MarkAsProcessedAsync(messageId, messageType);
 
         // Assert
-        var exists = await store.ExistsAsync(messageId);
+        bool exists = await store.ExistsAsync(messageId);
         Assert.True(exists);
     }
 
@@ -46,7 +40,7 @@ public class InboxOutboxTest
         var messageId = Guid.NewGuid();
 
         // Act
-        var exists = await store.ExistsAsync(messageId);
+        bool exists = await store.ExistsAsync(messageId);
 
         // Assert
         Assert.False(exists);
@@ -61,7 +55,7 @@ public class InboxOutboxTest
         await store.MarkAsProcessedAsync(messageId, "TestEvent");
 
         // Act
-        var exists = await store.ExistsAsync(messageId);
+        bool exists = await store.ExistsAsync(messageId);
 
         // Assert
         Assert.True(exists);
@@ -73,7 +67,7 @@ public class InboxOutboxTest
         // Arrange
         var store = new InMemoryInboxStore();
         var messageId = Guid.NewGuid();
-        var messageType = "TestEvent";
+        string messageType = "TestEvent";
         await store.MarkAsProcessedAsync(messageId, messageType);
 
         // Act
@@ -94,11 +88,11 @@ public class InboxOutboxTest
         await store.MarkAsProcessedAsync(messageId, "TestEvent");
 
         // Act - Cleanup messages older than future date
-        var deletedCount = await store.CleanupAsync(DateTime.UtcNow.AddDays(1));
+        int deletedCount = await store.CleanupAsync(DateTime.UtcNow.AddDays(1));
 
         // Assert
         Assert.Equal(1, deletedCount);
-        var exists = await store.ExistsAsync(messageId);
+        bool exists = await store.ExistsAsync(messageId);
         Assert.False(exists);
     }
 
@@ -218,7 +212,7 @@ public class InboxOutboxTest
         await store.AddAsync(message);
 
         // Assert
-        var count = await store.GetCountAsync();
+        int count = await store.GetCountAsync();
         Assert.Equal(1, count);
     }
 
@@ -284,11 +278,11 @@ public class InboxOutboxTest
         await store.AddAsync(message);
 
         // Act
-        var deleted = await store.DeleteAsync(message.Id);
+        bool deleted = await store.DeleteAsync(message.Id);
 
         // Assert
         Assert.True(deleted);
-        var count = await store.GetCountAsync();
+        int count = await store.GetCountAsync();
         Assert.Equal(0, count);
     }
 
@@ -329,10 +323,10 @@ public class InboxOutboxTest
         var inboxStore = new InMemoryInboxStore();
         var processor = new InboxProcessor(inboxStore);
         var @event = new TestIntegrationEvent { OrderId = 123 };
-        var processed = false;
+        bool processed = false;
 
         // Act
-        var result = await processor.ProcessAsync(@event, async (e, ct) =>
+        bool result = await processor.ProcessAsync(@event, async (e, ct) =>
         {
             processed = true;
             await Task.CompletedTask;
@@ -350,7 +344,7 @@ public class InboxOutboxTest
         var inboxStore = new InMemoryInboxStore();
         var processor = new InboxProcessor(inboxStore);
         var @event = new TestIntegrationEvent { OrderId = 123 };
-        var processCount = 0;
+        int processCount = 0;
 
         // Act - Process twice
         await processor.ProcessAsync(@event, async (e, ct) =>
@@ -359,7 +353,7 @@ public class InboxOutboxTest
             await Task.CompletedTask;
         });
 
-        var result = await processor.ProcessAsync(@event, async (e, ct) =>
+        bool result = await processor.ProcessAsync(@event, async (e, ct) =>
         {
             processCount++;
             await Task.CompletedTask;
@@ -379,14 +373,14 @@ public class InboxOutboxTest
         var @event = new TestIntegrationEvent { OrderId = 123 };
 
         // Act & Assert - Before processing
-        var isDuplicateBefore = await processor.IsDuplicateAsync(@event.Id);
+        bool isDuplicateBefore = await processor.IsDuplicateAsync(@event.Id);
         Assert.False(isDuplicateBefore);
 
         // Process the message
         await processor.ProcessAsync(@event, async (e, ct) => await Task.CompletedTask);
 
         // Act & Assert - After processing
-        var isDuplicateAfter = await processor.IsDuplicateAsync(@event.Id);
+        bool isDuplicateAfter = await processor.IsDuplicateAsync(@event.Id);
         Assert.True(isDuplicateAfter);
     }
 

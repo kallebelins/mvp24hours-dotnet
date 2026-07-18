@@ -3,15 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Observability;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
-using Mvp24Hours.Infrastructure.RabbitMQ.RequestResponse;
 using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
 
 namespace Mvp24Hours.Infrastructure.RabbitMQ.Serialization;

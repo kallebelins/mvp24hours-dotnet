@@ -3,13 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -42,14 +37,18 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 /// Assert.Equal("Test Customer", customer.Name);
 /// </code>
 /// </example>
-public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitChangesAsync, IDisposable
+/// <remarks>
+/// Initializes a new instance with a custom key selector.
+/// </remarks>
+/// <param name="keySelector">Function to extract the entity key.</param>
+public class RepositoryFakeAsync<TEntity>(Func<TEntity, object?> keySelector) : IRepositoryAsync<TEntity>, ICommitChangesAsync, IDisposable
     where TEntity : class, IEntityBase
 {
     private readonly List<TEntity> _entities = [];
     private readonly List<TEntity> _pendingAdds = [];
     private readonly List<TEntity> _pendingModifies = [];
     private readonly List<TEntity> _pendingRemoves = [];
-    private readonly Func<TEntity, object?> _keySelector;
+    private readonly Func<TEntity, object?> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     private bool _disposed;
 
     /// <summary>
@@ -58,15 +57,6 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     public RepositoryFakeAsync()
         : this(e => e.EntityKey)
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance with a custom key selector.
-    /// </summary>
-    /// <param name="keySelector">Function to extract the entity key.</param>
-    public RepositoryFakeAsync(Func<TEntity, object?> keySelector)
-    {
-        _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     }
 
     /// <summary>
@@ -334,7 +324,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     {
         if (ids.AnySafe())
         {
-            foreach (var id in ids)
+            foreach (object id in ids)
             {
                 await RemoveByIdAsync(id, cancellationToken);
             }
@@ -352,7 +342,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// <returns>The number of state entries written.</returns>
     public Task<int> CommitChangesAsync(CancellationToken cancellationToken = default)
     {
-        var changeCount = 0;
+        int changeCount = 0;
 
         // Process adds
         foreach (TEntity entity in _pendingAdds)
@@ -365,8 +355,8 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
         // Process modifies
         foreach (TEntity modifiedEntity in _pendingModifies)
         {
-            var key = _keySelector(modifiedEntity);
-            var existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
+            object? key = _keySelector(modifiedEntity);
+            int existingIndex = _entities.FindIndex(e => Equals(_keySelector(e), key));
             if (existingIndex >= 0)
             {
                 _entities[existingIndex] = modifiedEntity;
@@ -378,7 +368,7 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
         // Process removes
         foreach (TEntity entity in _pendingRemoves)
         {
-            var key = _keySelector(entity);
+            object? key = _keySelector(entity);
             TEntity? existingEntity = _entities.FirstOrDefault(e => Equals(_keySelector(e), key));
             if (existingEntity != null)
             {
@@ -430,24 +420,27 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
 
     private static IQueryable<TEntity> ApplyCriteria(IQueryable<TEntity> query, IPagingCriteria? criteria)
     {
-        if (criteria == null) return query;
+        if (criteria == null)
+        {
+            return query;
+        }
 
         // Apply ordering
         if (criteria.OrderBy?.Count > 0)
         {
-            var isFirst = true;
-            foreach (var orderClause in criteria.OrderBy)
+            bool isFirst = true;
+            foreach (string orderClause in criteria.OrderBy)
             {
-                var parts = orderClause.Split(' ');
-                var propertyName = parts[0];
-                var isDescending = parts.Length > 1 &&
+                string[] parts = orderClause.Split(' ');
+                string propertyName = parts[0];
+                bool isDescending = parts.Length > 1 &&
                     parts[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
 
                 ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "e");
                 MemberExpression property = Expression.PropertyOrField(parameter, propertyName);
                 LambdaExpression lambda = Expression.Lambda(property, parameter);
 
-                var methodName = isFirst
+                string methodName = isFirst
                     ? (isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy))
                     : (isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy));
 
@@ -490,7 +483,10 @@ public class RepositoryFakeAsync<TEntity> : IRepositoryAsync<TEntity>, ICommitCh
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {

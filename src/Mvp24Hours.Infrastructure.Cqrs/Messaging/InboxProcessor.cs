@@ -4,12 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Messaging;
 
@@ -81,23 +79,17 @@ public interface IInboxProcessor
 /// <summary>
 /// Default implementation of <see cref="IInboxProcessor"/>.
 /// </summary>
-public sealed class InboxProcessor : IInboxProcessor
+/// <remarks>
+/// Creates a new instance of the InboxProcessor.
+/// </remarks>
+/// <param name="inboxStore">The inbox store for deduplication.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class InboxProcessor(
+    IInboxStore inboxStore,
+    ILogger<InboxProcessor>? logger = null) : IInboxProcessor
 {
-    private readonly IInboxStore _inboxStore;
-    private readonly ILogger<InboxProcessor>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the InboxProcessor.
-    /// </summary>
-    /// <param name="inboxStore">The inbox store for deduplication.</param>
-    /// <param name="logger">Optional logger.</param>
-    public InboxProcessor(
-        IInboxStore inboxStore,
-        ILogger<InboxProcessor>? logger = null)
-    {
-        _inboxStore = inboxStore ?? throw new ArgumentNullException(nameof(inboxStore));
-        _logger = logger;
-    }
+    private readonly IInboxStore _inboxStore = inboxStore ?? throw new ArgumentNullException(nameof(inboxStore));
+    private readonly ILogger<InboxProcessor>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<bool> ProcessAsync<TMessage>(
@@ -161,24 +153,17 @@ public sealed class InboxProcessor : IInboxProcessor
 /// Task.Delay for modern async/await patterns with proper cancellation support.
 /// </para>
 /// </remarks>
-public sealed class InboxCleanupService : BackgroundService
+/// <remarks>
+/// Creates a new instance of the InboxCleanupService.
+/// </remarks>
+public sealed class InboxCleanupService(
+    IServiceProvider serviceProvider,
+    IOptions<InboxOutboxOptions> options,
+    ILogger<InboxCleanupService>? logger = null) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly InboxOutboxOptions _options;
-    private readonly ILogger<InboxCleanupService>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the InboxCleanupService.
-    /// </summary>
-    public InboxCleanupService(
-        IServiceProvider serviceProvider,
-        IOptions<InboxOutboxOptions> options,
-        ILogger<InboxCleanupService>? logger = null)
-    {
-        _serviceProvider = serviceProvider;
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly InboxOutboxOptions _options = options.Value;
+    private readonly ILogger<InboxCleanupService>? _logger = logger;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -198,7 +183,7 @@ public sealed class InboxCleanupService : BackgroundService
                     if (inboxStore != null)
                     {
                         DateTime cutoffDate = DateTime.UtcNow.AddDays(-_options.InboxRetentionDays);
-                        var deletedCount = await inboxStore.CleanupAsync(cutoffDate, stoppingToken);
+                        int deletedCount = await inboxStore.CleanupAsync(cutoffDate, stoppingToken);
 
                         if (deletedCount > 0)
                         {

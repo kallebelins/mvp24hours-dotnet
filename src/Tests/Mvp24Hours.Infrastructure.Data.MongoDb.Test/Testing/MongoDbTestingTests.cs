@@ -27,8 +27,15 @@ public class MongoDbTestingTests
         public bool Active { get; set; } = true;
 
         public object EntityKey => Id;
-        public IReadOnlyCollection<MessageResult> GetNotifications() => new List<MessageResult>();
-        public bool HasNotifications() => false;
+        public IReadOnlyCollection<MessageResult> GetNotifications()
+        {
+            return [];
+        }
+
+        public bool HasNotifications()
+        {
+            return false;
+        }
     }
 
     #endregion
@@ -101,12 +108,12 @@ public class MongoDbTestingTests
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
         InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
-        TestCustomer[] customers = new[]
-        {
+        TestCustomer[] customers =
+        [
             new TestCustomer { Name = "Customer 1" },
             new TestCustomer { Name = "Customer 2" },
             new TestCustomer { Name = "Customer 3" }
-        };
+        ];
 
         // Act
         collection.InsertMany(customers);
@@ -126,7 +133,7 @@ public class MongoDbTestingTests
 
         // Act
         customer.Name = "Updated Name";
-        var replaced = collection.ReplaceOne(customer);
+        bool replaced = collection.ReplaceOne(customer);
         TestCustomer? found = collection.FindById(customer.Id);
 
         // Assert
@@ -145,7 +152,7 @@ public class MongoDbTestingTests
         collection.InsertOne(customer);
 
         // Act
-        var deleted = collection.DeleteOne(customer);
+        bool deleted = collection.DeleteOne(customer);
         TestCustomer? found = collection.FindById(customer.Id);
 
         // Assert
@@ -159,12 +166,12 @@ public class MongoDbTestingTests
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
         InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
-        collection.InsertMany(new[]
-        {
+        collection.InsertMany(
+        [
             new TestCustomer { Name = "Active 1", Active = true },
             new TestCustomer { Name = "Active 2", Active = true },
             new TestCustomer { Name = "Inactive", Active = false }
-        });
+        ]);
 
         // Act
         IList<TestCustomer> activeCustomers = collection.Find(c => c.Active);
@@ -179,16 +186,16 @@ public class MongoDbTestingTests
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
         InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
-        collection.InsertMany(new[]
-        {
+        collection.InsertMany(
+        [
             new TestCustomer { Active = true },
             new TestCustomer { Active = true },
             new TestCustomer { Active = false }
-        });
+        ]);
 
         // Act
-        var totalCount = collection.CountDocuments();
-        var activeCount = collection.CountDocuments(c => c.Active);
+        long totalCount = collection.CountDocuments();
+        long activeCount = collection.CountDocuments(c => c.Active);
 
         // Assert
         Assert.Equal(3, totalCount);
@@ -201,12 +208,12 @@ public class MongoDbTestingTests
         // Arrange
         using var provider = new MongoDbInMemoryProvider();
         InMemoryMongoCollection<TestCustomer> collection = provider.GetCollection<TestCustomer>();
-        collection.InsertMany(new[]
-        {
+        collection.InsertMany(
+        [
             new TestCustomer(),
             new TestCustomer(),
             new TestCustomer()
-        });
+        ]);
 
         // Act
         collection.Clear();
@@ -239,7 +246,7 @@ public class MongoDbTestingTests
 
         // Act
         repository.Add(customer);
-        var changes = repository.CommitChanges();
+        int changes = repository.CommitChanges();
 
         // Assert
         Assert.Equal(1, changes);
@@ -258,7 +265,7 @@ public class MongoDbTestingTests
         // Act
         customer.Name = "Modified";
         repository.Modify(customer);
-        var changes = repository.CommitChanges();
+        int changes = repository.CommitChanges();
         TestCustomer? found = repository.GetById(customer.Id);
 
         // Assert
@@ -278,7 +285,7 @@ public class MongoDbTestingTests
 
         // Act
         repository.Remove(customer);
-        var changes = repository.CommitChanges();
+        int changes = repository.CommitChanges();
 
         // Assert
         Assert.Equal(1, changes);
@@ -290,12 +297,12 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var repository = new MongoRepositoryFake<TestCustomer>();
-        repository.SeedData(new[]
-        {
+        repository.SeedData(
+        [
             new TestCustomer { Name = "Active 1", Active = true },
             new TestCustomer { Name = "Active 2", Active = true },
             new TestCustomer { Name = "Inactive", Active = false }
-        });
+        ]);
 
         // Act
         IList<TestCustomer> activeCustomers = repository.GetBy(c => c.Active);
@@ -313,7 +320,7 @@ public class MongoDbTestingTests
         // Act & Assert
         Assert.False(repository.ListAny());
 
-        repository.SeedData(new[] { new TestCustomer() });
+        repository.SeedData([new TestCustomer()]);
         Assert.True(repository.ListAny());
     }
 
@@ -322,15 +329,15 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var repository = new MongoRepositoryFake<TestCustomer>();
-        repository.SeedData(new[]
-        {
+        repository.SeedData(
+        [
             new TestCustomer(),
             new TestCustomer(),
             new TestCustomer()
-        });
+        ]);
 
         // Act
-        var count = repository.ListCount();
+        int count = repository.ListCount();
 
         // Assert
         Assert.Equal(3, count);
@@ -383,7 +390,7 @@ public class MongoDbTestingTests
 
         // Act
         await repository.AddAsync(customer);
-        var changes = await repository.CommitChangesAsync();
+        int changes = await repository.CommitChangesAsync();
 
         // Assert
         Assert.Equal(1, changes);
@@ -396,7 +403,7 @@ public class MongoDbTestingTests
         // Arrange
         using var repository = new MongoRepositoryFakeAsync<TestCustomer>();
         var customer = new TestCustomer { Name = "Test" };
-        repository.SeedData(new[] { customer });
+        repository.SeedData([customer]);
 
         // Act
         TestCustomer? found = await repository.GetByIdAsync(customer.Id);
@@ -411,11 +418,11 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var repository = new MongoRepositoryFakeAsync<TestCustomer>();
-        repository.SeedData(new[]
-        {
+        repository.SeedData(
+        [
             new TestCustomer { Name = "Customer 1" },
             new TestCustomer { Name = "Customer 2" }
-        });
+        ]);
 
         // Act
         IList<TestCustomer> list = await repository.ListAsync();
@@ -429,11 +436,11 @@ public class MongoDbTestingTests
     {
         // Arrange
         using var repository = new MongoRepositoryFakeAsync<TestCustomer>();
-        repository.SeedData(new[]
-        {
+        repository.SeedData(
+        [
             new TestCustomer { Name = "Active", Active = true },
             new TestCustomer { Name = "Inactive", Active = false }
-        });
+        ]);
 
         // Act
         IList<TestCustomer> activeCustomers = await repository.GetByAsync(c => c.Active);
@@ -469,7 +476,7 @@ public class MongoDbTestingTests
         repository.Add(new TestCustomer { Name = "Test" });
 
         // Act
-        var changes = unitOfWork.SaveChanges();
+        int changes = unitOfWork.SaveChanges();
 
         // Assert
         Assert.Equal(1, changes);
@@ -518,7 +525,7 @@ public class MongoDbTestingTests
         await repository.AddAsync(new TestCustomer { Name = "Test" });
 
         // Act
-        var changes = await unitOfWork.SaveChangesAsync();
+        int changes = await unitOfWork.SaveChangesAsync();
 
         // Assert
         Assert.Equal(1, changes);
@@ -542,7 +549,7 @@ public class MongoDbTestingTests
     public void CompositeMongoDataSeeder_ShouldCallAllSeeders()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         var seeder1 = new ActionMongoDataSeeder(_ => callCount++);
         var seeder2 = new ActionMongoDataSeeder(_ => callCount++);
         var seeder3 = new ActionMongoDataSeeder(_ => callCount++);
@@ -559,7 +566,7 @@ public class MongoDbTestingTests
     public void ActionMongoDataSeeder_ShouldExecuteAction()
     {
         // Arrange
-        var executed = false;
+        bool executed = false;
         var seeder = new ActionMongoDataSeeder(_ => executed = true);
 
         // Act
@@ -573,7 +580,7 @@ public class MongoDbTestingTests
     public async Task ActionMongoDataSeederAsync_ShouldExecuteActionAsync()
     {
         // Arrange
-        var executed = false;
+        bool executed = false;
         var seeder = new ActionMongoDataSeederAsync(async (_, _) =>
         {
             await Task.Delay(1);
@@ -602,8 +609,8 @@ public class MongoDbTestingTests
         };
 
         // Act
-        var name1 = options.GetEffectiveDatabaseName();
-        var name2 = options.GetEffectiveDatabaseName();
+        string name1 = options.GetEffectiveDatabaseName();
+        string name2 = options.GetEffectiveDatabaseName();
 
         // Assert
         Assert.StartsWith("TestDb_", name1);
@@ -621,8 +628,8 @@ public class MongoDbTestingTests
         };
 
         // Act
-        var name1 = options.GetEffectiveDatabaseName();
-        var name2 = options.GetEffectiveDatabaseName();
+        string name1 = options.GetEffectiveDatabaseName();
+        string name2 = options.GetEffectiveDatabaseName();
 
         // Assert
         Assert.Equal("FixedDb", name1);
@@ -668,7 +675,7 @@ public class MongoDbTestingTests
         };
 
         // Act
-        var imageName = options.GetImageName();
+        string imageName = options.GetImageName();
 
         // Assert
         Assert.Equal("mongo:6.0", imageName);

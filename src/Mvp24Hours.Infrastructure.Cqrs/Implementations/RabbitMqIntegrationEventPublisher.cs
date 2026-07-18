@@ -7,7 +7,6 @@
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -81,8 +80,8 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
     {
         ArgumentNullException.ThrowIfNull(@event);
 
-        var eventType = typeof(TEvent).Name;
-        var correlationId = @event.CorrelationId ?? @event.Id.ToString();
+        string eventType = typeof(TEvent).Name;
+        string correlationId = @event.CorrelationId ?? @event.Id.ToString();
 
         _logger?.LogInformation(
             "[RabbitMQ Publisher] Publishing integration event {EventType} with CorrelationId {CorrelationId}",
@@ -101,7 +100,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
                 "RabbitMQ client not found. Ensure Mvp24Hours.Infrastructure.RabbitMQ is referenced and configured.");
         }
 
-        var rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType);
+        object? rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType);
 
         if (rabbitMqClient == null)
         {
@@ -127,7 +126,7 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
         {
             try
             {
-                publishMethod.Invoke(rabbitMqClient, new object[] { wrapper, correlationId });
+                publishMethod.Invoke(rabbitMqClient, [wrapper, correlationId]);
 
                 _logger?.LogDebug(
                     "[RabbitMQ Publisher] Successfully published event {EventType}",
@@ -177,19 +176,10 @@ public sealed class RabbitMqIntegrationEventPublisher : IIntegrationEventPublish
                 "RabbitMQ client not found. Ensure Mvp24Hours.Infrastructure.RabbitMQ is referenced and configured.");
         }
 
-        var rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType);
-
-        if (rabbitMqClient == null)
-        {
-            throw new InvalidOperationException(
+        object? rabbitMqClient = _serviceProvider.GetService(rabbitMqClientType) ?? throw new InvalidOperationException(
                 "RabbitMQ client is not registered. Call services.AddMvpRabbitMQ() to configure.");
-        }
-
         MethodInfo? publishMethod = rabbitMqClientType.GetMethod("Publish");
-        if (publishMethod != null)
-        {
-            publishMethod.Invoke(rabbitMqClient, new object[] { wrapper, wrapper.CorrelationId });
-        }
+        publishMethod?.Invoke(rabbitMqClient, [wrapper, wrapper.CorrelationId]);
 
         return Task.CompletedTask;
     }

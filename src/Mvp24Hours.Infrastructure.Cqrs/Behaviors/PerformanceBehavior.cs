@@ -6,7 +6,6 @@
 
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -38,23 +37,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// });
 /// </code>
 /// </example>
-public sealed class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the PerformanceBehavior.
+/// </remarks>
+/// <param name="logger">Logger for recording alerts.</param>
+/// <param name="thresholdMilliseconds">Threshold in milliseconds to consider a request slow (default: 500ms).</param>
+/// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+public sealed class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, int thresholdMilliseconds = 500) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
-    private readonly int _thresholdMilliseconds;
-
-    /// <summary>
-    /// Creates a new instance of the PerformanceBehavior.
-    /// </summary>
-    /// <param name="logger">Logger for recording alerts.</param>
-    /// <param name="thresholdMilliseconds">Threshold in milliseconds to consider a request slow (default: 500ms).</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
-    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, int thresholdMilliseconds = 500)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _thresholdMilliseconds = thresholdMilliseconds;
-    }
+    private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly int _thresholdMilliseconds = thresholdMilliseconds;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -67,7 +60,7 @@ public sealed class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior
 
         if (stopwatch.ElapsedMilliseconds > _thresholdMilliseconds)
         {
-            var requestName = typeof(TRequest).Name;
+            string requestName = typeof(TRequest).Name;
 
             _logger.LogWarning(
                 "[Performance] Slow request detected: {RequestName} executed in {ElapsedMs}ms (threshold: {Threshold}ms)",

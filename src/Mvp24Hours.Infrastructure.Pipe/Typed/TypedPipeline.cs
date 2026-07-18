@@ -3,222 +3,217 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Core.ValueObjects.Logic;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Typed
+namespace Mvp24Hours.Infrastructure.Pipe.Typed;
+
+/// <summary>
+/// A strongly-typed pipeline implementation that provides type-safe operation chaining.
+/// </summary>
+/// <typeparam name="TInput">The type of input the pipeline receives.</typeparam>
+/// <typeparam name="TOutput">The type of output the pipeline produces.</typeparam>
+/// <remarks>
+/// Creates a new instance of TypedPipeline.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class TypedPipeline<TInput, TOutput>(ILogger<TypedPipeline<TInput, TOutput>>? logger = null) : ITypedPipeline<TInput, TOutput>
 {
+    private readonly List<Func<object?, IOperationResult<object>>> _operations = [];
+    private readonly List<Action<object?>> _rollbacks = [];
+    private readonly List<object?> _executedInputs = [];
+    private readonly ILogger? _logger = logger;
+
+    /// <inheritdoc/>
+    public bool IsBreakOnFail { get; set; }
+
+    /// <inheritdoc/>
+    public bool ForceRollbackOnFailure { get; set; }
+
+    /// <inheritdoc/>
+    public bool AllowPropagateException { get; set; }
+
     /// <summary>
-    /// A strongly-typed pipeline implementation that provides type-safe operation chaining.
+    /// Gets the number of operations in the pipeline.
     /// </summary>
-    /// <typeparam name="TInput">The type of input the pipeline receives.</typeparam>
-    /// <typeparam name="TOutput">The type of output the pipeline produces.</typeparam>
-    public class TypedPipeline<TInput, TOutput> : ITypedPipeline<TInput, TOutput>
+    public int OperationCount => _operations.Count;
+
+    /// <inheritdoc/>
+    public ITypedPipeline<TInput, TOutput> Add<TOpInput, TOpOutput>(ITypedOperation<TOpInput, TOpOutput> operation)
+        where TOpInput : TInput
+        where TOpOutput : TOutput
     {
-        private readonly List<Func<object?, IOperationResult<object>>> _operations = [];
-        private readonly List<Action<object?>> _rollbacks = [];
-        private readonly List<object?> _executedInputs = [];
-        private readonly ILogger? _logger;
-
-        /// <summary>
-        /// Creates a new instance of TypedPipeline.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public TypedPipeline(ILogger<TypedPipeline<TInput, TOutput>>? logger = null)
+        if (operation == null)
         {
-            _logger = logger;
+            throw new ArgumentNullException(nameof(operation));
         }
 
-        /// <inheritdoc/>
-        public bool IsBreakOnFail { get; set; }
-
-        /// <inheritdoc/>
-        public bool ForceRollbackOnFailure { get; set; }
-
-        /// <inheritdoc/>
-        public bool AllowPropagateException { get; set; }
-
-        /// <summary>
-        /// Gets the number of operations in the pipeline.
-        /// </summary>
-        public int OperationCount => _operations.Count;
-
-        /// <inheritdoc/>
-        public ITypedPipeline<TInput, TOutput> Add<TOpInput, TOpOutput>(ITypedOperation<TOpInput, TOpOutput> operation)
-            where TOpInput : TInput
-            where TOpOutput : TOutput
+        _operations.Add(input =>
         {
-            if (operation == null)
-                throw new ArgumentNullException(nameof(operation));
+            var typedInput = (TOpInput?)input;
+            IOperationResult<TOpOutput> result = operation.Execute(typedInput!);
+            return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
+        });
 
-            _operations.Add(input =>
+        _rollbacks.Add(input =>
+        {
+            if (input is TOpInput typedInput)
             {
-                var typedInput = (TOpInput?)input;
-                IOperationResult<TOpOutput> result = operation.Execute(typedInput!);
-                return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
-            });
+                operation.Rollback(typedInput);
+            }
+        });
 
-            _rollbacks.Add(input =>
-            {
-                if (input is TOpInput typedInput)
-                {
-                    operation.Rollback(typedInput);
-                }
-            });
+        return this;
+    }
 
-            return this;
+    /// <inheritdoc/>
+    public ITypedPipeline<TInput, TOutput> Add(Func<TInput, IOperationResult<TOutput>> transform)
+    {
+        if (transform == null)
+        {
+            throw new ArgumentNullException(nameof(transform));
         }
 
-        /// <inheritdoc/>
-        public ITypedPipeline<TInput, TOutput> Add(Func<TInput, IOperationResult<TOutput>> transform)
+        _operations.Add(input =>
         {
-            if (transform == null)
-                throw new ArgumentNullException(nameof(transform));
+            var typedInput = (TInput?)input;
+            IOperationResult<TOutput> result = transform(typedInput!);
+            return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
+        });
 
-            _operations.Add(input =>
-            {
-                var typedInput = (TInput?)input;
-                IOperationResult<TOutput> result = transform(typedInput!);
-                return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
-            });
+        _rollbacks.Add(_ => { }); // No rollback for lambda operations
 
-            _rollbacks.Add(_ => { }); // No rollback for lambda operations
+        return this;
+    }
 
-            return this;
+    /// <summary>
+    /// Adds an operation using an action that modifies the input in place.
+    /// </summary>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="isRequired">Whether this operation is required.</param>
+    /// <returns>The pipeline for chaining.</returns>
+    public TypedPipeline<TInput, TOutput> Add(Action<TInput> action, bool isRequired = false)
+    {
+        if (action == null)
+        {
+            throw new ArgumentNullException(nameof(action));
         }
 
-        /// <summary>
-        /// Adds an operation using an action that modifies the input in place.
-        /// </summary>
-        /// <param name="action">The action to execute.</param>
-        /// <param name="isRequired">Whether this operation is required.</param>
-        /// <returns>The pipeline for chaining.</returns>
-        public TypedPipeline<TInput, TOutput> Add(Action<TInput> action, bool isRequired = false)
+        _operations.Add(input =>
         {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
-
-            _operations.Add(input =>
-            {
-                try
-                {
-                    var typedInput = (TInput?)input;
-                    action(typedInput!);
-                    return OperationResult<object>.Success(input!);
-                }
-                catch (Exception ex)
-                {
-                    return OperationResult<object>.Failure(ex);
-                }
-            });
-
-            _rollbacks.Add(_ => { });
-
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public IOperationResult<TOutput> Execute(TInput input)
-        {
-            _logger?.LogDebug("TypedPipeline: Execute started");
-            _executedInputs.Clear();
-
             try
             {
-                object? currentValue = input;
-                var allMessages = new List<IMessageResult>();
-
-                foreach (Func<object?, IOperationResult<object>> operation in _operations)
-                {
-                    _executedInputs.Add(currentValue);
-
-                    _logger?.LogDebug("TypedPipeline: Operation started");
-                    IOperationResult<object> result;
-
-                    try
-                    {
-                        result = operation(currentValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "TypedPipeline: Operation error");
-                        result = OperationResult<object>.Failure(ex);
-                    }
-
-                    _logger?.LogDebug("TypedPipeline: Operation completed");
-
-                    allMessages.AddRange(result.Messages);
-
-                    if (result.IsFailure)
-                    {
-                        if (ForceRollbackOnFailure)
-                        {
-                            ExecuteRollback();
-                        }
-
-                        var failureResult = OperationResult<TOutput>.Failure(allMessages);
-
-                        if (AllowPropagateException && allMessages.Any(m => m.Type == MessageType.Error))
-                        {
-                            throw new InvalidOperationException(failureResult.ErrorMessage);
-                        }
-
-                        if (IsBreakOnFail)
-                        {
-                            return failureResult;
-                        }
-                    }
-                    else
-                    {
-                        currentValue = result.Value;
-                    }
-                }
-
-                // Try to cast final value to TOutput
-                if (currentValue is TOutput typedOutput)
-                {
-                    return OperationResult<TOutput>.Success(typedOutput, allMessages);
-                }
-
-                // If no operations produced output, try casting input
-                if (input is TOutput inputAsOutput)
-                {
-                    return OperationResult<TOutput>.Success(inputAsOutput, allMessages);
-                }
-
-                return OperationResult<TOutput>.Create(default, true, allMessages);
+                var typedInput = (TInput?)input;
+                action(typedInput!);
+                return OperationResult<object>.Success(input!);
             }
-            finally
+            catch (Exception ex)
             {
-                _logger?.LogDebug("TypedPipeline: Execute completed");
+                return OperationResult<object>.Failure(ex);
             }
-        }
+        });
 
-        private void ExecuteRollback()
+        _rollbacks.Add(_ => { });
+
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IOperationResult<TOutput> Execute(TInput input)
+    {
+        _logger?.LogDebug("TypedPipeline: Execute started");
+        _executedInputs.Clear();
+
+        try
         {
-            _logger?.LogDebug("TypedPipeline: Rollback started");
+            object? currentValue = input;
+            var allMessages = new List<IMessageResult>();
 
-            for (int i = _executedInputs.Count - 1; i >= 0; i--)
+            foreach (Func<object?, IOperationResult<object>> operation in _operations)
             {
+                _executedInputs.Add(currentValue);
+
+                _logger?.LogDebug("TypedPipeline: Operation started");
+                IOperationResult<object> result;
+
                 try
                 {
-                    _rollbacks[i](_executedInputs[i]);
+                    result = operation(currentValue);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "TypedPipeline: Rollback error");
+                    _logger?.LogError(ex, "TypedPipeline: Operation error");
+                    result = OperationResult<object>.Failure(ex);
+                }
+
+                _logger?.LogDebug("TypedPipeline: Operation completed");
+
+                allMessages.AddRange(result.Messages);
+
+                if (result.IsFailure)
+                {
+                    if (ForceRollbackOnFailure)
+                    {
+                        ExecuteRollback();
+                    }
+
+                    var failureResult = OperationResult<TOutput>.Failure(allMessages);
+
+                    if (AllowPropagateException && allMessages.Any(m => m.Type == MessageType.Error))
+                    {
+                        throw new InvalidOperationException(failureResult.ErrorMessage);
+                    }
+
+                    if (IsBreakOnFail)
+                    {
+                        return failureResult;
+                    }
+                }
+                else
+                {
+                    currentValue = result.Value;
                 }
             }
 
-            _logger?.LogDebug("TypedPipeline: Rollback completed");
+            // Try to cast final value to TOutput
+            if (currentValue is TOutput typedOutput)
+            {
+                return OperationResult<TOutput>.Success(typedOutput, allMessages);
+            }
+
+            // If no operations produced output, try casting input
+            if (input is TOutput inputAsOutput)
+            {
+                return OperationResult<TOutput>.Success(inputAsOutput, allMessages);
+            }
+
+            return OperationResult<TOutput>.Create(default, true, allMessages);
         }
+        finally
+        {
+            _logger?.LogDebug("TypedPipeline: Execute completed");
+        }
+    }
+
+    private void ExecuteRollback()
+    {
+        _logger?.LogDebug("TypedPipeline: Rollback started");
+
+        for (int i = _executedInputs.Count - 1; i >= 0; i--)
+        {
+            try
+            {
+                _rollbacks[i](_executedInputs[i]);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "TypedPipeline: Rollback error");
+            }
+        }
+
+        _logger?.LogDebug("TypedPipeline: Rollback completed");
     }
 }
 

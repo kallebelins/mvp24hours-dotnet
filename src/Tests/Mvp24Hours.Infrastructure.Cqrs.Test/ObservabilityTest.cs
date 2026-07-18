@@ -5,12 +5,7 @@
 //=====================================================================================
 
 using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
-using Mvp24Hours.Infrastructure.Cqrs.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
@@ -40,10 +35,10 @@ public class ObservabilityTest
     public void RequestContext_ShouldUseProvidedValues_WhenCreatedWithParameters()
     {
         // Arrange
-        var correlationId = "correlation-123";
-        var causationId = "causation-456";
-        var userId = "user-789";
-        var tenantId = "tenant-abc";
+        string correlationId = "correlation-123";
+        string causationId = "causation-456";
+        string userId = "user-789";
+        string tenantId = "tenant-abc";
 
         // Act
         var context = new RequestContext(
@@ -83,7 +78,7 @@ public class ObservabilityTest
     public void RequestContext_FromCorrelationId_ShouldCreateContextWithProvidedId()
     {
         // Arrange
-        var correlationId = "external-correlation-id";
+        string correlationId = "external-correlation-id";
 
         // Act
         var context = RequestContext.FromCorrelationId(correlationId, userId: "user-1");
@@ -270,12 +265,12 @@ public class ObservabilityTest
     {
         // Arrange
         var store = new InMemoryAuditStore();
-        AuditEntry[] entries = new[]
-        {
+        AuditEntry[] entries =
+        [
             new AuditEntry { OperationName = "Op1", OperationType = "Command" },
             new AuditEntry { OperationName = "Op2", OperationType = "Query" },
             new AuditEntry { OperationName = "Op3", OperationType = "Command" }
-        };
+        ];
 
         // Act
         await store.SaveBatchAsync(entries);
@@ -467,14 +462,9 @@ public class ObservabilityTest
     public record ContextResult(string? CorrelationId, string? RequestId, string? CausationId);
 
     [Trait("Category", "Unit")]
-    public class GetContextCommandHandler : IMediatorCommandHandler<GetContextCommand, ContextResult>
+    public class GetContextCommandHandler(IRequestContextAccessor contextAccessor) : IMediatorCommandHandler<GetContextCommand, ContextResult>
     {
-        private readonly IRequestContextAccessor _contextAccessor;
-
-        public GetContextCommandHandler(IRequestContextAccessor contextAccessor)
-        {
-            _contextAccessor = contextAccessor;
-        }
+        private readonly IRequestContextAccessor _contextAccessor = contextAccessor;
 
         public Task<ContextResult> Handle(GetContextCommand request, CancellationToken cancellationToken)
         {

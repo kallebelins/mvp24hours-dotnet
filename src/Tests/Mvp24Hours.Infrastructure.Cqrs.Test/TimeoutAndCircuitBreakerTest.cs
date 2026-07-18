@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Behaviors;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;
 
 /// <summary>
@@ -34,7 +32,7 @@ public class TimeoutAndCircuitBreakerTest
         var command = new FastTimeoutCommand();
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("Fast completed", result);
@@ -80,7 +78,7 @@ public class TimeoutAndCircuitBreakerTest
         var command = new NoTimeoutCommand { DelayMs = 200 };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert - Should complete without timeout since no timeout configured
         Assert.Equal("No timeout completed", result);
@@ -125,7 +123,7 @@ public class TimeoutAndCircuitBreakerTest
         var command = new CircuitBreakerTestCommand { ShouldFail = false };
 
         // Act
-        var result = await mediator.SendAsync(command);
+        string result = await mediator.SendAsync(command);
 
         // Assert
         Assert.Equal("Success", result);
@@ -258,7 +256,7 @@ public class TimeoutAndCircuitBreakerTest
         CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetAllCircuits();
 
         // Act
-        var result = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetCircuit("test-circuit");
+        bool result = CircuitBreakerBehavior<CircuitBreakerTestCommand, string>.ResetCircuit("test-circuit");
 
         // Assert - Returns false because circuit doesn't exist
         Assert.False(result);
@@ -296,7 +294,7 @@ public class TimeoutAndCircuitBreakerTest
         IMediator mediator = sp.GetRequiredService<IMediator>();
 
         // Act - Should not use circuit breaker
-        var result = await mediator.SendAsync(new NonProtectedCommand());
+        string result = await mediator.SendAsync(new NonProtectedCommand());
 
         // Assert
         Assert.Equal("Not protected", result);

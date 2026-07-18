@@ -12,9 +12,6 @@ namespace Mvp24Hours.Application.Integration.Test.Services;
 /// <summary>
 /// Category service for integration tests.
 /// </summary>
-public class CategoryService : RepositoryServiceAsync<Category, IUnitOfWorkAsync>
+public class CategoryService(IUnitOfWorkAsync unitOfWork) : RepositoryServiceAsync<Category, IUnitOfWorkAsync>(unitOfWork)
 {
-    public CategoryService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork)
-    {
-    }
 }

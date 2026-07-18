@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -160,12 +159,18 @@ public sealed class CronJobMetrics
         /// <summary>
         /// Marks the execution as completed successfully.
         /// </summary>
-        public void Complete() => Succeeded = true;
+        public void Complete()
+        {
+            Succeeded = true;
+        }
 
         /// <summary>
         /// Marks the execution as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()

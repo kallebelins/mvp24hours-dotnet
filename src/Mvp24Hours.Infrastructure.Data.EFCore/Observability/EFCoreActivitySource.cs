@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Observability;
@@ -151,13 +150,18 @@ public static class EFCoreActivitySource
     public static Activity? StartQueryActivity(string commandText, string? dbName = null)
     {
         Activity? activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Client);
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(TagNames.DbOperation, "SELECT");
         activity.SetTag(TagNames.DbStatement, SanitizeSqlForLogging(commandText));
 
         if (!string.IsNullOrEmpty(dbName))
+        {
             activity.SetTag(TagNames.DbName, dbName);
+        }
 
         return activity;
     }
@@ -172,13 +176,18 @@ public static class EFCoreActivitySource
     public static Activity? StartCommandActivity(string commandText, string operation, string? dbName = null)
     {
         Activity? activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Client);
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(TagNames.DbOperation, operation);
         activity.SetTag(TagNames.DbStatement, SanitizeSqlForLogging(commandText));
 
         if (!string.IsNullOrEmpty(dbName))
+        {
             activity.SetTag(TagNames.DbName, dbName);
+        }
 
         return activity;
     }
@@ -193,7 +202,10 @@ public static class EFCoreActivitySource
     public static Activity? StartSlowQueryActivity(string commandText, double durationMs, double thresholdMs)
     {
         Activity? activity = Source.StartActivity(ActivityNames.SlowQuery, ActivityKind.Client);
-        if (activity == null) return null;
+        if (activity == null)
+        {
+            return null;
+        }
 
         activity.SetTag(TagNames.IsSlowQuery, true);
         activity.SetTag(TagNames.QueryDurationMs, durationMs);
@@ -217,13 +229,18 @@ public static class EFCoreActivitySource
     /// <param name="rowsAffected">Optional number of rows affected.</param>
     public static void SetSuccess(Activity? activity, int? rowsAffected = null)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
 
         if (rowsAffected.HasValue)
+        {
             activity.SetTag(TagNames.RowsAffected, rowsAffected.Value);
+        }
     }
 
     /// <summary>
@@ -233,7 +250,10 @@ public static class EFCoreActivitySource
     /// <param name="exception">The exception that occurred.</param>
     public static void SetError(Activity? activity, Exception exception)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, false);
         activity.SetTag(TagNames.ErrorType, exception.GetType().FullName);
@@ -268,16 +288,25 @@ public static class EFCoreActivitySource
     /// <param name="userId">The user ID.</param>
     public static void SetContext(Activity? activity, string? correlationId, string? tenantId = null, string? userId = null)
     {
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(correlationId))
+        {
             activity.SetTag(TagNames.CorrelationId, correlationId);
+        }
 
         if (!string.IsNullOrEmpty(tenantId))
+        {
             activity.SetTag(TagNames.TenantId, tenantId);
+        }
 
         if (!string.IsNullOrEmpty(userId))
+        {
             activity.SetTag(TagNames.UserId, userId);
+        }
     }
 
     /// <summary>
@@ -288,11 +317,16 @@ public static class EFCoreActivitySource
     /// <returns>Sanitized SQL string.</returns>
     private static string SanitizeSqlForLogging(string sql, int maxLength = 2000)
     {
-        if (string.IsNullOrEmpty(sql)) return sql;
+        if (string.IsNullOrEmpty(sql))
+        {
+            return sql;
+        }
 
         // Truncate if too long
         if (sql.Length > maxLength)
-            sql = sql.Substring(0, maxLength) + "... [TRUNCATED]";
+        {
+            sql = sql[..maxLength] + "... [TRUNCATED]";
+        }
 
         return sql;
     }

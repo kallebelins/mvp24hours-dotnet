@@ -3,15 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
@@ -424,7 +419,7 @@ public class RetryResilienceTest
         var config = CronJobResilienceConfig<TestResilientCronJob>.FullResilience();
 
         // Act
-        var result = config.ToString();
+        string result = config.ToString();
 
         // Assert
         result.Should().Contain("Retry");

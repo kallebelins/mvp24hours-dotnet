@@ -3,223 +3,219 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Mvp24Hours.Application.Contract.Cache;
 
-namespace Mvp24Hours.Application.Logic.Cache
+namespace Mvp24Hours.Application.Logic.Cache;
+
+/// <summary>
+/// Default implementation of <see cref="IQueryCacheKeyGenerator"/>.
+/// Generates deterministic cache keys for query caching.
+/// </summary>
+public class QueryCacheKeyGenerator : IQueryCacheKeyGenerator
 {
-    /// <summary>
-    /// Default implementation of <see cref="IQueryCacheKeyGenerator"/>.
-    /// Generates deterministic cache keys for query caching.
-    /// </summary>
-    public class QueryCacheKeyGenerator : IQueryCacheKeyGenerator
+    private const string KeySeparator = ":";
+    private const string ParameterSeparator = "_";
+    private const string WildcardPattern = "*";
+
+    /// <inheritdoc/>
+    public string GenerateKey<TQuery>(TQuery query) where TQuery : ICacheableQuery
     {
-        private const string KeySeparator = ":";
-        private const string ParameterSeparator = "_";
-        private const string WildcardPattern = "*";
-
-        /// <inheritdoc/>
-        public string GenerateKey<TQuery>(TQuery query) where TQuery : ICacheableQuery
+        if (query == null)
         {
-            if (query == null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return query.GetCacheKey();
+            throw new ArgumentNullException(nameof(query));
         }
 
-        /// <inheritdoc/>
-        public string GenerateKey(MethodInfo method, object?[] parameters, Type entityType)
+        return query.GetCacheKey();
+    }
+
+    /// <inheritdoc/>
+    public string GenerateKey(MethodInfo method, object?[] parameters, Type entityType)
+    {
+        if (method == null)
         {
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
+            throw new ArgumentNullException(nameof(method));
+        }
 
-            if (entityType == null)
-            {
-                throw new ArgumentNullException(nameof(entityType));
-            }
+        if (entityType == null)
+        {
+            throw new ArgumentNullException(nameof(entityType));
+        }
 
-            var keyBuilder = new StringBuilder();
+        var keyBuilder = new StringBuilder();
 
-            // Start with entity type name
-            keyBuilder.Append(entityType.Name);
+        // Start with entity type name
+        keyBuilder.Append(entityType.Name);
+        keyBuilder.Append(KeySeparator);
+
+        // Add method name
+        keyBuilder.Append(method.Name);
+
+        // Add parameter hash if any parameters exist
+        if (parameters != null && parameters.Length > 0)
+        {
             keyBuilder.Append(KeySeparator);
-
-            // Add method name
-            keyBuilder.Append(method.Name);
-
-            // Add parameter hash if any parameters exist
-            if (parameters != null && parameters.Length > 0)
-            {
-                keyBuilder.Append(KeySeparator);
-                keyBuilder.Append(GenerateParameterHash(method.GetParameters(), parameters));
-            }
-
-            return keyBuilder.ToString();
+            keyBuilder.Append(GenerateParameterHash(method.GetParameters(), parameters));
         }
 
-        /// <inheritdoc/>
-        public string GenerateKeyFromTemplate(string template, IDictionary<string, object?> parameters)
+        return keyBuilder.ToString();
+    }
+
+    /// <inheritdoc/>
+    public string GenerateKeyFromTemplate(string template, IDictionary<string, object?> parameters)
+    {
+        if (string.IsNullOrWhiteSpace(template))
         {
-            if (string.IsNullOrWhiteSpace(template))
-            {
-                throw new ArgumentException("Template cannot be null or empty.", nameof(template));
-            }
-
-            var result = template;
-
-            foreach ((string? key, object? value) in parameters)
-            {
-                var placeholder = $"{{{key}}}";
-                var replacement = value?.ToString() ?? "null";
-                result = result.Replace(placeholder, replacement);
-            }
-
-            // Also support positional placeholders like {0}, {1}, etc.
-            var positionalValues = parameters.Values.ToArray();
-            for (var i = 0; i < positionalValues.Length; i++)
-            {
-                var placeholder = $"{{{i}}}";
-                var replacement = positionalValues[i]?.ToString() ?? "null";
-                result = result.Replace(placeholder, replacement);
-            }
-
-            return result;
+            throw new ArgumentException("Template cannot be null or empty.", nameof(template));
         }
 
-        /// <inheritdoc/>
-        public string GenerateRegionKey<TEntity>()
+        string result = template;
+
+        foreach ((string? key, object? value) in parameters)
         {
-            return GenerateRegionKey(typeof(TEntity));
+            string placeholder = $"{{{key}}}";
+            string replacement = value?.ToString() ?? "null";
+            result = result.Replace(placeholder, replacement);
         }
 
-        /// <inheritdoc/>
-        public string GenerateRegionKey(Type entityType)
+        // Also support positional placeholders like {0}, {1}, etc.
+        object?[] positionalValues = [.. parameters.Values];
+        for (int i = 0; i < positionalValues.Length; i++)
         {
-            if (entityType == null)
-            {
-                throw new ArgumentNullException(nameof(entityType));
-            }
-
-            return $"region{KeySeparator}{entityType.Name}";
+            string placeholder = $"{{{i}}}";
+            string replacement = positionalValues[i]?.ToString() ?? "null";
+            result = result.Replace(placeholder, replacement);
         }
 
-        /// <inheritdoc/>
-        public string GenerateInvalidationPattern(Type entityType, string? operation = null)
+        return result;
+    }
+
+    /// <inheritdoc/>
+    public string GenerateRegionKey<TEntity>()
+    {
+        return GenerateRegionKey(typeof(TEntity));
+    }
+
+    /// <inheritdoc/>
+    public string GenerateRegionKey(Type entityType)
+    {
+        if (entityType == null)
         {
-            if (entityType == null)
-            {
-                throw new ArgumentNullException(nameof(entityType));
-            }
-
-            var pattern = entityType.Name;
-
-            if (!string.IsNullOrEmpty(operation))
-            {
-                pattern = $"{pattern}{KeySeparator}{operation}";
-            }
-
-            return $"{pattern}{KeySeparator}{WildcardPattern}";
+            throw new ArgumentNullException(nameof(entityType));
         }
 
-        /// <summary>
-        /// Generates a hash from method parameters for cache key uniqueness.
-        /// </summary>
-        private static string GenerateParameterHash(ParameterInfo[] parameterInfos, object?[] parameterValues)
+        return $"region{KeySeparator}{entityType.Name}";
+    }
+
+    /// <inheritdoc/>
+    public string GenerateInvalidationPattern(Type entityType, string? operation = null)
+    {
+        if (entityType == null)
         {
-            if (parameterValues.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            var keyParts = new List<string>();
-
-            for (var i = 0; i < parameterValues.Length && i < parameterInfos.Length; i++)
-            {
-                ParameterInfo paramInfo = parameterInfos[i];
-                var paramValue = parameterValues[i];
-
-                var valueStr = SerializeValue(paramValue);
-                keyParts.Add($"{paramInfo.Name}={valueStr}");
-            }
-
-            var combinedParams = string.Join(ParameterSeparator, keyParts);
-
-            // If the combined params are too long, hash them
-            if (combinedParams.Length > 200)
-            {
-                return ComputeHash(combinedParams);
-            }
-
-            return combinedParams;
+            throw new ArgumentNullException(nameof(entityType));
         }
 
-        /// <summary>
-        /// Serializes a parameter value to a string representation.
-        /// </summary>
-        private static string SerializeValue(object? value)
+        string pattern = entityType.Name;
+
+        if (!string.IsNullOrEmpty(operation))
         {
-            if (value == null)
-            {
-                return "null";
-            }
-
-            Type type = value.GetType();
-
-            // Handle primitive types directly
-            if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) ||
-                type == typeof(DateTime) || type == typeof(DateTimeOffset) ||
-                type == typeof(Guid) || type == typeof(DateOnly) || type == typeof(TimeOnly))
-            {
-                return value.ToString() ?? "null";
-            }
-
-            // Handle collections
-            if (value is System.Collections.IEnumerable enumerable and not string)
-            {
-                var items = new List<string>();
-                foreach (var item in enumerable)
-                {
-                    items.Add(SerializeValue(item));
-                }
-                return $"[{string.Join(",", items)}]";
-            }
-
-            // For complex objects, use JSON serialization and hash
-            try
-            {
-                var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
-                {
-                    WriteIndented = false,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-                return ComputeHash(json);
-            }
-            catch
-            {
-                // Fallback to type name and hash code
-                return $"{type.Name}_{value.GetHashCode()}";
-            }
+            pattern = $"{pattern}{KeySeparator}{operation}";
         }
 
-        /// <summary>
-        /// Computes a SHA256 hash of the input string.
-        /// </summary>
-        private static string ComputeHash(string input)
+        return $"{pattern}{KeySeparator}{WildcardPattern}";
+    }
+
+    /// <summary>
+    /// Generates a hash from method parameters for cache key uniqueness.
+    /// </summary>
+    private static string GenerateParameterHash(ParameterInfo[] parameterInfos, object?[] parameterValues)
+    {
+        if (parameterValues.Length == 0)
         {
-            var inputBytes = Encoding.UTF8.GetBytes(input);
-            var hashBytes = SHA256.HashData(inputBytes);
-            return Convert.ToHexString(hashBytes)[..16].ToLowerInvariant();
+            return string.Empty;
         }
+
+        var keyParts = new List<string>();
+
+        for (int i = 0; i < parameterValues.Length && i < parameterInfos.Length; i++)
+        {
+            ParameterInfo paramInfo = parameterInfos[i];
+            object? paramValue = parameterValues[i];
+
+            string valueStr = SerializeValue(paramValue);
+            keyParts.Add($"{paramInfo.Name}={valueStr}");
+        }
+
+        string combinedParams = string.Join(ParameterSeparator, keyParts);
+
+        // If the combined params are too long, hash them
+        if (combinedParams.Length > 200)
+        {
+            return ComputeHash(combinedParams);
+        }
+
+        return combinedParams;
+    }
+
+    /// <summary>
+    /// Serializes a parameter value to a string representation.
+    /// </summary>
+    private static string SerializeValue(object? value)
+    {
+        if (value == null)
+        {
+            return "null";
+        }
+
+        Type type = value.GetType();
+
+        // Handle primitive types directly
+        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) ||
+            type == typeof(DateTime) || type == typeof(DateTimeOffset) ||
+            type == typeof(Guid) || type == typeof(DateOnly) || type == typeof(TimeOnly))
+        {
+            return value.ToString() ?? "null";
+        }
+
+        // Handle collections
+        if (value is System.Collections.IEnumerable enumerable and not string)
+        {
+            var items = new List<string>();
+            foreach (object? item in enumerable)
+            {
+                items.Add(SerializeValue(item));
+            }
+            return $"[{string.Join(",", items)}]";
+        }
+
+        // For complex objects, use JSON serialization and hash
+        try
+        {
+            string json = JsonSerializer.Serialize(value, new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            return ComputeHash(json);
+        }
+        catch
+        {
+            // Fallback to type name and hash code
+            return $"{type.Name}_{value.GetHashCode()}";
+        }
+    }
+
+    /// <summary>
+    /// Computes a SHA256 hash of the input string.
+    /// </summary>
+    private static string ComputeHash(string input)
+    {
+        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+        byte[] hashBytes = SHA256.HashData(inputBytes);
+        return Convert.ToHexString(hashBytes)[..16].ToLowerInvariant();
     }
 }
 

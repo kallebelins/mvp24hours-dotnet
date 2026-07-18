@@ -12,9 +12,6 @@ namespace Mvp24Hours.Application.Integration.Test.Services;
 /// <summary>
 /// Product service for integration tests - inherits from RepositoryServiceAsync.
 /// </summary>
-public class ProductService : RepositoryServiceAsync<Product, IUnitOfWorkAsync>
+public class ProductService(IUnitOfWorkAsync unitOfWork) : RepositoryServiceAsync<Product, IUnitOfWorkAsync>(unitOfWork)
 {
-    public ProductService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork)
-    {
-    }
 }

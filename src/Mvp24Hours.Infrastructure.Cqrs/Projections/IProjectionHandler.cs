@@ -74,7 +74,7 @@ public interface IProjectionHandler<in TEvent> : IProjectionHandler
     Task HandleAsync(TEvent @event, ProjectionContext context, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
-    IReadOnlyList<Type> IProjectionHandler.HandledEventTypes => new[] { typeof(TEvent) };
+    IReadOnlyList<Type> IProjectionHandler.HandledEventTypes => [typeof(TEvent)];
 }
 
 /// <summary>
@@ -186,23 +186,18 @@ public abstract class ProjectionHandlerBase<TEvent> : IProjectionHandler<TEvent>
 /// </summary>
 /// <typeparam name="TEvent">The event type.</typeparam>
 /// <typeparam name="TReadModel">The read model type.</typeparam>
-public abstract class ReadModelProjectionHandler<TEvent, TReadModel> : ProjectionHandlerBase<TEvent>
+/// <remarks>
+/// Initializes a new instance of the projection handler.
+/// </remarks>
+/// <param name="repository">The read model repository.</param>
+public abstract class ReadModelProjectionHandler<TEvent, TReadModel>(IReadModelRepository<TReadModel> repository) : ProjectionHandlerBase<TEvent>
     where TEvent : CoreDomainEvent
     where TReadModel : class
 {
     /// <summary>
     /// Gets the read model repository.
     /// </summary>
-    protected IReadModelRepository<TReadModel> Repository { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the projection handler.
-    /// </summary>
-    /// <param name="repository">The read model repository.</param>
-    protected ReadModelProjectionHandler(IReadModelRepository<TReadModel> repository)
-    {
-        Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
+    protected IReadModelRepository<TReadModel> Repository { get; } = repository ?? throw new ArgumentNullException(nameof(repository));
 }
 
 /// <summary>
@@ -210,7 +205,11 @@ public abstract class ReadModelProjectionHandler<TEvent, TReadModel> : Projectio
 /// Useful for aggregating data from multiple event types.
 /// </summary>
 /// <typeparam name="TReadModel">The read model type.</typeparam>
-public abstract class AggregatingProjectionHandler<TReadModel> : IMultiEventProjectionHandler
+/// <remarks>
+/// Initializes a new instance of the aggregating handler.
+/// </remarks>
+/// <param name="repository">The read model repository.</param>
+public abstract class AggregatingProjectionHandler<TReadModel>(IReadModelRepository<TReadModel> repository) : IMultiEventProjectionHandler
     where TReadModel : class
 {
     private readonly List<Type> _handledTypes = [];
@@ -218,19 +217,10 @@ public abstract class AggregatingProjectionHandler<TReadModel> : IMultiEventProj
     /// <summary>
     /// Gets the read model repository.
     /// </summary>
-    protected IReadModelRepository<TReadModel> Repository { get; }
+    protected IReadModelRepository<TReadModel> Repository { get; } = repository ?? throw new ArgumentNullException(nameof(repository));
 
     /// <inheritdoc />
     public IReadOnlyList<Type> HandledEventTypes => _handledTypes.AsReadOnly();
-
-    /// <summary>
-    /// Initializes a new instance of the aggregating handler.
-    /// </summary>
-    /// <param name="repository">The read model repository.</param>
-    protected AggregatingProjectionHandler(IReadModelRepository<TReadModel> repository)
-    {
-        Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
 
     /// <summary>
     /// Registers an event type that this handler can process.

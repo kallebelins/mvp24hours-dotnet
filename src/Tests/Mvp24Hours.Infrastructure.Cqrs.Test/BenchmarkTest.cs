@@ -82,7 +82,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        var avgMs = (double)sw.ElapsedMilliseconds / 1000;
+        double avgMs = (double)sw.ElapsedMilliseconds / 1000;
         Assert.True(sw.ElapsedMilliseconds < 500,
             $"1000 commands should complete in under 500ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
@@ -96,7 +96,9 @@ public class BenchmarkTest
 
         // Warm up with multiple iterations
         for (int i = 0; i < 10; i++)
+        {
             await _mediator.SendAsync(command);
+        }
 
         var swWithout = Stopwatch.StartNew();
         for (int i = 0; i < 500; i++)
@@ -110,7 +112,9 @@ public class BenchmarkTest
 
         // Warm up
         for (int i = 0; i < 10; i++)
+        {
             await _mediator.SendAsync(command);
+        }
 
         var swWith = Stopwatch.StartNew();
         for (int i = 0; i < 500; i++)
@@ -177,7 +181,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        var avgMs = (double)sw.ElapsedMilliseconds / 1000;
+        double avgMs = (double)sw.ElapsedMilliseconds / 1000;
         Assert.True(sw.ElapsedMilliseconds < 500,
             $"1000 notifications should complete in under 500ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
@@ -190,12 +194,12 @@ public class BenchmarkTest
         var request = new GetItemsStreamRequest { Count = 100 };
 
         // Warm up
-        await foreach (var _ in _mediator.CreateStream(request)) { }
+        await foreach (int _ in _mediator.CreateStream(request)) { }
 
         // Act
         var sw = Stopwatch.StartNew();
-        var count = 0;
-        await foreach (var _ in _mediator.CreateStream(request))
+        int count = 0;
+        await foreach (int _ in _mediator.CreateStream(request))
         {
             count++;
         }
@@ -254,7 +258,7 @@ public class BenchmarkTest
         // Act
         var sw = Stopwatch.StartNew();
         IEnumerable<Task<string>> tasks = commands.Select(c => _mediator.SendAsync(c));
-        var results = await Task.WhenAll(tasks);
+        string[] results = await Task.WhenAll(tasks);
         sw.Stop();
 
         // Assert
@@ -285,7 +289,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        var avgMs = (double)sw.ElapsedMilliseconds / 100;
+        double avgMs = (double)sw.ElapsedMilliseconds / 100;
         Assert.True(sw.ElapsedMilliseconds < 100,
             $"100 queries should complete in under 100ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }
@@ -309,7 +313,7 @@ public class BenchmarkTest
         sw.Stop();
 
         // Assert
-        var avgMs = (double)sw.ElapsedMilliseconds / 1000;
+        double avgMs = (double)sw.ElapsedMilliseconds / 1000;
         Assert.True(sw.ElapsedMilliseconds < 100,
             $"1000 mediator resolutions should complete in under 100ms, took {sw.ElapsedMilliseconds}ms (avg: {avgMs:F3}ms)");
     }

@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Mvp24Hours.Core.Observability;
 
@@ -74,7 +71,7 @@ public class CorrelationIdEnricher : ActivityEnricherBase
     /// <inheritdoc />
     public override void EnrichOnStart(Activity activity, object? context = null)
     {
-        var correlationId = GetCorrelationId?.Invoke() ?? Activity.Current?.GetBaggageItem("correlation.id");
+        string? correlationId = GetCorrelationId?.Invoke() ?? Activity.Current?.GetBaggageItem("correlation.id");
 
         if (!string.IsNullOrEmpty(correlationId))
         {
@@ -110,13 +107,13 @@ public class UserContextEnricher : ActivityEnricherBase
     /// <inheritdoc />
     public override void EnrichOnStart(Activity activity, object? context = null)
     {
-        var userId = GetUserId?.Invoke();
+        string? userId = GetUserId?.Invoke();
         if (!string.IsNullOrEmpty(userId))
         {
             activity.SetTag(SemanticTags.EnduserId, userId);
         }
 
-        var userName = GetUserName?.Invoke();
+        string? userName = GetUserName?.Invoke();
         if (!string.IsNullOrEmpty(userName))
         {
             activity.SetTag(SemanticTags.EnduserName, userName);
@@ -151,14 +148,14 @@ public class TenantContextEnricher : ActivityEnricherBase
     /// <inheritdoc />
     public override void EnrichOnStart(Activity activity, object? context = null)
     {
-        var tenantId = GetTenantId?.Invoke();
+        string? tenantId = GetTenantId?.Invoke();
         if (!string.IsNullOrEmpty(tenantId))
         {
             activity.SetTag(SemanticTags.TenantId, tenantId);
             activity.SetBaggage("tenant.id", tenantId);
         }
 
-        var tenantName = GetTenantName?.Invoke();
+        string? tenantName = GetTenantName?.Invoke();
         if (!string.IsNullOrEmpty(tenantName))
         {
             activity.SetTag(SemanticTags.TenantName, tenantName);
@@ -169,18 +166,13 @@ public class TenantContextEnricher : ActivityEnricherBase
 /// <summary>
 /// Composite enricher that runs multiple enrichers in order.
 /// </summary>
-public class CompositeActivityEnricher : IActivityEnricher
+/// <remarks>
+/// Initializes a new instance of the <see cref="CompositeActivityEnricher"/> class.
+/// </remarks>
+/// <param name="enrichers">The enrichers to compose.</param>
+public class CompositeActivityEnricher(IEnumerable<IActivityEnricher> enrichers) : IActivityEnricher
 {
-    private readonly IEnumerable<IActivityEnricher> _enrichers;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CompositeActivityEnricher"/> class.
-    /// </summary>
-    /// <param name="enrichers">The enrichers to compose.</param>
-    public CompositeActivityEnricher(IEnumerable<IActivityEnricher> enrichers)
-    {
-        _enrichers = enrichers?.OrderBy(e => e.Order) ?? Enumerable.Empty<IActivityEnricher>();
-    }
+    private readonly IEnumerable<IActivityEnricher> _enrichers = enrichers?.OrderBy(e => e.Order) ?? Enumerable.Empty<IActivityEnricher>();
 
     /// <inheritdoc />
     public int Order => 0;

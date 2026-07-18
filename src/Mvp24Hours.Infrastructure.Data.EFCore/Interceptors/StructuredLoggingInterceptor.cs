@@ -3,13 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Data.EFCore.Observability;
@@ -108,7 +103,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
         _commandLogLevel = commandLogLevel;
         _errorLogLevel = errorLogLevel;
         _sensitiveParameters = new HashSet<string>(
-            sensitiveParameters ?? new[] { "password", "pwd", "token", "secret", "key", "credential", "ssn", "creditcard", "cvv" },
+            sensitiveParameters ?? ["password", "pwd", "token", "secret", "key", "credential", "ssn", "creditcard", "cvv"],
             StringComparer.OrdinalIgnoreCase);
         _maxSqlLength = maxSqlLength;
         _maxParameterValueLength = maxParameterValueLength;
@@ -215,8 +210,8 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
 
     private void LogCommand(DbCommand command, TimeSpan duration, string commandType, object? result)
     {
-        var durationMs = duration.TotalMilliseconds;
-        var operation = DetectOperation(command.CommandText);
+        double durationMs = duration.TotalMilliseconds;
+        string operation = DetectOperation(command.CommandText);
 
         // Record metrics
         _metrics?.RecordQuery(durationMs, operation, command.Connection?.Database);
@@ -248,7 +243,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
         {
             if (_logParameters && command.Parameters.Count > 0)
             {
-                var parameters = FormatParameters(command.Parameters);
+                string parameters = FormatParameters(command.Parameters);
                 _logger.Log(
                     _commandLogLevel,
                     "SQL {Operation} executed in {DurationMs:F2}ms - {Sql} - Parameters: {Parameters}",
@@ -281,7 +276,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
             {
                 CommandType = commandType,
                 Operation = operation,
-                Database = command.Connection?.Database,
+                command.Connection?.Database,
                 DurationMs = Math.Round(duration.TotalMilliseconds, 2),
                 Sql = TruncateSql(command.CommandText),
                 Parameters = _logParameters ? FormatParametersAsDict(command.Parameters) : null,
@@ -290,7 +285,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
             }
         };
 
-        var json = JsonSerializer.Serialize(logEntry, new JsonSerializerOptions
+        string json = JsonSerializer.Serialize(logEntry, new JsonSerializerOptions
         {
             WriteIndented = false,
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
@@ -301,7 +296,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
 
     private void LogError(DbCommand command, Exception exception, TimeSpan duration)
     {
-        var operation = DetectOperation(command.CommandText);
+        string operation = DetectOperation(command.CommandText);
 
         // Record error metrics
         _metrics?.RecordQueryError(exception.GetType().Name, command.Connection?.Database);
@@ -321,7 +316,7 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
         var parts = new List<string>();
         foreach (DbParameter param in parameters)
         {
-            var value = FormatParameterValue(param);
+            string value = FormatParameterValue(param);
             parts.Add($"{param.ParameterName}({param.DbType})={value}");
         }
         return string.Join(", ", parts);
@@ -346,31 +341,42 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
     {
         // Check for sensitive parameters
         if (IsSensitive(param.ParameterName))
+        {
             return "***MASKED***";
+        }
 
         if (param.Value == null || param.Value == DBNull.Value)
+        {
             return "NULL";
+        }
 
-        var value = param.Value.ToString() ?? "NULL";
+        string value = param.Value.ToString() ?? "NULL";
 
         // Truncate long values
         if (value.Length > _maxParameterValueLength)
-            value = value.Substring(0, _maxParameterValueLength) + "...";
+        {
+            value = value[.._maxParameterValueLength] + "...";
+        }
 
         return value;
     }
 
     private bool IsSensitive(string parameterName)
     {
-        if (string.IsNullOrEmpty(parameterName)) return false;
+        if (string.IsNullOrEmpty(parameterName))
+        {
+            return false;
+        }
 
         // Remove common prefixes (@, :, ?)
-        var normalized = parameterName.TrimStart('@', ':', '?');
+        string normalized = parameterName.TrimStart('@', ':', '?');
 
-        foreach (var sensitive in _sensitiveParameters)
+        foreach (string sensitive in _sensitiveParameters)
         {
             if (normalized.Contains(sensitive, StringComparison.OrdinalIgnoreCase))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -378,23 +384,57 @@ public class StructuredLoggingInterceptor : DbCommandInterceptor
 
     private string TruncateSql(string sql)
     {
-        if (string.IsNullOrEmpty(sql)) return sql;
-        if (sql.Length <= _maxSqlLength) return sql;
-        return sql.Substring(0, _maxSqlLength) + "... [TRUNCATED]";
+        if (string.IsNullOrEmpty(sql))
+        {
+            return sql;
+        }
+
+        if (sql.Length <= _maxSqlLength)
+        {
+            return sql;
+        }
+
+        return sql[.._maxSqlLength] + "... [TRUNCATED]";
     }
 
     private static string DetectOperation(string commandText)
     {
-        if (string.IsNullOrEmpty(commandText)) return "UNKNOWN";
+        if (string.IsNullOrEmpty(commandText))
+        {
+            return "UNKNOWN";
+        }
 
-        var normalized = commandText.TrimStart().ToUpperInvariant();
+        string normalized = commandText.TrimStart().ToUpperInvariant();
 
-        if (normalized.StartsWith("SELECT")) return "SELECT";
-        if (normalized.StartsWith("INSERT")) return "INSERT";
-        if (normalized.StartsWith("UPDATE")) return "UPDATE";
-        if (normalized.StartsWith("DELETE")) return "DELETE";
-        if (normalized.StartsWith("MERGE")) return "MERGE";
-        if (normalized.StartsWith("EXEC") || normalized.StartsWith("CALL")) return "PROCEDURE";
+        if (normalized.StartsWith("SELECT"))
+        {
+            return "SELECT";
+        }
+
+        if (normalized.StartsWith("INSERT"))
+        {
+            return "INSERT";
+        }
+
+        if (normalized.StartsWith("UPDATE"))
+        {
+            return "UPDATE";
+        }
+
+        if (normalized.StartsWith("DELETE"))
+        {
+            return "DELETE";
+        }
+
+        if (normalized.StartsWith("MERGE"))
+        {
+            return "MERGE";
+        }
+
+        if (normalized.StartsWith("EXEC") || normalized.StartsWith("CALL"))
+        {
+            return "PROCEDURE";
+        }
 
         return "OTHER";
     }

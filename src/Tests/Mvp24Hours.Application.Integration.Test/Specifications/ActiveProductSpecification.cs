@@ -21,16 +21,10 @@ public class ActiveProductSpecification : ISpecificationQuery<Product>
 /// <summary>
 /// Specification for products in a price range.
 /// </summary>
-public class PriceRangeSpecification : ISpecificationQuery<Product>
+public class PriceRangeSpecification(decimal minPrice, decimal maxPrice) : ISpecificationQuery<Product>
 {
-    private readonly decimal _minPrice;
-    private readonly decimal _maxPrice;
-
-    public PriceRangeSpecification(decimal minPrice, decimal maxPrice)
-    {
-        _minPrice = minPrice;
-        _maxPrice = maxPrice;
-    }
+    private readonly decimal _minPrice = minPrice;
+    private readonly decimal _maxPrice = maxPrice;
 
     public Expression<Func<Product, bool>> IsSatisfiedByExpression =>
         p => p.Price >= _minPrice && p.Price <= _maxPrice;
@@ -39,14 +33,9 @@ public class PriceRangeSpecification : ISpecificationQuery<Product>
 /// <summary>
 /// Specification for products with low stock.
 /// </summary>
-public class LowStockSpecification : ISpecificationQuery<Product>
+public class LowStockSpecification(int threshold = 50) : ISpecificationQuery<Product>
 {
-    private readonly int _threshold;
-
-    public LowStockSpecification(int threshold = 50)
-    {
-        _threshold = threshold;
-    }
+    private readonly int _threshold = threshold;
 
     public Expression<Func<Product, bool>> IsSatisfiedByExpression =>
         p => p.StockQuantity < _threshold;

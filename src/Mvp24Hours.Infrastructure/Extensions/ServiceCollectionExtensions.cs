@@ -4,52 +4,47 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Reflection;
-using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Mappings;
 using Mvp24Hours.Helpers;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// 
+    /// Add mapping services, use Assembly.GetExecutingAssembly()
     /// </summary>
-    public static class ServiceCollectionExtensions
+    public static IServiceCollection AddMvp24HoursMapService(this IServiceCollection services, Assembly assemblyMap)
     {
-        /// <summary>
-        /// Add mapping services, use Assembly.GetExecutingAssembly()
-        /// </summary>
-        public static IServiceCollection AddMvp24HoursMapService(this IServiceCollection services, Assembly assemblyMap)
+        if (assemblyMap == null)
         {
-            if (assemblyMap == null)
-            {
-                throw new System.ArgumentNullException(nameof(assemblyMap), "Assembly Map is required.");
-            }
-
-            Assembly local = assemblyMap;
-            services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile(new MappingProfile(local));
-            }, local);
-
-            return services;
+            throw new System.ArgumentNullException(nameof(assemblyMap), "Assembly Map is required.");
         }
 
-        /// <summary>
-        /// Add time zone 
-        /// </summary>
-        public static IServiceCollection AddMvp24HoursTimeZone(this IServiceCollection services, bool clearList, params string[] args)
-        {
-            if (clearList)
-            {
-                TimeZoneHelper.TimeZoneIds.Clear();
-            }
+        Assembly local = assemblyMap;
+        services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile(local)), local);
 
-            if (args.AnySafe())
-            {
-                TimeZoneHelper.TimeZoneIds.AddRange(args);
-            }
-            return services;
+        return services;
+    }
+
+    /// <summary>
+    /// Add time zone 
+    /// </summary>
+    public static IServiceCollection AddMvp24HoursTimeZone(this IServiceCollection services, bool clearList, params string[] args)
+    {
+        if (clearList)
+        {
+            TimeZoneHelper.TimeZoneIds.Clear();
         }
+
+        if (args.AnySafe())
+        {
+            TimeZoneHelper.TimeZoneIds.AddRange(args);
+        }
+        return services;
     }
 }

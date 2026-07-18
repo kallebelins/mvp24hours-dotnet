@@ -48,10 +48,10 @@ public class ValueObjectsTest
     public void Email_TryParse_WithValidEmail_ReturnsTrue()
     {
         // Arrange
-        var emailValue = "user@example.com";
+        string emailValue = "user@example.com";
 
         // Act
-        var result = Email.TryParse(emailValue, out Email? email);
+        bool result = Email.TryParse(emailValue, out Email? email);
 
         // Assert
         result.Should().BeTrue();
@@ -63,10 +63,10 @@ public class ValueObjectsTest
     public void Email_TryParse_WithInvalidEmail_ReturnsFalse()
     {
         // Arrange
-        var emailValue = "invalid";
+        string emailValue = "invalid";
 
         // Act
-        var result = Email.TryParse(emailValue, out Email? email);
+        bool result = Email.TryParse(emailValue, out _);
 
         // Assert
         result.Should().BeFalse();
@@ -80,7 +80,7 @@ public class ValueObjectsTest
     public void Email_IsValid_ReturnsExpectedResult(string? emailValue, bool expected)
     {
         // Act
-        var result = Email.IsValid(emailValue!);
+        bool result = Email.IsValid(emailValue!);
 
         // Assert
         result.Should().Be(expected);
@@ -145,10 +145,10 @@ public class ValueObjectsTest
     public void Cpf_TryParse_WithValidCpf_ReturnsTrue()
     {
         // Arrange
-        var cpfValue = "123.456.789-09";
+        string cpfValue = "123.456.789-09";
 
         // Act
-        var result = Cpf.TryParse(cpfValue, out Cpf? cpf);
+        bool result = Cpf.TryParse(cpfValue, out Cpf? cpf);
 
         // Assert
         result.Should().BeTrue();
@@ -159,10 +159,10 @@ public class ValueObjectsTest
     public void Cpf_TryParse_WithInvalidCpf_ReturnsFalse()
     {
         // Arrange
-        var cpfValue = "111.111.111-11";
+        string cpfValue = "111.111.111-11";
 
         // Act
-        var result = Cpf.TryParse(cpfValue, out Cpf? cpf);
+        bool result = Cpf.TryParse(cpfValue, out _);
 
         // Assert
         result.Should().BeFalse();
@@ -228,10 +228,10 @@ public class ValueObjectsTest
     public void Cnpj_TryParse_WithValidCnpj_ReturnsTrue()
     {
         // Arrange
-        var cnpjValue = "11.222.333/0001-81";
+        string cnpjValue = "11.222.333/0001-81";
 
         // Act
-        var result = Cnpj.TryParse(cnpjValue, out Cnpj? cnpj);
+        bool result = Cnpj.TryParse(cnpjValue, out Cnpj? cnpj);
 
         // Assert
         result.Should().BeTrue();
@@ -242,10 +242,10 @@ public class ValueObjectsTest
     public void Cnpj_TryParse_WithInvalidCnpj_ReturnsFalse()
     {
         // Arrange
-        var cnpjValue = "11.111.111/1111-11";
+        string cnpjValue = "11.111.111/1111-11";
 
         // Act
-        var result = Cnpj.TryParse(cnpjValue, out Cnpj? cnpj);
+        bool result = Cnpj.TryParse(cnpjValue, out _);
 
         // Assert
         result.Should().BeFalse();
@@ -443,7 +443,7 @@ public class ValueObjectsTest
         );
 
         // Act
-        var fullAddress = address.FullAddress;
+        string fullAddress = address.FullAddress;
 
         // Assert
         fullAddress.Should().Contain("Av. Paulista");
@@ -537,7 +537,7 @@ public class ValueObjectsTest
         var dateInRange = new DateTime(2024, 6, 15);
 
         // Act
-        var result = range.Contains(dateInRange);
+        bool result = range.Contains(dateInRange);
 
         // Assert
         result.Should().BeTrue();
@@ -554,7 +554,7 @@ public class ValueObjectsTest
         var dateOutOfRange = new DateTime(2025, 1, 1);
 
         // Act
-        var result = range.Contains(dateOutOfRange);
+        bool result = range.Contains(dateOutOfRange);
 
         // Assert
         result.Should().BeFalse();
@@ -574,7 +574,7 @@ public class ValueObjectsTest
         );
 
         // Act
-        var result = range1.Overlaps(range2);
+        bool result = range1.Overlaps(range2);
 
         // Assert
         result.Should().BeTrue();
@@ -594,7 +594,7 @@ public class ValueObjectsTest
         );
 
         // Act
-        var result = range1.Overlaps(range2);
+        bool result = range1.Overlaps(range2);
 
         // Assert
         result.Should().BeFalse();
@@ -655,7 +655,7 @@ public class ValueObjectsTest
         var percentage = Percentage.FromPercent(15);
 
         // Act
-        var result = percentage.Of(100m);
+        decimal result = percentage.Of(100m);
 
         // Assert
         result.Should().Be(15m);
@@ -668,7 +668,7 @@ public class ValueObjectsTest
         var discount = Percentage.FromPercent(15);
 
         // Act
-        var result = discount.ApplyTo(100m);
+        decimal result = discount.ApplyTo(100m);
 
         // Assert
         result.Should().Be(85m);
@@ -681,7 +681,7 @@ public class ValueObjectsTest
         var tax = Percentage.FromPercent(10);
 
         // Act
-        var result = tax.AddTo(100m);
+        decimal result = tax.AddTo(100m);
 
         // Assert
         result.Should().Be(110m);
@@ -776,7 +776,7 @@ public class ValueObjectsTest
         var phone = PhoneNumber.Create("+55", "11", "999887766");
 
         // Act
-        var fullNumber = phone.FullNumber;
+        string fullNumber = phone.FullNumber;
 
         // Assert
         fullNumber.Should().Be("5511999887766");
@@ -796,7 +796,7 @@ public class ValueObjectsTest
     public void PhoneNumber_TryParse_WithValidData_ReturnsTrue()
     {
         // Act
-        var result = PhoneNumber.TryParse("+55", "11", "999887766", out PhoneNumber? phone);
+        bool result = PhoneNumber.TryParse("+55", "11", "999887766", out PhoneNumber? phone);
 
         // Assert
         result.Should().BeTrue();
@@ -807,7 +807,7 @@ public class ValueObjectsTest
     public void PhoneNumber_TryParse_WithInvalidData_ReturnsFalse()
     {
         // Act
-        var result = PhoneNumber.TryParse("+55", "11", "123", out PhoneNumber? phone);
+        bool result = PhoneNumber.TryParse("+55", "11", "123", out _);
 
         // Assert
         result.Should().BeFalse();

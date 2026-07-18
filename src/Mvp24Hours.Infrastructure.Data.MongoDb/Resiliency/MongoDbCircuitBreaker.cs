@@ -3,311 +3,312 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
+
+/// <summary>
+/// Implements a circuit breaker pattern for MongoDB operations.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The circuit breaker has three states:
+/// <list type="bullet">
+///   <item><b>Closed</b>: Normal operation, all requests pass through</item>
+///   <item><b>Open</b>: Circuit tripped, all requests fail immediately</item>
+///   <item><b>Half-Open</b>: Testing if service has recovered</item>
+/// </list>
+/// </para>
+/// <para>
+/// State transitions:
+/// <list type="bullet">
+///   <item>Closed → Open: When failure threshold is exceeded</item>
+///   <item>Open → Half-Open: After break duration expires</item>
+///   <item>Half-Open → Closed: When a test request succeeds</item>
+///   <item>Half-Open → Open: When a test request fails</item>
+/// </list>
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="MongoDbCircuitBreaker"/> class.
+/// </remarks>
+/// <param name="options">The resiliency options.</param>
+public sealed class MongoDbCircuitBreaker(MongoDbResiliencyOptions options) : ICircuitBreakerMetrics
 {
+    private readonly MongoDbResiliencyOptions _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly object _stateLock = new();
+    private readonly ConcurrentQueue<DateTimeOffset> _recentFailures = new();
+
+    private CircuitBreakerState _state = CircuitBreakerState.Closed;
+    private long _totalSuccessCount;
+    private long _totalFailureCount;
+    private long _totalRejectedCount;
+    private long _circuitTripCount;
+
     /// <summary>
-    /// Implements a circuit breaker pattern for MongoDB operations.
+    /// Gets the current state of the circuit breaker.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The circuit breaker has three states:
-    /// <list type="bullet">
-    ///   <item><b>Closed</b>: Normal operation, all requests pass through</item>
-    ///   <item><b>Open</b>: Circuit tripped, all requests fail immediately</item>
-    ///   <item><b>Half-Open</b>: Testing if service has recovered</item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// State transitions:
-    /// <list type="bullet">
-    ///   <item>Closed → Open: When failure threshold is exceeded</item>
-    ///   <item>Open → Half-Open: After break duration expires</item>
-    ///   <item>Half-Open → Closed: When a test request succeeds</item>
-    ///   <item>Half-Open → Open: When a test request fails</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    public sealed class MongoDbCircuitBreaker : ICircuitBreakerMetrics
+    public CircuitBreakerState State
     {
-        private readonly MongoDbResiliencyOptions _options;
-        private readonly object _stateLock = new();
-        private readonly ConcurrentQueue<DateTimeOffset> _recentFailures = new();
-
-        private CircuitBreakerState _state = CircuitBreakerState.Closed;
-        private DateTimeOffset? _openedAt;
-        private DateTimeOffset? _lastSuccessTime;
-        private DateTimeOffset? _lastFailureTime;
-
-        private long _totalSuccessCount;
-        private long _totalFailureCount;
-        private long _totalRejectedCount;
-        private long _circuitTripCount;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MongoDbCircuitBreaker"/> class.
-        /// </summary>
-        /// <param name="options">The resiliency options.</param>
-        public MongoDbCircuitBreaker(MongoDbResiliencyOptions options)
+        get
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-        }
-
-        /// <summary>
-        /// Gets the current state of the circuit breaker.
-        /// </summary>
-        public CircuitBreakerState State
-        {
-            get
+            lock (_stateLock)
             {
-                lock (_stateLock)
+                if (_state == CircuitBreakerState.Open && ShouldTransitionToHalfOpen())
                 {
-                    if (_state == CircuitBreakerState.Open && ShouldTransitionToHalfOpen())
-                    {
-                        TransitionTo(CircuitBreakerState.HalfOpen);
-                    }
-                    return _state;
+                    TransitionTo(CircuitBreakerState.HalfOpen);
                 }
+                return _state;
             }
         }
+    }
 
-        #region ICircuitBreakerMetrics
+    #region ICircuitBreakerMetrics
 
-        /// <inheritdoc />
-        public long TotalSuccessCount => Interlocked.Read(ref _totalSuccessCount);
+    /// <inheritdoc />
+    public long TotalSuccessCount => Interlocked.Read(ref _totalSuccessCount);
 
-        /// <inheritdoc />
-        public long TotalFailureCount => Interlocked.Read(ref _totalFailureCount);
+    /// <inheritdoc />
+    public long TotalFailureCount => Interlocked.Read(ref _totalFailureCount);
 
-        /// <inheritdoc />
-        public long TotalRejectedCount => Interlocked.Read(ref _totalRejectedCount);
+    /// <inheritdoc />
+    public long TotalRejectedCount => Interlocked.Read(ref _totalRejectedCount);
 
-        /// <inheritdoc />
-        public long CircuitTripCount => Interlocked.Read(ref _circuitTripCount);
+    /// <inheritdoc />
+    public long CircuitTripCount => Interlocked.Read(ref _circuitTripCount);
 
-        /// <inheritdoc />
-        public double CurrentFailureRate
+    /// <inheritdoc />
+    public double CurrentFailureRate
+    {
+        get
         {
-            get
+            long total = TotalSuccessCount + TotalFailureCount;
+            if (total == 0)
             {
-                var total = TotalSuccessCount + TotalFailureCount;
-                if (total == 0) return 0;
-                return (double)TotalFailureCount / total;
+                return 0;
             }
+
+            return (double)TotalFailureCount / total;
         }
+    }
 
-        /// <inheritdoc />
-        public DateTimeOffset? LastSuccessTime => _lastSuccessTime;
+    /// <inheritdoc />
+    public DateTimeOffset? LastSuccessTime { get; private set; }
 
-        /// <inheritdoc />
-        public DateTimeOffset? LastFailureTime => _lastFailureTime;
+    /// <inheritdoc />
+    public DateTimeOffset? LastFailureTime { get; private set; }
 
-        /// <inheritdoc />
-        public DateTimeOffset? LastOpenTime => _openedAt;
+    /// <inheritdoc />
+    public DateTimeOffset? LastOpenTime { get; private set; }
 
-        /// <inheritdoc />
-        public void Reset()
+    /// <inheritdoc />
+    public void Reset()
+    {
+        lock (_stateLock)
         {
-            lock (_stateLock)
-            {
-                Interlocked.Exchange(ref _totalSuccessCount, 0);
-                Interlocked.Exchange(ref _totalFailureCount, 0);
-                Interlocked.Exchange(ref _totalRejectedCount, 0);
-                Interlocked.Exchange(ref _circuitTripCount, 0);
-                _lastSuccessTime = null;
-                _lastFailureTime = null;
-                _openedAt = null;
-                while (_recentFailures.TryDequeue(out _)) { }
-                _state = CircuitBreakerState.Closed;
-            }
+            Interlocked.Exchange(ref _totalSuccessCount, 0);
+            Interlocked.Exchange(ref _totalFailureCount, 0);
+            Interlocked.Exchange(ref _totalRejectedCount, 0);
+            Interlocked.Exchange(ref _circuitTripCount, 0);
+            LastSuccessTime = null;
+            LastFailureTime = null;
+            LastOpenTime = null;
+            while (_recentFailures.TryDequeue(out _)) { }
+            _state = CircuitBreakerState.Closed;
         }
+    }
 
-        #endregion
+    #endregion
 
-        /// <summary>
-        /// Checks if the circuit allows an operation to proceed.
-        /// </summary>
-        /// <returns>True if the operation should proceed; false if it should be rejected.</returns>
-        public bool AllowRequest()
+    /// <summary>
+    /// Checks if the circuit allows an operation to proceed.
+    /// </summary>
+    /// <returns>True if the operation should proceed; false if it should be rejected.</returns>
+    public bool AllowRequest()
+    {
+        CircuitBreakerState state = State; // This may trigger state transition
+
+        switch (state)
         {
-            CircuitBreakerState state = State; // This may trigger state transition
-
-            switch (state)
-            {
-                case CircuitBreakerState.Closed:
-                    return true;
-
-                case CircuitBreakerState.HalfOpen:
-                    // In half-open state, allow one test request
-                    return true;
-
-                case CircuitBreakerState.Open:
-                    Interlocked.Increment(ref _totalRejectedCount);
-                    return false;
-
-                default:
-                    return true;
-            }
-        }
-
-        /// <summary>
-        /// Gets the remaining duration until the circuit transitions to half-open.
-        /// </summary>
-        /// <returns>The remaining duration, or null if not in open state.</returns>
-        public TimeSpan? GetRemainingOpenDuration()
-        {
-            lock (_stateLock)
-            {
-                if (_state != CircuitBreakerState.Open || !_openedAt.HasValue)
-                    return null;
-
-                TimeSpan elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
-                var breakDuration = TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
-                TimeSpan remaining = breakDuration - elapsed;
-
-                return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
-            }
-        }
-
-        /// <summary>
-        /// Records a successful operation.
-        /// </summary>
-        public void RecordSuccess()
-        {
-            Interlocked.Increment(ref _totalSuccessCount);
-            _lastSuccessTime = DateTimeOffset.UtcNow;
-
-            lock (_stateLock)
-            {
-                if (_state == CircuitBreakerState.HalfOpen)
-                {
-                    // Successful test request, close the circuit
-                    TransitionTo(CircuitBreakerState.Closed);
-                    while (_recentFailures.TryDequeue(out _)) { } // Clear failures
-                }
-            }
-        }
-
-        /// <summary>
-        /// Records a failed operation.
-        /// </summary>
-        /// <param name="exception">The exception that caused the failure.</param>
-        public void RecordFailure(Exception exception)
-        {
-            Interlocked.Increment(ref _totalFailureCount);
-            _lastFailureTime = DateTimeOffset.UtcNow;
-            _recentFailures.Enqueue(DateTimeOffset.UtcNow);
-
-            // Clean up old failures outside the sampling window
-            CleanupOldFailures();
-
-            lock (_stateLock)
-            {
-                if (_state == CircuitBreakerState.HalfOpen)
-                {
-                    // Test request failed, reopen the circuit
-                    TransitionTo(CircuitBreakerState.Open);
-                    return;
-                }
-
-                if (_state == CircuitBreakerState.Closed)
-                {
-                    if (ShouldTrip())
-                    {
-                        TransitionTo(CircuitBreakerState.Open);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Manually trips the circuit breaker to open state.
-        /// </summary>
-        public void Trip()
-        {
-            lock (_stateLock)
-            {
-                if (_state != CircuitBreakerState.Open)
-                {
-                    TransitionTo(CircuitBreakerState.Open);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Manually resets the circuit breaker to closed state.
-        /// </summary>
-        public void ResetState()
-        {
-            lock (_stateLock)
-            {
-                while (_recentFailures.TryDequeue(out _)) { }
-                TransitionTo(CircuitBreakerState.Closed);
-            }
-        }
-
-        private bool ShouldTrip()
-        {
-            // Check minimum throughput
-            var recentCount = _recentFailures.Count;
-            if (recentCount < _options.CircuitBreakerMinimumThroughput)
-                return false;
-
-            // Check failure count threshold
-            if (recentCount >= _options.CircuitBreakerFailureThreshold)
+            case CircuitBreakerState.Closed:
                 return true;
 
-            // Check failure rate threshold if configured
-            if (_options.CircuitBreakerFailureRateThreshold.HasValue)
+            case CircuitBreakerState.HalfOpen:
+                // In half-open state, allow one test request
+                return true;
+
+            case CircuitBreakerState.Open:
+                Interlocked.Increment(ref _totalRejectedCount);
+                return false;
+
+            default:
+                return true;
+        }
+    }
+
+    /// <summary>
+    /// Gets the remaining duration until the circuit transitions to half-open.
+    /// </summary>
+    /// <returns>The remaining duration, or null if not in open state.</returns>
+    public TimeSpan? GetRemainingOpenDuration()
+    {
+        lock (_stateLock)
+        {
+            if (_state != CircuitBreakerState.Open || !LastOpenTime.HasValue)
             {
-                var total = TotalSuccessCount + TotalFailureCount;
-                if (total > 0)
-                {
-                    var failureRate = (double)recentCount / total;
-                    if (failureRate >= _options.CircuitBreakerFailureRateThreshold.Value)
-                        return true;
-                }
+                return null;
             }
 
+            TimeSpan elapsed = DateTimeOffset.UtcNow - LastOpenTime.Value;
+            var breakDuration = TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
+            TimeSpan remaining = breakDuration - elapsed;
+
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
+    }
+
+    /// <summary>
+    /// Records a successful operation.
+    /// </summary>
+    public void RecordSuccess()
+    {
+        Interlocked.Increment(ref _totalSuccessCount);
+        LastSuccessTime = DateTimeOffset.UtcNow;
+
+        lock (_stateLock)
+        {
+            if (_state == CircuitBreakerState.HalfOpen)
+            {
+                // Successful test request, close the circuit
+                TransitionTo(CircuitBreakerState.Closed);
+                while (_recentFailures.TryDequeue(out _)) { } // Clear failures
+            }
+        }
+    }
+
+    /// <summary>
+    /// Records a failed operation.
+    /// </summary>
+    /// <param name="exception">The exception that caused the failure.</param>
+    public void RecordFailure(Exception exception)
+    {
+        Interlocked.Increment(ref _totalFailureCount);
+        LastFailureTime = DateTimeOffset.UtcNow;
+        _recentFailures.Enqueue(DateTimeOffset.UtcNow);
+
+        // Clean up old failures outside the sampling window
+        CleanupOldFailures();
+
+        lock (_stateLock)
+        {
+            if (_state == CircuitBreakerState.HalfOpen)
+            {
+                // Test request failed, reopen the circuit
+                TransitionTo(CircuitBreakerState.Open);
+                return;
+            }
+
+            if (_state == CircuitBreakerState.Closed)
+            {
+                if (ShouldTrip())
+                {
+                    TransitionTo(CircuitBreakerState.Open);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Manually trips the circuit breaker to open state.
+    /// </summary>
+    public void Trip()
+    {
+        lock (_stateLock)
+        {
+            if (_state != CircuitBreakerState.Open)
+            {
+                TransitionTo(CircuitBreakerState.Open);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Manually resets the circuit breaker to closed state.
+    /// </summary>
+    public void ResetState()
+    {
+        lock (_stateLock)
+        {
+            while (_recentFailures.TryDequeue(out _)) { }
+            TransitionTo(CircuitBreakerState.Closed);
+        }
+    }
+
+    private bool ShouldTrip()
+    {
+        // Check minimum throughput
+        int recentCount = _recentFailures.Count;
+        if (recentCount < _options.CircuitBreakerMinimumThroughput)
+        {
             return false;
         }
 
-        private bool ShouldTransitionToHalfOpen()
+        // Check failure count threshold
+        if (recentCount >= _options.CircuitBreakerFailureThreshold)
         {
-            if (!_openedAt.HasValue)
-                return false;
-
-            TimeSpan elapsed = DateTimeOffset.UtcNow - _openedAt.Value;
-            return elapsed >= TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
+            return true;
         }
 
-        private void TransitionTo(CircuitBreakerState newState)
+        // Check failure rate threshold if configured
+        if (_options.CircuitBreakerFailureRateThreshold.HasValue)
         {
-            CircuitBreakerState previousState = _state;
-            _state = newState;
-
-            if (newState == CircuitBreakerState.Open)
+            long total = TotalSuccessCount + TotalFailureCount;
+            if (total > 0)
             {
-                _openedAt = DateTimeOffset.UtcNow;
-                Interlocked.Increment(ref _circuitTripCount);
-            }
-            else if (newState == CircuitBreakerState.Closed)
-            {
-                _openedAt = null;
+                double failureRate = (double)recentCount / total;
+                if (failureRate >= _options.CircuitBreakerFailureRateThreshold.Value)
+                {
+                    return true;
+                }
             }
         }
 
-        private void CleanupOldFailures()
-        {
-            DateTimeOffset cutoff = DateTimeOffset.UtcNow.AddSeconds(-_options.CircuitBreakerSamplingDurationSeconds);
+        return false;
+    }
 
-            while (_recentFailures.TryPeek(out DateTimeOffset oldest) && oldest < cutoff)
-            {
-                _recentFailures.TryDequeue(out _);
-            }
+    private bool ShouldTransitionToHalfOpen()
+    {
+        if (!LastOpenTime.HasValue)
+        {
+            return false;
+        }
+
+        TimeSpan elapsed = DateTimeOffset.UtcNow - LastOpenTime.Value;
+        return elapsed >= TimeSpan.FromSeconds(_options.CircuitBreakerDurationSeconds);
+    }
+
+    private void TransitionTo(CircuitBreakerState newState)
+    {
+        _state = newState;
+
+        if (newState == CircuitBreakerState.Open)
+        {
+            LastOpenTime = DateTimeOffset.UtcNow;
+            Interlocked.Increment(ref _circuitTripCount);
+        }
+        else if (newState == CircuitBreakerState.Closed)
+        {
+            LastOpenTime = null;
+        }
+    }
+
+    private void CleanupOldFailures()
+    {
+        DateTimeOffset cutoff = DateTimeOffset.UtcNow.AddSeconds(-_options.CircuitBreakerSamplingDurationSeconds);
+
+        while (_recentFailures.TryPeek(out DateTimeOffset oldest) && oldest < cutoff)
+        {
+            _recentFailures.TryDequeue(out _);
         }
     }
 }

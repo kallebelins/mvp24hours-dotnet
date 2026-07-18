@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,297 +11,296 @@ using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
+namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
+
+/// <summary>
+/// Consume filter that extracts tenant information from message headers and sets the tenant context.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This filter integrates with the CQRS module's <c>ITenantContextAccessor</c> to propagate
+/// tenant information throughout the message handling pipeline.
+/// </para>
+/// <para>
+/// <strong>Header Extraction Flow:</strong>
+/// <code>
+/// ┌────────────────────────────────────────────────────────────────────────────┐
+/// │ Message Received                                                           │
+/// │   ├─ Extract x-tenant-id header                                            │
+/// │   ├─ Extract x-tenant-name header (optional)                               │
+/// │   ├─ Validate tenant exists (if enabled)                                   │
+/// │   ├─ Set ITenantContextAccessor.Context                                    │
+/// │   ├─ Store in filter context Items                                         │
+/// │   └─ Continue to next filter / consumer                                    │
+/// │                                                                            │
+/// │ On Message Without Tenant:                                                 │
+/// │   ├─ RejectMessagesWithoutTenant = true → Send to DLQ                      │
+/// │   └─ RejectMessagesWithoutTenant = false → Continue with null tenant       │
+/// └────────────────────────────────────────────────────────────────────────────┘
+/// </code>
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Creates a new tenant consume filter.
+/// </remarks>
+/// <param name="options">Multi-tenancy options.</param>
+/// <param name="logger">Optional logger.</param>
+public class TenantConsumeFilter(
+    IOptions<TenantRabbitMQOptions> options,
+    ILogger<TenantConsumeFilter>? logger = null) : ITenantConsumeFilter
 {
+    private readonly TenantRabbitMQOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<TenantConsumeFilter>? _logger = logger;
+    private static readonly AsyncLocal<TenantMessageContext?> _currentTenantContext = new();
+
     /// <summary>
-    /// Consume filter that extracts tenant information from message headers and sets the tenant context.
+    /// Gets the current tenant context from the message being processed.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This filter integrates with the CQRS module's <c>ITenantContextAccessor</c> to propagate
-    /// tenant information throughout the message handling pipeline.
-    /// </para>
-    /// <para>
-    /// <strong>Header Extraction Flow:</strong>
-    /// <code>
-    /// ┌────────────────────────────────────────────────────────────────────────────┐
-    /// │ Message Received                                                           │
-    /// │   ├─ Extract x-tenant-id header                                            │
-    /// │   ├─ Extract x-tenant-name header (optional)                               │
-    /// │   ├─ Validate tenant exists (if enabled)                                   │
-    /// │   ├─ Set ITenantContextAccessor.Context                                    │
-    /// │   ├─ Store in filter context Items                                         │
-    /// │   └─ Continue to next filter / consumer                                    │
-    /// │                                                                            │
-    /// │ On Message Without Tenant:                                                 │
-    /// │   ├─ RejectMessagesWithoutTenant = true → Send to DLQ                      │
-    /// │   └─ RejectMessagesWithoutTenant = false → Continue with null tenant       │
-    /// └────────────────────────────────────────────────────────────────────────────┘
-    /// </code>
-    /// </para>
-    /// </remarks>
-    public class TenantConsumeFilter : ITenantConsumeFilter
+    public static TenantMessageContext? Current => _currentTenantContext.Value;
+
+    /// <inheritdoc />
+    public string TenantIdHeader => _options.TenantIdHeader;
+
+    /// <inheritdoc />
+    public string TenantNameHeader => _options.TenantNameHeader;
+
+    /// <inheritdoc />
+    public bool RejectMessagesWithoutTenant => _options.RejectMessagesWithoutTenant;
+
+    /// <inheritdoc />
+    public bool ValidateTenantExists => _options.ValidateTenantExists;
+
+    /// <inheritdoc />
+    public async Task ConsumeAsync<TMessage>(
+        IConsumeFilterContext<TMessage> context,
+        ConsumeFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
     {
-        private readonly TenantRabbitMQOptions _options;
-        private readonly ILogger<TenantConsumeFilter>? _logger;
-        private static readonly AsyncLocal<TenantMessageContext?> _currentTenantContext = new();
+        // Extract tenant information from headers
+        string? tenantId = context.GetHeader<string>(TenantIdHeader);
+        string? tenantName = context.GetHeader<string>(TenantNameHeader);
 
-        /// <summary>
-        /// Gets the current tenant context from the message being processed.
-        /// </summary>
-        public static TenantMessageContext? Current => _currentTenantContext.Value;
-
-        /// <summary>
-        /// Creates a new tenant consume filter.
-        /// </summary>
-        /// <param name="options">Multi-tenancy options.</param>
-        /// <param name="logger">Optional logger.</param>
-        public TenantConsumeFilter(
-            IOptions<TenantRabbitMQOptions> options,
-            ILogger<TenantConsumeFilter>? logger = null)
+        // Check if tenant is required
+        if (string.IsNullOrEmpty(tenantId) && RejectMessagesWithoutTenant)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger;
+            LogTenantMissing(context.MessageId);
+            context.SendToDeadLetter($"Missing required header: {TenantIdHeader}");
+            return;
         }
 
-        /// <inheritdoc />
-        public string TenantIdHeader => _options.TenantIdHeader;
+        // Create tenant context
+        var tenantContext = new TenantMessageContext(tenantId, tenantName);
 
-        /// <inheritdoc />
-        public string TenantNameHeader => _options.TenantNameHeader;
-
-        /// <inheritdoc />
-        public bool RejectMessagesWithoutTenant => _options.RejectMessagesWithoutTenant;
-
-        /// <inheritdoc />
-        public bool ValidateTenantExists => _options.ValidateTenantExists;
-
-        /// <inheritdoc />
-        public async Task ConsumeAsync<TMessage>(
-            IConsumeFilterContext<TMessage> context,
-            ConsumeFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
+        // Validate tenant exists if configured
+        if (!string.IsNullOrEmpty(tenantId) && ValidateTenantExists)
         {
-            // Extract tenant information from headers
-            var tenantId = context.GetHeader<string>(TenantIdHeader);
-            var tenantName = context.GetHeader<string>(TenantNameHeader);
-
-            // Check if tenant is required
-            if (string.IsNullOrEmpty(tenantId) && RejectMessagesWithoutTenant)
+            bool isValid = await ValidateTenantAsync(tenantId, context.ServiceProvider, cancellationToken);
+            if (!isValid)
             {
-                LogTenantMissing(context.MessageId);
-                context.SendToDeadLetter($"Missing required header: {TenantIdHeader}");
+                LogTenantInvalid(tenantId, context.MessageId);
+                context.SendToDeadLetter($"Invalid tenant: {tenantId}");
                 return;
             }
-
-            // Create tenant context
-            var tenantContext = new TenantMessageContext(tenantId, tenantName);
-
-            // Validate tenant exists if configured
-            if (!string.IsNullOrEmpty(tenantId) && ValidateTenantExists)
-            {
-                var isValid = await ValidateTenantAsync(tenantId, context.ServiceProvider, cancellationToken);
-                if (!isValid)
-                {
-                    LogTenantInvalid(tenantId, context.MessageId);
-                    context.SendToDeadLetter($"Invalid tenant: {tenantId}");
-                    return;
-                }
-            }
-
-            // Store in AsyncLocal for downstream access
-            TenantMessageContext? previousContext = _currentTenantContext.Value;
-            _currentTenantContext.Value = tenantContext;
-
-            // Store in filter context Items
-            context.Items["TenantId"] = tenantId;
-            context.Items["TenantName"] = tenantName;
-            context.Items["TenantContext"] = tenantContext;
-
-            // Try to set ITenantContextAccessor if available (from CQRS module)
-            TrySetTenantContextAccessor(context.ServiceProvider, tenantId, tenantName);
-
-            LogTenantContextSet(tenantId, tenantName, context.MessageId);
-
-            try
-            {
-                await next(context, cancellationToken);
-            }
-            finally
-            {
-                // Restore previous context
-                _currentTenantContext.Value = previousContext;
-
-                // Clear ITenantContextAccessor
-                TryClearTenantContextAccessor(context.ServiceProvider);
-
-                LogTenantContextCleared(tenantId, context.MessageId);
-            }
         }
 
-        private async Task<bool> ValidateTenantAsync(string tenantId, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        // Store in AsyncLocal for downstream access
+        TenantMessageContext? previousContext = _currentTenantContext.Value;
+        _currentTenantContext.Value = tenantContext;
+
+        // Store in filter context Items
+        context.Items["TenantId"] = tenantId;
+        context.Items["TenantName"] = tenantName;
+        context.Items["TenantContext"] = tenantContext;
+
+        // Try to set ITenantContextAccessor if available (from CQRS module)
+        TrySetTenantContextAccessor(context.ServiceProvider, tenantId, tenantName);
+
+        LogTenantContextSet(tenantId, tenantName, context.MessageId);
+
+        try
         {
-            // Try to resolve ITenantStore from CQRS module
-            var tenantStoreType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantStore, Mvp24Hours.Infrastructure.Cqrs");
-            if (tenantStoreType != null)
+            await next(context, cancellationToken);
+        }
+        finally
+        {
+            // Restore previous context
+            _currentTenantContext.Value = previousContext;
+
+            // Clear ITenantContextAccessor
+            TryClearTenantContextAccessor(context.ServiceProvider);
+
+            LogTenantContextCleared(tenantId, context.MessageId);
+        }
+    }
+
+    private async Task<bool> ValidateTenantAsync(string tenantId, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        // Try to resolve ITenantStore from CQRS module
+        var tenantStoreType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantStore, Mvp24Hours.Infrastructure.Cqrs");
+        if (tenantStoreType != null)
+        {
+            object? tenantStore = serviceProvider.GetService(tenantStoreType);
+            if (tenantStore != null)
             {
-                var tenantStore = serviceProvider.GetService(tenantStoreType);
-                if (tenantStore != null)
+                // Use reflection to call GetByIdAsync
+                MethodInfo? method = tenantStoreType.GetMethod("GetByIdAsync");
+                if (method != null)
                 {
-                    // Use reflection to call GetByIdAsync
-                    MethodInfo? method = tenantStoreType.GetMethod("GetByIdAsync");
-                    if (method != null)
+                    if (method.Invoke(tenantStore, [tenantId, cancellationToken]) is Task task)
                     {
-                        var task = method.Invoke(tenantStore, new object[] { tenantId, cancellationToken }) as Task;
-                        if (task != null)
-                        {
-                            await task;
-                            PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
-                            var result = resultProperty?.GetValue(task);
-                            return result != null;
-                        }
+                        await task;
+                        PropertyInfo? resultProperty = task.GetType().GetProperty("Result");
+                        object? result = resultProperty?.GetValue(task);
+                        return result != null;
                     }
                 }
             }
-
-            // Check ITenantRabbitMQResolver
-            ITenantRabbitMQResolver? resolver = serviceProvider.GetService<ITenantRabbitMQResolver>();
-            if (resolver != null)
-            {
-                TenantRabbitMQConfiguration? config = await resolver.ResolveAsync(tenantId, cancellationToken);
-                return config != null && config.IsEnabled;
-            }
-
-            // Check static configuration
-            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
-            {
-                return staticConfig.IsEnabled;
-            }
-
-            // Default: allow all tenants if no validation source is available
-            return true;
         }
 
-        private void TrySetTenantContextAccessor(IServiceProvider serviceProvider, string? tenantId, string? tenantName)
+        // Check ITenantRabbitMQResolver
+        ITenantRabbitMQResolver? resolver = serviceProvider.GetService<ITenantRabbitMQResolver>();
+        if (resolver != null)
         {
-            if (string.IsNullOrEmpty(tenantId))
-                return;
-
-            try
-            {
-                // Try to resolve ITenantContextAccessor from CQRS module
-                var accessorType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantContextAccessor, Mvp24Hours.Infrastructure.Cqrs");
-                if (accessorType == null)
-                    return;
-
-                var accessor = serviceProvider.GetService(accessorType);
-                if (accessor == null)
-                    return;
-
-                // Create TenantContext
-                var contextType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.TenantContext, Mvp24Hours.Infrastructure.Cqrs");
-                if (contextType == null)
-                    return;
-
-                var tenantContextInstance = Activator.CreateInstance(
-                    contextType,
-                    tenantId, tenantName, null, null, null);
-
-                // Set Context property
-                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
-                contextProperty?.SetValue(accessor, tenantContextInstance);
-            }
-            catch (Exception ex)
-            {
-                // Log but don't fail - CQRS module may not be available
-                _logger?.LogDebug(ex, "Could not set ITenantContextAccessor");
-            }
+            TenantRabbitMQConfiguration? config = await resolver.ResolveAsync(tenantId, cancellationToken);
+            return config != null && config.IsEnabled;
         }
 
-        private void TryClearTenantContextAccessor(IServiceProvider serviceProvider)
+        // Check static configuration
+        if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
         {
-            try
-            {
-                var accessorType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantContextAccessor, Mvp24Hours.Infrastructure.Cqrs");
-                if (accessorType == null)
-                    return;
-
-                var accessor = serviceProvider.GetService(accessorType);
-                if (accessor == null)
-                    return;
-
-                PropertyInfo? contextProperty = accessorType.GetProperty("Context");
-                contextProperty?.SetValue(accessor, null);
-            }
-            catch
-            {
-                // Ignore errors when clearing
-            }
+            return staticConfig.IsEnabled;
         }
 
-        #region Logging
-
-        private void LogTenantContextSet(string? tenantId, string? tenantName, string messageId)
-        {
-            _logger?.LogDebug(
-                "Tenant context set. TenantId={TenantId}, TenantName={TenantName}, MessageId={MessageId}",
-                tenantId, tenantName, messageId);
-        }
-
-        private void LogTenantContextCleared(string? tenantId, string messageId)
-        {
-            _logger?.LogDebug(
-                "Tenant context cleared. TenantId={TenantId}, MessageId={MessageId}",
-                tenantId, messageId);
-        }
-
-        private void LogTenantMissing(string messageId)
-        {
-            _logger?.LogWarning(
-                "Message rejected: missing tenant header. MessageId={MessageId}",
-                messageId);
-        }
-
-        private void LogTenantInvalid(string tenantId, string messageId)
-        {
-            _logger?.LogWarning(
-                "Message rejected: invalid tenant. TenantId={TenantId}, MessageId={MessageId}",
-                tenantId, messageId);
-        }
-
-        #endregion
+        // Default: allow all tenants if no validation source is available
+        return true;
     }
+
+    private void TrySetTenantContextAccessor(IServiceProvider serviceProvider, string? tenantId, string? tenantName)
+    {
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            return;
+        }
+
+        try
+        {
+            // Try to resolve ITenantContextAccessor from CQRS module
+            var accessorType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantContextAccessor, Mvp24Hours.Infrastructure.Cqrs");
+            if (accessorType == null)
+            {
+                return;
+            }
+
+            object? accessor = serviceProvider.GetService(accessorType);
+            if (accessor == null)
+            {
+                return;
+            }
+
+            // Create TenantContext
+            var contextType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.TenantContext, Mvp24Hours.Infrastructure.Cqrs");
+            if (contextType == null)
+            {
+                return;
+            }
+
+            object? tenantContextInstance = Activator.CreateInstance(
+                contextType,
+                tenantId, tenantName, null, null, null);
+
+            // Set Context property
+            PropertyInfo? contextProperty = accessorType.GetProperty("Context");
+            contextProperty?.SetValue(accessor, tenantContextInstance);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail - CQRS module may not be available
+            _logger?.LogDebug(ex, "Could not set ITenantContextAccessor");
+        }
+    }
+
+    private void TryClearTenantContextAccessor(IServiceProvider serviceProvider)
+    {
+        try
+        {
+            var accessorType = Type.GetType("Mvp24Hours.Infrastructure.Cqrs.MultiTenancy.ITenantContextAccessor, Mvp24Hours.Infrastructure.Cqrs");
+            if (accessorType == null)
+            {
+                return;
+            }
+
+            object? accessor = serviceProvider.GetService(accessorType);
+            if (accessor == null)
+            {
+                return;
+            }
+
+            PropertyInfo? contextProperty = accessorType.GetProperty("Context");
+            contextProperty?.SetValue(accessor, null);
+        }
+        catch
+        {
+            // Ignore errors when clearing
+        }
+    }
+
+    #region Logging
+
+    private void LogTenantContextSet(string? tenantId, string? tenantName, string messageId)
+    {
+        _logger?.LogDebug(
+            "Tenant context set. TenantId={TenantId}, TenantName={TenantName}, MessageId={MessageId}",
+            tenantId, tenantName, messageId);
+    }
+
+    private void LogTenantContextCleared(string? tenantId, string messageId)
+    {
+        _logger?.LogDebug(
+            "Tenant context cleared. TenantId={TenantId}, MessageId={MessageId}",
+            tenantId, messageId);
+    }
+
+    private void LogTenantMissing(string messageId)
+    {
+        _logger?.LogWarning(
+            "Message rejected: missing tenant header. MessageId={MessageId}",
+            messageId);
+    }
+
+    private void LogTenantInvalid(string tenantId, string messageId)
+    {
+        _logger?.LogWarning(
+            "Message rejected: invalid tenant. TenantId={TenantId}, MessageId={MessageId}",
+            tenantId, messageId);
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Represents the tenant context extracted from a message.
+/// </summary>
+/// <remarks>
+/// Creates a new tenant message context.
+/// </remarks>
+/// <param name="tenantId">The tenant ID.</param>
+/// <param name="tenantName">The tenant name.</param>
+public class TenantMessageContext(string? tenantId, string? tenantName)
+{
 
     /// <summary>
-    /// Represents the tenant context extracted from a message.
+    /// Gets the tenant ID.
     /// </summary>
-    public class TenantMessageContext
-    {
-        /// <summary>
-        /// Creates a new tenant message context.
-        /// </summary>
-        /// <param name="tenantId">The tenant ID.</param>
-        /// <param name="tenantName">The tenant name.</param>
-        public TenantMessageContext(string? tenantId, string? tenantName)
-        {
-            TenantId = tenantId;
-            TenantName = tenantName;
-        }
+    public string? TenantId { get; } = tenantId;
 
-        /// <summary>
-        /// Gets the tenant ID.
-        /// </summary>
-        public string? TenantId { get; }
+    /// <summary>
+    /// Gets the tenant name.
+    /// </summary>
+    public string? TenantName { get; } = tenantName;
 
-        /// <summary>
-        /// Gets the tenant name.
-        /// </summary>
-        public string? TenantName { get; }
-
-        /// <summary>
-        /// Gets whether a tenant is set.
-        /// </summary>
-        public bool HasTenant => !string.IsNullOrEmpty(TenantId);
-    }
+    /// <summary>
+    /// Gets whether a tenant is set.
+    /// </summary>
+    public bool HasTenant => !string.IsNullOrEmpty(TenantId);
 }
 

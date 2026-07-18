@@ -8,18 +8,17 @@ using System.Text.Json.Serialization;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Enums;
 using Mvp24Hours.Core.Entities;
 
-namespace Mvp24Hours.Application.PostgreSql.Test.Support.Entities
+namespace Mvp24Hours.Application.PostgreSql.Test.Support.Entities;
+
+public class Contact : EntityBase<int>
 {
-    public class Contact : EntityBase<int>
-    {
-        [Required]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ContactType Type { get; set; }
+    [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ContactType Type { get; set; }
 
-        [Required]
-        public string Description { get; set; } = string.Empty;
+    [Required]
+    public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public bool Active { get; set; }
-    }
+    [Required]
+    public bool Active { get; set; }
 }

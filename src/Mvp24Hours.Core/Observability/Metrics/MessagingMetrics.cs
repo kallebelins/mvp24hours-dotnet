@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -478,7 +477,10 @@ public sealed class MessagingMetrics
         /// <summary>
         /// Marks the publish as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()
@@ -517,12 +519,18 @@ public sealed class MessagingMetrics
         /// <summary>
         /// Marks the consume as completed successfully.
         /// </summary>
-        public void Complete() => Succeeded = true;
+        public void Complete()
+        {
+            Succeeded = true;
+        }
 
         /// <summary>
         /// Marks the consume as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()

@@ -4,41 +4,39 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Dynamic;
-using System.IO;
 using System.Runtime.Serialization;
 using Mvp24Hours.Extensions;
 
-namespace Mvp24Hours.Helpers
+namespace Mvp24Hours.Helpers;
+
+/// <summary>
+/// Contains functions to transform object (clone, serialize, ...)
+/// </summary>
+public static class ObjectHelper
 {
     /// <summary>
-    /// Contains functions to transform object (clone, serialize, ...)
+    /// Clone object instance with binary method in memory
     /// </summary>
-    public static class ObjectHelper
+    public static T? Clone<T>(T source)
     {
-        /// <summary>
-        /// Clone object instance with binary method in memory
-        /// </summary>
-        public static T? Clone<T>(T source)
+        if (source == null)
         {
-            if (source == null)
-            {
-                return default;
-            }
-
-            DataContractSerializer dcSer = new(source.GetType());
-            MemoryStream memoryStream = new();
-            dcSer.WriteObject(memoryStream, source);
-            memoryStream.Position = 0;
-            return (T?)dcSer.ReadObject(memoryStream);
+            return default;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static dynamic ConvertToDynamic(object obj)
-        {
-            string json = obj?.ToSerialize() ?? "{}";
-            return json.ToDeserialize<ExpandoObject>() ?? new ExpandoObject();
-        }
+        DataContractSerializer dcSer = new(source.GetType());
+        MemoryStream memoryStream = new();
+        dcSer.WriteObject(memoryStream, source);
+        memoryStream.Position = 0;
+        return (T?)dcSer.ReadObject(memoryStream);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static dynamic ConvertToDynamic(object obj)
+    {
+        string json = obj?.ToSerialize() ?? "{}";
+        return json.ToDeserialize<ExpandoObject>() ?? new ExpandoObject();
     }
 }

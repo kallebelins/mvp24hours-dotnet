@@ -3,153 +3,142 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
+namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry;
+
+/// <summary>
+/// A typed operation wrapper that adds OpenTelemetry tracing to the wrapped operation.
+/// </summary>
+/// <typeparam name="TInput">The input type.</typeparam>
+/// <typeparam name="TOutput">The output type.</typeparam>
+/// <remarks>
+/// Creates a new tracing typed operation.
+/// </remarks>
+/// <param name="innerOperation">The operation to wrap.</param>
+/// <param name="logger">Optional logger.</param>
+/// <param name="operationName">Optional custom operation name for the span.</param>
+public class TracingTypedOperation<TInput, TOutput>(
+    ITypedOperationAsync<TInput, TOutput> innerOperation,
+    ILogger<TracingTypedOperation<TInput, TOutput>>? logger = null,
+    string? operationName = null) : ITypedOperationAsync<TInput, TOutput>
 {
-    /// <summary>
-    /// A typed operation wrapper that adds OpenTelemetry tracing to the wrapped operation.
-    /// </summary>
-    /// <typeparam name="TInput">The input type.</typeparam>
-    /// <typeparam name="TOutput">The output type.</typeparam>
-    public class TracingTypedOperation<TInput, TOutput> : ITypedOperationAsync<TInput, TOutput>
+    private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
+
+    private readonly ITypedOperationAsync<TInput, TOutput> _innerOperation = innerOperation ?? throw new ArgumentNullException(nameof(innerOperation));
+    private readonly ILogger<TracingTypedOperation<TInput, TOutput>>? _logger = logger;
+    private readonly string _operationName = operationName ?? innerOperation.GetType().Name;
+
+    /// <inheritdoc/>
+    public bool IsRequired => _innerOperation.IsRequired;
+
+    /// <inheritdoc/>
+    public async Task<IOperationResult<TOutput>> ExecuteAsync(TInput input, CancellationToken cancellationToken = default)
     {
-        private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
+        string spanName = $"TypedOperation.{_operationName}";
 
-        private readonly ITypedOperationAsync<TInput, TOutput> _innerOperation;
-        private readonly ILogger<TracingTypedOperation<TInput, TOutput>>? _logger;
-        private readonly string _operationName;
+        using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
 
-        /// <summary>
-        /// Creates a new tracing typed operation.
-        /// </summary>
-        /// <param name="innerOperation">The operation to wrap.</param>
-        /// <param name="logger">Optional logger.</param>
-        /// <param name="operationName">Optional custom operation name for the span.</param>
-        public TracingTypedOperation(
-            ITypedOperationAsync<TInput, TOutput> innerOperation,
-            ILogger<TracingTypedOperation<TInput, TOutput>>? logger = null,
-            string? operationName = null)
+        if (activity != null)
         {
-            _innerOperation = innerOperation ?? throw new ArgumentNullException(nameof(innerOperation));
-            _logger = logger;
-            _operationName = operationName ?? innerOperation.GetType().Name;
+            activity.SetTag("operation.type", _innerOperation.GetType().FullName);
+            activity.SetTag("operation.input_type", typeof(TInput).Name);
+            activity.SetTag("operation.output_type", typeof(TOutput).Name);
+            activity.SetTag("operation.is_required", _innerOperation.IsRequired);
         }
 
-        /// <inheritdoc/>
-        public bool IsRequired => _innerOperation.IsRequired;
-
-        /// <inheritdoc/>
-        public async Task<IOperationResult<TOutput>> ExecuteAsync(TInput input, CancellationToken cancellationToken = default)
+        try
         {
-            var spanName = $"TypedOperation.{_operationName}";
-
-            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+            IOperationResult<TOutput> result = await _innerOperation.ExecuteAsync(input, cancellationToken);
 
             if (activity != null)
             {
-                activity.SetTag("operation.type", _innerOperation.GetType().FullName);
-                activity.SetTag("operation.input_type", typeof(TInput).Name);
-                activity.SetTag("operation.output_type", typeof(TOutput).Name);
-                activity.SetTag("operation.is_required", _innerOperation.IsRequired);
-            }
-
-            try
-            {
-                IOperationResult<TOutput> result = await _innerOperation.ExecuteAsync(input, cancellationToken);
-
-                if (activity != null)
+                if (result.IsSuccess)
                 {
-                    if (result.IsSuccess)
-                    {
-                        activity.SetStatus(ActivityStatusCode.Ok);
-                        activity.SetTag("operation.result", "success");
-                    }
-                    else
-                    {
-                        activity.SetStatus(ActivityStatusCode.Error, result.ErrorMessage);
-                        activity.SetTag("operation.result", "failure");
-                        activity.SetTag("operation.error_message", result.ErrorMessage);
-                    }
-
-                    activity.SetTag("operation.message_count", result.Messages.Count);
+                    activity.SetStatus(ActivityStatusCode.Ok);
+                    activity.SetTag("operation.result", "success");
+                }
+                else
+                {
+                    activity.SetStatus(ActivityStatusCode.Error, result.ErrorMessage);
+                    activity.SetTag("operation.result", "failure");
+                    activity.SetTag("operation.error_message", result.ErrorMessage);
                 }
 
-                return result;
+                activity.SetTag("operation.message_count", result.Messages.Count);
             }
-            catch (OperationCanceledException ex)
-            {
-                if (activity != null)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, "Cancelled");
-                    activity.SetTag("operation.cancelled", true);
-                    RecordException(activity, ex);
-                }
-                throw;
-            }
-            catch (Exception ex)
-            {
-                if (activity != null)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    RecordException(activity, ex);
-                }
 
-                _logger?.LogError(ex, "Error executing operation {OperationName}", _operationName);
-                return OperationResult<TOutput>.Failure(ex);
-            }
+            return result;
         }
-
-        /// <inheritdoc/>
-        public async Task RollbackAsync(TInput input, CancellationToken cancellationToken = default)
+        catch (OperationCanceledException ex)
         {
-            var spanName = $"TypedOperation.{_operationName}.Rollback";
-
-            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
-
             if (activity != null)
             {
-                activity.SetTag("operation.type", _innerOperation.GetType().FullName);
-                activity.SetTag("operation.is_rollback", true);
+                activity.SetStatus(ActivityStatusCode.Error, "Cancelled");
+                activity.SetTag("operation.cancelled", true);
+                RecordException(activity, ex);
             }
-
-            try
-            {
-                await _innerOperation.RollbackAsync(input, cancellationToken);
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-                if (activity != null)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    RecordException(activity, ex);
-                }
-                throw;
-            }
+            throw;
         }
-
-        private static void RecordException(Activity activity, Exception exception)
+        catch (Exception ex)
         {
-            var tags = new ActivityTagsCollection
+            if (activity != null)
             {
-                { "exception.type", exception.GetType().FullName },
-                { "exception.message", exception.Message }
-            };
-
-            if (exception.StackTrace != null)
-            {
-                tags.Add("exception.stacktrace", exception.StackTrace);
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                RecordException(activity, ex);
             }
 
-            activity.AddEvent(new ActivityEvent("exception", tags: tags));
+            _logger?.LogError(ex, "Error executing operation {OperationName}", _operationName);
+            return OperationResult<TOutput>.Failure(ex);
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task RollbackAsync(TInput input, CancellationToken cancellationToken = default)
+    {
+        string spanName = $"TypedOperation.{_operationName}.Rollback";
+
+        using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+
+        if (activity != null)
+        {
+            activity.SetTag("operation.type", _innerOperation.GetType().FullName);
+            activity.SetTag("operation.is_rollback", true);
+        }
+
+        try
+        {
+            await _innerOperation.RollbackAsync(input, cancellationToken);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (Exception ex)
+        {
+            if (activity != null)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                RecordException(activity, ex);
+            }
+            throw;
+        }
+    }
+
+    private static void RecordException(Activity activity, Exception exception)
+    {
+        var tags = new ActivityTagsCollection
+        {
+            { "exception.type", exception.GetType().FullName },
+            { "exception.message", exception.Message }
+        };
+
+        if (exception.StackTrace != null)
+        {
+            tags.Add("exception.stacktrace", exception.StackTrace);
+        }
+
+        activity.AddEvent(new ActivityEvent("exception", tags: tags));
     }
 }
 

@@ -3,11 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Extensions.KeyedServices;
-using Xunit;
 
 namespace Mvp24Hours.Core.Test;
 
@@ -28,18 +25,27 @@ public class KeyedServicesTest
     [Trait("Category", "Unit")]
     public class ServiceA : ITestService
     {
-        public string GetName() => "ServiceA";
+        public string GetName()
+        {
+            return "ServiceA";
+        }
     }
 
     public class ServiceB : ITestService
     {
-        public string GetName() => "ServiceB";
+        public string GetName()
+        {
+            return "ServiceB";
+        }
     }
 
     [Trait("Category", "Unit")]
     public class ServiceC : ITestService
     {
-        public string GetName() => "ServiceC";
+        public string GetName()
+        {
+            return "ServiceC";
+        }
     }
 
     public interface ITestDependency
@@ -50,33 +56,40 @@ public class KeyedServicesTest
     [Trait("Category", "Unit")]
     public class TestDependency : ITestDependency
     {
-        public string GetValue() => "dependency-value";
+        public string GetValue()
+        {
+            return "dependency-value";
+        }
     }
 
-    public class ServiceWithDependency : ITestService
+    public class ServiceWithDependency(KeyedServicesTest.ITestDependency dependency) : ITestService
     {
-        private readonly ITestDependency _dependency;
+        private readonly ITestDependency _dependency = dependency;
 
-        public ServiceWithDependency(ITestDependency dependency)
+        public string GetName()
         {
-            _dependency = dependency;
+            return $"ServiceWithDependency:{_dependency.GetValue()}";
         }
-
-        public string GetName() => $"ServiceWithDependency:{_dependency.GetValue()}";
     }
 
     [KeyedService("test:attributed", typeof(ITestService))]
     [Trait("Category", "Unit")]
     public class AttributedService : ITestService
     {
-        public string GetName() => "AttributedService";
+        public string GetName()
+        {
+            return "AttributedService";
+        }
     }
 
     [KeyedService("test:scoped", typeof(ITestService), Lifetime = ServiceLifetime.Scoped)]
     [Trait("Category", "Unit")]
     public class ScopedAttributedService : ITestService
     {
-        public string GetName() => "ScopedAttributedService";
+        public string GetName()
+        {
+            return "ScopedAttributedService";
+        }
     }
 
     #endregion
@@ -131,11 +144,11 @@ public class KeyedServicesTest
     public void ServiceKeys_Tenant_ForTenant_CreatesCorrectKey()
     {
         // Arrange
-        var tenantId = "tenant-123";
-        var category = "Database";
+        string tenantId = "tenant-123";
+        string category = "Database";
 
         // Act
-        var key = ServiceKeys.Tenant.ForTenant(category, tenantId);
+        string key = ServiceKeys.Tenant.ForTenant(category, tenantId);
 
         // Assert
         Assert.Equal("Tenant:tenant-123:Database", key);
@@ -145,10 +158,10 @@ public class KeyedServicesTest
     public void ServiceKeys_Tenant_DatabaseForTenant_CreatesCorrectKey()
     {
         // Arrange
-        var tenantId = "tenant-456";
+        string tenantId = "tenant-456";
 
         // Act
-        var key = ServiceKeys.Tenant.DatabaseForTenant(tenantId);
+        string key = ServiceKeys.Tenant.DatabaseForTenant(tenantId);
 
         // Assert
         Assert.Equal("Tenant:tenant-456:Database", key);
@@ -158,10 +171,10 @@ public class KeyedServicesTest
     public void ServiceKeys_Tenant_CacheForTenant_CreatesCorrectKey()
     {
         // Arrange
-        var tenantId = "tenant-789";
+        string tenantId = "tenant-789";
 
         // Act
-        var key = ServiceKeys.Tenant.CacheForTenant(tenantId);
+        string key = ServiceKeys.Tenant.CacheForTenant(tenantId);
 
         // Assert
         Assert.Equal("Tenant:tenant-789:Cache", key);
@@ -205,14 +218,11 @@ public class KeyedServicesTest
         services.AddSingleton<ITestDependency, TestDependency>();
 
         // Act
-        services.AddKeyedServices<ITestService>(config =>
-        {
-            config.AddKeyed("key:factory", (sp, _) =>
+        services.AddKeyedServices<ITestService>(config => config.AddKeyed("key:factory", (sp, _) =>
             {
                 ITestDependency dep = sp.GetRequiredService<ITestDependency>();
                 return new ServiceWithDependency(dep);
-            });
-        });
+            }));
 
         ServiceProvider provider = services.BuildServiceProvider();
 
@@ -659,7 +669,7 @@ public class KeyedServicesTest
     {
         // Arrange
         var services = new ServiceCollection();
-        var initialCount = services.Count;
+        int initialCount = services.Count;
 
         // Act - Should not throw
         services.RemoveKeyedService<ITestService>("key:nonexistent");

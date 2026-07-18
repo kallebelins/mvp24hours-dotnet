@@ -4,12 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
@@ -52,27 +48,20 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursRequestLogging();
 /// </code>
 /// </example>
-public class RequestLoggingMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="RequestLoggingMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="logger">The request logger service.</param>
+/// <param name="options">The logging options.</param>
+public class RequestLoggingMiddleware(
+    RequestDelegate next,
+    IRequestLogger logger,
+    IOptions<RequestLoggingOptions> options)
 {
-    private readonly RequestDelegate _next;
-    private readonly IRequestLogger _logger;
-    private readonly RequestLoggingOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="RequestLoggingMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="logger">The request logger service.</param>
-    /// <param name="options">The logging options.</param>
-    public RequestLoggingMiddleware(
-        RequestDelegate next,
-        IRequestLogger logger,
-        IOptions<RequestLoggingOptions> options)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly IRequestLogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly RequestLoggingOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     /// <summary>
     /// Processes the HTTP request with logging.
@@ -130,7 +119,7 @@ public class RequestLoggingMiddleware
             // Log slow request warning if applicable
             if (exception == null && _options.LogSlowRequests)
             {
-                var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+                double durationMs = stopwatch.Elapsed.TotalMilliseconds;
                 if (durationMs > _options.SlowRequestThresholdMs)
                 {
                     await _logger.LogSlowRequestAsync(context, durationMs, _options.SlowRequestThresholdMs);
@@ -167,9 +156,11 @@ public class RequestLoggingMiddleware
     private bool ShouldSkipLogging(HttpContext context)
     {
         if (_options.LoggingLevel == RequestLoggingLevel.None)
+        {
             return true;
+        }
 
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
 
         return _options.ExcludedPaths.Any(pattern => MatchesPattern(path, pattern));
     }
@@ -177,7 +168,7 @@ public class RequestLoggingMiddleware
     private static bool MatchesPattern(string path, string pattern)
     {
         // Convert glob pattern to regex
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

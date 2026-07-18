@@ -5,16 +5,15 @@
 //=====================================================================================
 using AutoMapper;
 
-namespace Mvp24Hours.Core.Contract.Mappings
+namespace Mvp24Hours.Core.Contract.Mappings;
+
+/// <summary>
+/// Dynamic service mapping contract
+/// </summary>
+public interface IMapFrom
 {
     /// <summary>
-    /// Dynamic service mapping contract
+    /// Apply mapping
     /// </summary>
-    public interface IMapFrom
-    {
-        /// <summary>
-        /// Apply mapping
-        /// </summary>
-        void Mapping(Profile profile);
-    }
+    void Mapping(Profile profile);
 }

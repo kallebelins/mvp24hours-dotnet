@@ -3,14 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Mvp24Hours.Core.Helpers;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
+
+[Serializable]
+public sealed class MongoDbRepositoryOptions
 {
-    [Serializable]
-    public sealed class MongoDbRepositoryOptions
-    {
-        public int MaxQtyByQueryPage { get; set; } = ContantsHelper.Data.MaxQtyByQueryPage;
-    }
+    public int MaxQtyByQueryPage { get; set; } = ContantsHelper.Data.MaxQtyByQueryPage;
 }

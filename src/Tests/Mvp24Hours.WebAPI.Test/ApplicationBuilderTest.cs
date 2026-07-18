@@ -3,9 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,214 +14,171 @@ using Mvp24Hours.WebAPI.Extensions;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Patterns.Test
+namespace Mvp24Hours.Patterns.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class ApplicationBuilderTest
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class ApplicationBuilderTest
+    [Fact]
+    public async Task TestExceptions1()
     {
-        [Fact]
-        public async Task TestExceptions1()
-        {
-            // arrange
-            using IHost host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices(services =>
+        // arrange
+        using IHost host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddRouting();
+                        services.AddMvp24HoursWebExceptions(x => x.TraceMiddleware = false);
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMvp24HoursExceptionHandling();
+                        app.UseEndpoints(endpoints => endpoints.MapGet("/", (_) => throw new System.Exception()));
+                    }))
+            .StartAsync();
+
+        // act
+        HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
+
+        // assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestExceptions2()
+    {
+        // arrange
+        using IHost host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddRouting();
+                        services.AddMvp24HoursWebExceptions(x =>
                         {
-                            services.AddRouting();
-                            services.AddMvp24HoursWebExceptions(x =>
-                            {
-                                x.TraceMiddleware = false;
-                            });
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseMvp24HoursExceptionHandling();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapGet("/", (_) => { throw new System.Exception(); });
-                            });
+                            x.TraceMiddleware = false;
+                            x.StatusCodeHandle = (Exception exception) => exception is NotImplementedException ? (int)HttpStatusCode.BadRequest : (int)HttpStatusCode.InternalServerError;
                         });
-                })
-                .StartAsync();
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMvp24HoursExceptionHandling();
+                        app.UseEndpoints(endpoints => endpoints.MapGet("/", requestDelegate: (_) => throw new NotImplementedException()));
+                    }))
+            .StartAsync();
 
-            // act
-            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
+        // act
+        HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
-            // assert
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-        }
+        // assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 
-        [Fact]
-        public async Task TestExceptions2()
-        {
-            // arrange
-            using IHost host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices(services =>
+    [Fact]
+    public async Task TestCors1()
+    {
+        // arrange
+        using IHost host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddRouting();
+                        services.AddMvp24HoursWebCors(x =>
                         {
-                            services.AddRouting();
-                            services.AddMvp24HoursWebExceptions(x =>
+                            x.AllowAll = true;
+                            x.AllowRequestOptions = true;
+                        });
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMvp24HoursCors();
+                        app.UseEndpoints(endpoints => endpoints.MapGet("/", async context => await context.Response.WriteAsync($"Running!")));
+                    }))
+            .StartAsync();
+
+        // act
+        HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
+
+        // assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestCors2()
+    {
+        // arrange
+        using IHost host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddRouting();
+                        services.AddMvp24HoursWebCors(x =>
+                        {
+                            x.AllowAll = false;
+                            x.AllowRequestOptions = false;
+                        });
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMvp24HoursCors();
+                        app.UseEndpoints(endpoints => endpoints.MapGet("/", async context =>
                             {
-                                x.TraceMiddleware = false;
-                                x.StatusCodeHandle = (Exception exception) =>
+                                if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Headers"))
                                 {
-                                    return exception is NotImplementedException ? (int)HttpStatusCode.BadRequest : (int)HttpStatusCode.InternalServerError;
-                                };
-                            });
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseMvp24HoursExceptionHandling();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapGet("/", requestDelegate: (_) => { throw new NotImplementedException(); });
-                            });
-                        });
-                })
-                .StartAsync();
+                                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                                }
+                                await context.Response.WriteAsync($"Running!");
+                            }));
+                    }))
+            .StartAsync();
 
-            // act
-            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
+        // act
+        HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
 
-            // assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        }
+        // assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+    }
 
-        [Fact]
-        public async Task TestCors1()
-        {
-            // arrange
-            using IHost host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices(services =>
-                        {
-                            services.AddRouting();
-                            services.AddMvp24HoursWebCors(x =>
+    [Fact]
+    public async Task TestCorrelationId1()
+    {
+        // arrange
+        using IHost host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services => services.AddRouting())
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMvp24HoursCorrelationId();
+                        app.UseEndpoints(endpoints => endpoints.MapGet("/", async context =>
                             {
-                                x.AllowAll = true;
-                                x.AllowRequestOptions = true;
-                            });
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseMvp24HoursCors();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapGet("/", async context =>
+                                if (context.TraceIdentifier != "123456")
                                 {
-                                    await context.Response.WriteAsync($"Running!");
-                                });
-                            });
-                        });
-                })
-                .StartAsync();
+                                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                                }
+                                await context.Response.WriteAsync($"Running!");
+                            }));
+                    }))
+            .StartAsync();
 
-            // act
-            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
+        // act
+        HttpClient client = host.GetTestClient();
+        client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-ID", "123456");
+        HttpResponseMessage response = await client.GetAsync("/");
 
-            // assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
-
-        [Fact]
-        public async Task TestCors2()
-        {
-            // arrange
-            using IHost host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices(services =>
-                        {
-                            services.AddRouting();
-                            services.AddMvp24HoursWebCors(x =>
-                            {
-                                x.AllowAll = false;
-                                x.AllowRequestOptions = false;
-                            });
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseMvp24HoursCors();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapGet("/", async context =>
-                                {
-                                    if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Headers"))
-                                    {
-                                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                                    }
-                                    await context.Response.WriteAsync($"Running!");
-                                });
-                            });
-                        });
-                })
-                .StartAsync();
-
-            // act
-            HttpResponseMessage response = await host.GetTestClient().GetAsync("/");
-
-            // assert
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-        }
-
-        [Fact]
-        public async Task TestCorrelationId1()
-        {
-            // arrange
-            using IHost host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices(services =>
-                        {
-                            services.AddRouting();
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseMvp24HoursCorrelationId();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapGet("/", async context =>
-                                {
-                                    if (context.TraceIdentifier != "123456")
-                                    {
-                                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                                    }
-                                    await context.Response.WriteAsync($"Running!");
-                                });
-                            });
-                        });
-                })
-                .StartAsync();
-
-            // act
-            HttpClient client = host.GetTestClient();
-            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-ID", "123456");
-            HttpResponseMessage response = await client.GetAsync("/");
-
-            // assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
+        // assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -331,9 +330,20 @@ public sealed class EFCoreMetrics : IDisposable
         _saveChangesCount.Add(1, tags);
         _saveChangesDuration.Record(durationMs, tags);
 
-        if (inserted > 0) _entitiesInserted.Add(inserted, tags);
-        if (updated > 0) _entitiesUpdated.Add(updated, tags);
-        if (deleted > 0) _entitiesDeleted.Add(deleted, tags);
+        if (inserted > 0)
+        {
+            _entitiesInserted.Add(inserted, tags);
+        }
+
+        if (updated > 0)
+        {
+            _entitiesUpdated.Add(updated, tags);
+        }
+
+        if (deleted > 0)
+        {
+            _entitiesDeleted.Add(deleted, tags);
+        }
     }
 
     #endregion

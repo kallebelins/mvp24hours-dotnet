@@ -3,302 +3,283 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
+
+/// <summary>
+/// Consume filter that provides OpenTelemetry integration with distributed tracing.
+/// Creates spans for message consumption with rich metadata.
+/// </summary>
+/// <remarks>
+/// Creates a new telemetry consume filter.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class TelemetryConsumeFilter(ILogger<TelemetryConsumeFilter>? logger = null) : IConsumeFilter
 {
+    private readonly ILogger<TelemetryConsumeFilter>? _logger = logger;
+
     /// <summary>
-    /// Consume filter that provides OpenTelemetry integration with distributed tracing.
-    /// Creates spans for message consumption with rich metadata.
+    /// The ActivitySource for creating spans.
     /// </summary>
-    public class TelemetryConsumeFilter : IConsumeFilter
+    public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Consumer", "1.0.0");
+
+    /// <inheritdoc />
+    public async Task ConsumeAsync<TMessage>(
+        IConsumeFilterContext<TMessage> context,
+        ConsumeFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
     {
-        private readonly ILogger<TelemetryConsumeFilter>? _logger;
+        string messageType = typeof(TMessage).Name;
+        string activityName = $"RabbitMQ Consume {messageType}";
 
-        /// <summary>
-        /// The ActivitySource for creating spans.
-        /// </summary>
-        public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Consumer", "1.0.0");
+        // Try to extract parent context from headers
+        ActivityContext parentContext = ExtractParentContext(context);
 
-        /// <summary>
-        /// Creates a new telemetry consume filter.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public TelemetryConsumeFilter(ILogger<TelemetryConsumeFilter>? logger = null)
+        using Activity? activity = ActivitySource.StartActivity(
+            activityName,
+            ActivityKind.Consumer,
+            parentContext);
+
+        if (activity != null)
         {
-            _logger = logger;
+            // Set standard messaging attributes
+            activity.SetTag("messaging.system", "rabbitmq");
+            activity.SetTag("messaging.operation", "receive");
+            activity.SetTag("messaging.destination", context.Exchange);
+            activity.SetTag("messaging.destination_kind", "topic");
+            activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
+            activity.SetTag("messaging.message_id", context.MessageId);
+            activity.SetTag("messaging.message_type", messageType);
+
+            // Set correlation IDs
+            if (!string.IsNullOrEmpty(context.CorrelationId))
+            {
+                activity.SetTag("messaging.correlation_id", context.CorrelationId);
+            }
+            if (!string.IsNullOrEmpty(context.CausationId))
+            {
+                activity.SetTag("messaging.causation_id", context.CausationId);
+            }
+
+            // Set queue info
+            activity.SetTag("messaging.consumer.queue", context.QueueName);
+            activity.SetTag("messaging.consumer.tag", context.ConsumerTag);
+            activity.SetTag("messaging.redelivered", context.Redelivered);
+            activity.SetTag("messaging.redelivery_count", context.RedeliveryCount);
+
+            // Store activity in Items for downstream access
+            context.Items["Activity"] = activity;
+            context.Items["TraceId"] = activity.TraceId.ToString();
+            context.Items["SpanId"] = activity.SpanId.ToString();
+
+            _logger?.LogDebug(
+                "Telemetry filter started. TraceId={TraceId}, SpanId={SpanId}",
+                activity.TraceId, activity.SpanId);
         }
 
-        /// <inheritdoc />
-        public async Task ConsumeAsync<TMessage>(
-            IConsumeFilterContext<TMessage> context,
-            ConsumeFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
+        try
         {
-            var messageType = typeof(TMessage).Name;
-            var activityName = $"RabbitMQ Consume {messageType}";
+            await next(context, cancellationToken);
 
-            // Try to extract parent context from headers
-            ActivityContext parentContext = ExtractParentContext(context);
-
-            using Activity? activity = ActivitySource.StartActivity(
-                activityName,
-                ActivityKind.Consumer,
-                parentContext);
-
-            if (activity != null)
-            {
-                // Set standard messaging attributes
-                activity.SetTag("messaging.system", "rabbitmq");
-                activity.SetTag("messaging.operation", "receive");
-                activity.SetTag("messaging.destination", context.Exchange);
-                activity.SetTag("messaging.destination_kind", "topic");
-                activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
-                activity.SetTag("messaging.message_id", context.MessageId);
-                activity.SetTag("messaging.message_type", messageType);
-
-                // Set correlation IDs
-                if (!string.IsNullOrEmpty(context.CorrelationId))
-                {
-                    activity.SetTag("messaging.correlation_id", context.CorrelationId);
-                }
-                if (!string.IsNullOrEmpty(context.CausationId))
-                {
-                    activity.SetTag("messaging.causation_id", context.CausationId);
-                }
-
-                // Set queue info
-                activity.SetTag("messaging.consumer.queue", context.QueueName);
-                activity.SetTag("messaging.consumer.tag", context.ConsumerTag);
-                activity.SetTag("messaging.redelivered", context.Redelivered);
-                activity.SetTag("messaging.redelivery_count", context.RedeliveryCount);
-
-                // Store activity in Items for downstream access
-                context.Items["Activity"] = activity;
-                context.Items["TraceId"] = activity.TraceId.ToString();
-                context.Items["SpanId"] = activity.SpanId.ToString();
-
-                _logger?.LogDebug(
-                    "Telemetry filter started. TraceId={TraceId}, SpanId={SpanId}",
-                    activity.TraceId, activity.SpanId);
-            }
-
-            try
-            {
-                await next(context, cancellationToken);
-
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity?.SetTag("error.type", ex.GetType().FullName);
-                activity?.SetTag("error.message", ex.Message);
-                activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
-                {
-                    { "exception.type", ex.GetType().FullName },
-                    { "exception.message", ex.Message },
-                    { "exception.stacktrace", ex.StackTrace }
-                }));
-
-                throw;
-            }
+            activity?.SetStatus(ActivityStatusCode.Ok);
         }
-
-        private static ActivityContext ExtractParentContext<TMessage>(IConsumeFilterContext<TMessage> context)
-            where TMessage : class
+        catch (Exception ex)
         {
-            // Try to extract traceparent from headers (W3C Trace Context)
-            var traceparent = context.GetHeader<string>("traceparent");
-            if (!string.IsNullOrEmpty(traceparent))
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().FullName);
+            activity?.SetTag("error.message", ex.Message);
+            activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
             {
-                if (ActivityContext.TryParse(traceparent, null, out ActivityContext activityContext))
-                {
-                    return activityContext;
-                }
-            }
+                { "exception.type", ex.GetType().FullName },
+                { "exception.message", ex.Message },
+                { "exception.stacktrace", ex.StackTrace }
+            }));
 
-            return default;
+            throw;
         }
     }
 
-    /// <summary>
-    /// Publish filter that provides OpenTelemetry integration with distributed tracing.
-    /// Creates spans for message publishing with rich metadata.
-    /// </summary>
-    public class TelemetryPublishFilter : IPublishFilter
+    private static ActivityContext ExtractParentContext<TMessage>(IConsumeFilterContext<TMessage> context)
+        where TMessage : class
     {
-        private readonly ILogger<TelemetryPublishFilter>? _logger;
-
-        /// <summary>
-        /// The ActivitySource for creating spans.
-        /// </summary>
-        public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Publisher", "1.0.0");
-
-        /// <summary>
-        /// Creates a new telemetry publish filter.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public TelemetryPublishFilter(ILogger<TelemetryPublishFilter>? logger = null)
+        // Try to extract traceparent from headers (W3C Trace Context)
+        string? traceparent = context.GetHeader<string>("traceparent");
+        if (!string.IsNullOrEmpty(traceparent))
         {
-            _logger = logger;
+            if (ActivityContext.TryParse(traceparent, null, out ActivityContext activityContext))
+            {
+                return activityContext;
+            }
         }
 
-        /// <inheritdoc />
-        public async Task PublishAsync<TMessage>(
-            IPublishFilterContext<TMessage> context,
-            PublishFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
+        return default;
+    }
+}
+
+/// <summary>
+/// Publish filter that provides OpenTelemetry integration with distributed tracing.
+/// Creates spans for message publishing with rich metadata.
+/// </summary>
+/// <remarks>
+/// Creates a new telemetry publish filter.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class TelemetryPublishFilter(ILogger<TelemetryPublishFilter>? logger = null) : IPublishFilter
+{
+    private readonly ILogger<TelemetryPublishFilter>? _logger = logger;
+
+    /// <summary>
+    /// The ActivitySource for creating spans.
+    /// </summary>
+    public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Publisher", "1.0.0");
+
+    /// <inheritdoc />
+    public async Task PublishAsync<TMessage>(
+        IPublishFilterContext<TMessage> context,
+        PublishFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
+    {
+        string messageType = typeof(TMessage).Name;
+        string activityName = $"RabbitMQ Publish {messageType}";
+
+        using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
+
+        if (activity != null)
         {
-            var messageType = typeof(TMessage).Name;
-            var activityName = $"RabbitMQ Publish {messageType}";
+            // Set standard messaging attributes
+            activity.SetTag("messaging.system", "rabbitmq");
+            activity.SetTag("messaging.operation", "send");
+            activity.SetTag("messaging.destination", context.Exchange);
+            activity.SetTag("messaging.destination_kind", "topic");
+            activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
+            activity.SetTag("messaging.message_id", context.MessageId);
+            activity.SetTag("messaging.message_type", messageType);
 
-            using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
-
-            if (activity != null)
+            // Set correlation IDs
+            if (!string.IsNullOrEmpty(context.CorrelationId))
             {
-                // Set standard messaging attributes
-                activity.SetTag("messaging.system", "rabbitmq");
-                activity.SetTag("messaging.operation", "send");
-                activity.SetTag("messaging.destination", context.Exchange);
-                activity.SetTag("messaging.destination_kind", "topic");
-                activity.SetTag("messaging.rabbitmq.routing_key", context.RoutingKey);
-                activity.SetTag("messaging.message_id", context.MessageId);
-                activity.SetTag("messaging.message_type", messageType);
-
-                // Set correlation IDs
-                if (!string.IsNullOrEmpty(context.CorrelationId))
-                {
-                    activity.SetTag("messaging.correlation_id", context.CorrelationId);
-                }
-                if (!string.IsNullOrEmpty(context.CausationId))
-                {
-                    activity.SetTag("messaging.causation_id", context.CausationId);
-                }
-
-                // Inject trace context into headers (W3C Trace Context)
-                context.Headers["traceparent"] = activity.Id ?? $"00-{activity.TraceId}-{activity.SpanId}-00";
-                if (!string.IsNullOrEmpty(activity.TraceStateString))
-                {
-                    context.Headers["tracestate"] = activity.TraceStateString;
-                }
-
-                // Store activity in Items for downstream access
-                context.Items["Activity"] = activity;
-                context.Items["TraceId"] = activity.TraceId.ToString();
-                context.Items["SpanId"] = activity.SpanId.ToString();
-
-                _logger?.LogDebug(
-                    "Telemetry publish filter started. TraceId={TraceId}, SpanId={SpanId}",
-                    activity.TraceId, activity.SpanId);
+                activity.SetTag("messaging.correlation_id", context.CorrelationId);
+            }
+            if (!string.IsNullOrEmpty(context.CausationId))
+            {
+                activity.SetTag("messaging.causation_id", context.CausationId);
             }
 
-            try
+            // Inject trace context into headers (W3C Trace Context)
+            context.Headers["traceparent"] = activity.Id ?? $"00-{activity.TraceId}-{activity.SpanId}-00";
+            if (!string.IsNullOrEmpty(activity.TraceStateString))
             {
-                await next(context, cancellationToken);
-
-                activity?.SetStatus(ActivityStatusCode.Ok);
+                context.Headers["tracestate"] = activity.TraceStateString;
             }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity?.SetTag("error.type", ex.GetType().FullName);
-                activity?.SetTag("error.message", ex.Message);
 
-                throw;
-            }
+            // Store activity in Items for downstream access
+            context.Items["Activity"] = activity;
+            context.Items["TraceId"] = activity.TraceId.ToString();
+            context.Items["SpanId"] = activity.SpanId.ToString();
+
+            _logger?.LogDebug(
+                "Telemetry publish filter started. TraceId={TraceId}, SpanId={SpanId}",
+                activity.TraceId, activity.SpanId);
+        }
+
+        try
+        {
+            await next(context, cancellationToken);
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().FullName);
+            activity?.SetTag("error.message", ex.Message);
+
+            throw;
         }
     }
+}
+
+/// <summary>
+/// Send filter that provides OpenTelemetry integration with distributed tracing.
+/// Creates spans for message sending with rich metadata.
+/// </summary>
+/// <remarks>
+/// Creates a new telemetry send filter.
+/// </remarks>
+/// <param name="logger">Optional logger instance.</param>
+public class TelemetrySendFilter(ILogger<TelemetrySendFilter>? logger = null) : ISendFilter
+{
+    private readonly ILogger<TelemetrySendFilter>? _logger = logger;
 
     /// <summary>
-    /// Send filter that provides OpenTelemetry integration with distributed tracing.
-    /// Creates spans for message sending with rich metadata.
+    /// The ActivitySource for creating spans.
     /// </summary>
-    public class TelemetrySendFilter : ISendFilter
+    public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Sender", "1.0.0");
+
+    /// <inheritdoc />
+    public async Task SendAsync<TMessage>(
+        ISendFilterContext<TMessage> context,
+        SendFilterDelegate<TMessage> next,
+        CancellationToken cancellationToken = default) where TMessage : class
     {
-        private readonly ILogger<TelemetrySendFilter>? _logger;
+        string messageType = typeof(TMessage).Name;
+        string activityName = $"RabbitMQ Send {messageType}";
 
-        /// <summary>
-        /// The ActivitySource for creating spans.
-        /// </summary>
-        public static readonly ActivitySource ActivitySource = new("Mvp24Hours.RabbitMQ.Sender", "1.0.0");
+        using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
 
-        /// <summary>
-        /// Creates a new telemetry send filter.
-        /// </summary>
-        /// <param name="logger">Optional logger instance.</param>
-        public TelemetrySendFilter(ILogger<TelemetrySendFilter>? logger = null)
+        if (activity != null)
         {
-            _logger = logger;
+            // Set standard messaging attributes
+            activity.SetTag("messaging.system", "rabbitmq");
+            activity.SetTag("messaging.operation", "send");
+            activity.SetTag("messaging.destination", context.DestinationQueue);
+            activity.SetTag("messaging.destination_kind", "queue");
+            activity.SetTag("messaging.message_id", context.MessageId);
+            activity.SetTag("messaging.message_type", messageType);
+
+            // Set correlation IDs
+            if (!string.IsNullOrEmpty(context.CorrelationId))
+            {
+                activity.SetTag("messaging.correlation_id", context.CorrelationId);
+            }
+            if (!string.IsNullOrEmpty(context.CausationId))
+            {
+                activity.SetTag("messaging.causation_id", context.CausationId);
+            }
+
+            // Inject trace context into headers (W3C Trace Context)
+            context.Headers["traceparent"] = activity.Id ?? $"00-{activity.TraceId}-{activity.SpanId}-00";
+            if (!string.IsNullOrEmpty(activity.TraceStateString))
+            {
+                context.Headers["tracestate"] = activity.TraceStateString;
+            }
+
+            // Store activity in Items for downstream access
+            context.Items["Activity"] = activity;
+            context.Items["TraceId"] = activity.TraceId.ToString();
+            context.Items["SpanId"] = activity.SpanId.ToString();
+
+            _logger?.LogDebug(
+                "Telemetry send filter started. TraceId={TraceId}, SpanId={SpanId}",
+                activity.TraceId, activity.SpanId);
         }
 
-        /// <inheritdoc />
-        public async Task SendAsync<TMessage>(
-            ISendFilterContext<TMessage> context,
-            SendFilterDelegate<TMessage> next,
-            CancellationToken cancellationToken = default) where TMessage : class
+        try
         {
-            var messageType = typeof(TMessage).Name;
-            var activityName = $"RabbitMQ Send {messageType}";
+            await next(context, cancellationToken);
 
-            using Activity? activity = ActivitySource.StartActivity(activityName, ActivityKind.Producer);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().FullName);
+            activity?.SetTag("error.message", ex.Message);
 
-            if (activity != null)
-            {
-                // Set standard messaging attributes
-                activity.SetTag("messaging.system", "rabbitmq");
-                activity.SetTag("messaging.operation", "send");
-                activity.SetTag("messaging.destination", context.DestinationQueue);
-                activity.SetTag("messaging.destination_kind", "queue");
-                activity.SetTag("messaging.message_id", context.MessageId);
-                activity.SetTag("messaging.message_type", messageType);
-
-                // Set correlation IDs
-                if (!string.IsNullOrEmpty(context.CorrelationId))
-                {
-                    activity.SetTag("messaging.correlation_id", context.CorrelationId);
-                }
-                if (!string.IsNullOrEmpty(context.CausationId))
-                {
-                    activity.SetTag("messaging.causation_id", context.CausationId);
-                }
-
-                // Inject trace context into headers (W3C Trace Context)
-                context.Headers["traceparent"] = activity.Id ?? $"00-{activity.TraceId}-{activity.SpanId}-00";
-                if (!string.IsNullOrEmpty(activity.TraceStateString))
-                {
-                    context.Headers["tracestate"] = activity.TraceStateString;
-                }
-
-                // Store activity in Items for downstream access
-                context.Items["Activity"] = activity;
-                context.Items["TraceId"] = activity.TraceId.ToString();
-                context.Items["SpanId"] = activity.SpanId.ToString();
-
-                _logger?.LogDebug(
-                    "Telemetry send filter started. TraceId={TraceId}, SpanId={SpanId}",
-                    activity.TraceId, activity.SpanId);
-            }
-
-            try
-            {
-                await next(context, cancellationToken);
-
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity?.SetTag("error.type", ex.GetType().FullName);
-                activity?.SetTag("error.message", ex.Message);
-
-                throw;
-            }
+            throw;
         }
     }
 }

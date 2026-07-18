@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -33,20 +32,15 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(ValidationBehavior&lt;,&gt;));
 /// </code>
 /// </example>
-public sealed class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the UnhandledExceptionBehavior.
+/// </remarks>
+/// <param name="logger">Logger for recording errors.</param>
+/// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+public sealed class UnhandledExceptionBehavior<TRequest, TResponse>(ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> _logger;
-
-    /// <summary>
-    /// Creates a new instance of the UnhandledExceptionBehavior.
-    /// </summary>
-    /// <param name="logger">Logger for recording errors.</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
-    public UnhandledExceptionBehavior(ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -57,7 +51,7 @@ public sealed class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineB
         }
         catch (Exception ex)
         {
-            var requestName = typeof(TRequest).Name;
+            string requestName = typeof(TRequest).Name;
 
             _logger.LogError(
                 ex,

@@ -3,271 +3,259 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Http.Options;
-using Polly;
 using Polly.Timeout;
 
-namespace Mvp24Hours.Infrastructure.Http.Resilience
+namespace Mvp24Hours.Infrastructure.Http.Resilience;
+
+/// <summary>
+/// Extension methods for configuring HTTP clients with Polly resilience policies.
+/// </summary>
+/// <remarks>
+/// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+/// <para>Use <c>AddStandardResilienceHandler()</c> or <c>AddResilienceHandler()</c> from 
+/// <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
+/// <para>
+/// See <see cref="NativeHttpResilienceExtensions"/> for the modern API.
+/// </para>
+/// </remarks>
+[Obsolete("Deprecated: Use AddStandardResilienceHandler() from Microsoft.Extensions.Http.Resilience. See NativeHttpResilienceExtensions for the modern API.")]
+public static class HttpClientResilienceExtensions
 {
     /// <summary>
-    /// Extension methods for configuring HTTP clients with Polly resilience policies.
+    /// Adds an HTTP client with Polly resilience policies configured.
     /// </summary>
-    /// <remarks>
-    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
-    /// <para>Use <c>AddStandardResilienceHandler()</c> or <c>AddResilienceHandler()</c> from 
-    /// <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
-    /// <para>
-    /// See <see cref="NativeHttpResilienceExtensions"/> for the modern API.
-    /// </para>
-    /// </remarks>
-    [Obsolete("Deprecated: Use AddStandardResilienceHandler() from Microsoft.Extensions.Http.Resilience. See NativeHttpResilienceExtensions for the modern API.")]
-    public static class HttpClientResilienceExtensions
+    /// <param name="services">The service collection.</param>
+    /// <param name="name">The name of the HTTP client.</param>
+    /// <param name="configure">The configuration action for resilience policies.</param>
+    /// <returns>The IHttpClientBuilder for further configuration.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddHttpClientWithPolly("MyApi", builder =>
+    /// {
+    ///     builder.AddRetryPolicy(options =>
+    ///     {
+    ///         options.MaxRetries = 3;
+    ///         options.BackoffType = BackoffType.Exponential;
+    ///     });
+    ///     
+    ///     builder.AddCircuitBreakerPolicy(options =>
+    ///     {
+    ///         options.FailureRatio = 0.5;
+    ///         options.BreakDuration = TimeSpan.FromSeconds(30);
+    ///     });
+    ///     
+    ///     builder.AddTimeoutPolicy(options =>
+    ///     {
+    ///         options.Timeout = TimeSpan.FromSeconds(30);
+    ///     });
+    /// });
+    /// </code>
+    /// </example>
+    public static IHttpClientBuilder AddHttpClientWithPolly(
+        this IServiceCollection services,
+        string name,
+        Action<HttpResiliencePolicyBuilder> configure)
     {
-        /// <summary>
-        /// Adds an HTTP client with Polly resilience policies configured.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="name">The name of the HTTP client.</param>
-        /// <param name="configure">The configuration action for resilience policies.</param>
-        /// <returns>The IHttpClientBuilder for further configuration.</returns>
-        /// <example>
-        /// <code>
-        /// services.AddHttpClientWithPolly("MyApi", builder =>
-        /// {
-        ///     builder.AddRetryPolicy(options =>
-        ///     {
-        ///         options.MaxRetries = 3;
-        ///         options.BackoffType = BackoffType.Exponential;
-        ///     });
-        ///     
-        ///     builder.AddCircuitBreakerPolicy(options =>
-        ///     {
-        ///         options.FailureRatio = 0.5;
-        ///         options.BreakDuration = TimeSpan.FromSeconds(30);
-        ///     });
-        ///     
-        ///     builder.AddTimeoutPolicy(options =>
-        ///     {
-        ///         options.Timeout = TimeSpan.FromSeconds(30);
-        ///     });
-        /// });
-        /// </code>
-        /// </example>
-        public static IHttpClientBuilder AddHttpClientWithPolly(
-            this IServiceCollection services,
-            string name,
-            Action<HttpResiliencePolicyBuilder> configure)
+        if (services == null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("HTTP client name cannot be null or empty.", nameof(name));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
-            var builder = new HttpResiliencePolicyBuilder(name);
-            configure(builder);
-
-            IHttpClientBuilder clientBuilder = services.AddHttpClient(name);
-            builder.ApplyTo(clientBuilder);
-
-            return clientBuilder;
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds a typed HTTP client with Polly resilience policies configured.
-        /// </summary>
-        /// <typeparam name="TClient">The typed HTTP client type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configure">The configuration action for resilience policies.</param>
-        /// <returns>The IHttpClientBuilder for further configuration.</returns>
-        public static IHttpClientBuilder AddHttpClientWithPolly<TClient>(
-            this IServiceCollection services,
-            Action<HttpResiliencePolicyBuilder> configure)
-            where TClient : class
+        if (string.IsNullOrWhiteSpace(name))
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
-            var name = typeof(TClient).Name;
-            var builder = new HttpResiliencePolicyBuilder(name);
-            configure(builder);
-
-            IHttpClientBuilder clientBuilder = services.AddHttpClient<TClient>();
-            builder.ApplyTo(clientBuilder);
-
-            return clientBuilder;
+            throw new ArgumentException("HTTP client name cannot be null or empty.", nameof(name));
         }
 
-        /// <summary>
-        /// Adds a resilience policy to an HTTP client builder.
-        /// </summary>
-        /// <param name="builder">The HTTP client builder.</param>
-        /// <param name="policy">The resilience policy to add.</param>
-        /// <returns>The HTTP client builder for chaining.</returns>
-        public static IHttpClientBuilder AddResiliencePolicy(
-            this IHttpClientBuilder builder,
-            IHttpResiliencePolicy policy)
+        if (configure == null)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policy == null)
-            {
-                throw new ArgumentNullException(nameof(policy));
-            }
-
-            return builder.AddPolicyHandler(policy.GetPollyPolicy());
+            throw new ArgumentNullException(nameof(configure));
         }
+
+        var builder = new HttpResiliencePolicyBuilder(name);
+        configure(builder);
+
+        IHttpClientBuilder clientBuilder = services.AddHttpClient(name);
+        builder.ApplyTo(clientBuilder);
+
+        return clientBuilder;
     }
 
     /// <summary>
-    /// Builder for configuring HTTP resilience policies.
+    /// Adds a typed HTTP client with Polly resilience policies configured.
     /// </summary>
-    /// <remarks>
-    /// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
-    /// <para>Use <c>ResiliencePipelineBuilder</c> from <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
-    /// </remarks>
-    [Obsolete("Deprecated: Use ResiliencePipelineBuilder from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
-    public class HttpResiliencePolicyBuilder
+    /// <typeparam name="TClient">The typed HTTP client type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">The configuration action for resilience policies.</param>
+    /// <returns>The IHttpClientBuilder for further configuration.</returns>
+    public static IHttpClientBuilder AddHttpClientWithPolly<TClient>(
+        this IServiceCollection services,
+        Action<HttpResiliencePolicyBuilder> configure)
+        where TClient : class
     {
-        private readonly string _clientName;
-        private readonly List<IHttpResiliencePolicy> _policies = [];
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HttpResiliencePolicyBuilder"/> class.
-        /// </summary>
-        /// <param name="clientName">The name of the HTTP client.</param>
-        public HttpResiliencePolicyBuilder(string clientName)
+        if (services == null)
         {
-            _clientName = clientName ?? throw new ArgumentNullException(nameof(clientName));
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds a retry policy with the specified configuration.
-        /// </summary>
-        /// <param name="configure">The configuration action for retry options.</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddRetryPolicy(Action<RetryPolicyOptions>? configure = null)
+        if (configure == null)
         {
-            var options = new RetryPolicyOptions();
-            configure?.Invoke(options);
-            _policies.Add(new RetryPolicy(options));
-            return this;
+            throw new ArgumentNullException(nameof(configure));
         }
 
-        /// <summary>
-        /// Adds a circuit breaker policy with the specified configuration.
-        /// </summary>
-        /// <param name="configure">The configuration action for circuit breaker options.</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddCircuitBreakerPolicy(Action<CircuitBreakerPolicyOptions>? configure = null)
+        string name = typeof(TClient).Name;
+        var builder = new HttpResiliencePolicyBuilder(name);
+        configure(builder);
+
+        IHttpClientBuilder clientBuilder = services.AddHttpClient<TClient>();
+        builder.ApplyTo(clientBuilder);
+
+        return clientBuilder;
+    }
+
+    /// <summary>
+    /// Adds a resilience policy to an HTTP client builder.
+    /// </summary>
+    /// <param name="builder">The HTTP client builder.</param>
+    /// <param name="policy">The resilience policy to add.</param>
+    /// <returns>The HTTP client builder for chaining.</returns>
+    public static IHttpClientBuilder AddResiliencePolicy(
+        this IHttpClientBuilder builder,
+        IHttpResiliencePolicy policy)
+    {
+        if (builder == null)
         {
-            var options = new CircuitBreakerPolicyOptions();
-            configure?.Invoke(options);
-            _policies.Add(new CircuitBreakerPolicy(options, _clientName));
-            return this;
+            throw new ArgumentNullException(nameof(builder));
         }
 
-        /// <summary>
-        /// Adds a timeout policy with the specified configuration.
-        /// </summary>
-        /// <param name="configure">The configuration action for timeout options.</param>
-        /// <param name="strategy">The timeout strategy (Optimistic or Pessimistic).</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddTimeoutPolicy(
-            Action<TimeoutPolicyOptions>? configure = null,
-            TimeoutStrategy strategy = TimeoutStrategy.Optimistic)
+        if (policy == null)
         {
-            var options = new TimeoutPolicyOptions();
-            configure?.Invoke(options);
-            _policies.Add(new TimeoutPolicy(options, strategy));
-            return this;
+            throw new ArgumentNullException(nameof(policy));
         }
 
-        /// <summary>
-        /// Adds a bulkhead policy with the specified configuration.
-        /// </summary>
-        /// <param name="configure">The configuration action for bulkhead options.</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddBulkheadPolicy(Action<BulkheadPolicyOptions>? configure = null)
+        return builder.AddPolicyHandler(policy.GetPollyPolicy());
+    }
+}
+
+/// <summary>
+/// Builder for configuring HTTP resilience policies.
+/// </summary>
+/// <remarks>
+/// <para><b>DEPRECATED</b>: This class is deprecated and will be removed in a future version.</para>
+/// <para>Use <c>ResiliencePipelineBuilder</c> from <c>Microsoft.Extensions.Http.Resilience</c> instead.</para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="HttpResiliencePolicyBuilder"/> class.
+/// </remarks>
+/// <param name="clientName">The name of the HTTP client.</param>
+[Obsolete("Deprecated: Use ResiliencePipelineBuilder from Microsoft.Extensions.Http.Resilience. This class will be removed in a future major version.")]
+public class HttpResiliencePolicyBuilder(string clientName)
+{
+    private readonly string _clientName = clientName ?? throw new ArgumentNullException(nameof(clientName));
+    private readonly List<IHttpResiliencePolicy> _policies = [];
+
+    /// <summary>
+    /// Adds a retry policy with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for retry options.</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddRetryPolicy(Action<RetryPolicyOptions>? configure = null)
+    {
+        var options = new RetryPolicyOptions();
+        configure?.Invoke(options);
+        _policies.Add(new RetryPolicy(options));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a circuit breaker policy with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for circuit breaker options.</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddCircuitBreakerPolicy(Action<CircuitBreakerPolicyOptions>? configure = null)
+    {
+        var options = new CircuitBreakerPolicyOptions();
+        configure?.Invoke(options);
+        _policies.Add(new CircuitBreakerPolicy(options, _clientName));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a timeout policy with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for timeout options.</param>
+    /// <param name="strategy">The timeout strategy (Optimistic or Pessimistic).</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddTimeoutPolicy(
+        Action<TimeoutPolicyOptions>? configure = null,
+        TimeoutStrategy strategy = TimeoutStrategy.Optimistic)
+    {
+        var options = new TimeoutPolicyOptions();
+        configure?.Invoke(options);
+        _policies.Add(new TimeoutPolicy(options, strategy));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a bulkhead policy with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for bulkhead options.</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddBulkheadPolicy(Action<BulkheadPolicyOptions>? configure = null)
+    {
+        var options = new BulkheadPolicyOptions();
+        configure?.Invoke(options);
+        _policies.Add(new BulkheadPolicy(options));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a fallback policy with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for fallback options.</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddFallbackPolicy(Action<FallbackPolicyOptions>? configure = null)
+    {
+        var options = new FallbackPolicyOptions();
+        configure?.Invoke(options);
+        _policies.Add(new FallbackPolicy(options));
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a custom resilience policy.
+    /// </summary>
+    /// <param name="policy">The custom policy to add.</param>
+    /// <returns>The builder for chaining.</returns>
+    public HttpResiliencePolicyBuilder AddPolicy(IHttpResiliencePolicy policy)
+    {
+        if (policy == null)
         {
-            var options = new BulkheadPolicyOptions();
-            configure?.Invoke(options);
-            _policies.Add(new BulkheadPolicy(options));
-            return this;
+            throw new ArgumentNullException(nameof(policy));
         }
 
-        /// <summary>
-        /// Adds a fallback policy with the specified configuration.
-        /// </summary>
-        /// <param name="configure">The configuration action for fallback options.</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddFallbackPolicy(Action<FallbackPolicyOptions>? configure = null)
+        _policies.Add(policy);
+        return this;
+    }
+
+    /// <summary>
+    /// Applies all configured policies to the HTTP client builder.
+    /// Policies are applied in order: Timeout → Bulkhead → CircuitBreaker → Retry → Fallback
+    /// </summary>
+    /// <param name="clientBuilder">The HTTP client builder.</param>
+    internal void ApplyTo(IHttpClientBuilder clientBuilder)
+    {
+        if (clientBuilder == null)
         {
-            var options = new FallbackPolicyOptions();
-            configure?.Invoke(options);
-            _policies.Add(new FallbackPolicy(options));
-            return this;
+            throw new ArgumentNullException(nameof(clientBuilder));
         }
 
-        /// <summary>
-        /// Adds a custom resilience policy.
-        /// </summary>
-        /// <param name="policy">The custom policy to add.</param>
-        /// <returns>The builder for chaining.</returns>
-        public HttpResiliencePolicyBuilder AddPolicy(IHttpResiliencePolicy policy)
+        // Apply policies in reverse order (innermost to outermost)
+        // This ensures proper policy wrapping: Timeout → Bulkhead → CircuitBreaker → Retry → Fallback
+        for (int i = _policies.Count - 1; i >= 0; i--)
         {
-            if (policy == null)
-            {
-                throw new ArgumentNullException(nameof(policy));
-            }
-
-            _policies.Add(policy);
-            return this;
-        }
-
-        /// <summary>
-        /// Applies all configured policies to the HTTP client builder.
-        /// Policies are applied in order: Timeout → Bulkhead → CircuitBreaker → Retry → Fallback
-        /// </summary>
-        /// <param name="clientBuilder">The HTTP client builder.</param>
-        internal void ApplyTo(IHttpClientBuilder clientBuilder)
-        {
-            if (clientBuilder == null)
-            {
-                throw new ArgumentNullException(nameof(clientBuilder));
-            }
-
-            // Apply policies in reverse order (innermost to outermost)
-            // This ensures proper policy wrapping: Timeout → Bulkhead → CircuitBreaker → Retry → Fallback
-            for (int i = _policies.Count - 1; i >= 0; i--)
-            {
-                clientBuilder.AddPolicyHandler(_policies[i].GetPollyPolicy());
-            }
+            clientBuilder.AddPolicyHandler(_policies[i].GetPollyPolicy());
         }
     }
 }

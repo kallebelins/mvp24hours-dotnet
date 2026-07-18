@@ -3,229 +3,224 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.Streaming;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using Xunit;
 
-namespace Mvp24Hours.Application.Pipe.Test.Integration
+namespace Mvp24Hours.Application.Pipe.Test.Integration;
+
+[Trait("Category", "Unit")]
+public class StreamingPipelineTest
 {
-    [Trait("Category", "Unit")]
-    public class StreamingPipelineTest
+    [Fact]
+    public async Task StreamingPipeline_ProcessesItemsSequentially()
     {
-        [Fact]
-        public async Task StreamingPipeline_ProcessesItemsSequentially()
+        // Arrange
+        var pipeline = new StreamingPipeline<int, int>();
+        pipeline.Add(async (input, ct) =>
         {
-            // Arrange
-            var pipeline = new StreamingPipeline<int, int>();
-            pipeline.Add(async (input, ct) =>
-            {
-                await Task.Delay(10, ct); // Simulate work
-                return OperationResult<int>.Success(input * 2);
-            });
+            await Task.Delay(10, ct); // Simulate work
+            return OperationResult<int>.Success(input * 2);
+        });
 
-            var inputs = new[] { 1, 2, 3, 4, 5 };
+        int[] inputs = [1, 2, 3, 4, 5];
 
-            // Act
-            var results = new List<int>();
-            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        // Act
+        var results = new List<int>();
+        await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        {
+            if (result.IsSuccess)
             {
-                if (result.IsSuccess)
-                {
-                    results.Add(result.Value);
-                }
+                results.Add(result.Value);
             }
-
-            // Assert
-            Assert.Equal(5, results.Count);
-            Assert.Equal(new[] { 2, 4, 6, 8, 10 }, results);
         }
 
-        [Fact]
-        public async Task StreamingPipeline_ProcessesItemsInParallel()
+        // Assert
+        Assert.Equal(5, results.Count);
+        Assert.Equal(new[] { 2, 4, 6, 8, 10 }, results);
+    }
+
+    [Fact]
+    public async Task StreamingPipeline_ProcessesItemsInParallel()
+    {
+        // Arrange
+        var pipeline = new StreamingPipeline<int, int>
         {
-            // Arrange
-            var pipeline = new StreamingPipeline<int, int>
-            {
-                MaxDegreeOfParallelism = 4
-            };
-            pipeline.Add(async (input, ct) =>
-            {
-                await Task.Delay(50, ct); // Simulate work
-                return OperationResult<int>.Success(input * 2);
-            });
+            MaxDegreeOfParallelism = 4
+        };
+        pipeline.Add(async (input, ct) =>
+        {
+            await Task.Delay(50, ct); // Simulate work
+            return OperationResult<int>.Success(input * 2);
+        });
 
-            var inputs = new[] { 1, 2, 3, 4 };
+        int[] inputs = [1, 2, 3, 4];
 
-            // Act
-            var results = new List<int>();
-            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        // Act
+        var results = new List<int>();
+        await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        {
+            if (result.IsSuccess)
             {
-                if (result.IsSuccess)
-                {
-                    results.Add(result.Value);
-                }
+                results.Add(result.Value);
             }
-
-            // Assert
-            Assert.Equal(4, results.Count);
-            Assert.Contains(2, results);
-            Assert.Contains(4, results);
-            Assert.Contains(6, results);
-            Assert.Contains(8, results);
         }
 
-        [Fact]
-        public async Task StreamingPipeline_StopsOnError_WhenContinueOnErrorIsFalse()
+        // Assert
+        Assert.Equal(4, results.Count);
+        Assert.Contains(2, results);
+        Assert.Contains(4, results);
+        Assert.Contains(6, results);
+        Assert.Contains(8, results);
+    }
+
+    [Fact]
+    public async Task StreamingPipeline_StopsOnError_WhenContinueOnErrorIsFalse()
+    {
+        // Arrange
+        var pipeline = new StreamingPipeline<int, int>
         {
-            // Arrange
-            var pipeline = new StreamingPipeline<int, int>
+            ContinueOnError = false
+        };
+        pipeline.Add(async (input, ct) =>
+        {
+            if (input == 3)
             {
-                ContinueOnError = false
-            };
-            pipeline.Add(async (input, ct) =>
-            {
-                if (input == 3)
-                {
-                    return OperationResult<int>.Failure("Error on item 3");
-                }
-                return OperationResult<int>.Success(input * 2);
-            });
-
-            var inputs = new[] { 1, 2, 3, 4, 5 };
-
-            // Act
-            var results = new List<int>();
-            var errorCount = 0;
-            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
-            {
-                if (result.IsSuccess)
-                {
-                    results.Add(result.Value);
-                }
-                else
-                {
-                    errorCount++;
-                }
+                return OperationResult<int>.Failure("Error on item 3");
             }
+            return OperationResult<int>.Success(input * 2);
+        });
 
-            // Assert - should stop after error
-            Assert.True(errorCount > 0 || results.Count < 5);
+        int[] inputs = [1, 2, 3, 4, 5];
+
+        // Act
+        var results = new List<int>();
+        int errorCount = 0;
+        await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        {
+            if (result.IsSuccess)
+            {
+                results.Add(result.Value);
+            }
+            else
+            {
+                errorCount++;
+            }
         }
 
-        [Fact]
-        public async Task StreamingPipeline_ContinuesOnError_WhenContinueOnErrorIsTrue()
+        // Assert - should stop after error
+        Assert.True(errorCount > 0 || results.Count < 5);
+    }
+
+    [Fact]
+    public async Task StreamingPipeline_ContinuesOnError_WhenContinueOnErrorIsTrue()
+    {
+        // Arrange
+        var pipeline = new StreamingPipeline<int, int>
         {
-            // Arrange
-            var pipeline = new StreamingPipeline<int, int>
+            ContinueOnError = true
+        };
+        pipeline.Add(async (input, ct) =>
+        {
+            if (input == 3)
             {
-                ContinueOnError = true
-            };
-            pipeline.Add(async (input, ct) =>
-            {
-                if (input == 3)
-                {
-                    return OperationResult<int>.Failure("Error on item 3");
-                }
-                return OperationResult<int>.Success(input * 2);
-            });
-
-            var inputs = new[] { 1, 2, 3, 4, 5 };
-
-            // Act
-            var successCount = 0;
-            var failureCount = 0;
-            await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
-            {
-                if (result.IsSuccess)
-                {
-                    successCount++;
-                }
-                else
-                {
-                    failureCount++;
-                }
+                return OperationResult<int>.Failure("Error on item 3");
             }
+            return OperationResult<int>.Success(input * 2);
+        });
 
-            // Assert
-            Assert.Equal(4, successCount);
-            Assert.Equal(1, failureCount);
+        int[] inputs = [1, 2, 3, 4, 5];
+
+        // Act
+        int successCount = 0;
+        int failureCount = 0;
+        await foreach (IOperationResult<int> result in pipeline.ExecuteStreamAsync(inputs))
+        {
+            if (result.IsSuccess)
+            {
+                successCount++;
+            }
+            else
+            {
+                failureCount++;
+            }
         }
 
-        [Fact]
-        public async Task FilterStreamingOperation_FiltersItems()
+        // Assert
+        Assert.Equal(4, successCount);
+        Assert.Equal(1, failureCount);
+    }
+
+    [Fact]
+    public async Task FilterStreamingOperation_FiltersItems()
+    {
+        // Arrange
+        var filter = new FilterStreamingOperation<int>(x => x % 2 == 0);
+        IAsyncEnumerable<int> inputs = ToAsyncEnumerable([1, 2, 3, 4, 5, 6]);
+
+        // Act
+        var results = new List<int>();
+        await foreach (int item in filter.ProcessStreamAsync(inputs))
         {
-            // Arrange
-            var filter = new FilterStreamingOperation<int>(x => x % 2 == 0);
-            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6 });
-
-            // Act
-            var results = new List<int>();
-            await foreach (var item in filter.ProcessStreamAsync(inputs))
-            {
-                results.Add(item);
-            }
-
-            // Assert
-            Assert.Equal(new[] { 2, 4, 6 }, results);
+            results.Add(item);
         }
 
-        [Fact]
-        public async Task TransformStreamingOperation_TransformsItems()
-        {
-            // Arrange
-            var transform = new TransformStreamingOperation<int, string>(
-                async (input, ct) =>
-                {
-                    await Task.CompletedTask;
-                    return $"Value: {input}";
-                });
+        // Assert
+        Assert.Equal(new[] { 2, 4, 6 }, results);
+    }
 
-            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3 });
-
-            // Act
-            var results = new List<string>();
-            await foreach (var item in transform.ProcessStreamAsync(inputs))
+    [Fact]
+    public async Task TransformStreamingOperation_TransformsItems()
+    {
+        // Arrange
+        var transform = new TransformStreamingOperation<int, string>(
+            async (input, ct) =>
             {
-                results.Add(item);
-            }
-
-            // Assert
-            Assert.Equal(new[] { "Value: 1", "Value: 2", "Value: 3" }, results);
-        }
-
-        [Fact]
-        public async Task BatchStreamingOperation_BatchesItems()
-        {
-            // Arrange
-            var batch = new BatchStreamingOperation<int>(3);
-            IAsyncEnumerable<int> inputs = ToAsyncEnumerable(new[] { 1, 2, 3, 4, 5, 6, 7 });
-
-            // Act
-            var results = new List<IReadOnlyList<int>>();
-            await foreach (IReadOnlyList<int> b in batch.ProcessStreamAsync(inputs))
-            {
-                results.Add(b);
-            }
-
-            // Assert
-            Assert.Equal(3, results.Count);
-            Assert.Equal(new[] { 1, 2, 3 }, results[0]);
-            Assert.Equal(new[] { 4, 5, 6 }, results[1]);
-            Assert.Equal(new[] { 7 }, results[2]);
-        }
-
-        private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> source)
-        {
-            foreach (T? item in source)
-            {
-                yield return item;
                 await Task.CompletedTask;
-            }
+                return $"Value: {input}";
+            });
+
+        IAsyncEnumerable<int> inputs = ToAsyncEnumerable([1, 2, 3]);
+
+        // Act
+        var results = new List<string>();
+        await foreach (string item in transform.ProcessStreamAsync(inputs))
+        {
+            results.Add(item);
+        }
+
+        // Assert
+        Assert.Equal(new[] { "Value: 1", "Value: 2", "Value: 3" }, results);
+    }
+
+    [Fact]
+    public async Task BatchStreamingOperation_BatchesItems()
+    {
+        // Arrange
+        var batch = new BatchStreamingOperation<int>(3);
+        IAsyncEnumerable<int> inputs = ToAsyncEnumerable([1, 2, 3, 4, 5, 6, 7]);
+
+        // Act
+        var results = new List<IReadOnlyList<int>>();
+        await foreach (IReadOnlyList<int> b in batch.ProcessStreamAsync(inputs))
+        {
+            results.Add(b);
+        }
+
+        // Assert
+        Assert.Equal(3, results.Count);
+        Assert.Equal([1, 2, 3], results[0]);
+        Assert.Equal([4, 5, 6], results[1]);
+        Assert.Equal([7], results[2]);
+    }
+
+    private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> source)
+    {
+        foreach (T? item in source)
+        {
+            yield return item;
+            await Task.CompletedTask;
         }
     }
 }

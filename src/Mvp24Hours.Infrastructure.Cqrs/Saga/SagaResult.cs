@@ -55,8 +55,10 @@ public sealed class SagaResult
     /// </summary>
     /// <param name="sagaId">The saga identifier.</param>
     /// <returns>A successful saga result.</returns>
-    public static SagaResult Success(Guid sagaId) =>
-        new(sagaId, true, SagaStatus.Completed);
+    public static SagaResult Success(Guid sagaId)
+    {
+        return new(sagaId, true, SagaStatus.Completed);
+    }
 
     /// <summary>
     /// Creates a failed saga result.
@@ -65,8 +67,10 @@ public sealed class SagaResult
     /// <param name="errorMessage">The error message.</param>
     /// <param name="exception">The exception that caused the failure.</param>
     /// <returns>A failed saga result.</returns>
-    public static SagaResult Failed(Guid sagaId, string errorMessage, Exception? exception = null) =>
-        new(sagaId, false, SagaStatus.Failed, errorMessage, exception);
+    public static SagaResult Failed(Guid sagaId, string errorMessage, Exception? exception = null)
+    {
+        return new(sagaId, false, SagaStatus.Failed, errorMessage, exception);
+    }
 
     /// <summary>
     /// Creates a compensated saga result.
@@ -74,8 +78,10 @@ public sealed class SagaResult
     /// <param name="sagaId">The saga identifier.</param>
     /// <param name="errorMessage">The original error message.</param>
     /// <returns>A compensated saga result.</returns>
-    public static SagaResult Compensated(Guid sagaId, string errorMessage) =>
-        new(sagaId, false, SagaStatus.Compensated, errorMessage);
+    public static SagaResult Compensated(Guid sagaId, string errorMessage)
+    {
+        return new(sagaId, false, SagaStatus.Compensated, errorMessage);
+    }
 
     /// <summary>
     /// Creates a partially compensated saga result.
@@ -83,24 +89,30 @@ public sealed class SagaResult
     /// <param name="sagaId">The saga identifier.</param>
     /// <param name="errorMessage">The error message including compensation failures.</param>
     /// <returns>A partially compensated saga result.</returns>
-    public static SagaResult PartiallyCompensated(Guid sagaId, string errorMessage) =>
-        new(sagaId, false, SagaStatus.PartiallyCompensated, errorMessage);
+    public static SagaResult PartiallyCompensated(Guid sagaId, string errorMessage)
+    {
+        return new(sagaId, false, SagaStatus.PartiallyCompensated, errorMessage);
+    }
 
     /// <summary>
     /// Creates a timed out saga result.
     /// </summary>
     /// <param name="sagaId">The saga identifier.</param>
     /// <returns>A timed out saga result.</returns>
-    public static SagaResult TimedOut(Guid sagaId) =>
-        new(sagaId, false, SagaStatus.TimedOut, "Saga timed out");
+    public static SagaResult TimedOut(Guid sagaId)
+    {
+        return new(sagaId, false, SagaStatus.TimedOut, "Saga timed out");
+    }
 
     /// <summary>
     /// Creates a cancelled saga result.
     /// </summary>
     /// <param name="sagaId">The saga identifier.</param>
     /// <returns>A cancelled saga result.</returns>
-    public static SagaResult Cancelled(Guid sagaId) =>
-        new(sagaId, false, SagaStatus.Cancelled, "Saga was cancelled");
+    public static SagaResult Cancelled(Guid sagaId)
+    {
+        return new(sagaId, false, SagaStatus.Cancelled, "Saga was cancelled");
+    }
 }
 
 /// <summary>
@@ -157,27 +169,35 @@ public sealed class SagaResult<TData> where TData : class
     /// <summary>
     /// Creates a successful saga result.
     /// </summary>
-    public static SagaResult<TData> Success(Guid sagaId, TData data) =>
-        new(sagaId, true, SagaStatus.Completed, data);
+    public static SagaResult<TData> Success(Guid sagaId, TData data)
+    {
+        return new(sagaId, true, SagaStatus.Completed, data);
+    }
 
     /// <summary>
     /// Creates a failed saga result.
     /// </summary>
-    public static SagaResult<TData> Failed(Guid sagaId, string errorMessage, TData? data = null, Exception? exception = null) =>
-        new(sagaId, false, SagaStatus.Failed, data, errorMessage, exception);
+    public static SagaResult<TData> Failed(Guid sagaId, string errorMessage, TData? data = null, Exception? exception = null)
+    {
+        return new(sagaId, false, SagaStatus.Failed, data, errorMessage, exception);
+    }
 
     /// <summary>
     /// Creates a compensated saga result.
     /// </summary>
-    public static SagaResult<TData> Compensated(Guid sagaId, string errorMessage, TData? data = null) =>
-        new(sagaId, false, SagaStatus.Compensated, data, errorMessage);
+    public static SagaResult<TData> Compensated(Guid sagaId, string errorMessage, TData? data = null)
+    {
+        return new(sagaId, false, SagaStatus.Compensated, data, errorMessage);
+    }
 
     /// <summary>
     /// Implicit conversion to non-generic SagaResult.
     /// </summary>
-    public static implicit operator SagaResult(SagaResult<TData> result) =>
-        result.IsSuccess
+    public static implicit operator SagaResult(SagaResult<TData> result)
+    {
+        return result.IsSuccess
             ? SagaResult.Success(result.SagaId)
             : SagaResult.Failed(result.SagaId, result.ErrorMessage ?? "Unknown error", result.Exception);
+    }
 }
 

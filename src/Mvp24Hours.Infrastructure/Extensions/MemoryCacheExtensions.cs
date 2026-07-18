@@ -3,36 +3,36 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class MemoryCacheExtensions
 {
+    private static readonly Func<MemoryCache, object>? GetEntriesCollection = Delegate.CreateDelegate(
+        typeof(Func<MemoryCache, object>),
+        typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance)?.GetGetMethod(true)
+            ?? throw new InvalidOperationException("EntriesCollection property not found on MemoryCache."),
+        throwOnBindFailure: true) as Func<MemoryCache, object>;
+
     /// <summary>
     /// 
     /// </summary>
-    public static class MemoryCacheExtensions
+    public static IEnumerable GetKeys(this IMemoryCache memoryCache)
     {
-        private static readonly Func<MemoryCache, object>? GetEntriesCollection = Delegate.CreateDelegate(
-            typeof(Func<MemoryCache, object>),
-            typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance)?.GetGetMethod(true)
-                ?? throw new InvalidOperationException("EntriesCollection property not found on MemoryCache."),
-            throwOnBindFailure: true) as Func<MemoryCache, object>;
+        return ((IDictionary)GetEntriesCollection!((MemoryCache)memoryCache)).Keys;
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IEnumerable GetKeys(this IMemoryCache memoryCache) =>
-            ((IDictionary)GetEntriesCollection!((MemoryCache)memoryCache)).Keys;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IEnumerable<T> GetKeys<T>(this IMemoryCache memoryCache) =>
-            GetKeys(memoryCache).OfType<T>();
+    /// <summary>
+    /// 
+    /// </summary>
+    public static IEnumerable<T> GetKeys<T>(this IMemoryCache memoryCache)
+    {
+        return GetKeys(memoryCache).OfType<T>();
     }
 }

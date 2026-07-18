@@ -3,92 +3,89 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class EnumExtensions
 {
-    public static class EnumExtensions
+    public static string GetEnumDescription<TEnum>(string value)
     {
-        public static string GetEnumDescription<TEnum>(string value)
-        {
-            Type type = typeof(TEnum);
-            var name = Enum.GetNames(type).Where(f => f.Equals(value, StringComparison.CurrentCultureIgnoreCase)).Select(d => d).FirstOrDefault();
+        Type type = typeof(TEnum);
+        string? name = Enum.GetNames(type).Where(f => f.Equals(value, StringComparison.CurrentCultureIgnoreCase)).Select(d => d).FirstOrDefault();
 
-            if (name == null)
-            {
-                return string.Empty;
-            }
-            FieldInfo field = type.GetField(name)!;
-            var customAttribute = field.GetCustomAttributes(typeof(DisplayAttribute), false);
-            return customAttribute.Length > 0 ? ((DisplayAttribute)customAttribute[0]).Description ?? name : name;
+        if (name == null)
+        {
+            return string.Empty;
+        }
+        FieldInfo field = type.GetField(name)!;
+        object[] customAttribute = field.GetCustomAttributes(typeof(DisplayAttribute), false);
+        return customAttribute.Length > 0 ? ((DisplayAttribute)customAttribute[0]).Description ?? name : name;
+    }
+
+    public static string GetEnumValue<TEnum>(string value)
+    {
+        Type type = typeof(TEnum);
+        string? name = Enum.GetNames(type).Where(f => f.Equals(value, StringComparison.CurrentCultureIgnoreCase)).Select(d => d).FirstOrDefault();
+
+        if (name == null)
+        {
+            return string.Empty;
+        }
+        FieldInfo field = type.GetField(name)!;
+
+        return field.GetRawConstantValue()?.ToString() ?? string.Empty;
+    }
+
+    public static string GetGroupName(this Enum value)
+    {
+        Type type = value.GetType();
+        if (!type.IsEnum)
+        {
+            throw new ArgumentException(string.Format("Type '{0}' is not Enum", type));
         }
 
-        public static string GetEnumValue<TEnum>(string value)
+        MemberInfo[] members = type.GetMember(value.ToString());
+        if (members.Length == 0)
         {
-            Type type = typeof(TEnum);
-            var name = Enum.GetNames(type).Where(f => f.Equals(value, StringComparison.CurrentCultureIgnoreCase)).Select(d => d).FirstOrDefault();
-
-            if (name == null)
-            {
-                return string.Empty;
-            }
-            FieldInfo field = type.GetField(name)!;
-
-            return field.GetRawConstantValue()?.ToString() ?? string.Empty;
+            throw new ArgumentException(string.Format("Member '{0}' not found in type '{1}'", value, type.Name));
         }
 
-        public static string GetGroupName(this Enum value)
+        MemberInfo member = members[0];
+        object[] attributes = member.GetCustomAttributes(typeof(DisplayAttribute), false);
+        if (attributes.Length == 0)
         {
-            Type type = value.GetType();
-            if (!type.IsEnum)
-            {
-                throw new ArgumentException(String.Format("Type '{0}' is not Enum", type));
-            }
-
-            MemberInfo[] members = type.GetMember(value.ToString());
-            if (members.Length == 0)
-            {
-                throw new ArgumentException(String.Format("Member '{0}' not found in type '{1}'", value, type.Name));
-            }
-
-            MemberInfo member = members[0];
-            var attributes = member.GetCustomAttributes(typeof(DisplayAttribute), false);
-            if (attributes.Length == 0)
-            {
-                return value.ToString();
-            }
-
-            var attribute = (DisplayAttribute)attributes[0];
-            var groupName = attribute.GetGroupName();
-            return string.IsNullOrEmpty(groupName) ? value.ToString() : groupName;
+            return value.ToString();
         }
 
-        public static string GetDisplayName(this Enum value)
+        var attribute = (DisplayAttribute)attributes[0];
+        string? groupName = attribute.GetGroupName();
+        return string.IsNullOrEmpty(groupName) ? value.ToString() : groupName;
+    }
+
+    public static string GetDisplayName(this Enum value)
+    {
+        Type type = value.GetType();
+        if (!type.IsEnum)
         {
-            Type type = value.GetType();
-            if (!type.IsEnum)
-            {
-                throw new ArgumentException(String.Format("Type '{0}' is not Enum", type));
-            }
-
-            MemberInfo[] members = type.GetMember(value.ToString());
-            if (members.Length == 0)
-            {
-                throw new ArgumentException(String.Format("Member '{0}' not found in type '{1}'", value, type.Name));
-            }
-
-            MemberInfo member = members[0];
-            var attributes = member.GetCustomAttributes(typeof(DisplayAttribute), false);
-            if (attributes.Length == 0)
-            {
-                return value.ToString();
-            }
-
-            var attribute = (DisplayAttribute)attributes[0];
-            return attribute.GetName() ?? value.ToString();
+            throw new ArgumentException(string.Format("Type '{0}' is not Enum", type));
         }
+
+        MemberInfo[] members = type.GetMember(value.ToString());
+        if (members.Length == 0)
+        {
+            throw new ArgumentException(string.Format("Member '{0}' not found in type '{1}'", value, type.Name));
+        }
+
+        MemberInfo member = members[0];
+        object[] attributes = member.GetCustomAttributes(typeof(DisplayAttribute), false);
+        if (attributes.Length == 0)
+        {
+            return value.ToString();
+        }
+
+        var attribute = (DisplayAttribute)attributes[0];
+        return attribute.GetName() ?? value.ToString();
     }
 }

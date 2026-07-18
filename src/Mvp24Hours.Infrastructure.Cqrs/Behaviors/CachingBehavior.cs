@@ -7,7 +7,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -131,13 +130,13 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             return await next();
         }
 
-        var cacheKey = GetCacheKey(request, cacheable);
-        var requestName = typeof(TRequest).Name;
+        string cacheKey = GetCacheKey(request, cacheable);
+        string requestName = typeof(TRequest).Name;
 
         // Try to get from cache
         try
         {
-            var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
+            string? cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
 
             if (!string.IsNullOrEmpty(cachedValue))
             {
@@ -176,7 +175,7 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             if (response != null)
             {
                 TimeSpan duration = cacheable.CacheDuration ?? _defaultCacheDuration;
-                var serialized = JsonSerializer.Serialize(response, _jsonOptions);
+                string serialized = JsonSerializer.Serialize(response, _jsonOptions);
 
                 var options = new DistributedCacheEntryOptions
                 {
@@ -212,9 +211,9 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         }
 
         // Generate key from request type and properties
-        var typeName = typeof(TRequest).Name;
-        var requestHash = JsonSerializer.Serialize(request, _jsonOptions);
-        var hashCode = requestHash.GetHashCode();
+        string typeName = typeof(TRequest).Name;
+        string requestHash = JsonSerializer.Serialize(request, _jsonOptions);
+        int hashCode = requestHash.GetHashCode();
 
         return $"mediator:{typeName}:{hashCode}";
     }
@@ -250,24 +249,18 @@ public interface ICacheInvalidator
 /// </summary>
 /// <typeparam name="TRequest">The type of request.</typeparam>
 /// <typeparam name="TResponse">The type of response.</typeparam>
-public sealed class CacheInvalidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the CacheInvalidationBehavior.
+/// </remarks>
+/// <param name="cache">The distributed cache.</param>
+/// <param name="logger">Optional logger.</param>
+public sealed class CacheInvalidationBehavior<TRequest, TResponse>(
+    IDistributedCache cache,
+    ILogger<CacheInvalidationBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<CacheInvalidationBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the CacheInvalidationBehavior.
-    /// </summary>
-    /// <param name="cache">The distributed cache.</param>
-    /// <param name="logger">Optional logger.</param>
-    public CacheInvalidationBehavior(
-        IDistributedCache cache,
-        ILogger<CacheInvalidationBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _logger = logger;
-    }
+    private readonly IDistributedCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    private readonly ILogger<CacheInvalidationBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -278,11 +271,11 @@ public sealed class CacheInvalidationBehavior<TRequest, TResponse> : IPipelineBe
         // Only invalidate if the request implements ICacheInvalidator
         if (request is ICacheInvalidator invalidator)
         {
-            var requestName = typeof(TRequest).Name;
+            string requestName = typeof(TRequest).Name;
 
-            foreach (var key in invalidator.CacheKeysToInvalidate)
+            foreach (string key in invalidator.CacheKeysToInvalidate)
             {
-                var fullKey = $"mediator:{key}";
+                string fullKey = $"mediator:{key}";
 
                 try
                 {

@@ -4,13 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Events;
 
@@ -114,8 +109,8 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
         CancellationToken cancellationToken = default)
     {
         var pending = _entries.Values
-            .Where(e => e.Status == ApplicationEventOutboxStatus.Pending ||
-                       e.Status == ApplicationEventOutboxStatus.Failed)
+            .Where(e => e.Status is ApplicationEventOutboxStatus.Pending or
+                       ApplicationEventOutboxStatus.Failed)
             .OrderBy(e => e.CreatedAt)
             .Take(batchSize)
             .ToList();
@@ -199,7 +194,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
     /// </summary>
     public IReadOnlyList<ApplicationEventOutboxEntry> GetAll()
     {
-        return _entries.Values.ToList();
+        return [.. _entries.Values];
     }
 
     /// <summary>
@@ -208,7 +203,7 @@ public sealed class InMemoryApplicationEventOutbox : IApplicationEventOutbox
     /// <param name="status">The status to filter by.</param>
     public IReadOnlyList<ApplicationEventOutboxEntry> GetByStatus(ApplicationEventOutboxStatus status)
     {
-        return _entries.Values.Where(e => e.Status == status).ToList();
+        return [.. _entries.Values.Where(e => e.Status == status)];
     }
 
     /// <summary>

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,259 +13,270 @@ using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
 using Mvp24Hours.Infrastructure.Caching.Providers;
 using Mvp24Hours.Infrastructure.Caching.Serializers;
 
-namespace Mvp24Hours.Infrastructure.Caching.Extensions
+namespace Mvp24Hours.Infrastructure.Caching.Extensions;
+
+/// <summary>
+/// Extension methods for registering cache providers and related services.
+/// </summary>
+public static class CacheProviderExtensions
 {
     /// <summary>
-    /// Extension methods for registering cache providers and related services.
+    /// Adds the memory cache provider to the service collection.
     /// </summary>
-    public static class CacheProviderExtensions
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure cache options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMemoryCacheProvider(
+        this IServiceCollection services,
+        Action<CacheOptions>? configureOptions = null)
     {
-        /// <summary>
-        /// Adds the memory cache provider to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional action to configure cache options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMemoryCacheProvider(
-            this IServiceCollection services,
-            Action<CacheOptions>? configureOptions = null)
+        if (services == null)
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            // Register memory cache if not already registered
-            services.AddMemoryCache();
-
-            // Register options
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
-
-            // Register serializer
-            services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
-
-            // Register key generator
-            services.AddSingleton<ICacheKeyGenerator>(sp =>
-            {
-                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
-                return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
-            });
-
-            // Register cache provider
-            services.AddSingleton<ICacheProvider>(sp =>
-            {
-                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
-                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
-                ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
-                return new MemoryCacheProvider(memoryCache, serializer, logger);
-            });
-
-            return services;
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds the distributed cache provider to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional action to configure cache options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        /// <remarks>
-        /// Requires IDistributedCache to be registered separately (e.g., AddStackExchangeRedisCache).
-        /// </remarks>
-        public static IServiceCollection AddDistributedCacheProvider(
-            this IServiceCollection services,
-            Action<CacheOptions>? configureOptions = null)
+        // Register memory cache if not already registered
+        services.AddMemoryCache();
+
+        // Register options
+        if (configureOptions != null)
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            // Register options
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
-
-            // Register serializer
-            services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
-
-            // Register key generator
-            services.AddSingleton<ICacheKeyGenerator>(sp =>
-            {
-                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
-                return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
-            });
-
-            // Register cache provider
-            services.AddSingleton<ICacheProvider>(sp =>
-            {
-                IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
-                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
-                ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
-                return new DistributedCacheProvider(distributedCache, serializer, logger);
-            });
-
-            return services;
+            services.Configure(configureOptions);
         }
 
-        /// <summary>
-        /// Adds cache infrastructure with automatic provider selection.
-        /// Uses distributed cache if available, otherwise falls back to memory cache.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional action to configure cache options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMvp24HoursCaching(
-            this IServiceCollection services,
-            Action<CacheOptions>? configureOptions = null)
+        // Register serializer
+        services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
+
+        // Register key generator
+        services.AddSingleton<ICacheKeyGenerator>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+            return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
+        });
 
-            // Register memory cache as fallback
-            services.AddMemoryCache();
+        // Register cache provider
+        services.AddSingleton<ICacheProvider>(sp =>
+        {
+            IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+            ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+            ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+            return new MemoryCacheProvider(memoryCache, serializer, logger);
+        });
 
-            // Register options
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
+        return services;
+    }
 
-            // Register serializer
-            services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
-
-            // Register key generator
-            services.AddSingleton<ICacheKeyGenerator>(sp =>
-            {
-                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
-                return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
-            });
-
-            // Register cache provider with automatic selection
-            services.AddSingleton<ICacheProvider>(sp =>
-            {
-                // Try distributed cache first
-                IDistributedCache? distributedCache = sp.GetService<IDistributedCache>();
-                if (distributedCache != null)
-                {
-                    ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
-                    ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
-                    return new DistributedCacheProvider(distributedCache, serializer, logger);
-                }
-
-                // Fallback to memory cache
-                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
-                ICacheSerializer memSerializer = sp.GetRequiredService<ICacheSerializer>();
-                ILogger<MemoryCacheProvider>? memLogger = sp.GetService<ILogger<MemoryCacheProvider>>();
-                return new MemoryCacheProvider(memoryCache, memSerializer, memLogger);
-            });
-
-            return services;
+    /// <summary>
+    /// Adds the distributed cache provider to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure cache options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <remarks>
+    /// Requires IDistributedCache to be registered separately (e.g., AddStackExchangeRedisCache).
+    /// </remarks>
+    public static IServiceCollection AddDistributedCacheProvider(
+        this IServiceCollection services,
+        Action<CacheOptions>? configureOptions = null)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds the memory cache provider with MessagePack serializer to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional action to configure cache options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddMemoryCacheProviderWithMessagePack(
-            this IServiceCollection services,
-            Action<CacheOptions>? configureOptions = null)
+        // Register options
+        if (configureOptions != null)
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            // Register memory cache if not already registered
-            services.AddMemoryCache();
-
-            // Register options
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
-
-            // Register MessagePack serializer
-            services.AddSingleton<ICacheSerializer, MessagePackCacheSerializer>();
-
-            // Register key generator
-            services.AddSingleton<ICacheKeyGenerator>(sp =>
-            {
-                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
-                return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
-            });
-
-            // Register cache provider
-            services.AddSingleton<ICacheProvider>(sp =>
-            {
-                IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
-                ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
-                ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
-                return new MemoryCacheProvider(memoryCache, serializer, logger);
-            });
-
-            return services;
+            services.Configure(configureOptions);
         }
 
-        /// <summary>
-        /// Adds the distributed cache provider with MessagePack serializer to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configureOptions">Optional action to configure cache options.</param>
-        /// <returns>The service collection for chaining.</returns>
-        /// <remarks>
-        /// Requires IDistributedCache to be registered separately (e.g., AddStackExchangeRedisCache).
-        /// </remarks>
-        public static IServiceCollection AddDistributedCacheProviderWithMessagePack(
-            this IServiceCollection services,
-            Action<CacheOptions>? configureOptions = null)
+        // Register serializer
+        services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
+
+        // Register key generator
+        services.AddSingleton<ICacheKeyGenerator>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+            return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
+        });
 
-            // Register options
-            if (configureOptions != null)
+        // Register cache provider
+        services.AddSingleton<ICacheProvider>(sp =>
+        {
+            IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+            ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+            ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+            return new DistributedCacheProvider(distributedCache, serializer, logger);
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds cache infrastructure with automatic provider selection.
+    /// Uses distributed cache if available, otherwise falls back to memory cache.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure cache options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMvp24HoursCaching(
+        this IServiceCollection services,
+        Action<CacheOptions>? configureOptions = null)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        // Register memory cache as fallback
+        services.AddMemoryCache();
+
+        // Register options
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+
+        // Register serializer
+        services.AddSingleton<ICacheSerializer, JsonCacheSerializer>();
+
+        // Register key generator
+        services.AddSingleton<ICacheKeyGenerator>(sp =>
+        {
+            CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+            return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
+        });
+
+        // Register cache provider with automatic selection
+        services.AddSingleton<ICacheProvider>(sp =>
+        {
+            // Try distributed cache first
+            IDistributedCache? distributedCache = sp.GetService<IDistributedCache>();
+            if (distributedCache != null)
             {
-                services.Configure(configureOptions);
-            }
-
-            // Register MessagePack serializer
-            services.AddSingleton<ICacheSerializer, MessagePackCacheSerializer>();
-
-            // Register key generator
-            services.AddSingleton<ICacheKeyGenerator>(sp =>
-            {
-                CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
-                return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
-            });
-
-            // Register cache provider
-            services.AddSingleton<ICacheProvider>(sp =>
-            {
-                IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
                 ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
                 ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
                 return new DistributedCacheProvider(distributedCache, serializer, logger);
-            });
+            }
 
-            return services;
-        }
+            // Fallback to memory cache
+            IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+            ICacheSerializer memSerializer = sp.GetRequiredService<ICacheSerializer>();
+            ILogger<MemoryCacheProvider>? memLogger = sp.GetService<ILogger<MemoryCacheProvider>>();
+            return new MemoryCacheProvider(memoryCache, memSerializer, memLogger);
+        });
 
-        /// <summary>
-        /// Adds a custom cache serializer to the service collection.
-        /// </summary>
-        /// <typeparam name="TSerializer">The type of serializer to register.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddCacheSerializer<TSerializer>(this IServiceCollection services)
-            where TSerializer : class, ICacheSerializer
+        return services;
+    }
+
+    /// <summary>
+    /// Adds the memory cache provider with MessagePack serializer to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure cache options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMemoryCacheProviderWithMessagePack(
+        this IServiceCollection services,
+        Action<CacheOptions>? configureOptions = null)
+    {
+        if (services == null)
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            services.AddSingleton<ICacheSerializer, TSerializer>();
-            return services;
+            throw new ArgumentNullException(nameof(services));
         }
+
+        // Register memory cache if not already registered
+        services.AddMemoryCache();
+
+        // Register options
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+
+        // Register MessagePack serializer
+        services.AddSingleton<ICacheSerializer, MessagePackCacheSerializer>();
+
+        // Register key generator
+        services.AddSingleton<ICacheKeyGenerator>(sp =>
+        {
+            CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+            return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
+        });
+
+        // Register cache provider
+        services.AddSingleton<ICacheProvider>(sp =>
+        {
+            IMemoryCache memoryCache = sp.GetRequiredService<IMemoryCache>();
+            ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+            ILogger<MemoryCacheProvider>? logger = sp.GetService<ILogger<MemoryCacheProvider>>();
+            return new MemoryCacheProvider(memoryCache, serializer, logger);
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds the distributed cache provider with MessagePack serializer to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure cache options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <remarks>
+    /// Requires IDistributedCache to be registered separately (e.g., AddStackExchangeRedisCache).
+    /// </remarks>
+    public static IServiceCollection AddDistributedCacheProviderWithMessagePack(
+        this IServiceCollection services,
+        Action<CacheOptions>? configureOptions = null)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        // Register options
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+
+        // Register MessagePack serializer
+        services.AddSingleton<ICacheSerializer, MessagePackCacheSerializer>();
+
+        // Register key generator
+        services.AddSingleton<ICacheKeyGenerator>(sp =>
+        {
+            CacheOptions options = sp.GetService<IOptions<CacheOptions>>()?.Value ?? new CacheOptions();
+            return new DefaultCacheKeyGenerator(options.DefaultKeyPrefix, options.KeySeparator);
+        });
+
+        // Register cache provider
+        services.AddSingleton<ICacheProvider>(sp =>
+        {
+            IDistributedCache distributedCache = sp.GetRequiredService<IDistributedCache>();
+            ICacheSerializer serializer = sp.GetRequiredService<ICacheSerializer>();
+            ILogger<DistributedCacheProvider>? logger = sp.GetService<ILogger<DistributedCacheProvider>>();
+            return new DistributedCacheProvider(distributedCache, serializer, logger);
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds a custom cache serializer to the service collection.
+    /// </summary>
+    /// <typeparam name="TSerializer">The type of serializer to register.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCacheSerializer<TSerializer>(this IServiceCollection services)
+        where TSerializer : class, ICacheSerializer
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        services.AddSingleton<ICacheSerializer, TSerializer>();
+        return services;
     }
 }
 

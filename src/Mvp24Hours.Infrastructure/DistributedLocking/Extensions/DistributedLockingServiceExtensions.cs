@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.DistributedLocking.Contract;
@@ -12,255 +10,256 @@ using Mvp24Hours.Infrastructure.DistributedLocking.Metrics;
 using Mvp24Hours.Infrastructure.DistributedLocking.Providers;
 using StackExchange.Redis;
 
-namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions
+namespace Mvp24Hours.Infrastructure.DistributedLocking.Extensions;
+
+/// <summary>
+/// Extension methods for registering distributed locking services.
+/// </summary>
+public static class DistributedLockingServiceExtensions
 {
     /// <summary>
-    /// Extension methods for registering distributed locking services.
+    /// Adds distributed locking services to the service collection.
     /// </summary>
-    public static class DistributedLockingServiceExtensions
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">Optional configuration action.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <remarks>
+    /// This method registers the <see cref="IDistributedLockFactory"/> and allows
+    /// configuration of multiple providers. At least one provider must be added.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddDistributedLocking(builder =>
+    /// {
+    ///     builder.AddRedisProvider("Redis", connectionMultiplexer);
+    ///     builder.AddInMemoryProvider("InMemory");
+    ///     builder.SetDefaultProvider("Redis");
+    /// });
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddDistributedLocking(
+        this IServiceCollection services,
+        Action<IDistributedLockingBuilder>? configure = null)
     {
-        /// <summary>
-        /// Adds distributed locking services to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configure">Optional configuration action.</param>
-        /// <returns>The service collection for chaining.</returns>
-        /// <remarks>
-        /// This method registers the <see cref="IDistributedLockFactory"/> and allows
-        /// configuration of multiple providers. At least one provider must be added.
-        /// </remarks>
-        /// <example>
-        /// <code>
-        /// services.AddDistributedLocking(builder =>
-        /// {
-        ///     builder.AddRedisProvider("Redis", connectionMultiplexer);
-        ///     builder.AddInMemoryProvider("InMemory");
-        ///     builder.SetDefaultProvider("Redis");
-        /// });
-        /// </code>
-        /// </example>
-        public static IServiceCollection AddDistributedLocking(
-            this IServiceCollection services,
-            Action<IDistributedLockingBuilder>? configure = null)
+        // Register metrics as singleton
+        services.AddSingleton<Metrics.DistributedLockMetrics>();
+
+        var builder = new DistributedLockingBuilder(services);
+        configure?.Invoke(builder);
+
+        // Register factory
+        services.AddSingleton<IDistributedLockFactory>(serviceProvider =>
         {
-            // Register metrics as singleton
-            services.AddSingleton<Metrics.DistributedLockMetrics>();
+            Dictionary<string, IDistributedLock> providers = builder.BuildProviders(serviceProvider);
+            return new DistributedLockFactory(providers, builder.DefaultProviderName);
+        });
 
-            var builder = new DistributedLockingBuilder(services);
-            configure?.Invoke(builder);
-
-            // Register factory
-            services.AddSingleton<IDistributedLockFactory>(serviceProvider =>
-            {
-                Dictionary<string, IDistributedLock> providers = builder.BuildProviders(serviceProvider);
-                return new DistributedLockFactory(providers, builder.DefaultProviderName);
-            });
-
-            return services;
-        }
-
-        /// <summary>
-        /// Adds an in-memory distributed lock provider.
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="name">The provider name.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder AddInMemoryProvider(
-            this IDistributedLockingBuilder builder,
-            string name = "InMemory")
-        {
-            builder.RegisterProvider(name, serviceProvider =>
-            {
-                ILogger<InMemoryDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<InMemoryDistributedLockProvider>>();
-                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
-                return new InMemoryDistributedLockProvider(logger, metrics);
-            });
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds a Redis distributed lock provider.
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="name">The provider name.</param>
-        /// <param name="redisConnection">The Redis connection multiplexer.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder AddRedisProvider(
-            this IDistributedLockingBuilder builder,
-            string name,
-            IConnectionMultiplexer redisConnection)
-        {
-            if (redisConnection == null)
-                throw new ArgumentNullException(nameof(redisConnection));
-
-            builder.RegisterProvider(name, serviceProvider =>
-            {
-                ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
-                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
-                return new RedisDistributedLockProvider(redisConnection, logger, metrics);
-            });
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds a Redis RedLock distributed lock provider (multiple Redis instances).
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="name">The provider name.</param>
-        /// <param name="redisConnections">Array of Redis connection multiplexers.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder AddRedisRedLockProvider(
-            this IDistributedLockingBuilder builder,
-            string name,
-            IConnectionMultiplexer[] redisConnections)
-        {
-            if (redisConnections == null || redisConnections.Length == 0)
-                throw new ArgumentException("At least one Redis connection is required.", nameof(redisConnections));
-
-            builder.RegisterProvider(name, serviceProvider =>
-            {
-                ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
-                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
-                return new RedisDistributedLockProvider(redisConnections, logger, metrics);
-            });
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds a SQL Server distributed lock provider.
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="name">The provider name.</param>
-        /// <param name="connectionString">SQL Server connection string.</param>
-        /// <param name="lockOwner">Lock owner: "Session" (default) or "Transaction".</param>
-        /// <param name="lockMode">Lock mode: "Exclusive" (default), "Shared", "Update", etc.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder AddSqlServerProvider(
-            this IDistributedLockingBuilder builder,
-            string name,
-            string connectionString,
-            string lockOwner = "Session",
-            string lockMode = "Exclusive")
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
-
-            builder.RegisterProvider(name, serviceProvider =>
-            {
-                ILogger<SqlServerDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<SqlServerDistributedLockProvider>>();
-                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
-                return new SqlServerDistributedLockProvider(connectionString, logger, metrics, lockOwner, lockMode);
-            });
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds a PostgreSQL distributed lock provider.
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="name">The provider name.</param>
-        /// <param name="connectionString">PostgreSQL connection string.</param>
-        /// <param name="useSharedLock">Whether to use shared locks instead of exclusive locks.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder AddPostgreSqlProvider(
-            this IDistributedLockingBuilder builder,
-            string name,
-            string connectionString,
-            bool useSharedLock = false)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
-
-            builder.RegisterProvider(name, serviceProvider =>
-            {
-                ILogger<PostgreSqlDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<PostgreSqlDistributedLockProvider>>();
-                DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
-                return new PostgreSqlDistributedLockProvider(connectionString, logger, metrics, useSharedLock);
-            });
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Sets the default provider name.
-        /// </summary>
-        /// <param name="builder">The distributed locking builder.</param>
-        /// <param name="providerName">The default provider name.</param>
-        /// <returns>The builder for chaining.</returns>
-        public static IDistributedLockingBuilder SetDefaultProvider(
-            this IDistributedLockingBuilder builder,
-            string providerName)
-        {
-            builder.DefaultProviderName = providerName;
-            return builder;
-        }
+        return services;
     }
 
     /// <summary>
-    /// Builder interface for configuring distributed locking.
+    /// Adds an in-memory distributed lock provider.
     /// </summary>
-    public interface IDistributedLockingBuilder
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="name">The provider name.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder AddInMemoryProvider(
+        this IDistributedLockingBuilder builder,
+        string name = "InMemory")
     {
-        /// <summary>
-        /// Gets the service collection.
-        /// </summary>
-        IServiceCollection Services { get; }
+        builder.RegisterProvider(name, serviceProvider =>
+        {
+            ILogger<InMemoryDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<InMemoryDistributedLockProvider>>();
+            DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+            return new InMemoryDistributedLockProvider(logger, metrics);
+        });
 
-        /// <summary>
-        /// Gets or sets the default provider name.
-        /// </summary>
-        string? DefaultProviderName { get; set; }
-
-        /// <summary>
-        /// Registers a provider with a factory function.
-        /// </summary>
-        /// <param name="name">The provider name.</param>
-        /// <param name="factory">Factory function to create the provider.</param>
-        void RegisterProvider(string name, Func<IServiceProvider, IDistributedLock> factory);
+        return builder;
     }
 
     /// <summary>
-    /// Builder implementation for configuring distributed locking.
+    /// Adds a Redis distributed lock provider.
     /// </summary>
-    internal class DistributedLockingBuilder : IDistributedLockingBuilder
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="name">The provider name.</param>
+    /// <param name="redisConnection">The Redis connection multiplexer.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder AddRedisProvider(
+        this IDistributedLockingBuilder builder,
+        string name,
+        IConnectionMultiplexer redisConnection)
     {
-        private readonly Dictionary<string, Func<IServiceProvider, IDistributedLock>> _providerFactories = [];
-
-        public IServiceCollection Services { get; }
-        public string? DefaultProviderName { get; set; }
-
-        public DistributedLockingBuilder(IServiceCollection services)
+        if (redisConnection == null)
         {
-            Services = services ?? throw new ArgumentNullException(nameof(services));
+            throw new ArgumentNullException(nameof(redisConnection));
         }
 
-        public void RegisterProvider(string name, Func<IServiceProvider, IDistributedLock> factory)
+        builder.RegisterProvider(name, serviceProvider =>
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Provider name cannot be null or empty.", nameof(name));
+            ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
+            DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+            return new RedisDistributedLockProvider(redisConnection, logger, metrics);
+        });
 
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
+        return builder;
+    }
 
-            _providerFactories[name] = factory;
+    /// <summary>
+    /// Adds a Redis RedLock distributed lock provider (multiple Redis instances).
+    /// </summary>
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="name">The provider name.</param>
+    /// <param name="redisConnections">Array of Redis connection multiplexers.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder AddRedisRedLockProvider(
+        this IDistributedLockingBuilder builder,
+        string name,
+        IConnectionMultiplexer[] redisConnections)
+    {
+        if (redisConnections == null || redisConnections.Length == 0)
+        {
+            throw new ArgumentException("At least one Redis connection is required.", nameof(redisConnections));
         }
 
-        internal Dictionary<string, IDistributedLock> BuildProviders(IServiceProvider serviceProvider)
+        builder.RegisterProvider(name, serviceProvider =>
         {
-            var providers = new Dictionary<string, IDistributedLock>();
+            ILogger<RedisDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<RedisDistributedLockProvider>>();
+            DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+            return new RedisDistributedLockProvider(redisConnections, logger, metrics);
+        });
 
-            foreach ((string? name, Func<IServiceProvider, IDistributedLock>? factory) in _providerFactories)
-            {
-                IDistributedLock provider = factory(serviceProvider);
-                providers[name] = provider;
-            }
+        return builder;
+    }
 
-            return providers;
+    /// <summary>
+    /// Adds a SQL Server distributed lock provider.
+    /// </summary>
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="name">The provider name.</param>
+    /// <param name="connectionString">SQL Server connection string.</param>
+    /// <param name="lockOwner">Lock owner: "Session" (default) or "Transaction".</param>
+    /// <param name="lockMode">Lock mode: "Exclusive" (default), "Shared", "Update", etc.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder AddSqlServerProvider(
+        this IDistributedLockingBuilder builder,
+        string name,
+        string connectionString,
+        string lockOwner = "Session",
+        string lockMode = "Exclusive")
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
         }
+
+        builder.RegisterProvider(name, serviceProvider =>
+        {
+            ILogger<SqlServerDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<SqlServerDistributedLockProvider>>();
+            DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+            return new SqlServerDistributedLockProvider(connectionString, logger, metrics, lockOwner, lockMode);
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds a PostgreSQL distributed lock provider.
+    /// </summary>
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="name">The provider name.</param>
+    /// <param name="connectionString">PostgreSQL connection string.</param>
+    /// <param name="useSharedLock">Whether to use shared locks instead of exclusive locks.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder AddPostgreSqlProvider(
+        this IDistributedLockingBuilder builder,
+        string name,
+        string connectionString,
+        bool useSharedLock = false)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
+        }
+
+        builder.RegisterProvider(name, serviceProvider =>
+        {
+            ILogger<PostgreSqlDistributedLockProvider>? logger = serviceProvider.GetService<ILogger<PostgreSqlDistributedLockProvider>>();
+            DistributedLockMetrics? metrics = serviceProvider.GetService<Metrics.DistributedLockMetrics>();
+            return new PostgreSqlDistributedLockProvider(connectionString, logger, metrics, useSharedLock);
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Sets the default provider name.
+    /// </summary>
+    /// <param name="builder">The distributed locking builder.</param>
+    /// <param name="providerName">The default provider name.</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDistributedLockingBuilder SetDefaultProvider(
+        this IDistributedLockingBuilder builder,
+        string providerName)
+    {
+        builder.DefaultProviderName = providerName;
+        return builder;
+    }
+}
+
+/// <summary>
+/// Builder interface for configuring distributed locking.
+/// </summary>
+public interface IDistributedLockingBuilder
+{
+    /// <summary>
+    /// Gets the service collection.
+    /// </summary>
+    IServiceCollection Services { get; }
+
+    /// <summary>
+    /// Gets or sets the default provider name.
+    /// </summary>
+    string? DefaultProviderName { get; set; }
+
+    /// <summary>
+    /// Registers a provider with a factory function.
+    /// </summary>
+    /// <param name="name">The provider name.</param>
+    /// <param name="factory">Factory function to create the provider.</param>
+    void RegisterProvider(string name, Func<IServiceProvider, IDistributedLock> factory);
+}
+
+/// <summary>
+/// Builder implementation for configuring distributed locking.
+/// </summary>
+internal class DistributedLockingBuilder(IServiceCollection services) : IDistributedLockingBuilder
+{
+    private readonly Dictionary<string, Func<IServiceProvider, IDistributedLock>> _providerFactories = [];
+
+    public IServiceCollection Services { get; } = services ?? throw new ArgumentNullException(nameof(services));
+    public string? DefaultProviderName { get; set; }
+
+    public void RegisterProvider(string name, Func<IServiceProvider, IDistributedLock> factory)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Provider name cannot be null or empty.", nameof(name));
+        }
+
+        _providerFactories[name] = factory ?? throw new ArgumentNullException(nameof(factory));
+    }
+
+    internal Dictionary<string, IDistributedLock> BuildProviders(IServiceProvider serviceProvider)
+    {
+        var providers = new Dictionary<string, IDistributedLock>();
+
+        foreach ((string? name, Func<IServiceProvider, IDistributedLock>? factory) in _providerFactories)
+        {
+            IDistributedLock provider = factory(serviceProvider);
+            providers[name] = provider;
+        }
+
+        return providers;
     }
 }
 

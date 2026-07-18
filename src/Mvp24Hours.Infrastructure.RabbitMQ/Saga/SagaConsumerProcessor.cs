@@ -3,171 +3,156 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga
-{
-    /// <summary>
-    /// Processes messages for saga consumers with automatic correlation and state management.
-    /// </summary>
-    /// <typeparam name="TData">The type of saga data.</typeparam>
-    /// <typeparam name="TMessage">The type of message.</typeparam>
-    /// <typeparam name="TConsumer">The type of saga consumer.</typeparam>
-    public class SagaConsumerProcessor<TData, TMessage, TConsumer>
-        where TData : class, new()
-        where TMessage : class
-        where TConsumer : class, ISagaConsumer<TData, TMessage>
-    {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>? _logger;
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Saga;
 
-        /// <summary>
-        /// Creates a new saga consumer processor.
-        /// </summary>
-        public SagaConsumerProcessor(
-            IServiceProvider serviceProvider,
-            ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>? logger = null)
+/// <summary>
+/// Processes messages for saga consumers with automatic correlation and state management.
+/// </summary>
+/// <typeparam name="TData">The type of saga data.</typeparam>
+/// <typeparam name="TMessage">The type of message.</typeparam>
+/// <typeparam name="TConsumer">The type of saga consumer.</typeparam>
+/// <remarks>
+/// Creates a new saga consumer processor.
+/// </remarks>
+public class SagaConsumerProcessor<TData, TMessage, TConsumer>(
+    IServiceProvider serviceProvider,
+    ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>? logger = null)
+    where TData : class, new()
+    where TMessage : class
+    where TConsumer : class, ISagaConsumer<TData, TMessage>
+{
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>? _logger = logger;
+
+    /// <summary>
+    /// Processes a message by finding/creating a saga instance and invoking the consumer.
+    /// </summary>
+    /// <param name="context">The consume context.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task ProcessAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
+    {
+        using Core.Contract.IServiceScope scope = context.CreateScope();
+
+        TConsumer consumer = scope.ServiceProvider.GetRequiredService<TConsumer>();
+        ISagaRepository<TData> repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
+        IMessageScheduler? scheduler = scope.ServiceProvider.GetService<IMessageScheduler>();
+        IMvpRabbitMQClient? rabbitClient = scope.ServiceProvider.GetService<IMvpRabbitMQClient>();
+
+        // Extract correlation ID from message
+        Guid correlationId = consumer.GetCorrelationId(context.Message);
+
+        _logger?.LogDebug(
+            "Processing message {MessageType} with correlation ID {CorrelationId}",
+            typeof(TMessage).Name, correlationId);
+
+        // Find or create saga instance
+        SagaInstance<TData>? instance = await repository.FindAsync(correlationId, cancellationToken);
+        bool isNew = false;
+
+        if (instance == null)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _logger = logger;
+            if (consumer.CanStartSaga(context.Message))
+            {
+                instance = await repository.CreateAsync(
+                    correlationId,
+                    "Initial",
+                    new TData(),
+                    cancellationToken);
+                isNew = true;
+
+                _logger?.LogInformation(
+                    "Created new saga instance {SagaId} from message {MessageType}",
+                    correlationId, typeof(TMessage).Name);
+            }
+            else
+            {
+                _logger?.LogWarning(
+                    "Saga instance not found for correlation ID {CorrelationId} and message {MessageType} cannot start saga",
+                    correlationId, typeof(TMessage).Name);
+
+                await consumer.OnSagaNotFoundAsync(context, correlationId, cancellationToken);
+                return;
+            }
         }
 
-        /// <summary>
-        /// Processes a message by finding/creating a saga instance and invoking the consumer.
-        /// </summary>
-        /// <param name="context">The consume context.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public async Task ProcessAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
+        // Check if saga can still process messages
+        if (instance.IsCompleted)
         {
-            using Core.Contract.IServiceScope scope = context.CreateScope();
+            _logger?.LogWarning(
+                "Saga {SagaId} is already completed, ignoring message {MessageType}",
+                correlationId, typeof(TMessage).Name);
+            return;
+        }
 
-            TConsumer consumer = scope.ServiceProvider.GetRequiredService<TConsumer>();
-            ISagaRepository<TData> repository = scope.ServiceProvider.GetRequiredService<ISagaRepository<TData>>();
-            IMessageScheduler? scheduler = scope.ServiceProvider.GetService<IMessageScheduler>();
-            IMvpRabbitMQClient? rabbitClient = scope.ServiceProvider.GetService<IMvpRabbitMQClient>();
+        if (instance.IsFaulted)
+        {
+            _logger?.LogWarning(
+                "Saga {SagaId} is faulted, ignoring message {MessageType}",
+                correlationId, typeof(TMessage).Name);
+            return;
+        }
 
-            // Extract correlation ID from message
-            Guid correlationId = consumer.GetCorrelationId(context.Message);
+        // Create saga context and invoke consumer
+        var sagaContext = new SagaConsumeContext<TData, TMessage>(
+            context,
+            instance,
+            isNew,
+            scheduler,
+            rabbitClient,
+            repository);
+
+        try
+        {
+            await consumer.ConsumeAsync(sagaContext, cancellationToken);
+
+            // Save saga state
+            await repository.SaveAsync(instance, cancellationToken);
 
             _logger?.LogDebug(
-                "Processing message {MessageType} with correlation ID {CorrelationId}",
+                "Saga {SagaId} processed message {MessageType}, new state: {State}",
+                correlationId, typeof(TMessage).Name, instance.CurrentState);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex,
+                "Error processing message {MessageType} for saga {SagaId}",
                 typeof(TMessage).Name, correlationId);
 
-            // Find or create saga instance
-            SagaInstance<TData>? instance = await repository.FindAsync(correlationId, cancellationToken);
-            var isNew = false;
+            instance.Fault(ex.Message);
+            await repository.SaveAsync(instance, cancellationToken);
 
-            if (instance == null)
-            {
-                if (consumer.CanStartSaga(context.Message))
-                {
-                    instance = await repository.CreateAsync(
-                        correlationId,
-                        "Initial",
-                        new TData(),
-                        cancellationToken);
-                    isNew = true;
-
-                    _logger?.LogInformation(
-                        "Created new saga instance {SagaId} from message {MessageType}",
-                        correlationId, typeof(TMessage).Name);
-                }
-                else
-                {
-                    _logger?.LogWarning(
-                        "Saga instance not found for correlation ID {CorrelationId} and message {MessageType} cannot start saga",
-                        correlationId, typeof(TMessage).Name);
-
-                    await consumer.OnSagaNotFoundAsync(context, correlationId, cancellationToken);
-                    return;
-                }
-            }
-
-            // Check if saga can still process messages
-            if (instance.IsCompleted)
-            {
-                _logger?.LogWarning(
-                    "Saga {SagaId} is already completed, ignoring message {MessageType}",
-                    correlationId, typeof(TMessage).Name);
-                return;
-            }
-
-            if (instance.IsFaulted)
-            {
-                _logger?.LogWarning(
-                    "Saga {SagaId} is faulted, ignoring message {MessageType}",
-                    correlationId, typeof(TMessage).Name);
-                return;
-            }
-
-            // Create saga context and invoke consumer
-            var sagaContext = new SagaConsumeContext<TData, TMessage>(
-                context,
-                instance,
-                isNew,
-                scheduler,
-                rabbitClient,
-                repository);
-
-            try
-            {
-                await consumer.ConsumeAsync(sagaContext, cancellationToken);
-
-                // Save saga state
-                await repository.SaveAsync(instance, cancellationToken);
-
-                _logger?.LogDebug(
-                    "Saga {SagaId} processed message {MessageType}, new state: {State}",
-                    correlationId, typeof(TMessage).Name, instance.CurrentState);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex,
-                    "Error processing message {MessageType} for saga {SagaId}",
-                    typeof(TMessage).Name, correlationId);
-
-                instance.Fault(ex.Message);
-                await repository.SaveAsync(instance, cancellationToken);
-
-                throw;
-            }
+            throw;
         }
     }
+}
 
-    /// <summary>
-    /// Message consumer adapter that wraps a saga consumer.
-    /// </summary>
-    /// <typeparam name="TData">The type of saga data.</typeparam>
-    /// <typeparam name="TMessage">The type of message.</typeparam>
-    /// <typeparam name="TConsumer">The type of saga consumer.</typeparam>
-    public class SagaMessageConsumerAdapter<TData, TMessage, TConsumer> : IMessageConsumer<TMessage>
-        where TData : class, new()
-        where TMessage : class
-        where TConsumer : class, ISagaConsumer<TData, TMessage>
+/// <summary>
+/// Message consumer adapter that wraps a saga consumer.
+/// </summary>
+/// <typeparam name="TData">The type of saga data.</typeparam>
+/// <typeparam name="TMessage">The type of message.</typeparam>
+/// <typeparam name="TConsumer">The type of saga consumer.</typeparam>
+/// <remarks>
+/// Creates a new saga message consumer adapter.
+/// </remarks>
+public class SagaMessageConsumerAdapter<TData, TMessage, TConsumer>(IServiceProvider serviceProvider) : IMessageConsumer<TMessage>
+    where TData : class, new()
+    where TMessage : class
+    where TConsumer : class, ISagaConsumer<TData, TMessage>
+{
+    private readonly SagaConsumerProcessor<TData, TMessage, TConsumer> _processor = new(
+            serviceProvider,
+            serviceProvider.GetService<ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>>());
+
+    /// <inheritdoc />
+    public Task ConsumeAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
     {
-        private readonly SagaConsumerProcessor<TData, TMessage, TConsumer> _processor;
-
-        /// <summary>
-        /// Creates a new saga message consumer adapter.
-        /// </summary>
-        public SagaMessageConsumerAdapter(IServiceProvider serviceProvider)
-        {
-            _processor = new SagaConsumerProcessor<TData, TMessage, TConsumer>(
-                serviceProvider,
-                serviceProvider.GetService<ILogger<SagaConsumerProcessor<TData, TMessage, TConsumer>>>());
-        }
-
-        /// <inheritdoc />
-        public Task ConsumeAsync(IConsumeContext<TMessage> context, CancellationToken cancellationToken = default)
-        {
-            return _processor.ProcessAsync(context, cancellationToken);
-        }
+        return _processor.ProcessAsync(context, cancellationToken);
     }
 }
 

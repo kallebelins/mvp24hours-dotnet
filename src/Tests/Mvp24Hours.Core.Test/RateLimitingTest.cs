@@ -5,7 +5,6 @@
 //=====================================================================================
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.RateLimiting;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.Extensions;
@@ -37,7 +36,7 @@ public class RateLimitingTest : IDisposable
     public void GetRateLimiter_WithValidKey_ReturnsRateLimiter()
     {
         // Arrange
-        var key = "test_key";
+        string key = "test_key";
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         // Act
@@ -51,7 +50,7 @@ public class RateLimitingTest : IDisposable
     public void GetRateLimiter_WithSameKey_ReturnsSameInstance()
     {
         // Arrange
-        var key = "same_key";
+        string key = "same_key";
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         // Act
@@ -80,7 +79,7 @@ public class RateLimitingTest : IDisposable
     public void GetRateLimiter_WithNullOptions_ThrowsArgumentNullException()
     {
         // Arrange
-        var key = "test_key";
+        string key = "test_key";
         NativeRateLimiterOptions? options = null;
 
         // Act
@@ -94,7 +93,7 @@ public class RateLimitingTest : IDisposable
     public async Task AcquireAsync_WithAvailablePermits_ReturnsAcquiredLease()
     {
         // Arrange
-        var key = "acquire_test";
+        string key = "acquire_test";
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 10, window: TimeSpan.FromSeconds(1));
 
         // Act
@@ -109,7 +108,7 @@ public class RateLimitingTest : IDisposable
     public async Task AcquireAsync_WithExceededPermits_ReturnsRejectedLease()
     {
         // Arrange
-        var key = "exceed_test";
+        string key = "exceed_test";
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 2, window: TimeSpan.FromSeconds(1));
 
         // Act - Acquire all permits
@@ -131,7 +130,7 @@ public class RateLimitingTest : IDisposable
     public async Task AcquireAsync_WithRejectedLease_MayHaveRetryAfterMetadata()
     {
         // Arrange
-        var key = "retry_after_test";
+        string key = "retry_after_test";
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit: 1, window: TimeSpan.FromSeconds(1));
 
         // Act
@@ -157,12 +156,12 @@ public class RateLimitingTest : IDisposable
     public void TryRemoveRateLimiter_WithExistingKey_ReturnsTrue()
     {
         // Arrange
-        var key = "remove_test";
+        string key = "remove_test";
         var options = NativeRateLimiterOptions.SlidingWindow(100);
         _rateLimiterProvider.GetRateLimiter(key, options);
 
         // Act
-        var result = _rateLimiterProvider.TryRemoveRateLimiter(key);
+        bool result = _rateLimiterProvider.TryRemoveRateLimiter(key);
 
         // Assert
         result.Should().BeTrue();
@@ -172,10 +171,10 @@ public class RateLimitingTest : IDisposable
     public void TryRemoveRateLimiter_WithNonExistentKey_ReturnsFalse()
     {
         // Arrange
-        var key = "non_existent";
+        string key = "non_existent";
 
         // Act
-        var result = _rateLimiterProvider.TryRemoveRateLimiter(key);
+        bool result = _rateLimiterProvider.TryRemoveRateLimiter(key);
 
         // Assert
         result.Should().BeFalse();
@@ -201,7 +200,7 @@ public class RateLimitingTest : IDisposable
     public void FixedWindow_WithCustomValues_CreatesCorrectOptions()
     {
         // Arrange
-        var permitLimit = 50;
+        int permitLimit = 50;
         var window = TimeSpan.FromSeconds(30);
 
         // Act
@@ -230,9 +229,9 @@ public class RateLimitingTest : IDisposable
     public void SlidingWindow_WithCustomValues_CreatesCorrectOptions()
     {
         // Arrange
-        var permitLimit = 200;
+        int permitLimit = 200;
         var window = TimeSpan.FromSeconds(60);
-        var segmentsPerWindow = 8;
+        int segmentsPerWindow = 8;
 
         // Act
         var options = NativeRateLimiterOptions.SlidingWindow(permitLimit, window, segmentsPerWindow);
@@ -261,9 +260,9 @@ public class RateLimitingTest : IDisposable
     public void TokenBucket_WithCustomValues_CreatesCorrectOptions()
     {
         // Arrange
-        var tokenLimit = 50;
+        int tokenLimit = 50;
         var replenishmentPeriod = TimeSpan.FromSeconds(5);
-        var tokensPerPeriod = 5;
+        int tokensPerPeriod = 5;
 
         // Act
         var options = NativeRateLimiterOptions.TokenBucket(tokenLimit, replenishmentPeriod, tokensPerPeriod);
@@ -291,8 +290,8 @@ public class RateLimitingTest : IDisposable
     public void Concurrency_WithCustomValues_CreatesCorrectOptions()
     {
         // Arrange
-        var permitLimit = 5;
-        var queueLimit = 10;
+        int permitLimit = 5;
+        int queueLimit = 10;
 
         // Act
         var options = NativeRateLimiterOptions.Concurrency(permitLimit, queueLimit);
@@ -323,7 +322,7 @@ public class RateLimitingTest : IDisposable
     public void RateLimitExceededException_WithMessage_HasCorrectMessage()
     {
         // Arrange
-        var message = "Custom rate limit message";
+        string message = "Custom rate limit message";
 
         // Act
         var exception = new RateLimitExceededException(message);
@@ -337,11 +336,11 @@ public class RateLimitingTest : IDisposable
     public void RateLimitExceededException_WithDetails_HasAllProperties()
     {
         // Arrange
-        var message = "Rate limit exceeded";
-        var key = "test_key";
+        string message = "Rate limit exceeded";
+        string key = "test_key";
         var retryAfter = TimeSpan.FromSeconds(30);
-        var permitLimit = 100;
-        var errorCode = "CUSTOM_ERROR";
+        int permitLimit = 100;
+        string errorCode = "CUSTOM_ERROR";
 
         // Act
         var exception = new RateLimitExceededException(message, key, retryAfter, permitLimit, errorCode);
@@ -358,7 +357,7 @@ public class RateLimitingTest : IDisposable
     public void RateLimitExceededException_ForKey_WithRetryAfter_IncludesRetryAfterInMessage()
     {
         // Arrange
-        var key = "test_key";
+        string key = "test_key";
         var retryAfter = TimeSpan.FromSeconds(45);
 
         // Act
@@ -375,8 +374,8 @@ public class RateLimitingTest : IDisposable
     public void RateLimitExceededException_ForKey_WithPermitLimit_IncludesPermitLimit()
     {
         // Arrange
-        var key = "test_key";
-        var permitLimit = 50;
+        string key = "test_key";
+        int permitLimit = 50;
 
         // Act
         var exception = RateLimitExceededException.ForKey(key, null, permitLimit);
@@ -411,7 +410,7 @@ public class RateLimitingTest : IDisposable
     {
         // Arrange
         var services = new ServiceCollection();
-        var key = "sliding_window_test";
+        string key = "sliding_window_test";
 
         // Act
         services.AddSlidingWindowRateLimiter(key, permitLimit: 200);
@@ -427,7 +426,7 @@ public class RateLimitingTest : IDisposable
     {
         // Arrange
         var services = new ServiceCollection();
-        var key = "fixed_window_test";
+        string key = "fixed_window_test";
 
         // Act
         services.AddFixedWindowRateLimiter(key, permitLimit: 150);
@@ -443,7 +442,7 @@ public class RateLimitingTest : IDisposable
     {
         // Arrange
         var services = new ServiceCollection();
-        var key = "token_bucket_test";
+        string key = "token_bucket_test";
 
         // Act
         services.AddTokenBucketRateLimiter(key, tokenLimit: 75);
@@ -459,7 +458,7 @@ public class RateLimitingTest : IDisposable
     {
         // Arrange
         var services = new ServiceCollection();
-        var key = "concurrency_test";
+        string key = "concurrency_test";
 
         // Act
         services.AddConcurrencyRateLimiter(key, permitLimit: 5);
@@ -478,7 +477,7 @@ public class RateLimitingTest : IDisposable
     public async Task FixedWindowRateLimiter_ResetsAfterWindow()
     {
         // Arrange
-        var key = "fixed_window_reset";
+        string key = "fixed_window_reset";
         var options = NativeRateLimiterOptions.FixedWindow(
             permitLimit: 2,
             window: TimeSpan.FromMilliseconds(100));
@@ -515,7 +514,7 @@ public class RateLimitingTest : IDisposable
     public async Task ConcurrencyLimiter_LimitsConcurrentOperations()
     {
         // Arrange
-        var key = "concurrency_limit";
+        string key = "concurrency_limit";
         var options = NativeRateLimiterOptions.Concurrency(permitLimit: 2);
 
         // Act - Try to acquire 3 permits concurrently
@@ -551,8 +550,8 @@ public class RateLimitingTest : IDisposable
         ServiceProvider provider = services.BuildServiceProvider();
         IRateLimiterProvider rateLimiterProvider = provider.GetRequiredService<IRateLimiterProvider>();
 
-        var key1 = "dispose_test_1";
-        var key2 = "dispose_test_2";
+        string key1 = "dispose_test_1";
+        string key2 = "dispose_test_2";
         var options = NativeRateLimiterOptions.SlidingWindow(100);
 
         rateLimiterProvider.GetRateLimiter(key1, options);

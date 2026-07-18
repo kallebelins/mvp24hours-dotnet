@@ -6,7 +6,6 @@
 
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -38,26 +37,21 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// // [Mediator] Completed GetUserQuery (ID: a1b2c3d4) in 42ms
 /// </code>
 /// </example>
-public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the LoggingBehavior.
+/// </remarks>
+/// <param name="logger">Logger for recording messages.</param>
+/// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
-
-    /// <summary>
-    /// Creates a new instance of the LoggingBehavior.
-    /// </summary>
-    /// <param name="logger">Logger for recording messages.</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
-    public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-        var requestId = Guid.NewGuid().ToString("N")[..8];
+        string requestName = typeof(TRequest).Name;
+        string requestId = Guid.NewGuid().ToString("N")[..8];
 
         _logger.LogInformation(
             "[Mediator] Starting {RequestName} (ID: {RequestId})",

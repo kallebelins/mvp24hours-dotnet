@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -347,7 +346,9 @@ public static class CacheActivitySource
         Activity? activity = Source.StartActivity(operationName, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.Operation, operation);
 
@@ -375,7 +376,9 @@ public static class CacheActivitySource
     public static void SetSuccess(Activity? activity, bool isHit = false)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, true);
         activity.SetTag(TagNames.IsHit, isHit);
@@ -389,7 +392,9 @@ public static class CacheActivitySource
     public static void SetError(Activity? activity, Exception exception)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, false);
         activity.SetTag(TagNames.ErrorType, exception.GetType().FullName);
@@ -415,7 +420,9 @@ public static class CacheActivitySource
         int? batchSize = null)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.DurationMs, durationMs);
 

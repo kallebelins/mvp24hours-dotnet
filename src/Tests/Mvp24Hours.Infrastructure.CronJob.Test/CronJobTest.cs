@@ -1,54 +1,48 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Mvp24Hours.Infrastructure.CronJob;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
 
-namespace Mvp24Hours.Infrastructure.CronJob.Test
+namespace Mvp24Hours.Infrastructure.CronJob.Test;
+
+/// <summary>
+/// Tests for CronJob module functionality.
+/// </summary>
+[Trait("Category", "Unit")]
+public class CronJobTest
 {
-    /// <summary>
-    /// Tests for CronJob module functionality.
-    /// </summary>
-    [Trait("Category", "Unit")]
-    public class CronJobTest
+    #region [ Fields ]
+    #endregion
+
+    #region [ Configure ]
+    #endregion
+
+    [Fact]
+    public async Task CronJobWithCorrectScheduler()
     {
-        #region [ Fields ]
-        #endregion
-
-        #region [ Configure ]
-        #endregion
-
-        [Fact]
-        public async Task CronJobWithCorrectScheduler()
+        var timerService = new TimerService();
+        var services = new ServiceCollection();
+        services.AddSingleton(timerService);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        var scheduleConfig = new ScheduleConfig<CustomerCronJob>()
         {
-            var timerService = new TimerService();
-            var services = new ServiceCollection();
-            services.AddSingleton(timerService);
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
-            var scheduleConfig = new ScheduleConfig<CustomerCronJob>()
-            {
-                TimeZoneInfo = TimeZoneInfo.Utc,
-                CronExpression = "* * * * *"
-            };
-            var hostApplicationLifetimeMock = new Mock<IHostApplicationLifetime>();
-            NullLogger<CronJobService<CustomerCronJob>> logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
-            var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider, logger);
+            TimeZoneInfo = TimeZoneInfo.Utc,
+            CronExpression = "* * * * *"
+        };
+        var hostApplicationLifetimeMock = new Mock<IHostApplicationLifetime>();
+        NullLogger<CronJobService<CustomerCronJob>> logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
+        var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider, logger);
 
-            var cts = new CancellationTokenSource();
-            timerService.Start();
-            await cronjobHostedService.StartAsync(cts.Token);
-            await Task.Delay(120 * 1000); // 2 minutes
-            await cronjobHostedService.StopAsync(cts.Token);
+        var cts = new CancellationTokenSource();
+        timerService.Start();
+        await cronjobHostedService.StartAsync(cts.Token);
+        await Task.Delay(120 * 1000); // 2 minutes
+        await cronjobHostedService.StopAsync(cts.Token);
 
-            Assert.Equal(2, timerService.Counters.Count);
-        }
+        Assert.Equal(2, timerService.Counters.Count);
     }
 }
 

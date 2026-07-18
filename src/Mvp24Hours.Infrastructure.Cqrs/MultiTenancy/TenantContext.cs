@@ -52,7 +52,7 @@ public sealed record TenantContext : ITenantContext
     /// <inheritdoc />
     public T? GetProperty<T>(string key, T? defaultValue = default)
     {
-        if (Properties.TryGetValue(key, out var value) && value is T typedValue)
+        if (Properties.TryGetValue(key, out object? value) && value is T typedValue)
         {
             return typedValue;
         }
@@ -67,13 +67,18 @@ public sealed record TenantContext : ITenantContext
     /// <summary>
     /// Creates a tenant context with just the tenant ID.
     /// </summary>
-    public static TenantContext FromId(string tenantId) => new(tenantId: tenantId);
+    public static TenantContext FromId(string tenantId)
+    {
+        return new(tenantId: tenantId);
+    }
 
     /// <summary>
     /// Creates a tenant context with ID and name.
     /// </summary>
-    public static TenantContext FromIdAndName(string tenantId, string tenantName) =>
-        new(tenantId: tenantId, tenantName: tenantName);
+    public static TenantContext FromIdAndName(string tenantId, string tenantName)
+    {
+        return new(tenantId: tenantId, tenantName: tenantName);
+    }
 }
 
 /// <summary>
@@ -100,10 +105,7 @@ public sealed class TenantContextAccessor : ITenantContextAccessor
         set
         {
             TenantContextHolder? holder = _contextHolder.Value;
-            if (holder != null)
-            {
-                holder.Context = null;
-            }
+            holder?.Context = null;
 
             if (value != null)
             {
@@ -223,19 +225,14 @@ public sealed class InMemoryTenantStore : ITenantStore
 /// <summary>
 /// Default implementation of <see cref="ITenantFilter"/>.
 /// </summary>
-public sealed class TenantFilter : ITenantFilter
+/// <remarks>
+/// Creates a new instance of the tenant filter.
+/// </remarks>
+/// <param name="tenantContextAccessor">The tenant context accessor.</param>
+public sealed class TenantFilter(ITenantContextAccessor tenantContextAccessor) : ITenantFilter
 {
-    private readonly ITenantContextAccessor _tenantContextAccessor;
+    private readonly ITenantContextAccessor _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
     private readonly AsyncLocal<bool> _filterDisabled = new();
-
-    /// <summary>
-    /// Creates a new instance of the tenant filter.
-    /// </summary>
-    /// <param name="tenantContextAccessor">The tenant context accessor.</param>
-    public TenantFilter(ITenantContextAccessor tenantContextAccessor)
-    {
-        _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
-    }
 
     /// <inheritdoc />
     public string? CurrentTenantId => _tenantContextAccessor.Context?.TenantId;
@@ -250,15 +247,10 @@ public sealed class TenantFilter : ITenantFilter
         return new FilterDisabler(this);
     }
 
-    private sealed class FilterDisabler : IDisposable
+    private sealed class FilterDisabler(TenantFilter filter) : IDisposable
     {
-        private readonly TenantFilter _filter;
+        private readonly TenantFilter _filter = filter;
         private bool _disposed;
-
-        public FilterDisabler(TenantFilter filter)
-        {
-            _filter = filter;
-        }
 
         public void Dispose()
         {

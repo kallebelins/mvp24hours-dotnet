@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Saga;
 
@@ -50,18 +49,6 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     private readonly List<ISagaStep<TData>> _steps = [];
     private readonly Stack<ISagaStep<TData>> _executedSteps = new();
 
-    private TData _data = default!;
-    private Guid _sagaId;
-    private SagaStatus _status = SagaStatus.NotStarted;
-    private int _currentStepIndex;
-    private string? _currentStepName;
-    private DateTime? _startedAt;
-    private DateTime? _completedAt;
-    private Exception? _error;
-    private TimeSpan? _timeout;
-    private int _maxRetries = 3;
-    private int _retryCount;
-
     /// <summary>
     /// Initializes a new instance of the saga.
     /// </summary>
@@ -76,28 +63,28 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     #region Properties
 
     /// <inheritdoc />
-    public Guid SagaId => _sagaId;
+    public Guid SagaId { get; private set; }
 
     /// <inheritdoc />
-    public TData Data => _data;
+    public TData Data { get; private set; } = default!;
 
     /// <inheritdoc />
-    public SagaStatus Status => _status;
+    public SagaStatus Status { get; private set; } = SagaStatus.NotStarted;
 
     /// <inheritdoc />
-    public int CurrentStepIndex => _currentStepIndex;
+    public int CurrentStepIndex { get; private set; }
 
     /// <inheritdoc />
-    public string? CurrentStepName => _currentStepName;
+    public string? CurrentStepName { get; private set; }
 
     /// <inheritdoc />
-    public DateTime? StartedAt => _startedAt;
+    public DateTime? StartedAt { get; private set; }
 
     /// <inheritdoc />
-    public DateTime? CompletedAt => _completedAt;
+    public DateTime? CompletedAt { get; private set; }
 
     /// <inheritdoc />
-    public Exception? Error => _error;
+    public Exception? Error { get; private set; }
 
     /// <inheritdoc />
     public IReadOnlyList<ISagaStep<TData>> Steps => _steps.AsReadOnly();
@@ -108,17 +95,17 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     /// <summary>
     /// Gets the timeout for the saga.
     /// </summary>
-    public TimeSpan? Timeout => _timeout;
+    public TimeSpan? Timeout { get; private set; }
 
     /// <summary>
     /// Gets the maximum number of retries.
     /// </summary>
-    public int MaxRetries => _maxRetries;
+    public int MaxRetries { get; private set; } = 3;
 
     /// <summary>
     /// Gets the current retry count.
     /// </summary>
-    public int RetryCount => _retryCount;
+    public int RetryCount { get; private set; }
 
     #endregion
 
@@ -141,7 +128,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     /// <param name="timeout">The timeout duration.</param>
     protected void WithTimeout(TimeSpan timeout)
     {
-        _timeout = timeout;
+        Timeout = timeout;
     }
 
     /// <summary>
@@ -150,7 +137,7 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     /// <param name="maxRetries">Maximum retry attempts.</param>
     protected void WithMaxRetries(int maxRetries)
     {
-        _maxRetries = maxRetries;
+        MaxRetries = maxRetries;
     }
 
     #endregion
@@ -162,57 +149,57 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     {
         ArgumentNullException.ThrowIfNull(data);
 
-        if (_status != SagaStatus.NotStarted)
+        if (Status != SagaStatus.NotStarted)
         {
-            throw new SagaInvalidStateException(_sagaId, _status, SagaStatus.NotStarted);
+            throw new SagaInvalidStateException(SagaId, Status, SagaStatus.NotStarted);
         }
 
-        _sagaId = Guid.NewGuid();
-        _data = data;
-        _status = SagaStatus.Running;
-        _startedAt = DateTime.UtcNow;
-        _currentStepIndex = 0;
+        SagaId = Guid.NewGuid();
+        Data = data;
+        Status = SagaStatus.Running;
+        StartedAt = DateTime.UtcNow;
+        CurrentStepIndex = 0;
 
-        _logger.LogInformation("Saga {SagaId} started", _sagaId);
+        _logger.LogInformation("Saga {SagaId} started", SagaId);
 
         try
         {
             await ExecuteStepsAsync(cancellationToken);
 
-            _status = SagaStatus.Completed;
-            _completedAt = DateTime.UtcNow;
+            Status = SagaStatus.Completed;
+            CompletedAt = DateTime.UtcNow;
 
-            _logger.LogInformation("Saga {SagaId} completed successfully", _sagaId);
+            _logger.LogInformation("Saga {SagaId} completed successfully", SagaId);
             await OnSagaCompletedAsync(cancellationToken);
 
-            return SagaResult.Success(_sagaId);
+            return SagaResult.Success(SagaId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _status = SagaStatus.Cancelled;
-            _logger.LogWarning("Saga {SagaId} was cancelled", _sagaId);
-            return SagaResult.Cancelled(_sagaId);
+            Status = SagaStatus.Cancelled;
+            _logger.LogWarning("Saga {SagaId} was cancelled", SagaId);
+            return SagaResult.Cancelled(SagaId);
         }
         catch (Exception ex)
         {
-            _error = ex;
-            _status = SagaStatus.Failed;
+            Error = ex;
+            Status = SagaStatus.Failed;
 
-            _logger.LogError(ex, "Saga {SagaId} failed at step {Step}", _sagaId, _currentStepName);
+            _logger.LogError(ex, "Saga {SagaId} failed at step {Step}", SagaId, CurrentStepName);
 
             await OnSagaFailedAsync(ex, cancellationToken);
             await CompensateAsync(cancellationToken);
 
-            return _status == SagaStatus.Compensated
-                ? SagaResult.Compensated(_sagaId, ex.Message)
-                : SagaResult.PartiallyCompensated(_sagaId, ex.Message);
+            return Status == SagaStatus.Compensated
+                ? SagaResult.Compensated(SagaId, ex.Message)
+                : SagaResult.PartiallyCompensated(SagaId, ex.Message);
         }
     }
 
     private async Task ExecuteStepsAsync(CancellationToken cancellationToken)
     {
-        using CancellationTokenSource timeoutCts = _timeout.HasValue
-            ? new CancellationTokenSource(_timeout.Value)
+        using CancellationTokenSource timeoutCts = Timeout.HasValue
+            ? new CancellationTokenSource(Timeout.Value)
             : new CancellationTokenSource();
 
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
@@ -226,59 +213,59 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
             {
                 if (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                 {
-                    throw new SagaTimeoutException(_sagaId, _timeout!.Value, step.Name);
+                    throw new SagaTimeoutException(SagaId, Timeout!.Value, step.Name);
                 }
 
                 linkedCts.Token.ThrowIfCancellationRequested();
             }
 
-            _currentStepName = step.Name;
-            _logger.LogDebug("Saga {SagaId}: Executing step {Step}", _sagaId, step.Name);
+            CurrentStepName = step.Name;
+            _logger.LogDebug("Saga {SagaId}: Executing step {Step}", SagaId, step.Name);
 
             try
             {
                 await ExecuteStepWithRetryAsync(step, linkedCts.Token);
                 _executedSteps.Push(step);
-                _currentStepIndex++;
+                CurrentStepIndex++;
 
                 await OnStepCompletedAsync(step, cancellationToken);
             }
             catch (Exception ex)
             {
-                throw new SagaStepException(_sagaId, step.Name, _currentStepIndex, ex.Message, ex);
+                throw new SagaStepException(SagaId, step.Name, CurrentStepIndex, ex.Message, ex);
             }
         }
     }
 
     private async Task ExecuteStepWithRetryAsync(ISagaStep<TData> step, CancellationToken cancellationToken)
     {
-        var attempts = 0;
+        int attempts = 0;
         Exception? lastException = null;
 
-        while (attempts <= _maxRetries)
+        while (attempts <= MaxRetries)
         {
             try
             {
-                await step.ExecuteAsync(_data, cancellationToken);
+                await step.ExecuteAsync(Data, cancellationToken);
                 return;
             }
-            catch (Exception ex) when (attempts < _maxRetries && ShouldRetry(ex))
+            catch (Exception ex) when (attempts < MaxRetries && ShouldRetry(ex))
             {
                 lastException = ex;
                 attempts++;
-                _retryCount++;
+                RetryCount++;
 
                 TimeSpan delay = CalculateRetryDelay(attempts);
                 _logger.LogWarning(ex,
                     "Saga {SagaId}: Step {Step} failed, retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})",
-                    _sagaId, step.Name, delay.TotalMilliseconds, attempts, _maxRetries);
+                    SagaId, step.Name, delay.TotalMilliseconds, attempts, MaxRetries);
 
                 await OnStepRetryAsync(step, attempts, ex, cancellationToken);
                 await Task.Delay(delay, cancellationToken);
             }
         }
 
-        throw new SagaMaxRetriesExceededException(_sagaId, _maxRetries, step.Name, lastException);
+        throw new SagaMaxRetriesExceededException(SagaId, MaxRetries, step.Name, lastException);
     }
 
     /// <summary>
@@ -310,14 +297,14 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     /// <inheritdoc />
     public virtual async Task CompensateAsync(CancellationToken cancellationToken = default)
     {
-        if (_status != SagaStatus.Failed && _status != SagaStatus.Running)
+        if (Status is not SagaStatus.Failed and not SagaStatus.Running)
         {
-            throw new SagaInvalidStateException(_sagaId, _status,
+            throw new SagaInvalidStateException(SagaId, Status,
                 "Saga can only be compensated when in Failed or Running state");
         }
 
-        _status = SagaStatus.Compensating;
-        _logger.LogInformation("Saga {SagaId}: Starting compensation", _sagaId);
+        Status = SagaStatus.Compensating;
+        _logger.LogInformation("Saga {SagaId}: Starting compensation", SagaId);
 
         var compensationErrors = new List<Exception>();
         var failedSteps = new List<string>();
@@ -326,19 +313,19 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
         {
             if (!step.CanCompensate)
             {
-                _logger.LogWarning("Saga {SagaId}: Step {Step} cannot be compensated", _sagaId, step.Name);
+                _logger.LogWarning("Saga {SagaId}: Step {Step} cannot be compensated", SagaId, step.Name);
                 continue;
             }
 
             try
             {
-                _logger.LogDebug("Saga {SagaId}: Compensating step {Step}", _sagaId, step.Name);
-                await step.CompensateAsync(_data, cancellationToken);
+                _logger.LogDebug("Saga {SagaId}: Compensating step {Step}", SagaId, step.Name);
+                await step.CompensateAsync(Data, cancellationToken);
                 await OnStepCompensatedAsync(step, cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Saga {SagaId}: Compensation failed for step {Step}", _sagaId, step.Name);
+                _logger.LogError(ex, "Saga {SagaId}: Compensation failed for step {Step}", SagaId, step.Name);
                 compensationErrors.Add(ex);
                 failedSteps.Add(step.Name);
             }
@@ -346,17 +333,17 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
 
         if (compensationErrors.Count > 0)
         {
-            _status = SagaStatus.PartiallyCompensated;
+            Status = SagaStatus.PartiallyCompensated;
             await OnCompensationFailedAsync(failedSteps, compensationErrors, cancellationToken);
         }
         else
         {
-            _status = SagaStatus.Compensated;
+            Status = SagaStatus.Compensated;
             await OnSagaCompensatedAsync(cancellationToken);
         }
 
-        _completedAt = DateTime.UtcNow;
-        _logger.LogInformation("Saga {SagaId}: Compensation completed with status {Status}", _sagaId, _status);
+        CompletedAt = DateTime.UtcNow;
+        _logger.LogInformation("Saga {SagaId}: Compensation completed with status {Status}", SagaId, Status);
     }
 
     #endregion
@@ -379,36 +366,36 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        if (state.Status != SagaStatus.Running && state.Status != SagaStatus.Suspended)
+        if (state.Status is not SagaStatus.Running and not SagaStatus.Suspended)
         {
             throw new SagaInvalidStateException(state.SagaId, state.Status,
                 "Saga can only be resumed when in Running or Suspended state");
         }
 
-        _sagaId = state.SagaId;
-        _data = state.Data;
-        _status = SagaStatus.Running;
-        _startedAt = state.StartedAt;
-        _currentStepIndex = state.CurrentStepIndex;
-        _currentStepName = state.CurrentStepName;
-        _retryCount = state.RetryCount;
+        SagaId = state.SagaId;
+        Data = state.Data;
+        Status = SagaStatus.Running;
+        StartedAt = state.StartedAt;
+        CurrentStepIndex = state.CurrentStepIndex;
+        CurrentStepName = state.CurrentStepName;
+        RetryCount = state.RetryCount;
 
         // Rebuild executed steps
         var orderedSteps = _steps.OrderBy(s => s.Order).ToList();
-        for (var i = 0; i < _currentStepIndex && i < orderedSteps.Count; i++)
+        for (int i = 0; i < CurrentStepIndex && i < orderedSteps.Count; i++)
         {
             _executedSteps.Push(orderedSteps[i]);
         }
 
-        _logger.LogInformation("Saga {SagaId} resumed at step {Step}", _sagaId, _currentStepName);
+        _logger.LogInformation("Saga {SagaId} resumed at step {Step}", SagaId, CurrentStepName);
 
         try
         {
             // Continue from current step
-            var remainingSteps = orderedSteps.Skip(_currentStepIndex).ToList();
+            var remainingSteps = orderedSteps.Skip(CurrentStepIndex).ToList();
 
-            using CancellationTokenSource timeoutCts = _timeout.HasValue
-                ? new CancellationTokenSource(_timeout.Value)
+            using CancellationTokenSource timeoutCts = Timeout.HasValue
+                ? new CancellationTokenSource(Timeout.Value)
                 : new CancellationTokenSource();
 
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
@@ -420,44 +407,44 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
                 {
                     if (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                     {
-                        throw new SagaTimeoutException(_sagaId, _timeout!.Value, step.Name);
+                        throw new SagaTimeoutException(SagaId, Timeout!.Value, step.Name);
                     }
 
                     linkedCts.Token.ThrowIfCancellationRequested();
                 }
 
-                _currentStepName = step.Name;
+                CurrentStepName = step.Name;
                 await ExecuteStepWithRetryAsync(step, linkedCts.Token);
                 _executedSteps.Push(step);
-                _currentStepIndex++;
+                CurrentStepIndex++;
 
                 await OnStepCompletedAsync(step, cancellationToken);
             }
 
-            _status = SagaStatus.Completed;
-            _completedAt = DateTime.UtcNow;
+            Status = SagaStatus.Completed;
+            CompletedAt = DateTime.UtcNow;
 
-            _logger.LogInformation("Saga {SagaId} completed successfully after resume", _sagaId);
+            _logger.LogInformation("Saga {SagaId} completed successfully after resume", SagaId);
             await OnSagaCompletedAsync(cancellationToken);
 
-            return SagaResult.Success(_sagaId);
+            return SagaResult.Success(SagaId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _status = SagaStatus.Cancelled;
-            return SagaResult.Cancelled(_sagaId);
+            Status = SagaStatus.Cancelled;
+            return SagaResult.Cancelled(SagaId);
         }
         catch (Exception ex)
         {
-            _error = ex;
-            _status = SagaStatus.Failed;
+            Error = ex;
+            Status = SagaStatus.Failed;
 
             await OnSagaFailedAsync(ex, cancellationToken);
             await CompensateAsync(cancellationToken);
 
-            return _status == SagaStatus.Compensated
-                ? SagaResult.Compensated(_sagaId, ex.Message)
-                : SagaResult.PartiallyCompensated(_sagaId, ex.Message);
+            return Status == SagaStatus.Compensated
+                ? SagaResult.Compensated(SagaId, ex.Message)
+                : SagaResult.PartiallyCompensated(SagaId, ex.Message);
         }
     }
 
@@ -532,20 +519,20 @@ public abstract class SagaBase<TData> : ISaga<TData>, ISaga where TData : class
     {
         return new SagaState<TData>
         {
-            SagaId = _sagaId,
+            SagaId = SagaId,
             SagaType = GetType().FullName ?? GetType().Name,
-            Status = _status,
-            CurrentStepIndex = _currentStepIndex,
-            CurrentStepName = _currentStepName,
-            Data = _data,
-            StartedAt = _startedAt ?? DateTime.UtcNow,
+            Status = Status,
+            CurrentStepIndex = CurrentStepIndex,
+            CurrentStepName = CurrentStepName,
+            Data = Data,
+            StartedAt = StartedAt ?? DateTime.UtcNow,
             LastUpdatedAt = DateTime.UtcNow,
-            CompletedAt = _completedAt,
-            Timeout = _timeout,
-            ExecutedSteps = _executedSteps.Select(s => s.Name).Reverse().ToList(),
-            Errors = _error != null ? [_error.Message] : [],
-            RetryCount = _retryCount,
-            MaxRetries = _maxRetries
+            CompletedAt = CompletedAt,
+            Timeout = Timeout,
+            ExecutedSteps = [.. _executedSteps.Select(s => s.Name).Reverse()],
+            Errors = Error != null ? [Error.Message] : [],
+            RetryCount = RetryCount,
+            MaxRetries = MaxRetries
         };
     }
 
@@ -589,6 +576,9 @@ public sealed class SagaStepBuilder<TData> where TData : class
         return this;
     }
 
-    internal IReadOnlyList<ISagaStep<TData>> Build() => _steps.AsReadOnly();
+    internal IReadOnlyList<ISagaStep<TData>> Build()
+    {
+        return _steps.AsReadOnly();
+    }
 }
 

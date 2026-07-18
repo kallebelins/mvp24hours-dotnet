@@ -13,115 +13,138 @@ using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.State;
 
-namespace Mvp24Hours.Infrastructure.CronJob.Control
+namespace Mvp24Hours.Infrastructure.CronJob.Control;
+
+/// <summary>
+/// Default implementation of <see cref="ICronJobController"/>.
+/// </summary>
+/// <remarks>
+/// Creates a new instance of <see cref="CronJobController"/>.
+/// </remarks>
+public sealed class CronJobController(
+    ICronJobStateStore stateStore,
+    CronJobCircuitBreaker circuitBreaker,
+    ILogger<CronJobController> logger) : ICronJobController
 {
+    private readonly ICronJobStateStore _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
+    private readonly CronJobCircuitBreaker _circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
+    private readonly ILogger<CronJobController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ConcurrentDictionary<string, CronJobRegistration> _registrations = new();
+    private readonly ConcurrentDictionary<string, Func<CancellationToken, Task>> _triggerCallbacks = new();
+
     /// <summary>
-    /// Default implementation of <see cref="ICronJobController"/>.
+    /// Registers a job for control.
     /// </summary>
-    public sealed class CronJobController : ICronJobController
+    public void Register(string jobName, string? cronExpression = null, Func<CancellationToken, Task>? triggerCallback = null)
     {
-        private readonly ICronJobStateStore _stateStore;
-        private readonly CronJobCircuitBreaker _circuitBreaker;
-        private readonly ILogger<CronJobController> _logger;
-        private readonly ConcurrentDictionary<string, CronJobRegistration> _registrations = new();
-        private readonly ConcurrentDictionary<string, Func<CancellationToken, Task>> _triggerCallbacks = new();
-
-        /// <summary>
-        /// Creates a new instance of <see cref="CronJobController"/>.
-        /// </summary>
-        public CronJobController(
-            ICronJobStateStore stateStore,
-            CronJobCircuitBreaker circuitBreaker,
-            ILogger<CronJobController> logger)
+        _registrations[jobName] = new CronJobRegistration
         {
-            _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
-            _circuitBreaker = circuitBreaker ?? throw new ArgumentNullException(nameof(circuitBreaker));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            JobName = jobName,
+            CronExpression = cronExpression,
+            RegisteredAt = DateTimeOffset.UtcNow
+        };
+
+        if (triggerCallback != null)
+        {
+            _triggerCallbacks[jobName] = triggerCallback;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> PauseAsync(string jobName, string? reason = null, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Pausing CronJob {JobName}. Reason: {Reason}", jobName, reason ?? "None");
+
+        await _stateStore.SetPausedAsync(jobName, true, cancellationToken);
+
+        CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
+        if (state != null)
+        {
+            state.PauseReason = reason;
+            await _stateStore.SaveStateAsync(state, cancellationToken);
         }
 
-        /// <summary>
-        /// Registers a job for control.
-        /// </summary>
-        public void Register(string jobName, string? cronExpression = null, Func<CancellationToken, Task>? triggerCallback = null)
-        {
-            _registrations[jobName] = new CronJobRegistration
-            {
-                JobName = jobName,
-                CronExpression = cronExpression,
-                RegisteredAt = DateTimeOffset.UtcNow
-            };
+        return true;
+    }
 
-            if (triggerCallback != null)
-            {
-                _triggerCallbacks[jobName] = triggerCallback;
-            }
+    /// <inheritdoc />
+    public Task<bool> PauseAsync<T>(string? reason = null, CancellationToken cancellationToken = default) where T : class
+    {
+        return PauseAsync(typeof(T).Name, reason, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ResumeAsync(string jobName, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Resuming CronJob {JobName}", jobName);
+
+        await _stateStore.SetPausedAsync(jobName, false, cancellationToken);
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public Task<bool> ResumeAsync<T>(CancellationToken cancellationToken = default) where T : class
+    {
+        return ResumeAsync(typeof(T).Name, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> IsPausedAsync(string jobName, CancellationToken cancellationToken = default)
+    {
+        return _stateStore.IsPausedAsync(jobName, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> IsPausedAsync<T>(CancellationToken cancellationToken = default) where T : class
+    {
+        return IsPausedAsync(typeof(T).Name, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CronJobStatus?> GetStatusAsync(string jobName, CancellationToken cancellationToken = default)
+    {
+        CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
+        if (state == null)
+        {
+            return null;
         }
 
-        /// <inheritdoc />
-        public async Task<bool> PauseAsync(string jobName, string? reason = null, CancellationToken cancellationToken = default)
+        _registrations.TryGetValue(jobName, out CronJobRegistration? registration);
+
+        CircuitBreakerState circuitState = _circuitBreaker.GetState(jobName);
+
+        return new CronJobStatus
         {
-            _logger.LogInformation("Pausing CronJob {JobName}. Reason: {Reason}", jobName, reason ?? "None");
+            JobName = state.JobName,
+            CronExpression = registration?.CronExpression,
+            State = state.IsPaused ? CronJobExecutionState.Paused : CronJobExecutionState.Idle,
+            IsPaused = state.IsPaused,
+            PauseReason = state.PauseReason,
+            PausedAt = state.PausedAt,
+            LastExecutionTime = state.LastExecutionTime,
+            NextExecutionTime = null, // Would need CRON parser to calculate
+            ExecutionCount = state.ExecutionCount,
+            SuccessCount = state.SuccessCount,
+            FailureCount = state.FailureCount,
+            LastError = state.LastErrorMessage,
+            AverageDurationMs = state.AverageDurationMs,
+            CircuitBreakerState = circuitState
+        };
+    }
 
-            await _stateStore.SetPausedAsync(jobName, true, cancellationToken);
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CronJobStatus>> GetAllStatusesAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<CronJobState> states = await _stateStore.GetAllStatesAsync(cancellationToken);
+        var statuses = new List<CronJobStatus>();
 
-            CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
-            if (state != null)
-            {
-                state.PauseReason = reason;
-                await _stateStore.SaveStateAsync(state, cancellationToken);
-            }
-
-            return true;
-        }
-
-        /// <inheritdoc />
-        public Task<bool> PauseAsync<T>(string? reason = null, CancellationToken cancellationToken = default) where T : class
+        foreach (CronJobState state in states)
         {
-            return PauseAsync(typeof(T).Name, reason, cancellationToken);
-        }
+            _registrations.TryGetValue(state.JobName, out CronJobRegistration? registration);
+            CircuitBreakerState circuitState = _circuitBreaker.GetState(state.JobName);
 
-        /// <inheritdoc />
-        public async Task<bool> ResumeAsync(string jobName, CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Resuming CronJob {JobName}", jobName);
-
-            await _stateStore.SetPausedAsync(jobName, false, cancellationToken);
-
-            return true;
-        }
-
-        /// <inheritdoc />
-        public Task<bool> ResumeAsync<T>(CancellationToken cancellationToken = default) where T : class
-        {
-            return ResumeAsync(typeof(T).Name, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<bool> IsPausedAsync(string jobName, CancellationToken cancellationToken = default)
-        {
-            return _stateStore.IsPausedAsync(jobName, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<bool> IsPausedAsync<T>(CancellationToken cancellationToken = default) where T : class
-        {
-            return IsPausedAsync(typeof(T).Name, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public async Task<CronJobStatus?> GetStatusAsync(string jobName, CancellationToken cancellationToken = default)
-        {
-            CronJobState? state = await _stateStore.GetStateAsync(jobName, cancellationToken);
-            if (state == null)
-            {
-                return null;
-            }
-
-            _registrations.TryGetValue(jobName, out CronJobRegistration? registration);
-
-            CircuitBreakerState circuitState = _circuitBreaker.GetState(jobName);
-
-            return new CronJobStatus
+            statuses.Add(new CronJobStatus
             {
                 JobName = state.JobName,
                 CronExpression = registration?.CronExpression,
@@ -130,126 +153,95 @@ namespace Mvp24Hours.Infrastructure.CronJob.Control
                 PauseReason = state.PauseReason,
                 PausedAt = state.PausedAt,
                 LastExecutionTime = state.LastExecutionTime,
-                NextExecutionTime = null, // Would need CRON parser to calculate
                 ExecutionCount = state.ExecutionCount,
                 SuccessCount = state.SuccessCount,
                 FailureCount = state.FailureCount,
                 LastError = state.LastErrorMessage,
                 AverageDurationMs = state.AverageDurationMs,
                 CircuitBreakerState = circuitState
-            };
+            });
         }
 
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<CronJobStatus>> GetAllStatusesAsync(CancellationToken cancellationToken = default)
+        // Add registered jobs that don't have state yet
+        foreach (CronJobRegistration registration in _registrations.Values)
         {
-            IReadOnlyList<CronJobState> states = await _stateStore.GetAllStatesAsync(cancellationToken);
-            var statuses = new List<CronJobStatus>();
-
-            foreach (CronJobState state in states)
+            if (!statuses.Any(s => s.JobName == registration.JobName))
             {
-                _registrations.TryGetValue(state.JobName, out CronJobRegistration? registration);
-                CircuitBreakerState circuitState = _circuitBreaker.GetState(state.JobName);
-
                 statuses.Add(new CronJobStatus
                 {
-                    JobName = state.JobName,
-                    CronExpression = registration?.CronExpression,
-                    State = state.IsPaused ? CronJobExecutionState.Paused : CronJobExecutionState.Idle,
-                    IsPaused = state.IsPaused,
-                    PauseReason = state.PauseReason,
-                    PausedAt = state.PausedAt,
-                    LastExecutionTime = state.LastExecutionTime,
-                    ExecutionCount = state.ExecutionCount,
-                    SuccessCount = state.SuccessCount,
-                    FailureCount = state.FailureCount,
-                    LastError = state.LastErrorMessage,
-                    AverageDurationMs = state.AverageDurationMs,
-                    CircuitBreakerState = circuitState
+                    JobName = registration.JobName,
+                    CronExpression = registration.CronExpression,
+                    State = CronJobExecutionState.Idle,
+                    IsPaused = false,
+                    CircuitBreakerState = CircuitBreakerState.Closed
                 });
             }
-
-            // Add registered jobs that don't have state yet
-            foreach (CronJobRegistration registration in _registrations.Values)
-            {
-                if (!statuses.Any(s => s.JobName == registration.JobName))
-                {
-                    statuses.Add(new CronJobStatus
-                    {
-                        JobName = registration.JobName,
-                        CronExpression = registration.CronExpression,
-                        State = CronJobExecutionState.Idle,
-                        IsPaused = false,
-                        CircuitBreakerState = CircuitBreakerState.Closed
-                    });
-                }
-            }
-
-            return statuses;
         }
 
-        /// <inheritdoc />
-        public async Task<bool> TriggerAsync(string jobName, CancellationToken cancellationToken = default)
+        return statuses;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TriggerAsync(string jobName, CancellationToken cancellationToken = default)
+    {
+        if (await IsPausedAsync(jobName, cancellationToken))
         {
-            if (await IsPausedAsync(jobName, cancellationToken))
-            {
-                _logger.LogWarning("Cannot trigger paused CronJob {JobName}", jobName);
-                return false;
-            }
-
-            if (_triggerCallbacks.TryGetValue(jobName, out Func<CancellationToken, Task>? callback))
-            {
-                _logger.LogInformation("Manually triggering CronJob {JobName}", jobName);
-                try
-                {
-                    await callback(cancellationToken);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error triggering CronJob {JobName}", jobName);
-                    return false;
-                }
-            }
-
-            _logger.LogWarning("No trigger callback registered for CronJob {JobName}", jobName);
+            _logger.LogWarning("Cannot trigger paused CronJob {JobName}", jobName);
             return false;
         }
 
-        /// <inheritdoc />
-        public Task<bool> TriggerAsync<T>(CancellationToken cancellationToken = default) where T : class
+        if (_triggerCallbacks.TryGetValue(jobName, out Func<CancellationToken, Task>? callback))
         {
-            return TriggerAsync(typeof(T).Name, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public async Task PauseAllAsync(string? reason = null, CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Pausing all CronJobs. Reason: {Reason}", reason ?? "None");
-
-            foreach (var registration in _registrations.Keys)
+            _logger.LogInformation("Manually triggering CronJob {JobName}", jobName);
+            try
             {
-                await PauseAsync(registration, reason, cancellationToken);
+                await callback(cancellationToken);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error triggering CronJob {JobName}", jobName);
+                return false;
             }
         }
 
-        /// <inheritdoc />
-        public async Task ResumeAllAsync(CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Resuming all CronJobs");
+        _logger.LogWarning("No trigger callback registered for CronJob {JobName}", jobName);
+        return false;
+    }
 
-            foreach (var registration in _registrations.Keys)
-            {
-                await ResumeAsync(registration, cancellationToken);
-            }
-        }
+    /// <inheritdoc />
+    public Task<bool> TriggerAsync<T>(CancellationToken cancellationToken = default) where T : class
+    {
+        return TriggerAsync(typeof(T).Name, cancellationToken);
+    }
 
-        private sealed class CronJobRegistration
+    /// <inheritdoc />
+    public async Task PauseAllAsync(string? reason = null, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Pausing all CronJobs. Reason: {Reason}", reason ?? "None");
+
+        foreach (string registration in _registrations.Keys)
         {
-            public string JobName { get; init; } = string.Empty;
-            public string? CronExpression { get; init; }
-            public DateTimeOffset RegisteredAt { get; init; }
+            await PauseAsync(registration, reason, cancellationToken);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task ResumeAllAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Resuming all CronJobs");
+
+        foreach (string registration in _registrations.Keys)
+        {
+            await ResumeAsync(registration, cancellationToken);
+        }
+    }
+
+    private sealed class CronJobRegistration
+    {
+        public string JobName { get; init; } = string.Empty;
+        public string? CronExpression { get; init; }
+        public DateTimeOffset RegisteredAt { get; init; }
     }
 }
 

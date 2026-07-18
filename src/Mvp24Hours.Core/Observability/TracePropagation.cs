@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Mvp24Hours.Core.Observability;
 
@@ -84,10 +81,13 @@ public static class TracePropagation
     public static void InjectTraceContext(IDictionary<string, string> headers, Activity? activity = null)
     {
         activity ??= Activity.Current;
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         // W3C Trace Context - traceparent
-        var traceparent = FormatTraceparent(activity);
+        string traceparent = FormatTraceparent(activity);
         headers[TraceparentHeader] = traceparent;
 
         // W3C Trace Context - tracestate (optional)
@@ -100,13 +100,13 @@ public static class TracePropagation
         var baggageItems = activity.Baggage.ToList();
         if (baggageItems.Count > 0)
         {
-            var baggageValue = string.Join(",",
+            string baggageValue = string.Join(",",
                 baggageItems.Select(b => $"{b.Key}={Uri.EscapeDataString(b.Value ?? "")}"));
             headers[BaggageHeader] = baggageValue;
         }
 
         // Correlation ID (from baggage or generate from trace ID)
-        var correlationId = activity.GetBaggageItem("correlation.id")
+        string correlationId = activity.GetBaggageItem("correlation.id")
                            ?? activity.TraceId.ToString();
         headers[CorrelationIdHeader] = correlationId;
     }
@@ -124,7 +124,10 @@ public static class TracePropagation
         Activity? activity = null)
     {
         activity ??= Activity.Current;
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         setter(carrier, TraceparentHeader, FormatTraceparent(activity));
 
@@ -136,12 +139,12 @@ public static class TracePropagation
         var baggageItems = activity.Baggage.ToList();
         if (baggageItems.Count > 0)
         {
-            var baggageValue = string.Join(",",
+            string baggageValue = string.Join(",",
                 baggageItems.Select(b => $"{b.Key}={Uri.EscapeDataString(b.Value ?? "")}"));
             setter(carrier, BaggageHeader, baggageValue);
         }
 
-        var correlationId = activity.GetBaggageItem("correlation.id")
+        string correlationId = activity.GetBaggageItem("correlation.id")
                            ?? activity.TraceId.ToString();
         setter(carrier, CorrelationIdHeader, correlationId);
     }
@@ -157,18 +160,22 @@ public static class TracePropagation
     /// <returns>The extracted trace context, or null if extraction fails.</returns>
     public static TraceContext? ExtractTraceContext(IDictionary<string, string?> headers)
     {
-        var traceparent = GetHeaderValue(headers, TraceparentHeader);
+        string? traceparent = GetHeaderValue(headers, TraceparentHeader);
         if (string.IsNullOrEmpty(traceparent))
+        {
             return null;
+        }
 
         TraceContext? context = ParseTraceparent(traceparent);
         if (context == null)
+        {
             return null;
+        }
 
         context.TraceState = GetHeaderValue(headers, TracestateHeader);
 
         // Parse baggage
-        var baggage = GetHeaderValue(headers, BaggageHeader);
+        string? baggage = GetHeaderValue(headers, BaggageHeader);
         if (!string.IsNullOrEmpty(baggage))
         {
             context.Baggage = ParseBaggage(baggage);
@@ -193,17 +200,21 @@ public static class TracePropagation
         T carrier,
         Func<T, string, string?> getter)
     {
-        var traceparent = getter(carrier, TraceparentHeader);
+        string? traceparent = getter(carrier, TraceparentHeader);
         if (string.IsNullOrEmpty(traceparent))
+        {
             return null;
+        }
 
         TraceContext? context = ParseTraceparent(traceparent);
         if (context == null)
+        {
             return null;
+        }
 
         context.TraceState = getter(carrier, TracestateHeader);
 
-        var baggage = getter(carrier, BaggageHeader);
+        string? baggage = getter(carrier, BaggageHeader);
         if (!string.IsNullOrEmpty(baggage))
         {
             context.Baggage = ParseBaggage(baggage);
@@ -227,11 +238,15 @@ public static class TracePropagation
         {
             // Parse trace ID (32 hex characters)
             if (string.IsNullOrEmpty(context.TraceId) || context.TraceId.Length != 32)
+            {
                 return default;
+            }
 
             // Parse span ID (16 hex characters)
             if (string.IsNullOrEmpty(context.SpanId) || context.SpanId.Length != 16)
+            {
                 return default;
+            }
 
             var traceId = ActivityTraceId.CreateFromString(context.TraceId.AsSpan());
             var spanId = ActivitySpanId.CreateFromString(context.SpanId.AsSpan());
@@ -292,7 +307,7 @@ public static class TracePropagation
 
     private static string FormatTraceparent(Activity activity)
     {
-        var flags = activity.Recorded ? "01" : "00";
+        string flags = activity.Recorded ? "01" : "00";
         return $"00-{activity.TraceId}-{activity.SpanId}-{flags}";
     }
 
@@ -301,21 +316,27 @@ public static class TracePropagation
         // Format: version-traceid-parentid-traceflags
         // Example: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
 
-        var parts = traceparent.Split('-');
+        string[] parts = traceparent.Split('-');
         if (parts.Length < 4)
+        {
             return null;
+        }
 
-        var version = parts[0];
+        string version = parts[0];
         if (version != "00") // Only support version 00 for now
+        {
             return null;
+        }
 
-        var traceId = parts[1];
-        var spanId = parts[2];
-        var flags = parts[3];
+        string traceId = parts[1];
+        string spanId = parts[2];
+        string flags = parts[3];
 
         // Validate trace ID and span ID format
         if (traceId.Length != 32 || spanId.Length != 16)
+        {
             return null;
+        }
 
         return new TraceContext
         {
@@ -329,13 +350,13 @@ public static class TracePropagation
     {
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var item in baggage.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string item in baggage.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
-            var parts = item.Split('=', 2);
+            string[] parts = item.Split('=', 2);
             if (parts.Length == 2)
             {
-                var key = parts[0].Trim();
-                var value = Uri.UnescapeDataString(parts[1].Trim());
+                string key = parts[0].Trim();
+                string value = Uri.UnescapeDataString(parts[1].Trim());
                 result[key] = value;
             }
         }
@@ -345,14 +366,18 @@ public static class TracePropagation
 
     private static string? GetHeaderValue(IDictionary<string, string?> headers, string key)
     {
-        if (headers.TryGetValue(key, out var value))
+        if (headers.TryGetValue(key, out string? value))
+        {
             return value;
+        }
 
         // Try case-insensitive search
         foreach (KeyValuePair<string, string?> header in headers)
         {
             if (string.Equals(header.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
                 return header.Value;
+            }
         }
 
         return null;

@@ -169,7 +169,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Execute, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
 
@@ -201,7 +203,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Schedule, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
         activity.SetTag(Tags.CronExpression, cronExpression);
@@ -227,7 +231,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Start, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
 
@@ -249,7 +255,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Stop, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
 
@@ -277,7 +285,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.Retry", ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
         activity.SetTag(Tags.RetryAttempt, attemptNumber);
@@ -302,7 +312,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.CircuitBreakerStateChange", ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
         activity.SetTag("cronjob.resilience.circuit_breaker_previous_state", previousState);
@@ -324,7 +336,9 @@ public static class CronJobActivitySource
         Activity? activity = Source.StartActivity($"{ActivityNames.Execute}.Skipped", ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(Tags.JobName, jobName);
         activity.SetTag(Tags.ExecutionSkipped, true);
@@ -351,7 +365,9 @@ public static class CronJobActivitySource
         string? errorMessage = null)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(Tags.Success, success);
         activity.SetTag(Tags.DurationMs, durationMs);
@@ -385,7 +401,9 @@ public static class CronJobActivitySource
         bool preventOverlapping)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(Tags.RetryEnabled, retryEnabled);
         activity.SetTag(Tags.CircuitBreakerEnabled, circuitBreakerEnabled);
@@ -406,7 +424,9 @@ public static class CronJobActivitySource
         double delayMs)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.AddEvent(new ActivityEvent("retry", default, new ActivityTagsCollection
         {
@@ -425,7 +445,9 @@ public static class CronJobActivitySource
     public static void RecordError(this Activity? activity, Exception exception)
     {
         if (activity == null || exception == null)
+        {
             return;
+        }
 
         activity.SetStatus(ActivityStatusCode.Error, exception.Message);
         activity.SetTag(Tags.Success, false);

@@ -6,7 +6,6 @@
 
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
@@ -32,21 +31,15 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 /// Consider using a handler that catches exceptions if you need fire-and-forget behavior.
 /// </para>
 /// </remarks>
-public sealed class DomainEventDispatcher : IDomainEventDispatcher
+/// <remarks>
+/// Creates a new instance of the DomainEventDispatcher.
+/// </remarks>
+/// <param name="publisher">The publisher for dispatching events.</param>
+/// <param name="logger">Optional logger for recording dispatch operations.</param>
+public sealed class DomainEventDispatcher(IPublisher publisher, ILogger<DomainEventDispatcher>? logger = null) : IDomainEventDispatcher
 {
-    private readonly IPublisher _publisher;
-    private readonly ILogger<DomainEventDispatcher>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the DomainEventDispatcher.
-    /// </summary>
-    /// <param name="publisher">The publisher for dispatching events.</param>
-    /// <param name="logger">Optional logger for recording dispatch operations.</param>
-    public DomainEventDispatcher(IPublisher publisher, ILogger<DomainEventDispatcher>? logger = null)
-    {
-        _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        _logger = logger;
-    }
+    private readonly IPublisher _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
+    private readonly ILogger<DomainEventDispatcher>? _logger = logger;
 
     /// <inheritdoc />
     public async Task DispatchEventsAsync(CoreHasDomainEvents entity, CancellationToken cancellationToken = default)
@@ -92,7 +85,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
             return;
         }
 
-        var totalEvents = entitiesWithEvents.Sum(e => e.DomainEvents.Count);
+        int totalEvents = entitiesWithEvents.Sum(e => e.DomainEvents.Count);
 
         _logger?.LogDebug(
             "[DomainEvents] Dispatching {EventCount} event(s) from {EntityCount} entities",
@@ -121,7 +114,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
                 .GetMethod(nameof(IPublisher.PublishAsync))!
                 .MakeGenericMethod(eventType);
 
-            var task = (Task)publishMethod.Invoke(_publisher, new object[] { domainEvent, cancellationToken })!;
+            var task = (Task)publishMethod.Invoke(_publisher, [domainEvent, cancellationToken])!;
             await task;
         }
         catch (Exception ex)

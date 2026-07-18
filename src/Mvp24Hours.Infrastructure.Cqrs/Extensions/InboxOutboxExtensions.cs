@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.Messaging;
 

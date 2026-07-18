@@ -54,31 +54,55 @@ public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     public static readonly Task<Unit> Task = System.Threading.Tasks.Task.FromResult(Value);
 
     /// <inheritdoc />
-    public int CompareTo(Unit other) => 0;
+    public int CompareTo(Unit other)
+    {
+        return 0;
+    }
 
     /// <inheritdoc />
-    int IComparable.CompareTo(object? obj) => 0;
+    int IComparable.CompareTo(object? obj)
+    {
+        return 0;
+    }
 
     /// <inheritdoc />
-    public override int GetHashCode() => 0;
+    public override int GetHashCode()
+    {
+        return 0;
+    }
 
     /// <inheritdoc />
-    public bool Equals(Unit other) => true;
+    public bool Equals(Unit other)
+    {
+        return true;
+    }
 
     /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is Unit;
+    public override bool Equals(object? obj)
+    {
+        return obj is Unit;
+    }
 
     /// <inheritdoc />
-    public override string ToString() => "()";
+    public override string ToString()
+    {
+        return "()";
+    }
 
     /// <summary>
     /// Equality operator. Always returns true since all Unit values are equal.
     /// </summary>
-    public static bool operator ==(Unit left, Unit right) => true;
+    public static bool operator ==(Unit left, Unit right)
+    {
+        return true;
+    }
 
     /// <summary>
     /// Inequality operator. Always returns false since all Unit values are equal.
     /// </summary>
-    public static bool operator !=(Unit left, Unit right) => false;
+    public static bool operator !=(Unit left, Unit right)
+    {
+        return false;
+    }
 }
 

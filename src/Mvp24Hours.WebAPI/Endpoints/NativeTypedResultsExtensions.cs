@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -293,7 +290,7 @@ public static class NativeTypedResultsExtensions
         ArgumentNullException.ThrowIfNull(exception);
 
         (int statusCode, string? title, string? type) = MapExceptionToStatusCode(exception);
-        var detail = includeDetails ? exception.Message : GetSafeExceptionDetail(exception);
+        string detail = includeDetails ? exception.Message : GetSafeExceptionDetail(exception);
 
         var problemDetails = new ProblemDetails
         {
@@ -360,7 +357,10 @@ public static class NativeTypedResultsExtensions
     /// return NativeTypedResultsExtensions.Ok(orderDto);
     /// </code>
     /// </example>
-    public static Ok<T> Ok<T>(T data) => TypedResults.Ok(data);
+    public static Ok<T> Ok<T>(T data)
+    {
+        return TypedResults.Ok(data);
+    }
 
     /// <summary>
     /// Creates a 201 Created response with strongly-typed data.
@@ -369,7 +369,10 @@ public static class NativeTypedResultsExtensions
     /// <param name="uri">The URI of the created resource.</param>
     /// <param name="data">The created resource data.</param>
     /// <returns>A strongly-typed Created result.</returns>
-    public static Created<T> Created<T>(string? uri, T data) => TypedResults.Created(uri, data);
+    public static Created<T> Created<T>(string? uri, T data)
+    {
+        return TypedResults.Created(uri, data);
+    }
 
     /// <summary>
     /// Creates a 202 Accepted response with strongly-typed data.
@@ -378,13 +381,19 @@ public static class NativeTypedResultsExtensions
     /// <param name="uri">The URI to check operation status.</param>
     /// <param name="data">The operation data.</param>
     /// <returns>A strongly-typed Accepted result.</returns>
-    public static Accepted<T> Accepted<T>(string? uri, T data) => TypedResults.Accepted(uri, data);
+    public static Accepted<T> Accepted<T>(string? uri, T data)
+    {
+        return TypedResults.Accepted(uri, data);
+    }
 
     /// <summary>
     /// Creates a 204 No Content response.
     /// </summary>
     /// <returns>A NoContent result.</returns>
-    public static NoContent NoContent() => TypedResults.NoContent();
+    public static NoContent NoContent()
+    {
+        return TypedResults.NoContent();
+    }
 
     /// <summary>
     /// Creates a 400 Bad Request response with ProblemDetails.
@@ -392,19 +401,27 @@ public static class NativeTypedResultsExtensions
     /// <param name="detail">The error detail message.</param>
     /// <returns>A BadRequest result with ProblemDetails.</returns>
     public static BadRequest<ProblemDetails> BadRequest(string detail)
-        => TypedResults.BadRequest(CreateProblemDetails(StatusCodes.Status400BadRequest, "Bad Request", detail));
+    {
+        return TypedResults.BadRequest(CreateProblemDetails(StatusCodes.Status400BadRequest, "Bad Request", detail));
+    }
 
     /// <summary>
     /// Creates a 401 Unauthorized response.
     /// </summary>
     /// <returns>An Unauthorized result.</returns>
-    public static UnauthorizedHttpResult Unauthorized() => TypedResults.Unauthorized();
+    public static UnauthorizedHttpResult Unauthorized()
+    {
+        return TypedResults.Unauthorized();
+    }
 
     /// <summary>
     /// Creates a 403 Forbidden response.
     /// </summary>
     /// <returns>A Forbid result.</returns>
-    public static ForbidHttpResult Forbid() => TypedResults.Forbid();
+    public static ForbidHttpResult Forbid()
+    {
+        return TypedResults.Forbid();
+    }
 
     /// <summary>
     /// Creates a 404 Not Found response with ProblemDetails.
@@ -414,14 +431,16 @@ public static class NativeTypedResultsExtensions
     /// <returns>A NotFound result with ProblemDetails.</returns>
     public static NotFound<ProblemDetails> NotFound(string entityName, object? entityId = null)
     {
-        var detail = entityId is not null
+        string detail = entityId is not null
             ? $"{entityName} with ID '{entityId}' was not found."
             : $"{entityName} was not found.";
 
         ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status404NotFound, "Resource Not Found", detail);
         problemDetails.Extensions["entityName"] = entityName;
         if (entityId is not null)
+        {
             problemDetails.Extensions["entityId"] = entityId;
+        }
 
         return TypedResults.NotFound(problemDetails);
     }
@@ -436,7 +455,9 @@ public static class NativeTypedResultsExtensions
     {
         ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status409Conflict, "Resource Conflict", detail);
         if (entityName is not null)
+        {
             problemDetails.Extensions["entityName"] = entityName;
+        }
 
         return TypedResults.Conflict(problemDetails);
     }
@@ -453,9 +474,14 @@ public static class NativeTypedResultsExtensions
         ProblemDetails problemDetails = CreateProblemDetails(StatusCodes.Status422UnprocessableEntity, "Domain Rule Violation", detail);
         problemDetails.Type = "https://httpstatuses.com/domain-error";
         if (entityName is not null)
+        {
             problemDetails.Extensions["entityName"] = entityName;
+        }
+
         if (ruleName is not null)
+        {
             problemDetails.Extensions["ruleName"] = ruleName;
+        }
 
         return TypedResults.Problem(problemDetails);
     }
@@ -492,7 +518,9 @@ public static class NativeTypedResultsExtensions
     /// </code>
     /// </example>
     public static ValidationProblem ValidationProblem(IDictionary<string, string[]> errors)
-        => TypedResults.ValidationProblem(errors);
+    {
+        return TypedResults.ValidationProblem(errors);
+    }
 
     /// <summary>
     /// Creates a ValidationProblem response from a list of error tuples.
@@ -555,7 +583,7 @@ public static class NativeTypedResultsExtensions
 
         var errorMessages = result.Messages.Where(m => m.Type == MessageType.Error).ToList();
         var structuredMessages = errorMessages.OfType<IStructuredMessageResult>().ToList();
-        var errorDetail = string.Join("; ", errorMessages.Select(m => m.Message));
+        string errorDetail = string.Join("; ", errorMessages.Select(m => m.Message));
 
         // Check for NOT_FOUND error code
         if (structuredMessages.Any(m => m.ErrorCode == "NOT_FOUND" || m.ErrorCode?.Contains("NOT_FOUND") == true) ||
@@ -668,9 +696,15 @@ public static class NativeTypedResultsExtensions
         {
             case NotFoundException notFoundEx:
                 if (notFoundEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = notFoundEx.EntityName;
+                }
+
                 if (notFoundEx.EntityId != null)
+                {
                     problemDetails.Extensions["entityId"] = notFoundEx.EntityId;
+                }
+
                 break;
 
             case ValidationException validationEx:
@@ -684,39 +718,72 @@ public static class NativeTypedResultsExtensions
 
             case ConflictException conflictEx:
                 if (conflictEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = conflictEx.EntityName;
+                }
+
                 if (conflictEx.PropertyName != null)
+                {
                     problemDetails.Extensions["propertyName"] = conflictEx.PropertyName;
+                }
+
                 if (conflictEx.ConflictingValue != null)
+                {
                     problemDetails.Extensions["conflictingValue"] = conflictEx.ConflictingValue;
+                }
+
                 break;
 
             case ForbiddenException forbiddenEx:
                 if (forbiddenEx.ResourceName != null)
+                {
                     problemDetails.Extensions["resourceName"] = forbiddenEx.ResourceName;
+                }
+
                 if (forbiddenEx.ActionName != null)
+                {
                     problemDetails.Extensions["actionName"] = forbiddenEx.ActionName;
+                }
+
                 if (forbiddenEx.RequiredPermission != null)
+                {
                     problemDetails.Extensions["requiredPermission"] = forbiddenEx.RequiredPermission;
+                }
+
                 break;
 
             case UnauthorizedException unauthorizedEx:
                 if (unauthorizedEx.AuthenticationScheme != null)
+                {
                     problemDetails.Extensions["authenticationScheme"] = unauthorizedEx.AuthenticationScheme;
+                }
+
                 break;
 
             case DomainException domainEx:
                 if (domainEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = domainEx.EntityName;
+                }
+
                 if (domainEx.RuleName != null)
+                {
                     problemDetails.Extensions["ruleName"] = domainEx.RuleName;
+                }
+
                 break;
 
             case Mvp24HoursException mvpEx:
                 if (mvpEx.ErrorCode != null)
+                {
                     problemDetails.Extensions["errorCode"] = mvpEx.ErrorCode;
+                }
+
                 if (mvpEx.Context?.Count > 0)
+                {
                     problemDetails.Extensions["context"] = mvpEx.Context;
+                }
+
                 break;
         }
     }

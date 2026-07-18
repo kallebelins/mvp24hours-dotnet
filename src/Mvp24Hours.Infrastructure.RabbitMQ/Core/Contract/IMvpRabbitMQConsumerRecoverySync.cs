@@ -4,13 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract
+public interface IMvpRabbitMQConsumerRecoverySync : IMvpRabbitMQConsumerSync
 {
-    public interface IMvpRabbitMQConsumerRecoverySync : IMvpRabbitMQConsumerSync
-    {
-        void Failure(Exception exception, string token);
-        void Rejected(object message, string token);
-    }
+    void Failure(Exception exception, string token);
+    void Rejected(object message, string token);
 }

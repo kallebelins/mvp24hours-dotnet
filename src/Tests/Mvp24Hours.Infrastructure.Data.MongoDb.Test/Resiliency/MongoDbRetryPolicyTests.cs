@@ -11,15 +11,18 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 [Trait("Category", "Unit")]
 public class MongoDbRetryPolicyTests
 {
-    private MongoDbResiliencyOptions CreateDefaultOptions() => new()
+    private MongoDbResiliencyOptions CreateDefaultOptions()
     {
-        EnableRetry = true,
-        RetryCount = 3,
-        RetryBaseDelayMilliseconds = 10, // Short delays for tests
-        RetryMaxDelayMilliseconds = 100,
-        UseExponentialBackoff = true,
-        RetryJitterFactor = 0
-    };
+        return new()
+        {
+            EnableRetry = true,
+            RetryCount = 3,
+            RetryBaseDelayMilliseconds = 10, // Short delays for tests
+            RetryMaxDelayMilliseconds = 100,
+            UseExponentialBackoff = true,
+            RetryJitterFactor = 0
+        };
+    }
 
     [Fact]
     public async Task Should_Execute_Successfully_On_First_Attempt()
@@ -27,10 +30,10 @@ public class MongoDbRetryPolicyTests
         // Arrange
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
+        string result = await policy.ExecuteAsync(async ct =>
         {
             executionCount++;
             await Task.Delay(1, ct);
@@ -48,10 +51,10 @@ public class MongoDbRetryPolicyTests
         // Arrange
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
+        string result = await policy.ExecuteAsync(async ct =>
         {
             executionCount++;
             await Task.Delay(1, ct);
@@ -81,7 +84,7 @@ public class MongoDbRetryPolicyTests
             RetryJitterFactor = 0
         };
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
         Exception? caughtException = null;
@@ -112,18 +115,15 @@ public class MongoDbRetryPolicyTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.EnableRetry = false;
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        Func<Task> action = async () =>
-        {
-            await policy.ExecuteAsync<string>(async ct =>
+        Func<Task> action = async () => await policy.ExecuteAsync<string>(async ct =>
             {
                 executionCount++;
                 await Task.Delay(1, ct);
                 throw new TimeoutException("Fails");
             });
-        };
 
         // Assert
         await action.Should().ThrowAsync<TimeoutException>();
@@ -136,18 +136,15 @@ public class MongoDbRetryPolicyTests
         // Arrange
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        Func<Task> action = async () =>
-        {
-            await policy.ExecuteAsync<string>(async ct =>
+        Func<Task> action = async () => await policy.ExecuteAsync<string>(async ct =>
             {
                 executionCount++;
                 await Task.Delay(1, ct);
                 throw new ArgumentException("Non-retryable");
             });
-        };
 
         // Assert
         await action.Should().ThrowAsync<ArgumentException>();
@@ -235,8 +232,8 @@ public class MongoDbRetryPolicyTests
             .ToList();
 
         // Assert - Delays should vary due to jitter
-        var minDelay = delays.Min();
-        var maxDelay = delays.Max();
+        double minDelay = delays.Min();
+        double maxDelay = delays.Max();
 
         // With 20% jitter, delays should be between 800 and 1200
         minDelay.Should().BeGreaterThanOrEqualTo(800);
@@ -254,7 +251,7 @@ public class MongoDbRetryPolicyTests
         var policy = new MongoDbRetryPolicy(options);
 
         // Act
-        var shouldRetry = policy.ShouldRetry(new TimeoutException(), 0);
+        bool shouldRetry = policy.ShouldRetry(new TimeoutException(), 0);
 
         // Assert
         shouldRetry.Should().BeTrue();
@@ -268,7 +265,7 @@ public class MongoDbRetryPolicyTests
         var policy = new MongoDbRetryPolicy(options);
 
         // Act
-        var shouldRetry = policy.ShouldRetry(new ArgumentException(), 0);
+        bool shouldRetry = policy.ShouldRetry(new ArgumentException(), 0);
 
         // Assert
         shouldRetry.Should().BeFalse();
@@ -283,7 +280,7 @@ public class MongoDbRetryPolicyTests
         var policy = new MongoDbRetryPolicy(options);
 
         // Act
-        var shouldRetry = policy.ShouldRetry(new TimeoutException(), 3);
+        bool shouldRetry = policy.ShouldRetry(new TimeoutException(), 3);
 
         // Assert
         shouldRetry.Should().BeFalse();
@@ -319,7 +316,7 @@ public class MongoDbRetryPolicyTests
         // Arrange
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         var policy = new MongoDbRetryPolicy(options);
-        var executed = false;
+        bool executed = false;
 
         // Act
         await policy.ExecuteAsync(async ct =>
@@ -346,7 +343,7 @@ public class MongoDbRetryPolicyTests
             RetryJitterFactor = 0
         };
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
         Exception? caughtException = null;
@@ -383,7 +380,7 @@ public class MongoDbRetryPolicyTests
             RetryJitterFactor = 0
         };
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
         Exception? caughtException = null;
@@ -425,10 +422,10 @@ public class MongoDbRetryPolicyTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.AdditionalRetryableExceptions.Add(typeof(InvalidOperationException));
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        var result = await policy.ExecuteAsync(async ct =>
+        string result = await policy.ExecuteAsync(async ct =>
         {
             executionCount++;
             await Task.Delay(1, ct);
@@ -451,18 +448,15 @@ public class MongoDbRetryPolicyTests
         MongoDbResiliencyOptions options = CreateDefaultOptions();
         options.NonRetryableExceptions.Add(typeof(TimeoutException)); // Override default retryable
         var policy = new MongoDbRetryPolicy(options);
-        var executionCount = 0;
+        int executionCount = 0;
 
         // Act
-        Func<Task> action = async () =>
-        {
-            await policy.ExecuteAsync<string>(async ct =>
+        Func<Task> action = async () => await policy.ExecuteAsync<string>(async ct =>
             {
                 executionCount++;
                 await Task.Delay(1, ct);
                 throw new TimeoutException("Should not retry");
             });
-        };
 
         // Assert - Should fail immediately without retry
         await action.Should().ThrowAsync<TimeoutException>();

@@ -4,11 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 
@@ -27,29 +23,21 @@ namespace Mvp24Hours.Infrastructure.Caching.Observability;
 /// </list>
 /// </para>
 /// </remarks>
-public class ObservableCacheProvider : ICacheProvider
+/// <remarks>
+/// Creates a new instance of ObservableCacheProvider.
+/// </remarks>
+/// <param name="innerProvider">The underlying cache provider.</param>
+/// <param name="metrics">Optional metrics service.</param>
+/// <param name="logger">Optional logger.</param>
+public class ObservableCacheProvider(
+    ICacheProvider innerProvider,
+    ICacheMetrics? metrics = null,
+    ILogger<ObservableCacheProvider>? logger = null) : ICacheProvider
 {
-    private readonly ICacheProvider _innerProvider;
-    private readonly ICacheMetrics? _metrics;
-    private readonly ILogger<ObservableCacheProvider>? _logger;
-    private readonly string _providerName;
-
-    /// <summary>
-    /// Creates a new instance of ObservableCacheProvider.
-    /// </summary>
-    /// <param name="innerProvider">The underlying cache provider.</param>
-    /// <param name="metrics">Optional metrics service.</param>
-    /// <param name="logger">Optional logger.</param>
-    public ObservableCacheProvider(
-        ICacheProvider innerProvider,
-        ICacheMetrics? metrics = null,
-        ILogger<ObservableCacheProvider>? logger = null)
-    {
-        _innerProvider = innerProvider ?? throw new ArgumentNullException(nameof(innerProvider));
-        _metrics = metrics;
-        _logger = logger;
-        _providerName = innerProvider.GetType().Name;
-    }
+    private readonly ICacheProvider _innerProvider = innerProvider ?? throw new ArgumentNullException(nameof(innerProvider));
+    private readonly ICacheMetrics? _metrics = metrics;
+    private readonly ILogger<ObservableCacheProvider>? _logger = logger;
+    private readonly string _providerName = innerProvider.GetType().Name;
 
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
@@ -71,8 +59,8 @@ public class ObservableCacheProvider : ICacheProvider
                 _providerName);
 
             T? value = await _innerProvider.GetAsync<T>(key, cancellationToken);
-            var isHit = value != null;
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            bool isHit = value != null;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, isHit);
             CacheActivitySource.EnrichActivity(activity, durationMs);
@@ -100,7 +88,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("get", _providerName, durationMs, null, false);
             _metrics?.RecordError("get", ex, _providerName);
@@ -139,9 +127,9 @@ public class ObservableCacheProvider : ICacheProvider
                 key,
                 _providerName);
 
-            var value = await _innerProvider.GetStringAsync(key, cancellationToken);
-            var isHit = value != null;
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            string? value = await _innerProvider.GetStringAsync(key, cancellationToken);
+            bool isHit = value != null;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, isHit);
             CacheActivitySource.EnrichActivity(activity, durationMs);
@@ -169,7 +157,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("get", _providerName, durationMs, null, false);
             _metrics?.RecordError("get", ex, _providerName);
@@ -216,7 +204,7 @@ public class ObservableCacheProvider : ICacheProvider
                 valueSizeBytes);
 
             await _innerProvider.SetAsync(key, value, options, cancellationToken);
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, false);
             CacheActivitySource.EnrichActivity(activity, durationMs, valueSizeBytes);
@@ -231,7 +219,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("set", _providerName, durationMs, null, false);
             _metrics?.RecordError("set", ex, _providerName);
@@ -265,7 +253,7 @@ public class ObservableCacheProvider : ICacheProvider
                 key,
                 _providerName);
 
-            var valueSizeBytes = System.Text.Encoding.UTF8.GetByteCount(value);
+            int valueSizeBytes = System.Text.Encoding.UTF8.GetByteCount(value);
 
             _logger?.LogDebug(
                 "Cache SET operation started. Key: {Key}, Provider: {Provider}, ValueSize: {ValueSizeBytes}",
@@ -274,7 +262,7 @@ public class ObservableCacheProvider : ICacheProvider
                 valueSizeBytes);
 
             await _innerProvider.SetStringAsync(key, value, options, cancellationToken);
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, false);
             CacheActivitySource.EnrichActivity(activity, durationMs, valueSizeBytes);
@@ -289,7 +277,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("set", _providerName, durationMs, null, false);
             _metrics?.RecordError("set", ex, _providerName);
@@ -329,7 +317,7 @@ public class ObservableCacheProvider : ICacheProvider
                 _providerName);
 
             await _innerProvider.RemoveAsync(key, cancellationToken);
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, false);
             CacheActivitySource.EnrichActivity(activity, durationMs);
@@ -344,7 +332,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("remove", _providerName, durationMs, null, false);
             _metrics?.RecordError("remove", ex, _providerName);
@@ -384,8 +372,8 @@ public class ObservableCacheProvider : ICacheProvider
                 key,
                 _providerName);
 
-            var exists = await _innerProvider.ExistsAsync(key, cancellationToken);
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            bool exists = await _innerProvider.ExistsAsync(key, cancellationToken);
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, exists);
             CacheActivitySource.EnrichActivity(activity, durationMs);
@@ -395,7 +383,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("exists", _providerName, durationMs, null, false);
             _metrics?.RecordError("exists", ex, _providerName);
@@ -435,7 +423,7 @@ public class ObservableCacheProvider : ICacheProvider
                 _providerName);
 
             await _innerProvider.RefreshAsync(key, cancellationToken);
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
 
             CacheActivitySource.SetSuccess(activity, false);
             CacheActivitySource.EnrichActivity(activity, durationMs);
@@ -443,7 +431,7 @@ public class ObservableCacheProvider : ICacheProvider
         }
         catch (Exception ex)
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
             CacheActivitySource.SetError(activity, ex);
             CacheActivitySource.RecordOperation("refresh", _providerName, durationMs, null, false);
             _metrics?.RecordError("refresh", ex, _providerName);

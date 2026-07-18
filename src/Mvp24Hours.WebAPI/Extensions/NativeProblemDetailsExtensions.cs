@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -105,9 +102,7 @@ public static class NativeProblemDetailsExtensions
         services.AddSingleton<IExceptionToProblemDetailsMapper, DefaultExceptionToProblemDetailsMapper>();
 
         // Add native ProblemDetails service
-        services.AddProblemDetails(options =>
-        {
-            options.CustomizeProblemDetails = context =>
+        services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
             {
                 ProblemDetails problemDetails = context.ProblemDetails;
                 HttpContext httpContext = context.HttpContext;
@@ -121,7 +116,7 @@ public static class NativeProblemDetailsExtensions
                 {
                     problemDetails.Extensions["correlationId"] = correlationId.ToString();
                 }
-                else if (httpContext.Items.TryGetValue("CorrelationId", out var itemValue) &&
+                else if (httpContext.Items.TryGetValue("CorrelationId", out object? itemValue) &&
                          itemValue is string correlationIdValue)
                 {
                     problemDetails.Extensions["correlationId"] = correlationIdValue;
@@ -135,8 +130,7 @@ public static class NativeProblemDetailsExtensions
                 {
                     problemDetails.Extensions["requestId"] = httpContext.TraceIdentifier;
                 }
-            };
-        });
+            });
 
         return services;
     }
@@ -213,9 +207,7 @@ public static class NativeProblemDetailsExtensions
     /// <returns>The application builder for chaining.</returns>
     public static IApplicationBuilder UseNativeProblemDetailsHandling(this IApplicationBuilder app)
     {
-        app.UseExceptionHandler(exceptionApp =>
-        {
-            exceptionApp.Run(async context =>
+        app.UseExceptionHandler(exceptionApp => exceptionApp.Run(async context =>
             {
                 IExceptionHandlerFeature? exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
                 Exception? exception = exceptionHandlerFeature?.Error;
@@ -235,7 +227,7 @@ public static class NativeProblemDetailsExtensions
                 LogException(logger, exception, context, options);
 
                 // Get status code from mapper or use default
-                var statusCode = mapper?.GetStatusCode(exception) ?? GetDefaultStatusCode(exception);
+                int statusCode = mapper?.GetStatusCode(exception) ?? GetDefaultStatusCode(exception);
                 context.Response.StatusCode = statusCode;
 
                 // Try to use IProblemDetailsService
@@ -256,8 +248,7 @@ public static class NativeProblemDetailsExtensions
                     context.Response.ContentType = "application/problem+json";
                     await context.Response.WriteAsJsonAsync(problemDetails);
                 }
-            });
-        });
+            }));
 
         // Add status code pages for non-exception errors
         app.UseStatusCodePages(async context =>
@@ -266,7 +257,7 @@ public static class NativeProblemDetailsExtensions
 
             if (problemDetailsService is not null)
             {
-                var statusCode = context.HttpContext.Response.StatusCode;
+                int statusCode = context.HttpContext.Response.StatusCode;
                 var problemDetails = new ProblemDetails
                 {
                     Status = statusCode,
@@ -351,9 +342,15 @@ public static class NativeProblemDetailsExtensions
         {
             case NotFoundException notFoundEx:
                 if (notFoundEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = notFoundEx.EntityName;
+                }
+
                 if (notFoundEx.EntityId != null)
+                {
                     problemDetails.Extensions["entityId"] = notFoundEx.EntityId;
+                }
+
                 break;
 
             case ValidationException validationEx:
@@ -375,39 +372,72 @@ public static class NativeProblemDetailsExtensions
 
             case ConflictException conflictEx:
                 if (conflictEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = conflictEx.EntityName;
+                }
+
                 if (conflictEx.PropertyName != null)
+                {
                     problemDetails.Extensions["propertyName"] = conflictEx.PropertyName;
+                }
+
                 if (conflictEx.ConflictingValue != null)
+                {
                     problemDetails.Extensions["conflictingValue"] = conflictEx.ConflictingValue;
+                }
+
                 break;
 
             case ForbiddenException forbiddenEx:
                 if (forbiddenEx.ResourceName != null)
+                {
                     problemDetails.Extensions["resourceName"] = forbiddenEx.ResourceName;
+                }
+
                 if (forbiddenEx.ActionName != null)
+                {
                     problemDetails.Extensions["actionName"] = forbiddenEx.ActionName;
+                }
+
                 if (forbiddenEx.RequiredPermission != null)
+                {
                     problemDetails.Extensions["requiredPermission"] = forbiddenEx.RequiredPermission;
+                }
+
                 break;
 
             case UnauthorizedException unauthorizedEx:
                 if (unauthorizedEx.AuthenticationScheme != null)
+                {
                     problemDetails.Extensions["authenticationScheme"] = unauthorizedEx.AuthenticationScheme;
+                }
+
                 break;
 
             case DomainException domainEx:
                 if (domainEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = domainEx.EntityName;
+                }
+
                 if (domainEx.RuleName != null)
+                {
                     problemDetails.Extensions["ruleName"] = domainEx.RuleName;
+                }
+
                 break;
 
             case Mvp24HoursException mvpEx:
                 if (mvpEx.ErrorCode != null)
+                {
                     problemDetails.Extensions["errorCode"] = mvpEx.ErrorCode;
+                }
+
                 if (mvpEx.Context?.Count > 0)
+                {
                     problemDetails.Extensions["context"] = mvpEx.Context;
+                }
+
                 break;
         }
     }
@@ -472,7 +502,7 @@ public static class NativeProblemDetailsExtensions
 
     private static string GetTypeForException(Exception exception, MvpProblemDetailsOptions options)
     {
-        var type = exception switch
+        string type = exception switch
         {
             NotFoundException => "not-found",
             ValidationException => "validation-error",
@@ -536,10 +566,10 @@ public static class NativeProblemDetailsExtensions
             return;
         }
 
-        var statusCode = GetDefaultStatusCode(exception);
+        int statusCode = GetDefaultStatusCode(exception);
         PathString requestPath = context.Request.Path;
-        var requestMethod = context.Request.Method;
-        var traceId = context.TraceIdentifier;
+        string requestMethod = context.Request.Method;
+        string traceId = context.TraceIdentifier;
 
         if (statusCode >= 500)
         {

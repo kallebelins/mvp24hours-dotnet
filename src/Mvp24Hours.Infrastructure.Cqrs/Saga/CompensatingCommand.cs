@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Saga;
 
 /// <summary>
@@ -189,13 +187,18 @@ public sealed class CompensationResult
     /// <summary>
     /// Creates a successful compensation result.
     /// </summary>
-    public static CompensationResult Success() => new(true);
+    public static CompensationResult Success()
+    {
+        return new(true);
+    }
 
     /// <summary>
     /// Creates a failed compensation result.
     /// </summary>
-    public static CompensationResult Failed(string errorMessage, Exception? exception = null) =>
-        new(false, errorMessage, exception);
+    public static CompensationResult Failed(string errorMessage, Exception? exception = null)
+    {
+        return new(false, errorMessage, exception);
+    }
 }
 
 /// <summary>

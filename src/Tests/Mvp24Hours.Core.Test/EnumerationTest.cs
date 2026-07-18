@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Diagnostics.CodeAnalysis;
 using Mvp24Hours.Core.Domain.Enumerations;
 
 namespace Mvp24Hours.Core.Test;
@@ -57,7 +56,7 @@ public class EnumerationTest
     public void FromValue_WithInvalidValue_ThrowsInvalidOperationException()
     {
         // Arrange
-        var invalidValue = 999;
+        int invalidValue = 999;
 
         // Act
         Func<OrderStatus> act = () => OrderStatus.FromValue(invalidValue);
@@ -116,7 +115,7 @@ public class EnumerationTest
     public void FromName_WithInvalidName_ThrowsInvalidOperationException()
     {
         // Arrange
-        var invalidName = "InvalidStatus";
+        string invalidName = "InvalidStatus";
 
         // Act
         Func<OrderStatus> act = () => OrderStatus.FromName(invalidName);
@@ -154,7 +153,7 @@ public class EnumerationTest
     public void TryFromValue_WithValidValue_ReturnsTrue()
     {
         // Act
-        var result = OrderStatus.TryFromValue(1, out OrderStatus? status);
+        bool result = OrderStatus.TryFromValue(1, out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -165,7 +164,7 @@ public class EnumerationTest
     public void TryFromValue_WithInvalidValue_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromValue(999, out OrderStatus? status);
+        bool result = OrderStatus.TryFromValue(999, out OrderStatus? status);
 
         // Assert
         result.Should().BeFalse();
@@ -180,7 +179,7 @@ public class EnumerationTest
     public void TryFromName_WithValidName_ReturnsTrue()
     {
         // Act
-        var result = OrderStatus.TryFromName("Pending", out OrderStatus? status);
+        bool result = OrderStatus.TryFromName("Pending", out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -191,7 +190,7 @@ public class EnumerationTest
     public void TryFromName_WithInvalidName_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromName("InvalidStatus", out OrderStatus? status);
+        bool result = OrderStatus.TryFromName("InvalidStatus", out OrderStatus? status);
 
         // Assert
         result.Should().BeFalse();
@@ -202,7 +201,7 @@ public class EnumerationTest
     public void TryFromName_WithNull_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.TryFromName(null!, out OrderStatus? status);
+        bool result = OrderStatus.TryFromName(null!, out _);
 
         // Assert
         result.Should().BeFalse();
@@ -212,7 +211,7 @@ public class EnumerationTest
     public void TryFromName_IsCaseInsensitive()
     {
         // Act
-        var result = OrderStatus.TryFromName("pending", out OrderStatus? status);
+        bool result = OrderStatus.TryFromName("pending", out OrderStatus? status);
 
         // Assert
         result.Should().BeTrue();
@@ -261,7 +260,7 @@ public class EnumerationTest
     public void IsDefined_Int_ReturnsExpectedResult(int value, bool expected)
     {
         // Act
-        var result = OrderStatus.IsDefined(value);
+        bool result = OrderStatus.IsDefined(value);
 
         // Assert
         result.Should().Be(expected);
@@ -276,7 +275,7 @@ public class EnumerationTest
     public void IsDefined_String_ReturnsExpectedResult(string name, bool expected)
     {
         // Act
-        var result = OrderStatus.IsDefined(name);
+        bool result = OrderStatus.IsDefined(name);
 
         // Assert
         result.Should().Be(expected);
@@ -286,7 +285,7 @@ public class EnumerationTest
     public void IsDefined_String_WithNull_ReturnsFalse()
     {
         // Act
-        var result = OrderStatus.IsDefined(null!);
+        bool result = OrderStatus.IsDefined(null!);
 
         // Assert
         result.Should().BeFalse();
@@ -532,7 +531,7 @@ public class EnumerationTest
 
         // Act
         var key = OrderStatus.FromValue(1);
-        var value = dictionary[key];
+        string value = dictionary[key];
 
         // Assert
         value.Should().Be("Waiting");

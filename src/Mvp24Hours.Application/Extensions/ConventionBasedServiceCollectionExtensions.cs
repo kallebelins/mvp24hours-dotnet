@@ -4,9 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -66,7 +63,11 @@ public static class ConventionBasedServiceCollectionExtensions
         this IServiceCollection services,
         params Assembly[] assemblies)
     {
-        if (services == null) throw new ArgumentNullException(nameof(services));
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
         if (assemblies == null || assemblies.Length == 0)
         {
             throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
@@ -117,12 +118,19 @@ public static class ConventionBasedServiceCollectionExtensions
         Assembly[] assemblies,
         Func<Type, bool> filter)
     {
-        if (services == null) throw new ArgumentNullException(nameof(services));
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
         if (assemblies == null || assemblies.Length == 0)
         {
             throw new ArgumentException("At least one assembly must be specified.", nameof(assemblies));
         }
-        if (filter == null) throw new ArgumentNullException(nameof(filter));
+        if (filter == null)
+        {
+            throw new ArgumentNullException(nameof(filter));
+        }
 
         foreach (Assembly assembly in assemblies)
         {
@@ -206,10 +214,10 @@ public static class ConventionBasedServiceCollectionExtensions
         foreach (Type? implementationType in eligibleTypes)
         {
             ServiceLifetime lifetime = GetServiceLifetime(implementationType);
-            var isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
-            var isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
-            var shouldReplace = implementationType.IsDefined(typeof(ServiceReplaceAttribute), false);
-            var shouldTryAdd = implementationType.IsDefined(typeof(ServiceTryAddAttribute), false);
+            bool isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
+            bool isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
+            bool shouldReplace = implementationType.IsDefined(typeof(ServiceReplaceAttribute), false);
+            bool shouldTryAdd = implementationType.IsDefined(typeof(ServiceTryAddAttribute), false);
 
             // Get all interfaces that are not marker interfaces
             var serviceInterfaces = implementationType.GetInterfaces()
@@ -339,7 +347,7 @@ public static class ConventionBasedServiceCollectionExtensions
         }
         else if (shouldTryAdd)
         {
-            var exists = services.Any(d =>
+            bool exists = services.Any(d =>
                 d.ServiceType == serviceType &&
                 d.IsKeyedService &&
                 Equals(d.ServiceKey, key));
@@ -393,8 +401,8 @@ public static class ConventionBasedServiceCollectionExtensions
             foreach (Type? implementationType in eligibleTypes)
             {
                 ServiceLifetime lifetime = GetServiceLifetime(implementationType);
-                var isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
-                var isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
+                bool isKeyedService = typeof(IKeyedService).IsAssignableFrom(implementationType);
+                bool isSelfRegistering = typeof(ISelfRegistering).IsAssignableFrom(implementationType);
 
                 string? serviceKey = null;
                 if (isKeyedService)

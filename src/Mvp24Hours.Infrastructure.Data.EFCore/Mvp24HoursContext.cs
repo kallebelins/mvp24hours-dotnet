@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mvp24Hours.Core.Contract.Domain.Entity;
@@ -13,134 +10,133 @@ using Mvp24Hours.Core.Entities;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 
-namespace Mvp24Hours.Infrastructure.Data.EFCore
+namespace Mvp24Hours.Infrastructure.Data.EFCore;
+
+/// <summary>
+/// A Mvp24HoursContext instance represents a session with the database and can be used to query and save instances of your entities.
+/// </summary>
+public abstract class Mvp24HoursContext : DbContext
 {
-    /// <summary>
-    /// A Mvp24HoursContext instance represents a session with the database and can be used to query and save instances of your entities.
-    /// </summary>
-    public abstract class Mvp24HoursContext : DbContext
+    #region [ Ctor ]
+
+    protected Mvp24HoursContext()
+        : base()
     {
-        #region [ Ctor ]
+    }
 
-        protected Mvp24HoursContext()
-            : base()
+    protected Mvp24HoursContext(DbContextOptions options)
+        : base(options)
+    {
+    }
+
+    #endregion
+
+    #region [ Configs ]
+
+    /// <summary>
+    /// <see cref="Microsoft.EntityFrameworkCore.DbContext.OnModelCreating(ModelBuilder)"/>
+    /// </summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        if (CanApplyEntityLog)
         {
+            modelBuilder.ApplyGlobalFilters<IEntityDateLog>(e => e.Removed == null);
+        }
+    }
+    /// <summary>
+    /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChanges"/>
+    /// </summary>
+    public override int SaveChanges()
+    {
+        ApplyLogRules();
+        return base.SaveChanges();
+    }
+    /// <summary>
+    /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(CancellationToken)"/>
+    /// </summary>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyLogRules();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+    /// <summary>
+    /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(bool, CancellationToken)"/>
+    /// </summary>
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ApplyLogRules();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+    /// <summary>
+    /// Apply log rules
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
+    protected void ApplyLogRules()
+    {
+        if (!CanApplyEntityLog)
+        {
+            return;
         }
 
-        protected Mvp24HoursContext(DbContextOptions options)
-            : base(options)
+        // entity log and guid
+        foreach (EntityEntry? entry in ChangeTracker
+            .Entries()
+            .Where(e =>
+                (e.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
+                    || e.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>))
+                    || e.Entity.GetType().InheritsOrImplements(typeof(IEntityDateLog)))
+                && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)))
         {
-        }
+            bool hasUserBy = (entry.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
+                    || entry.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)));
 
-        #endregion
-
-        #region [ Configs ]
-
-        /// <summary>
-        /// <see cref="Microsoft.EntityFrameworkCore.DbContext.OnModelCreating(ModelBuilder)"/>
-        /// </summary>
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-            if (CanApplyEntityLog)
+            var e = (dynamic)entry.Entity;
+            if (entry.State == EntityState.Added)
             {
-                modelBuilder.ApplyGlobalFilters<IEntityDateLog>(e => e.Removed == null);
-            }
-        }
-        /// <summary>
-        /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChanges"/>
-        /// </summary>
-        public override int SaveChanges()
-        {
-            this.ApplyLogRules();
-            return base.SaveChanges();
-        }
-        /// <summary>
-        /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(CancellationToken)"/>
-        /// </summary>
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            ApplyLogRules();
-            return base.SaveChangesAsync(cancellationToken);
-        }
-        /// <summary>
-        /// <see cref="Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(bool, CancellationToken)"/>
-        /// </summary>
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-        {
-            ApplyLogRules();
-            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-        }
-        /// <summary>
-        /// Apply log rules
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
-        protected void ApplyLogRules()
-        {
-            if (!CanApplyEntityLog)
-            {
-                return;
-            }
+                e.Created = TimeZoneHelper.GetTimeZoneNow();
+                e.Modified = null;
+                e.Removed = null;
 
-            // entity log and guid
-            foreach (EntityEntry? entry in this.ChangeTracker
-                .Entries()
-                .Where(e =>
-                    (e.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-                        || e.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>))
-                        || e.Entity.GetType().InheritsOrImplements(typeof(IEntityDateLog)))
-                    && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)))
-            {
-                bool hasUserBy = (entry.Entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
-                        || entry.Entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)));
-
-                var e = (dynamic)entry.Entity;
-                if (entry.State == EntityState.Added)
+                if (hasUserBy)
                 {
-                    e.Created = TimeZoneHelper.GetTimeZoneNow();
-                    e.Modified = null;
-                    e.Removed = null;
+                    e.CreatedBy = (dynamic?)EntityLogBy;
+                    e.ModifiedBy = null;
+                    e.RemovedBy = null;
+                }
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                if (e.Removed == null)
+                {
+                    e.Modified = TimeZoneHelper.GetTimeZoneNow();
 
                     if (hasUserBy)
                     {
-                        e.CreatedBy = (dynamic?)EntityLogBy;
-                        e.ModifiedBy = null;
-                        e.RemovedBy = null;
+                        e.ModifiedBy = (dynamic?)EntityLogBy;
                     }
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    if (e.Removed == null)
-                    {
-                        e.Modified = TimeZoneHelper.GetTimeZoneNow();
-
-                        if (hasUserBy)
-                        {
-                            e.ModifiedBy = (dynamic?)EntityLogBy;
-                        }
-                    }
-                }
-                else if (entry.State == EntityState.Deleted)
-                {
-                    // no action
                 }
             }
+            else if (entry.State == EntityState.Deleted)
+            {
+                // no action
+            }
         }
-
-        #endregion
-
-        #region [ Props ]
-
-        /// <summary>
-        /// Indicates whether log control can be performed by the base context of Mvp24Hours.
-        /// </summary>
-        public virtual bool CanApplyEntityLog { get; }
-        /// <summary>
-        /// Gets the value of the user logged in the context or logged into the database
-        /// </summary>
-        public virtual object? EntityLogBy { get; }
-
-        #endregion
     }
+
+    #endregion
+
+    #region [ Props ]
+
+    /// <summary>
+    /// Indicates whether log control can be performed by the base context of Mvp24Hours.
+    /// </summary>
+    public virtual bool CanApplyEntityLog { get; }
+    /// <summary>
+    /// Gets the value of the user logged in the context or logged into the database
+    /// </summary>
+    public virtual object? EntityLogBy { get; }
+
+    #endregion
 }

@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Observability;
@@ -102,7 +100,9 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
     public void RecordOperationStart(string serviceName, string operationName, string operationType)
     {
         if (!_options.Enabled)
+        {
             return;
+        }
 
         KeyValuePair<string, object?>[] tags = CreateTags(serviceName, operationName, operationType);
         _operationsTotal.Add(1, tags);
@@ -117,7 +117,9 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
     public void RecordOperationSuccess(string serviceName, string operationName, string operationType, long durationMs)
     {
         if (!_options.Enabled)
+        {
             return;
+        }
 
         KeyValuePair<string, object?>[] tags = CreateTags(serviceName, operationName, operationType);
         _operationsSuccess.Add(1, tags);
@@ -133,7 +135,9 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
     public void RecordOperationFailure(string serviceName, string operationName, string operationType, long durationMs, string exceptionType)
     {
         if (!_options.Enabled)
+        {
             return;
+        }
 
         KeyValuePair<string, object?>[] tags = CreateTagsWithError(serviceName, operationName, operationType, exceptionType);
         _operationsFailure.Add(1, tags);
@@ -147,23 +151,23 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
 
     private static KeyValuePair<string, object?>[] CreateTags(string serviceName, string operationName, string operationType)
     {
-        return new KeyValuePair<string, object?>[]
-        {
+        return
+        [
             new("service.name", serviceName),
             new("operation.name", operationName),
             new("operation.type", operationType)
-        };
+        ];
     }
 
     private static KeyValuePair<string, object?>[] CreateTagsWithError(string serviceName, string operationName, string operationType, string errorType)
     {
-        return new KeyValuePair<string, object?>[]
-        {
+        return
+        [
             new("service.name", serviceName),
             new("operation.name", operationName),
             new("operation.type", operationType),
             new("error.type", errorType)
-        };
+        ];
     }
 
     /// <summary>
@@ -172,7 +176,9 @@ public sealed class ApplicationOperationMetrics : IOperationMetrics, IDisposable
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _disposed = true;
         _meter.Dispose();

@@ -3,40 +3,37 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
+namespace Mvp24Hours.WebAPI.Configuration;
 
-namespace Mvp24Hours.WebAPI.Configuration
+/// <summary>
+/// Options for configuring request decompression.
+/// </summary>
+public class RequestDecompressionOptions
 {
     /// <summary>
-    /// Options for configuring request decompression.
+    /// Gets or sets whether request decompression is enabled.
     /// </summary>
-    public class RequestDecompressionOptions
-    {
-        /// <summary>
-        /// Gets or sets whether request decompression is enabled.
-        /// </summary>
-        public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets the maximum request body size (in bytes) to decompress.
-        /// Requests larger than this will not be decompressed.
-        /// </summary>
-        public long MaxRequestBodySize { get; set; } = 10 * 1024 * 1024; // 10MB
+    /// <summary>
+    /// Gets or sets the maximum request body size (in bytes) to decompress.
+    /// Requests larger than this will not be decompressed.
+    /// </summary>
+    public long MaxRequestBodySize { get; set; } = 10 * 1024 * 1024; // 10MB
 
-        /// <summary>
-        /// Gets or sets the list of content encodings supported for decompression.
-        /// </summary>
-        public HashSet<string> SupportedEncodings { get; set; } =
-        [
-            "gzip",
-            "deflate",
-            "br" // Brotli
-        ];
+    /// <summary>
+    /// Gets or sets the list of content encodings supported for decompression.
+    /// </summary>
+    public HashSet<string> SupportedEncodings { get; set; } =
+    [
+        "gzip",
+        "deflate",
+        "br" // Brotli
+    ];
 
-        /// <summary>
-        /// Gets or sets the list of paths to exclude from decompression.
-        /// </summary>
-        public HashSet<string> ExcludedPaths { get; set; } = [];
-    }
+    /// <summary>
+    /// Gets or sets the list of paths to exclude from decompression.
+    /// </summary>
+    public HashSet<string> ExcludedPaths { get; set; } = [];
 }
 

@@ -3,405 +3,453 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation;
+
+/// <summary>
+/// Service for MongoDB Schema Validation operations.
+/// </summary>
+/// <example>
+/// <code>
+/// // Create a schema using the fluent builder
+/// var schema = new JsonSchemaBuilder()
+///     .WithBsonType("object")
+///     .WithRequired("name", "email")
+///     .WithProperty("name", p => p.WithBsonType("string").WithMinLength(1))
+///     .WithProperty("email", p => p.WithBsonType("string").WithPattern(@"^[\w-\.]+@"))
+///     .Build();
+/// 
+/// // Create collection with validation
+/// await schemaService.CreateCollectionWithValidationAsync("users", schema);
+/// 
+/// // Or generate schema from a .NET type
+/// var autoSchema = schemaService.GenerateSchemaFromType&lt;User&gt;();
+/// await schemaService.SetValidationAsync("users", autoSchema);
+/// </code>
+/// </example>
+/// <remarks>
+/// Initializes a new instance of the <see cref="MongoDbSchemaValidationService"/> class.
+/// </remarks>
+/// <param name="database">The MongoDB database.</param>
+/// <param name="logger">Optional logger.</param>
+public class MongoDbSchemaValidationService(
+    IMongoDatabase database,
+    ILogger<MongoDbSchemaValidationService>? logger = null) : IMongoDbSchemaValidationService
 {
-    /// <summary>
-    /// Service for MongoDB Schema Validation operations.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// // Create a schema using the fluent builder
-    /// var schema = new JsonSchemaBuilder()
-    ///     .WithBsonType("object")
-    ///     .WithRequired("name", "email")
-    ///     .WithProperty("name", p => p.WithBsonType("string").WithMinLength(1))
-    ///     .WithProperty("email", p => p.WithBsonType("string").WithPattern(@"^[\w-\.]+@"))
-    ///     .Build();
-    /// 
-    /// // Create collection with validation
-    /// await schemaService.CreateCollectionWithValidationAsync("users", schema);
-    /// 
-    /// // Or generate schema from a .NET type
-    /// var autoSchema = schemaService.GenerateSchemaFromType&lt;User&gt;();
-    /// await schemaService.SetValidationAsync("users", autoSchema);
-    /// </code>
-    /// </example>
-    public class MongoDbSchemaValidationService : IMongoDbSchemaValidationService
+    private readonly IMongoDatabase _database = database ?? throw new ArgumentNullException(nameof(database));
+    private readonly ILogger<MongoDbSchemaValidationService>? _logger = logger;
+
+    /// <inheritdoc/>
+    public async Task CreateCollectionWithValidationAsync(
+        string collectionName,
+        BsonDocument jsonSchema,
+        MongoDbSchemaValidationOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
-        private readonly IMongoDatabase _database;
-        private readonly ILogger<MongoDbSchemaValidationService>? _logger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MongoDbSchemaValidationService"/> class.
-        /// </summary>
-        /// <param name="database">The MongoDB database.</param>
-        /// <param name="logger">Optional logger.</param>
-        public MongoDbSchemaValidationService(
-            IMongoDatabase database,
-            ILogger<MongoDbSchemaValidationService>? logger = null)
+        if (string.IsNullOrWhiteSpace(collectionName))
         {
-            _database = database ?? throw new ArgumentNullException(nameof(database));
-            _logger = logger;
+            throw new ArgumentException("Collection name is required.", nameof(collectionName));
         }
 
-        /// <inheritdoc/>
-        public async Task CreateCollectionWithValidationAsync(
-            string collectionName,
-            BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions? options = null,
-            CancellationToken cancellationToken = default)
+        if (jsonSchema == null)
         {
-            if (string.IsNullOrWhiteSpace(collectionName))
-            {
-                throw new ArgumentException("Collection name is required.", nameof(collectionName));
-            }
-
-            if (jsonSchema == null)
-            {
-                throw new ArgumentNullException(nameof(jsonSchema));
-            }
-
-            options ??= new MongoDbSchemaValidationOptions();
-
-            // Use the command approach for validation as CreateCollectionOptions doesn't expose Validator directly
-            var command = new BsonDocument
-            {
-                { "create", collectionName },
-                { "validator", new BsonDocument("$jsonSchema", jsonSchema) },
-                { "validationLevel", GetValidationLevelString(options.ValidationLevel) },
-                { "validationAction", GetValidationActionString(options.ValidationAction) }
-            };
-
-            await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            _logger?.LogInformation("Collection '{CollectionName}' created with schema validation.", collectionName);
+            throw new ArgumentNullException(nameof(jsonSchema));
         }
 
-        /// <inheritdoc/>
-        public async Task SetValidationAsync(
-            string collectionName,
-            BsonDocument jsonSchema,
-            MongoDbSchemaValidationOptions? options = null,
-            CancellationToken cancellationToken = default)
+        options ??= new MongoDbSchemaValidationOptions();
+
+        // Use the command approach for validation as CreateCollectionOptions doesn't expose Validator directly
+        var command = new BsonDocument
         {
-            if (string.IsNullOrWhiteSpace(collectionName))
-            {
-                throw new ArgumentException("Collection name is required.", nameof(collectionName));
-            }
+            { "create", collectionName },
+            { "validator", new BsonDocument("$jsonSchema", jsonSchema) },
+            { "validationLevel", GetValidationLevelString(options.ValidationLevel) },
+            { "validationAction", GetValidationActionString(options.ValidationAction) }
+        };
 
-            if (jsonSchema == null)
-            {
-                throw new ArgumentNullException(nameof(jsonSchema));
-            }
+        await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
-            options ??= new MongoDbSchemaValidationOptions();
+        _logger?.LogInformation("Collection '{CollectionName}' created with schema validation.", collectionName);
+    }
 
-            var command = new BsonDocument
-            {
-                { "collMod", collectionName },
-                { "validator", new BsonDocument("$jsonSchema", jsonSchema) },
-                { "validationLevel", GetValidationLevelString(options.ValidationLevel) },
-                { "validationAction", GetValidationActionString(options.ValidationAction) }
-            };
-
-            await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            _logger?.LogInformation("Schema validation updated for collection '{CollectionName}'.", collectionName);
+    /// <inheritdoc/>
+    public async Task SetValidationAsync(
+        string collectionName,
+        BsonDocument jsonSchema,
+        MongoDbSchemaValidationOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(collectionName))
+        {
+            throw new ArgumentException("Collection name is required.", nameof(collectionName));
         }
 
-        /// <inheritdoc/>
-        public async Task RemoveValidationAsync(
-            string collectionName,
-            CancellationToken cancellationToken = default)
+        if (jsonSchema == null)
         {
-            if (string.IsNullOrWhiteSpace(collectionName))
-            {
-                throw new ArgumentException("Collection name is required.", nameof(collectionName));
-            }
-
-            var command = new BsonDocument
-            {
-                { "collMod", collectionName },
-                { "validator", new BsonDocument() },
-                { "validationLevel", "off" }
-            };
-
-            await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            _logger?.LogInformation("Schema validation removed from collection '{CollectionName}'.", collectionName);
+            throw new ArgumentNullException(nameof(jsonSchema));
         }
 
-        /// <inheritdoc/>
-        public async Task<BsonDocument?> GetValidationAsync(
-            string collectionName,
-            CancellationToken cancellationToken = default)
+        options ??= new MongoDbSchemaValidationOptions();
+
+        var command = new BsonDocument
         {
-            var command = new BsonDocument
+            { "collMod", collectionName },
+            { "validator", new BsonDocument("$jsonSchema", jsonSchema) },
+            { "validationLevel", GetValidationLevelString(options.ValidationLevel) },
+            { "validationAction", GetValidationActionString(options.ValidationAction) }
+        };
+
+        await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        _logger?.LogInformation("Schema validation updated for collection '{CollectionName}'.", collectionName);
+    }
+
+    /// <inheritdoc/>
+    public async Task RemoveValidationAsync(
+        string collectionName,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(collectionName))
+        {
+            throw new ArgumentException("Collection name is required.", nameof(collectionName));
+        }
+
+        var command = new BsonDocument
+        {
+            { "collMod", collectionName },
+            { "validator", new BsonDocument() },
+            { "validationLevel", "off" }
+        };
+
+        await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        _logger?.LogInformation("Schema validation removed from collection '{CollectionName}'.", collectionName);
+    }
+
+    /// <inheritdoc/>
+    public async Task<BsonDocument?> GetValidationAsync(
+        string collectionName,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new BsonDocument
+        {
+            { "listCollections", 1 },
+            { "filter", new BsonDocument("name", collectionName) }
+        };
+
+        BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        if (result.Contains("cursor"))
+        {
+            BsonDocument cursor = result["cursor"].AsBsonDocument;
+            BsonArray firstBatch = cursor["firstBatch"].AsBsonArray;
+
+            if (firstBatch.Count > 0)
             {
-                { "listCollections", 1 },
-                { "filter", new BsonDocument("name", collectionName) }
-            };
-
-            BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            if (result.Contains("cursor"))
-            {
-                BsonDocument cursor = result["cursor"].AsBsonDocument;
-                BsonArray firstBatch = cursor["firstBatch"].AsBsonArray;
-
-                if (firstBatch.Count > 0)
+                BsonDocument collectionInfo = firstBatch[0].AsBsonDocument;
+                if (collectionInfo.Contains("options"))
                 {
-                    BsonDocument collectionInfo = firstBatch[0].AsBsonDocument;
-                    if (collectionInfo.Contains("options"))
+                    BsonDocument options = collectionInfo["options"].AsBsonDocument;
+                    if (options.Contains("validator"))
                     {
-                        BsonDocument options = collectionInfo["options"].AsBsonDocument;
-                        if (options.Contains("validator"))
-                        {
-                            return options["validator"].AsBsonDocument;
-                        }
+                        return options["validator"].AsBsonDocument;
                     }
                 }
             }
-
-            return null;
         }
 
-        /// <inheritdoc/>
-        public async Task<SchemaValidationResult> ValidateDocumentAsync<TDocument>(
-            string collectionName,
-            TDocument document,
-            CancellationToken cancellationToken = default)
-        {
-            BsonDocument? schema = await GetValidationAsync(collectionName, cancellationToken);
+        return null;
+    }
 
-            if (schema == null)
+    /// <inheritdoc/>
+    public async Task<SchemaValidationResult> ValidateDocumentAsync<TDocument>(
+        string collectionName,
+        TDocument document,
+        CancellationToken cancellationToken = default)
+    {
+        BsonDocument? schema = await GetValidationAsync(collectionName, cancellationToken);
+
+        if (schema == null)
+        {
+            return SchemaValidationResult.Success();
+        }
+
+        try
+        {
+            // Attempt to insert into a temporary validation collection
+            string tempCollectionName = $"_validation_temp_{Guid.NewGuid():N}";
+
+            var command = new BsonDocument
             {
-                return SchemaValidationResult.Success();
-            }
+                { "create", tempCollectionName },
+                { "validator", schema }
+            };
+
+            await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
 
             try
             {
-                // Attempt to insert into a temporary validation collection
-                var tempCollectionName = $"_validation_temp_{Guid.NewGuid():N}";
-
-                var command = new BsonDocument
-                {
-                    { "create", tempCollectionName },
-                    { "validator", schema }
-                };
-
-                await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-                try
-                {
-                    IMongoCollection<TDocument> collection = _database.GetCollection<TDocument>(tempCollectionName);
-                    await collection.InsertOneAsync(document, cancellationToken: cancellationToken);
-                    return SchemaValidationResult.Success();
-                }
-                catch (MongoWriteException ex)
-                {
-                    return SchemaValidationResult.Failure(ex.WriteError?.Message ?? ex.Message);
-                }
-                finally
-                {
-                    await _database.DropCollectionAsync(tempCollectionName, cancellationToken);
-                }
+                IMongoCollection<TDocument> collection = _database.GetCollection<TDocument>(tempCollectionName);
+                await collection.InsertOneAsync(document, cancellationToken: cancellationToken);
+                return SchemaValidationResult.Success();
             }
-            catch (Exception ex)
+            catch (MongoWriteException ex)
             {
-                return SchemaValidationResult.Failure(ex.Message);
+                return SchemaValidationResult.Failure(ex.WriteError?.Message ?? ex.Message);
+            }
+            finally
+            {
+                await _database.DropCollectionAsync(tempCollectionName, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            return SchemaValidationResult.Failure(ex.Message);
+        }
+    }
+
+    /// <inheritdoc/>
+    public BsonDocument GenerateSchemaFromType<T>(bool includeRequired = true)
+    {
+        Type type = typeof(T);
+        JsonSchemaBuilder builder = new JsonSchemaBuilder().WithBsonType("object");
+        var requiredFields = new List<string>();
+
+        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            string propertyName = GetBsonPropertyName(property);
+            BsonDocument propertySchema = GeneratePropertySchema(property);
+
+            builder.WithProperty(propertyName, propertySchema);
+
+            if (includeRequired && IsRequired(property))
+            {
+                requiredFields.Add(propertyName);
             }
         }
 
-        /// <inheritdoc/>
-        public BsonDocument GenerateSchemaFromType<T>(bool includeRequired = true)
+        if (requiredFields.Count > 0)
         {
-            Type type = typeof(T);
-            JsonSchemaBuilder builder = new JsonSchemaBuilder().WithBsonType("object");
-            var requiredFields = new List<string>();
-
-            foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                var propertyName = GetBsonPropertyName(property);
-                BsonDocument propertySchema = GeneratePropertySchema(property);
-
-                builder.WithProperty(propertyName, propertySchema);
-
-                if (includeRequired && IsRequired(property))
-                {
-                    requiredFields.Add(propertyName);
-                }
-            }
-
-            if (requiredFields.Count > 0)
-            {
-                builder.WithRequired(requiredFields.ToArray());
-            }
-
-            return builder.Build();
+            builder.WithRequired([.. requiredFields]);
         }
 
-        private static string GetBsonPropertyName(PropertyInfo property)
+        return builder.Build();
+    }
+
+    private static string GetBsonPropertyName(PropertyInfo property)
+    {
+        BsonElementAttribute? bsonElement = property.GetCustomAttribute<MongoDB.Bson.Serialization.Attributes.BsonElementAttribute>();
+        return bsonElement?.ElementName ?? property.Name;
+    }
+
+    private static bool IsRequired(PropertyInfo property)
+    {
+        // Check for Required attribute
+        if (property.GetCustomAttribute<RequiredAttribute>() != null)
         {
-            BsonElementAttribute? bsonElement = property.GetCustomAttribute<MongoDB.Bson.Serialization.Attributes.BsonElementAttribute>();
-            return bsonElement?.ElementName ?? property.Name;
+            return true;
         }
 
-        private static bool IsRequired(PropertyInfo property)
-        {
-            // Check for Required attribute
-            if (property.GetCustomAttribute<RequiredAttribute>() != null)
-            {
-                return true;
-            }
+        // Check for non-nullable reference types (C# 8+)
+        var nullabilityContext = new NullabilityInfoContext();
+        NullabilityInfo nullabilityInfo = nullabilityContext.Create(property);
+        return nullabilityInfo.WriteState == NullabilityState.NotNull;
+    }
 
-            // Check for non-nullable reference types (C# 8+)
-            var nullabilityContext = new NullabilityInfoContext();
-            NullabilityInfo nullabilityInfo = nullabilityContext.Create(property);
-            return nullabilityInfo.WriteState == NullabilityState.NotNull;
+    private static BsonDocument GeneratePropertySchema(PropertyInfo property)
+    {
+        var schema = new BsonDocument();
+        Type type = property.PropertyType;
+        Type? underlyingType = Nullable.GetUnderlyingType(type);
+
+        if (underlyingType != null)
+        {
+            // Nullable type
+            var bsonTypes = new BsonArray { GetBsonType(underlyingType), "null" };
+            schema["bsonType"] = bsonTypes;
+        }
+        else
+        {
+            schema["bsonType"] = GetBsonType(type);
         }
 
-        private static BsonDocument GeneratePropertySchema(PropertyInfo property)
+        // Add validation from attributes
+        AddAttributeValidation(property, schema);
+
+        return schema;
+    }
+
+    private static string GetBsonType(Type type)
+    {
+        if (type == typeof(string))
         {
-            var schema = new BsonDocument();
-            Type type = property.PropertyType;
-            Type? underlyingType = Nullable.GetUnderlyingType(type);
-
-            if (underlyingType != null)
-            {
-                // Nullable type
-                var bsonTypes = new BsonArray { GetBsonType(underlyingType), "null" };
-                schema["bsonType"] = bsonTypes;
-            }
-            else
-            {
-                schema["bsonType"] = GetBsonType(type);
-            }
-
-            // Add validation from attributes
-            AddAttributeValidation(property, schema);
-
-            return schema;
-        }
-
-        private static string GetBsonType(Type type)
-        {
-            if (type == typeof(string)) return "string";
-            if (type == typeof(int) || type == typeof(short) || type == typeof(byte)) return "int";
-            if (type == typeof(long)) return "long";
-            if (type == typeof(double) || type == typeof(float)) return "double";
-            if (type == typeof(decimal)) return "decimal";
-            if (type == typeof(bool)) return "bool";
-            if (type == typeof(DateTime) || type == typeof(DateTimeOffset)) return "date";
-            if (type == typeof(Guid)) return "string";
-            if (type == typeof(ObjectId)) return "objectId";
-            if (type == typeof(byte[])) return "binData";
-            if (type.IsArray || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))) return "array";
-            if (type.IsClass && type != typeof(string)) return "object";
-            if (type.IsEnum) return "string";
-
             return "string";
         }
 
-        private static void AddAttributeValidation(PropertyInfo property, BsonDocument schema)
+        if (type == typeof(int) || type == typeof(short) || type == typeof(byte))
         {
-            StringLengthAttribute? stringLength = property.GetCustomAttribute<StringLengthAttribute>();
-            if (stringLength != null)
+            return "int";
+        }
+
+        if (type == typeof(long))
+        {
+            return "long";
+        }
+
+        if (type == typeof(double) || type == typeof(float))
+        {
+            return "double";
+        }
+
+        if (type == typeof(decimal))
+        {
+            return "decimal";
+        }
+
+        if (type == typeof(bool))
+        {
+            return "bool";
+        }
+
+        if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
+        {
+            return "date";
+        }
+
+        if (type == typeof(Guid))
+        {
+            return "string";
+        }
+
+        if (type == typeof(ObjectId))
+        {
+            return "objectId";
+        }
+
+        if (type == typeof(byte[]))
+        {
+            return "binData";
+        }
+
+        if (type.IsArray || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)))
+        {
+            return "array";
+        }
+
+        if (type.IsClass && type != typeof(string))
+        {
+            return "object";
+        }
+
+        if (type.IsEnum)
+        {
+            return "string";
+        }
+
+        return "string";
+    }
+
+    private static void AddAttributeValidation(PropertyInfo property, BsonDocument schema)
+    {
+        StringLengthAttribute? stringLength = property.GetCustomAttribute<StringLengthAttribute>();
+        if (stringLength != null)
+        {
+            if (stringLength.MinimumLength > 0)
             {
-                if (stringLength.MinimumLength > 0)
-                    schema["minLength"] = stringLength.MinimumLength;
-                if (stringLength.MaximumLength > 0)
-                    schema["maxLength"] = stringLength.MaximumLength;
+                schema["minLength"] = stringLength.MinimumLength;
             }
 
-            MaxLengthAttribute? maxLength = property.GetCustomAttribute<MaxLengthAttribute>();
-            if (maxLength != null)
+            if (stringLength.MaximumLength > 0)
             {
-                schema["maxLength"] = maxLength.Length;
-            }
-
-            MinLengthAttribute? minLength = property.GetCustomAttribute<MinLengthAttribute>();
-            if (minLength != null)
-            {
-                schema["minLength"] = minLength.Length;
-            }
-
-            RangeAttribute? range = property.GetCustomAttribute<RangeAttribute>();
-            if (range != null)
-            {
-                if (range.Minimum != null)
-                    schema["minimum"] = Convert.ToDouble(range.Minimum);
-                if (range.Maximum != null)
-                    schema["maximum"] = Convert.ToDouble(range.Maximum);
-            }
-
-            RegularExpressionAttribute? regex = property.GetCustomAttribute<RegularExpressionAttribute>();
-            if (regex != null)
-            {
-                schema["pattern"] = regex.Pattern;
-            }
-
-            EmailAddressAttribute? email = property.GetCustomAttribute<EmailAddressAttribute>();
-            if (email != null)
-            {
-                schema["pattern"] = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+                schema["maxLength"] = stringLength.MaximumLength;
             }
         }
 
-        private static DocumentValidationLevel GetValidationLevel(SchemaValidationLevel level)
+        MaxLengthAttribute? maxLength = property.GetCustomAttribute<MaxLengthAttribute>();
+        if (maxLength != null)
         {
-            return level switch
-            {
-                SchemaValidationLevel.Off => DocumentValidationLevel.Off,
-                SchemaValidationLevel.Strict => DocumentValidationLevel.Strict,
-                SchemaValidationLevel.Moderate => DocumentValidationLevel.Moderate,
-                _ => DocumentValidationLevel.Strict
-            };
+            schema["maxLength"] = maxLength.Length;
         }
 
-        private static DocumentValidationAction GetValidationAction(SchemaValidationAction action)
+        MinLengthAttribute? minLength = property.GetCustomAttribute<MinLengthAttribute>();
+        if (minLength != null)
         {
-            return action switch
-            {
-                SchemaValidationAction.Error => DocumentValidationAction.Error,
-                SchemaValidationAction.Warn => DocumentValidationAction.Warn,
-                _ => DocumentValidationAction.Error
-            };
+            schema["minLength"] = minLength.Length;
         }
 
-        private static string GetValidationLevelString(SchemaValidationLevel level)
+        RangeAttribute? range = property.GetCustomAttribute<RangeAttribute>();
+        if (range != null)
         {
-            return level switch
+            if (range.Minimum != null)
             {
-                SchemaValidationLevel.Off => "off",
-                SchemaValidationLevel.Strict => "strict",
-                SchemaValidationLevel.Moderate => "moderate",
-                _ => "strict"
-            };
+                schema["minimum"] = Convert.ToDouble(range.Minimum);
+            }
+
+            if (range.Maximum != null)
+            {
+                schema["maximum"] = Convert.ToDouble(range.Maximum);
+            }
         }
 
-        private static string GetValidationActionString(SchemaValidationAction action)
+        RegularExpressionAttribute? regex = property.GetCustomAttribute<RegularExpressionAttribute>();
+        if (regex != null)
         {
-            return action switch
-            {
-                SchemaValidationAction.Error => "error",
-                SchemaValidationAction.Warn => "warn",
-                _ => "error"
-            };
+            schema["pattern"] = regex.Pattern;
         }
+
+        EmailAddressAttribute? email = property.GetCustomAttribute<EmailAddressAttribute>();
+        if (email != null)
+        {
+            schema["pattern"] = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+        }
+    }
+
+    private static DocumentValidationLevel GetValidationLevel(SchemaValidationLevel level)
+    {
+        return level switch
+        {
+            SchemaValidationLevel.Off => DocumentValidationLevel.Off,
+            SchemaValidationLevel.Strict => DocumentValidationLevel.Strict,
+            SchemaValidationLevel.Moderate => DocumentValidationLevel.Moderate,
+            _ => DocumentValidationLevel.Strict
+        };
+    }
+
+    private static DocumentValidationAction GetValidationAction(SchemaValidationAction action)
+    {
+        return action switch
+        {
+            SchemaValidationAction.Error => DocumentValidationAction.Error,
+            SchemaValidationAction.Warn => DocumentValidationAction.Warn,
+            _ => DocumentValidationAction.Error
+        };
+    }
+
+    private static string GetValidationLevelString(SchemaValidationLevel level)
+    {
+        return level switch
+        {
+            SchemaValidationLevel.Off => "off",
+            SchemaValidationLevel.Strict => "strict",
+            SchemaValidationLevel.Moderate => "moderate",
+            _ => "strict"
+        };
+    }
+
+    private static string GetValidationActionString(SchemaValidationAction action)
+    {
+        return action switch
+        {
+            SchemaValidationAction.Error => "error",
+            SchemaValidationAction.Warn => "warn",
+            _ => "error"
+        };
     }
 }
 

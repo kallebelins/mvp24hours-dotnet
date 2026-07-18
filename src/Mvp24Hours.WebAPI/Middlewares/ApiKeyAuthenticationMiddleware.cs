@@ -4,12 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -55,30 +52,23 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursApiKeyAuthentication();
 /// </code>
 /// </example>
-public class ApiKeyAuthenticationMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="ApiKeyAuthenticationMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The API key authentication options.</param>
+/// <param name="logger">The logger.</param>
+public class ApiKeyAuthenticationMiddleware(
+    RequestDelegate next,
+    IOptions<ApiKeyAuthenticationOptions> options,
+    ILogger<ApiKeyAuthenticationMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ApiKeyAuthenticationOptions _options;
-    private readonly ILogger<ApiKeyAuthenticationMiddleware> _logger;
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly ApiKeyAuthenticationOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<ApiKeyAuthenticationMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string ApiKeyContextKey = "Mvp24Hours.ApiKey";
     private const string ApiKeyValidationResultKey = "Mvp24Hours.ApiKeyValidationResult";
-
-    /// <summary>
-    /// Creates a new instance of <see cref="ApiKeyAuthenticationMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The API key authentication options.</param>
-    /// <param name="logger">The logger.</param>
-    public ApiKeyAuthenticationMiddleware(
-        RequestDelegate next,
-        IOptions<ApiKeyAuthenticationOptions> options,
-        ILogger<ApiKeyAuthenticationMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Processes the HTTP request with API key authentication.
@@ -101,7 +91,7 @@ public class ApiKeyAuthenticationMiddleware
         }
 
         // Try to extract API key
-        var apiKey = ExtractApiKey(context);
+        string? apiKey = ExtractApiKey(context);
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -215,7 +205,7 @@ public class ApiKeyAuthenticationMiddleware
     {
         var claims = new System.Collections.Generic.List<Claim>
         {
-            new Claim(ClaimTypes.AuthenticationMethod, _options.ChallengeScheme)
+            new(ClaimTypes.AuthenticationMethod, _options.ChallengeScheme)
         };
 
         if (!string.IsNullOrEmpty(validationResult.ClientId))
@@ -230,7 +220,7 @@ public class ApiKeyAuthenticationMiddleware
         }
 
         // Add scopes as claims
-        foreach (var scope in validationResult.Scopes)
+        foreach (string scope in validationResult.Scopes)
         {
             claims.Add(new Claim("scope", scope));
         }
@@ -266,13 +256,13 @@ public class ApiKeyAuthenticationMiddleware
 
     private bool IsExcludedPath(HttpContext context)
     {
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
         return _options.ExcludedPaths.Any(pattern => MatchesPattern(path, pattern));
     }
 
     private bool RequiresAuthentication(HttpContext context)
     {
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
 
         if (_options.RequireAuthenticationByDefault)
         {
@@ -285,7 +275,7 @@ public class ApiKeyAuthenticationMiddleware
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
@@ -15,124 +13,126 @@ using Mvp24Hours.Extensions;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.SQLServer.Test
+namespace Mvp24Hours.Application.SQLServer.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class Test4CommandServiceAsync
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class Test4CommandServiceAsync
+    #region [ Actions ]
+    [Fact, Priority(1)]
+    public async Task CreateCustomer()
     {
-        #region [ Actions ]
-        [Fact, Priority(1)]
-        public async Task CreateCustomer()
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize(false);
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        var customer = new Customer
         {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize(false);
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            var customer = new Customer
-            {
-                Name = "Test 1",
-                Active = true
-            };
-            await service.AddAsync(customer);
-            // assert
-            Assert.True(customer.Id > 0);
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        [Fact, Priority(2)]
-        public async Task CreateManyCustomers()
-        {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize(false);
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            List<Customer> customers = [];
-            for (int i = 2; i <= 10; i++)
-            {
-                customers.Add(new Customer
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                });
-            }
-            await service.AddAsync(customers);
-            // assert
-            Assert.False(customers.AnySafe(x => x.Id == 0));
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        [Fact, Priority(3)]
-        public async Task UpdateCustomer()
-        {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize();
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
-            Assert.NotNull(customer);
-            customer.Name = "Test Updated";
-            await service.ModifyAsync(customer);
-            customer = await service.GetByIdAsync(1).GetDataValueAsync();
-            // assert
-            Assert.Equal("Test Updated", customer?.Name);
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        [Fact, Priority(4)]
-        public async Task UpdateManyCustomers()
-        {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize();
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(1, 0);
-            IList<Customer>? customers = await service.ListAsync(paging)
-                .GetDataValueAsync();
-            Assert.NotNull(customers);
-            foreach (Customer item in customers)
-                item.Active = false;
-            await service.ModifyAsync(customers);
-            IBusinessResult<int> result = await service.GetByCountAsync(x => !x.Active);
-            // assert
-            Assert.True(result.GetDataValue() > 0);
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        [Fact, Priority(5)]
-        public async Task DeleteCustomer()
-        {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize();
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
-            Assert.NotNull(customer);
-            await service.RemoveByIdAsync(customer.Id);
-            IBusinessResult<Customer?> result = await service.GetByIdAsync(customer.Id);
-            // assert
-            Assert.Null(result.GetDataValue());
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        [Fact, Priority(6)]
-        public async Task DeleteManyCustomers()
-        {
-            // arrange
-            IServiceProvider serviceProvider = StartupAsync.Initialize();
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IList<Customer>? customers = await service.ListAsync().GetDataValueAsync();
-            Assert.NotNull(customers);
-            await service.RemoveAsync(customers);
-            IBusinessResult<int> result = await service.ListCountAsync();
-            // assert
-            Assert.Equal(0, result.GetDataValue());
-            // dispose
-            StartupAsync.Cleanup(serviceProvider);
-        }
-        #endregion
+            Name = "Test 1",
+            Active = true
+        };
+        await service.AddAsync(customer);
+        // assert
+        Assert.True(customer.Id > 0);
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
     }
+    [Fact, Priority(2)]
+    public async Task CreateManyCustomers()
+    {
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize(false);
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        List<Customer> customers = [];
+        for (int i = 2; i <= 10; i++)
+        {
+            customers.Add(new Customer
+            {
+                Name = $"Test {i}",
+                Active = true
+            });
+        }
+        await service.AddAsync(customers);
+        // assert
+        Assert.False(customers.AnySafe(x => x.Id == 0));
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
+    }
+    [Fact, Priority(3)]
+    public async Task UpdateCustomer()
+    {
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize();
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
+        Assert.NotNull(customer);
+        customer.Name = "Test Updated";
+        await service.ModifyAsync(customer);
+        customer = await service.GetByIdAsync(1).GetDataValueAsync();
+        // assert
+        Assert.Equal("Test Updated", customer?.Name);
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
+    }
+    [Fact, Priority(4)]
+    public async Task UpdateManyCustomers()
+    {
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize();
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(1, 0);
+        IList<Customer>? customers = await service.ListAsync(paging)
+            .GetDataValueAsync();
+        Assert.NotNull(customers);
+        foreach (Customer item in customers)
+        {
+            item.Active = false;
+        }
+
+        await service.ModifyAsync(customers);
+        IBusinessResult<int> result = await service.GetByCountAsync(x => !x.Active);
+        // assert
+        Assert.True(result.GetDataValue() > 0);
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
+    }
+    [Fact, Priority(5)]
+    public async Task DeleteCustomer()
+    {
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize();
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        Customer? customer = await service.GetByIdAsync(1).GetDataValueAsync();
+        Assert.NotNull(customer);
+        await service.RemoveByIdAsync(customer.Id);
+        IBusinessResult<Customer?> result = await service.GetByIdAsync(customer.Id);
+        // assert
+        Assert.Null(result.GetDataValue());
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
+    }
+    [Fact, Priority(6)]
+    public async Task DeleteManyCustomers()
+    {
+        // arrange
+        IServiceProvider serviceProvider = StartupAsync.Initialize();
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IList<Customer>? customers = await service.ListAsync().GetDataValueAsync();
+        Assert.NotNull(customers);
+        await service.RemoveAsync(customers);
+        IBusinessResult<int> result = await service.ListCountAsync();
+        // assert
+        Assert.Equal(0, result.GetDataValue());
+        // dispose
+        StartupAsync.Cleanup(serviceProvider);
+    }
+    #endregion
 }

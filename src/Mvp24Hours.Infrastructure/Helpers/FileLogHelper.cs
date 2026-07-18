@@ -3,83 +3,80 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.IO;
 using Newtonsoft.Json;
 
-namespace Mvp24Hours.Helpers
+namespace Mvp24Hours.Helpers;
+
+/// <summary>
+/// Contains functions to handle log files
+/// </summary>
+public static class FileLogHelper
 {
     /// <summary>
-    /// Contains functions to handle log files
+    /// Writes log with model characteristics in the parameter
     /// </summary>
-    public static class FileLogHelper
+    public static void WriteLog<T>(T dto, string logPath, string? suffixFilename = null, string? header = null) where T : class
     {
-        /// <summary>
-        /// Writes log with model characteristics in the parameter
-        /// </summary>
-        public static void WriteLog<T>(T dto, string logPath, string? suffixFilename = null, string? header = null) where T : class
+        if (string.IsNullOrEmpty(logPath))
+        {
+            return;
+        }
+
+        string filename = $"{DateTime.Today:yyyy_MM_dd}_{Guid.NewGuid()}.log";
+        if (!string.IsNullOrEmpty(suffixFilename))
+        {
+            filename = $"{suffixFilename.ToLower()}_{filename}";
+        }
+        string folder = $"{logPath}/{DateTime.Today:yyyy_MM_dd}/";
+        WriteDisk(dto, folder, filename, $"{header} Hora : {DateTime.Now:HH:mm:ss.fff}", true);
+    }
+    /// <summary>
+    /// Writes log with model characteristics in the parameter using token to map location (system folder)
+    /// </summary>
+    public static void WriteLogToken<T>(string token, string fileName, T obj, string logPath) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+        lock (obj)
         {
             if (string.IsNullOrEmpty(logPath))
             {
                 return;
             }
 
-            string filename = $"{DateTime.Today:yyyy_MM_dd}_{Guid.NewGuid()}.log";
-            if (!string.IsNullOrEmpty(suffixFilename))
-            {
-                filename = $"{suffixFilename.ToLower()}_{filename}";
-            }
-            var folder = $"{logPath}/{DateTime.Today:yyyy_MM_dd}/";
-            WriteDisk(dto, folder, filename, $"{header} Hora : {DateTime.Now:HH:mm:ss.fff}", true);
+            string folder = $"{logPath}/{token}/";
+            Directory.CreateDirectory(folder);
+
+            string fullPath = $"{folder}{fileName}.json";
+            File.WriteAllText(fullPath, JsonConvert.SerializeObject(obj));
         }
-        /// <summary>
-        /// Writes log with model characteristics in the parameter using token to map location (system folder)
-        /// </summary>
-        public static void WriteLogToken<T>(string token, string fileName, T obj, string logPath) where T : class
+    }
+    /// <summary>
+    /// Performs log reading based on token (system folder path)
+    /// </summary>
+    public static T? ReadLogToken<T>(string token, string fileName, string logPath) where T : class
+    {
+        string fullPath = $"{logPath}/{token}/{fileName}.json";
+        if (!File.Exists(fullPath))
         {
-            ArgumentNullException.ThrowIfNull(obj);
-            lock (obj)
-            {
-                if (string.IsNullOrEmpty(logPath))
-                {
-                    return;
-                }
-
-                var folder = $"{logPath}/{token}/";
-                Directory.CreateDirectory(folder);
-
-                var fullPath = $"{folder}{fileName}.json";
-                File.WriteAllText(fullPath, JsonConvert.SerializeObject(obj));
-            }
+            return default;
         }
-        /// <summary>
-        /// Performs log reading based on token (system folder path)
-        /// </summary>
-        public static T? ReadLogToken<T>(string token, string fileName, string logPath) where T : class
+
+        return JsonConvert.DeserializeObject<T>(File.ReadAllText(fullPath));
+    }
+    private static void WriteDisk<T>(T obj, string folder, string fileName, string? header = null, bool append = false) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+        lock (obj)
         {
-            var fullPath = $"{logPath}/{token}/{fileName}.json";
-            if (!File.Exists(fullPath))
+            Directory.CreateDirectory(folder);
+            string fullpath = folder + fileName;
+            using var sw = new StreamWriter(fullpath, append);
+            if (!string.IsNullOrEmpty(header))
             {
-                return default;
+                sw.Write(header.PadLeft(5, '-').PadRight(5, '-') + "\r\n");
             }
 
-            return JsonConvert.DeserializeObject<T>(File.ReadAllText(fullPath));
-        }
-        private static void WriteDisk<T>(T obj, string folder, string fileName, string? header = null, bool append = false) where T : class
-        {
-            ArgumentNullException.ThrowIfNull(obj);
-            lock (obj)
-            {
-                Directory.CreateDirectory(folder);
-                string fullpath = folder + fileName;
-                using var sw = new StreamWriter(fullpath, append);
-                if (!string.IsNullOrEmpty(header))
-                {
-                    sw.Write(header.PadLeft(5, '-').PadRight(5, '-') + "\r\n");
-                }
-
-                sw.Write(JsonConvert.SerializeObject(obj) + "\r\n");
-            }
+            sw.Write(JsonConvert.SerializeObject(obj) + "\r\n");
         }
     }
 }

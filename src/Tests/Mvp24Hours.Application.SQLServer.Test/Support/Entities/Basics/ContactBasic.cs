@@ -10,25 +10,24 @@ using System.Text.Json.Serialization;
 using Mvp24Hours.Application.SQLServer.Test.Support.Enums;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
-namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.Basics
+namespace Mvp24Hours.Application.SQLServer.Test.Support.Entities.Basics;
+
+public class ContactBasic : IEntityBase
 {
-    public class ContactBasic : IEntityBase
-    {
-        [JsonIgnore]
-        [IgnoreDataMember]
-        public object EntityKey => Id; // class instance identifier
+    [JsonIgnore]
+    [IgnoreDataMember]
+    public object EntityKey => Id; // class instance identifier
 
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
 
-        [Required]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ContactType Type { get; set; }
+    [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ContactType Type { get; set; }
 
-        [Required]
-        public string Description { get; set; } = string.Empty;
+    [Required]
+    public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public bool Active { get; set; }
-    }
+    [Required]
+    public bool Active { get; set; }
 }

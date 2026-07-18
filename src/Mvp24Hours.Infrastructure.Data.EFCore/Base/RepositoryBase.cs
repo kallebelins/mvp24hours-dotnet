@@ -3,9 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Transactions;
@@ -17,125 +15,79 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 
-namespace Mvp24Hours.Infrastructure.Data.EFCore
+namespace Mvp24Hours.Infrastructure.Data.EFCore;
+
+/// <summary>
+///  <see cref="Mvp24Hours.Core.Contract.Data.IRepository"/>
+/// </summary>
+public abstract class RepositoryBase<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
+    where T : class, IEntityBase
 {
+
+    #region [ Ctor ]
+
+    #endregion
+
+    #region [ Fields ]
+
     /// <summary>
-    ///  <see cref="Mvp24Hours.Core.Contract.Data.IRepository"/>
+    /// Database context
     /// </summary>
-    public abstract class RepositoryBase<T>
-        where T : class, IEntityBase
+    protected readonly DbContext dbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
+    /// <summary>
+    /// Represents relationship with entities in the database
+    /// </summary>
+    protected DbSet<T> dbEntities = _dbContext.Set<T>();
+    /// <summary>
+    /// Gets the value of the user logged in the context or logged into the database
+    /// </summary>
+    protected abstract object? EntityLogBy { get; }
+    /// <summary>
+    /// Repository configuration options
+    /// </summary>
+    protected EFCoreRepositoryOptions Options { get; private set; } = options?.Value ?? new EFCoreRepositoryOptions();
+    /// <summary>
+    /// Logger instance for telemetry and debugging
+    /// </summary>
+    protected ILogger<RepositoryBase<T>>? Logger { get; } = logger;
+
+    #endregion
+
+    #region [ Methods ]
+    /// <summary>
+    /// Gets database query with clause and aggregation of relationships
+    /// </summary>
+    protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
     {
-        #region [ Ctor ]
+        // cria query
+        IQueryable<T> query = dbEntities.AsQueryable();
+        return GetQuery(query, criteria, onlyNavigation);
+    }
+    /// <summary>
+    /// Gets database query with clause and aggregation of relationships
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
+    protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria? criteria, bool onlyNavigation = false)
+    {
+        Logger?.LogDebug("EFCore RepositoryBase query criteria. EntityType: {EntityType}, Criteria: {Criteria}", typeof(T).Name, criteria);
 
-        protected RepositoryBase(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
+        bool ordered = false;
+
+        if (!onlyNavigation)
         {
-            this.dbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
-            this.dbEntities = _dbContext.Set<T>();
-            this.Options = options?.Value ?? new EFCoreRepositoryOptions();
-            this.Logger = logger;
-        }
+            int offset = 0;
+            int limit = Options.MaxQtyByQueryPage;
 
-        #endregion
-
-        #region [ Fields ]
-
-        /// <summary>
-        /// Database context
-        /// </summary>
-        protected readonly DbContext dbContext;
-        /// <summary>
-        /// Represents relationship with entities in the database
-        /// </summary>
-        protected DbSet<T> dbEntities;
-        /// <summary>
-        /// Gets the value of the user logged in the context or logged into the database
-        /// </summary>
-        protected abstract object? EntityLogBy { get; }
-        /// <summary>
-        /// Repository configuration options
-        /// </summary>
-        protected EFCoreRepositoryOptions Options { get; private set; }
-        /// <summary>
-        /// Logger instance for telemetry and debugging
-        /// </summary>
-        protected ILogger<RepositoryBase<T>>? Logger { get; }
-
-        #endregion
-
-        #region [ Methods ]
-        /// <summary>
-        /// Gets database query with clause and aggregation of relationships
-        /// </summary>
-        protected IQueryable<T> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
-        {
-            // cria query
-            IQueryable<T> query = this.dbEntities.AsQueryable();
-            return GetQuery(query, criteria, onlyNavigation);
-        }
-        /// <summary>
-        /// Gets database query with clause and aggregation of relationships
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3776:Cognitive Complexity of methods should not be too high", Justification = "Low complexity")]
-        protected IQueryable<T> GetQuery(IQueryable<T> query, IPagingCriteria? criteria, bool onlyNavigation = false)
-        {
-            Logger?.LogDebug("EFCore RepositoryBase query criteria. EntityType: {EntityType}, Criteria: {Criteria}", typeof(T).Name, criteria);
-
-            var ordered = false;
-
-            if (!onlyNavigation)
+            if (criteria != null)
             {
-                int offset = 0;
-                int limit = Options.MaxQtyByQueryPage;
-
-                if (criteria != null)
+                // ordination
+                if (criteria is IPagingCriteriaExpression<T> clauseExpr)
                 {
-                    // ordination
-                    if (criteria is IPagingCriteriaExpression<T> clauseExpr)
-                    {
-                        // ordination by ascending expression
-                        if (clauseExpr.OrderByAscendingExpr.AnySafe())
-                        {
-                            IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByAscendingExpr)
-                            {
-                                if (queryOrdered == null)
-                                {
-                                    ordered = true;
-                                    queryOrdered = query.OrderBy(ord);
-                                }
-                                else
-                                {
-                                    queryOrdered = queryOrdered.ThenBy(ord);
-                                }
-                            }
-                            query = queryOrdered ?? query;
-                        }
-
-                        // ordination by descending expression
-                        if (clauseExpr.OrderByDescendingExpr.AnySafe())
-                        {
-                            IOrderedQueryable<T>? queryOrdered = null;
-                            foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByDescendingExpr)
-                            {
-                                if (queryOrdered == null)
-                                {
-                                    ordered = true;
-                                    queryOrdered = query.OrderByDescending(ord);
-                                }
-                                else
-                                {
-                                    queryOrdered = queryOrdered.ThenByDescending(ord);
-                                }
-                            }
-                            query = queryOrdered ?? query;
-                        }
-                    }
-
-                    // ordination by string
-                    if (criteria.OrderBy.AnySafe())
+                    // ordination by ascending expression
+                    if (clauseExpr.OrderByAscendingExpr.AnySafe())
                     {
                         IOrderedQueryable<T>? queryOrdered = null;
-                        foreach (var ord in criteria.OrderBy)
+                        foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByAscendingExpr)
                         {
                             if (queryOrdered == null)
                             {
@@ -150,141 +102,174 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore
                         query = queryOrdered ?? query;
                     }
 
-                    // Paging
-                    offset = criteria.Offset;
-                    limit = criteria.Limit > 0 ? criteria.Limit : limit;
-                }
-
-                if (!ordered)
-                {
-                    query = SortByKey(query, GetKeyInfo());
-                }
-
-                // page index
-                query = query.Skip(limit * offset);
-
-                // number of records per page
-                query = query.Take(limit);
-            }
-
-            if (criteria != null)
-            {
-                // navigation
-                if (criteria is IPagingCriteriaExpression<T> clauseExpr)
-                {
-                    // navigation by expression
-                    if (clauseExpr.NavigationExpr.AnySafe())
+                    // ordination by descending expression
+                    if (clauseExpr.OrderByDescendingExpr.AnySafe())
                     {
-                        foreach (Expression<Func<T, dynamic>> nav in clauseExpr.NavigationExpr)
+                        IOrderedQueryable<T>? queryOrdered = null;
+                        foreach (Expression<Func<T, dynamic>> ord in clauseExpr.OrderByDescendingExpr)
                         {
-                            query = query.Include(nav);
+                            if (queryOrdered == null)
+                            {
+                                ordered = true;
+                                queryOrdered = query.OrderByDescending(ord);
+                            }
+                            else
+                            {
+                                queryOrdered = queryOrdered.ThenByDescending(ord);
+                            }
                         }
+                        query = queryOrdered ?? query;
                     }
                 }
 
-                // navigation by string
-                if (criteria.Navigation.AnySafe())
+                // ordination by string
+                if (criteria.OrderBy.AnySafe())
                 {
-                    foreach (var nav in criteria.Navigation)
+                    IOrderedQueryable<T>? queryOrdered = null;
+                    foreach (string ord in criteria.OrderBy)
+                    {
+                        if (queryOrdered == null)
+                        {
+                            ordered = true;
+                            queryOrdered = query.OrderBy(ord);
+                        }
+                        else
+                        {
+                            queryOrdered = queryOrdered.ThenBy(ord);
+                        }
+                    }
+                    query = queryOrdered ?? query;
+                }
+
+                // Paging
+                offset = criteria.Offset;
+                limit = criteria.Limit > 0 ? criteria.Limit : limit;
+            }
+
+            if (!ordered)
+            {
+                query = SortByKey(query, GetKeyInfo());
+            }
+
+            // page index
+            query = query.Skip(limit * offset);
+
+            // number of records per page
+            query = query.Take(limit);
+        }
+
+        if (criteria != null)
+        {
+            // navigation
+            if (criteria is IPagingCriteriaExpression<T> clauseExpr)
+            {
+                // navigation by expression
+                if (clauseExpr.NavigationExpr.AnySafe())
+                {
+                    foreach (Expression<Func<T, dynamic>> nav in clauseExpr.NavigationExpr)
                     {
                         query = query.Include(nav);
                     }
                 }
             }
 
-            return query;
-        }
-        /// <summary>
-        /// Makes a code block transactional.
-        /// </summary>
-        protected TransactionScope? CreateTransactionScope(bool isAggregate = false)
-        {
-            if (isAggregate || Options.TransactionIsolationLevel != null)
+            // navigation by string
+            if (criteria.Navigation.AnySafe())
             {
-                Logger?.LogDebug("EFCore RepositoryBase creating transaction scope. EntityType: {EntityType}, IsolationLevel: {IsolationLevel}, Timeout: {Timeout}, AsyncFlow: Enabled",
-                    typeof(T).Name,
-                    Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
-                    TransactionManager.MaximumTimeout);
-                return new TransactionScope(TransactionScopeOption.Required, new TransactionOptions
+                foreach (string nav in criteria.Navigation)
                 {
-                    IsolationLevel = Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
-                    Timeout = TransactionManager.MaximumTimeout
-                }, TransactionScopeAsyncFlowOption.Enabled);
-            }
-            return null;
-        }
-
-        #endregion
-
-        #region [ Supports ]
-
-        PropertyInfo? _keyInfo;
-        /// <summary>
-        /// 
-        /// </summary>
-        protected PropertyInfo GetKeyInfo()
-        {
-            if (_keyInfo == null)
-            {
-                _keyInfo = Array.Find(typeof(T).GetTypeInfo()
-                                .GetProperties(bindingAttr: BindingFlags.Instance | BindingFlags.Public)
-                                , x => x.GetCustomAttribute<KeyAttribute>() != null);
-
-                if (_keyInfo == null)
-                {
-                    throw new InvalidOperationException("Key property not found.");
+                    query = query.Include(nav);
                 }
-                Logger?.LogDebug("EFCore RepositoryBase key info resolved. EntityType: {EntityType}, KeyProperty: {KeyProperty}", typeof(T).Name, _keyInfo.Name);
-            }
-
-            return _keyInfo;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        protected IQueryable<T> GetDynamicFilter<TValue>(IQueryable<T> query, PropertyInfo key, TValue value)
-        {
-            ParameterExpression entityParameter = Expression.Parameter(typeof(T), "e");
-
-            var lambda =
-                Expression.Lambda<Func<T, bool>>(
-                    Expression.Equal(
-                        Expression.Property(entityParameter, key),
-                        ((value != null && value.GetType() == key.PropertyType) || typeof(TValue) == key.PropertyType)
-                            ? Expression.Constant(value)
-                                : Expression.Convert(Expression.Constant(value), key.PropertyType)),
-                        entityParameter);
-
-            return query.Where(lambda);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        protected IQueryable<T> SortByKey(IQueryable<T> query, PropertyInfo key)
-        {
-            try
-            {
-                Type t = typeof(T);
-                ParameterExpression param = Expression.Parameter(t);
-
-                return query.Provider.CreateQuery<T>(
-                    Expression.Call(
-                        typeof(Queryable),
-                        "OrderBy",
-                        new Type[] { t, key.PropertyType },
-                        query.Expression,
-                        Expression.Quote(
-                            Expression.Lambda(
-                                Expression.Property(param, key),
-                                param))
-                    ));
-            }
-            catch (Exception) // Probably invalid input, you can catch specifics if you want
-            {
-                return query; // Return unsorted query
             }
         }
 
-        #endregion
+        return query;
     }
+    /// <summary>
+    /// Makes a code block transactional.
+    /// </summary>
+    protected TransactionScope? CreateTransactionScope(bool isAggregate = false)
+    {
+        if (isAggregate || Options.TransactionIsolationLevel != null)
+        {
+            Logger?.LogDebug("EFCore RepositoryBase creating transaction scope. EntityType: {EntityType}, IsolationLevel: {IsolationLevel}, Timeout: {Timeout}, AsyncFlow: Enabled",
+                typeof(T).Name,
+                Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
+                TransactionManager.MaximumTimeout);
+            return new TransactionScope(TransactionScopeOption.Required, new TransactionOptions
+            {
+                IsolationLevel = Options.TransactionIsolationLevel ?? IsolationLevel.ReadUncommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            }, TransactionScopeAsyncFlowOption.Enabled);
+        }
+        return null;
+    }
+
+    #endregion
+
+    #region [ Supports ]
+
+    private PropertyInfo? _keyInfo;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected PropertyInfo GetKeyInfo()
+    {
+        if (_keyInfo == null)
+        {
+            _keyInfo = Array.Find(typeof(T).GetTypeInfo()
+                            .GetProperties(bindingAttr: BindingFlags.Instance | BindingFlags.Public)
+                            , x => x.GetCustomAttribute<KeyAttribute>() != null) ?? throw new InvalidOperationException("Key property not found.");
+            Logger?.LogDebug("EFCore RepositoryBase key info resolved. EntityType: {EntityType}, KeyProperty: {KeyProperty}", typeof(T).Name, _keyInfo.Name);
+        }
+
+        return _keyInfo;
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    protected IQueryable<T> GetDynamicFilter<TValue>(IQueryable<T> query, PropertyInfo key, TValue value)
+    {
+        ParameterExpression entityParameter = Expression.Parameter(typeof(T), "e");
+
+        var lambda =
+            Expression.Lambda<Func<T, bool>>(
+                Expression.Equal(
+                    Expression.Property(entityParameter, key),
+                    ((value != null && value.GetType() == key.PropertyType) || typeof(TValue) == key.PropertyType)
+                        ? Expression.Constant(value)
+                            : Expression.Convert(Expression.Constant(value), key.PropertyType)),
+                    entityParameter);
+
+        return query.Where(lambda);
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    protected IQueryable<T> SortByKey(IQueryable<T> query, PropertyInfo key)
+    {
+        try
+        {
+            Type t = typeof(T);
+            ParameterExpression param = Expression.Parameter(t);
+
+            return query.Provider.CreateQuery<T>(
+                Expression.Call(
+                    typeof(Queryable),
+                    "OrderBy",
+                    [t, key.PropertyType],
+                    query.Expression,
+                    Expression.Quote(
+                        Expression.Lambda(
+                            Expression.Property(param, key),
+                            param))
+                ));
+        }
+        catch (Exception) // Probably invalid input, you can catch specifics if you want
+        {
+            return query; // Return unsorted query
+        }
+    }
+
+    #endregion
 }

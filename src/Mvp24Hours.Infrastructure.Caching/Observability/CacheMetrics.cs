@@ -4,10 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Metrics;
-using System.Threading;
 
 namespace Mvp24Hours.Infrastructure.Caching.Observability;
 
@@ -222,11 +219,13 @@ public class CacheMetrics : ICacheMetrics
         if (provider != null)
         {
             if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
+            {
                 return null;
+            }
 
-            var hits = stats.Hits;
-            var misses = stats.Misses;
-            var total = hits + misses;
+            long hits = stats.Hits;
+            long misses = stats.Misses;
+            long total = hits + misses;
 
             return total > 0 ? (double)hits / total : null;
         }
@@ -241,7 +240,7 @@ public class CacheMetrics : ICacheMetrics
             totalMisses += kvp.Value.Misses;
         }
 
-        var grandTotal = totalHits + totalMisses;
+        long grandTotal = totalHits + totalMisses;
         return grandTotal > 0 ? (double)totalHits / grandTotal : null;
     }
 
@@ -251,7 +250,9 @@ public class CacheMetrics : ICacheMetrics
         if (provider != null)
         {
             if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
+            {
                 return 0;
+            }
 
             return stats.TotalOperations;
         }
@@ -272,7 +273,9 @@ public class CacheMetrics : ICacheMetrics
         if (provider != null)
         {
             if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
+            {
                 return 0;
+            }
 
             return stats.Hits;
         }
@@ -293,7 +296,9 @@ public class CacheMetrics : ICacheMetrics
         if (provider != null)
         {
             if (!_providerStats.TryGetValue(provider, out CacheProviderStats? stats))
+            {
                 return 0;
+            }
 
             return stats.Misses;
         }

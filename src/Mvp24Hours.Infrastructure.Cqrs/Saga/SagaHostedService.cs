@@ -23,24 +23,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Saga;
 /// </list>
 /// </para>
 /// </remarks>
-public class SagaHostedService : BackgroundService
+/// <remarks>
+/// Initializes a new instance of the <see cref="SagaHostedService"/> class.
+/// </remarks>
+public class SagaHostedService(
+    IServiceProvider serviceProvider,
+    ILogger<SagaHostedService> logger,
+    SagaHostedServiceOptions? options = null) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<SagaHostedService> _logger;
-    private readonly SagaHostedServiceOptions _options;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SagaHostedService"/> class.
-    /// </summary>
-    public SagaHostedService(
-        IServiceProvider serviceProvider,
-        ILogger<SagaHostedService> logger,
-        SagaHostedServiceOptions? options = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options ?? new SagaHostedServiceOptions();
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<SagaHostedService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly SagaHostedServiceOptions _options = options ?? new SagaHostedServiceOptions();
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,7 +65,7 @@ public class SagaHostedService : BackgroundService
         // Process timeouts
         if (_options.ProcessTimeouts)
         {
-            var timedOut = await orchestrator.ProcessTimeoutsAsync(cancellationToken);
+            int timedOut = await orchestrator.ProcessTimeoutsAsync(cancellationToken);
             if (timedOut > 0)
             {
                 _logger.LogInformation("Processed {Count} timed out sagas", timedOut);
@@ -82,7 +75,7 @@ public class SagaHostedService : BackgroundService
         // Process retries
         if (_options.ProcessRetries)
         {
-            var retried = await orchestrator.ProcessRetryQueueAsync(cancellationToken);
+            int retried = await orchestrator.ProcessRetryQueueAsync(cancellationToken);
             if (retried > 0)
             {
                 _logger.LogInformation("Processed {Count} saga retries", retried);
@@ -92,7 +85,7 @@ public class SagaHostedService : BackgroundService
         // Cleanup expired states
         if (_options.CleanupExpired)
         {
-            var cleaned = await orchestrator.CleanupAsync(
+            int cleaned = await orchestrator.CleanupAsync(
                 DateTime.UtcNow.Subtract(_options.CleanupOlderThan),
                 cancellationToken);
             if (cleaned > 0)

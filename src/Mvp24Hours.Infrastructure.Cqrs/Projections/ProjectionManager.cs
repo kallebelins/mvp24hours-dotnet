@@ -94,33 +94,24 @@ public interface IProjectionManager
 /// await projectionManager.RebuildAsync("OrderSummary");
 /// </code>
 /// </example>
-public class ProjectionManager : IProjectionManager
+/// <remarks>
+/// Initializes a new instance of the projection manager.
+/// </remarks>
+public class ProjectionManager(
+    IEventStoreWithSubscription eventStore,
+    IEventSerializer eventSerializer,
+    IServiceProvider serviceProvider,
+    IProjectionPositionStore positionStore,
+    ILogger<ProjectionManager> logger) : IProjectionManager
 {
-    private readonly IEventStoreWithSubscription _eventStore;
-    private readonly IEventSerializer _eventSerializer;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ProjectionManager> _logger;
-    private readonly IProjectionPositionStore _positionStore;
+    private readonly IEventStoreWithSubscription _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<ProjectionManager> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IProjectionPositionStore _positionStore = positionStore ?? throw new ArgumentNullException(nameof(positionStore));
     private readonly Dictionary<string, ProjectionRegistration> _registrations = [];
     private readonly CancellationTokenSource _cts = new();
     private Task? _processingTask;
-
-    /// <summary>
-    /// Initializes a new instance of the projection manager.
-    /// </summary>
-    public ProjectionManager(
-        IEventStoreWithSubscription eventStore,
-        IEventSerializer eventSerializer,
-        IServiceProvider serviceProvider,
-        IProjectionPositionStore positionStore,
-        ILogger<ProjectionManager> logger)
-    {
-        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _positionStore = positionStore ?? throw new ArgumentNullException(nameof(positionStore));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Registers a projection.
@@ -130,12 +121,14 @@ public class ProjectionManager : IProjectionManager
     public void RegisterProjection(string name, params Type[] handlerTypes)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Projection name is required.", nameof(name));
+        }
 
         _registrations[name] = new ProjectionRegistration
         {
             Name = name,
-            HandlerTypes = handlerTypes.ToList()
+            HandlerTypes = [.. handlerTypes]
         };
     }
 
@@ -205,7 +198,7 @@ public class ProjectionManager : IProjectionManager
         using IServiceScope scope = _serviceProvider.CreateScope();
         foreach (Type handlerType in registration.HandlerTypes)
         {
-            var handler = scope.ServiceProvider.GetService(handlerType);
+            object? handler = scope.ServiceProvider.GetService(handlerType);
             if (handler is IResettableProjection resettable)
             {
                 await resettable.ResetAsync(cancellationToken);
@@ -224,7 +217,7 @@ public class ProjectionManager : IProjectionManager
     {
         _logger.LogInformation("Rebuilding all {Count} projections", _registrations.Count);
 
-        foreach (var projectionName in _registrations.Keys)
+        foreach (string projectionName in _registrations.Keys)
         {
             await RebuildAsync(projectionName, cancellationToken);
         }
@@ -233,15 +226,15 @@ public class ProjectionManager : IProjectionManager
     /// <inheritdoc />
     public IReadOnlyList<ProjectionInfo> GetProjectionInfos()
     {
-        return _registrations.Values.Select(r => new ProjectionInfo
+        return [.. _registrations.Values.Select(r => new ProjectionInfo
         {
             Name = r.Name,
             Position = r.Position,
             Status = r.Status,
             LastErrorMessage = r.LastError?.Message,
             LastUpdatedAt = r.LastUpdatedAt,
-            HandledEventTypes = r.HandlerTypes.SelectMany(GetHandledEventTypes).Select(t => t.Name).Distinct().ToList()
-        }).ToList();
+            HandledEventTypes = [.. r.HandlerTypes.SelectMany(GetHandledEventTypes).Select(t => t.Name).Distinct()]
+        })];
     }
 
     /// <inheritdoc />
@@ -259,11 +252,10 @@ public class ProjectionManager : IProjectionManager
             Status = registration.Status,
             LastErrorMessage = registration.LastError?.Message,
             LastUpdatedAt = registration.LastUpdatedAt,
-            HandledEventTypes = registration.HandlerTypes
+            HandledEventTypes = [.. registration.HandlerTypes
                 .SelectMany(GetHandledEventTypes)
                 .Select(t => t.Name)
-                .Distinct()
-                .ToList()
+                .Distinct()]
         };
     }
 
@@ -310,7 +302,7 @@ public class ProjectionManager : IProjectionManager
             }
 
             // Then subscribe to new events
-            var minPosition = _registrations.Values.Min(r => r.Position);
+            long minPosition = _registrations.Values.Min(r => r.Position);
 
             await foreach (StoredEvent storedEvent in _eventStore.SubscribeFromPositionAsync(minPosition, cancellationToken))
             {
@@ -367,8 +359,11 @@ public class ProjectionManager : IProjectionManager
 
         foreach (Type handlerType in registration.HandlerTypes)
         {
-            var handler = scope.ServiceProvider.GetService(handlerType);
-            if (handler == null) continue;
+            object? handler = scope.ServiceProvider.GetService(handlerType);
+            if (handler == null)
+            {
+                continue;
+            }
 
             // Check if handler can process this event type
             if (CanHandle(handler, eventType))
@@ -413,11 +408,11 @@ public class ProjectionManager : IProjectionManager
 
         Type eventType = @event.GetType();
         Type handlerType = handler.GetType();
-        MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync", new[] { eventType, typeof(ProjectionContext), typeof(CancellationToken) });
+        MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync", [eventType, typeof(ProjectionContext), typeof(CancellationToken)]);
 
         if (handleMethod != null)
         {
-            var task = (Task?)handleMethod.Invoke(handler, new object[] { @event, context, cancellationToken });
+            var task = (Task?)handleMethod.Invoke(handler, [@event, context, cancellationToken]);
             if (task != null)
             {
                 await task;
@@ -482,7 +477,7 @@ public class InMemoryProjectionPositionStore : IProjectionPositionStore
     /// <inheritdoc />
     public Task<long> GetPositionAsync(string projectionName, CancellationToken cancellationToken = default)
     {
-        _positions.TryGetValue(projectionName, out var position);
+        _positions.TryGetValue(projectionName, out long position);
         return Task.FromResult(position);
     }
 

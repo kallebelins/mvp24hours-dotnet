@@ -4,12 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Application.Contract.Observability;
 
 namespace Mvp24Hours.Application.Logic.Observability;
@@ -32,22 +27,16 @@ namespace Mvp24Hours.Application.Logic.Observability;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class InMemoryApplicationAuditStore : IApplicationAuditStore
+/// <remarks>
+/// Creates a new in-memory audit store.
+/// </remarks>
+/// <param name="maxEntries">Maximum number of entries to keep (default: 10000).</param>
+/// <param name="retentionDays">Number of days to retain entries (default: 7).</param>
+public sealed class InMemoryApplicationAuditStore(int maxEntries = 10000, int retentionDays = 7) : IApplicationAuditStore
 {
     private readonly ConcurrentDictionary<string, ApplicationAuditEntry> _entries = new();
-    private readonly int _maxEntries;
-    private readonly TimeSpan _retentionPeriod;
-
-    /// <summary>
-    /// Creates a new in-memory audit store.
-    /// </summary>
-    /// <param name="maxEntries">Maximum number of entries to keep (default: 10000).</param>
-    /// <param name="retentionDays">Number of days to retain entries (default: 7).</param>
-    public InMemoryApplicationAuditStore(int maxEntries = 10000, int retentionDays = 7)
-    {
-        _maxEntries = maxEntries;
-        _retentionPeriod = TimeSpan.FromDays(retentionDays);
-    }
+    private readonly int _maxEntries = maxEntries;
+    private readonly TimeSpan _retentionPeriod = TimeSpan.FromDays(retentionDays);
 
     /// <inheritdoc />
     public Task SaveAsync(ApplicationAuditEntry entry, CancellationToken cancellationToken = default)
@@ -113,7 +102,7 @@ public sealed class InMemoryApplicationAuditStore : IApplicationAuditStore
     /// <returns>All audit entries.</returns>
     public IReadOnlyList<ApplicationAuditEntry> GetAll()
     {
-        return _entries.Values.OrderByDescending(e => e.Timestamp).ToList();
+        return [.. _entries.Values.OrderByDescending(e => e.Timestamp)];
     }
 
     /// <summary>

@@ -177,7 +177,7 @@ public static class TenantQueryExtensions
     {
         if (string.IsNullOrEmpty(tenantId))
         {
-            return Enumerable.Empty<T>();
+            return [];
         }
 
         return source.Where(e => e.TenantId == tenantId);

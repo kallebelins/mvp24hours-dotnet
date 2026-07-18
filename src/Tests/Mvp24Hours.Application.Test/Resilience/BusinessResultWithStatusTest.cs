@@ -3,10 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentAssertions;
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Logic.Resilience;
-using Xunit;
 
 namespace Mvp24Hours.Application.Test.Resilience;
 
@@ -22,7 +20,7 @@ public class BusinessResultWithStatusTest
     public void Success_WithData_ShouldReturnSuccessResult()
     {
         // Arrange
-        var data = "Test data";
+        string data = "Test data";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Success(data);
@@ -38,8 +36,8 @@ public class BusinessResultWithStatusTest
     public void Success_WithDataAndInfoMessage_ShouldReturnSuccessResultWithMessage()
     {
         // Arrange
-        var data = 42;
-        var infoMessage = "Operation completed successfully";
+        int data = 42;
+        string infoMessage = "Operation completed successfully";
 
         // Act - Using named parameter to ensure we call the correct overload
         IBusinessResultWithStatus<int> result = BusinessResultWithStatus.Success(data, infoMessage: infoMessage);
@@ -55,7 +53,7 @@ public class BusinessResultWithStatusTest
     {
         // Arrange
         var data = new TestEntity { Id = 1, Name = "Test" };
-        var token = "test-token-123";
+        string token = "test-token-123";
 
         // Act
         IBusinessResultWithStatus<TestEntity> result = BusinessResultWithStatus.Success(data, token);
@@ -70,8 +68,8 @@ public class BusinessResultWithStatusTest
     public void SuccessWithWarning_ShouldReturnSuccessWithWarning()
     {
         // Arrange
-        var data = "Test";
-        var warningMessage = "This is a warning";
+        string data = "Test";
+        string warningMessage = "This is a warning";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.SuccessWithWarning(data, warningMessage);
@@ -86,7 +84,7 @@ public class BusinessResultWithStatusTest
     public void SuccessWithWarnings_ShouldReturnSuccessWithMultipleWarnings()
     {
         // Arrange
-        var data = "Test";
+        string data = "Test";
         var warnings = new List<IResultMessage>
         {
             ResultMessage.Warning("Warning 1"),
@@ -110,7 +108,7 @@ public class BusinessResultWithStatusTest
     public void Failure_WithStatusCodeAndMessage_ShouldReturnFailureResult()
     {
         // Arrange
-        var errorMessage = "Operation failed";
+        string errorMessage = "Operation failed";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Failure<string>(
@@ -127,8 +125,8 @@ public class BusinessResultWithStatusTest
     public void Failure_WithStatusCodeAndErrorCode_ShouldReturnDetailedFailure()
     {
         // Arrange
-        var errorMessage = "Resource not found";
-        var errorCode = "RESOURCE.NOT_FOUND";
+        string errorMessage = "Resource not found";
+        string errorCode = "RESOURCE.NOT_FOUND";
         ResultStatusCode statusCode = ResultStatusCode.NotFound;
 
         // Act
@@ -169,7 +167,7 @@ public class BusinessResultWithStatusTest
     public void NotFound_WithMessage_ShouldReturnNotFoundResult()
     {
         // Arrange
-        var message = "Entity not found";
+        string message = "Entity not found";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.NotFound<string>(message);
@@ -184,8 +182,8 @@ public class BusinessResultWithStatusTest
     public void NotFound_WithEntityAndId_ShouldReturnDescriptiveMessage()
     {
         // Arrange
-        var entityName = "Customer";
-        var id = 123;
+        string entityName = "Customer";
+        int id = 123;
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.NotFound<string>(entityName, id);
@@ -200,7 +198,7 @@ public class BusinessResultWithStatusTest
     public void ValidationFailed_WithMessage_ShouldReturnValidationFailedResult()
     {
         // Arrange
-        var message = "Validation failed";
+        string message = "Validation failed";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.ValidationFailed<string>(message);
@@ -234,7 +232,7 @@ public class BusinessResultWithStatusTest
     public void Unauthorized_WithMessage_ShouldReturnUnauthorizedResult()
     {
         // Arrange
-        var message = "Authentication required";
+        string message = "Authentication required";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Unauthorized<string>(message);
@@ -248,7 +246,7 @@ public class BusinessResultWithStatusTest
     public void Forbidden_WithMessage_ShouldReturnForbiddenResult()
     {
         // Arrange
-        var message = "Access denied";
+        string message = "Access denied";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Forbidden<string>(message);
@@ -262,7 +260,7 @@ public class BusinessResultWithStatusTest
     public void Conflict_WithMessage_ShouldReturnConflictResult()
     {
         // Arrange
-        var message = "Resource conflict";
+        string message = "Resource conflict";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.Conflict<string>(message);
@@ -276,7 +274,7 @@ public class BusinessResultWithStatusTest
     public void InternalError_WithMessage_ShouldReturnInternalErrorResult()
     {
         // Arrange
-        var message = "Internal server error";
+        string message = "Internal server error";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.InternalError<string>(message);
@@ -290,7 +288,7 @@ public class BusinessResultWithStatusTest
     public void DomainRuleViolation_WithMessage_ShouldReturnDomainRuleViolationResult()
     {
         // Arrange
-        var message = "Domain rule violated";
+        string message = "Domain rule violated";
 
         // Act
         IBusinessResultWithStatus<string> result = BusinessResultWithStatus.DomainRuleViolation<string>(message);
@@ -455,7 +453,7 @@ public class BusinessResultWithStatusTest
     {
         // Arrange
         var result = new BusinessResultWithStatus<string>("data");
-        var token = "new-token";
+        string token = "new-token";
 
         // Act
         result.SetToken(token);
@@ -469,7 +467,7 @@ public class BusinessResultWithStatusTest
     {
         // Arrange
         var result = new BusinessResultWithStatus<string>("data", token: "original-token");
-        var newToken = "new-token";
+        string newToken = "new-token";
 
         // Act
         result.SetToken(newToken);
@@ -523,7 +521,7 @@ public class BusinessResultWithStatusTest
         var failureResult = new BusinessResultWithStatus<string>(
             null,
             ResultStatusCode.InternalError,
-            new[] { ResultMessage.Error("Error") });
+            [ResultMessage.Error("Error")]);
 
         // Act & Assert
         ((bool)failureResult).Should().BeFalse();
@@ -540,7 +538,7 @@ public class BusinessResultWithStatusTest
         var result = new BusinessResultWithStatus<string>("data");
 
         // Act
-        var str = result.ToString();
+        string str = result.ToString();
 
         // Assert
         str.Should().Contain("Success");
@@ -554,10 +552,10 @@ public class BusinessResultWithStatusTest
         var result = new BusinessResultWithStatus<string>(
             null,
             ResultStatusCode.NotFound,
-            new[] { ResultMessage.Error("Error") });
+            [ResultMessage.Error("Error")]);
 
         // Act
-        var str = result.ToString();
+        string str = result.ToString();
 
         // Assert
         str.Should().Contain("Failure");

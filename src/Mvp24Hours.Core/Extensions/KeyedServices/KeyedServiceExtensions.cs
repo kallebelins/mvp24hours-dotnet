@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -80,9 +77,14 @@ public static class KeyedServiceExtensions
         where TService : class
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
+
         if (configure == null)
+        {
             throw new ArgumentNullException(nameof(configure));
+        }
 
         var config = new KeyedServiceConfiguration<TService>(services);
         configure(config);
@@ -338,10 +340,14 @@ public static class KeyedServiceExtensions
     {
         TService? service = provider.GetKeyedService<TService>(serviceKey);
         if (service != null)
+        {
             return service;
+        }
 
         if (useDefaultIfNotFound)
+        {
             return provider.GetRequiredService<TService>();
+        }
 
         throw new InvalidOperationException(
             $"Service {typeof(TService).Name} with key '{serviceKey}' is not registered.");
@@ -402,7 +408,7 @@ public static class KeyedServiceExtensions
         where TService : class
         where TImplementation : class, TService
     {
-        var key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
+        string key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
         var descriptor = new ServiceDescriptor(
             typeof(TService),
             key,
@@ -430,7 +436,7 @@ public static class KeyedServiceExtensions
         ServiceLifetime lifetime = ServiceLifetime.Scoped)
         where TService : class
     {
-        var key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
+        string key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
         var descriptor = ServiceDescriptor.DescribeKeyed(
             typeof(TService),
             key,
@@ -454,7 +460,7 @@ public static class KeyedServiceExtensions
         string serviceCategory)
         where TService : class
     {
-        var key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
+        string key = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
         return provider.GetRequiredKeyedService<TService>(key);
     }
 
@@ -474,7 +480,7 @@ public static class KeyedServiceExtensions
         object defaultKey)
         where TService : class
     {
-        var tenantKey = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
+        string tenantKey = ServiceKeys.Tenant.ForTenant(serviceCategory, tenantId);
         TService? service = provider.GetKeyedService<TService>(tenantKey);
 
         return service ?? provider.GetRequiredKeyedService<TService>(defaultKey);
@@ -495,9 +501,14 @@ public static class KeyedServiceExtensions
         Assembly assembly)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
+
         if (assembly == null)
+        {
             throw new ArgumentNullException(nameof(assembly));
+        }
 
         IEnumerable<Type> typesWithAttribute = assembly.GetTypes()
             .Where(t => t.GetCustomAttribute<KeyedServiceAttribute>() != null && !t.IsAbstract);
@@ -558,7 +569,9 @@ public static class KeyedServiceExtensions
             Equals(d.ServiceKey, serviceKey));
 
         if (existing != null)
+        {
             services.Remove(existing);
+        }
 
         // Add new
         var descriptor = new ServiceDescriptor(
@@ -589,7 +602,9 @@ public static class KeyedServiceExtensions
             Equals(d.ServiceKey, serviceKey));
 
         if (existing != null)
+        {
             services.Remove(existing);
+        }
 
         return services;
     }

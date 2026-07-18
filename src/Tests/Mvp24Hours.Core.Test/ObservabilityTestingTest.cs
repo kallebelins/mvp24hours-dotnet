@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Observability;
@@ -9,7 +8,6 @@ using Mvp24Hours.Infrastructure.Testing.Extensions;
 using Mvp24Hours.Infrastructure.Testing.Fixtures;
 using Mvp24Hours.Infrastructure.Testing.Logging;
 using Mvp24Hours.Infrastructure.Testing.Observability;
-using Xunit;
 
 namespace Mvp24Hours.Core.Test;
 
@@ -629,7 +627,7 @@ public class ObservabilityTestingTest
         logger.LogError("Error log");
 
         // Act
-        var summary = fixture.GetSummary();
+        string summary = fixture.GetSummary();
 
         // Assert
         summary.Should().Contain("Observability Summary:");

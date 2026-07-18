@@ -104,18 +104,13 @@ public sealed class ParallelNotificationPublisher : INotificationPublisher
 /// <summary>
 /// Fire-and-forget notification publisher - starts all handlers but doesn't wait for completion.
 /// </summary>
-public sealed class ParallelNoWaitNotificationPublisher : INotificationPublisher
+/// <remarks>
+/// Creates a new instance of the ParallelNoWaitNotificationPublisher.
+/// </remarks>
+/// <param name="logger">Optional logger for recording exceptions.</param>
+public sealed class ParallelNoWaitNotificationPublisher(Microsoft.Extensions.Logging.ILogger<ParallelNoWaitNotificationPublisher>? logger = null) : INotificationPublisher
 {
-    private readonly Microsoft.Extensions.Logging.ILogger<ParallelNoWaitNotificationPublisher>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the ParallelNoWaitNotificationPublisher.
-    /// </summary>
-    /// <param name="logger">Optional logger for recording exceptions.</param>
-    public ParallelNoWaitNotificationPublisher(Microsoft.Extensions.Logging.ILogger<ParallelNoWaitNotificationPublisher>? logger = null)
-    {
-        _logger = logger;
-    }
+    private readonly Microsoft.Extensions.Logging.ILogger<ParallelNoWaitNotificationPublisher>? _logger = logger;
 
     /// <inheritdoc />
     public Task PublishAsync<TNotification>(

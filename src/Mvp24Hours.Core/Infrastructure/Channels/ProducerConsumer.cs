@@ -3,13 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Core.Contract.Infrastructure.Channels;
 
 namespace Mvp24Hours.Core.Infrastructure.Channels;
 
@@ -102,7 +97,11 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
     /// </summary>
     public void Start()
     {
-        if (_started) return;
+        if (_started)
+        {
+            return;
+        }
+
         _started = true;
 
         _logger?.LogInformation(
@@ -110,9 +109,9 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
             _workerCount,
             typeof(TItem).Name);
 
-        for (var i = 0; i < _workerCount; i++)
+        for (int i = 0; i < _workerCount; i++)
         {
-            var workerId = i;
+            int workerId = i;
             _workerTasks.Add(Task.Run(() => ConsumeAsync(workerId, _cts.Token), _cts.Token));
         }
     }
@@ -126,7 +125,9 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_completed)
+        {
             throw new InvalidOperationException("Cannot produce after calling Complete()");
+        }
 
         await _channel.Writer.WriteAsync(item, cancellationToken);
     }
@@ -166,7 +167,11 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
     /// </summary>
     public void Complete()
     {
-        if (_completed) return;
+        if (_completed)
+        {
+            return;
+        }
+
         _completed = true;
 
         _channel.Writer.Complete();
@@ -179,7 +184,10 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task WaitForCompletionAsync(CancellationToken cancellationToken = default)
     {
-        if (!_started) Start();
+        if (!_started)
+        {
+            Start();
+        }
 
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
         await Task.WhenAll(_workerTasks);
@@ -229,7 +237,9 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
                         workerId);
 
                     if (!_options.ContinueOnError)
+                    {
                         throw;
+                    }
                 }
             }
         }
@@ -246,7 +256,11 @@ public sealed class ProducerConsumer<TItem> : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _channel.Writer.TryComplete();
@@ -349,10 +363,14 @@ public sealed class ProducerConsumer<TInput, TOutput> : IAsyncDisposable
     /// </summary>
     public void Start()
     {
-        if (_started) return;
+        if (_started)
+        {
+            return;
+        }
+
         _started = true;
 
-        for (var i = 0; i < _workerCount; i++)
+        for (int i = 0; i < _workerCount; i++)
         {
             _workerTasks.Add(Task.Run(() => ConsumeAsync(_cts.Token), _cts.Token));
         }
@@ -374,7 +392,11 @@ public sealed class ProducerConsumer<TInput, TOutput> : IAsyncDisposable
     /// </summary>
     public void Complete()
     {
-        if (_completed) return;
+        if (_completed)
+        {
+            return;
+        }
+
         _completed = true;
         _inputChannel.Writer.Complete();
     }
@@ -399,7 +421,10 @@ public sealed class ProducerConsumer<TInput, TOutput> : IAsyncDisposable
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 _logger?.LogError(ex, "Error processing item");
-                if (!_options.ContinueOnError) throw;
+                if (!_options.ContinueOnError)
+                {
+                    throw;
+                }
             }
         }
     }
@@ -407,7 +432,11 @@ public sealed class ProducerConsumer<TInput, TOutput> : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _inputChannel.Writer.TryComplete();

@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Diagnostics.CodeAnalysis;
-using Mvp24Hours.Extensions;
-
 namespace Mvp24Hours.Core.Test;
 
 #pragma warning disable CS8604
@@ -22,12 +19,12 @@ public class ExtensionMethodsTest
     public void StringExtensions_RegexReplace_ReplacesPattern()
     {
         // Arrange
-        var source = "Hello World";
-        var pattern = "World";
-        var replacement = "Universe";
+        string source = "Hello World";
+        string pattern = "World";
+        string replacement = "Universe";
 
         // Act
-        var result = source.RegexReplace(pattern, replacement);
+        string result = source.RegexReplace(pattern, replacement);
 
         // Assert
         result.Should().Be("Hello Universe");
@@ -37,12 +34,12 @@ public class ExtensionMethodsTest
     public void StringExtensions_ReplaceEnd_ReplacesEndOfString()
     {
         // Arrange
-        var source = "test.txt";
-        var value = ".txt";
-        var replacement = ".csv";
+        string source = "test.txt";
+        string value = ".txt";
+        string replacement = ".csv";
 
         // Act
-        var result = source.ReplaceEnd(value, replacement);
+        string result = source.ReplaceEnd(value, replacement);
 
         // Assert
         result.Should().Be("test.csv");
@@ -52,11 +49,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_RemoveEnd_RemovesEndOfString()
     {
         // Arrange
-        var source = "test.txt";
-        var value = ".txt";
+        string source = "test.txt";
+        string value = ".txt";
 
         // Act
-        var result = source.RemoveEnd(value);
+        string result = source.RemoveEnd(value);
 
         // Assert
         result.Should().Be("test");
@@ -66,11 +63,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_Truncate_TruncatesLongString()
     {
         // Arrange
-        var text = "This is a very long string";
-        var size = 10;
+        string text = "This is a very long string";
+        int size = 10;
 
         // Act
-        var result = text.Truncate(size);
+        string result = text.Truncate(size);
 
         // Assert
         result.Should().Be("This is a ");
@@ -81,11 +78,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_Truncate_DoesNotTruncateShortString()
     {
         // Arrange
-        var text = "Short";
-        var size = 10;
+        string text = "Short";
+        int size = 10;
 
         // Act
-        var result = text.Truncate(size);
+        string result = text.Truncate(size);
 
         // Assert
         result.Should().Be("Short");
@@ -111,11 +108,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_Reticence_AddsEllipsis()
     {
         // Arrange
-        var text = "This is a very long string";
-        var size = 10;
+        string text = "This is a very long string";
+        int size = 10;
 
         // Act
-        var result = text.Reticence(size);
+        string result = text.Reticence(size);
 
         // Assert
         result.Should().Be("This is a ...");
@@ -125,11 +122,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_Reticence_DoesNotAddEllipsisForShortString()
     {
         // Arrange
-        var text = "Short";
-        var size = 10;
+        string text = "Short";
+        int size = 10;
 
         // Act
-        var result = text.Reticence(size);
+        string result = text.Reticence(size);
 
         // Assert
         result.Should().Be("Short");
@@ -139,12 +136,12 @@ public class ExtensionMethodsTest
     public void StringExtensions_SubstringSafe_ReturnsSubstring()
     {
         // Arrange
-        var text = "Hello World";
-        var start = 0;
-        var length = 5;
+        string text = "Hello World";
+        int start = 0;
+        int length = 5;
 
         // Act
-        var result = text.SubstringSafe(start, length);
+        string result = text.SubstringSafe(start, length);
 
         // Assert
         result.Should().Be("Hello");
@@ -154,12 +151,12 @@ public class ExtensionMethodsTest
     public void StringExtensions_SubstringSafe_WithStartBeyondLength_ReturnsEmpty()
     {
         // Arrange
-        var text = "Hello";
-        var start = 10;
-        var length = 5;
+        string text = "Hello";
+        int start = 10;
+        int length = 5;
 
         // Act
-        var result = text.SubstringSafe(start, length);
+        string result = text.SubstringSafe(start, length);
 
         // Assert
         result.Should().BeEmpty();
@@ -169,12 +166,12 @@ public class ExtensionMethodsTest
     public void StringExtensions_SubstringSafe_WithLengthBeyondEnd_ReturnsToEnd()
     {
         // Arrange
-        var text = "Hello";
-        var start = 2;
-        var length = 100;
+        string text = "Hello";
+        int start = 2;
+        int length = 100;
 
         // Act
-        var result = text.SubstringSafe(start, length);
+        string result = text.SubstringSafe(start, length);
 
         // Assert
         result.Should().Be("llo");
@@ -184,10 +181,10 @@ public class ExtensionMethodsTest
     public void StringExtensions_SqlSafe_EscapesSqlCharacters()
     {
         // Arrange
-        var text = "O'Brien--comment";
+        string text = "O'Brien--comment";
 
         // Act
-        var result = text.SqlSafe();
+        string result = text.SqlSafe();
 
         // Assert
         result.Should().Be("O''Brien");
@@ -200,7 +197,7 @@ public class ExtensionMethodsTest
         string? text = null;
 
         // Act
-        var result = text.SqlSafe();
+        string result = text.SqlSafe();
 
         // Assert
         result.Should().BeEmpty();
@@ -210,11 +207,11 @@ public class ExtensionMethodsTest
     public void StringExtensions_Format_FormatsString()
     {
         // Arrange
-        var text = "Hello {0}, you are {1} years old";
-        var args = new object[] { "John", 30 };
+        string text = "Hello {0}, you are {1} years old";
+        object[] args = ["John", 30];
 
         // Act
-        var result = text.Format(args);
+        string result = text.Format(args);
 
         // Assert
         result.Should().Be("Hello John, you are 30 years old");
@@ -231,7 +228,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.IsList();
+        bool result = list.IsList();
 
         // Assert
         result.Should().BeTrue();
@@ -241,10 +238,10 @@ public class ExtensionMethodsTest
     public void EnumerableExtensions_IsList_WithArray_ReturnsTrue()
     {
         // Arrange
-        var array = new int[] { 1, 2, 3 };
+        int[] array = [1, 2, 3];
 
         // Act
-        var result = array.IsList();
+        bool result = array.IsList();
 
         // Assert
         result.Should().BeTrue();
@@ -257,7 +254,7 @@ public class ExtensionMethodsTest
         object? value = null;
 
         // Act
-        var result = value.IsList();
+        bool result = value.IsList();
 
         // Assert
         result.Should().BeFalse();
@@ -267,10 +264,10 @@ public class ExtensionMethodsTest
     public void EnumerableExtensions_IsList_WithString_ReturnsFalse()
     {
         // Arrange
-        var value = "not a list";
+        string value = "not a list";
 
         // Act
-        var result = value.IsList();
+        bool result = value.IsList();
 
         // Assert
         result.Should().BeFalse();
@@ -283,7 +280,7 @@ public class ExtensionMethodsTest
         var dict = new Dictionary<string, int> { { "key", 1 } };
 
         // Act
-        var result = dict.IsDictionary();
+        bool result = dict.IsDictionary();
 
         // Assert
         result.Should().BeTrue();
@@ -296,7 +293,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.IsDictionary();
+        bool result = list.IsDictionary();
 
         // Assert
         result.Should().BeFalse();
@@ -309,7 +306,7 @@ public class ExtensionMethodsTest
         object? value = null;
 
         // Act
-        var result = value.IsDictionary();
+        bool result = value.IsDictionary();
 
         // Assert
         result.Should().BeFalse();
@@ -319,8 +316,8 @@ public class ExtensionMethodsTest
     public void EnumerableExtensions_ForEach_ExecutesAction()
     {
         // Arrange
-        IEnumerable<int> list = new List<int> { 1, 2, 3 };
-        var sum = 0;
+        IEnumerable<int> list = [1, 2, 3];
+        int sum = 0;
 
         // Act
         var result = list.ForEach(x => sum += x).ToList();
@@ -337,7 +334,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.AnyOrNotNull();
+        bool result = list.AnyOrNotNull();
 
         // Assert
         result.Should().BeTrue();
@@ -350,7 +347,7 @@ public class ExtensionMethodsTest
         var list = new List<int>();
 
         // Act
-        var result = list.AnyOrNotNull();
+        bool result = list.AnyOrNotNull();
 
         // Assert
         result.Should().BeFalse();
@@ -363,7 +360,7 @@ public class ExtensionMethodsTest
         List<int>? list = null;
 
         // Act
-        var result = list.AnyOrNotNull();
+        bool result = list.AnyOrNotNull();
 
         // Assert
         result.Should().BeFalse();
@@ -376,7 +373,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.AnyOrNotNull(x => x > 2);
+        bool result = list.AnyOrNotNull(x => x > 2);
 
         // Assert
         result.Should().BeTrue();
@@ -389,7 +386,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.AnyOrNotNull(x => x > 10);
+        bool result = list.AnyOrNotNull(x => x > 10);
 
         // Assert
         result.Should().BeFalse();
@@ -402,7 +399,7 @@ public class ExtensionMethodsTest
         var list = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = list.AnySafe();
+        bool result = list.AnySafe();
 
         // Assert
         result.Should().BeTrue();
@@ -415,7 +412,7 @@ public class ExtensionMethodsTest
         var list = new List<int>();
 
         // Act
-        var result = list.AnySafe();
+        bool result = list.AnySafe();
 
         // Assert
         result.Should().BeFalse();
@@ -428,7 +425,7 @@ public class ExtensionMethodsTest
         List<int>? list = null;
 
         // Act
-        var result = list.AnySafe();
+        bool result = list.AnySafe();
 
         // Assert
         result.Should().BeFalse();
@@ -441,7 +438,7 @@ public class ExtensionMethodsTest
         var dict = new Dictionary<string, int> { { "key", 1 } };
 
         // Act
-        var result = dict.ContainsKeySafe("key");
+        bool result = dict.ContainsKeySafe("key");
 
         // Assert
         result.Should().BeTrue();
@@ -454,7 +451,7 @@ public class ExtensionMethodsTest
         var dict = new Dictionary<string, int> { { "key", 1 } };
 
         // Act
-        var result = dict.ContainsKeySafe("missing");
+        bool result = dict.ContainsKeySafe("missing");
 
         // Assert
         result.Should().BeFalse();
@@ -467,7 +464,7 @@ public class ExtensionMethodsTest
         Dictionary<string, int>? dict = null;
 
         // Act
-        var result = dict.ContainsKeySafe("key");
+        bool result = dict.ContainsKeySafe("key");
 
         // Assert
         result.Should().BeFalse();
@@ -477,10 +474,10 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_FirstOrDefaultAsync_ReturnsFirst()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.FirstOrDefaultAsync();
+        int result = await task.FirstOrDefaultAsync();
 
         // Assert
         result.Should().Be(1);
@@ -490,10 +487,10 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_FirstOrDefaultAsync_WithPredicate_ReturnsMatching()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.FirstOrDefaultAsync(x => x > 1);
+        int result = await task.FirstOrDefaultAsync(x => x > 1);
 
         // Assert
         result.Should().Be(2);
@@ -503,10 +500,10 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_LastOrDefaultAsync_ReturnsLast()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.LastOrDefaultAsync();
+        int result = await task.LastOrDefaultAsync();
 
         // Assert
         result.Should().Be(3);
@@ -516,10 +513,10 @@ public class ExtensionMethodsTest
     public async Task EnumerableExtensions_ElementAtOrDefaultAsync_ReturnsElement()
     {
         // Arrange
-        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>(new List<int> { 1, 2, 3 });
+        Task<IEnumerable<int>> task = Task.FromResult<IEnumerable<int>>([1, 2, 3]);
 
         // Act
-        var result = await task.ElementAtOrDefaultAsync(1);
+        int result = await task.ElementAtOrDefaultAsync(1);
 
         // Assert
         result.Should().Be(2);
@@ -559,7 +556,7 @@ public class ExtensionMethodsTest
     public void GuidExtensions_ToGuid_WithValidString_ReturnsGuid()
     {
         // Arrange
-        var guidString = Guid.NewGuid().ToString();
+        string guidString = Guid.NewGuid().ToString();
 
         // Act
         var result = guidString.ToGuid();
@@ -572,7 +569,7 @@ public class ExtensionMethodsTest
     public void GuidExtensions_ToGuid_WithInvalidString_ReturnsEmpty()
     {
         // Arrange
-        var invalidString = "not-a-guid";
+        string invalidString = "not-a-guid";
 
         // Act
         var result = invalidString.ToGuid();
@@ -585,10 +582,10 @@ public class ExtensionMethodsTest
     public void GuidExtensions_IsValidGuid_WithValidString_ReturnsTrue()
     {
         // Arrange
-        var guidString = Guid.NewGuid().ToString();
+        string guidString = Guid.NewGuid().ToString();
 
         // Act
-        var result = guidString.IsValidGuid();
+        bool result = guidString.IsValidGuid();
 
         // Assert
         result.Should().BeTrue();
@@ -598,10 +595,10 @@ public class ExtensionMethodsTest
     public void GuidExtensions_IsValidGuid_WithInvalidString_ReturnsFalse()
     {
         // Arrange
-        var invalidString = "not-a-guid";
+        string invalidString = "not-a-guid";
 
         // Act
-        var result = invalidString.IsValidGuid();
+        bool result = invalidString.IsValidGuid();
 
         // Assert
         result.Should().BeFalse();
@@ -614,7 +611,7 @@ public class ExtensionMethodsTest
         string? guidString = null;
 
         // Act
-        var result = guidString.IsValidGuid();
+        bool result = guidString.IsValidGuid();
 
         // Assert
         result.Should().BeFalse();
@@ -627,7 +624,7 @@ public class ExtensionMethodsTest
         Guid? guid = null;
 
         // Act
-        var result = guid.IsNullOrEmpty();
+        bool result = guid.IsNullOrEmpty();
 
         // Assert
         result.Should().BeTrue();
@@ -640,7 +637,7 @@ public class ExtensionMethodsTest
         Guid? guid = Guid.Empty;
 
         // Act
-        var result = guid.IsNullOrEmpty();
+        bool result = guid.IsNullOrEmpty();
 
         // Assert
         result.Should().BeTrue();
@@ -653,7 +650,7 @@ public class ExtensionMethodsTest
         Guid? guid = Guid.NewGuid();
 
         // Act
-        var result = guid.IsNullOrEmpty();
+        bool result = guid.IsNullOrEmpty();
 
         // Assert
         result.Should().BeFalse();
@@ -666,7 +663,7 @@ public class ExtensionMethodsTest
         Guid guid = Guid.Empty;
 
         // Act
-        var result = guid.IsEmpty();
+        bool result = guid.IsEmpty();
 
         // Assert
         result.Should().BeTrue();
@@ -679,7 +676,7 @@ public class ExtensionMethodsTest
         var guid = Guid.NewGuid();
 
         // Act
-        var result = guid.IsEmpty();
+        bool result = guid.IsEmpty();
 
         // Assert
         result.Should().BeFalse();
@@ -702,7 +699,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetEnumDescription_WithDisplayAttribute_ReturnsDescription()
     {
         // Act
-        var result = EnumExtensions.GetEnumDescription<TestEnum>("First");
+        string result = EnumExtensions.GetEnumDescription<TestEnum>("First");
 
         // Assert
         result.Should().Be("First description");
@@ -712,7 +709,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetEnumDescription_WithoutDisplayAttribute_ReturnsName()
     {
         // Act
-        var result = EnumExtensions.GetEnumDescription<TestEnum>("Third");
+        string result = EnumExtensions.GetEnumDescription<TestEnum>("Third");
 
         // Assert
         result.Should().Be("Third");
@@ -722,7 +719,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetEnumDescription_WithInvalidValue_ReturnsEmpty()
     {
         // Act
-        var result = EnumExtensions.GetEnumDescription<TestEnum>("Invalid");
+        string result = EnumExtensions.GetEnumDescription<TestEnum>("Invalid");
 
         // Assert
         result.Should().BeEmpty();
@@ -732,7 +729,7 @@ public class ExtensionMethodsTest
     public void EnumExtensions_GetEnumValue_ReturnsValue()
     {
         // Act
-        var result = EnumExtensions.GetEnumValue<TestEnum>("First");
+        string result = EnumExtensions.GetEnumValue<TestEnum>("First");
 
         // Assert
         result.Should().Be("0");
@@ -745,7 +742,7 @@ public class ExtensionMethodsTest
         TestEnum value = TestEnum.First;
 
         // Act
-        var result = value.GetDisplayName();
+        string result = value.GetDisplayName();
 
         // Assert
         result.Should().Be("First Value");
@@ -758,7 +755,7 @@ public class ExtensionMethodsTest
         TestEnum value = TestEnum.Third;
 
         // Act
-        var result = value.GetDisplayName();
+        string result = value.GetDisplayName();
 
         // Assert
         result.Should().Be("Third");
@@ -771,7 +768,7 @@ public class ExtensionMethodsTest
         TestEnum value = TestEnum.First;
 
         // Act
-        var result = value.GetGroupName();
+        string result = value.GetGroupName();
 
         // Assert
         // If GroupName is not set, returns the enum name
@@ -807,7 +804,7 @@ public class ExtensionMethodsTest
         var destination = new DestinationClass();
 
         // Act
-        var result = source.CopyPropertiesTo(destination);
+        bool result = source.CopyPropertiesTo(destination);
 
         // Assert
         result.Should().BeTrue();
@@ -822,10 +819,10 @@ public class ExtensionMethodsTest
         // Arrange
         var source = new SourceClass { Id = 1, Name = "Test", Price = 99.99m };
         var destination = new DestinationClass { Id = 999 };
-        var propertiesToIgnore = new[] { "Id" };
+        string[] propertiesToIgnore = ["Id"];
 
         // Act
-        var result = source.CopyPropertiesTo(destination, propertiesToIgnore);
+        _ = source.CopyPropertiesTo(destination, propertiesToIgnore);
 
         // Assert
         destination.Id.Should().Be(999); // Should remain unchanged
@@ -840,7 +837,7 @@ public class ExtensionMethodsTest
         var destination = new DestinationClass { Name = "Original" };
 
         // Act
-        var result = source.CopyPropertiesTo(destination, IgnoreNullProperties: true);
+        _ = source.CopyPropertiesTo(destination, IgnoreNullProperties: true);
 
         // Assert
         destination.Name.Should().Be("Original"); // Should remain unchanged
@@ -882,7 +879,7 @@ public class ExtensionMethodsTest
         var obj = new SourceClass { Id = 42, Name = "Test" };
 
         // Act
-        var result = obj.GetPropValue("Id");
+        object? result = obj.GetPropValue("Id");
 
         // Assert
         result.Should().Be(42);
@@ -895,7 +892,7 @@ public class ExtensionMethodsTest
         var obj = new { Nested = new SourceClass { Id = 42 } };
 
         // Act
-        var result = obj.GetPropValue("Nested.Id");
+        object? result = obj.GetPropValue("Nested.Id");
 
         // Assert
         result.Should().Be(42);
@@ -908,7 +905,7 @@ public class ExtensionMethodsTest
         var obj = new SourceClass { Id = 42 };
 
         // Act
-        var result = obj.GetPropValue("InvalidProperty");
+        object? result = obj.GetPropValue("InvalidProperty");
 
         // Assert
         result.Should().BeNull();
@@ -921,7 +918,7 @@ public class ExtensionMethodsTest
         var obj = new SourceClass { Id = 42 };
 
         // Act
-        var result = obj.GetPropValue<int>("Id");
+        int result = obj.GetPropValue<int>("Id");
 
         // Assert
         result.Should().Be(42);
@@ -948,7 +945,7 @@ public class ExtensionMethodsTest
         Type parentType = typeof(SourceClass);
 
         // Act
-        var result = childType.InheritsOrImplements(parentType);
+        bool result = childType.InheritsOrImplements(parentType);
 
         // Assert
         // Note: This will be false unless DestinationClass actually inherits from SourceClass

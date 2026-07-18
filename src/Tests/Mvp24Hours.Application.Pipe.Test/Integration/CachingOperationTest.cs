@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -14,179 +11,173 @@ using Mvp24Hours.Infrastructure.Pipe.Integration.Caching;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 using Xunit;
 
-namespace Mvp24Hours.Application.Pipe.Test.Integration
+namespace Mvp24Hours.Application.Pipe.Test.Integration;
+
+[Trait("Category", "Unit")]
+public class CachingOperationTest
 {
-    [Trait("Category", "Unit")]
-    public class CachingOperationTest
+    [Fact]
+    public async Task CachingOperation_CachesResult_OnSuccess()
     {
-        [Fact]
-        public async Task CachingOperation_CachesResult_OnSuccess()
+        // Arrange
+        IDistributedCache cache = CreateMemoryCache();
+        int executionCount = 0;
+        var innerOperation = new TestOperation(() =>
         {
-            // Arrange
-            IDistributedCache cache = CreateMemoryCache();
-            var executionCount = 0;
-            var innerOperation = new TestOperation(() =>
-            {
-                executionCount++;
-                return OperationResult<string>.Success("Test Result");
-            });
+            executionCount++;
+            return OperationResult<string>.Success("Test Result");
+        });
 
-            var cachingOperation = new CachingOperation<int, string>(
-                innerOperation,
-                cache,
-                input => $"test-{input}");
+        var cachingOperation = new CachingOperation<int, string>(
+            innerOperation,
+            cache,
+            input => $"test-{input}");
 
-            // Act
-            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
-            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
+        // Act
+        IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+        IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
 
-            // Assert
-            Assert.True(result1.IsSuccess);
-            Assert.True(result2.IsSuccess);
-            Assert.Equal("Test Result", result1.Value);
-            Assert.Equal("Test Result", result2.Value);
-            Assert.Equal(1, executionCount); // Should only execute once
+        // Assert
+        Assert.True(result1.IsSuccess);
+        Assert.True(result2.IsSuccess);
+        Assert.Equal("Test Result", result1.Value);
+        Assert.Equal("Test Result", result2.Value);
+        Assert.Equal(1, executionCount); // Should only execute once
+    }
+
+    [Fact]
+    public async Task CachingOperation_DifferentKeys_ExecutesMultipleTimes()
+    {
+        // Arrange
+        IDistributedCache cache = CreateMemoryCache();
+        int executionCount = 0;
+        var innerOperation = new TestOperation(() =>
+        {
+            executionCount++;
+            return OperationResult<string>.Success($"Result {executionCount}");
+        });
+
+        var cachingOperation = new CachingOperation<int, string>(
+            innerOperation,
+            cache,
+            input => $"test-{input}");
+
+        // Act
+        IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+        IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(2);
+
+        // Assert
+        Assert.True(result1.IsSuccess);
+        Assert.True(result2.IsSuccess);
+        Assert.Equal(2, executionCount); // Should execute twice for different keys
+    }
+
+    [Fact]
+    public async Task CachingOperation_DoesNotCacheFailures_ByDefault()
+    {
+        // Arrange
+        IDistributedCache cache = CreateMemoryCache();
+        int executionCount = 0;
+        var innerOperation = new TestOperation(() =>
+        {
+            executionCount++;
+            return OperationResult<string>.Failure("Error");
+        });
+
+        var cachingOperation = new CachingOperation<int, string>(
+            innerOperation,
+            cache,
+            input => $"test-{input}",
+            options: new CacheOperationOptions { CacheFailedResults = false });
+
+        // Act
+        IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+        IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
+
+        // Assert
+        Assert.False(result1.IsSuccess);
+        Assert.False(result2.IsSuccess);
+        Assert.Equal(2, executionCount); // Should execute twice since failures are not cached
+    }
+
+    [Fact]
+    public async Task CachingOperation_CachesFailures_WhenEnabled()
+    {
+        // Arrange
+        IDistributedCache cache = CreateMemoryCache();
+        int executionCount = 0;
+        var innerOperation = new TestOperation(() =>
+        {
+            executionCount++;
+            return OperationResult<string>.Failure("Error");
+        });
+
+        var cachingOperation = new CachingOperation<int, string>(
+            innerOperation,
+            cache,
+            input => $"test-{input}",
+            options: new CacheOperationOptions { CacheFailedResults = true });
+
+        // Act
+        IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+        IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
+
+        // Assert
+        Assert.False(result1.IsSuccess);
+        Assert.False(result2.IsSuccess);
+        Assert.Equal(1, executionCount); // Should execute once since failures are cached
+    }
+
+    [Fact]
+    public async Task CachingOperation_InvalidateCache_ClearsEntry()
+    {
+        // Arrange
+        IDistributedCache cache = CreateMemoryCache();
+        int executionCount = 0;
+        var innerOperation = new TestOperation(() =>
+        {
+            executionCount++;
+            return OperationResult<string>.Success($"Result {executionCount}");
+        });
+
+        var cachingOperation = new CachingOperation<int, string>(
+            innerOperation,
+            cache,
+            input => $"test-{input}");
+
+        // Act
+        IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
+        await cachingOperation.InvalidateCacheAsync(1);
+        IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
+
+        // Assert
+        Assert.True(result1.IsSuccess);
+        Assert.True(result2.IsSuccess);
+        Assert.Equal("Result 1", result1.Value);
+        Assert.Equal("Result 2", result2.Value);
+        Assert.Equal(2, executionCount); // Should execute twice after invalidation
+    }
+
+    private static IDistributedCache CreateMemoryCache()
+    {
+        IOptions<MemoryDistributedCacheOptions> options = Options.Create(new MemoryDistributedCacheOptions());
+        return new MemoryDistributedCache(options);
+    }
+
+    private class TestOperation(Func<IOperationResult<string>> execute) : ITypedOperationAsync<int, string>
+    {
+        private readonly Func<IOperationResult<string>> _execute = execute;
+
+        public bool IsRequired => false;
+
+        public Task<IOperationResult<string>> ExecuteAsync(int input, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_execute());
         }
 
-        [Fact]
-        public async Task CachingOperation_DifferentKeys_ExecutesMultipleTimes()
+        public Task RollbackAsync(int input, CancellationToken cancellationToken = default)
         {
-            // Arrange
-            IDistributedCache cache = CreateMemoryCache();
-            var executionCount = 0;
-            var innerOperation = new TestOperation(() =>
-            {
-                executionCount++;
-                return OperationResult<string>.Success($"Result {executionCount}");
-            });
-
-            var cachingOperation = new CachingOperation<int, string>(
-                innerOperation,
-                cache,
-                input => $"test-{input}");
-
-            // Act
-            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
-            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(2);
-
-            // Assert
-            Assert.True(result1.IsSuccess);
-            Assert.True(result2.IsSuccess);
-            Assert.Equal(2, executionCount); // Should execute twice for different keys
-        }
-
-        [Fact]
-        public async Task CachingOperation_DoesNotCacheFailures_ByDefault()
-        {
-            // Arrange
-            IDistributedCache cache = CreateMemoryCache();
-            var executionCount = 0;
-            var innerOperation = new TestOperation(() =>
-            {
-                executionCount++;
-                return OperationResult<string>.Failure("Error");
-            });
-
-            var cachingOperation = new CachingOperation<int, string>(
-                innerOperation,
-                cache,
-                input => $"test-{input}",
-                options: new CacheOperationOptions { CacheFailedResults = false });
-
-            // Act
-            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
-            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
-
-            // Assert
-            Assert.False(result1.IsSuccess);
-            Assert.False(result2.IsSuccess);
-            Assert.Equal(2, executionCount); // Should execute twice since failures are not cached
-        }
-
-        [Fact]
-        public async Task CachingOperation_CachesFailures_WhenEnabled()
-        {
-            // Arrange
-            IDistributedCache cache = CreateMemoryCache();
-            var executionCount = 0;
-            var innerOperation = new TestOperation(() =>
-            {
-                executionCount++;
-                return OperationResult<string>.Failure("Error");
-            });
-
-            var cachingOperation = new CachingOperation<int, string>(
-                innerOperation,
-                cache,
-                input => $"test-{input}",
-                options: new CacheOperationOptions { CacheFailedResults = true });
-
-            // Act
-            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
-            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
-
-            // Assert
-            Assert.False(result1.IsSuccess);
-            Assert.False(result2.IsSuccess);
-            Assert.Equal(1, executionCount); // Should execute once since failures are cached
-        }
-
-        [Fact]
-        public async Task CachingOperation_InvalidateCache_ClearsEntry()
-        {
-            // Arrange
-            IDistributedCache cache = CreateMemoryCache();
-            var executionCount = 0;
-            var innerOperation = new TestOperation(() =>
-            {
-                executionCount++;
-                return OperationResult<string>.Success($"Result {executionCount}");
-            });
-
-            var cachingOperation = new CachingOperation<int, string>(
-                innerOperation,
-                cache,
-                input => $"test-{input}");
-
-            // Act
-            IOperationResult<string> result1 = await cachingOperation.ExecuteAsync(1);
-            await cachingOperation.InvalidateCacheAsync(1);
-            IOperationResult<string> result2 = await cachingOperation.ExecuteAsync(1);
-
-            // Assert
-            Assert.True(result1.IsSuccess);
-            Assert.True(result2.IsSuccess);
-            Assert.Equal("Result 1", result1.Value);
-            Assert.Equal("Result 2", result2.Value);
-            Assert.Equal(2, executionCount); // Should execute twice after invalidation
-        }
-
-        private static IDistributedCache CreateMemoryCache()
-        {
-            IOptions<MemoryDistributedCacheOptions> options = Options.Create(new MemoryDistributedCacheOptions());
-            return new MemoryDistributedCache(options);
-        }
-
-        private class TestOperation : ITypedOperationAsync<int, string>
-        {
-            private readonly Func<IOperationResult<string>> _execute;
-
-            public TestOperation(Func<IOperationResult<string>> execute)
-            {
-                _execute = execute;
-            }
-
-            public bool IsRequired => false;
-
-            public Task<IOperationResult<string>> ExecuteAsync(int input, CancellationToken cancellationToken = default)
-            {
-                return Task.FromResult(_execute());
-            }
-
-            public Task RollbackAsync(int input, CancellationToken cancellationToken = default)
-            {
-                return Task.CompletedTask;
-            }
+            return Task.CompletedTask;
         }
     }
 }

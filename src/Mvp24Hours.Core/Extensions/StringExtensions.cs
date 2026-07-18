@@ -5,81 +5,80 @@
 //=====================================================================================
 using System.Text.RegularExpressions;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
+    public static string RegexReplace(this string source, string pattern, string replacement)
     {
-        public static string RegexReplace(this string source, string pattern, string replacement)
+        return Regex.Replace(source, pattern, replacement);
+    }
+
+    public static string ReplaceEnd(this string source, string value, string replacement)
+    {
+        return RegexReplace(source, $"{value}$", replacement);
+    }
+
+    public static string RemoveEnd(this string source, string value)
+    {
+        return ReplaceEnd(source, value, string.Empty);
+    }
+
+    public static string Truncate(this string? text, int size)
+    {
+        string value = text ?? string.Empty;
+        return value.Length > size ? value[..size] : value;
+    }
+
+    public static string Reticence(this string? text, int size)
+    {
+        string value = text ?? string.Empty;
+        return value.Length > size ? value[..size] + "..." : value;
+    }
+
+    public static string SubstringSafe(this string text, int start, int length = int.MaxValue)
+    {
+        if (text == null)
         {
-            return Regex.Replace(source, pattern, replacement);
+            return string.Empty;
         }
 
-        public static string ReplaceEnd(this string source, string value, string replacement)
+        if (start < 0)
         {
-            return RegexReplace(source, $"{value}$", replacement);
+            start = 0;
         }
 
-        public static string RemoveEnd(this string source, string value)
+        if (start >= text.Length)
         {
-            return ReplaceEnd(source, value, string.Empty);
+            return string.Empty;
         }
 
-        public static string Truncate(this string? text, int size)
+        // Se length é int.MaxValue ou muito grande, retornar até o final da string
+        if (length == int.MaxValue || start + length > text.Length)
         {
-            string value = text ?? string.Empty;
-            return value.Length > size ? value[..size] : value;
+            length = text.Length - start;
         }
 
-        public static string Reticence(this string? text, int size)
+        return text.Substring(start, length);
+    }
+
+    public static string SqlSafe(this string? text)
+    {
+        string safeText = text.NullSafe();
+
+        // Remove SQL comments (everything from -- to end of string)
+        int commentIndex = safeText.IndexOf("--");
+        if (commentIndex >= 0)
         {
-            string value = text ?? string.Empty;
-            return value.Length > size ? value[..size] + "..." : value;
+            safeText = safeText[..commentIndex];
         }
 
-        public static string SubstringSafe(this string text, int start, int length = int.MaxValue)
-        {
-            if (text == null)
-            {
-                return string.Empty;
-            }
+        // Escape single quotes
+        return safeText.Replace("'", "''");
+    }
 
-            if (start < 0)
-            {
-                start = 0;
-            }
-
-            if (start >= text.Length)
-            {
-                return string.Empty;
-            }
-
-            // Se length é int.MaxValue ou muito grande, retornar até o final da string
-            if (length == int.MaxValue || start + length > text.Length)
-            {
-                length = text.Length - start;
-            }
-
-            return text.Substring(start, length);
-        }
-
-        public static string SqlSafe(this string? text)
-        {
-            var safeText = text.NullSafe();
-
-            // Remove SQL comments (everything from -- to end of string)
-            int commentIndex = safeText.IndexOf("--");
-            if (commentIndex >= 0)
-            {
-                safeText = safeText.Substring(0, commentIndex);
-            }
-
-            // Escape single quotes
-            return safeText.Replace("'", "''");
-        }
-
-        public static string Format(this string text, params object[] args)
-        {
-            return string.Format(text, args);
-        }
+    public static string Format(this string text, params object[] args)
+    {
+        return string.Format(text, args);
     }
 }

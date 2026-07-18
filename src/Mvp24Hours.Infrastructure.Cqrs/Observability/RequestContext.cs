@@ -81,7 +81,10 @@ public sealed record RequestContext : IRequestContext
         return new RequestContext(correlationId: correlationId, userId: userId, tenantId: tenantId);
     }
 
-    private static string GenerateId() => Guid.NewGuid().ToString("N");
+    private static string GenerateId()
+    {
+        return Guid.NewGuid().ToString("N");
+    }
 }
 
 /// <summary>
@@ -108,10 +111,7 @@ public sealed class RequestContextAccessor : IRequestContextAccessor
         set
         {
             ContextHolder? holder = _contextHolder.Value;
-            if (holder != null)
-            {
-                holder.Context = null;
-            }
+            holder?.Context = null;
 
             if (value != null)
             {

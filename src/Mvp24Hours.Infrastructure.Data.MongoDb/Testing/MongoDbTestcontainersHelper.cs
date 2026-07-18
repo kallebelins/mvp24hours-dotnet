@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
@@ -366,11 +363,13 @@ public static class MongoDbTestcontainersHelper
         IAsyncCursor<string> cursor = await database.ListCollectionNamesAsync(cancellationToken: cancellationToken);
         List<string> collectionNames = await cursor.ToListAsync(cancellationToken);
 
-        foreach (var collectionName in collectionNames)
+        foreach (string collectionName in collectionNames)
         {
             // Skip system collections
             if (collectionName.StartsWith("system."))
+            {
                 continue;
+            }
 
             await database.DropCollectionAsync(collectionName, cancellationToken);
         }

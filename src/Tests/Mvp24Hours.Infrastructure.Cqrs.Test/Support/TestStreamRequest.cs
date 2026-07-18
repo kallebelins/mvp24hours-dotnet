@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using System.Runtime.CompilerServices;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
@@ -30,10 +29,14 @@ public class GetItemsStreamHandler : IStreamRequestHandler<GetItemsStreamRequest
         for (int i = 1; i <= request.Count; i++)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 yield break;
+            }
 
             if (request.DelayMs > 0)
+            {
                 await Task.Delay(request.DelayMs, cancellationToken);
+            }
 
             yield return i;
         }
@@ -57,10 +60,12 @@ public class GetNamesStreamHandler : IStreamRequestHandler<GetNamesStreamRequest
         GetNamesStreamRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        foreach (var name in request.Names)
+        foreach (string name in request.Names)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 yield break;
+            }
 
             yield return name;
             await Task.Yield();

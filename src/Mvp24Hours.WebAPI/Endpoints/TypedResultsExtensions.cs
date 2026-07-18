@@ -3,10 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -259,7 +256,7 @@ public static class TypedResultsExtensions
         ArgumentNullException.ThrowIfNull(exception);
 
         (int statusCode, string? title, string? type) = GetExceptionMapping(exception);
-        var detail = includeDetails ? exception.Message : GetSafeDetail(exception);
+        string detail = includeDetails ? exception.Message : GetSafeDetail(exception);
 
         var problemDetails = new ProblemDetails
         {
@@ -769,9 +766,15 @@ public static class TypedResultsExtensions
         {
             case NotFoundException notFoundEx:
                 if (notFoundEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = notFoundEx.EntityName;
+                }
+
                 if (notFoundEx.EntityId != null)
+                {
                     problemDetails.Extensions["entityId"] = notFoundEx.EntityId;
+                }
+
                 break;
 
             case ValidationException validationEx:
@@ -793,39 +796,72 @@ public static class TypedResultsExtensions
 
             case ConflictException conflictEx:
                 if (conflictEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = conflictEx.EntityName;
+                }
+
                 if (conflictEx.PropertyName != null)
+                {
                     problemDetails.Extensions["propertyName"] = conflictEx.PropertyName;
+                }
+
                 if (conflictEx.ConflictingValue != null)
+                {
                     problemDetails.Extensions["conflictingValue"] = conflictEx.ConflictingValue;
+                }
+
                 break;
 
             case ForbiddenException forbiddenEx:
                 if (forbiddenEx.ResourceName != null)
+                {
                     problemDetails.Extensions["resourceName"] = forbiddenEx.ResourceName;
+                }
+
                 if (forbiddenEx.ActionName != null)
+                {
                     problemDetails.Extensions["actionName"] = forbiddenEx.ActionName;
+                }
+
                 if (forbiddenEx.RequiredPermission != null)
+                {
                     problemDetails.Extensions["requiredPermission"] = forbiddenEx.RequiredPermission;
+                }
+
                 break;
 
             case UnauthorizedException unauthorizedEx:
                 if (unauthorizedEx.AuthenticationScheme != null)
+                {
                     problemDetails.Extensions["authenticationScheme"] = unauthorizedEx.AuthenticationScheme;
+                }
+
                 break;
 
             case DomainException domainEx:
                 if (domainEx.EntityName != null)
+                {
                     problemDetails.Extensions["entityName"] = domainEx.EntityName;
+                }
+
                 if (domainEx.RuleName != null)
+                {
                     problemDetails.Extensions["ruleName"] = domainEx.RuleName;
+                }
+
                 break;
 
             case Mvp24HoursException mvpEx:
                 if (mvpEx.ErrorCode != null)
+                {
                     problemDetails.Extensions["errorCode"] = mvpEx.ErrorCode;
+                }
+
                 if (mvpEx.Context?.Count > 0)
+                {
                     problemDetails.Extensions["context"] = mvpEx.Context;
+                }
+
                 break;
         }
     }

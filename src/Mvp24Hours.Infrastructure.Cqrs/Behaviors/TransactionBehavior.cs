@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
@@ -70,28 +69,22 @@ public interface ITransactional
 /// services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(TransactionBehavior&lt;,&gt;));
 /// </code>
 /// </example>
-public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TransactionBehavior.
+/// </remarks>
+/// <param name="unitOfWork">Optional unit of work for transaction management.</param>
+/// <param name="logger">Optional logger for recording transaction operations.</param>
+/// <remarks>
+/// If no unit of work is provided, this behavior does nothing.
+/// This allows it to be registered globally without affecting non-transactional requests.
+/// </remarks>
+public sealed class TransactionBehavior<TRequest, TResponse>(
+    IUnitOfWorkAsync? unitOfWork = null,
+    ILogger<TransactionBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IUnitOfWorkAsync? _unitOfWork;
-    private readonly ILogger<TransactionBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the TransactionBehavior.
-    /// </summary>
-    /// <param name="unitOfWork">Optional unit of work for transaction management.</param>
-    /// <param name="logger">Optional logger for recording transaction operations.</param>
-    /// <remarks>
-    /// If no unit of work is provided, this behavior does nothing.
-    /// This allows it to be registered globally without affecting non-transactional requests.
-    /// </remarks>
-    public TransactionBehavior(
-        IUnitOfWorkAsync? unitOfWork = null,
-        ILogger<TransactionBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _unitOfWork = unitOfWork;
-        _logger = logger;
-    }
+    private readonly IUnitOfWorkAsync? _unitOfWork = unitOfWork;
+    private readonly ILogger<TransactionBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -102,7 +95,7 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         _logger?.LogDebug(
             "[Transaction] Starting transaction for {RequestName}",
@@ -114,7 +107,7 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
             TResponse? response = await next();
 
             // Commit the transaction
-            var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
+            int affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger?.LogDebug(
                 "[Transaction] Committed transaction for {RequestName} ({AffectedRows} rows affected)",
@@ -167,28 +160,21 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
 /// and dispatched after the transaction commits.
 /// </para>
 /// </remarks>
-public sealed class TransactionWithEventsBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the TransactionWithEventsBehavior.
+/// </remarks>
+/// <param name="unitOfWork">Optional unit of work for transaction management.</param>
+/// <param name="eventDispatcher">Optional domain event dispatcher.</param>
+/// <param name="logger">Optional logger for recording operations.</param>
+public sealed class TransactionWithEventsBehavior<TRequest, TResponse>(
+    IUnitOfWorkAsync? unitOfWork = null,
+    IDomainEventDispatcher? eventDispatcher = null,
+    ILogger<TransactionWithEventsBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IUnitOfWorkAsync? _unitOfWork;
-    private readonly IDomainEventDispatcher? _eventDispatcher;
-    private readonly ILogger<TransactionWithEventsBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the TransactionWithEventsBehavior.
-    /// </summary>
-    /// <param name="unitOfWork">Optional unit of work for transaction management.</param>
-    /// <param name="eventDispatcher">Optional domain event dispatcher.</param>
-    /// <param name="logger">Optional logger for recording operations.</param>
-    public TransactionWithEventsBehavior(
-        IUnitOfWorkAsync? unitOfWork = null,
-        IDomainEventDispatcher? eventDispatcher = null,
-        ILogger<TransactionWithEventsBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _unitOfWork = unitOfWork;
-        _eventDispatcher = eventDispatcher;
-        _logger = logger;
-    }
+    private readonly IUnitOfWorkAsync? _unitOfWork = unitOfWork;
+    private readonly IDomainEventDispatcher? _eventDispatcher = eventDispatcher;
+    private readonly ILogger<TransactionWithEventsBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -199,7 +185,7 @@ public sealed class TransactionWithEventsBehavior<TRequest, TResponse> : IPipeli
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         _logger?.LogDebug(
             "[Transaction] Starting transaction with events for {RequestName}",
@@ -211,7 +197,7 @@ public sealed class TransactionWithEventsBehavior<TRequest, TResponse> : IPipeli
             TResponse? response = await next();
 
             // Commit the transaction
-            var affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
+            int affectedRows = await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger?.LogDebug(
                 "[Transaction] Committed transaction for {RequestName} ({AffectedRows} rows affected)",

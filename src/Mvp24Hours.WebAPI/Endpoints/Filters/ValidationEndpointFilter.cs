@@ -3,15 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.WebAPI.Endpoints.Filters;

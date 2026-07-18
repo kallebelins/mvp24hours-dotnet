@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -320,7 +319,9 @@ public static class WebApiActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.HttpRequest, ActivityKind.Server);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.HttpMethod, method);
         activity.SetTag(TagNames.HttpPath, path);
@@ -339,7 +340,9 @@ public static class WebApiActivitySource
     public static void SetSuccess(Activity? activity, int statusCode)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.HttpStatusCode, statusCode);
         activity.SetTag(TagNames.IsSuccess, true);
@@ -352,7 +355,9 @@ public static class WebApiActivitySource
     public static void SetError(Activity? activity, Exception exception, int statusCode)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.HttpStatusCode, statusCode);
         activity.SetTag(TagNames.IsSuccess, false);
@@ -381,22 +386,34 @@ public static class WebApiActivitySource
         string? userAgent = null)
     {
         if (activity == null)
+        {
             return;
+        }
 
         if (!string.IsNullOrEmpty(userId))
+        {
             activity.SetTag(TagNames.UserId, userId);
+        }
 
         if (!string.IsNullOrEmpty(tenantId))
+        {
             activity.SetTag(TagNames.TenantId, tenantId);
+        }
 
         if (!string.IsNullOrEmpty(causationId))
+        {
             activity.SetTag(TagNames.CausationId, causationId);
+        }
 
         if (!string.IsNullOrEmpty(clientIp))
+        {
             activity.SetTag(TagNames.ClientIp, clientIp);
+        }
 
         if (!string.IsNullOrEmpty(userAgent))
+        {
             activity.SetTag(TagNames.HttpUserAgent, userAgent);
+        }
     }
 
     #endregion

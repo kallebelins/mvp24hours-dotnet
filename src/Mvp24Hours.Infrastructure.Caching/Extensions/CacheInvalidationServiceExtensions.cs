@@ -3,114 +3,122 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Caching.Invalidation;
 
-namespace Mvp24Hours.Infrastructure.Caching.Extensions
+namespace Mvp24Hours.Infrastructure.Caching.Extensions;
+
+/// <summary>
+/// Extension methods for registering cache invalidation services.
+/// </summary>
+public static class CacheInvalidationServiceExtensions
 {
     /// <summary>
-    /// Extension methods for registering cache invalidation services.
+    /// Adds cache tag manager to the service collection.
     /// </summary>
-    public static class CacheInvalidationServiceExtensions
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCacheTagManager(this IServiceCollection services)
     {
-        /// <summary>
-        /// Adds cache tag manager to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddCacheTagManager(this IServiceCollection services)
+        if (services == null)
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
-
-            services.AddSingleton<ICacheTagManager>(sp =>
-            {
-                ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
-                ILogger<CacheTagManager>? logger = sp.GetService<ILogger<CacheTagManager>>();
-                return new CacheTagManager(cacheProvider, logger);
-            });
-
-            return services;
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds cache dependency manager to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddCacheDependencyManager(this IServiceCollection services)
+        services.AddSingleton<ICacheTagManager>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
+            ILogger<CacheTagManager>? logger = sp.GetService<ILogger<CacheTagManager>>();
+            return new CacheTagManager(cacheProvider, logger);
+        });
 
-            services.AddSingleton<CacheDependencyManager>(sp =>
-            {
-                ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
-                ILogger<CacheDependencyManager>? logger = sp.GetService<ILogger<CacheDependencyManager>>();
-                return new CacheDependencyManager(cacheProvider, logger);
-            });
+        return services;
+    }
 
-            return services;
+    /// <summary>
+    /// Adds cache dependency manager to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCacheDependencyManager(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds cache stampede prevention to the service collection.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddCacheStampedePrevention(this IServiceCollection services)
+        services.AddSingleton<CacheDependencyManager>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            ICacheProvider cacheProvider = sp.GetRequiredService<ICacheProvider>();
+            ILogger<CacheDependencyManager>? logger = sp.GetService<ILogger<CacheDependencyManager>>();
+            return new CacheDependencyManager(cacheProvider, logger);
+        });
 
-            services.AddSingleton<ICacheStampedePrevention>(sp =>
-            {
-                ILogger<CacheStampedePrevention>? logger = sp.GetService<ILogger<CacheStampedePrevention>>();
-                return new CacheStampedePrevention(logger);
-            });
+        return services;
+    }
 
-            return services;
+    /// <summary>
+    /// Adds cache stampede prevention to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCacheStampedePrevention(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds in-memory cache invalidation event publisher (for testing).
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddInMemoryCacheInvalidationEvents(this IServiceCollection services)
+        services.AddSingleton<ICacheStampedePrevention>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            ILogger<CacheStampedePrevention>? logger = sp.GetService<ILogger<CacheStampedePrevention>>();
+            return new CacheStampedePrevention(logger);
+        });
 
-            services.AddSingleton<ICacheInvalidationEventPublisher>(sp =>
-            {
-                ILogger<InMemoryCacheInvalidationEventPublisher>? logger = sp.GetService<ILogger<InMemoryCacheInvalidationEventPublisher>>();
-                return new InMemoryCacheInvalidationEventPublisher(logger);
-            });
+        return services;
+    }
 
-            return services;
+    /// <summary>
+    /// Adds in-memory cache invalidation event publisher (for testing).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddInMemoryCacheInvalidationEvents(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
         }
 
-        /// <summary>
-        /// Adds all cache invalidation features (tags, dependencies, stampede prevention, events).
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddCacheInvalidationFeatures(this IServiceCollection services)
+        services.AddSingleton<ICacheInvalidationEventPublisher>(sp =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            ILogger<InMemoryCacheInvalidationEventPublisher>? logger = sp.GetService<ILogger<InMemoryCacheInvalidationEventPublisher>>();
+            return new InMemoryCacheInvalidationEventPublisher(logger);
+        });
 
-            services.AddCacheTagManager();
-            services.AddCacheDependencyManager();
-            services.AddCacheStampedePrevention();
-            services.AddInMemoryCacheInvalidationEvents();
+        return services;
+    }
 
-            return services;
+    /// <summary>
+    /// Adds all cache invalidation features (tags, dependencies, stampede prevention, events).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddCacheInvalidationFeatures(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
         }
+
+        services.AddCacheTagManager();
+        services.AddCacheDependencyManager();
+        services.AddCacheStampedePrevention();
+        services.AddInMemoryCacheInvalidationEvents();
+
+        return services;
     }
 }
 

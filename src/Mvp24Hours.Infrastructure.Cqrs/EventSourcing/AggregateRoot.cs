@@ -86,28 +86,22 @@ namespace Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 public abstract class AggregateRoot : IEventSourcedAggregate
 {
     private readonly List<CoreDomainEvent> _uncommittedEvents = [];
-    private long _version;
-    private Guid _id;
 
     /// <summary>
     /// Gets the unique identifier of the aggregate.
     /// </summary>
-    public Guid Id
-    {
-        get => _id;
-        protected set => _id = value;
-    }
+    public Guid Id { get; protected set; }
 
     /// <summary>
     /// Gets the entity key (for IEntityBase compatibility).
     /// </summary>
-    object CoreIEntityBase.EntityKey => _id;
+    object CoreIEntityBase.EntityKey => Id;
 
     /// <summary>
     /// Gets the current version of the aggregate.
     /// The version is incremented each time an event is applied.
     /// </summary>
-    public long Version => _version;
+    public long Version { get; private set; }
 
     /// <summary>
     /// Gets the uncommitted events that have been raised but not yet persisted.
@@ -127,7 +121,7 @@ public abstract class AggregateRoot : IEventSourcedAggregate
     /// <summary>
     /// Gets whether this is a new aggregate (version 0 with uncommitted events).
     /// </summary>
-    public bool IsNew => _version == _uncommittedEvents.Count && _uncommittedEvents.Count > 0;
+    public bool IsNew => Version == _uncommittedEvents.Count && _uncommittedEvents.Count > 0;
 
     /// <summary>
     /// Clears the uncommitted events after they have been persisted.
@@ -140,7 +134,10 @@ public abstract class AggregateRoot : IEventSourcedAggregate
     /// <summary>
     /// Clears domain events (IHasDomainEvents implementation).
     /// </summary>
-    void CoreHasDomainEvents.ClearDomainEvents() => ClearUncommittedEvents();
+    void CoreHasDomainEvents.ClearDomainEvents()
+    {
+        ClearUncommittedEvents();
+    }
 
     /// <summary>
     /// Loads the aggregate from historical events.
@@ -155,7 +152,7 @@ public abstract class AggregateRoot : IEventSourcedAggregate
         foreach (CoreDomainEvent @event in events)
         {
             Apply(@event);
-            _version++;
+            Version++;
         }
     }
 
@@ -171,7 +168,7 @@ public abstract class AggregateRoot : IEventSourcedAggregate
 
         Apply(@event);
         _uncommittedEvents.Add(@event);
-        _version++;
+        Version++;
     }
 
     /// <summary>
@@ -220,7 +217,6 @@ public abstract class AggregateRoot : IEventSourcedAggregate
 public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
 {
     private readonly List<CoreDomainEvent> _uncommittedEvents = [];
-    private long _version;
 
     /// <summary>
     /// Gets or sets the typed identifier of the aggregate.
@@ -248,7 +244,7 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
     /// <summary>
     /// Gets the current version of the aggregate.
     /// </summary>
-    public long Version => _version;
+    public long Version { get; private set; }
 
     /// <summary>
     /// Gets the uncommitted events.
@@ -276,7 +272,10 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
     /// <summary>
     /// Clears domain events (IHasDomainEvents implementation).
     /// </summary>
-    void CoreHasDomainEvents.ClearDomainEvents() => ClearUncommittedEvents();
+    void CoreHasDomainEvents.ClearDomainEvents()
+    {
+        ClearUncommittedEvents();
+    }
 
     /// <summary>
     /// Loads the aggregate from historical events.
@@ -289,7 +288,7 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
         foreach (CoreDomainEvent @event in events)
         {
             Apply(@event);
-            _version++;
+            Version++;
         }
     }
 
@@ -303,7 +302,7 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
 
         Apply(@event);
         _uncommittedEvents.Add(@event);
-        _version++;
+        Version++;
     }
 
     /// <summary>
@@ -354,17 +353,15 @@ public abstract class AggregateRoot<TId> : IEventSourcedAggregate<TId>
 public abstract class SnapshotAggregateRoot<TSnapshot> : AggregateRoot, ISnapshotAggregate<TSnapshot>
     where TSnapshot : class
 {
-    private long _snapshotVersion;
-
     /// <summary>
     /// Gets the version at which the last snapshot was taken.
     /// </summary>
-    public long SnapshotVersion => _snapshotVersion;
+    public long SnapshotVersion { get; private set; }
 
     /// <summary>
     /// Gets whether the aggregate was restored from a snapshot.
     /// </summary>
-    public bool WasRestoredFromSnapshot => _snapshotVersion > 0;
+    public bool WasRestoredFromSnapshot => SnapshotVersion > 0;
 
     /// <summary>
     /// Creates a snapshot of the current aggregate state.
@@ -386,7 +383,7 @@ public abstract class SnapshotAggregateRoot<TSnapshot> : AggregateRoot, ISnapsho
     /// <param name="version">The version to set.</param>
     protected void SetVersion(long version)
     {
-        _snapshotVersion = version;
+        SnapshotVersion = version;
         // Use reflection to set the private _version field from base class
         FieldInfo? versionField = typeof(AggregateRoot).GetField("_version",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -534,18 +533,24 @@ public sealed class CqrsMetrics
         /// <summary>
         /// Marks the request as completed successfully.
         /// </summary>
-        public void Complete() => Succeeded = true;
+        public void Complete()
+        {
+            Succeeded = true;
+        }
 
         /// <summary>
         /// Marks the request as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
-            var durationMs = elapsed.TotalMilliseconds;
+            double durationMs = elapsed.TotalMilliseconds;
 
             switch (_kind)
             {
@@ -587,12 +592,18 @@ public sealed class CqrsMetrics
         /// <summary>
         /// Marks the behavior as completed successfully.
         /// </summary>
-        public void Complete() => Succeeded = true;
+        public void Complete()
+        {
+            Succeeded = true;
+        }
 
         /// <summary>
         /// Marks the behavior as failed.
         /// </summary>
-        public void Fail() => Succeeded = false;
+        public void Fail()
+        {
+            Succeeded = false;
+        }
 
         /// <inheritdoc />
         public void Dispose()

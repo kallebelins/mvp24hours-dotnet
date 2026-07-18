@@ -78,6 +78,6 @@ public class OperationMetricsOptions
     /// <summary>
     /// Gets or sets the histogram buckets for duration metrics (in milliseconds).
     /// </summary>
-    public double[] DurationBuckets { get; set; } = new[] { 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0 };
+    public double[] DurationBuckets { get; set; } = [5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0];
 }
 

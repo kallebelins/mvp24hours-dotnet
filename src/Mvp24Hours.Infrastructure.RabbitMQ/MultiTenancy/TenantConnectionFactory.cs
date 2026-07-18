@@ -3,10 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
@@ -17,440 +15,438 @@ using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy
+namespace Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
+
+/// <summary>
+/// Factory for creating and managing RabbitMQ connections per tenant with virtual host isolation.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This factory implements connection pooling per tenant, with automatic cleanup of idle connections.
+/// Each tenant can have their own virtual host, credentials, and connection settings.
+/// </para>
+/// <para>
+/// Connection lifecycle:
+/// <code>
+/// ┌────────────────────────────────────────────────────────────────────────────┐
+/// │ GetOrCreateConnection(tenantId)                                            │
+/// │   ├─ Check pool for existing connection                                    │
+/// │   │   ├─ Connection exists and healthy → Return                            │
+/// │   │   └─ Connection missing or unhealthy → Create new                      │
+/// │   └─ Create new connection                                                 │
+/// │       ├─ Resolve tenant configuration                                      │
+/// │       ├─ Apply virtual host from config                                    │
+/// │       ├─ Create ConnectionFactory                                          │
+/// │       ├─ Apply retry policy                                                │
+/// │       └─ Add to pool with timestamp                                        │
+/// └────────────────────────────────────────────────────────────────────────────┘
+/// </code>
+/// </para>
+/// </remarks>
+public class TenantConnectionFactory : ITenantConnectionFactory, IDisposable
 {
+    private readonly ConcurrentDictionary<string, TenantConnectionEntry> _connections = new();
+    private readonly TenantRabbitMQOptions _options;
+    private readonly RabbitMQConnectionOptions _defaultConnectionOptions;
+    private readonly ITenantRabbitMQResolver? _resolver;
+    private readonly ILogger<TenantConnectionFactory>? _logger;
+    private readonly Timer _cleanupTimer;
+    private readonly SemaphoreSlim _createLock = new(1, 1);
+    private bool _disposed;
+
     /// <summary>
-    /// Factory for creating and managing RabbitMQ connections per tenant with virtual host isolation.
+    /// Creates a new tenant connection factory.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This factory implements connection pooling per tenant, with automatic cleanup of idle connections.
-    /// Each tenant can have their own virtual host, credentials, and connection settings.
-    /// </para>
-    /// <para>
-    /// Connection lifecycle:
-    /// <code>
-    /// ┌────────────────────────────────────────────────────────────────────────────┐
-    /// │ GetOrCreateConnection(tenantId)                                            │
-    /// │   ├─ Check pool for existing connection                                    │
-    /// │   │   ├─ Connection exists and healthy → Return                            │
-    /// │   │   └─ Connection missing or unhealthy → Create new                      │
-    /// │   └─ Create new connection                                                 │
-    /// │       ├─ Resolve tenant configuration                                      │
-    /// │       ├─ Apply virtual host from config                                    │
-    /// │       ├─ Create ConnectionFactory                                          │
-    /// │       ├─ Apply retry policy                                                │
-    /// │       └─ Add to pool with timestamp                                        │
-    /// └────────────────────────────────────────────────────────────────────────────┘
-    /// </code>
-    /// </para>
-    /// </remarks>
-    public class TenantConnectionFactory : ITenantConnectionFactory, IDisposable
+    /// <param name="options">Multi-tenancy options.</param>
+    /// <param name="connectionOptions">Default RabbitMQ connection options.</param>
+    /// <param name="resolver">Optional tenant configuration resolver.</param>
+    /// <param name="logger">Optional logger.</param>
+    public TenantConnectionFactory(
+        IOptions<TenantRabbitMQOptions> options,
+        IOptions<RabbitMQConnectionOptions> connectionOptions,
+        ITenantRabbitMQResolver? resolver = null,
+        ILogger<TenantConnectionFactory>? logger = null)
     {
-        private readonly ConcurrentDictionary<string, TenantConnectionEntry> _connections = new();
-        private readonly TenantRabbitMQOptions _options;
-        private readonly RabbitMQConnectionOptions _defaultConnectionOptions;
-        private readonly ITenantRabbitMQResolver? _resolver;
-        private readonly ILogger<TenantConnectionFactory>? _logger;
-        private readonly Timer _cleanupTimer;
-        private readonly SemaphoreSlim _createLock = new(1, 1);
-        private bool _disposed;
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _defaultConnectionOptions = connectionOptions?.Value ?? throw new ArgumentNullException(nameof(connectionOptions));
+        _resolver = resolver;
+        _logger = logger;
 
-        /// <summary>
-        /// Creates a new tenant connection factory.
-        /// </summary>
-        /// <param name="options">Multi-tenancy options.</param>
-        /// <param name="connectionOptions">Default RabbitMQ connection options.</param>
-        /// <param name="resolver">Optional tenant configuration resolver.</param>
-        /// <param name="logger">Optional logger.</param>
-        public TenantConnectionFactory(
-            IOptions<TenantRabbitMQOptions> options,
-            IOptions<RabbitMQConnectionOptions> connectionOptions,
-            ITenantRabbitMQResolver? resolver = null,
-            ILogger<TenantConnectionFactory>? logger = null)
+        // Start cleanup timer for idle connections
+        _cleanupTimer = new Timer(
+            CleanupIdleConnections,
+            null,
+            TimeSpan.FromMinutes(5),
+            TimeSpan.FromMinutes(5));
+    }
+
+    /// <inheritdoc />
+    public IConnection GetOrCreateConnection(string tenantId)
+    {
+        ArgumentNullException.ThrowIfNull(tenantId);
+
+        // Try to get existing connection
+        if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _defaultConnectionOptions = connectionOptions?.Value ?? throw new ArgumentNullException(nameof(connectionOptions));
-            _resolver = resolver;
-            _logger = logger;
-
-            // Start cleanup timer for idle connections
-            _cleanupTimer = new Timer(
-                CleanupIdleConnections,
-                null,
-                TimeSpan.FromMinutes(5),
-                TimeSpan.FromMinutes(5));
+            entry.LastAccessed = DateTimeOffset.UtcNow;
+            return entry.Connection;
         }
 
-        /// <inheritdoc />
-        public IConnection GetOrCreateConnection(string tenantId)
+        // Create new connection
+        return CreateConnectionInternal(tenantId);
+    }
+
+    /// <inheritdoc />
+    public IModel GetOrCreateChannel(string tenantId)
+    {
+        IConnection connection = GetOrCreateConnection(tenantId);
+        return connection.CreateModel();
+    }
+
+    /// <inheritdoc />
+    public string GetVirtualHost(string tenantId)
+    {
+        ArgumentNullException.ThrowIfNull(tenantId);
+
+        // Check static configuration first
+        if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? tenantConfig) &&
+            !string.IsNullOrEmpty(tenantConfig.VirtualHost))
         {
-            ArgumentNullException.ThrowIfNull(tenantId);
-
-            // Try to get existing connection
-            if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen)
-            {
-                entry.LastAccessed = DateTimeOffset.UtcNow;
-                return entry.Connection;
-            }
-
-            // Create new connection
-            return CreateConnectionInternal(tenantId);
+            return tenantConfig.VirtualHost;
         }
 
-        /// <inheritdoc />
-        public IModel GetOrCreateChannel(string tenantId)
+        // Apply template
+        return _options.GetVirtualHost(tenantId);
+    }
+
+    /// <inheritdoc />
+    public bool HasConnection(string tenantId)
+    {
+        return _connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen;
+    }
+
+    /// <inheritdoc />
+    public void CloseConnection(string tenantId)
+    {
+        if (_connections.TryRemove(tenantId, out TenantConnectionEntry? entry))
         {
-            IConnection connection = GetOrCreateConnection(tenantId);
-            return connection.CreateModel();
-        }
-
-        /// <inheritdoc />
-        public string GetVirtualHost(string tenantId)
-        {
-            ArgumentNullException.ThrowIfNull(tenantId);
-
-            // Check static configuration first
-            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? tenantConfig) &&
-                !string.IsNullOrEmpty(tenantConfig.VirtualHost))
-            {
-                return tenantConfig.VirtualHost;
-            }
-
-            // Apply template
-            return _options.GetVirtualHost(tenantId);
-        }
-
-        /// <inheritdoc />
-        public bool HasConnection(string tenantId)
-        {
-            return _connections.TryGetValue(tenantId, out TenantConnectionEntry? entry) && entry.Connection.IsOpen;
-        }
-
-        /// <inheritdoc />
-        public void CloseConnection(string tenantId)
-        {
-            if (_connections.TryRemove(tenantId, out TenantConnectionEntry? entry))
-            {
-                try
-                {
-                    entry.Connection.Close();
-                    entry.Connection.Dispose();
-
-                    LogConnectionClosed(tenantId);
-                }
-                catch (Exception ex)
-                {
-                    LogConnectionCloseError(tenantId, ex);
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        public void CloseAllConnections()
-        {
-            foreach (var tenantId in _connections.Keys)
-            {
-                CloseConnection(tenantId);
-            }
-        }
-
-        private IConnection CreateConnectionInternal(string tenantId)
-        {
-            _createLock.Wait();
             try
             {
-                // Double-check after acquiring lock
-                if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? existing) && existing.Connection.IsOpen)
-                {
-                    existing.LastAccessed = DateTimeOffset.UtcNow;
-                    return existing.Connection;
-                }
+                entry.Connection.Close();
+                entry.Connection.Dispose();
 
-                // Check tenant limit
-                if (_connections.Count >= _options.MaxTenantConnections)
-                {
-                    // Evict oldest idle connection
-                    EvictOldestConnection();
-                }
-
-                // Get tenant configuration
-                TenantRabbitMQConfiguration? config = GetTenantConfiguration(tenantId);
-
-                // Create connection factory
-                ConnectionFactory factory = CreateConnectionFactory(tenantId, config);
-
-                // Apply retry policy and create connection
-                IConnection connection = CreateConnectionWithRetry(factory, tenantId);
-
-                // Add to pool
-                var entry = new TenantConnectionEntry
-                {
-                    TenantId = tenantId,
-                    Connection = connection,
-                    CreatedAt = DateTimeOffset.UtcNow,
-                    LastAccessed = DateTimeOffset.UtcNow
-                };
-
-                _connections[tenantId] = entry;
-
-                // Subscribe to connection events
-                connection.ConnectionShutdown += (sender, args) => OnConnectionShutdown(tenantId, args);
-                connection.CallbackException += (sender, args) => OnCallbackException(tenantId, args);
-
-                LogConnectionCreated(tenantId, factory.VirtualHost);
-
-                return connection;
+                LogConnectionClosed(tenantId);
             }
-            finally
+            catch (Exception ex)
             {
-                _createLock.Release();
+                LogConnectionCloseError(tenantId, ex);
             }
         }
+    }
 
-        private TenantRabbitMQConfiguration? GetTenantConfiguration(string tenantId)
+    /// <inheritdoc />
+    public void CloseAllConnections()
+    {
+        foreach (string tenantId in _connections.Keys)
         {
-            // Try async resolver if available
-            if (_resolver != null)
-            {
-                TenantRabbitMQConfiguration? config = _resolver.ResolveAsync(tenantId).GetAwaiter().GetResult();
-                if (config != null)
-                    return config;
-            }
-
-            // Check static configuration
-            if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
-            {
-                return new TenantRabbitMQConfiguration
-                {
-                    TenantId = tenantId,
-                    VirtualHost = staticConfig.VirtualHost,
-                    ConnectionString = staticConfig.ConnectionString,
-                    Username = staticConfig.Username,
-                    Password = staticConfig.Password,
-                    IsEnabled = staticConfig.IsEnabled
-                };
-            }
-
-            // Return default (will use templates)
-            return null;
+            CloseConnection(tenantId);
         }
+    }
 
-        private ConnectionFactory CreateConnectionFactory(string tenantId, TenantRabbitMQConfiguration? config)
+    private IConnection CreateConnectionInternal(string tenantId)
+    {
+        _createLock.Wait();
+        try
         {
-            ConnectionFactory factory;
-
-            if (!string.IsNullOrEmpty(config?.ConnectionString))
+            // Double-check after acquiring lock
+            if (_connections.TryGetValue(tenantId, out TenantConnectionEntry? existing) && existing.Connection.IsOpen)
             {
-                // Use tenant-specific connection string
-                factory = new ConnectionFactory
-                {
-                    Uri = new Uri(config.ConnectionString),
-                    DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
-                };
-            }
-            else if (!string.IsNullOrEmpty(_defaultConnectionOptions.ConnectionString))
-            {
-                // Use default connection string
-                factory = new ConnectionFactory
-                {
-                    Uri = new Uri(_defaultConnectionOptions.ConnectionString),
-                    DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
-                };
-            }
-            else if (_defaultConnectionOptions.Configuration != null)
-            {
-                // Use default configuration
-                RabbitMQConnection defaultConfig = _defaultConnectionOptions.Configuration;
-                factory = new ConnectionFactory
-                {
-                    HostName = defaultConfig.HostName,
-                    Port = defaultConfig.Port,
-                    UserName = config?.Username ?? defaultConfig.UserName,
-                    Password = config?.Password ?? defaultConfig.Password,
-                    DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
-                };
-            }
-            else
-            {
-                throw new InvalidOperationException("No RabbitMQ connection configuration available.");
+                existing.LastAccessed = DateTimeOffset.UtcNow;
+                return existing.Connection;
             }
 
-            // Set virtual host based on strategy
-            if (_options.IsolationStrategy == TenantIsolationStrategy.VirtualHostPerTenant)
+            // Check tenant limit
+            if (_connections.Count >= _options.MaxTenantConnections)
             {
-                factory.VirtualHost = config?.VirtualHost ?? _options.GetVirtualHost(tenantId);
+                // Evict oldest idle connection
+                EvictOldestConnection();
             }
 
-            // Override credentials if provided
-            if (!string.IsNullOrEmpty(config?.Username))
-            {
-                factory.UserName = config.Username;
-            }
-            if (!string.IsNullOrEmpty(config?.Password))
-            {
-                factory.Password = config.Password;
-            }
+            // Get tenant configuration
+            TenantRabbitMQConfiguration? config = GetTenantConfiguration(tenantId);
 
-            return factory;
+            // Create connection factory
+            ConnectionFactory factory = CreateConnectionFactory(tenantId, config);
+
+            // Apply retry policy and create connection
+            IConnection connection = CreateConnectionWithRetry(factory, tenantId);
+
+            // Add to pool
+            var entry = new TenantConnectionEntry
+            {
+                TenantId = tenantId,
+                Connection = connection,
+                CreatedAt = DateTimeOffset.UtcNow,
+                LastAccessed = DateTimeOffset.UtcNow
+            };
+
+            _connections[tenantId] = entry;
+
+            // Subscribe to connection events
+            connection.ConnectionShutdown += (sender, args) => OnConnectionShutdown(tenantId, args);
+            connection.CallbackException += (sender, args) => OnCallbackException(tenantId, args);
+
+            LogConnectionCreated(tenantId, factory.VirtualHost);
+
+            return connection;
         }
-
-        private IConnection CreateConnectionWithRetry(ConnectionFactory factory, string tenantId)
+        finally
         {
-            RetryPolicy policy = Policy
-                .Handle<SocketException>()
-                .Or<BrokerUnreachableException>()
-                .WaitAndRetry(
-                    _defaultConnectionOptions.RetryCount,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                    (ex, timeSpan, retryCount, context) =>
-                    {
-                        LogConnectionRetry(tenantId, retryCount, timeSpan, ex);
-                    });
+            _createLock.Release();
+        }
+    }
 
-            IConnection? connection = null;
-            policy.Execute(() =>
+    private TenantRabbitMQConfiguration? GetTenantConfiguration(string tenantId)
+    {
+        // Try async resolver if available
+        if (_resolver != null)
+        {
+            TenantRabbitMQConfiguration? config = _resolver.ResolveAsync(tenantId).GetAwaiter().GetResult();
+            if (config != null)
             {
-                connection = factory.CreateConnection($"tenant-{tenantId}");
-            });
-
-            return connection ?? throw new InvalidOperationException($"Failed to create connection for tenant {tenantId}");
-        }
-
-        private void OnConnectionShutdown(string tenantId, ShutdownEventArgs args)
-        {
-            LogConnectionShutdown(tenantId, args.ReplyText);
-
-            // Remove from pool - will be recreated on next access
-            _connections.TryRemove(tenantId, out _);
-        }
-
-        private void OnCallbackException(string tenantId, global::RabbitMQ.Client.Events.CallbackExceptionEventArgs args)
-        {
-            LogCallbackException(tenantId, args.Exception);
-        }
-
-        private void CleanupIdleConnections(object? state)
-        {
-            DateTimeOffset now = DateTimeOffset.UtcNow;
-            DateTimeOffset threshold = now - _options.IdleConnectionTimeout;
-
-            foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
-            {
-                if (kvp.Value.LastAccessed < threshold && !kvp.Value.Connection.IsOpen)
-                {
-                    CloseConnection(kvp.Key);
-                }
+                return config;
             }
         }
 
-        private void EvictOldestConnection()
+        // Check static configuration
+        if (_options.Tenants.TryGetValue(tenantId, out TenantRabbitMQConnectionConfig? staticConfig))
         {
-            TenantConnectionEntry? oldest = null;
-            string? oldestTenantId = null;
-
-            foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
+            return new TenantRabbitMQConfiguration
             {
-                if (oldest == null || kvp.Value.LastAccessed < oldest.LastAccessed)
-                {
-                    oldest = kvp.Value;
-                    oldestTenantId = kvp.Key;
-                }
-            }
+                TenantId = tenantId,
+                VirtualHost = staticConfig.VirtualHost,
+                ConnectionString = staticConfig.ConnectionString,
+                Username = staticConfig.Username,
+                Password = staticConfig.Password,
+                IsEnabled = staticConfig.IsEnabled
+            };
+        }
 
-            if (oldestTenantId != null)
+        // Return default (will use templates)
+        return null;
+    }
+
+    private ConnectionFactory CreateConnectionFactory(string tenantId, TenantRabbitMQConfiguration? config)
+    {
+        ConnectionFactory factory;
+
+        if (!string.IsNullOrEmpty(config?.ConnectionString))
+        {
+            // Use tenant-specific connection string
+            factory = new ConnectionFactory
             {
-                CloseConnection(oldestTenantId);
-                LogConnectionEvicted(oldestTenantId);
-            }
+                Uri = new Uri(config.ConnectionString),
+                DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
+            };
         }
-
-        #region Logging
-
-        private void LogConnectionCreated(string tenantId, string virtualHost)
+        else if (!string.IsNullOrEmpty(_defaultConnectionOptions.ConnectionString))
         {
-            _logger?.LogInformation(
-                "Created RabbitMQ connection for tenant. TenantId={TenantId}, VirtualHost={VirtualHost}",
-                tenantId, virtualHost);
-        }
-
-        private void LogConnectionClosed(string tenantId)
-        {
-            _logger?.LogInformation(
-                "Closed RabbitMQ connection for tenant. TenantId={TenantId}",
-                tenantId);
-        }
-
-        private void LogConnectionCloseError(string tenantId, Exception ex)
-        {
-            _logger?.LogWarning(ex,
-                "Error closing RabbitMQ connection for tenant. TenantId={TenantId}",
-                tenantId);
-        }
-
-        private void LogConnectionShutdown(string tenantId, string reason)
-        {
-            _logger?.LogWarning(
-                "RabbitMQ connection shutdown for tenant. TenantId={TenantId}, Reason={Reason}",
-                tenantId, reason);
-        }
-
-        private void LogCallbackException(string tenantId, Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Callback exception for tenant. TenantId={TenantId}",
-                tenantId);
-        }
-
-        private void LogConnectionRetry(string tenantId, int retryCount, TimeSpan delay, Exception ex)
-        {
-            _logger?.LogWarning(ex,
-                "RabbitMQ connection retry for tenant. RetryCount={RetryCount}, TenantId={TenantId}, Delay={Delay}s",
-                retryCount, tenantId, delay.TotalSeconds);
-        }
-
-        private void LogConnectionEvicted(string tenantId)
-        {
-            _logger?.LogInformation(
-                "Evicted RabbitMQ connection for tenant due to pool limit. TenantId={TenantId}",
-                tenantId);
-        }
-
-        #endregion
-
-        #region IDisposable
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Disposes resources.
-        /// </summary>
-        /// <param name="disposing">True if called from Dispose().</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed && disposing)
+            // Use default connection string
+            factory = new ConnectionFactory
             {
-                _cleanupTimer.Dispose();
-                CloseAllConnections();
-                _createLock.Dispose();
-                _disposed = true;
+                Uri = new Uri(_defaultConnectionOptions.ConnectionString),
+                DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
+            };
+        }
+        else if (_defaultConnectionOptions.Configuration != null)
+        {
+            // Use default configuration
+            RabbitMQConnection defaultConfig = _defaultConnectionOptions.Configuration;
+            factory = new ConnectionFactory
+            {
+                HostName = defaultConfig.HostName,
+                Port = defaultConfig.Port,
+                UserName = config?.Username ?? defaultConfig.UserName,
+                Password = config?.Password ?? defaultConfig.Password,
+                DispatchConsumersAsync = _defaultConnectionOptions.DispatchConsumersAsync
+            };
+        }
+        else
+        {
+            throw new InvalidOperationException("No RabbitMQ connection configuration available.");
+        }
+
+        // Set virtual host based on strategy
+        if (_options.IsolationStrategy == TenantIsolationStrategy.VirtualHostPerTenant)
+        {
+            factory.VirtualHost = config?.VirtualHost ?? _options.GetVirtualHost(tenantId);
+        }
+
+        // Override credentials if provided
+        if (!string.IsNullOrEmpty(config?.Username))
+        {
+            factory.UserName = config.Username;
+        }
+        if (!string.IsNullOrEmpty(config?.Password))
+        {
+            factory.Password = config.Password;
+        }
+
+        return factory;
+    }
+
+    private IConnection CreateConnectionWithRetry(ConnectionFactory factory, string tenantId)
+    {
+        RetryPolicy policy = Policy
+            .Handle<SocketException>()
+            .Or<BrokerUnreachableException>()
+            .WaitAndRetry(
+                _defaultConnectionOptions.RetryCount,
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                (ex, timeSpan, retryCount, context) => LogConnectionRetry(tenantId, retryCount, timeSpan, ex));
+
+        IConnection? connection = null;
+        policy.Execute(() =>
+        {
+            connection = factory.CreateConnection($"tenant-{tenantId}");
+        });
+
+        return connection ?? throw new InvalidOperationException($"Failed to create connection for tenant {tenantId}");
+    }
+
+    private void OnConnectionShutdown(string tenantId, ShutdownEventArgs args)
+    {
+        LogConnectionShutdown(tenantId, args.ReplyText);
+
+        // Remove from pool - will be recreated on next access
+        _connections.TryRemove(tenantId, out _);
+    }
+
+    private void OnCallbackException(string tenantId, global::RabbitMQ.Client.Events.CallbackExceptionEventArgs args)
+    {
+        LogCallbackException(tenantId, args.Exception);
+    }
+
+    private void CleanupIdleConnections(object? state)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        DateTimeOffset threshold = now - _options.IdleConnectionTimeout;
+
+        foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
+        {
+            if (kvp.Value.LastAccessed < threshold && !kvp.Value.Connection.IsOpen)
+            {
+                CloseConnection(kvp.Key);
+            }
+        }
+    }
+
+    private void EvictOldestConnection()
+    {
+        TenantConnectionEntry? oldest = null;
+        string? oldestTenantId = null;
+
+        foreach (KeyValuePair<string, TenantConnectionEntry> kvp in _connections)
+        {
+            if (oldest == null || kvp.Value.LastAccessed < oldest.LastAccessed)
+            {
+                oldest = kvp.Value;
+                oldestTenantId = kvp.Key;
             }
         }
 
-        #endregion
-
-        private class TenantConnectionEntry
+        if (oldestTenantId != null)
         {
-            public required string TenantId { get; set; }
-            public required IConnection Connection { get; set; }
-            public DateTimeOffset CreatedAt { get; set; }
-            public DateTimeOffset LastAccessed { get; set; }
+            CloseConnection(oldestTenantId);
+            LogConnectionEvicted(oldestTenantId);
         }
+    }
+
+    #region Logging
+
+    private void LogConnectionCreated(string tenantId, string virtualHost)
+    {
+        _logger?.LogInformation(
+            "Created RabbitMQ connection for tenant. TenantId={TenantId}, VirtualHost={VirtualHost}",
+            tenantId, virtualHost);
+    }
+
+    private void LogConnectionClosed(string tenantId)
+    {
+        _logger?.LogInformation(
+            "Closed RabbitMQ connection for tenant. TenantId={TenantId}",
+            tenantId);
+    }
+
+    private void LogConnectionCloseError(string tenantId, Exception ex)
+    {
+        _logger?.LogWarning(ex,
+            "Error closing RabbitMQ connection for tenant. TenantId={TenantId}",
+            tenantId);
+    }
+
+    private void LogConnectionShutdown(string tenantId, string reason)
+    {
+        _logger?.LogWarning(
+            "RabbitMQ connection shutdown for tenant. TenantId={TenantId}, Reason={Reason}",
+            tenantId, reason);
+    }
+
+    private void LogCallbackException(string tenantId, Exception ex)
+    {
+        _logger?.LogError(ex,
+            "Callback exception for tenant. TenantId={TenantId}",
+            tenantId);
+    }
+
+    private void LogConnectionRetry(string tenantId, int retryCount, TimeSpan delay, Exception ex)
+    {
+        _logger?.LogWarning(ex,
+            "RabbitMQ connection retry for tenant. RetryCount={RetryCount}, TenantId={TenantId}, Delay={Delay}s",
+            retryCount, tenantId, delay.TotalSeconds);
+    }
+
+    private void LogConnectionEvicted(string tenantId)
+    {
+        _logger?.LogInformation(
+            "Evicted RabbitMQ connection for tenant due to pool limit. TenantId={TenantId}",
+            tenantId);
+    }
+
+    #endregion
+
+    #region IDisposable
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes resources.
+    /// </summary>
+    /// <param name="disposing">True if called from Dispose().</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed && disposing)
+        {
+            _cleanupTimer.Dispose();
+            CloseAllConnections();
+            _createLock.Dispose();
+            _disposed = true;
+        }
+    }
+
+    #endregion
+
+    private class TenantConnectionEntry
+    {
+        public required string TenantId { get; set; }
+        public required IConnection Connection { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset LastAccessed { get; set; }
     }
 }
 

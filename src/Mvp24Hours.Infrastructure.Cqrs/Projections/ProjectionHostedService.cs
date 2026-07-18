@@ -33,23 +33,17 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
 /// services.AddProjectionHostedService();
 /// </code>
 /// </example>
-public class ProjectionHostedService : BackgroundService
+/// <remarks>
+/// Initializes a new instance of the projection hosted service.
+/// </remarks>
+/// <param name="projectionManager">The projection manager.</param>
+/// <param name="logger">The logger.</param>
+public class ProjectionHostedService(
+    IProjectionManager projectionManager,
+    ILogger<ProjectionHostedService> logger) : BackgroundService
 {
-    private readonly IProjectionManager _projectionManager;
-    private readonly ILogger<ProjectionHostedService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the projection hosted service.
-    /// </summary>
-    /// <param name="projectionManager">The projection manager.</param>
-    /// <param name="logger">The logger.</param>
-    public ProjectionHostedService(
-        IProjectionManager projectionManager,
-        ILogger<ProjectionHostedService> logger)
-    {
-        _projectionManager = projectionManager ?? throw new ArgumentNullException(nameof(projectionManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IProjectionManager _projectionManager = projectionManager ?? throw new ArgumentNullException(nameof(projectionManager));
+    private readonly ILogger<ProjectionHostedService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -183,23 +177,17 @@ public enum RebuildState
 /// <summary>
 /// Service for scheduling and tracking projection rebuilds.
 /// </summary>
-public class ProjectionRebuildService : IProjectionRebuildService
+/// <remarks>
+/// Initializes a new instance of the rebuild service.
+/// </remarks>
+public class ProjectionRebuildService(
+    IProjectionManager projectionManager,
+    ILogger<ProjectionRebuildService> logger) : IProjectionRebuildService
 {
-    private readonly IProjectionManager _projectionManager;
-    private readonly ILogger<ProjectionRebuildService> _logger;
+    private readonly IProjectionManager _projectionManager = projectionManager ?? throw new ArgumentNullException(nameof(projectionManager));
+    private readonly ILogger<ProjectionRebuildService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Dictionary<string, RebuildStatus> _rebuildStatuses = [];
     private readonly object _lock = new();
-
-    /// <summary>
-    /// Initializes a new instance of the rebuild service.
-    /// </summary>
-    public ProjectionRebuildService(
-        IProjectionManager projectionManager,
-        ILogger<ProjectionRebuildService> logger)
-    {
-        _projectionManager = projectionManager ?? throw new ArgumentNullException(nameof(projectionManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <inheritdoc />
     public async Task ScheduleRebuildAsync(string projectionName, CancellationToken cancellationToken = default)

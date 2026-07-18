@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
@@ -97,7 +95,10 @@ public static class BaggagePropagation
         ArgumentNullException.ThrowIfNull(headers);
 
         activity ??= Activity.Current;
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         // Inject W3C Trace Context
         headers[Keys.TraceParent] = activity.Id ?? $"00-{activity.TraceId}-{activity.SpanId}-{(activity.Recorded ? "01" : "00")}";
@@ -134,41 +135,63 @@ public static class BaggagePropagation
         ArgumentNullException.ThrowIfNull(context);
 
         if (!string.IsNullOrEmpty(context.CorrelationId))
+        {
             headers[Keys.CorrelationId] = context.CorrelationId;
+        }
 
         if (!string.IsNullOrEmpty(context.CausationId))
+        {
             headers[Keys.CausationId] = context.CausationId;
+        }
 
         if (!string.IsNullOrEmpty(context.TenantId))
+        {
             headers[Keys.TenantId] = context.TenantId;
+        }
 
         if (!string.IsNullOrEmpty(context.UserId))
+        {
             headers[Keys.UserId] = context.UserId;
+        }
 
         if (!string.IsNullOrEmpty(context.ConversationId))
+        {
             headers[Keys.ConversationId] = context.ConversationId;
+        }
 
         if (!string.IsNullOrEmpty(context.MessageType))
+        {
             headers[Keys.MessageType] = context.MessageType;
+        }
 
         if (!string.IsNullOrEmpty(context.SourceService))
+        {
             headers[Keys.SourceService] = context.SourceService;
+        }
 
         if (context.Timestamp.HasValue)
+        {
             headers[Keys.Timestamp] = context.Timestamp.Value.ToString("O");
+        }
 
         // Also inject into current activity baggage if available
         Activity? activity = Activity.Current;
         if (activity != null)
         {
             if (!string.IsNullOrEmpty(context.CorrelationId))
+            {
                 activity.SetBaggage("correlation-id", context.CorrelationId);
+            }
 
             if (!string.IsNullOrEmpty(context.TenantId))
+            {
                 activity.SetBaggage("tenant-id", context.TenantId);
+            }
 
             if (!string.IsNullOrEmpty(context.UserId))
+            {
                 activity.SetBaggage("user-id", context.UserId);
+            }
         }
     }
 
@@ -179,11 +202,14 @@ public static class BaggagePropagation
     /// <returns>The extracted activity context, or default if not found.</returns>
     public static ActivityContext ExtractTraceContext(IDictionary<string, object>? headers)
     {
-        if (headers == null) return default;
-
-        if (headers.TryGetValue(Keys.TraceParent, out var traceparentObj) && traceparentObj != null)
+        if (headers == null)
         {
-            var traceparent = GetHeaderStringValue(traceparentObj);
+            return default;
+        }
+
+        if (headers.TryGetValue(Keys.TraceParent, out object? traceparentObj) && traceparentObj != null)
+        {
+            string? traceparent = GetHeaderStringValue(traceparentObj);
             if (!string.IsNullOrEmpty(traceparent) &&
                 ActivityContext.TryParse(traceparent, null, out ActivityContext activityContext))
             {
@@ -203,40 +229,59 @@ public static class BaggagePropagation
     {
         var context = new BaggageContext();
 
-        if (headers == null) return context;
-
-        if (headers.TryGetValue(Keys.CorrelationId, out var correlationId))
-            context.CorrelationId = GetHeaderStringValue(correlationId);
-
-        if (headers.TryGetValue(Keys.CausationId, out var causationId))
-            context.CausationId = GetHeaderStringValue(causationId);
-
-        if (headers.TryGetValue(Keys.TenantId, out var tenantId))
-            context.TenantId = GetHeaderStringValue(tenantId);
-
-        if (headers.TryGetValue(Keys.UserId, out var userId))
-            context.UserId = GetHeaderStringValue(userId);
-
-        if (headers.TryGetValue(Keys.ConversationId, out var conversationId))
-            context.ConversationId = GetHeaderStringValue(conversationId);
-
-        if (headers.TryGetValue(Keys.MessageType, out var messageType))
-            context.MessageType = GetHeaderStringValue(messageType);
-
-        if (headers.TryGetValue(Keys.SourceService, out var sourceService))
-            context.SourceService = GetHeaderStringValue(sourceService);
-
-        if (headers.TryGetValue(Keys.Timestamp, out var timestamp))
+        if (headers == null)
         {
-            var timestampStr = GetHeaderStringValue(timestamp);
+            return context;
+        }
+
+        if (headers.TryGetValue(Keys.CorrelationId, out object? correlationId))
+        {
+            context.CorrelationId = GetHeaderStringValue(correlationId);
+        }
+
+        if (headers.TryGetValue(Keys.CausationId, out object? causationId))
+        {
+            context.CausationId = GetHeaderStringValue(causationId);
+        }
+
+        if (headers.TryGetValue(Keys.TenantId, out object? tenantId))
+        {
+            context.TenantId = GetHeaderStringValue(tenantId);
+        }
+
+        if (headers.TryGetValue(Keys.UserId, out object? userId))
+        {
+            context.UserId = GetHeaderStringValue(userId);
+        }
+
+        if (headers.TryGetValue(Keys.ConversationId, out object? conversationId))
+        {
+            context.ConversationId = GetHeaderStringValue(conversationId);
+        }
+
+        if (headers.TryGetValue(Keys.MessageType, out object? messageType))
+        {
+            context.MessageType = GetHeaderStringValue(messageType);
+        }
+
+        if (headers.TryGetValue(Keys.SourceService, out object? sourceService))
+        {
+            context.SourceService = GetHeaderStringValue(sourceService);
+        }
+
+        if (headers.TryGetValue(Keys.Timestamp, out object? timestamp))
+        {
+            string? timestampStr = GetHeaderStringValue(timestamp);
             if (DateTimeOffset.TryParse(timestampStr, out DateTimeOffset dto))
+            {
                 context.Timestamp = dto;
+            }
         }
 
         // Also extract from W3C Baggage header
-        if (headers.TryGetValue(Keys.Baggage, out var baggageObj))
+        if (headers.TryGetValue(Keys.Baggage, out object? baggageObj))
         {
-            var baggage = GetHeaderStringValue(baggageObj);
+            string? baggage = GetHeaderStringValue(baggageObj);
             if (!string.IsNullOrEmpty(baggage))
             {
                 ParseW3CBaggage(baggage, context);
@@ -255,22 +300,35 @@ public static class BaggagePropagation
         ArgumentNullException.ThrowIfNull(context);
 
         Activity? activity = Activity.Current;
-        if (activity == null) return;
+        if (activity == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(context.CorrelationId))
+        {
             activity.SetBaggage("correlation-id", context.CorrelationId);
+        }
 
         if (!string.IsNullOrEmpty(context.CausationId))
+        {
             activity.SetBaggage("causation-id", context.CausationId);
+        }
 
         if (!string.IsNullOrEmpty(context.TenantId))
+        {
             activity.SetBaggage("tenant-id", context.TenantId);
+        }
 
         if (!string.IsNullOrEmpty(context.UserId))
+        {
             activity.SetBaggage("user-id", context.UserId);
+        }
 
         if (!string.IsNullOrEmpty(context.ConversationId))
+        {
             activity.SetBaggage("conversation-id", context.ConversationId);
+        }
     }
 
     /// <summary>
@@ -282,7 +340,10 @@ public static class BaggagePropagation
         var context = new BaggageContext();
         Activity? activity = Activity.Current;
 
-        if (activity == null) return context;
+        if (activity == null)
+        {
+            return context;
+        }
 
         foreach (KeyValuePair<string, string?> kvp in activity.Baggage)
         {
@@ -329,7 +390,10 @@ public static class BaggagePropagation
 
     private static string? GetHeaderStringValue(object? value)
     {
-        if (value == null) return null;
+        if (value == null)
+        {
+            return null;
+        }
 
         return value switch
         {
@@ -341,15 +405,18 @@ public static class BaggagePropagation
 
     private static void ParseW3CBaggage(string baggage, BaggageContext context)
     {
-        var pairs = baggage.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        string[] pairs = baggage.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var pair in pairs)
+        foreach (string pair in pairs)
         {
-            var kvp = pair.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
-            if (kvp.Length != 2) continue;
+            string[] kvp = pair.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (kvp.Length != 2)
+            {
+                continue;
+            }
 
-            var key = Uri.UnescapeDataString(kvp[0].Trim());
-            var value = Uri.UnescapeDataString(kvp[1].Trim());
+            string key = Uri.UnescapeDataString(kvp[0].Trim());
+            string value = Uri.UnescapeDataString(kvp[1].Trim());
 
             switch (key)
             {

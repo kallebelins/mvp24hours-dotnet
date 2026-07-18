@@ -215,7 +215,10 @@ public interface IAuditable
     /// <summary>
     /// Gets additional metadata to include in the audit entry.
     /// </summary>
-    IReadOnlyDictionary<string, string>? GetAuditMetadata() => null;
+    IReadOnlyDictionary<string, string>? GetAuditMetadata()
+    {
+        return null;
+    }
 }
 
 /// <summary>
@@ -241,7 +244,7 @@ public sealed class InMemoryAuditStore : IAuditStore
         {
             lock (_lock)
             {
-                return _entries.ToList();
+                return [.. _entries];
             }
         }
     }
@@ -284,7 +287,7 @@ public sealed class InMemoryAuditStore : IAuditStore
     {
         lock (_lock)
         {
-            return _entries.Where(e => e.CorrelationId == correlationId).ToList();
+            return [.. _entries.Where(e => e.CorrelationId == correlationId)];
         }
     }
 
@@ -295,7 +298,7 @@ public sealed class InMemoryAuditStore : IAuditStore
     {
         lock (_lock)
         {
-            return _entries.Where(e => e.UserId == userId).ToList();
+            return [.. _entries.Where(e => e.UserId == userId)];
         }
     }
 
@@ -306,7 +309,7 @@ public sealed class InMemoryAuditStore : IAuditStore
     {
         lock (_lock)
         {
-            return _entries.Where(e => e.OperationName == operationName).ToList();
+            return [.. _entries.Where(e => e.OperationName == operationName)];
         }
     }
 }

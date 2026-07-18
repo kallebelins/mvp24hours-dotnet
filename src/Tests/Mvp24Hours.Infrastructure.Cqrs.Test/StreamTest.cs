@@ -36,7 +36,7 @@ public class StreamTest
         var results = new List<int>();
 
         // Act
-        await foreach (var item in _mediator.CreateStream(request))
+        await foreach (int item in _mediator.CreateStream(request))
         {
             results.Add(item);
         }
@@ -54,7 +54,7 @@ public class StreamTest
         var results = new List<int>();
 
         // Act
-        await foreach (var item in _mediator.CreateStream(request))
+        await foreach (int item in _mediator.CreateStream(request))
         {
             results.Add(item);
         }
@@ -72,7 +72,7 @@ public class StreamTest
         var results = new List<int>();
 
         // Act
-        await foreach (var item in _mediator.CreateStream(request, cts.Token))
+        await foreach (int item in _mediator.CreateStream(request, cts.Token))
         {
             results.Add(item);
             if (results.Count >= 3)
@@ -96,7 +96,7 @@ public class StreamTest
         var results = new List<string>();
 
         // Act
-        await foreach (var name in _mediator.CreateStream(request))
+        await foreach (string? name in _mediator.CreateStream(request))
         {
             results.Add(name);
         }
@@ -114,7 +114,7 @@ public class StreamTest
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
         {
-            await foreach (var _ in _mediator.CreateStream<int>(null!))
+            await foreach (int _ in _mediator.CreateStream<int>(null!))
             {
                 // Should not reach here
             }
@@ -129,7 +129,7 @@ public class StreamTest
         var results = new List<int>();
 
         // Act
-        await foreach (var item in _streamSender.CreateStream(request))
+        await foreach (int item in _streamSender.CreateStream(request))
         {
             results.Add(item);
         }
@@ -146,7 +146,7 @@ public class StreamTest
         var timestamps = new List<DateTime>();
 
         // Act
-        await foreach (var _ in _mediator.CreateStream(request))
+        await foreach (int _ in _mediator.CreateStream(request))
         {
             timestamps.Add(DateTime.UtcNow);
         }
@@ -166,10 +166,10 @@ public class StreamTest
     {
         // Arrange
         var request = new GetNamesStreamRequest { Names = [] };
-        var count = 0;
+        int count = 0;
 
         // Act
-        await foreach (var _ in _mediator.CreateStream(request))
+        await foreach (string? _ in _mediator.CreateStream(request))
         {
             count++;
         }

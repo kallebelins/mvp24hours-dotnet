@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.PostgreSql.Test.Support.Data;
@@ -20,96 +17,92 @@ using Microsoft.Extensions.Configuration;
 using Mvp24Hours.Helpers;
 #endif
 
-namespace Mvp24Hours.Application.PostgreSql.Test.Setup
+namespace Mvp24Hours.Application.PostgreSql.Test.Setup;
+
+public static class StartupAsync
 {
-    public static class StartupAsync
+    public static ServiceProvider Initialize(bool canLoadData = true)
     {
-        public static ServiceProvider Initialize(bool canLoadData = true)
+        ServiceProvider serviceProvider = ConfigureServicesAsync();
+
+        // ensure database
+        DataContext? db = serviceProvider.GetRequiredService<DataContext>();
+        db.Database?.EnsureCreated();
+
+        // load data
+        if (canLoadData)
         {
-            ServiceProvider serviceProvider = ConfigureServicesAsync();
-
-            // ensure database
-            DataContext? db = serviceProvider.GetRequiredService<DataContext>();
-            db.Database?.EnsureCreated();
-
-            // load data
-            if (canLoadData)
-            {
-                LoadDataAsync(serviceProvider).Wait();
-            }
-            return serviceProvider;
+            LoadDataAsync(serviceProvider).Wait();
         }
+        return serviceProvider;
+    }
 
-        public static void Cleanup(IServiceProvider serviceProvider)
+    public static void Cleanup(IServiceProvider serviceProvider)
+    {
+        // ensure database drop
+        DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
+        if (db != null)
         {
-            // ensure database drop
-            DataContext? db = serviceProvider?.GetRequiredService<DataContext>();
-            if (db != null)
-            {
-                db.Database.EnsureDeleted();
-                db.Dispose();
-            }
+            db.Database.EnsureDeleted();
+            db.Dispose();
         }
+    }
 
-        private static ServiceProvider ConfigureServicesAsync()
-        {
+    private static ServiceProvider ConfigureServicesAsync()
+    {
 #if InMemory
-            var services = new ServiceCollection();
-            services.AddDbContext<DataContext>(options =>
-                options
-                    .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
+        var services = new ServiceCollection();
+        services.AddDbContext<DataContext>(options =>
+            options
+                .UseInMemoryDatabase(StringHelper.GenerateKey(10)));
 #else
-            var services = new ServiceCollection()
-                .AddSingleton(ConfigurationHelper.AppSettings);
+        IServiceCollection services = new ServiceCollection()
+            .AddSingleton(ConfigurationHelper.AppSettings);
 
-            services.AddDbContext<DataContext>(
-                options => options.UseNpgsql((ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
-                    ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
-                    .Format(StringHelper.GenerateKey(10)),
-                options => options.SetPostgresVersion(new Version(9, 6)))
-            );
+        services.AddDbContext<DataContext>(
+            options => options.UseNpgsql((ConfigurationHelper.AppSettings.GetConnectionString("DataContext")
+                ?? throw new InvalidOperationException("Connection string 'DataContext' not found."))
+                .Format(StringHelper.GenerateKey(10)),
+            options => options.SetPostgresVersion(new Version(9, 6)))
+        );
 #endif
 
-            services.AddMvp24HoursDbContext<DataContext>();
-            services.AddMvp24HoursRepositoryAsync(options: options =>
-            {
-                options.MaxQtyByQueryPage = 100;
-            });
+        services.AddMvp24HoursDbContext<DataContext>();
+        services.AddMvp24HoursRepositoryAsync(options: options => options.MaxQtyByQueryPage = 100);
 
-            // register my services
-            services.AddScoped<CustomerServiceAsync, CustomerServiceAsync>();
-            services.AddScoped<ContactServiceAsync, ContactServiceAsync>();
-            services.AddScoped<CustomerPagingServiceAsync, CustomerPagingServiceAsync>();
+        // register my services
+        services.AddScoped<CustomerServiceAsync, CustomerServiceAsync>();
+        services.AddScoped<ContactServiceAsync, ContactServiceAsync>();
+        services.AddScoped<CustomerPagingServiceAsync, CustomerPagingServiceAsync>();
 
-            return services.BuildServiceProvider();
-        }
+        return services.BuildServiceProvider();
+    }
 
-        private static async Task LoadDataAsync(IServiceProvider serviceProvider)
+    private static async Task LoadDataAsync(IServiceProvider serviceProvider)
+    {
+        CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        List<Customer> customers = [];
+        for (int i = 1; i <= 10; i++)
         {
-            CustomerServiceAsync? service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            List<Customer> customers = [];
-            for (int i = 1; i <= 10; i++)
+            var customer = new Customer
             {
-                var customer = new Customer
-                {
-                    Name = $"Test {i}",
-                    Active = true
-                };
-                customer.Contacts.Add(new Contact
-                {
-                    Description = $"202-555-014{i}",
-                    Type = ContactType.CellPhone,
-                    Active = true
-                });
-                customer.Contacts.Add(new Contact
-                {
-                    Description = $"test{i}@sample.com",
-                    Type = ContactType.Email,
-                    Active = true
-                });
-                customers.Add(customer);
-            }
-            await service.AddAsync(customers);
+                Name = $"Test {i}",
+                Active = true
+            };
+            customer.Contacts.Add(new Contact
+            {
+                Description = $"202-555-014{i}",
+                Type = ContactType.CellPhone,
+                Active = true
+            });
+            customer.Contacts.Add(new Contact
+            {
+                Description = $"test{i}@sample.com",
+                Type = ContactType.Email,
+                Active = true
+            });
+            customers.Add(customer);
         }
+        await service.AddAsync(customers);
     }
 }

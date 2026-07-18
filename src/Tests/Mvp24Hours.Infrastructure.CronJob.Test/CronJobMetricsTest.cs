@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using FluentAssertions;
 using Mvp24Hours.Infrastructure.CronJob.Observability;

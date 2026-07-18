@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -391,13 +390,13 @@ public class EnhancedLoggingOptions
     /// <summary>
     /// Gets or sets headers that should be masked in logs.
     /// </summary>
-    public string[] SensitiveHeaders { get; set; } = new[]
-    {
+    public string[] SensitiveHeaders { get; set; } =
+    [
         "Authorization",
         "x-api-key",
         "password",
         "secret",
         "token"
-    };
+    ];
 }
 

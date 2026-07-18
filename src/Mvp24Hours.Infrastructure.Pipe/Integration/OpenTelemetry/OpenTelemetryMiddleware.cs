@@ -3,263 +3,248 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry
+namespace Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry;
+
+/// <summary>
+/// Pipeline middleware that integrates with OpenTelemetry for distributed tracing.
+/// Creates spans for each pipeline execution with detailed metadata.
+/// </summary>
+/// <remarks>
+/// Creates a new OpenTelemetry middleware.
+/// </remarks>
+/// <param name="logger">Optional logger.</param>
+/// <param name="options">Optional configuration options.</param>
+public class OpenTelemetryMiddleware(
+    ILogger<OpenTelemetryMiddleware>? logger = null,
+    OpenTelemetryOptions? options = null) : IPipelineMiddleware
 {
-    /// <summary>
-    /// Pipeline middleware that integrates with OpenTelemetry for distributed tracing.
-    /// Creates spans for each pipeline execution with detailed metadata.
-    /// </summary>
-    public class OpenTelemetryMiddleware : IPipelineMiddleware
+    private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
+    private readonly ILogger<OpenTelemetryMiddleware>? _logger = logger;
+    private readonly OpenTelemetryOptions _options = options ?? new OpenTelemetryOptions();
+
+    /// <inheritdoc/>
+    public int Order => -1000; // Execute early to wrap all other middleware
+
+    /// <inheritdoc/>
+    public async Task ExecuteAsync(
+        IPipelineMessage message,
+        Func<Task> next,
+        CancellationToken cancellationToken = default)
     {
-        private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
-        private readonly ILogger<OpenTelemetryMiddleware>? _logger;
-        private readonly OpenTelemetryOptions _options;
+        string spanName = "Pipeline.Operation";
 
-        /// <summary>
-        /// Creates a new OpenTelemetry middleware.
-        /// </summary>
-        /// <param name="logger">Optional logger.</param>
-        /// <param name="options">Optional configuration options.</param>
-        public OpenTelemetryMiddleware(
-            ILogger<OpenTelemetryMiddleware>? logger = null,
-            OpenTelemetryOptions? options = null)
+        using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+
+        if (activity == null)
         {
-            _logger = logger;
-            _options = options ?? new OpenTelemetryOptions();
+            await next();
+            return;
         }
 
-        /// <inheritdoc/>
-        public int Order => -1000; // Execute early to wrap all other middleware
+        // Add common tags
+        SetActivityTags(activity, message);
 
-        /// <inheritdoc/>
-        public async Task ExecuteAsync(
-            IPipelineMessage message,
-            Func<Task> next,
-            CancellationToken cancellationToken = default)
+        bool startLocked = message.IsLocked;
+        bool startFaulted = message.IsFaulty;
+
+        try
         {
-            var spanName = "Pipeline.Operation";
+            await next();
 
-            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
-
-            if (activity == null)
+            // Record result status
+            if (!startLocked && message.IsLocked)
             {
-                await next();
-                return;
+                activity.SetStatus(ActivityStatusCode.Error, "Pipeline locked");
+                activity.SetTag("pipeline.locked", true);
+                activity.SetTag("pipeline.lock_reason", GetLockReason(message));
+            }
+            else if (!startFaulted && message.IsFaulty)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, "Pipeline faulted");
+                activity.SetTag("pipeline.faulted", true);
+            }
+            else
+            {
+                activity.SetStatus(ActivityStatusCode.Ok);
+                activity.SetTag("pipeline.success", true);
             }
 
-            // Add common tags
-            SetActivityTags(activity, message);
-
-            var startLocked = message.IsLocked;
-            var startFaulted = message.IsFaulty;
-
-            try
+            // Add message count
+            if (_options.IncludeMessageDetails)
             {
-                await next();
-
-                // Record result status
-                if (!startLocked && message.IsLocked)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, "Pipeline locked");
-                    activity.SetTag("pipeline.locked", true);
-                    activity.SetTag("pipeline.lock_reason", GetLockReason(message));
-                }
-                else if (!startFaulted && message.IsFaulty)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, "Pipeline faulted");
-                    activity.SetTag("pipeline.faulted", true);
-                }
-                else
-                {
-                    activity.SetStatus(ActivityStatusCode.Ok);
-                    activity.SetTag("pipeline.success", true);
-                }
-
-                // Add message count
-                if (_options.IncludeMessageDetails)
-                {
-                    activity.SetTag("pipeline.message_count", message.Messages?.Count ?? 0);
-                }
-            }
-            catch (OperationCanceledException ex)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Cancelled");
-                activity.SetTag("pipeline.cancelled", true);
-                RecordException(activity, ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                RecordException(activity, ex);
-                throw;
+                activity.SetTag("pipeline.message_count", message.Messages?.Count ?? 0);
             }
         }
-
-        private void SetActivityTags(Activity activity, IPipelineMessage message)
+        catch (OperationCanceledException ex)
         {
-            if (message.Token != null)
-            {
-                activity.SetTag("pipeline.token", message.Token.ToString());
-            }
-
-            if (_options.IncludeInputDetails)
-            {
-                activity.SetTag("pipeline.input.is_locked", message.IsLocked);
-                activity.SetTag("pipeline.input.is_faulted", message.IsFaulty);
-            }
-
-            // Add custom tags from options
-            if (_options.CustomTags != null)
-            {
-                foreach (KeyValuePair<string, object> tag in _options.CustomTags)
-                {
-                    activity.SetTag(tag.Key, tag.Value);
-                }
-            }
+            activity.SetStatus(ActivityStatusCode.Error, "Cancelled");
+            activity.SetTag("pipeline.cancelled", true);
+            RecordException(activity, ex);
+            throw;
         }
-
-        private static void RecordException(Activity activity, Exception exception)
+        catch (Exception ex)
         {
-            var tags = new ActivityTagsCollection
-            {
-                { "exception.type", exception.GetType().FullName },
-                { "exception.message", exception.Message }
-            };
-
-            if (exception.StackTrace != null)
-            {
-                tags.Add("exception.stacktrace", exception.StackTrace);
-            }
-
-            activity.AddEvent(new ActivityEvent("exception", tags: tags));
-        }
-
-        private static string? GetLockReason(IPipelineMessage message)
-        {
-            if (message.Messages == null || message.Messages.Count == 0)
-                return null;
-
-            var errors = new List<string>();
-            foreach (IMessageResult msg in message.Messages)
-            {
-                if (msg.Type == Core.Enums.MessageType.Error)
-                {
-                    errors.Add(msg.Message);
-                }
-            }
-
-            return errors.Count > 0 ? string.Join("; ", errors) : null;
+            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            RecordException(activity, ex);
+            throw;
         }
     }
 
-    /// <summary>
-    /// Synchronous version of OpenTelemetry middleware for non-async pipelines.
-    /// </summary>
-    public class OpenTelemetryMiddlewareSync : IPipelineMiddlewareSync
+    private void SetActivityTags(Activity activity, IPipelineMessage message)
     {
-        private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
-        private readonly ILogger<OpenTelemetryMiddlewareSync>? _logger;
-        private readonly OpenTelemetryOptions _options;
-
-        /// <summary>
-        /// Creates a new synchronous OpenTelemetry middleware.
-        /// </summary>
-        /// <param name="logger">Optional logger.</param>
-        /// <param name="options">Optional configuration options.</param>
-        public OpenTelemetryMiddlewareSync(
-            ILogger<OpenTelemetryMiddlewareSync>? logger = null,
-            OpenTelemetryOptions? options = null)
+        if (message.Token != null)
         {
-            _logger = logger;
-            _options = options ?? new OpenTelemetryOptions();
+            activity.SetTag("pipeline.token", message.Token.ToString());
         }
 
-        /// <inheritdoc/>
-        public int Order => -1000;
-
-        /// <inheritdoc/>
-        public void Execute(IPipelineMessage message, Action next)
+        if (_options.IncludeInputDetails)
         {
-            var spanName = "Pipeline.Operation";
+            activity.SetTag("pipeline.input.is_locked", message.IsLocked);
+            activity.SetTag("pipeline.input.is_faulted", message.IsFaulty);
+        }
 
-            using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
-
-            if (activity == null)
+        // Add custom tags from options
+        if (_options.CustomTags != null)
+        {
+            foreach (KeyValuePair<string, object> tag in _options.CustomTags)
             {
-                next();
-                return;
+                activity.SetTag(tag.Key, tag.Value);
             }
+        }
+    }
 
-            SetActivityTags(activity, message);
-            var startLocked = message.IsLocked;
-            var startFaulted = message.IsFaulty;
+    private static void RecordException(Activity activity, Exception exception)
+    {
+        var tags = new ActivityTagsCollection
+        {
+            { "exception.type", exception.GetType().FullName },
+            { "exception.message", exception.Message }
+        };
 
-            try
+        if (exception.StackTrace != null)
+        {
+            tags.Add("exception.stacktrace", exception.StackTrace);
+        }
+
+        activity.AddEvent(new ActivityEvent("exception", tags: tags));
+    }
+
+    private static string? GetLockReason(IPipelineMessage message)
+    {
+        if (message.Messages == null || message.Messages.Count == 0)
+        {
+            return null;
+        }
+
+        var errors = new List<string>();
+        foreach (IMessageResult msg in message.Messages)
+        {
+            if (msg.Type == Core.Enums.MessageType.Error)
             {
-                next();
-
-                if (!startLocked && message.IsLocked)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, "Pipeline locked");
-                    activity.SetTag("pipeline.locked", true);
-                }
-                else if (!startFaulted && message.IsFaulty)
-                {
-                    activity.SetStatus(ActivityStatusCode.Error, "Pipeline faulted");
-                    activity.SetTag("pipeline.faulted", true);
-                }
-                else
-                {
-                    activity.SetStatus(ActivityStatusCode.Ok);
-                    activity.SetTag("pipeline.success", true);
-                }
-            }
-            catch (Exception ex)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                RecordException(activity, ex);
-                throw;
+                errors.Add(msg.Message);
             }
         }
 
-        private void SetActivityTags(Activity activity, IPipelineMessage message)
-        {
-            if (message.Token != null)
-            {
-                activity.SetTag("pipeline.token", message.Token.ToString());
-            }
+        return errors.Count > 0 ? string.Join("; ", errors) : null;
+    }
+}
 
-            if (_options.IncludeInputDetails)
-            {
-                activity.SetTag("pipeline.input.is_locked", message.IsLocked);
-                activity.SetTag("pipeline.input.is_faulted", message.IsFaulty);
-            }
+/// <summary>
+/// Synchronous version of OpenTelemetry middleware for non-async pipelines.
+/// </summary>
+/// <remarks>
+/// Creates a new synchronous OpenTelemetry middleware.
+/// </remarks>
+/// <param name="logger">Optional logger.</param>
+/// <param name="options">Optional configuration options.</param>
+public class OpenTelemetryMiddlewareSync(
+    ILogger<OpenTelemetryMiddlewareSync>? logger = null,
+    OpenTelemetryOptions? options = null) : IPipelineMiddlewareSync
+{
+    private static readonly ActivitySource ActivitySource = new("Mvp24Hours.Pipeline", "1.0.0");
+    private readonly ILogger<OpenTelemetryMiddlewareSync>? _logger = logger;
+    private readonly OpenTelemetryOptions _options = options ?? new OpenTelemetryOptions();
+
+    /// <inheritdoc/>
+    public int Order => -1000;
+
+    /// <inheritdoc/>
+    public void Execute(IPipelineMessage message, Action next)
+    {
+        string spanName = "Pipeline.Operation";
+
+        using Activity? activity = ActivitySource.StartActivity(spanName, ActivityKind.Internal);
+
+        if (activity == null)
+        {
+            next();
+            return;
         }
 
-        private static void RecordException(Activity activity, Exception exception)
+        SetActivityTags(activity, message);
+        bool startLocked = message.IsLocked;
+        bool startFaulted = message.IsFaulty;
+
+        try
         {
-            var tags = new ActivityTagsCollection
-            {
-                { "exception.type", exception.GetType().FullName },
-                { "exception.message", exception.Message }
-            };
+            next();
 
-            if (exception.StackTrace != null)
+            if (!startLocked && message.IsLocked)
             {
-                tags.Add("exception.stacktrace", exception.StackTrace);
+                activity.SetStatus(ActivityStatusCode.Error, "Pipeline locked");
+                activity.SetTag("pipeline.locked", true);
             }
-
-            activity.AddEvent(new ActivityEvent("exception", tags: tags));
+            else if (!startFaulted && message.IsFaulty)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, "Pipeline faulted");
+                activity.SetTag("pipeline.faulted", true);
+            }
+            else
+            {
+                activity.SetStatus(ActivityStatusCode.Ok);
+                activity.SetTag("pipeline.success", true);
+            }
         }
+        catch (Exception ex)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            RecordException(activity, ex);
+            throw;
+        }
+    }
+
+    private void SetActivityTags(Activity activity, IPipelineMessage message)
+    {
+        if (message.Token != null)
+        {
+            activity.SetTag("pipeline.token", message.Token.ToString());
+        }
+
+        if (_options.IncludeInputDetails)
+        {
+            activity.SetTag("pipeline.input.is_locked", message.IsLocked);
+            activity.SetTag("pipeline.input.is_faulted", message.IsFaulty);
+        }
+    }
+
+    private static void RecordException(Activity activity, Exception exception)
+    {
+        var tags = new ActivityTagsCollection
+        {
+            { "exception.type", exception.GetType().FullName },
+            { "exception.message", exception.Message }
+        };
+
+        if (exception.StackTrace != null)
+        {
+            tags.Add("exception.stacktrace", exception.StackTrace);
+        }
+
+        activity.AddEvent(new ActivityEvent("exception", tags: tags));
     }
 }

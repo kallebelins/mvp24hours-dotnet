@@ -3,245 +3,241 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Typed;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming
+namespace Mvp24Hours.Infrastructure.Pipe.Integration.Streaming;
+
+/// <summary>
+/// A pipeline implementation that supports streaming via IAsyncEnumerable.
+/// Processes items as they arrive and yields results immediately.
+/// </summary>
+/// <typeparam name="TInput">The type of input items.</typeparam>
+/// <typeparam name="TOutput">The type of output items.</typeparam>
+/// <remarks>
+/// Creates a new streaming pipeline.
+/// </remarks>
+/// <param name="logger">Optional logger.</param>
+public class StreamingPipeline<TInput, TOutput>(ILogger<StreamingPipeline<TInput, TOutput>>? logger = null) : IStreamingPipeline<TInput, TOutput>
 {
+    private readonly List<Func<object?, CancellationToken, Task<IOperationResult<object>>>> _operations = [];
+    private readonly ILogger<StreamingPipeline<TInput, TOutput>>? _logger = logger;
+
+    /// <inheritdoc/>
+    public bool ContinueOnError { get; set; } = true;
+
+    /// <inheritdoc/>
+    public int MaxDegreeOfParallelism { get; set; } = 1;
+
     /// <summary>
-    /// A pipeline implementation that supports streaming via IAsyncEnumerable.
-    /// Processes items as they arrive and yields results immediately.
+    /// Gets or sets whether to preserve order of results when using parallel processing.
     /// </summary>
-    /// <typeparam name="TInput">The type of input items.</typeparam>
-    /// <typeparam name="TOutput">The type of output items.</typeparam>
-    public class StreamingPipeline<TInput, TOutput> : IStreamingPipeline<TInput, TOutput>
+    public bool PreserveOrder { get; set; } = true;
+
+    /// <inheritdoc/>
+    public IStreamingPipeline<TInput, TOutput> Add<TOpInput, TOpOutput>(ITypedOperationAsync<TOpInput, TOpOutput> operation)
+        where TOpInput : TInput
+        where TOpOutput : TOutput
     {
-        private readonly List<Func<object?, CancellationToken, Task<IOperationResult<object>>>> _operations = [];
-        private readonly ILogger<StreamingPipeline<TInput, TOutput>>? _logger;
-
-        /// <summary>
-        /// Creates a new streaming pipeline.
-        /// </summary>
-        /// <param name="logger">Optional logger.</param>
-        public StreamingPipeline(ILogger<StreamingPipeline<TInput, TOutput>>? logger = null)
+        if (operation == null)
         {
-            _logger = logger;
+            throw new ArgumentNullException(nameof(operation));
         }
 
-        /// <inheritdoc/>
-        public bool ContinueOnError { get; set; } = true;
-
-        /// <inheritdoc/>
-        public int MaxDegreeOfParallelism { get; set; } = 1;
-
-        /// <summary>
-        /// Gets or sets whether to preserve order of results when using parallel processing.
-        /// </summary>
-        public bool PreserveOrder { get; set; } = true;
-
-        /// <inheritdoc/>
-        public IStreamingPipeline<TInput, TOutput> Add<TOpInput, TOpOutput>(ITypedOperationAsync<TOpInput, TOpOutput> operation)
-            where TOpInput : TInput
-            where TOpOutput : TOutput
+        _operations.Add(async (input, ct) =>
         {
-            if (operation == null)
-                throw new ArgumentNullException(nameof(operation));
+            var typedInput = (TOpInput?)input;
+            IOperationResult<TOpOutput> result = await operation.ExecuteAsync(typedInput!, ct);
+            return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
+        });
 
-            _operations.Add(async (input, ct) =>
-            {
-                var typedInput = (TOpInput?)input;
-                IOperationResult<TOpOutput> result = await operation.ExecuteAsync(typedInput!, ct);
-                return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
-            });
+        return this;
+    }
 
-            return this;
+    /// <summary>
+    /// Adds a transformation function to the pipeline.
+    /// </summary>
+    /// <param name="transform">The transformation function.</param>
+    /// <returns>The pipeline for chaining.</returns>
+    public StreamingPipeline<TInput, TOutput> Add(Func<TInput, CancellationToken, Task<IOperationResult<TOutput>>> transform)
+    {
+        if (transform == null)
+        {
+            throw new ArgumentNullException(nameof(transform));
         }
 
-        /// <summary>
-        /// Adds a transformation function to the pipeline.
-        /// </summary>
-        /// <param name="transform">The transformation function.</param>
-        /// <returns>The pipeline for chaining.</returns>
-        public StreamingPipeline<TInput, TOutput> Add(Func<TInput, CancellationToken, Task<IOperationResult<TOutput>>> transform)
+        _operations.Add(async (input, ct) =>
         {
-            if (transform == null)
-                throw new ArgumentNullException(nameof(transform));
+            var typedInput = (TInput?)input;
+            IOperationResult<TOutput> result = await transform(typedInput!, ct);
+            return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
+        });
 
-            _operations.Add(async (input, ct) =>
-            {
-                var typedInput = (TInput?)input;
-                IOperationResult<TOutput> result = await transform(typedInput!, ct);
-                return OperationResult<object>.Create(result.Value, result.IsSuccess, result.Messages);
-            });
+        return this;
+    }
 
-            return this;
-        }
+    /// <inheritdoc/>
+    public async IAsyncEnumerable<IOperationResult<TOutput>> ExecuteStreamAsync(
+        IAsyncEnumerable<TInput> inputs,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _logger?.LogDebug("StreamingPipeline: Started");
 
-        /// <inheritdoc/>
-        public async IAsyncEnumerable<IOperationResult<TOutput>> ExecuteStreamAsync(
-            IAsyncEnumerable<TInput> inputs,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        if (MaxDegreeOfParallelism <= 1)
         {
-            _logger?.LogDebug("StreamingPipeline: Started");
-
-            if (MaxDegreeOfParallelism <= 1)
+            // Sequential processing
+            await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
             {
-                // Sequential processing
-                await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
-                {
-                    IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
+                IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
 
-                    if (result.IsFailure && !ContinueOnError)
-                    {
-                        yield return result;
-                        yield break;
-                    }
-
-                    yield return result;
-                }
-            }
-            else
-            {
-                // Parallel processing with bounded channel
-                var channel = Channel.CreateBounded<IOperationResult<TOutput>>(
-                    new BoundedChannelOptions(MaxDegreeOfParallelism * 2)
-                    {
-                        SingleWriter = false,
-                        SingleReader = true,
-                        FullMode = BoundedChannelFullMode.Wait
-                    });
-
-                Task processingTask = ProcessInParallelAsync(inputs, channel.Writer, cancellationToken);
-
-                await foreach (IOperationResult<TOutput> result in channel.Reader.ReadAllAsync(cancellationToken))
+                if (result.IsFailure && !ContinueOnError)
                 {
                     yield return result;
+                    yield break;
                 }
 
-                await processingTask;
-            }
-
-            _logger?.LogDebug("StreamingPipeline: Completed");
-        }
-
-        /// <inheritdoc/>
-        public async IAsyncEnumerable<IOperationResult<TOutput>> ExecuteStreamAsync(
-            IEnumerable<TInput> inputs,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            await foreach (IOperationResult<TOutput> result in ExecuteStreamAsync(ToAsyncEnumerable(inputs), cancellationToken))
-            {
                 yield return result;
             }
         }
-
-        private async Task ProcessInParallelAsync(
-            IAsyncEnumerable<TInput> inputs,
-            ChannelWriter<IOperationResult<TOutput>> writer,
-            CancellationToken cancellationToken)
+        else
         {
-            var semaphore = new SemaphoreSlim(MaxDegreeOfParallelism);
-            var tasks = new List<Task>();
-            var shouldStop = false;
-
-            try
-            {
-                await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
+            // Parallel processing with bounded channel
+            var channel = Channel.CreateBounded<IOperationResult<TOutput>>(
+                new BoundedChannelOptions(MaxDegreeOfParallelism * 2)
                 {
-                    if (shouldStop)
-                        break;
+                    SingleWriter = false,
+                    SingleReader = true,
+                    FullMode = BoundedChannelFullMode.Wait
+                });
 
-                    await semaphore.WaitAsync(cancellationToken);
+            Task processingTask = ProcessInParallelAsync(inputs, channel.Writer, cancellationToken);
 
-                    var task = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
-                            await writer.WriteAsync(result, cancellationToken);
-
-                            if (result.IsFailure && !ContinueOnError)
-                            {
-                                shouldStop = true;
-                            }
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
-                    }, cancellationToken);
-
-                    tasks.Add(task);
-                }
-
-                await Task.WhenAll(tasks);
-            }
-            finally
+            await foreach (IOperationResult<TOutput> result in channel.Reader.ReadAllAsync(cancellationToken))
             {
-                writer.Complete();
-                semaphore.Dispose();
+                yield return result;
             }
+
+            await processingTask;
         }
 
-        private async Task<IOperationResult<TOutput>> ProcessSingleItemAsync(
-            TInput input,
-            CancellationToken cancellationToken)
+        _logger?.LogDebug("StreamingPipeline: Completed");
+    }
+
+    /// <inheritdoc/>
+    public async IAsyncEnumerable<IOperationResult<TOutput>> ExecuteStreamAsync(
+        IEnumerable<TInput> inputs,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await foreach (IOperationResult<TOutput> result in ExecuteStreamAsync(ToAsyncEnumerable(inputs), cancellationToken))
         {
-            try
+            yield return result;
+        }
+    }
+
+    private async Task ProcessInParallelAsync(
+        IAsyncEnumerable<TInput> inputs,
+        ChannelWriter<IOperationResult<TOutput>> writer,
+        CancellationToken cancellationToken)
+    {
+        var semaphore = new SemaphoreSlim(MaxDegreeOfParallelism);
+        var tasks = new List<Task>();
+        bool shouldStop = false;
+
+        try
+        {
+            await foreach (TInput? input in inputs.WithCancellation(cancellationToken))
             {
-                object? currentValue = input;
-
-                foreach (Func<object?, CancellationToken, Task<IOperationResult<object>>> operation in _operations)
+                if (shouldStop)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    break;
+                }
 
-                    IOperationResult<object> result = await operation(currentValue, cancellationToken);
+                await semaphore.WaitAsync(cancellationToken);
 
-                    if (result.IsFailure)
+                var task = Task.Run(async () =>
+                {
+                    try
                     {
-                        return OperationResult<TOutput>.Create(default, false, result.Messages);
+                        IOperationResult<TOutput> result = await ProcessSingleItemAsync(input, cancellationToken);
+                        await writer.WriteAsync(result, cancellationToken);
+
+                        if (result.IsFailure && !ContinueOnError)
+                        {
+                            shouldStop = true;
+                        }
                     }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }, cancellationToken);
 
-                    currentValue = result.Value;
-                }
-
-                if (currentValue is TOutput typedOutput)
-                {
-                    return OperationResult<TOutput>.Success(typedOutput);
-                }
-
-                if (input is TOutput inputAsOutput)
-                {
-                    return OperationResult<TOutput>.Success(inputAsOutput);
-                }
-
-                return OperationResult<TOutput>.Create(default, true);
+                tasks.Add(task);
             }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error processing item in streaming pipeline");
-                return OperationResult<TOutput>.Failure(ex);
-            }
+
+            await Task.WhenAll(tasks);
         }
-
-        private static async IAsyncEnumerable<TInput> ToAsyncEnumerable(IEnumerable<TInput> source)
+        finally
         {
-            foreach (TInput? item in source)
+            writer.Complete();
+            semaphore.Dispose();
+        }
+    }
+
+    private async Task<IOperationResult<TOutput>> ProcessSingleItemAsync(
+        TInput input,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            object? currentValue = input;
+
+            foreach (Func<object?, CancellationToken, Task<IOperationResult<object>>> operation in _operations)
             {
-                yield return item;
-                await Task.CompletedTask; // Allow cooperative scheduling
+                cancellationToken.ThrowIfCancellationRequested();
+
+                IOperationResult<object> result = await operation(currentValue, cancellationToken);
+
+                if (result.IsFailure)
+                {
+                    return OperationResult<TOutput>.Create(default, false, result.Messages);
+                }
+
+                currentValue = result.Value;
             }
+
+            if (currentValue is TOutput typedOutput)
+            {
+                return OperationResult<TOutput>.Success(typedOutput);
+            }
+
+            if (input is TOutput inputAsOutput)
+            {
+                return OperationResult<TOutput>.Success(inputAsOutput);
+            }
+
+            return OperationResult<TOutput>.Create(default, true);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error processing item in streaming pipeline");
+            return OperationResult<TOutput>.Failure(ex);
+        }
+    }
+
+    private static async IAsyncEnumerable<TInput> ToAsyncEnumerable(IEnumerable<TInput> source)
+    {
+        foreach (TInput? item in source)
+        {
+            yield return item;
+            await Task.CompletedTask; // Allow cooperative scheduling
         }
     }
 }

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Threading.Channels;
 
 namespace Mvp24Hours.Core.Contract.Infrastructure.Channels;
@@ -83,10 +82,13 @@ public class MvpChannelOptions
     /// <summary>
     /// Creates default unbounded channel options.
     /// </summary>
-    public static MvpChannelOptions Unbounded() => new()
+    public static MvpChannelOptions Unbounded()
     {
-        IsBounded = false
-    };
+        return new()
+        {
+            IsBounded = false
+        };
+    }
 
     /// <summary>
     /// Creates bounded channel options with the specified capacity.
@@ -96,61 +98,75 @@ public class MvpChannelOptions
     public static MvpChannelOptions Bounded(
         int capacity,
         BoundedChannelFullMode fullMode = BoundedChannelFullMode.Wait)
-        => new()
+    {
+        return new()
         {
             IsBounded = true,
             Capacity = capacity,
             FullMode = fullMode
         };
+    }
 
     /// <summary>
     /// Creates options optimized for high-throughput scenarios.
     /// </summary>
     /// <param name="capacity">The maximum capacity.</param>
-    public static MvpChannelOptions HighThroughput(int capacity = 1000) => new()
+    public static MvpChannelOptions HighThroughput(int capacity = 1000)
     {
-        IsBounded = true,
-        Capacity = capacity,
-        FullMode = BoundedChannelFullMode.Wait,
-        AllowSynchronousContinuations = true,
-        SingleReader = true,
-        SingleWriter = false
-    };
+        return new()
+        {
+            IsBounded = true,
+            Capacity = capacity,
+            FullMode = BoundedChannelFullMode.Wait,
+            AllowSynchronousContinuations = true,
+            SingleReader = true,
+            SingleWriter = false
+        };
+    }
 
     /// <summary>
     /// Creates options for dropping oldest items when full.
     /// Useful for real-time data where latest is more important.
     /// </summary>
     /// <param name="capacity">The maximum capacity.</param>
-    public static MvpChannelOptions DropOldest(int capacity = 100) => new()
+    public static MvpChannelOptions DropOldest(int capacity = 100)
     {
-        IsBounded = true,
-        Capacity = capacity,
-        FullMode = BoundedChannelFullMode.DropOldest
-    };
+        return new()
+        {
+            IsBounded = true,
+            Capacity = capacity,
+            FullMode = BoundedChannelFullMode.DropOldest
+        };
+    }
 
     /// <summary>
     /// Creates options for dropping newest items when full.
     /// Useful when you want to preserve order of arrival.
     /// </summary>
     /// <param name="capacity">The maximum capacity.</param>
-    public static MvpChannelOptions DropNewest(int capacity = 100) => new()
+    public static MvpChannelOptions DropNewest(int capacity = 100)
     {
-        IsBounded = true,
-        Capacity = capacity,
-        FullMode = BoundedChannelFullMode.DropNewest
-    };
+        return new()
+        {
+            IsBounded = true,
+            Capacity = capacity,
+            FullMode = BoundedChannelFullMode.DropNewest
+        };
+    }
 
     /// <summary>
     /// Creates options that drop writes when full.
     /// Useful for fire-and-forget scenarios.
     /// </summary>
     /// <param name="capacity">The maximum capacity.</param>
-    public static MvpChannelOptions DropWrite(int capacity = 100) => new()
+    public static MvpChannelOptions DropWrite(int capacity = 100)
     {
-        IsBounded = true,
-        Capacity = capacity,
-        FullMode = BoundedChannelFullMode.DropWrite
-    };
+        return new()
+        {
+            IsBounded = true,
+            Capacity = capacity,
+            FullMode = BoundedChannelFullMode.DropWrite
+        };
+    }
 }
 

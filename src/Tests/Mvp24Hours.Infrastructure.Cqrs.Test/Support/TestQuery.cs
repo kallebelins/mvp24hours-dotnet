@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
 /// <summary>
@@ -58,8 +56,8 @@ public class GetAllUsersQueryHandler : IMediatorQueryHandler<GetAllUsersQuery, L
     public Task<List<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
         List<UserDto> result = request.Limit.HasValue
-            ? Users.Take(request.Limit.Value).ToList()
-            : Users.ToList();
+            ? [.. Users.Take(request.Limit.Value)]
+            : [.. Users];
         return Task.FromResult(result);
     }
 }

@@ -12,9 +12,6 @@ namespace Mvp24Hours.Application.Integration.Test.Services;
 /// <summary>
 /// Product paging service for integration tests - inherits from RepositoryPagingServiceAsync.
 /// </summary>
-public class ProductPagingService : RepositoryPagingServiceAsync<Product, IUnitOfWorkAsync>
+public class ProductPagingService(IUnitOfWorkAsync unitOfWork) : RepositoryPagingServiceAsync<Product, IUnitOfWorkAsync>(unitOfWork)
 {
-    public ProductPagingService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork)
-    {
-    }
 }

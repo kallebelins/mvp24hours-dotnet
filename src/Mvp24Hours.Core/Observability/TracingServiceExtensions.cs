@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -228,7 +226,10 @@ public class TraceContextAccessor : ITraceContextAccessor
         get
         {
             Activity? activity = Activity.Current;
-            if (activity == null) return null;
+            if (activity == null)
+            {
+                return null;
+            }
 
             return activity.GetBaggageItem("correlation.id")
                    ?? activity.TraceId.ToString();
@@ -306,17 +307,52 @@ public static class OpenTelemetryBuilderExtensions
     {
         var sources = new List<string>();
 
-        if (includeCore) sources.Add(Mvp24HoursActivitySources.Core.Name);
-        if (includePipe) sources.Add(Mvp24HoursActivitySources.Pipe.Name);
-        if (includeCqrs) sources.Add(Mvp24HoursActivitySources.Cqrs.Name);
-        if (includeData) sources.Add(Mvp24HoursActivitySources.Data.Name);
-        if (includeRabbitMQ) sources.Add(Mvp24HoursActivitySources.RabbitMQ.Name);
-        if (includeWebAPI) sources.Add(Mvp24HoursActivitySources.WebAPI.Name);
-        if (includeCaching) sources.Add(Mvp24HoursActivitySources.Caching.Name);
-        if (includeCronJob) sources.Add(Mvp24HoursActivitySources.CronJob.Name);
-        if (includeInfrastructure) sources.Add(Mvp24HoursActivitySources.Infrastructure.Name);
+        if (includeCore)
+        {
+            sources.Add(Mvp24HoursActivitySources.Core.Name);
+        }
 
-        return sources.ToArray();
+        if (includePipe)
+        {
+            sources.Add(Mvp24HoursActivitySources.Pipe.Name);
+        }
+
+        if (includeCqrs)
+        {
+            sources.Add(Mvp24HoursActivitySources.Cqrs.Name);
+        }
+
+        if (includeData)
+        {
+            sources.Add(Mvp24HoursActivitySources.Data.Name);
+        }
+
+        if (includeRabbitMQ)
+        {
+            sources.Add(Mvp24HoursActivitySources.RabbitMQ.Name);
+        }
+
+        if (includeWebAPI)
+        {
+            sources.Add(Mvp24HoursActivitySources.WebAPI.Name);
+        }
+
+        if (includeCaching)
+        {
+            sources.Add(Mvp24HoursActivitySources.Caching.Name);
+        }
+
+        if (includeCronJob)
+        {
+            sources.Add(Mvp24HoursActivitySources.CronJob.Name);
+        }
+
+        if (includeInfrastructure)
+        {
+            sources.Add(Mvp24HoursActivitySources.Infrastructure.Name);
+        }
+
+        return [.. sources];
     }
 }
 

@@ -16,9 +16,8 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 public class MockUnitOfWorkAsync : IUnitOfWorkAsync
 {
     private bool _disposed;
-    private readonly List<string> _operationsLog = [];
 
-    public List<string> OperationsLog => _operationsLog;
+    public List<string> OperationsLog { get; } = [];
     public int SaveChangesCallCount { get; private set; }
     public int RollbackCallCount { get; private set; }
     public bool ShouldThrowOnSave { get; set; }
@@ -33,26 +32,26 @@ public class MockUnitOfWorkAsync : IUnitOfWorkAsync
         }
 
         SaveChangesCallCount++;
-        _operationsLog.Add("SaveChanges");
+        OperationsLog.Add("SaveChanges");
         return Task.FromResult(RowsAffected);
     }
 
     public Task RollbackAsync()
     {
         RollbackCallCount++;
-        _operationsLog.Add("Rollback");
+        OperationsLog.Add("Rollback");
         return Task.CompletedTask;
     }
 
     public IRepositoryAsync<T> GetRepository<T>() where T : class, IEntityBase
     {
-        _operationsLog.Add($"GetRepository<{typeof(T).Name}>");
+        OperationsLog.Add($"GetRepository<{typeof(T).Name}>");
         throw new NotImplementedException("Use mock for specific repository tests");
     }
 
     public IDbConnection GetConnection()
     {
-        _operationsLog.Add("GetConnection");
+        OperationsLog.Add("GetConnection");
         throw new NotImplementedException("Use mock for connection tests");
     }
 
@@ -60,7 +59,7 @@ public class MockUnitOfWorkAsync : IUnitOfWorkAsync
     {
         if (!_disposed)
         {
-            _operationsLog.Add("Dispose");
+            OperationsLog.Add("Dispose");
             _disposed = true;
         }
     }
@@ -72,7 +71,7 @@ public class MockUnitOfWorkAsync : IUnitOfWorkAsync
         ShouldThrowOnSave = false;
         ExceptionToThrow = null;
         RowsAffected = 1;
-        _operationsLog.Clear();
+        OperationsLog.Clear();
     }
 }
 

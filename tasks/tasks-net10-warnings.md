@@ -351,15 +351,25 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
 
 > **ADO:** US a criar.
 
-[ ] 7.1 - Zerar `MvpResidualWarnings` e reativar o gate estrito
+[x] 7.1 - Zerar `MvpResidualWarnings` e reativar o gate estrito
 - Após §5 e §6, recompilar a solução (`Release --no-incremental`) e remover **todos** os códigos CS86xx (e qualquer resíduo) de `MvpResidualWarnings`. Manter **somente** `NU1510` se o pin de segurança da tarefa 7.1 (v1) ainda exigir (reavaliar). Confirmar `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**.
 - `src/Directory.Build.props`
 - https://learn.microsoft.com/visualstudio/msbuild/msbuild-warnings-as-errors
-
-[ ] 7.2 - Elevar regras de estilo do `.editorconfig` e rodar `dotnet format` completo
+- **Concluído 2026-07-18:** residual CS0618 (4) zerado antes de encolher o gate:
+  - **EFCore** (`ResilienceDbContextExtensions.ConfigureSqlServerWithResilience`): removido o uso de `MvpExecutionStrategy` (obsoleto). Retry passa a usar só o built-in `EnableRetryOnFailure` / `SqlServerRetryingExecutionStrategy` quando `EnableRetryOnFailure` é true (alinhado à doc de `EFCoreResilienceOptions`; Polly → `NativeDbResilienceExtensions`).
+  - **MongoDb** (`MongoDbResiliencyExtensions.AddMongoDbResiliency`): `#pragma warning disable CS0618` justificado no shim de compatibilidade que ainda registra `MongoDbResiliencyPolicy` como `IMongoDbResiliencyPolicy` (consumidores legados; preferir `AddNativeMongoDbResilience`).
+  - **Gate:** `MvpResidualWarnings` em [`src/Directory.Build.props`](../src/Directory.Build.props) reduzido a **somente `NU1510`** (pin de segurança `System.Security.Cryptography.Xml` 10.0.10 no Infrastructure — `NoWarn=NU1510` no `PackageReference`; ainda necessário para consumidores sem AspNetCore.App). Removidos todos os CS86xx + `CS0618`.
+  - `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**. Baseline [`warnings-baseline-v2.json`](./warnings-baseline-v2.json): **total = 0**. Gate: 14 → **1 código** (`NU1510`).
+- **Testes:** `MongoDb.Test` (`Category=Unit`) **129 aprovados, 0 falhas**; `SQLServer.Test` (`Category!=Integration`) **232 aprovados, 4 ignorados, 0 falhas**.
+[x] 7.2 - Elevar regras de estilo do `.editorconfig` e rodar `dotnet format` completo
 - Concluir o que a tarefa 10.2 (v1) adiou: elevar as regras de estilo/analisador de `suggestion` para `warning`/`error` no `.editorconfig` e rodar `dotnet format src/Mvp24Hours.sln --verify-no-changes` **completo** (sem `--severity error`), agora que os fixers de nullable/obsoleto não têm mais o que aplicar. Ajustar o CI para o escopo completo.
 - `.editorconfig`, `.github/workflows/ci.yml`
 - https://learn.microsoft.com/dotnet/core/tools/dotnet-format
+- **Concluído 2026-07-18:**
+  - **`.editorconfig`:** preferências `dotnet_style_*` / `csharp_style_*` e diagnósticos IDE* elevados de `suggestion` → `warning` (EnforceCodeStyleInBuild). Exceções documentadas: **IDE0005** permanece suggestion (exige `GenerateDocumentationFile`, que dispara CS1570 em XML samples); **IDE0078** suggestion (fixer quebra precedência de `&` bitwise); **IDE0130**/`namespace_match_folder` desabilitados (crash MSBuildWorkspace, [dotnet/format#2192](https://github.com/dotnet/format/issues/2192)); **IDE1006**/naming permanece suggestion (NamingStyleCodeFixProvider sem Fix All); CA* invasivos e **NU1510** inalterados.
+  - **`dotnet format` completo:** 1567/1723 arquivos (file-scoped namespaces, primary constructors, collection expressions, usings, etc.). Correções manuais: expressão bitwise em `ValidatorExtensions`; CS9113 em `CircuitBreaker` (logger de compatibilidade); IDE0008 (`IServiceCollection`) nos Startups SQLServer/MySql/PostgreSql; `DbSet` de teste com `= null! // set by EF Core`.
+  - **CI:** step `🎨 Check code formatting` passou a `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes` (sem `--severity error`). Comentário do gate de análise alinhado à 7.1.
+  - `dotnet format ... --verify-no-changes` → **exit 0** (0/1723). `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**.
 
 [ ] 7.3 - Suíte completa de testes + relatório final
 - Reexecutar a suíte (unit + integração com Docker) confirmando **0 falhas** e nenhuma regressão introduzida pelas mudanças de nulidade/API. Consolidar TRX + cobertura como na tarefa 9.5 (v1).

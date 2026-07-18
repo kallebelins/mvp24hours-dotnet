@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -99,7 +96,7 @@ public class CircuitBreakerTest
         // Act - Advance time past the duration
         fakeTimeProvider.Advance(duration.Add(TimeSpan.FromSeconds(1)));
 
-        var canExecute = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
+        bool canExecute = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
 
         // Assert
         canExecute.Should().BeTrue();
@@ -181,7 +178,7 @@ public class CircuitBreakerTest
         }
 
         // Act
-        var canExecute = circuitBreaker.AllowExecution("TestJob",
+        bool canExecute = circuitBreaker.AllowExecution("TestJob",
             failureThreshold: 5,
             TimeSpan.FromSeconds(30),
             TimeSpan.FromMinutes(1));
@@ -197,7 +194,7 @@ public class CircuitBreakerTest
         var circuitBreaker = new CronJobCircuitBreaker();
 
         // Act
-        var canExecute = circuitBreaker.AllowExecution("TestJob",
+        bool canExecute = circuitBreaker.AllowExecution("TestJob",
             failureThreshold: 5,
             TimeSpan.FromSeconds(30),
             TimeSpan.FromMinutes(1));
@@ -223,10 +220,10 @@ public class CircuitBreakerTest
 
         // Transition to half-open
         fakeTimeProvider.Advance(duration.Add(TimeSpan.FromSeconds(1)));
-        var firstExecutionAllowed = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
+        bool firstExecutionAllowed = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
 
         // Act - Try second execution while first is pending
-        var secondExecutionAllowed = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
+        bool secondExecutionAllowed = circuitBreaker.AllowExecution("TestJob", failureThreshold: 5, duration, TimeSpan.FromMinutes(1));
 
         // Assert
         firstExecutionAllowed.Should().BeTrue();
@@ -420,7 +417,7 @@ public class CircuitBreakerTest
         // Arrange
         var circuitBreaker = new CronJobCircuitBreaker();
         var stateChanges = new System.Collections.Generic.List<(CircuitBreakerState From, CircuitBreakerState To)>();
-        var failureThreshold = 3;
+        int failureThreshold = 3;
         var duration = TimeSpan.FromSeconds(30);
 
         // Act - Record failures to trigger state change
@@ -447,7 +444,7 @@ public class CircuitBreakerTest
         var fakeTimeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
         var circuitBreaker = new CronJobCircuitBreaker(fakeTimeProvider);
         var duration = TimeSpan.FromSeconds(30);
-        var successThreshold = 3;
+        int successThreshold = 3;
 
         // Open the circuit
         for (int i = 0; i < 5; i++)

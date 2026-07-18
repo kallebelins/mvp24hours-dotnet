@@ -3,80 +3,71 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Mvp24Hours.WebAPI.Configuration
+namespace Mvp24Hours.WebAPI.Configuration;
+
+/// <summary>
+/// Configures Swagger generation options for API versioning.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This class configures Swagger documents for each API version discovered via IApiVersionDescriptionProvider.
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ConfigureSwaggerGenOptions"/> class.
+/// </remarks>
+/// <param name="provider">The API version description provider.</param>
+/// <param name="swaggerOptions">The Swagger options.</param>
+public class ConfigureSwaggerGenOptions(
+    IApiVersionDescriptionProvider provider,
+    SwaggerOptions swaggerOptions) : IConfigureOptions<SwaggerGenOptions>
 {
+    private readonly IApiVersionDescriptionProvider _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+    private readonly SwaggerOptions _swaggerOptions = swaggerOptions ?? throw new ArgumentNullException(nameof(swaggerOptions));
+
     /// <summary>
-    /// Configures Swagger generation options for API versioning.
+    /// Configures Swagger generation options.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This class configures Swagger documents for each API version discovered via IApiVersionDescriptionProvider.
-    /// </para>
-    /// </remarks>
-    public class ConfigureSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
+    /// <param name="options">The Swagger generation options.</param>
+    public void Configure(SwaggerGenOptions options)
     {
-        private readonly IApiVersionDescriptionProvider _provider;
-        private readonly SwaggerOptions _swaggerOptions;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigureSwaggerGenOptions"/> class.
-        /// </summary>
-        /// <param name="provider">The API version description provider.</param>
-        /// <param name="swaggerOptions">The Swagger options.</param>
-        public ConfigureSwaggerGenOptions(
-            IApiVersionDescriptionProvider provider,
-            SwaggerOptions swaggerOptions)
+        // Configure each API version
+        foreach (ApiVersionDescription description in _provider.ApiVersionDescriptions)
         {
-            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _swaggerOptions = swaggerOptions ?? throw new ArgumentNullException(nameof(swaggerOptions));
-        }
-
-        /// <summary>
-        /// Configures Swagger generation options.
-        /// </summary>
-        /// <param name="options">The Swagger generation options.</param>
-        public void Configure(SwaggerGenOptions options)
-        {
-            // Configure each API version
-            foreach (ApiVersionDescription description in _provider.ApiVersionDescriptions)
-            {
-                SwaggerVersionInfo versionInfo = _swaggerOptions.Versions.FirstOrDefault(v =>
-                    v.Version == description.ApiVersion.ToString() ||
-                    v.Version == description.GroupName)
-                    ?? new SwaggerVersionInfo
-                    {
-                        Version = description.ApiVersion.ToString(),
-                        Title = $"{_swaggerOptions.Title} {description.ApiVersion}",
-                        Description = _swaggerOptions.Description
-                    };
-
-                var openApiInfo = new OpenApiInfo
+            SwaggerVersionInfo versionInfo = _swaggerOptions.Versions.FirstOrDefault(v =>
+                v.Version == description.ApiVersion.ToString() ||
+                v.Version == description.GroupName)
+                ?? new SwaggerVersionInfo
                 {
-                    Title = versionInfo.Title,
-                    Version = versionInfo.Version,
-                    Description = versionInfo.Description ?? _swaggerOptions.Description,
-                    Contact = _swaggerOptions.Contact != null ? new OpenApiContact
-                    {
-                        Name = _swaggerOptions.Contact.Name,
-                        Email = _swaggerOptions.Contact.Email,
-                        Url = !string.IsNullOrEmpty(_swaggerOptions.Contact.Url) ? new Uri(_swaggerOptions.Contact.Url) : null
-                    } : null,
-                    License = _swaggerOptions.License != null ? new OpenApiLicense
-                    {
-                        Name = _swaggerOptions.License.Name,
-                        Url = !string.IsNullOrEmpty(_swaggerOptions.License.Url) ? new Uri(_swaggerOptions.License.Url) : null
-                    } : null
+                    Version = description.ApiVersion.ToString(),
+                    Title = $"{_swaggerOptions.Title} {description.ApiVersion}",
+                    Description = _swaggerOptions.Description
                 };
 
-                options.SwaggerGeneratorOptions.SwaggerDocs.Add(description.GroupName, openApiInfo);
-            }
+            var openApiInfo = new OpenApiInfo
+            {
+                Title = versionInfo.Title,
+                Version = versionInfo.Version,
+                Description = versionInfo.Description ?? _swaggerOptions.Description,
+                Contact = _swaggerOptions.Contact != null ? new OpenApiContact
+                {
+                    Name = _swaggerOptions.Contact.Name,
+                    Email = _swaggerOptions.Contact.Email,
+                    Url = !string.IsNullOrEmpty(_swaggerOptions.Contact.Url) ? new Uri(_swaggerOptions.Contact.Url) : null
+                } : null,
+                License = _swaggerOptions.License != null ? new OpenApiLicense
+                {
+                    Name = _swaggerOptions.License.Name,
+                    Url = !string.IsNullOrEmpty(_swaggerOptions.License.Url) ? new Uri(_swaggerOptions.License.Url) : null
+                } : null
+            };
+
+            options.SwaggerGeneratorOptions.SwaggerDocs.Add(description.GroupName, openApiInfo);
         }
     }
 }

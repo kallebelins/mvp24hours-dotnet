@@ -4,10 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
@@ -55,23 +51,17 @@ namespace Mvp24Hours.WebAPI.Http;
 /// });
 /// </code>
 /// </example>
-public class CorrelationIdHandler : DelegatingHandler
+/// <remarks>
+/// Creates a new instance of <see cref="CorrelationIdHandler"/>.
+/// </remarks>
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
+/// <param name="options">The request context options.</param>
+public class CorrelationIdHandler(
+    IHttpContextAccessor httpContextAccessor,
+    IOptions<RequestContextOptions> options) : DelegatingHandler
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly RequestContextOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="CorrelationIdHandler"/>.
-    /// </summary>
-    /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-    /// <param name="options">The request context options.</param>
-    public CorrelationIdHandler(
-        IHttpContextAccessor httpContextAccessor,
-        IOptions<RequestContextOptions> options)
-    {
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        _options = options?.Value ?? new RequestContextOptions();
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    private readonly RequestContextOptions _options = options?.Value ?? new RequestContextOptions();
 
     /// <inheritdoc />
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -83,21 +73,21 @@ public class CorrelationIdHandler : DelegatingHandler
         if (httpContext != null && _options.PropagateToOutgoingRequests)
         {
             // Propagate Correlation ID
-            var correlationId = httpContext.GetCorrelationId();
+            string correlationId = httpContext.GetCorrelationId();
             if (!string.IsNullOrEmpty(correlationId) && !request.Headers.Contains(_options.CorrelationIdHeader))
             {
                 request.Headers.TryAddWithoutValidation(_options.CorrelationIdHeader, correlationId);
             }
 
             // Set Causation ID to the current Request ID (establishing the causation chain)
-            var requestId = httpContext.GetRequestId();
+            string requestId = httpContext.GetRequestId();
             if (!string.IsNullOrEmpty(requestId) && !request.Headers.Contains(_options.CausationIdHeader))
             {
                 request.Headers.TryAddWithoutValidation(_options.CausationIdHeader, requestId);
             }
 
             // Propagate Tenant ID
-            var tenantId = httpContext.GetTenantId();
+            string? tenantId = httpContext.GetTenantId();
             if (!string.IsNullOrEmpty(tenantId) && !request.Headers.Contains(_options.TenantIdHeader))
             {
                 request.Headers.TryAddWithoutValidation(_options.TenantIdHeader, tenantId);
@@ -143,23 +133,17 @@ public class CorrelationIdHandler : DelegatingHandler
 /// correlation context, making it suitable for non-web scenarios.
 /// </para>
 /// </remarks>
-public class CorrelationIdPropagatingHandler : DelegatingHandler
+/// <remarks>
+/// Creates a new instance of <see cref="CorrelationIdPropagatingHandler"/>.
+/// </remarks>
+/// <param name="contextProvider">The correlation context provider.</param>
+/// <param name="options">The request context options.</param>
+public class CorrelationIdPropagatingHandler(
+    ICorrelationContextProvider contextProvider,
+    IOptions<RequestContextOptions> options) : DelegatingHandler
 {
-    private readonly ICorrelationContextProvider _contextProvider;
-    private readonly RequestContextOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="CorrelationIdPropagatingHandler"/>.
-    /// </summary>
-    /// <param name="contextProvider">The correlation context provider.</param>
-    /// <param name="options">The request context options.</param>
-    public CorrelationIdPropagatingHandler(
-        ICorrelationContextProvider contextProvider,
-        IOptions<RequestContextOptions> options)
-    {
-        _contextProvider = contextProvider ?? throw new ArgumentNullException(nameof(contextProvider));
-        _options = options?.Value ?? new RequestContextOptions();
-    }
+    private readonly ICorrelationContextProvider _contextProvider = contextProvider ?? throw new ArgumentNullException(nameof(contextProvider));
+    private readonly RequestContextOptions _options = options?.Value ?? new RequestContextOptions();
 
     /// <inheritdoc />
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -252,7 +236,7 @@ public record CorrelationContext
         string? userId = null,
         string? tenantId = null)
     {
-        var id = correlationId ?? Guid.NewGuid().ToString("N");
+        string id = correlationId ?? Guid.NewGuid().ToString("N");
         return new CorrelationContext
         {
             CorrelationId = id,
@@ -289,15 +273,24 @@ public class AsyncLocalCorrelationContextProvider : ICorrelationContextProvider
     private static readonly AsyncLocal<CorrelationContext?> _context = new();
 
     /// <inheritdoc />
-    public CorrelationContext? GetCurrentContext() => _context.Value;
+    public CorrelationContext? GetCurrentContext()
+    {
+        return _context.Value;
+    }
 
     /// <inheritdoc />
-    public void SetCurrentContext(CorrelationContext context) => _context.Value = context;
+    public void SetCurrentContext(CorrelationContext context)
+    {
+        _context.Value = context;
+    }
 
     /// <summary>
     /// Clears the current context.
     /// </summary>
-    public void ClearCurrentContext() => _context.Value = null;
+    public void ClearCurrentContext()
+    {
+        _context.Value = null;
+    }
 }
 
 

@@ -6,7 +6,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -47,27 +46,20 @@ namespace Mvp24Hours.Infrastructure.CronJob.Observability;
 ///     });
 /// </code>
 /// </example>
-public sealed class CronJobHealthCheck : IHealthCheck
+/// <remarks>
+/// Initializes a new instance of <see cref="CronJobHealthCheck"/>.
+/// </remarks>
+/// <param name="metricsService">The CronJob metrics service.</param>
+/// <param name="logger">Optional logger.</param>
+/// <param name="options">Health check options.</param>
+public sealed class CronJobHealthCheck(
+    CronJobMetricsService? metricsService = null,
+    ILogger<CronJobHealthCheck>? logger = null,
+    IOptions<CronJobHealthCheckOptions>? options = null) : IHealthCheck
 {
-    private readonly CronJobMetricsService? _metricsService;
-    private readonly ILogger<CronJobHealthCheck>? _logger;
-    private readonly CronJobHealthCheckOptions _options;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="CronJobHealthCheck"/>.
-    /// </summary>
-    /// <param name="metricsService">The CronJob metrics service.</param>
-    /// <param name="logger">Optional logger.</param>
-    /// <param name="options">Health check options.</param>
-    public CronJobHealthCheck(
-        CronJobMetricsService? metricsService = null,
-        ILogger<CronJobHealthCheck>? logger = null,
-        IOptions<CronJobHealthCheckOptions>? options = null)
-    {
-        _metricsService = metricsService;
-        _logger = logger;
-        _options = options?.Value ?? new CronJobHealthCheckOptions();
-    }
+    private readonly CronJobMetricsService? _metricsService = metricsService;
+    private readonly ILogger<CronJobHealthCheck>? _logger = logger;
+    private readonly CronJobHealthCheckOptions _options = options?.Value ?? new CronJobHealthCheckOptions();
 
     /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(
@@ -156,14 +148,14 @@ public sealed class CronJobHealthCheck : IHealthCheck
 
             if (unhealthyJobs.Count > 0)
             {
-                var description = $"Unhealthy CronJobs: {string.Join(", ", unhealthyJobs)}";
+                string description = $"Unhealthy CronJobs: {string.Join(", ", unhealthyJobs)}";
                 _logger?.LogWarning("CronJob health check failed. {Description}", description);
                 return Task.FromResult(HealthCheckResult.Unhealthy(description, data: data));
             }
 
             if (degradedJobs.Count > 0)
             {
-                var description = $"Degraded CronJobs: {string.Join(", ", degradedJobs)}";
+                string description = $"Degraded CronJobs: {string.Join(", ", degradedJobs)}";
                 _logger?.LogWarning("CronJob health check degraded. {Description}", description);
                 return Task.FromResult(HealthCheckResult.Degraded(description, data: data));
             }
@@ -202,7 +194,7 @@ public sealed class CronJobHealthCheck : IHealthCheck
         // Check failure rate
         if (state.TotalExecutions > _options.MinExecutionsForRateCheck)
         {
-            var failureRate = state.TotalFailures / (double)state.TotalExecutions;
+            double failureRate = state.TotalFailures / (double)state.TotalExecutions;
             if (failureRate > _options.MaxFailureRate)
             {
                 return failureRate > _options.CriticalFailureRate

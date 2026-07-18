@@ -173,7 +173,9 @@ public readonly struct ExceptionHandlingResult<TResponse>
     /// <param name="response">The response to return instead of throwing.</param>
     /// <returns>A handled result with the provided response.</returns>
     public static ExceptionHandlingResult<TResponse> Handled(TResponse response)
-        => new(true, response, null);
+    {
+        return new(true, response, null);
+    }
 
     /// <summary>
     /// Creates a result indicating the exception was not handled and should propagate.
@@ -187,6 +189,8 @@ public readonly struct ExceptionHandlingResult<TResponse>
     /// <param name="exception">The exception to throw instead.</param>
     /// <returns>A result that will cause the provided exception to be thrown.</returns>
     public static ExceptionHandlingResult<TResponse> Rethrow(Exception exception)
-        => new(false, default, exception);
+    {
+        return new(false, default, exception);
+    }
 }
 

@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Mvp24Hours.Core.Serialization.SourceGeneration;
@@ -104,25 +103,21 @@ public sealed class AotCompatibleAttribute : Attribute
 /// <remarks>
 /// This complements <see cref="RequiresUnreferencedCodeAttribute"/> with Mvp24Hours-specific guidance.
 /// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="RequiresReflectionAttribute"/> class.
+/// </remarks>
+/// <param name="reason">The reason why reflection is required.</param>
 [AttributeUsage(
     AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Constructor,
     AllowMultiple = false,
     Inherited = false)]
-public sealed class RequiresReflectionAttribute : Attribute
+public sealed class RequiresReflectionAttribute(string reason) : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequiresReflectionAttribute"/> class.
-    /// </summary>
-    /// <param name="reason">The reason why reflection is required.</param>
-    public RequiresReflectionAttribute(string reason)
-    {
-        Reason = reason;
-    }
 
     /// <summary>
     /// Gets the reason why reflection is required.
     /// </summary>
-    public string Reason { get; }
+    public string Reason { get; } = reason;
 
     /// <summary>
     /// Gets or sets the recommended AOT-compatible alternative.

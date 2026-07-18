@@ -3,231 +3,220 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Contract.Cache;
 
-namespace Mvp24Hours.Application.Logic.Cache
+namespace Mvp24Hours.Application.Logic.Cache;
+
+/// <summary>
+/// Default implementation of <see cref="ICacheInvalidator"/> for automatic cache invalidation.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This implementation provides automatic cache invalidation when command operations
+/// modify data, ensuring cache consistency across the application.
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="CacheInvalidator"/> class.
+/// </remarks>
+public class CacheInvalidator(
+    IQueryCacheProvider cacheProvider,
+    IQueryCacheKeyGenerator keyGenerator,
+    ILogger<CacheInvalidator> logger) : ICacheInvalidator
 {
-    /// <summary>
-    /// Default implementation of <see cref="ICacheInvalidator"/> for automatic cache invalidation.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This implementation provides automatic cache invalidation when command operations
-    /// modify data, ensuring cache consistency across the application.
-    /// </para>
-    /// </remarks>
-    public class CacheInvalidator : ICacheInvalidator
+    private readonly IQueryCacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+    private readonly IQueryCacheKeyGenerator _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
+    private readonly ILogger<CacheInvalidator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    /// <inheritdoc/>
+    public async Task InvalidateEntityAsync<TEntity>(CancellationToken cancellationToken = default)
     {
-        private readonly IQueryCacheProvider _cacheProvider;
-        private readonly IQueryCacheKeyGenerator _keyGenerator;
-        private readonly ILogger<CacheInvalidator> _logger;
+        await InvalidateEntityAsync(typeof(TEntity), cancellationToken);
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CacheInvalidator"/> class.
-        /// </summary>
-        public CacheInvalidator(
-            IQueryCacheProvider cacheProvider,
-            IQueryCacheKeyGenerator keyGenerator,
-            ILogger<CacheInvalidator> logger)
+    /// <inheritdoc/>
+    public async Task InvalidateEntityAsync(Type entityType, CancellationToken cancellationToken = default)
+    {
+        if (entityType == null)
         {
-            _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-            _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            throw new ArgumentNullException(nameof(entityType));
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateEntityAsync<TEntity>(CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-invalidateentity-start EntityType={EntityType}", entityType.Name);
+
+        try
         {
-            await InvalidateEntityAsync(typeof(TEntity), cancellationToken);
+            // Invalidate by region (entity type name)
+            string region = _keyGenerator.GenerateRegionKey(entityType);
+            await _cacheProvider.InvalidateRegionAsync(region, cancellationToken);
+
+            // Also invalidate by pattern
+            string pattern = _keyGenerator.GenerateInvalidationPattern(entityType);
+            await _cacheProvider.InvalidateByPatternAsync(pattern, cancellationToken);
+
+            _logger.LogDebug("Cache invalidated for entity type: {EntityType}", entityType.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache for entity type: {EntityType}", entityType.Name);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidateentity-end EntityType={EntityType}", entityType.Name);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task InvalidateByIdAsync<TEntity>(object id, CancellationToken cancellationToken = default)
+    {
+        if (id == null)
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateEntityAsync(Type entityType, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-invalidatebyid-start EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
+
+        try
         {
-            if (entityType == null)
-            {
-                throw new ArgumentNullException(nameof(entityType));
-            }
+            // Generate possible cache keys for this entity ID
+            Type entityType = typeof(TEntity);
 
-            _logger.LogDebug("application-cache-invalidateentity-start EntityType={EntityType}", entityType.Name);
+            // Common key patterns for GetById operations
+            string[] keys =
+            [
+                $"{entityType.Name}:GetById:{id}",
+                $"{entityType.Name}:GetByIdAsync:{id}",
+                $"{entityType.Name}:{id}",
+                $"{entityType.Name}:id={id}"
+            ];
 
-            try
-            {
-                // Invalidate by region (entity type name)
-                var region = _keyGenerator.GenerateRegionKey(entityType);
-                await _cacheProvider.InvalidateRegionAsync(region, cancellationToken);
+            await InvalidateKeysAsync(keys, cancellationToken);
 
-                // Also invalidate by pattern
-                var pattern = _keyGenerator.GenerateInvalidationPattern(entityType);
-                await _cacheProvider.InvalidateByPatternAsync(pattern, cancellationToken);
+            _logger.LogDebug("Cache invalidated for entity: {EntityType}, Id: {EntityId}", entityType.Name, id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache for entity by ID: {EntityType}, Id: {EntityId}", typeof(TEntity).Name, id);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidatebyid-end EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
+        }
+    }
 
-                _logger.LogDebug("Cache invalidated for entity type: {EntityType}", entityType.Name);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache for entity type: {EntityType}", entityType.Name);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidateentity-end EntityType={EntityType}", entityType.Name);
-            }
+    /// <inheritdoc/>
+    public async Task InvalidateRegionAsync(string region, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(region))
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateByIdAsync<TEntity>(object id, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
+
+        try
         {
-            if (id == null)
+            await _cacheProvider.InvalidateRegionAsync(region, cancellationToken);
+            _logger.LogDebug("Cache region invalidated: {Region}", region);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache region: {Region}", region);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task InvalidateByTagsAsync(string[] tags, CancellationToken cancellationToken = default)
+    {
+        if (tags == null || tags.Length == 0)
+        {
+            return;
+        }
+
+        _logger.LogDebug("application-cache-invalidatebytags-start Tags={Tags}", string.Join(",", tags));
+
+        try
+        {
+            // Tags are implemented as regions in this implementation
+            foreach (string tag in tags)
             {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-invalidatebyid-start EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
-
-            try
-            {
-                // Generate possible cache keys for this entity ID
-                Type entityType = typeof(TEntity);
-
-                // Common key patterns for GetById operations
-                var keys = new[]
+                if (!string.IsNullOrWhiteSpace(tag))
                 {
-                    $"{entityType.Name}:GetById:{id}",
-                    $"{entityType.Name}:GetByIdAsync:{id}",
-                    $"{entityType.Name}:{id}",
-                    $"{entityType.Name}:id={id}"
-                };
-
-                await InvalidateKeysAsync(keys, cancellationToken);
-
-                _logger.LogDebug("Cache invalidated for entity: {EntityType}, Id: {EntityId}", entityType.Name, id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache for entity by ID: {EntityType}, Id: {EntityId}", typeof(TEntity).Name, id);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidatebyid-end EntityType={EntityType} EntityId={EntityId}", typeof(TEntity).Name, id);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task InvalidateRegionAsync(string region, CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(region))
-            {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
-
-            try
-            {
-                await _cacheProvider.InvalidateRegionAsync(region, cancellationToken);
-                _logger.LogDebug("Cache region invalidated: {Region}", region);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache region: {Region}", region);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task InvalidateByTagsAsync(string[] tags, CancellationToken cancellationToken = default)
-        {
-            if (tags == null || tags.Length == 0)
-            {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-invalidatebytags-start Tags={Tags}", string.Join(",", tags));
-
-            try
-            {
-                // Tags are implemented as regions in this implementation
-                foreach (var tag in tags)
-                {
-                    if (!string.IsNullOrWhiteSpace(tag))
-                    {
-                        await _cacheProvider.InvalidateRegionAsync($"tag:{tag}", cancellationToken);
-                    }
+                    await _cacheProvider.InvalidateRegionAsync($"tag:{tag}", cancellationToken);
                 }
+            }
 
-                _logger.LogDebug("Cache invalidated for tags: {Tags}", string.Join(", ", tags));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache by tags: {Tags}", string.Join(", ", tags));
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidatebytags-end Tags={Tags}", string.Join(",", tags));
-            }
+            _logger.LogDebug("Cache invalidated for tags: {Tags}", string.Join(", ", tags));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache by tags: {Tags}", string.Join(", ", tags));
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidatebytags-end Tags={Tags}", string.Join(",", tags));
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task InvalidateByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-invalidatebypattern-start Pattern={Pattern}", pattern);
+
+        try
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-            {
-                return;
-            }
+            await _cacheProvider.InvalidateByPatternAsync(pattern, cancellationToken);
+            _logger.LogDebug("Cache invalidated by pattern: {Pattern}", pattern);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache by pattern: {Pattern}", pattern);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidatebypattern-end Pattern={Pattern}", pattern);
+        }
+    }
 
-            _logger.LogDebug("application-cache-invalidatebypattern-start Pattern={Pattern}", pattern);
-
-            try
-            {
-                await _cacheProvider.InvalidateByPatternAsync(pattern, cancellationToken);
-                _logger.LogDebug("Cache invalidated by pattern: {Pattern}", pattern);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache by pattern: {Pattern}", pattern);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidatebypattern-end Pattern={Pattern}", pattern);
-            }
+    /// <inheritdoc/>
+    public async Task InvalidateKeysAsync(string[] keys, CancellationToken cancellationToken = default)
+    {
+        if (keys == null || keys.Length == 0)
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateKeysAsync(string[] keys, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-invalidatekeys-start Keys={Keys}", string.Join(",", keys));
+
+        try
         {
-            if (keys == null || keys.Length == 0)
+            foreach (string key in keys)
             {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-invalidatekeys-start Keys={Keys}", string.Join(",", keys));
-
-            try
-            {
-                foreach (var key in keys)
+                if (!string.IsNullOrWhiteSpace(key))
                 {
-                    if (!string.IsNullOrWhiteSpace(key))
-                    {
-                        await _cacheProvider.RemoveAsync(key, cancellationToken);
-                    }
+                    await _cacheProvider.RemoveAsync(key, cancellationToken);
                 }
+            }
 
-                _logger.LogDebug("Cache keys invalidated: {KeyCount} keys", keys.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache keys");
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidatekeys-end Keys={Keys}", string.Join(",", keys));
-            }
+            _logger.LogDebug("Cache keys invalidated: {KeyCount} keys", keys.Length);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache keys");
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidatekeys-end Keys={Keys}", string.Join(",", keys));
         }
     }
 }

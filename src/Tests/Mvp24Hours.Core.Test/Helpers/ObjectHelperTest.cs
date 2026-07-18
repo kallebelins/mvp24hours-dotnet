@@ -171,9 +171,7 @@ public class ObjectHelperTest
         {
             Id = 1,
             Name = "Acme",
-            Employees = Enumerable.Range(1, 1000)
-                .Select(i => new Person { Id = i, Name = $"Person{i}", Age = i % 100 })
-                .ToList()
+            Employees = [.. Enumerable.Range(1, 1000).Select(i => new Person { Id = i, Name = $"Person{i}", Age = i % 100 })]
         };
 
         // Act

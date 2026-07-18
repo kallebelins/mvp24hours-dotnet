@@ -3,26 +3,24 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.Caching.Helpers;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+public static class CachingServiceExtensions
 {
-    public static class CachingServiceExtensions
+    /// <summary>
+    /// 
+    /// </summary>
+    public static IServiceCollection AddMvp24HoursCaching(this IServiceCollection services,
+        DateTimeOffset? AbsoluteExpiration = null,
+        TimeSpan? AbsoluteExpirationRelativeToNow = null,
+        TimeSpan? SlidingExpiration = null)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IServiceCollection AddMvp24HoursCaching(this IServiceCollection services,
-            DateTimeOffset? AbsoluteExpiration = null,
-            TimeSpan? AbsoluteExpirationRelativeToNow = null,
-            TimeSpan? SlidingExpiration = null)
-        {
-            CacheConfigHelper.AbsoluteExpiration = AbsoluteExpiration;
-            CacheConfigHelper.AbsoluteExpirationRelativeToNow = AbsoluteExpirationRelativeToNow;
-            CacheConfigHelper.SlidingExpiration = SlidingExpiration;
-            return services;
-        }
+        CacheConfigHelper.AbsoluteExpiration = AbsoluteExpiration;
+        CacheConfigHelper.AbsoluteExpirationRelativeToNow = AbsoluteExpirationRelativeToNow;
+        CacheConfigHelper.SlidingExpiration = SlidingExpiration;
+        return services;
     }
 }

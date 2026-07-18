@@ -3,196 +3,192 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Testing.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Testing.Extensions;
+
+/// <summary>
+/// Extension methods for configuring RabbitMQ testing services.
+/// </summary>
+public static class TestingServiceExtensions
 {
     /// <summary>
-    /// Extension methods for configuring RabbitMQ testing services.
+    /// Adds the in-memory RabbitMQ bus for testing.
     /// </summary>
-    public static class TestingServiceExtensions
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddInMemoryRabbitMQ(this IServiceCollection services)
     {
-        /// <summary>
-        /// Adds the in-memory RabbitMQ bus for testing.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddInMemoryRabbitMQ(this IServiceCollection services)
-        {
-            services.AddSingleton<IInMemoryBus>(sp => new InMemoryBus(sp));
-            services.AddSingleton<IMvpRabbitMQClient>(sp =>
-                sp.GetRequiredService<IInMemoryBus>() as IMvpRabbitMQClient
-                ?? throw new InvalidOperationException("InMemoryBus not registered"));
+        services.AddSingleton<IInMemoryBus>(sp => new InMemoryBus(sp));
+        services.AddSingleton<IMvpRabbitMQClient>(sp =>
+            sp.GetRequiredService<IInMemoryBus>() as IMvpRabbitMQClient
+            ?? throw new InvalidOperationException("InMemoryBus not registered"));
 
-            return services;
-        }
-
-        /// <summary>
-        /// Adds the test harness for integration testing.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddRabbitMQTestHarness(this IServiceCollection services)
-        {
-            services.AddInMemoryRabbitMQ();
-            services.AddSingleton<ITestHarness>(sp => new TestHarness(sp));
-
-            return services;
-        }
-
-        /// <summary>
-        /// Adds the test harness with custom configuration.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <param name="configure">Action to configure the test harness.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddRabbitMQTestHarness(
-            this IServiceCollection services,
-            Action<TestHarnessOptions> configure)
-        {
-            var options = new TestHarnessOptions();
-            configure(options);
-
-            services.AddInMemoryRabbitMQ();
-
-            if (options.AutoRegisterConsumers)
-            {
-                // Auto-register consumers from specified assemblies
-                foreach (Assembly assembly in options.ConsumerAssemblies)
-                {
-                    IEnumerable<Type> consumerTypes = assembly.GetTypes()
-                        .Where(t => !t.IsAbstract && !t.IsInterface)
-                        .Where(t => t.GetInterfaces().Any(i =>
-                            i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
-
-                    foreach (Type? consumerType in consumerTypes)
-                    {
-                        services.AddScoped(consumerType);
-
-                        IEnumerable<Type> interfaces = consumerType.GetInterfaces()
-                            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
-
-                        foreach (Type? iface in interfaces)
-                        {
-                            services.AddScoped(iface, consumerType);
-                        }
-                    }
-                }
-            }
-
-            services.AddSingleton<ITestHarness>(sp => new TestHarness(sp));
-
-            return services;
-        }
-
-        /// <summary>
-        /// Replaces the RabbitMQ client with the in-memory bus for testing.
-        /// </summary>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection ReplaceRabbitMQWithInMemory(this IServiceCollection services)
-        {
-            // Remove existing IMvpRabbitMQClient registrations
-            var descriptors = services
-                .Where(d => d.ServiceType == typeof(IMvpRabbitMQClient))
-                .ToList();
-
-            foreach (ServiceDescriptor? descriptor in descriptors)
-            {
-                services.Remove(descriptor);
-            }
-
-            // Add in-memory implementation
-            services.AddInMemoryRabbitMQ();
-
-            return services;
-        }
-
-        /// <summary>
-        /// Adds a test consumer to the service collection.
-        /// </summary>
-        /// <typeparam name="TConsumer">The consumer type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddTestConsumer<TConsumer>(this IServiceCollection services)
-            where TConsumer : class
-        {
-            Type consumerType = typeof(TConsumer);
-            services.AddScoped(consumerType);
-
-            IEnumerable<Type> interfaces = consumerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
-
-            foreach (Type? iface in interfaces)
-            {
-                services.AddScoped(iface, consumerType);
-            }
-
-            return services;
-        }
-
-        /// <summary>
-        /// Adds a test request handler to the service collection.
-        /// </summary>
-        /// <typeparam name="THandler">The handler type.</typeparam>
-        /// <param name="services">The service collection.</param>
-        /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddTestRequestHandler<THandler>(this IServiceCollection services)
-            where THandler : class
-        {
-            Type handlerType = typeof(THandler);
-            services.AddScoped(handlerType);
-
-            IEnumerable<Type> interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
-
-            foreach (Type? iface in interfaces)
-            {
-                services.AddScoped(iface, handlerType);
-            }
-
-            return services;
-        }
+        return services;
     }
 
     /// <summary>
-    /// Options for configuring the test harness.
+    /// Adds the test harness for integration testing.
     /// </summary>
-    public class TestHarnessOptions
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddRabbitMQTestHarness(this IServiceCollection services)
     {
-        /// <summary>
-        /// Gets or sets whether to auto-register consumers from assemblies.
-        /// </summary>
-        public bool AutoRegisterConsumers { get; set; } = false;
+        services.AddInMemoryRabbitMQ();
+        services.AddSingleton<ITestHarness>(sp => new TestHarness(sp));
 
-        /// <summary>
-        /// Gets or sets the assemblies to scan for consumers.
-        /// </summary>
-        public List<System.Reflection.Assembly> ConsumerAssemblies { get; set; } = [];
+        return services;
+    }
 
-        /// <summary>
-        /// Adds an assembly to scan for consumers.
-        /// </summary>
-        public TestHarnessOptions AddConsumersFromAssembly(System.Reflection.Assembly assembly)
+    /// <summary>
+    /// Adds the test harness with custom configuration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">Action to configure the test harness.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddRabbitMQTestHarness(
+        this IServiceCollection services,
+        Action<TestHarnessOptions> configure)
+    {
+        var options = new TestHarnessOptions();
+        configure(options);
+
+        services.AddInMemoryRabbitMQ();
+
+        if (options.AutoRegisterConsumers)
         {
-            AutoRegisterConsumers = true;
-            ConsumerAssemblies.Add(assembly);
-            return this;
+            // Auto-register consumers from specified assemblies
+            foreach (Assembly assembly in options.ConsumerAssemblies)
+            {
+                IEnumerable<Type> consumerTypes = assembly.GetTypes()
+                    .Where(t => !t.IsAbstract && !t.IsInterface)
+                    .Where(t => t.GetInterfaces().Any(i =>
+                        i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>)));
+
+                foreach (Type? consumerType in consumerTypes)
+                {
+                    services.AddScoped(consumerType);
+
+                    IEnumerable<Type> interfaces = consumerType.GetInterfaces()
+                        .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
+
+                    foreach (Type? iface in interfaces)
+                    {
+                        services.AddScoped(iface, consumerType);
+                    }
+                }
+            }
         }
 
-        /// <summary>
-        /// Adds the assembly containing the specified type.
-        /// </summary>
-        public TestHarnessOptions AddConsumersFromAssemblyContaining<T>()
+        services.AddSingleton<ITestHarness>(sp => new TestHarness(sp));
+
+        return services;
+    }
+
+    /// <summary>
+    /// Replaces the RabbitMQ client with the in-memory bus for testing.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection ReplaceRabbitMQWithInMemory(this IServiceCollection services)
+    {
+        // Remove existing IMvpRabbitMQClient registrations
+        var descriptors = services
+            .Where(d => d.ServiceType == typeof(IMvpRabbitMQClient))
+            .ToList();
+
+        foreach (ServiceDescriptor? descriptor in descriptors)
         {
-            return AddConsumersFromAssembly(typeof(T).Assembly);
+            services.Remove(descriptor);
         }
+
+        // Add in-memory implementation
+        services.AddInMemoryRabbitMQ();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds a test consumer to the service collection.
+    /// </summary>
+    /// <typeparam name="TConsumer">The consumer type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddTestConsumer<TConsumer>(this IServiceCollection services)
+        where TConsumer : class
+    {
+        Type consumerType = typeof(TConsumer);
+        services.AddScoped(consumerType);
+
+        IEnumerable<Type> interfaces = consumerType.GetInterfaces()
+            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageConsumer<>));
+
+        foreach (Type? iface in interfaces)
+        {
+            services.AddScoped(iface, consumerType);
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds a test request handler to the service collection.
+    /// </summary>
+    /// <typeparam name="THandler">The handler type.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddTestRequestHandler<THandler>(this IServiceCollection services)
+        where THandler : class
+    {
+        Type handlerType = typeof(THandler);
+        services.AddScoped(handlerType);
+
+        IEnumerable<Type> interfaces = handlerType.GetInterfaces()
+            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
+
+        foreach (Type? iface in interfaces)
+        {
+            services.AddScoped(iface, handlerType);
+        }
+
+        return services;
+    }
+}
+
+/// <summary>
+/// Options for configuring the test harness.
+/// </summary>
+public class TestHarnessOptions
+{
+    /// <summary>
+    /// Gets or sets whether to auto-register consumers from assemblies.
+    /// </summary>
+    public bool AutoRegisterConsumers { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the assemblies to scan for consumers.
+    /// </summary>
+    public List<System.Reflection.Assembly> ConsumerAssemblies { get; set; } = [];
+
+    /// <summary>
+    /// Adds an assembly to scan for consumers.
+    /// </summary>
+    public TestHarnessOptions AddConsumersFromAssembly(System.Reflection.Assembly assembly)
+    {
+        AutoRegisterConsumers = true;
+        ConsumerAssemblies.Add(assembly);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds the assembly containing the specified type.
+    /// </summary>
+    public TestHarnessOptions AddConsumersFromAssemblyContaining<T>()
+    {
+        return AddConsumersFromAssembly(typeof(T).Assembly);
     }
 }
 

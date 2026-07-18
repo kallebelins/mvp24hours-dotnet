@@ -3,20 +3,18 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Linq;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Mvp24Hours.WebAPI.Filters.Swagger
+namespace Mvp24Hours.WebAPI.Filters.Swagger;
+
+public class CustomSwaggerFilter : IDocumentFilter
 {
-    public class CustomSwaggerFilter : IDocumentFilter
+    public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
-        public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
-        {
-            var nonMobileRoutes = swaggerDoc.Paths
-                .Where(predicate: x => !x.Key.Contains("public", System.StringComparison.CurrentCultureIgnoreCase))
-                .ToList();
-            nonMobileRoutes.ForEach(x => { swaggerDoc.Paths.Remove(x.Key); });
-        }
+        var nonMobileRoutes = swaggerDoc.Paths
+            .Where(predicate: x => !x.Key.Contains("public", System.StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+        nonMobileRoutes.ForEach(x => swaggerDoc.Paths.Remove(x.Key));
     }
 }

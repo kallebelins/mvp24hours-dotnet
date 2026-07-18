@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure.Options;
@@ -226,21 +224,16 @@ public abstract class SimpleOptionsValidatorBase<TOptions> :
 /// Composite validator that combines multiple validators for the same options type.
 /// </summary>
 /// <typeparam name="TOptions">The type of options to validate.</typeparam>
-public sealed class CompositeOptionsValidator<TOptions> :
+/// <remarks>
+/// Initializes a new instance of the composite validator.
+/// </remarks>
+/// <param name="validators">The validators to combine.</param>
+public sealed class CompositeOptionsValidator<TOptions>(IEnumerable<IOptionsValidator<TOptions>> validators) :
     IOptionsValidator<TOptions>,
     IValidateOptions<TOptions>
     where TOptions : class
 {
-    private readonly IEnumerable<IOptionsValidator<TOptions>> _validators;
-
-    /// <summary>
-    /// Initializes a new instance of the composite validator.
-    /// </summary>
-    /// <param name="validators">The validators to combine.</param>
-    public CompositeOptionsValidator(IEnumerable<IOptionsValidator<TOptions>> validators)
-    {
-        _validators = validators ?? throw new ArgumentNullException(nameof(validators));
-    }
+    private readonly IEnumerable<IOptionsValidator<TOptions>> _validators = validators ?? throw new ArgumentNullException(nameof(validators));
 
     /// <summary>
     /// Validates the options using all registered validators.
@@ -285,21 +278,16 @@ public sealed class CompositeOptionsValidator<TOptions> :
 /// Inline options validator using a delegate.
 /// </summary>
 /// <typeparam name="TOptions">The type of options to validate.</typeparam>
-public sealed class DelegateOptionsValidator<TOptions> :
+/// <remarks>
+/// Initializes a new instance of the delegate validator.
+/// </remarks>
+/// <param name="validateFunc">The validation function.</param>
+public sealed class DelegateOptionsValidator<TOptions>(Func<TOptions, OptionsValidationResult> validateFunc) :
     IOptionsValidator<TOptions>,
     IValidateOptions<TOptions>
     where TOptions : class
 {
-    private readonly Func<TOptions, OptionsValidationResult> _validateFunc;
-
-    /// <summary>
-    /// Initializes a new instance of the delegate validator.
-    /// </summary>
-    /// <param name="validateFunc">The validation function.</param>
-    public DelegateOptionsValidator(Func<TOptions, OptionsValidationResult> validateFunc)
-    {
-        _validateFunc = validateFunc ?? throw new ArgumentNullException(nameof(validateFunc));
-    }
+    private readonly Func<TOptions, OptionsValidationResult> _validateFunc = validateFunc ?? throw new ArgumentNullException(nameof(validateFunc));
 
     /// <summary>
     /// Creates a validator from a predicate and failure message.

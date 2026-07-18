@@ -3,11 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -48,10 +46,14 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 /// Assert.Single(products);
 /// </code>
 /// </example>
-public class InMemoryDbContextFactory<TContext> : IDisposable
+/// <remarks>
+/// Initializes a new instance of the factory with the specified options.
+/// </remarks>
+/// <param name="options">The configuration options.</param>
+public class InMemoryDbContextFactory<TContext>(InMemoryDbContextOptions options) : IDisposable
     where TContext : DbContext
 {
-    private readonly InMemoryDbContextOptions _options;
+    private readonly InMemoryDbContextOptions _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ConcurrentBag<TContext> _createdContexts = [];
     private readonly Func<DbContextOptions<TContext>, TContext>? _contextFactory;
     private bool _disposed;
@@ -62,15 +64,6 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     public InMemoryDbContextFactory()
         : this(new InMemoryDbContextOptions())
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the factory with the specified options.
-    /// </summary>
-    /// <param name="options">The configuration options.</param>
-    public InMemoryDbContextFactory(InMemoryDbContextOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     /// <summary>
@@ -268,7 +261,10 @@ public class InMemoryDbContextFactory<TContext> : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
@@ -326,7 +322,7 @@ public static class InMemoryDbContextHelper
     public static DbContextOptions<TContext> CreateOptions<TContext>(string? databaseName = null)
         where TContext : DbContext
     {
-        var effectiveName = databaseName ?? $"InMemoryTestDb_{Guid.NewGuid():N}";
+        string effectiveName = databaseName ?? $"InMemoryTestDb_{Guid.NewGuid():N}";
 
         return new DbContextOptionsBuilder<TContext>()
             .UseInMemoryDatabase(effectiveName)

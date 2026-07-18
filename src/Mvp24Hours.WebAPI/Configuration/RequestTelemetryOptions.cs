@@ -4,9 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-
 namespace Mvp24Hours.WebAPI.Configuration;
 
 /// <summary>
@@ -88,11 +85,11 @@ public class RequestTelemetryOptions
     /// <summary>
     /// Gets or sets histogram bucket boundaries for request duration metrics (in milliseconds).
     /// </summary>
-    public double[] DurationBuckets { get; set; } = { 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000 };
+    public double[] DurationBuckets { get; set; } = [5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000];
 
     /// <summary>
     /// Gets or sets histogram bucket boundaries for request size metrics (in bytes).
     /// </summary>
-    public double[] SizeBuckets { get; set; } = { 100, 1024, 10240, 102400, 1048576, 10485760 };
+    public double[] SizeBuckets { get; set; } = [100, 1024, 10240, 102400, 1048576, 10485760];
 }
 

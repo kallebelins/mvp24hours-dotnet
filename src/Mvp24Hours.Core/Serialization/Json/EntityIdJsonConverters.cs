@@ -3,366 +3,343 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mvp24Hours.Core.ValueObjects;
 
-namespace Mvp24Hours.Core.Serialization.Json
+namespace Mvp24Hours.Core.Serialization.Json;
+
+/// <summary>
+/// JSON converter for Guid-based strongly-typed entity IDs (System.Text.Json).
+/// </summary>
+/// <typeparam name="TId">The strongly-typed ID type.</typeparam>
+/// <example>
+/// <code>
+/// // Register globally:
+/// services.AddControllers()
+///     .AddJsonOptions(options =>
+///     {
+///         options.JsonSerializerOptions.Converters.Add(new GuidEntityIdJsonConverter&lt;CustomerId&gt;());
+///     });
+/// 
+/// // Or use as attribute:
+/// [JsonConverter(typeof(GuidEntityIdJsonConverter&lt;CustomerId&gt;))]
+/// public CustomerId Id { get; set; }
+/// </code>
+/// </example>
+public class GuidEntityIdJsonConverter<TId> : JsonConverter<TId>
+    where TId : GuidEntityId<TId>
 {
-    /// <summary>
-    /// JSON converter for Guid-based strongly-typed entity IDs (System.Text.Json).
-    /// </summary>
-    /// <typeparam name="TId">The strongly-typed ID type.</typeparam>
-    /// <example>
-    /// <code>
-    /// // Register globally:
-    /// services.AddControllers()
-    ///     .AddJsonOptions(options =>
-    ///     {
-    ///         options.JsonSerializerOptions.Converters.Add(new GuidEntityIdJsonConverter&lt;CustomerId&gt;());
-    ///     });
-    /// 
-    /// // Or use as attribute:
-    /// [JsonConverter(typeof(GuidEntityIdJsonConverter&lt;CustomerId&gt;))]
-    /// public CustomerId Id { get; set; }
-    /// </code>
-    /// </example>
-    public class GuidEntityIdJsonConverter<TId> : JsonConverter<TId>
-        where TId : GuidEntityId<TId>
+    private static readonly Func<Guid, TId> _createInstance = CreateFactory();
+
+    /// <inheritdoc />
+    public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        private static readonly Func<Guid, TId> _createInstance = CreateFactory();
-
-        /// <inheritdoc />
-        public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.Null)
         {
-            if (reader.TokenType == JsonTokenType.Null)
-            {
-                return default!;
-            }
-
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var stringValue = reader.GetString();
-                if (Guid.TryParse(stringValue, out Guid guid))
-                {
-                    return _createInstance(guid);
-                }
-            }
-
-            throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+            return default!;
         }
 
-        /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.String)
         {
-            if (value is null)
+            string? stringValue = reader.GetString();
+            if (Guid.TryParse(stringValue, out Guid guid))
             {
-                writer.WriteNullValue();
-            }
-            else
-            {
-                writer.WriteStringValue(value.Value.ToString());
+                return _createInstance(guid);
             }
         }
 
-        private static Func<Guid, TId> CreateFactory()
+        throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+    }
+
+    /// <inheritdoc />
+    public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+    {
+        if (value is null)
         {
-            ConstructorInfo? ctor = typeof(TId).GetConstructor(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new[] { typeof(Guid) },
-                null);
-
-            if (ctor == null)
-            {
-                throw new InvalidOperationException(
-                    $"Type {typeof(TId).Name} must have a constructor that accepts a Guid parameter.");
-            }
-
-            ParameterExpression parameter = Expression.Parameter(typeof(Guid), "value");
-            NewExpression body = Expression.New(ctor, parameter);
-            return Expression.Lambda<Func<Guid, TId>>(body, parameter).Compile();
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteStringValue(value.Value.ToString());
         }
     }
 
-    /// <summary>
-    /// JSON converter for int-based strongly-typed entity IDs (System.Text.Json).
-    /// </summary>
-    /// <typeparam name="TId">The strongly-typed ID type.</typeparam>
-    public class IntEntityIdJsonConverter<TId> : JsonConverter<TId>
-        where TId : IntEntityId<TId>
+    private static Func<Guid, TId> CreateFactory()
     {
-        private static readonly Func<int, TId> _createInstance = CreateFactory();
+        ConstructorInfo? ctor = typeof(TId).GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            null,
+            [typeof(Guid)],
+            null) ?? throw new InvalidOperationException(
+                $"Type {typeof(TId).Name} must have a constructor that accepts a Guid parameter.");
+        ParameterExpression parameter = Expression.Parameter(typeof(Guid), "value");
+        NewExpression body = Expression.New(ctor, parameter);
+        return Expression.Lambda<Func<Guid, TId>>(body, parameter).Compile();
+    }
+}
 
-        /// <inheritdoc />
-        public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+/// <summary>
+/// JSON converter for int-based strongly-typed entity IDs (System.Text.Json).
+/// </summary>
+/// <typeparam name="TId">The strongly-typed ID type.</typeparam>
+public class IntEntityIdJsonConverter<TId> : JsonConverter<TId>
+    where TId : IntEntityId<TId>
+{
+    private static readonly Func<int, TId> _createInstance = CreateFactory();
+
+    /// <inheritdoc />
+    public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
         {
-            if (reader.TokenType == JsonTokenType.Null)
-            {
-                return default!;
-            }
-
-            if (reader.TokenType == JsonTokenType.Number)
-            {
-                return _createInstance(reader.GetInt32());
-            }
-
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var stringValue = reader.GetString();
-                if (int.TryParse(stringValue, out var intValue))
-                {
-                    return _createInstance(intValue);
-                }
-            }
-
-            throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+            return default!;
         }
 
-        /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.Number)
         {
-            if (value is null)
+            return _createInstance(reader.GetInt32());
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            string? stringValue = reader.GetString();
+            if (int.TryParse(stringValue, out int intValue))
             {
-                writer.WriteNullValue();
-            }
-            else
-            {
-                writer.WriteNumberValue(value.Value);
+                return _createInstance(intValue);
             }
         }
 
-        private static Func<int, TId> CreateFactory()
+        throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+    }
+
+    /// <inheritdoc />
+    public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+    {
+        if (value is null)
         {
-            ConstructorInfo? ctor = typeof(TId).GetConstructor(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new[] { typeof(int) },
-                null);
-
-            if (ctor == null)
-            {
-                throw new InvalidOperationException(
-                    $"Type {typeof(TId).Name} must have a constructor that accepts an int parameter.");
-            }
-
-            ParameterExpression parameter = Expression.Parameter(typeof(int), "value");
-            NewExpression body = Expression.New(ctor, parameter);
-            return Expression.Lambda<Func<int, TId>>(body, parameter).Compile();
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteNumberValue(value.Value);
         }
     }
 
-    /// <summary>
-    /// JSON converter for long-based strongly-typed entity IDs (System.Text.Json).
-    /// </summary>
-    /// <typeparam name="TId">The strongly-typed ID type.</typeparam>
-    public class LongEntityIdJsonConverter<TId> : JsonConverter<TId>
-        where TId : LongEntityId<TId>
+    private static Func<int, TId> CreateFactory()
     {
-        private static readonly Func<long, TId> _createInstance = CreateFactory();
+        ConstructorInfo? ctor = typeof(TId).GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            null,
+            [typeof(int)],
+            null) ?? throw new InvalidOperationException(
+                $"Type {typeof(TId).Name} must have a constructor that accepts an int parameter.");
+        ParameterExpression parameter = Expression.Parameter(typeof(int), "value");
+        NewExpression body = Expression.New(ctor, parameter);
+        return Expression.Lambda<Func<int, TId>>(body, parameter).Compile();
+    }
+}
 
-        /// <inheritdoc />
-        public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+/// <summary>
+/// JSON converter for long-based strongly-typed entity IDs (System.Text.Json).
+/// </summary>
+/// <typeparam name="TId">The strongly-typed ID type.</typeparam>
+public class LongEntityIdJsonConverter<TId> : JsonConverter<TId>
+    where TId : LongEntityId<TId>
+{
+    private static readonly Func<long, TId> _createInstance = CreateFactory();
+
+    /// <inheritdoc />
+    public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
         {
-            if (reader.TokenType == JsonTokenType.Null)
-            {
-                return default!;
-            }
-
-            if (reader.TokenType == JsonTokenType.Number)
-            {
-                return _createInstance(reader.GetInt64());
-            }
-
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var stringValue = reader.GetString();
-                if (long.TryParse(stringValue, out var longValue))
-                {
-                    return _createInstance(longValue);
-                }
-            }
-
-            throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+            return default!;
         }
 
-        /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.Number)
         {
-            if (value is null)
+            return _createInstance(reader.GetInt64());
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            string? stringValue = reader.GetString();
+            if (long.TryParse(stringValue, out long longValue))
             {
-                writer.WriteNullValue();
-            }
-            else
-            {
-                writer.WriteNumberValue(value.Value);
+                return _createInstance(longValue);
             }
         }
 
-        private static Func<long, TId> CreateFactory()
+        throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+    }
+
+    /// <inheritdoc />
+    public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+    {
+        if (value is null)
         {
-            ConstructorInfo? ctor = typeof(TId).GetConstructor(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new[] { typeof(long) },
-                null);
-
-            if (ctor == null)
-            {
-                throw new InvalidOperationException(
-                    $"Type {typeof(TId).Name} must have a constructor that accepts a long parameter.");
-            }
-
-            ParameterExpression parameter = Expression.Parameter(typeof(long), "value");
-            NewExpression body = Expression.New(ctor, parameter);
-            return Expression.Lambda<Func<long, TId>>(body, parameter).Compile();
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteNumberValue(value.Value);
         }
     }
 
-    /// <summary>
-    /// JSON converter for string-based strongly-typed entity IDs (System.Text.Json).
-    /// </summary>
-    /// <typeparam name="TId">The strongly-typed ID type.</typeparam>
-    public class StringEntityIdJsonConverter<TId> : JsonConverter<TId>
-        where TId : StringEntityId<TId>
+    private static Func<long, TId> CreateFactory()
     {
-        private static readonly Func<string, TId> _createInstance = CreateFactory();
+        ConstructorInfo? ctor = typeof(TId).GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            null,
+            [typeof(long)],
+            null) ?? throw new InvalidOperationException(
+                $"Type {typeof(TId).Name} must have a constructor that accepts a long parameter.");
+        ParameterExpression parameter = Expression.Parameter(typeof(long), "value");
+        NewExpression body = Expression.New(ctor, parameter);
+        return Expression.Lambda<Func<long, TId>>(body, parameter).Compile();
+    }
+}
 
-        /// <inheritdoc />
-        public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+/// <summary>
+/// JSON converter for string-based strongly-typed entity IDs (System.Text.Json).
+/// </summary>
+/// <typeparam name="TId">The strongly-typed ID type.</typeparam>
+public class StringEntityIdJsonConverter<TId> : JsonConverter<TId>
+    where TId : StringEntityId<TId>
+{
+    private static readonly Func<string, TId> _createInstance = CreateFactory();
+
+    /// <inheritdoc />
+    public override TId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
         {
-            if (reader.TokenType == JsonTokenType.Null)
-            {
-                return default!;
-            }
-
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                var stringValue = reader.GetString();
-                return _createInstance(stringValue ?? string.Empty);
-            }
-
-            throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+            return default!;
         }
 
-        /// <inheritdoc />
-        public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+        if (reader.TokenType == JsonTokenType.String)
         {
-            if (value is null)
-            {
-                writer.WriteNullValue();
-            }
-            else
-            {
-                writer.WriteStringValue(value.Value);
-            }
+            string? stringValue = reader.GetString();
+            return _createInstance(stringValue ?? string.Empty);
         }
 
-        private static Func<string, TId> CreateFactory()
+        throw new JsonException($"Cannot convert value to {typeof(TId).Name}");
+    }
+
+    /// <inheritdoc />
+    public override void Write(Utf8JsonWriter writer, TId? value, JsonSerializerOptions options)
+    {
+        if (value is null)
         {
-            ConstructorInfo? ctor = typeof(TId).GetConstructor(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new[] { typeof(string) },
-                null);
-
-            if (ctor == null)
-            {
-                throw new InvalidOperationException(
-                    $"Type {typeof(TId).Name} must have a constructor that accepts a string parameter.");
-            }
-
-            ParameterExpression parameter = Expression.Parameter(typeof(string), "value");
-            NewExpression body = Expression.New(ctor, parameter);
-            return Expression.Lambda<Func<string, TId>>(body, parameter).Compile();
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteStringValue(value.Value);
         }
     }
 
-    /// <summary>
-    /// JSON converter factory that automatically creates converters for strongly-typed entity IDs.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// services.AddControllers()
-    ///     .AddJsonOptions(options =>
-    ///     {
-    ///         options.JsonSerializerOptions.Converters.Add(new EntityIdJsonConverterFactory());
-    ///     });
-    /// </code>
-    /// </example>
-    public class EntityIdJsonConverterFactory : JsonConverterFactory
+    private static Func<string, TId> CreateFactory()
     {
-        /// <inheritdoc />
-        public override bool CanConvert(Type typeToConvert)
-        {
-            if (typeToConvert == null) return false;
+        ConstructorInfo? ctor = typeof(TId).GetConstructor(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            null,
+            [typeof(string)],
+            null) ?? throw new InvalidOperationException(
+                $"Type {typeof(TId).Name} must have a constructor that accepts a string parameter.");
+        ParameterExpression parameter = Expression.Parameter(typeof(string), "value");
+        NewExpression body = Expression.New(ctor, parameter);
+        return Expression.Lambda<Func<string, TId>>(body, parameter).Compile();
+    }
+}
 
-            return IsGuidEntityId(typeToConvert) ||
-                   IsIntEntityId(typeToConvert) ||
-                   IsLongEntityId(typeToConvert) ||
-                   IsStringEntityId(typeToConvert);
+/// <summary>
+/// JSON converter factory that automatically creates converters for strongly-typed entity IDs.
+/// </summary>
+/// <example>
+/// <code>
+/// services.AddControllers()
+///     .AddJsonOptions(options =>
+///     {
+///         options.JsonSerializerOptions.Converters.Add(new EntityIdJsonConverterFactory());
+///     });
+/// </code>
+/// </example>
+public class EntityIdJsonConverterFactory : JsonConverterFactory
+{
+    /// <inheritdoc />
+    public override bool CanConvert(Type typeToConvert)
+    {
+        if (typeToConvert == null)
+        {
+            return false;
         }
 
-        /// <inheritdoc />
-        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+        return IsGuidEntityId(typeToConvert) ||
+               IsIntEntityId(typeToConvert) ||
+               IsLongEntityId(typeToConvert) ||
+               IsStringEntityId(typeToConvert);
+    }
+
+    /// <inheritdoc />
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (IsGuidEntityId(typeToConvert))
         {
-            if (IsGuidEntityId(typeToConvert))
-            {
-                Type converterType = typeof(GuidEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType)!;
-            }
-
-            if (IsIntEntityId(typeToConvert))
-            {
-                Type converterType = typeof(IntEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType)!;
-            }
-
-            if (IsLongEntityId(typeToConvert))
-            {
-                Type converterType = typeof(LongEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType)!;
-            }
-
-            if (IsStringEntityId(typeToConvert))
-            {
-                Type converterType = typeof(StringEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
-                return (JsonConverter)Activator.CreateInstance(converterType)!;
-            }
-
-            throw new NotSupportedException($"Cannot create converter for type {typeToConvert}");
+            Type converterType = typeof(GuidEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
+            return (JsonConverter)Activator.CreateInstance(converterType)!;
         }
 
-        private static bool IsGuidEntityId(Type type)
+        if (IsIntEntityId(typeToConvert))
         {
-            return type.BaseType != null &&
-                   type.BaseType.IsGenericType &&
-                   type.BaseType.GetGenericTypeDefinition() == typeof(GuidEntityId<>);
+            Type converterType = typeof(IntEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
+            return (JsonConverter)Activator.CreateInstance(converterType)!;
         }
 
-        private static bool IsIntEntityId(Type type)
+        if (IsLongEntityId(typeToConvert))
         {
-            return type.BaseType != null &&
-                   type.BaseType.IsGenericType &&
-                   type.BaseType.GetGenericTypeDefinition() == typeof(IntEntityId<>);
+            Type converterType = typeof(LongEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
+            return (JsonConverter)Activator.CreateInstance(converterType)!;
         }
 
-        private static bool IsLongEntityId(Type type)
+        if (IsStringEntityId(typeToConvert))
         {
-            return type.BaseType != null &&
-                   type.BaseType.IsGenericType &&
-                   type.BaseType.GetGenericTypeDefinition() == typeof(LongEntityId<>);
+            Type converterType = typeof(StringEntityIdJsonConverter<>).MakeGenericType(typeToConvert);
+            return (JsonConverter)Activator.CreateInstance(converterType)!;
         }
 
-        private static bool IsStringEntityId(Type type)
-        {
-            return type.BaseType != null &&
-                   type.BaseType.IsGenericType &&
-                   type.BaseType.GetGenericTypeDefinition() == typeof(StringEntityId<>);
-        }
+        throw new NotSupportedException($"Cannot create converter for type {typeToConvert}");
+    }
+
+    private static bool IsGuidEntityId(Type type)
+    {
+        return type.BaseType != null &&
+               type.BaseType.IsGenericType &&
+               type.BaseType.GetGenericTypeDefinition() == typeof(GuidEntityId<>);
+    }
+
+    private static bool IsIntEntityId(Type type)
+    {
+        return type.BaseType != null &&
+               type.BaseType.IsGenericType &&
+               type.BaseType.GetGenericTypeDefinition() == typeof(IntEntityId<>);
+    }
+
+    private static bool IsLongEntityId(Type type)
+    {
+        return type.BaseType != null &&
+               type.BaseType.IsGenericType &&
+               type.BaseType.GetGenericTypeDefinition() == typeof(LongEntityId<>);
+    }
+
+    private static bool IsStringEntityId(Type type)
+    {
+        return type.BaseType != null &&
+               type.BaseType.IsGenericType &&
+               type.BaseType.GetGenericTypeDefinition() == typeof(StringEntityId<>);
     }
 }
 

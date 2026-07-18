@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Observability.Metrics;
 
@@ -322,17 +320,52 @@ public static class OpenTelemetryMeterBuilderExtensions
     {
         var meters = new List<string>();
 
-        if (includeCore) meters.Add(Mvp24HoursMeters.Core.Name);
-        if (includePipe) meters.Add(Mvp24HoursMeters.Pipe.Name);
-        if (includeCqrs) meters.Add(Mvp24HoursMeters.Cqrs.Name);
-        if (includeData) meters.Add(Mvp24HoursMeters.Data.Name);
-        if (includeRabbitMQ) meters.Add(Mvp24HoursMeters.RabbitMQ.Name);
-        if (includeWebAPI) meters.Add(Mvp24HoursMeters.WebAPI.Name);
-        if (includeCaching) meters.Add(Mvp24HoursMeters.Caching.Name);
-        if (includeCronJob) meters.Add(Mvp24HoursMeters.CronJob.Name);
-        if (includeInfrastructure) meters.Add(Mvp24HoursMeters.Infrastructure.Name);
+        if (includeCore)
+        {
+            meters.Add(Mvp24HoursMeters.Core.Name);
+        }
 
-        return meters.ToArray();
+        if (includePipe)
+        {
+            meters.Add(Mvp24HoursMeters.Pipe.Name);
+        }
+
+        if (includeCqrs)
+        {
+            meters.Add(Mvp24HoursMeters.Cqrs.Name);
+        }
+
+        if (includeData)
+        {
+            meters.Add(Mvp24HoursMeters.Data.Name);
+        }
+
+        if (includeRabbitMQ)
+        {
+            meters.Add(Mvp24HoursMeters.RabbitMQ.Name);
+        }
+
+        if (includeWebAPI)
+        {
+            meters.Add(Mvp24HoursMeters.WebAPI.Name);
+        }
+
+        if (includeCaching)
+        {
+            meters.Add(Mvp24HoursMeters.Caching.Name);
+        }
+
+        if (includeCronJob)
+        {
+            meters.Add(Mvp24HoursMeters.CronJob.Name);
+        }
+
+        if (includeInfrastructure)
+        {
+            meters.Add(Mvp24HoursMeters.Infrastructure.Name);
+        }
+
+        return [.. meters];
     }
 }
 

@@ -7,29 +7,28 @@ using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Application.MySql.Test.Support.Entities;
 using Mvp24Hours.Infrastructure.Data.EFCore;
 
-namespace Mvp24Hours.Application.MySql.Test.Support.Data
+namespace Mvp24Hours.Application.MySql.Test.Support.Data;
+
+public class DataContext : Mvp24HoursContext
 {
-    public class DataContext : Mvp24HoursContext
+    #region [ Ctor ]
+
+    public DataContext()
+        : base()
     {
-        #region [ Ctor ]
-
-        public DataContext()
-            : base()
-        {
-        }
-
-        public DataContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
-        #endregion
-
-        #region [ Sets ]
-
-        public virtual DbSet<Customer> Customer { get; set; }
-        public virtual DbSet<Contact> Contact { get; set; }
-
-        #endregion
     }
+
+    public DataContext(DbContextOptions options)
+        : base(options)
+    {
+    }
+
+    #endregion
+
+    #region [ Sets ]
+
+    public virtual DbSet<Customer> Customer { get; set; } = null!; // set by EF Core
+    public virtual DbSet<Contact> Contact { get; set; } = null!; // set by EF Core
+
+    #endregion
 }

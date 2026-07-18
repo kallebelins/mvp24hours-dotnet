@@ -3,96 +3,96 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Threading.Tasks;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 using Mvp24Hours.Patterns.Test.Setup;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Patterns.Test
+namespace Mvp24Hours.Patterns.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class WebRequestTest
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class WebRequestTest
+    private static string GetBaseUrl()
     {
-        private static string GetBaseUrl() =>
-            Startup.GetMockServer().Url
-            ?? throw new InvalidOperationException("WireMock server URL is not available.");
+        return Startup.GetMockServer().Url
+        ?? throw new InvalidOperationException("WireMock server URL is not available.");
+    }
 
-        [Fact, Priority(1)]
-        public async Task GetPostsAsync()
+    [Fact, Priority(1)]
+    public async Task GetPostsAsync()
+    {
+        // arrange
+        string? result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts");
+        // assert
+        Assert.NotNull(result);
+    }
+
+    [Fact, Priority(2)]
+    public async Task GetIdPostsAsync()
+    {
+        // arrange
+        string? result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts/1");
+        // assert
+        Assert.NotNull(result);
+    }
+
+    [Fact, Priority(3)]
+    public async Task PostPostsAsync()
+    {
+        // arrange
+        var dto = new
         {
-            // arrange
-            var result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts");
-            // assert
-            Assert.NotNull(result);
-        }
+            title = "foo",
+            body = "bar",
+            userId = 1,
+        };
+        string? result = await WebRequestHelper.PostAsync($"{GetBaseUrl()}/posts", dto.ToSerialize());
+        // assert
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(2)]
-        public async Task GetIdPostsAsync()
+    [Fact, Priority(4)]
+    public async Task PutPostsAsync()
+    {
+        // arrange
+        var dto = new
         {
-            // arrange
-            var result = await WebRequestHelper.GetAsync($"{GetBaseUrl()}/posts/1");
-            // assert
-            Assert.NotNull(result);
-        }
+            id = 1,
+            title = "foo1",
+            body = "bar1",
+            userId = 1,
+        };
+        string? result = await WebRequestHelper.PutAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
+        // assert
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(3)]
-        public async Task PostPostsAsync()
+
+    [Fact, Priority(5)]
+    public async Task DeletePostsAsync()
+    {
+        // arrange
+        string? result = await WebRequestHelper.DeleteAsync($"{GetBaseUrl()}/posts/1");
+        // assert
+        Assert.Equal("{}", result);
+    }
+
+    [Fact, Priority(6)]
+    public async Task PatchPostsAsync()
+    {
+        // arrange
+        var dto = new
         {
-            // arrange
-            var dto = new
-            {
-                title = "foo",
-                body = "bar",
-                userId = 1,
-            };
-            var result = await WebRequestHelper.PostAsync($"{GetBaseUrl()}/posts", dto.ToSerialize());
-            // assert
-            Assert.NotNull(result);
-        }
-
-        [Fact, Priority(4)]
-        public async Task PutPostsAsync()
-        {
-            // arrange
-            var dto = new
-            {
-                id = 1,
-                title = "foo1",
-                body = "bar1",
-                userId = 1,
-            };
-            var result = await WebRequestHelper.PutAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
-            // assert
-            Assert.NotNull(result);
-        }
-
-
-        [Fact, Priority(5)]
-        public async Task DeletePostsAsync()
-        {
-            // arrange
-            var result = await WebRequestHelper.DeleteAsync($"{GetBaseUrl()}/posts/1");
-            // assert
-            Assert.Equal("{}", result);
-        }
-
-        [Fact, Priority(6)]
-        public async Task PatchPostsAsync()
-        {
-            // arrange
-            var dto = new
-            {
-                title = "foo1"
-            };
-            var result = await WebRequestHelper.PatchAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
-            // assert
-            Assert.NotNull(result);
-        }
+            title = "foo1"
+        };
+        string? result = await WebRequestHelper.PatchAsync($"{GetBaseUrl()}/posts/1", dto.ToSerialize());
+        // assert
+        Assert.NotNull(result);
     }
 }

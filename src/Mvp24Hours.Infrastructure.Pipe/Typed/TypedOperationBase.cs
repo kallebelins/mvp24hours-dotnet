@@ -3,70 +3,77 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Typed
+namespace Mvp24Hours.Infrastructure.Pipe.Typed;
+
+/// <summary>
+/// Base class for strongly-typed synchronous operations.
+/// </summary>
+/// <typeparam name="TInput">The type of input the operation receives.</typeparam>
+/// <typeparam name="TOutput">The type of output the operation produces.</typeparam>
+public abstract class TypedOperationBase<TInput, TOutput> : ITypedOperation<TInput, TOutput>
 {
-    /// <summary>
-    /// Base class for strongly-typed synchronous operations.
-    /// </summary>
-    /// <typeparam name="TInput">The type of input the operation receives.</typeparam>
-    /// <typeparam name="TOutput">The type of output the operation produces.</typeparam>
-    public abstract class TypedOperationBase<TInput, TOutput> : ITypedOperation<TInput, TOutput>
+    /// <inheritdoc/>
+    public virtual bool IsRequired => false;
+
+    /// <inheritdoc/>
+    public abstract IOperationResult<TOutput> Execute(TInput input);
+
+    /// <inheritdoc/>
+    public virtual void Rollback(TInput input)
     {
-        /// <inheritdoc/>
-        public virtual bool IsRequired => false;
-
-        /// <inheritdoc/>
-        public abstract IOperationResult<TOutput> Execute(TInput input);
-
-        /// <inheritdoc/>
-        public virtual void Rollback(TInput input)
-        {
-            // Default implementation does nothing
-        }
-
-        /// <summary>
-        /// Creates a successful result with the given value.
-        /// </summary>
-        protected static OperationResult<TOutput> Success(TOutput value) => OperationResult<TOutput>.Success(value);
-
-        /// <summary>
-        /// Creates a failed result with the given error message.
-        /// </summary>
-        protected static OperationResult<TOutput> Failure(string errorMessage) => OperationResult<TOutput>.Failure(errorMessage);
-
-        /// <summary>
-        /// Creates a failed result from an exception.
-        /// </summary>
-        protected static OperationResult<TOutput> Failure(Exception exception) => OperationResult<TOutput>.Failure(exception);
+        // Default implementation does nothing
     }
 
     /// <summary>
-    /// Base class for strongly-typed synchronous operations without output.
+    /// Creates a successful result with the given value.
     /// </summary>
-    /// <typeparam name="TInput">The type of input the operation receives.</typeparam>
-    public abstract class TypedOperationBase<TInput> : TypedOperationBase<TInput, object>
+    protected static OperationResult<TOutput> Success(TOutput value)
     {
-        /// <summary>
-        /// Executes the operation logic.
-        /// </summary>
-        /// <param name="input">The input data.</param>
-        protected abstract void ExecuteCore(TInput input);
+        return OperationResult<TOutput>.Success(value);
+    }
 
-        /// <inheritdoc/>
-        public override IOperationResult<object> Execute(TInput input)
+    /// <summary>
+    /// Creates a failed result with the given error message.
+    /// </summary>
+    protected static OperationResult<TOutput> Failure(string errorMessage)
+    {
+        return OperationResult<TOutput>.Failure(errorMessage);
+    }
+
+    /// <summary>
+    /// Creates a failed result from an exception.
+    /// </summary>
+    protected static OperationResult<TOutput> Failure(Exception exception)
+    {
+        return OperationResult<TOutput>.Failure(exception);
+    }
+}
+
+/// <summary>
+/// Base class for strongly-typed synchronous operations without output.
+/// </summary>
+/// <typeparam name="TInput">The type of input the operation receives.</typeparam>
+public abstract class TypedOperationBase<TInput> : TypedOperationBase<TInput, object>
+{
+    /// <summary>
+    /// Executes the operation logic.
+    /// </summary>
+    /// <param name="input">The input data.</param>
+    protected abstract void ExecuteCore(TInput input);
+
+    /// <inheritdoc/>
+    public override IOperationResult<object> Execute(TInput input)
+    {
+        try
         {
-            try
-            {
-                ExecuteCore(input);
-                return OperationResult<object>.Success(new object());
-            }
-            catch (Exception ex)
-            {
-                return OperationResult<object>.Failure(ex);
-            }
+            ExecuteCore(input);
+            return OperationResult<object>.Success(new object());
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<object>.Failure(ex);
         }
     }
 }

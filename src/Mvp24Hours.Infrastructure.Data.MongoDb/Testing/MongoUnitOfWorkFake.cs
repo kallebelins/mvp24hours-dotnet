@@ -3,12 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
@@ -78,9 +75,9 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
             return 0;
         }
 
-        var totalChanges = 0;
+        int totalChanges = 0;
 
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             if (repo is MongoRepositoryFake<IEntityBase> typedRepo)
             {
@@ -92,7 +89,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
                 MethodInfo? commitMethod = repo.GetType().GetMethod("CommitChanges");
                 if (commitMethod != null)
                 {
-                    var result = commitMethod.Invoke(repo, null);
+                    object? result = commitMethod.Invoke(repo, null);
                     if (result is int changes)
                     {
                         totalChanges += changes;
@@ -109,7 +106,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
     /// </summary>
     public void Rollback()
     {
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             MethodInfo? resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
             resetMethod?.Invoke(repo, null);
@@ -121,7 +118,7 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
     /// </summary>
     public void Clear()
     {
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             MethodInfo? clearMethod = repo.GetType().GetMethod("Clear");
             clearMethod?.Invoke(repo, null);
@@ -160,11 +157,14 @@ public class MongoUnitOfWorkFake : IUnitOfWork, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
-            foreach (var repo in _repositories.Values)
+            foreach (object repo in _repositories.Values)
             {
                 if (repo is IDisposable disposable)
                 {
@@ -227,9 +227,9 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// <returns>The total number of state entries written.</returns>
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var totalChanges = 0;
+        int totalChanges = 0;
 
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             // Use reflection for async commit
             MethodInfo? commitMethod = repo.GetType().GetMethod("CommitChangesAsync");
@@ -251,7 +251,7 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// </summary>
     public Task RollbackAsync()
     {
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             MethodInfo? resetMethod = repo.GetType().GetMethod("ResetPendingChanges");
             resetMethod?.Invoke(repo, null);
@@ -265,7 +265,7 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// </summary>
     public void Clear()
     {
-        foreach (var repo in _repositories.Values)
+        foreach (object repo in _repositories.Values)
         {
             MethodInfo? clearMethod = repo.GetType().GetMethod("Clear");
             clearMethod?.Invoke(repo, null);
@@ -304,11 +304,14 @@ public class MongoUnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
-            foreach (var repo in _repositories.Values)
+            foreach (object repo in _repositories.Values)
             {
                 if (repo is IDisposable disposable)
                 {

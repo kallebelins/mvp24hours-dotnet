@@ -3,10 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -94,15 +90,12 @@ public static class OpenTelemetryLoggingBuilderExtensions
         {
             if (options.EnableTraceCorrelation)
             {
-                builder.Configure(loggerOptions =>
-                {
-                    loggerOptions.ActivityTrackingOptions =
+                builder.Configure(loggerOptions => loggerOptions.ActivityTrackingOptions =
                         ActivityTrackingOptions.TraceId |
                         ActivityTrackingOptions.SpanId |
                         ActivityTrackingOptions.ParentId |
                         ActivityTrackingOptions.Baggage |
-                        ActivityTrackingOptions.Tags;
-                });
+                        ActivityTrackingOptions.Tags);
             }
 
             // Add namespace filtering if configuration is provided
@@ -339,15 +332,12 @@ public static class LoggingBuilderOpenTelemetryExtensions
         // Configure activity tracking for trace correlation
         if (options.EnableTraceCorrelation)
         {
-            builder.Configure(loggerOptions =>
-            {
-                loggerOptions.ActivityTrackingOptions =
+            builder.Configure(loggerOptions => loggerOptions.ActivityTrackingOptions =
                     ActivityTrackingOptions.TraceId |
                     ActivityTrackingOptions.SpanId |
                     ActivityTrackingOptions.ParentId |
                     ActivityTrackingOptions.Baggage |
-                    ActivityTrackingOptions.Tags;
-            });
+                    ActivityTrackingOptions.Tags);
         }
 
         // Apply minimum log level

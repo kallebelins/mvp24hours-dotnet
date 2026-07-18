@@ -116,7 +116,10 @@ public abstract class PipelineHookBase : IPipelineHook
     public virtual Task OnPipelineStartAsync(
         object request,
         Type requestType,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public virtual Task OnPipelineCompleteAsync(
@@ -125,7 +128,10 @@ public abstract class PipelineHookBase : IPipelineHook
         Type requestType,
         Type responseType,
         long elapsedMilliseconds,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public virtual Task OnPipelineErrorAsync(
@@ -133,7 +139,10 @@ public abstract class PipelineHookBase : IPipelineHook
         Exception exception,
         Type requestType,
         long elapsedMilliseconds,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>
@@ -165,12 +174,21 @@ public interface IPipelineHook<in TRequest>
 public abstract class PipelineHookBase<TRequest> : IPipelineHook<TRequest>
 {
     /// <inheritdoc />
-    public virtual Task OnPipelineStartAsync(TRequest request, CancellationToken cancellationToken) => Task.CompletedTask;
+    public virtual Task OnPipelineStartAsync(TRequest request, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
-    public virtual Task OnPipelineCompleteAsync(TRequest request, object? response, long elapsedMilliseconds, CancellationToken cancellationToken) => Task.CompletedTask;
+    public virtual Task OnPipelineCompleteAsync(TRequest request, object? response, long elapsedMilliseconds, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
-    public virtual Task OnPipelineErrorAsync(TRequest request, Exception exception, long elapsedMilliseconds, CancellationToken cancellationToken) => Task.CompletedTask;
+    public virtual Task OnPipelineErrorAsync(TRequest request, Exception exception, long elapsedMilliseconds, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 }
 

@@ -3,472 +3,514 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
 
-namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions
+namespace Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
+
+/// <summary>
+/// Extension methods for performing bulk operations on EF Core DbContext.
+/// </summary>
+/// <remarks>
+/// <para>
+/// These extensions provide high-performance bulk operations that work directly with
+/// the database, bypassing EF Core's change tracking for better performance.
+/// </para>
+/// <para>
+/// For .NET 7+, uses native ExecuteUpdateAsync and ExecuteDeleteAsync methods.
+/// For bulk insert/update/delete of entity lists, uses optimized batch processing.
+/// </para>
+/// </remarks>
+public static class BulkOperationsExtensions
 {
+    #region Bulk Insert
+
     /// <summary>
-    /// Extension methods for performing bulk operations on EF Core DbContext.
+    /// Inserts a large collection of entities efficiently using bulk operations.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// These extensions provide high-performance bulk operations that work directly with
-    /// the database, bypassing EF Core's change tracking for better performance.
-    /// </para>
-    /// <para>
-    /// For .NET 7+, uses native ExecuteUpdateAsync and ExecuteDeleteAsync methods.
-    /// For bulk insert/update/delete of entity lists, uses optimized batch processing.
-    /// </para>
-    /// </remarks>
-    public static class BulkOperationsExtensions
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to insert.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of inserted rows and execution statistics.</returns>
+    public static Task<BulkOperationResult> BulkInsertAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
     {
-        #region Bulk Insert
+        return BulkInsertAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+    }
 
-        /// <summary>
-        /// Inserts a large collection of entities efficiently using bulk operations.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to insert.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of inserted rows and execution statistics.</returns>
-        public static Task<BulkOperationResult> BulkInsertAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+    /// <summary>
+    /// Inserts a large collection of entities efficiently using bulk operations with custom options.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to insert.</param>
+    /// <param name="options">Configuration options for the bulk operation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of inserted rows and execution statistics.</returns>
+    public static async Task<BulkOperationResult> BulkInsertAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
         {
-            return BulkInsertAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+            throw new ArgumentNullException(nameof(dbContext));
         }
 
-        /// <summary>
-        /// Inserts a large collection of entities efficiently using bulk operations with custom options.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to insert.</param>
-        /// <param name="options">Configuration options for the bulk operation.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of inserted rows and execution statistics.</returns>
-        public static async Task<BulkOperationResult> BulkInsertAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (options == null)
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            throw new ArgumentNullException(nameof(options));
+        }
 
-            if (!entities.AnySafe())
+        if (!entities.AnySafe())
+        {
+            return BulkOperationResult.Success(0, TimeSpan.Zero);
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
+            int totalCount = entities.Count;
+            int processedCount = 0;
+
+            // Process in batches
+            foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
             {
-                return BulkOperationResult.Success(0, TimeSpan.Zero);
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
-                var totalCount = entities.Count;
-                var processedCount = 0;
-
-                // Process in batches
-                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
+                if (options.BypassChangeTracking)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (options.BypassChangeTracking)
+                    // Add without tracking (best performance)
+                    await dbSet.AddRangeAsync(batch, cancellationToken);
+                }
+                else
+                {
+                    foreach (TEntity? entity in batch)
                     {
-                        // Add without tracking (best performance)
-                        await dbSet.AddRangeAsync(batch, cancellationToken);
+                        await dbSet.AddAsync(entity, cancellationToken);
                     }
-                    else
-                    {
-                        foreach (TEntity? entity in batch)
-                        {
-                            await dbSet.AddAsync(entity, cancellationToken);
-                        }
-                    }
-
-                    processedCount += batch.Count();
-                    options.ProgressCallback?.Invoke(processedCount, totalCount);
                 }
 
-                // Save changes
-                var rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
-
-                stopwatch.Stop();
-
-                return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
+                processedCount += batch.Count();
+                options.ProgressCallback?.Invoke(processedCount, totalCount);
             }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
 
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
-            }
+            // Save changes
+            int rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
+
+            stopwatch.Stop();
+
+            return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
+        }
+    }
+
+    #endregion
+
+    #region Bulk Update
+
+    /// <summary>
+    /// Updates a large collection of entities efficiently using bulk operations.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to update (identified by primary key).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of updated rows and execution statistics.</returns>
+    public static Task<BulkOperationResult> BulkUpdateAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        return BulkUpdateAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <summary>
+    /// Updates a large collection of entities efficiently using bulk operations with custom options.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to update (identified by primary key).</param>
+    /// <param name="options">Configuration options for the bulk operation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of updated rows and execution statistics.</returns>
+    public static async Task<BulkOperationResult> BulkUpdateAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
         }
 
-        #endregion
-
-        #region Bulk Update
-
-        /// <summary>
-        /// Updates a large collection of entities efficiently using bulk operations.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to update (identified by primary key).</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of updated rows and execution statistics.</returns>
-        public static Task<BulkOperationResult> BulkUpdateAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (options == null)
         {
-            return BulkUpdateAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+            throw new ArgumentNullException(nameof(options));
         }
 
-        /// <summary>
-        /// Updates a large collection of entities efficiently using bulk operations with custom options.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to update (identified by primary key).</param>
-        /// <param name="options">Configuration options for the bulk operation.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of updated rows and execution statistics.</returns>
-        public static async Task<BulkOperationResult> BulkUpdateAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (!entities.AnySafe())
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            return BulkOperationResult.Success(0, TimeSpan.Zero);
+        }
 
-            if (!entities.AnySafe())
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
+            int totalCount = entities.Count;
+            int processedCount = 0;
+
+            // Process in batches
+            foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
             {
-                return BulkOperationResult.Success(0, TimeSpan.Zero);
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
-                var totalCount = entities.Count;
-                var processedCount = 0;
-
-                // Process in batches
-                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
+                if (options.BypassChangeTracking)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (options.BypassChangeTracking)
+                    // Attach and mark as modified
+                    dbSet.UpdateRange(batch);
+                }
+                else
+                {
+                    foreach (TEntity? entity in batch)
                     {
-                        // Attach and mark as modified
-                        dbSet.UpdateRange(batch);
-                    }
-                    else
-                    {
-                        foreach (TEntity? entity in batch)
+                        EntityEntry<TEntity> entry = dbContext.Entry(entity);
+                        if (entry.State == EntityState.Detached)
                         {
-                            EntityEntry<TEntity> entry = dbContext.Entry(entity);
-                            if (entry.State == EntityState.Detached)
-                            {
-                                dbSet.Attach(entity);
-                            }
-                            entry.State = EntityState.Modified;
+                            dbSet.Attach(entity);
                         }
+                        entry.State = EntityState.Modified;
                     }
-
-                    processedCount += batch.Count();
-                    options.ProgressCallback?.Invoke(processedCount, totalCount);
                 }
 
-                // Save changes
-                var rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
-
-                stopwatch.Stop();
-
-                return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
+                processedCount += batch.Count();
+                options.ProgressCallback?.Invoke(processedCount, totalCount);
             }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
 
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
-            }
+            // Save changes
+            int rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
+
+            stopwatch.Stop();
+
+            return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
+        }
+    }
+
+    #endregion
+
+    #region Bulk Delete
+
+    /// <summary>
+    /// Deletes a large collection of entities efficiently using bulk operations.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to delete (identified by primary key).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of deleted rows and execution statistics.</returns>
+    public static Task<BulkOperationResult> BulkDeleteAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        return BulkDeleteAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <summary>
+    /// Deletes a large collection of entities efficiently using bulk operations with custom options.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="entities">Collection of entities to delete (identified by primary key).</param>
+    /// <param name="options">Configuration options for the bulk operation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result containing the number of deleted rows and execution statistics.</returns>
+    public static async Task<BulkOperationResult> BulkDeleteAsync<TEntity>(
+        this DbContext dbContext,
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
         }
 
-        #endregion
-
-        #region Bulk Delete
-
-        /// <summary>
-        /// Deletes a large collection of entities efficiently using bulk operations.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to delete (identified by primary key).</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of deleted rows and execution statistics.</returns>
-        public static Task<BulkOperationResult> BulkDeleteAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (options == null)
         {
-            return BulkDeleteAsync(dbContext, entities, new BulkOperationOptions(), cancellationToken);
+            throw new ArgumentNullException(nameof(options));
         }
 
-        /// <summary>
-        /// Deletes a large collection of entities efficiently using bulk operations with custom options.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="entities">Collection of entities to delete (identified by primary key).</param>
-        /// <param name="options">Configuration options for the bulk operation.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Result containing the number of deleted rows and execution statistics.</returns>
-        public static async Task<BulkOperationResult> BulkDeleteAsync<TEntity>(
-            this DbContext dbContext,
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (!entities.AnySafe())
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            return BulkOperationResult.Success(0, TimeSpan.Zero);
+        }
 
-            if (!entities.AnySafe())
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
+            int totalCount = entities.Count;
+            int processedCount = 0;
+
+            // Process in batches
+            foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
             {
-                return BulkOperationResult.Success(0, TimeSpan.Zero);
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                DbSet<TEntity> dbSet = dbContext.Set<TEntity>();
-                var totalCount = entities.Count;
-                var processedCount = 0;
-
-                // Process in batches
-                foreach (IEnumerable<TEntity> batch in entities.Batch(options.BatchSize))
+                if (options.BypassChangeTracking)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (options.BypassChangeTracking)
+                    // Remove range
+                    dbSet.RemoveRange(batch);
+                }
+                else
+                {
+                    foreach (TEntity? entity in batch)
                     {
-                        // Remove range
-                        dbSet.RemoveRange(batch);
-                    }
-                    else
-                    {
-                        foreach (TEntity? entity in batch)
+                        EntityEntry<TEntity> entry = dbContext.Entry(entity);
+                        if (entry.State == EntityState.Detached)
                         {
-                            EntityEntry<TEntity> entry = dbContext.Entry(entity);
-                            if (entry.State == EntityState.Detached)
-                            {
-                                dbSet.Attach(entity);
-                            }
-                            entry.State = EntityState.Deleted;
+                            dbSet.Attach(entity);
                         }
+                        entry.State = EntityState.Deleted;
                     }
-
-                    processedCount += batch.Count();
-                    options.ProgressCallback?.Invoke(processedCount, totalCount);
                 }
 
-                // Save changes
-                var rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
-
-                stopwatch.Stop();
-
-                return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
+                processedCount += batch.Count();
+                options.ProgressCallback?.Invoke(processedCount, totalCount);
             }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
 
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
-            }
+            // Save changes
+            int rowsAffected = await dbContext.SaveChangesAsync(cancellationToken);
+
+            stopwatch.Stop();
+
+            return BulkOperationResult.Success(rowsAffected, stopwatch.Elapsed);
         }
-
-        #endregion
-
-        #region Execute Update (.NET 7+)
-
-        /// <summary>
-        /// Updates all entities matching the specified condition using a single SQL statement.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <typeparam name="TProperty">Type of the property to update.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="predicate">Condition to filter entities to update.</param>
-        /// <param name="property">Property selector expression.</param>
-        /// <param name="value">New value for the property.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Number of rows affected.</returns>
-        public static async Task<int> ExecuteUpdateAsync<TEntity, TProperty>(
-            this DbContext dbContext,
-            Expression<Func<TEntity, bool>> predicate,
-            Expression<Func<TEntity, TProperty>> property,
-            TProperty value,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        catch (Exception ex)
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            if (property == null) throw new ArgumentNullException(nameof(property));
+            stopwatch.Stop();
 
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                var rowsAffected = await dbContext.Set<TEntity>()
-                    .Where(predicate)
-                    .ExecuteUpdateAsync(
-                        setters => setters.SetProperty(property, value),
-                        cancellationToken);
-
-                stopwatch.Stop();
-
-                return rowsAffected;
-            }
-            catch (Exception)
-            {
-                stopwatch.Stop();
-
-                throw;
-            }
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed);
         }
+    }
 
-        /// <summary>
-        /// Updates all entities matching the specified condition using a single SQL statement with multiple property setters.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="predicate">Condition to filter entities to update.</param>
-        /// <param name="setPropertyCalls">Action to configure property setters using SetProperty calls.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Number of rows affected.</returns>
-        public static async Task<int> ExecuteUpdateAsync<TEntity>(
-            this DbContext dbContext,
-            Expression<Func<TEntity, bool>> predicate,
-            Action<Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<TEntity>> setPropertyCalls,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+    #endregion
+
+    #region Execute Update (.NET 7+)
+
+    /// <summary>
+    /// Updates all entities matching the specified condition using a single SQL statement.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <typeparam name="TProperty">Type of the property to update.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="predicate">Condition to filter entities to update.</param>
+    /// <param name="property">Property selector expression.</param>
+    /// <param name="value">New value for the property.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of rows affected.</returns>
+    public static async Task<int> ExecuteUpdateAsync<TEntity, TProperty>(
+        this DbContext dbContext,
+        Expression<Func<TEntity, bool>> predicate,
+        Expression<Func<TEntity, TProperty>> property,
+        TProperty value,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            if (setPropertyCalls == null) throw new ArgumentNullException(nameof(setPropertyCalls));
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                var rowsAffected = await dbContext.Set<TEntity>()
-                    .Where(predicate)
-                    .ExecuteUpdateAsync(setPropertyCalls, cancellationToken);
-
-                stopwatch.Stop();
-
-                return rowsAffected;
-            }
-            catch (Exception)
-            {
-                stopwatch.Stop();
-
-                throw;
-            }
+            throw new ArgumentNullException(nameof(dbContext));
         }
 
-        #endregion
-
-        #region Execute Delete (.NET 7+)
-
-        /// <summary>
-        /// Deletes all entities matching the specified condition using a single SQL statement.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="dbContext">The DbContext instance.</param>
-        /// <param name="predicate">Condition to filter entities to delete.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Number of rows affected.</returns>
-        public static async Task<int> ExecuteDeleteAsync<TEntity>(
-            this DbContext dbContext,
-            Expression<Func<TEntity, bool>> predicate,
-            CancellationToken cancellationToken = default)
-            where TEntity : class, IEntityBase
+        if (predicate == null)
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                var rowsAffected = await dbContext.Set<TEntity>()
-                    .Where(predicate)
-                    .ExecuteDeleteAsync(cancellationToken);
-
-                stopwatch.Stop();
-
-                return rowsAffected;
-            }
-            catch (Exception)
-            {
-                stopwatch.Stop();
-
-                throw;
-            }
+            throw new ArgumentNullException(nameof(predicate));
         }
 
-        #endregion
-
-        #region Helpers
-
-        /// <summary>
-        /// Splits a collection into batches of the specified size.
-        /// </summary>
-        private static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
+        if (property == null)
         {
-            using IEnumerator<T> enumerator = source.GetEnumerator();
-            while (enumerator.MoveNext())
-            {
-                yield return YieldBatchElements(enumerator, batchSize - 1);
-            }
+            throw new ArgumentNullException(nameof(property));
         }
 
-        private static IEnumerable<T> YieldBatchElements<T>(IEnumerator<T> source, int batchSize)
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            int rowsAffected = await dbContext.Set<TEntity>()
+                .Where(predicate)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(property, value),
+                    cancellationToken);
+
+            stopwatch.Stop();
+
+            return rowsAffected;
+        }
+        catch (Exception)
+        {
+            stopwatch.Stop();
+
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates all entities matching the specified condition using a single SQL statement with multiple property setters.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="predicate">Condition to filter entities to update.</param>
+    /// <param name="setPropertyCalls">Action to configure property setters using SetProperty calls.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of rows affected.</returns>
+    public static async Task<int> ExecuteUpdateAsync<TEntity>(
+        this DbContext dbContext,
+        Expression<Func<TEntity, bool>> predicate,
+        Action<Microsoft.EntityFrameworkCore.Query.UpdateSettersBuilder<TEntity>> setPropertyCalls,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
+        }
+
+        if (predicate == null)
+        {
+            throw new ArgumentNullException(nameof(predicate));
+        }
+
+        if (setPropertyCalls == null)
+        {
+            throw new ArgumentNullException(nameof(setPropertyCalls));
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            int rowsAffected = await dbContext.Set<TEntity>()
+                .Where(predicate)
+                .ExecuteUpdateAsync(setPropertyCalls, cancellationToken);
+
+            stopwatch.Stop();
+
+            return rowsAffected;
+        }
+        catch (Exception)
+        {
+            stopwatch.Stop();
+
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region Execute Delete (.NET 7+)
+
+    /// <summary>
+    /// Deletes all entities matching the specified condition using a single SQL statement.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="dbContext">The DbContext instance.</param>
+    /// <param name="predicate">Condition to filter entities to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of rows affected.</returns>
+    public static async Task<int> ExecuteDeleteAsync<TEntity>(
+        this DbContext dbContext,
+        Expression<Func<TEntity, bool>> predicate,
+        CancellationToken cancellationToken = default)
+        where TEntity : class, IEntityBase
+    {
+        if (dbContext == null)
+        {
+            throw new ArgumentNullException(nameof(dbContext));
+        }
+
+        if (predicate == null)
+        {
+            throw new ArgumentNullException(nameof(predicate));
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            int rowsAffected = await dbContext.Set<TEntity>()
+                .Where(predicate)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            stopwatch.Stop();
+
+            return rowsAffected;
+        }
+        catch (Exception)
+        {
+            stopwatch.Stop();
+
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region Helpers
+
+    /// <summary>
+    /// Splits a collection into batches of the specified size.
+    /// </summary>
+    private static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
+    {
+        using IEnumerator<T> enumerator = source.GetEnumerator();
+        while (enumerator.MoveNext())
+        {
+            yield return YieldBatchElements(enumerator, batchSize - 1);
+        }
+    }
+
+    private static IEnumerable<T> YieldBatchElements<T>(IEnumerator<T> source, int batchSize)
+    {
+        yield return source.Current;
+        for (int i = 0; i < batchSize && source.MoveNext(); i++)
         {
             yield return source.Current;
-            for (var i = 0; i < batchSize && source.MoveNext(); i++)
-            {
-                yield return source.Current;
-            }
         }
-
-        #endregion
     }
+
+    #endregion
 }
 

@@ -4,17 +4,16 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-namespace Mvp24Hours.Core.Enums
+namespace Mvp24Hours.Core.Enums;
+
+/// <summary>
+/// Defines the type of message for user feedback
+/// </summary>
+public enum MessageType
 {
-    /// <summary>
-    /// Defines the type of message for user feedback
-    /// </summary>
-    public enum MessageType
-    {
-        Success,
-        Info,
-        Warning,
-        Error,
-        Custom
-    }
+    Success,
+    Info,
+    Warning,
+    Error,
+    Custom
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace Mvp24Hours.Core.Test.Extensions;
@@ -20,8 +19,8 @@ public class ConvertExtensionsTest
     public void ToBase64_From64_RoundTrip_ReturnsOriginal(string original)
     {
         // Act
-        var base64 = original.ToBase64();
-        var decoded = base64.From64();
+        string base64 = original.ToBase64();
+        string decoded = base64.From64();
 
         // Assert
         decoded.Should().Be(original);
@@ -31,11 +30,11 @@ public class ConvertExtensionsTest
     public void ToBase64_WithUnicode_EncodesCorrectly()
     {
         // Arrange
-        var input = "JosÃ© ä¸–ç•Œ ðŸŒ";
+        string input = "JosÃ© ä¸–ç•Œ ðŸŒ";
 
         // Act
-        var base64 = input.ToBase64();
-        var decoded = base64.From64();
+        string base64 = input.ToBase64();
+        string decoded = base64.From64();
 
         // Assert
         decoded.Should().Be(input);
@@ -45,12 +44,12 @@ public class ConvertExtensionsTest
     public void ToBase64_WithDifferentEncoding_UsesSpecifiedEncoding()
     {
         // Arrange
-        var input = "Hello";
+        string input = "Hello";
         Encoding encoding = System.Text.Encoding.ASCII;
 
         // Act
-        var base64 = input.ToBase64(encoding);
-        var decoded = base64.From64(encoding);
+        string base64 = input.ToBase64(encoding);
+        string decoded = base64.From64(encoding);
 
         // Assert
         decoded.Should().Be(input);
@@ -85,14 +84,14 @@ public class ConvertExtensionsTest
         TestEnum result = input.ToEnum<TestEnum>();
 
         // Assert
-        result.Should().Be(default(TestEnum));
+        result.Should().Be(default);
     }
 
     [Fact]
     public void ToEnum_WithCustomDefault_ReturnsCustomDefault()
     {
         // Arrange
-        var input = "Invalid";
+        string input = "Invalid";
 
         // Act
         TestEnum result = input.ToEnum(TestEnum.Pending);
@@ -113,7 +112,7 @@ public class ConvertExtensionsTest
     public void ToInt_WithValidString_ReturnsInteger(string input, int expected)
     {
         // Act
-        var result = input.ToInt();
+        int? result = input.ToInt();
 
         // Assert
         result.Should().Be(expected);
@@ -128,7 +127,7 @@ public class ConvertExtensionsTest
     public void ToInt_WithInvalidString_ReturnsNull(string? input)
     {
         // Act
-        var result = input.ToInt();
+        int? result = input.ToInt();
 
         // Assert
         result.Should().BeNull();
@@ -138,10 +137,10 @@ public class ConvertExtensionsTest
     public void ToInt_WithInvalidStringAndDefault_ReturnsDefault()
     {
         // Arrange
-        var input = "abc";
+        string input = "abc";
 
         // Act
-        var result = input.ToInt(-1);
+        int? result = input.ToInt(-1);
 
         // Assert
         result.Should().Be(-1);
@@ -159,7 +158,7 @@ public class ConvertExtensionsTest
     public void ToLong_WithValidString_ReturnsLong(string input, long expected)
     {
         // Act
-        var result = input.ToLong();
+        long? result = input.ToLong();
 
         // Assert
         result.Should().Be(expected);
@@ -172,7 +171,7 @@ public class ConvertExtensionsTest
     public void ToLong_WithInvalidString_ReturnsNull(string? input)
     {
         // Act
-        var result = input.ToLong();
+        long? result = input.ToLong();
 
         // Assert
         result.Should().BeNull();
@@ -192,7 +191,7 @@ public class ConvertExtensionsTest
     public void ToBoolean_WithValidString_ReturnsBool(string input, bool expected)
     {
         // Act
-        var result = input.ToBoolean();
+        bool? result = input.ToBoolean();
 
         // Assert
         result.Should().Be(expected);
@@ -207,7 +206,7 @@ public class ConvertExtensionsTest
     public void ToBoolean_WithInvalidString_ReturnsNull(string? input)
     {
         // Act
-        var result = input.ToBoolean();
+        bool? result = input.ToBoolean();
 
         // Assert
         result.Should().BeNull();
@@ -224,10 +223,10 @@ public class ConvertExtensionsTest
     public void ToDecimal_WithValidString_ReturnsDecimal(string input, string expectedString)
     {
         // Arrange
-        var expected = decimal.Parse(expectedString, System.Globalization.CultureInfo.InvariantCulture);
+        decimal expected = decimal.Parse(expectedString, System.Globalization.CultureInfo.InvariantCulture);
 
         // Act
-        var result = input.ToDecimal();
+        decimal? result = input.ToDecimal();
 
         // Assert
         result.Should().Be(expected);
@@ -240,7 +239,7 @@ public class ConvertExtensionsTest
     public void ToDecimal_WithInvalidString_ReturnsNull(string? input)
     {
         // Act
-        var result = input.ToDecimal();
+        decimal? result = input.ToDecimal();
 
         // Assert
         result.Should().BeNull();
@@ -254,7 +253,7 @@ public class ConvertExtensionsTest
     public void ToDateTime_WithValidString_ReturnsDateTime()
     {
         // Arrange
-        var input = "2025-01-02";
+        string input = "2025-01-02";
 
         // Act
         var result = input.ToDateTime();
@@ -283,7 +282,7 @@ public class ConvertExtensionsTest
     public void ToDateTime_WithCustomDefault_ReturnsCustomDefault()
     {
         // Arrange
-        var input = "invalid";
+        string input = "invalid";
         var defaultDate = new DateTime(2020, 1, 1);
 
         // Act
@@ -305,7 +304,7 @@ public class ConvertExtensionsTest
     public void NullSafe_ReturnsNonNullTrimmedString(string? input, string expected)
     {
         // Act
-        var result = input.NullSafe();
+        string result = input.NullSafe();
 
         // Assert
         result.Should().Be(expected);
@@ -319,11 +318,11 @@ public class ConvertExtensionsTest
     public void Replace_WithMultipleOldValues_ReplacesAll()
     {
         // Arrange
-        var input = "Hello World, Welcome World";
+        string input = "Hello World, Welcome World";
         var oldValues = new List<string> { "Hello", "Welcome" };
 
         // Act
-        var result = input.Replace(oldValues, "Hi");
+        string result = input.Replace(oldValues, "Hi");
 
         // Assert
         result.Should().Be("Hi World, Hi World");
@@ -341,7 +340,7 @@ public class ConvertExtensionsTest
     public void OnlyNumbers_ReturnsOnlyDigits(string input, string expected)
     {
         // Act
-        var result = input.OnlyNumbers();
+        string result = input.OnlyNumbers();
 
         // Assert
         result.Should().Be(expected);
@@ -354,7 +353,7 @@ public class ConvertExtensionsTest
         string? input = null;
 
         // Act
-        var result = input.OnlyNumbers();
+        string result = input.OnlyNumbers();
 
         // Assert
         result.Should().BeEmpty();
@@ -371,7 +370,7 @@ public class ConvertExtensionsTest
     public void OnlyNumbersLetters_ReturnsAlphanumeric(string input, string expected)
     {
         // Act
-        var result = input.OnlyNumbersLetters();
+        string result = input.OnlyNumbersLetters();
 
         // Assert
         result.Should().Be(expected);
@@ -388,7 +387,7 @@ public class ConvertExtensionsTest
     public void OnlyLetters_ReturnsOnlyLetters(string input, string expected)
     {
         // Act
-        var result = input.OnlyLetters();
+        string result = input.OnlyLetters();
 
         // Assert
         result.Should().Be(expected);
@@ -406,7 +405,7 @@ public class ConvertExtensionsTest
     public void RemoveDiacritics_RemovesAccents(string input, string expected)
     {
         // Act
-        var result = input.RemoveDiacritics();
+        string result = input.RemoveDiacritics();
 
         // Assert
         result.Should().Be(expected);
@@ -419,7 +418,7 @@ public class ConvertExtensionsTest
         string? input = null;
 
         // Act
-        var result = input.RemoveDiacritics();
+        string result = input.RemoveDiacritics();
 
         // Assert
         result.Should().BeEmpty();
@@ -435,7 +434,7 @@ public class ConvertExtensionsTest
     public void ReplaceSpecialChar_RemovesDiacritics(string input, string expected)
     {
         // Act
-        var result = input.ReplaceSpecialChar();
+        string result = input.ReplaceSpecialChar();
 
         // Assert
         result.Should().Be(expected);
@@ -449,11 +448,11 @@ public class ConvertExtensionsTest
     public void GetSHA256Hash_GeneratesConsistentHash()
     {
         // Arrange
-        var input = "test string";
+        string input = "test string";
 
         // Act
-        var hash1 = input.GetSHA256Hash();
-        var hash2 = input.GetSHA256Hash();
+        string hash1 = input.GetSHA256Hash();
+        string hash2 = input.GetSHA256Hash();
 
         // Assert
         hash1.Should().Be(hash2);
@@ -464,11 +463,11 @@ public class ConvertExtensionsTest
     public void GetSHA512Hash_GeneratesConsistentHash()
     {
         // Arrange
-        var input = "test string";
+        string input = "test string";
 
         // Act
-        var hash1 = input.GetSHA512Hash();
-        var hash2 = input.GetSHA512Hash();
+        string hash1 = input.GetSHA512Hash();
+        string hash2 = input.GetSHA512Hash();
 
         // Assert
         hash1.Should().Be(hash2);
@@ -479,12 +478,12 @@ public class ConvertExtensionsTest
     public void GetSHA256Hash_DifferentInputs_DifferentHashes()
     {
         // Arrange
-        var input1 = "test1";
-        var input2 = "test2";
+        string input1 = "test1";
+        string input2 = "test2";
 
         // Act
-        var hash1 = input1.GetSHA256Hash();
-        var hash2 = input2.GetSHA256Hash();
+        string hash1 = input1.GetSHA256Hash();
+        string hash2 = input2.GetSHA256Hash();
 
         // Assert
         hash1.Should().NotBe(hash2);
@@ -500,8 +499,8 @@ public class ConvertExtensionsTest
     public void ZipBase64_UnZipBase64_RoundTrip_ReturnsOriginal(string original)
     {
         // Act
-        var zipped = original.ZipBase64();
-        var unzipped = zipped.UnZipBase64();
+        string zipped = original.ZipBase64();
+        string unzipped = zipped.UnZipBase64();
 
         // Assert
         unzipped.Should().Be(original);
@@ -511,11 +510,11 @@ public class ConvertExtensionsTest
     public void ZipByte_UnZip_RoundTrip_ReturnsOriginal()
     {
         // Arrange
-        var original = "Test string for compression";
+        string original = "Test string for compression";
 
         // Act
-        var zipped = original.ZipByte();
-        var unzipped = zipped.UnZip();
+        byte[] zipped = original.ZipByte();
+        string unzipped = zipped.UnZip();
 
         // Assert
         unzipped.Should().Be(original);
@@ -525,10 +524,10 @@ public class ConvertExtensionsTest
     public void ZipBase64_CompressesLongStrings()
     {
         // Arrange
-        var longString = new string('a', 1000);
+        string longString = new('a', 1000);
 
         // Act
-        var zipped = longString.ZipBase64();
+        string zipped = longString.ZipBase64();
 
         // Assert
         zipped.Length.Should().BeLessThan(longString.Length);

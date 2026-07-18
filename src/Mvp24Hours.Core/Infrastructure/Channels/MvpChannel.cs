@@ -3,12 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
 
 namespace Mvp24Hours.Core.Infrastructure.Channels;
@@ -60,7 +56,6 @@ public sealed class MvpChannel<T> : IChannel<T>
     private readonly Channel<T> _channel;
     private readonly MvpChannelReader<T> _reader;
     private readonly MvpChannelWriter<T> _writer;
-    private readonly MvpChannelOptions _options;
     private bool _disposed;
 
     /// <summary>
@@ -69,10 +64,10 @@ public sealed class MvpChannel<T> : IChannel<T>
     /// <param name="options">The channel options. Defaults to bounded channel with 100 capacity.</param>
     public MvpChannel(MvpChannelOptions? options = null)
     {
-        _options = options ?? new MvpChannelOptions();
-        _channel = CreateChannel(_options);
-        _reader = new MvpChannelReader<T>(_channel.Reader, _options);
-        _writer = new MvpChannelWriter<T>(_channel.Writer, _options);
+        Options = options ?? new MvpChannelOptions();
+        _channel = CreateChannel(Options);
+        _reader = new MvpChannelReader<T>(_channel.Reader, Options);
+        _writer = new MvpChannelWriter<T>(_channel.Writer, Options);
     }
 
     /// <inheritdoc />
@@ -88,7 +83,7 @@ public sealed class MvpChannel<T> : IChannel<T>
     public int Count => _reader.Count;
 
     /// <inheritdoc />
-    public MvpChannelOptions Options => _options;
+    public MvpChannelOptions Options { get; }
 
     /// <summary>
     /// Creates the underlying channel based on options.
@@ -117,7 +112,11 @@ public sealed class MvpChannel<T> : IChannel<T>
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
 
         _writer.TryComplete();
@@ -127,29 +126,29 @@ public sealed class MvpChannel<T> : IChannel<T>
     /// Creates an unbounded channel.
     /// </summary>
     /// <returns>A new unbounded channel.</returns>
-    public static MvpChannel<T> CreateUnbounded() => new(MvpChannelOptions.Unbounded());
+    public static MvpChannel<T> CreateUnbounded()
+    {
+        return new(MvpChannelOptions.Unbounded());
+    }
 
     /// <summary>
     /// Creates a bounded channel with the specified capacity.
     /// </summary>
     /// <param name="capacity">The maximum capacity.</param>
     /// <returns>A new bounded channel.</returns>
-    public static MvpChannel<T> CreateBounded(int capacity) => new(MvpChannelOptions.Bounded(capacity));
+    public static MvpChannel<T> CreateBounded(int capacity)
+    {
+        return new(MvpChannelOptions.Bounded(capacity));
+    }
 }
 
 /// <summary>
 /// Implementation of <see cref="IChannelReader{T}"/> wrapping ChannelReader.
 /// </summary>
-internal sealed class MvpChannelReader<T> : IChannelReader<T>
+internal sealed class MvpChannelReader<T>(ChannelReader<T> reader, MvpChannelOptions options) : IChannelReader<T>
 {
-    private readonly ChannelReader<T> _reader;
-    private readonly MvpChannelOptions _options;
-
-    public MvpChannelReader(ChannelReader<T> reader, MvpChannelOptions options)
-    {
-        _reader = reader ?? throw new ArgumentNullException(nameof(reader));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly ChannelReader<T> _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+    private readonly MvpChannelOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
     public bool IsCompleted => _reader.Completion.IsCompleted;
 
@@ -179,10 +178,14 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
     }
 
     public ValueTask<bool> WaitToReadAsync(CancellationToken cancellationToken = default)
-        => _reader.WaitToReadAsync(cancellationToken);
+    {
+        return _reader.WaitToReadAsync(cancellationToken);
+    }
 
     public IAsyncEnumerable<T> ReadAllAsync(CancellationToken cancellationToken = default)
-        => _reader.ReadAllAsync(cancellationToken);
+    {
+        return _reader.ReadAllAsync(cancellationToken);
+    }
 
     public async IAsyncEnumerable<IReadOnlyList<T>> ReadBatchAsync(
         int batchSize,
@@ -190,18 +193,20 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (batchSize <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.");
+        }
 
         var batch = new List<T>(batchSize);
         TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
-        var shouldBreak = false;
+        bool shouldBreak = false;
         IReadOnlyList<T>? pendingBatch = null;
 
         while (!cancellationToken.IsCancellationRequested && !shouldBreak)
         {
             var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var timedOut = false;
-            var channelCompleted = false;
+            bool timedOut = false;
+            bool channelCompleted = false;
 
             try
             {
@@ -247,7 +252,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
             {
                 if (batch.Count > 0)
                 {
-                    pendingBatch = batch.ToArray();
+                    pendingBatch = [.. batch];
                     batch.Clear();
                 }
                 shouldBreak = true;
@@ -257,7 +262,7 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
             {
                 if (batch.Count > 0)
                 {
-                    pendingBatch = batch.ToArray();
+                    pendingBatch = [.. batch];
                     batch.Clear();
                 }
             }
@@ -292,20 +297,17 @@ internal sealed class MvpChannelReader<T> : IChannelReader<T>
 /// <summary>
 /// Implementation of <see cref="IChannelWriter{T}"/> wrapping ChannelWriter.
 /// </summary>
-internal sealed class MvpChannelWriter<T> : IChannelWriter<T>
+internal sealed class MvpChannelWriter<T>(ChannelWriter<T> writer, MvpChannelOptions options) : IChannelWriter<T>
 {
-    private readonly ChannelWriter<T> _writer;
-    private readonly MvpChannelOptions _options;
-
-    public MvpChannelWriter(ChannelWriter<T> writer, MvpChannelOptions options)
-    {
-        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly ChannelWriter<T> _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+    private readonly MvpChannelOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
     public bool IsCompleted { get; private set; }
 
-    public bool TryWrite(T item) => _writer.TryWrite(item);
+    public bool TryWrite(T item)
+    {
+        return _writer.TryWrite(item);
+    }
 
     public async ValueTask WriteAsync(T item, CancellationToken cancellationToken = default)
     {
@@ -321,11 +323,13 @@ internal sealed class MvpChannelWriter<T> : IChannelWriter<T>
     }
 
     public ValueTask<bool> WaitToWriteAsync(CancellationToken cancellationToken = default)
-        => _writer.WaitToWriteAsync(cancellationToken);
+    {
+        return _writer.WaitToWriteAsync(cancellationToken);
+    }
 
     public bool TryComplete(Exception? error = null)
     {
-        var result = _writer.TryComplete(error);
+        bool result = _writer.TryComplete(error);
         if (result)
         {
             IsCompleted = true;

@@ -3,391 +3,395 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Query;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// Extension methods for configuring multi-tenant global query filters in Entity Framework Core.
+/// </summary>
+/// <remarks>
+/// <para>
+/// These extensions automatically apply query filters to all entities implementing
+/// <see cref="ITenantEntity"/> or <see cref="ITenantEntity{T}"/>, ensuring data isolation
+/// between tenants in a shared database/schema scenario.
+/// </para>
+/// <para>
+/// <strong>Usage in DbContext:</strong>
+/// <code>
+/// protected override void OnModelCreating(ModelBuilder modelBuilder)
+/// {
+///     base.OnModelCreating(modelBuilder);
+///     modelBuilder.ApplyTenantQueryFilters(_tenantProvider);
+/// }
+/// </code>
+/// </para>
+/// </remarks>
+public static class TenantModelBuilderExtensions
 {
     /// <summary>
-    /// Extension methods for configuring multi-tenant global query filters in Entity Framework Core.
+    /// Applies global query filters to all entities implementing <see cref="ITenantEntity"/>.
     /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="tenantProvider">The tenant provider to get the current tenant ID.</param>
+    /// <returns>The model builder for chaining.</returns>
     /// <remarks>
     /// <para>
-    /// These extensions automatically apply query filters to all entities implementing
-    /// <see cref="ITenantEntity"/> or <see cref="ITenantEntity{T}"/>, ensuring data isolation
-    /// between tenants in a shared database/schema scenario.
+    /// This method adds a query filter that ensures queries only return entities
+    /// where TenantId matches the current tenant from <paramref name="tenantProvider"/>.
     /// </para>
     /// <para>
-    /// <strong>Usage in DbContext:</strong>
-    /// <code>
-    /// protected override void OnModelCreating(ModelBuilder modelBuilder)
-    /// {
-    ///     base.OnModelCreating(modelBuilder);
-    ///     modelBuilder.ApplyTenantQueryFilters(_tenantProvider);
-    /// }
-    /// </code>
+    /// <strong>Important:</strong> The tenant provider is captured by reference, so the
+    /// filter will always use the current tenant at query execution time.
     /// </para>
     /// </remarks>
-    public static class TenantModelBuilderExtensions
+    /// <example>
+    /// <code>
+    /// public class AppDbContext : DbContext
+    /// {
+    ///     private readonly ITenantProvider? _tenantProvider;
+    ///     
+    ///     public AppDbContext(DbContextOptions options, ITenantProvider tenantProvider) 
+    ///         : base(options)
+    ///     {
+    ///         _tenantProvider = tenantProvider;
+    ///     }
+    ///     
+    ///     protected override void OnModelCreating(ModelBuilder modelBuilder)
+    ///     {
+    ///         base.OnModelCreating(modelBuilder);
+    ///         modelBuilder.ApplyTenantQueryFilters(_tenantProvider);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public static ModelBuilder ApplyTenantQueryFilters(
+        this ModelBuilder modelBuilder,
+        ITenantProvider tenantProvider)
     {
-        /// <summary>
-        /// Applies global query filters to all entities implementing <see cref="ITenantEntity"/>.
-        /// </summary>
-        /// <param name="modelBuilder">The model builder.</param>
-        /// <param name="tenantProvider">The tenant provider to get the current tenant ID.</param>
-        /// <returns>The model builder for chaining.</returns>
-        /// <remarks>
-        /// <para>
-        /// This method adds a query filter that ensures queries only return entities
-        /// where TenantId matches the current tenant from <paramref name="tenantProvider"/>.
-        /// </para>
-        /// <para>
-        /// <strong>Important:</strong> The tenant provider is captured by reference, so the
-        /// filter will always use the current tenant at query execution time.
-        /// </para>
-        /// </remarks>
-        /// <example>
-        /// <code>
-        /// public class AppDbContext : DbContext
-        /// {
-        ///     private readonly ITenantProvider? _tenantProvider;
-        ///     
-        ///     public AppDbContext(DbContextOptions options, ITenantProvider tenantProvider) 
-        ///         : base(options)
-        ///     {
-        ///         _tenantProvider = tenantProvider;
-        ///     }
-        ///     
-        ///     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        ///     {
-        ///         base.OnModelCreating(modelBuilder);
-        ///         modelBuilder.ApplyTenantQueryFilters(_tenantProvider);
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
-        public static ModelBuilder ApplyTenantQueryFilters(
-            this ModelBuilder modelBuilder,
-            ITenantProvider tenantProvider)
+        if (tenantProvider == null)
         {
-            if (tenantProvider == null)
-            {
-                throw new ArgumentNullException(nameof(tenantProvider));
-            }
-
-            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                // Check if entity implements ITenantEntity (string TenantId)
-                if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    ApplyTenantFilter(modelBuilder, entityType.ClrType, tenantProvider);
-                }
-                // Check for generic ITenantEntity<T>
-                else if (ImplementsGenericTenantEntity(entityType.ClrType, out Type? tenantIdType) && tenantIdType != null)
-                {
-                    ApplyGenericTenantFilter(modelBuilder, entityType.ClrType, tenantIdType, tenantProvider);
-                }
-            }
-
-            return modelBuilder;
+            throw new ArgumentNullException(nameof(tenantProvider));
         }
 
-        /// <summary>
-        /// Applies a global query filter to a specific entity type for tenant filtering.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="modelBuilder">The model builder.</param>
-        /// <param name="tenantProvider">The tenant provider.</param>
-        /// <returns>The model builder for chaining.</returns>
-        public static ModelBuilder ApplyTenantQueryFilter<TEntity>(
-            this ModelBuilder modelBuilder,
-            ITenantProvider tenantProvider)
-            where TEntity : class, ITenantEntity
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (tenantProvider == null)
+            // Check if entity implements ITenantEntity (string TenantId)
+            if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
             {
-                throw new ArgumentNullException(nameof(tenantProvider));
+                ApplyTenantFilter(modelBuilder, entityType.ClrType, tenantProvider);
             }
-
-            modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
-                e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null);
-
-            return modelBuilder;
+            // Check for generic ITenantEntity<T>
+            else if (ImplementsGenericTenantEntity(entityType.ClrType, out Type? tenantIdType) && tenantIdType != null)
+            {
+                ApplyGenericTenantFilter(modelBuilder, entityType.ClrType, tenantIdType, tenantProvider);
+            }
         }
 
-        /// <summary>
-        /// Applies combined query filters for both tenant isolation and soft delete.
-        /// </summary>
-        /// <param name="modelBuilder">The model builder.</param>
-        /// <param name="tenantProvider">The tenant provider.</param>
-        /// <returns>The model builder for chaining.</returns>
-        /// <remarks>
-        /// This method combines tenant filtering with soft delete filtering for entities
-        /// that implement both <see cref="ITenantEntity"/> and <see cref="ISoftDeletable"/>.
-        /// </remarks>
-        public static ModelBuilder ApplyTenantAndSoftDeleteFilters(
-            this ModelBuilder modelBuilder,
-            ITenantProvider tenantProvider)
+        return modelBuilder;
+    }
+
+    /// <summary>
+    /// Applies a global query filter to a specific entity type for tenant filtering.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="tenantProvider">The tenant provider.</param>
+    /// <returns>The model builder for chaining.</returns>
+    public static ModelBuilder ApplyTenantQueryFilter<TEntity>(
+        this ModelBuilder modelBuilder,
+        ITenantProvider tenantProvider)
+        where TEntity : class, ITenantEntity
+    {
+        if (tenantProvider == null)
         {
-            if (tenantProvider == null)
-            {
-                throw new ArgumentNullException(nameof(tenantProvider));
-            }
-
-            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                Type clrType = entityType.ClrType;
-                var isTenant = typeof(ITenantEntity).IsAssignableFrom(clrType);
-                var isSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(clrType);
-
-                if (isTenant && isSoftDelete)
-                {
-                    ApplyCombinedFilter(modelBuilder, clrType, tenantProvider);
-                }
-                else if (isTenant)
-                {
-                    ApplyTenantFilter(modelBuilder, clrType, tenantProvider);
-                }
-                else if (isSoftDelete)
-                {
-                    ApplySoftDeleteFilter(modelBuilder, clrType);
-                }
-            }
-
-            return modelBuilder;
+            throw new ArgumentNullException(nameof(tenantProvider));
         }
 
-        /// <summary>
-        /// Configures the TenantId property for all tenant entities with consistent settings.
-        /// </summary>
-        /// <param name="modelBuilder">The model builder.</param>
-        /// <param name="maxLength">Maximum length for the TenantId column. Default is 50.</param>
-        /// <param name="isRequired">Whether TenantId is required. Default is true.</param>
-        /// <param name="createIndex">Whether to create an index on TenantId. Default is true.</param>
-        /// <returns>The model builder for chaining.</returns>
-        public static ModelBuilder ConfigureTenantProperties(
-            this ModelBuilder modelBuilder,
-            int maxLength = 50,
-            bool isRequired = true,
-            bool createIndex = true)
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+            e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null);
+
+        return modelBuilder;
+    }
+
+    /// <summary>
+    /// Applies combined query filters for both tenant isolation and soft delete.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="tenantProvider">The tenant provider.</param>
+    /// <returns>The model builder for chaining.</returns>
+    /// <remarks>
+    /// This method combines tenant filtering with soft delete filtering for entities
+    /// that implement both <see cref="ITenantEntity"/> and <see cref="ISoftDeletable"/>.
+    /// </remarks>
+    public static ModelBuilder ApplyTenantAndSoftDeleteFilters(
+        this ModelBuilder modelBuilder,
+        ITenantProvider tenantProvider)
+    {
+        if (tenantProvider == null)
         {
-            foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    EntityTypeBuilder entityBuilder = modelBuilder.Entity(entityType.ClrType);
-
-                    entityBuilder.Property(nameof(ITenantEntity.TenantId))
-                        .HasMaxLength(maxLength)
-                        .IsRequired(isRequired);
-
-                    if (createIndex)
-                    {
-                        entityBuilder.HasIndex(nameof(ITenantEntity.TenantId))
-                            .HasDatabaseName($"IX_{entityType.ClrType.Name}_TenantId");
-                    }
-                }
-            }
-
-            return modelBuilder;
+            throw new ArgumentNullException(nameof(tenantProvider));
         }
 
-        #region Private Methods
-
-        private static void ApplyTenantFilter(
-            ModelBuilder modelBuilder,
-            Type entityType,
-            ITenantProvider tenantProvider)
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
         {
-            // Build expression: e => e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
-            ParameterExpression parameter = Expression.Parameter(entityType, "e");
-            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+            Type clrType = entityType.ClrType;
+            bool isTenant = typeof(ITenantEntity).IsAssignableFrom(clrType);
+            bool isSoftDelete = typeof(ISoftDeletable).IsAssignableFrom(clrType);
 
-            // Access tenantProvider.TenantId at runtime
+            if (isTenant && isSoftDelete)
+            {
+                ApplyCombinedFilter(modelBuilder, clrType, tenantProvider);
+            }
+            else if (isTenant)
+            {
+                ApplyTenantFilter(modelBuilder, clrType, tenantProvider);
+            }
+            else if (isSoftDelete)
+            {
+                ApplySoftDeleteFilter(modelBuilder, clrType);
+            }
+        }
+
+        return modelBuilder;
+    }
+
+    /// <summary>
+    /// Configures the TenantId property for all tenant entities with consistent settings.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    /// <param name="maxLength">Maximum length for the TenantId column. Default is 50.</param>
+    /// <param name="isRequired">Whether TenantId is required. Default is true.</param>
+    /// <param name="createIndex">Whether to create an index on TenantId. Default is true.</param>
+    /// <returns>The model builder for chaining.</returns>
+    public static ModelBuilder ConfigureTenantProperties(
+        this ModelBuilder modelBuilder,
+        int maxLength = 50,
+        bool isRequired = true,
+        bool createIndex = true)
+    {
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                EntityTypeBuilder entityBuilder = modelBuilder.Entity(entityType.ClrType);
+
+                entityBuilder.Property(nameof(ITenantEntity.TenantId))
+                    .HasMaxLength(maxLength)
+                    .IsRequired(isRequired);
+
+                if (createIndex)
+                {
+                    entityBuilder.HasIndex(nameof(ITenantEntity.TenantId))
+                        .HasDatabaseName($"IX_{entityType.ClrType.Name}_TenantId");
+                }
+            }
+        }
+
+        return modelBuilder;
+    }
+
+    #region Private Methods
+
+    private static void ApplyTenantFilter(
+        ModelBuilder modelBuilder,
+        Type entityType,
+        ITenantProvider tenantProvider)
+    {
+        // Build expression: e => e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
+        ParameterExpression parameter = Expression.Parameter(entityType, "e");
+        MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+
+        // Access tenantProvider.TenantId at runtime
+        ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+        MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+
+        // e.TenantId == tenantProvider.TenantId
+        BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
+
+        // tenantProvider.TenantId == null (bypass filter when no tenant set)
+        ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+        BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
+
+        // Combine: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
+        BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+
+        LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
+        modelBuilder.Entity(entityType).HasQueryFilter(lambda);
+    }
+
+    private static void ApplyGenericTenantFilter(
+        ModelBuilder modelBuilder,
+        Type entityType,
+        Type tenantIdType,
+        ITenantProvider tenantProvider)
+    {
+        // For generic tenant entities, we create a dynamic filter
+        // This is more complex as we need to handle different TenantId types
+
+        ParameterExpression parameter = Expression.Parameter(entityType, "e");
+        MemberExpression tenantIdProperty = Expression.Property(parameter, "TenantId");
+
+        if (tenantIdType == typeof(string))
+        {
+            // Same as non-generic case
             ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
             MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-
-            // e.TenantId == tenantProvider.TenantId
             BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
-
-            // tenantProvider.TenantId == null (bypass filter when no tenant set)
             ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
             BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
-
-            // Combine: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
             BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-
             LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
-
-        private static void ApplyGenericTenantFilter(
-            ModelBuilder modelBuilder,
-            Type entityType,
-            Type tenantIdType,
-            ITenantProvider tenantProvider)
+        else if (tenantIdType == typeof(Guid))
         {
-            // For generic tenant entities, we create a dynamic filter
-            // This is more complex as we need to handle different TenantId types
+            // For Guid tenant IDs, use EF.Property for comparison
+            Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
 
-            ParameterExpression parameter = Expression.Parameter(entityType, "e");
-            MemberExpression tenantIdProperty = Expression.Property(parameter, "TenantId");
-
-            if (tenantIdType == typeof(string))
-            {
-                // Same as non-generic case
-                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
-                MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-                BinaryExpression equalExpression = Expression.Equal(tenantIdProperty, currentTenantId);
-                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
-                BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
-                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
-                modelBuilder.Entity(entityType).HasQueryFilter(lambda);
-            }
-            else if (tenantIdType == typeof(Guid))
-            {
-                // For Guid tenant IDs, use EF.Property for comparison
-                Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
-
-                // Create method to convert string to Guid at runtime
-                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
-                MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-
-                // Convert string to Guid using Guid.Parse wrapped in a null check
-                MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
-                    nameof(ParseGuidOrDefault),
-                    BindingFlags.NonPublic | BindingFlags.Static)
-                    ?? throw new InvalidOperationException("ParseGuidOrDefault method not found.");
-                MethodCallExpression parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
-
-                BinaryExpression equalExpression = Expression.Equal(methodCall, parsedGuid);
-
-                // Check if tenant string is null
-                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
-                BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
-
-                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
-                modelBuilder.Entity(entityType).HasQueryFilter(lambda);
-            }
-            else if (tenantIdType == typeof(int))
-            {
-                // For int tenant IDs
-                Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
-
-                ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
-                MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-
-                MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
-                    nameof(ParseIntOrDefault),
-                    BindingFlags.NonPublic | BindingFlags.Static)
-                    ?? throw new InvalidOperationException("ParseIntOrDefault method not found.");
-                MethodCallExpression parsedInt = Expression.Call(parseMethod, currentTenantIdString);
-
-                BinaryExpression equalExpression = Expression.Equal(methodCall, parsedInt);
-
-                ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
-                BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
-
-                BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
-                LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
-                modelBuilder.Entity(entityType).HasQueryFilter(lambda);
-            }
-        }
-
-        private static void ApplyCombinedFilter(
-            ModelBuilder modelBuilder,
-            Type entityType,
-            ITenantProvider tenantProvider)
-        {
-            ParameterExpression parameter = Expression.Parameter(entityType, "e");
-
-            // Tenant filter: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
-            MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+            // Create method to convert string to Guid at runtime
             ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
-            MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
-            BinaryExpression tenantEqual = Expression.Equal(tenantIdProperty, currentTenantId);
+            MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+
+            // Convert string to Guid using Guid.Parse wrapped in a null check
+            MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
+                nameof(ParseGuidOrDefault),
+                BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new InvalidOperationException("ParseGuidOrDefault method not found.");
+            MethodCallExpression parsedGuid = Expression.Call(parseMethod, currentTenantIdString);
+
+            BinaryExpression equalExpression = Expression.Equal(methodCall, parsedGuid);
+
+            // Check if tenant string is null
             ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
-            BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
-            BinaryExpression tenantFilter = Expression.OrElse(tenantEqual, tenantIsNull);
+            BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
 
-            // Soft delete filter: !e.IsDeleted
-            MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-            ConstantExpression falseConstant = Expression.Constant(false);
-            BinaryExpression softDeleteFilter = Expression.Equal(isDeletedProperty, falseConstant);
-
-            // Combine: tenantFilter && softDeleteFilter
-            BinaryExpression combinedFilter = Expression.AndAlso(tenantFilter, softDeleteFilter);
-
-            LambdaExpression lambda = Expression.Lambda(combinedFilter, parameter);
+            BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+            LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
-
-        private static void ApplySoftDeleteFilter(ModelBuilder modelBuilder, Type entityType)
+        else if (tenantIdType == typeof(int))
         {
-            ParameterExpression parameter = Expression.Parameter(entityType, "e");
-            MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
-            ConstantExpression falseConstant = Expression.Constant(false);
-            BinaryExpression filter = Expression.Equal(isDeletedProperty, falseConstant);
-            LambdaExpression lambda = Expression.Lambda(filter, parameter);
+            // For int tenant IDs
+            Expression methodCall = CreateEfPropertyCall(entityType, tenantIdType, "TenantId", parameter);
+
+            ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+            MemberExpression currentTenantIdString = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+
+            MethodInfo parseMethod = typeof(TenantModelBuilderExtensions).GetMethod(
+                nameof(ParseIntOrDefault),
+                BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new InvalidOperationException("ParseIntOrDefault method not found.");
+            MethodCallExpression parsedInt = Expression.Call(parseMethod, currentTenantIdString);
+
+            BinaryExpression equalExpression = Expression.Equal(methodCall, parsedInt);
+
+            ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+            BinaryExpression tenantIsNull = Expression.Equal(currentTenantIdString, nullConstant);
+
+            BinaryExpression combinedExpression = Expression.OrElse(equalExpression, tenantIsNull);
+            LambdaExpression lambda = Expression.Lambda(combinedExpression, parameter);
             modelBuilder.Entity(entityType).HasQueryFilter(lambda);
         }
-
-        private static bool ImplementsGenericTenantEntity(Type type, out Type? tenantIdType)
-        {
-            tenantIdType = null;
-
-            foreach (Type iface in type.GetInterfaces())
-            {
-                if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
-                {
-                    tenantIdType = iface.GetGenericArguments()[0];
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static Expression CreateEfPropertyCall(
-            Type entityType,
-            Type propertyType,
-            string propertyName,
-            ParameterExpression parameter)
-        {
-            MethodInfo efPropertyMethod = typeof(EF)
-                .GetMethod(nameof(EF.Property))
-                ?.MakeGenericMethod(propertyType)
-                ?? throw new InvalidOperationException("EF.Property method not found.");
-
-            return Expression.Call(
-                efPropertyMethod,
-                parameter,
-                Expression.Constant(propertyName));
-        }
-
-        private static Guid ParseGuidOrDefault(string? value)
-        {
-            if (string.IsNullOrEmpty(value)) return Guid.Empty;
-            return Guid.TryParse(value, out Guid result) ? result : Guid.Empty;
-        }
-
-        private static int ParseIntOrDefault(string? value)
-        {
-            if (string.IsNullOrEmpty(value)) return 0;
-            return int.TryParse(value, out var result) ? result : 0;
-        }
-
-        #endregion
     }
+
+    private static void ApplyCombinedFilter(
+        ModelBuilder modelBuilder,
+        Type entityType,
+        ITenantProvider tenantProvider)
+    {
+        ParameterExpression parameter = Expression.Parameter(entityType, "e");
+
+        // Tenant filter: e.TenantId == tenantProvider.TenantId || tenantProvider.TenantId == null
+        MemberExpression tenantIdProperty = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
+        ConstantExpression tenantProviderConstant = Expression.Constant(tenantProvider);
+        MemberExpression currentTenantId = Expression.Property(tenantProviderConstant, nameof(ITenantProvider.TenantId));
+        BinaryExpression tenantEqual = Expression.Equal(tenantIdProperty, currentTenantId);
+        ConstantExpression nullConstant = Expression.Constant(null, typeof(string));
+        BinaryExpression tenantIsNull = Expression.Equal(currentTenantId, nullConstant);
+        BinaryExpression tenantFilter = Expression.OrElse(tenantEqual, tenantIsNull);
+
+        // Soft delete filter: !e.IsDeleted
+        MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+        ConstantExpression falseConstant = Expression.Constant(false);
+        BinaryExpression softDeleteFilter = Expression.Equal(isDeletedProperty, falseConstant);
+
+        // Combine: tenantFilter && softDeleteFilter
+        BinaryExpression combinedFilter = Expression.AndAlso(tenantFilter, softDeleteFilter);
+
+        LambdaExpression lambda = Expression.Lambda(combinedFilter, parameter);
+        modelBuilder.Entity(entityType).HasQueryFilter(lambda);
+    }
+
+    private static void ApplySoftDeleteFilter(ModelBuilder modelBuilder, Type entityType)
+    {
+        ParameterExpression parameter = Expression.Parameter(entityType, "e");
+        MemberExpression isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+        ConstantExpression falseConstant = Expression.Constant(false);
+        BinaryExpression filter = Expression.Equal(isDeletedProperty, falseConstant);
+        LambdaExpression lambda = Expression.Lambda(filter, parameter);
+        modelBuilder.Entity(entityType).HasQueryFilter(lambda);
+    }
+
+    private static bool ImplementsGenericTenantEntity(Type type, out Type? tenantIdType)
+    {
+        tenantIdType = null;
+
+        foreach (Type iface in type.GetInterfaces())
+        {
+            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITenantEntity<>))
+            {
+                tenantIdType = iface.GetGenericArguments()[0];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Expression CreateEfPropertyCall(
+        Type entityType,
+        Type propertyType,
+        string propertyName,
+        ParameterExpression parameter)
+    {
+        MethodInfo efPropertyMethod = typeof(EF)
+            .GetMethod(nameof(EF.Property))
+            ?.MakeGenericMethod(propertyType)
+            ?? throw new InvalidOperationException("EF.Property method not found.");
+
+        return Expression.Call(
+            efPropertyMethod,
+            parameter,
+            Expression.Constant(propertyName));
+    }
+
+    private static Guid ParseGuidOrDefault(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return Guid.Empty;
+        }
+
+        return Guid.TryParse(value, out Guid result) ? result : Guid.Empty;
+    }
+
+    private static int ParseIntOrDefault(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return 0;
+        }
+
+        return int.TryParse(value, out int result) ? result : 0;
+    }
+
+    #endregion
 }
 

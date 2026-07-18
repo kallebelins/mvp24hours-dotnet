@@ -3,13 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
@@ -117,9 +112,7 @@ public class TestDbContextFactoryOptions
 public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory<TContext>
     where TContext : DbContext
 {
-    private readonly TestDbContextFactoryOptions _options;
     private readonly List<TContext> _createdContexts = [];
-    private readonly string _databaseName;
     private readonly Func<DbContextOptions<TContext>, TContext>? _contextFactory;
     private bool _initialized;
     private bool _disposed;
@@ -131,10 +124,10 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <param name="options">The factory options.</param>
     protected TestDbContextFactoryBase(TestDbContextFactoryOptions options)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _databaseName = _options.CreateNewDatabasePerTest
-            ? $"{_options.DatabaseNamePrefix}{Guid.NewGuid():N}"
-            : $"{_options.DatabaseNamePrefix}Shared";
+        Options = options ?? throw new ArgumentNullException(nameof(options));
+        DatabaseName = Options.CreateNewDatabasePerTest
+            ? $"{Options.DatabaseNamePrefix}{Guid.NewGuid():N}"
+            : $"{Options.DatabaseNamePrefix}Shared";
     }
 
     /// <summary>
@@ -153,12 +146,12 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <summary>
     /// Gets the database name being used.
     /// </summary>
-    protected string DatabaseName => _databaseName;
+    protected string DatabaseName { get; }
 
     /// <summary>
     /// Gets the factory options.
     /// </summary>
-    protected TestDbContextFactoryOptions Options => _options;
+    protected TestDbContextFactoryOptions Options { get; }
 
     /// <inheritdoc />
     public TContext CreateContext()
@@ -180,16 +173,22 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// <inheritdoc />
     public async Task InitializeDatabaseAsync(CancellationToken cancellationToken = default)
     {
-        if (_initialized) return;
+        if (_initialized)
+        {
+            return;
+        }
 
         await _initLock.WaitAsync(cancellationToken);
         try
         {
-            if (_initialized) return;
+            if (_initialized)
+            {
+                return;
+            }
 
             using TContext context = CreateContext();
 
-            if (_options.UseMigrations)
+            if (Options.UseMigrations)
             {
                 await context.Database.MigrateAsync(cancellationToken);
             }
@@ -238,22 +237,22 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// </summary>
     protected virtual void ApplyCommonConfiguration(DbContextOptionsBuilder<TContext> builder)
     {
-        if (_options.EnableSensitiveDataLogging)
+        if (Options.EnableSensitiveDataLogging)
         {
             builder.EnableSensitiveDataLogging();
         }
 
-        if (_options.EnableDetailedErrors)
+        if (Options.EnableDetailedErrors)
         {
             builder.EnableDetailedErrors();
         }
 
-        if (_options.Interceptors.Count > 0)
+        if (Options.Interceptors.Count > 0)
         {
-            builder.AddInterceptors([.. _options.Interceptors]);
+            builder.AddInterceptors([.. Options.Interceptors]);
         }
 
-        _options.ConfigureOptions?.Invoke(builder);
+        Options.ConfigureOptions?.Invoke(builder);
     }
 
     /// <inheritdoc />
@@ -268,7 +267,10 @@ public abstract class TestDbContextFactoryBase<TContext> : ITestDbContextFactory
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
@@ -343,10 +345,7 @@ public class InMemoryTestDbContextFactory<TContext> : TestDbContextFactoryBase<T
 
         builder.UseInMemoryDatabase(DatabaseName);
 
-        builder.ConfigureWarnings(warnings =>
-        {
-            warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning);
-        });
+        builder.ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning));
 
         ApplyCommonConfiguration(builder);
 

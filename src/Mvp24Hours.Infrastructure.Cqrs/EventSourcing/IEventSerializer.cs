@@ -42,23 +42,18 @@ public interface IEventSerializer
 /// <summary>
 /// JSON-based event serializer using System.Text.Json.
 /// </summary>
-public class JsonEventSerializer : IEventSerializer
+/// <remarks>
+/// Initializes a new instance with custom options.
+/// </remarks>
+/// <param name="options">The JSON serializer options.</param>
+public class JsonEventSerializer(JsonSerializerOptions options) : IEventSerializer
 {
-    private readonly JsonSerializerOptions _options;
+    private readonly JsonSerializerOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
     /// <summary>
     /// Initializes a new instance with default options.
     /// </summary>
     public JsonEventSerializer() : this(CreateDefaultOptions()) { }
-
-    /// <summary>
-    /// Initializes a new instance with custom options.
-    /// </summary>
-    /// <param name="options">The JSON serializer options.</param>
-    public JsonEventSerializer(JsonSerializerOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
 
     /// <inheritdoc />
     public string Serialize(object @event)
@@ -71,23 +66,18 @@ public class JsonEventSerializer : IEventSerializer
     public CoreDomainEvent Deserialize(string eventType, string data)
     {
         if (string.IsNullOrWhiteSpace(eventType))
+        {
             throw new ArgumentException("Event type cannot be null or empty.", nameof(eventType));
+        }
 
         if (string.IsNullOrWhiteSpace(data))
+        {
             throw new ArgumentException("Data cannot be null or empty.", nameof(data));
-
-        var type = Type.GetType(eventType);
-        if (type == null)
-        {
-            throw new InvalidOperationException($"Cannot find type: {eventType}");
         }
 
-        var result = JsonSerializer.Deserialize(data, type, _options);
-        if (result == null)
-        {
-            throw new InvalidOperationException($"Failed to deserialize event of type: {eventType}");
-        }
+        Type type = Type.GetType(eventType) ?? throw new InvalidOperationException($"Cannot find type: {eventType}");
 
+        object? result = JsonSerializer.Deserialize(data, type, _options) ?? throw new InvalidOperationException($"Failed to deserialize event of type: {eventType}");
         return (CoreDomainEvent)result;
     }
 
@@ -97,7 +87,9 @@ public class JsonEventSerializer : IEventSerializer
         ArgumentNullException.ThrowIfNull(type);
 
         if (string.IsNullOrWhiteSpace(data))
+        {
             throw new ArgumentException("Data cannot be null or empty.", nameof(data));
+        }
 
         return JsonSerializer.Deserialize(data, type, _options);
     }
@@ -182,7 +174,9 @@ public class RegistryEventTypeResolver : IEventTypeResolver
         ArgumentNullException.ThrowIfNull(type);
 
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Name cannot be null or empty.", nameof(name));
+        }
 
         _typesByName[name] = type;
         _namesByType[type] = name;
@@ -203,7 +197,7 @@ public class RegistryEventTypeResolver : IEventTypeResolver
     /// <inheritdoc />
     public string GetTypeName(Type type)
     {
-        if (_namesByType.TryGetValue(type, out var name))
+        if (_namesByType.TryGetValue(type, out string? name))
         {
             return name;
         }

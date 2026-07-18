@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using System.Runtime.CompilerServices;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -24,19 +23,14 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 /// with their configured lifetimes.
 /// </para>
 /// </remarks>
-public sealed class Mediator : IMediator
+/// <remarks>
+/// Creates a new instance of the Mediator.
+/// </remarks>
+/// <param name="serviceProvider">Service provider for resolving handlers and behaviors.</param>
+/// <exception cref="ArgumentNullException">Thrown when serviceProvider is null.</exception>
+public sealed class Mediator(IServiceProvider serviceProvider) : IMediator
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    /// <summary>
-    /// Creates a new instance of the Mediator.
-    /// </summary>
-    /// <param name="serviceProvider">Service provider for resolving handlers and behaviors.</param>
-    /// <exception cref="ArgumentNullException">Thrown when serviceProvider is null.</exception>
-    public Mediator(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     /// <inheritdoc />
     public async Task<TResponse> SendAsync<TResponse>(IMediatorRequest<TResponse> request, CancellationToken cancellationToken = default)

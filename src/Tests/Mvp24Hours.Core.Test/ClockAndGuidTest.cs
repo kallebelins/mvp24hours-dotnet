@@ -591,7 +591,7 @@ public class ClockAndGuidTest
         // Arrange
         var initialTime = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var clock = new TestClock(initialTime);
-        var expirationDays = 30;
+        int expirationDays = 30;
         DateTime createdAt = clock.UtcNow;
         DateTime expiresAt = createdAt.AddDays(expirationDays);
 

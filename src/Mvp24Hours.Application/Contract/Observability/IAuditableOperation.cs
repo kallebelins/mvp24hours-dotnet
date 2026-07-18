@@ -4,11 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Mvp24Hours.Application.Contract.Observability;
 
 /// <summary>
@@ -49,7 +44,10 @@ public interface IAuditableOperation
     /// Gets additional metadata to include in the audit entry.
     /// </summary>
     /// <returns>A dictionary of key-value pairs to include in the audit.</returns>
-    IDictionary<string, string>? GetAuditMetadata() => null;
+    IDictionary<string, string>? GetAuditMetadata()
+    {
+        return null;
+    }
 }
 
 /// <summary>

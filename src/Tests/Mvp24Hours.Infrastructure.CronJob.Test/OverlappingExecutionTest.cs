@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -116,7 +113,7 @@ public class OverlappingExecutionTest
     {
         // Arrange
         var executionLock = new InMemoryCronJobExecutionLock();
-        ICronJobLockHandle? firstHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
+        _ = await executionLock.TryAcquireAsync("TestJob", TimeSpan.Zero);
 
         // Act
         ICronJobLockHandle? secondHandle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromMilliseconds(50));
@@ -435,7 +432,7 @@ public class OverlappingExecutionTest
                 ICronJobLockHandle? handle = await executionLock.TryAcquireAsync("TestJob", TimeSpan.FromSeconds(5));
                 if (handle != null)
                 {
-                    var current = Interlocked.Increment(ref concurrentExecutions);
+                    int current = Interlocked.Increment(ref concurrentExecutions);
                     maxConcurrent = Math.Max(maxConcurrent, current);
 
                     await Task.Delay(50); // Simulate work

@@ -3,215 +3,214 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Mvp24Hours.Core.Contract.Application.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Resolvers
+namespace Mvp24Hours.Infrastructure.Pipe.Resolvers;
+
+/// <summary>
+/// 
+/// </summary>
+public class PipelineBuilderResolver
 {
+    private readonly Dictionary<string, Type> _builders;
+    private readonly Dictionary<string, List<Type>> _buildersComplex;
+
     /// <summary>
     /// 
     /// </summary>
-    public class PipelineBuilderResolver
+    public PipelineBuilderResolver()
     {
-        private readonly Dictionary<string, Type> _builders;
-        private readonly Dictionary<string, List<Type>> _buildersComplex;
+        _builders = [];
+        _buildersComplex = [];
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver()
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver AddList<T, U>()
+        where T : IPipelineBuilder
+        where U : IPipelineBuilder, new()
+    {
+        return AddList<T, U>(typeof(T).FullName!);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver AddList<T, U>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+        where U : IPipelineBuilder, new()
+    {
+        string keyName = key;
+        if (!isSimpleKey)
         {
-            _builders = [];
-            _buildersComplex = [];
+            keyName = $"{key}_{typeof(T).FullName}";
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver AddList<T, U>()
-            where T : IPipelineBuilder
-            where U : IPipelineBuilder, new()
+        if (!_buildersComplex.TryGetValue(keyName, out List<Type>? value))
         {
-            return AddList<T, U>(typeof(T).FullName!);
+            value = [];
+            _buildersComplex.Add(keyName, value);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver AddList<T, U>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
-            where U : IPipelineBuilder, new()
+        value.Add(typeof(U));
+        return this;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver Add<T, U>()
+        where T : IPipelineBuilder
+        where U : IPipelineBuilder, new()
+    {
+        Add<T, U>(typeof(T).FullName!);
+        return this;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public PipelineBuilderResolver Add<T, U>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+        where U : IPipelineBuilder, new()
+    {
+        string keyName = key;
+        if (!isSimpleKey)
         {
-            string keyName = key;
-            if (!isSimpleKey)
-            {
-                keyName = $"{key}_{typeof(T).FullName}";
-            }
-
-            if (!_buildersComplex.TryGetValue(keyName, out List<Type>? value))
-            {
-                value = [];
-                _buildersComplex.Add(keyName, value);
-            }
-
-            value.Add(typeof(U));
-            return this;
+            keyName = $"{key}_{typeof(T).FullName}";
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver Add<T, U>()
-            where T : IPipelineBuilder
-            where U : IPipelineBuilder, new()
+        if (_builders.ContainsKey(keyName))
         {
-            Add<T, U>(typeof(T).FullName!);
-            return this;
+            _builders[keyName] = typeof(U);
+        }
+        else
+        {
+            _builders.Add(keyName, typeof(U));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PipelineBuilderResolver Add<T, U>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
-            where U : IPipelineBuilder, new()
+        return this;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public T? Get<T>()
+        where T : IPipelineBuilder
+    {
+        return Get<T>(typeof(T).FullName!);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public T? Get<T>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+    {
+        string keyName = key;
+        if (!isSimpleKey)
         {
-            string keyName = key;
-            if (!isSimpleKey)
-            {
-                keyName = $"{key}_{typeof(T).FullName}";
-            }
-
-            if (_builders.ContainsKey(keyName))
-            {
-                _builders[keyName] = typeof(U);
-            }
-            else
-            {
-                _builders.Add(keyName, typeof(U));
-            }
-
-            return this;
+            keyName = $"{key}_{typeof(T).FullName}";
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public T? Get<T>()
-            where T : IPipelineBuilder
+        if (_builders.TryGetValue(keyName, out Type? value))
         {
-            return Get<T>(typeof(T).FullName!);
+            return (T?)Activator.CreateInstance(value);
+        }
+        return default;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public List<T> GetList<T>()
+        where T : IPipelineBuilder
+    {
+        return GetList<T>(typeof(T).FullName!);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public List<T> GetList<T>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+    {
+        string keyName = key;
+        if (!isSimpleKey)
+        {
+            keyName = $"{key}_{typeof(T).FullName}";
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public T? Get<T>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
+        if (_buildersComplex.TryGetValue(keyName, out List<Type>? value))
         {
-            string keyName = key;
-            if (!isSimpleKey)
+            var result = new List<T>();
+            foreach (Type item in value)
             {
-                keyName = $"{key}_{typeof(T).FullName}";
-            }
-
-            if (_builders.TryGetValue(keyName, out Type? value))
-            {
-                return (T?)Activator.CreateInstance(value);
-            }
-            return default;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<T> GetList<T>()
-            where T : IPipelineBuilder
-        {
-            return GetList<T>(typeof(T).FullName!);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<T> GetList<T>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
-        {
-            string keyName = key;
-            if (!isSimpleKey)
-            {
-                keyName = $"{key}_{typeof(T).FullName}";
-            }
-
-            if (_buildersComplex.TryGetValue(keyName, out List<Type>? value))
-            {
-                var result = new List<T>();
-                foreach (Type item in value)
+                var instance = (T?)Activator.CreateInstance(item);
+                if (instance != null)
                 {
-                    var instance = (T?)Activator.CreateInstance(item);
-                    if (instance != null)
-                        result.Add(instance);
+                    result.Add(instance);
                 }
-
-                return result;
-            }
-            return [];
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Has<T>()
-            where T : IPipelineBuilder
-        {
-            return Has(typeof(T).FullName!);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Has<T>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
-        {
-            return Has(key, isSimpleKey ? null : typeof(T));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Has(string key, Type? typeComposeKey = null)
-        {
-            string keyName = key;
-            if (typeComposeKey != null)
-            {
-                keyName = $"{key}_{typeComposeKey.FullName}";
             }
 
-            return _builders.ContainsKey(keyName);
+            return result;
         }
+        return [];
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool HasList<T>(string key, bool isSimpleKey = false)
-            where T : IPipelineBuilder
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Has<T>()
+        where T : IPipelineBuilder
+    {
+        return Has(typeof(T).FullName!);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Has<T>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+    {
+        return Has(key, isSimpleKey ? null : typeof(T));
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Has(string key, Type? typeComposeKey = null)
+    {
+        string keyName = key;
+        if (typeComposeKey != null)
         {
-            return HasList(key, isSimpleKey ? null : typeof(T));
+            keyName = $"{key}_{typeComposeKey.FullName}";
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool HasList(string key, Type? typeComposeKey = null)
+        return _builders.ContainsKey(keyName);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool HasList<T>(string key, bool isSimpleKey = false)
+        where T : IPipelineBuilder
+    {
+        return HasList(key, isSimpleKey ? null : typeof(T));
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool HasList(string key, Type? typeComposeKey = null)
+    {
+        string keyName = key;
+        if (typeComposeKey != null)
         {
-            string keyName = key;
-            if (typeComposeKey != null)
-            {
-                keyName = $"{key}_{typeComposeKey.FullName}";
-            }
-
-            return _buildersComplex.ContainsKey(keyName);
+            keyName = $"{key}_{typeComposeKey.FullName}";
         }
+
+        return _buildersComplex.ContainsKey(keyName);
     }
 }

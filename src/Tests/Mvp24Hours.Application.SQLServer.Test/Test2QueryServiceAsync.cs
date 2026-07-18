@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.SQLServer.Test.Setup;
 using Mvp24Hours.Application.SQLServer.Test.Support.Entities;
@@ -16,294 +13,293 @@ using Mvp24Hours.Extensions;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.SQLServer.Test
+namespace Mvp24Hours.Application.SQLServer.Test;
+
+/// <summary>
+/// 
+/// </summary>
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Unit")]
+public class Test2QueryServiceAsync
 {
+    private readonly IServiceProvider serviceProvider;
+
+    #region [ Ctor ]
     /// <summary>
-    /// 
+    /// Initialize
     /// </summary>
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Unit")]
-    public class Test2QueryServiceAsync
+    public Test2QueryServiceAsync()
     {
-        private readonly IServiceProvider serviceProvider;
-
-        #region [ Ctor ]
-        /// <summary>
-        /// Initialize
-        /// </summary>
-        public Test2QueryServiceAsync()
-        {
-            serviceProvider = StartupAsync.Initialize();
-        }
-        #endregion
-
-        #region [ List ]
-        [Fact, Priority(1)]
-        public async Task GetFilterCustomerList()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync();
-            // assert
-            Assert.True(result.HasData());
-        }
-        [Fact, Priority(2)]
-        public async Task GetFilterCustomerListAny()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<bool> result = await service.ListAnyAsync();
-            // assert
-            Assert.True(result.GetDataValue());
-        }
-        [Fact, Priority(3)]
-        public async Task GetFilterCustomerListCount()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<int> result = await service.ListCountAsync();
-            // assert
-            Assert.True(result.GetDataValue() > 0);
-        }
-        [Fact, Priority(4)]
-        public async Task GetFilterCustomerListPaging()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(5)]
-        public async Task GetFilterCustomerListNavigation()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(6)]
-        public async Task GetFilterCustomerListOrderAsc()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(7)]
-        public async Task GetFilterCustomerListOrderDesc()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(8)]
-        public async Task GetFilterCustomerListOrderAscExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.OrderByAscendingExpr.Add(x => x.Name);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(9)]
-        public async Task GetFilterCustomerListOrderDescExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.OrderByDescendingExpr.Add(x => x.Name);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(10)]
-        public async Task GetFilterCustomerListPagingExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(11)]
-        public async Task GetFilterCustomerListNavigationExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.NavigationExpr.Add(x => x.Contacts);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        #endregion
-
-        #region [ GetBy ]
-        [Fact, Priority(12)]
-        public async Task GetFilterCustomerGetById()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<Customer?> result = await service.GetByIdAsync(1);
-            // assert
-            Assert.NotNull(result.GetDataValue());
-        }
-        [Fact, Priority(13)]
-        public async Task GetFilterCustomerGetByIdNavigation()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(1, 0, navigation: ["Contacts"]);
-            // act
-            IBusinessResult<Customer?> result = await service.GetByIdAsync(1, paging);
-            // assert
-            Assert.True(result?.GetDataValue()?.Contacts.AnyOrNotNull());
-        }
-        [Fact, Priority(14)]
-        public async Task GetFilterCustomerGetBy()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"));
-            // assert
-            Assert.True(result.HasData());
-        }
-        [Fact, Priority(15)]
-        public async Task GetFilterCustomerGetByAny()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<bool> result = await service.GetByAnyAsync(x => x.Name.Contains("Test"));
-            // assert
-            Assert.True(result.GetDataValue());
-        }
-        [Fact, Priority(16)]
-        public async Task GetFilterCustomerGetByCount()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            // act
-            IBusinessResult<int> result = await service.GetByCountAsync(x => x.Name.Contains("Test"));
-            // assert
-            Assert.True(result.GetDataValue() > 0);
-        }
-        [Fact, Priority(17)]
-        public async Task GetFilterCustomerGetByPaging()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(18)]
-        public async Task GetFilterCustomerGetByNavigation()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, navigation: new List<string> { "Contacts" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(19)]
-        public async Task GetFilterCustomerGetByOrderAsc()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, new List<string> { "Name" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(20)]
-        public async Task GetFilterCustomerGetByOrderDesc()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteria(3, 0, new List<string> { "Name desc" });
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(21)]
-        public async Task GetFilterCustomerGetByOrderAscExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.OrderByAscendingExpr.Add(x => x.Name);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(22)]
-        public async Task GetFilterCustomerGetByOrderDescExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.OrderByDescendingExpr.Add(x => x.Name);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(23)]
-        public async Task GetFilterCustomerGetByPagingExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        [Fact, Priority(24)]
-        public async Task GetFilterCustomerGetByNavigationExpression()
-        {
-            // arrange
-            CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.NavigationExpr.Add(x => x.Contacts);
-            // act
-            IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
-            // assert
-            Assert.True(result.HasDataCount(3));
-        }
-        #endregion
+        serviceProvider = StartupAsync.Initialize();
     }
+    #endregion
+
+    #region [ List ]
+    [Fact, Priority(1)]
+    public async Task GetFilterCustomerList()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync();
+        // assert
+        Assert.True(result.HasData());
+    }
+    [Fact, Priority(2)]
+    public async Task GetFilterCustomerListAny()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<bool> result = await service.ListAnyAsync();
+        // assert
+        Assert.True(result.GetDataValue());
+    }
+    [Fact, Priority(3)]
+    public async Task GetFilterCustomerListCount()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<int> result = await service.ListCountAsync();
+        // assert
+        Assert.True(result.GetDataValue() > 0);
+    }
+    [Fact, Priority(4)]
+    public async Task GetFilterCustomerListPaging()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(5)]
+    public async Task GetFilterCustomerListNavigation()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, navigation: ["Contacts"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(6)]
+    public async Task GetFilterCustomerListOrderAsc()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, ["Name"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(7)]
+    public async Task GetFilterCustomerListOrderDesc()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, ["Name desc"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(8)]
+    public async Task GetFilterCustomerListOrderAscExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.OrderByAscendingExpr.Add(x => x.Name);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(9)]
+    public async Task GetFilterCustomerListOrderDescExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.OrderByDescendingExpr.Add(x => x.Name);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(10)]
+    public async Task GetFilterCustomerListPagingExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(11)]
+    public async Task GetFilterCustomerListNavigationExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.NavigationExpr.Add(x => x.Contacts);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    #endregion
+
+    #region [ GetBy ]
+    [Fact, Priority(12)]
+    public async Task GetFilterCustomerGetById()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<Customer?> result = await service.GetByIdAsync(1);
+        // assert
+        Assert.NotNull(result.GetDataValue());
+    }
+    [Fact, Priority(13)]
+    public async Task GetFilterCustomerGetByIdNavigation()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(1, 0, navigation: ["Contacts"]);
+        // act
+        IBusinessResult<Customer?> result = await service.GetByIdAsync(1, paging);
+        // assert
+        Assert.True(result?.GetDataValue()?.Contacts.AnyOrNotNull());
+    }
+    [Fact, Priority(14)]
+    public async Task GetFilterCustomerGetBy()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"));
+        // assert
+        Assert.True(result.HasData());
+    }
+    [Fact, Priority(15)]
+    public async Task GetFilterCustomerGetByAny()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<bool> result = await service.GetByAnyAsync(x => x.Name.Contains("Test"));
+        // assert
+        Assert.True(result.GetDataValue());
+    }
+    [Fact, Priority(16)]
+    public async Task GetFilterCustomerGetByCount()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        // act
+        IBusinessResult<int> result = await service.GetByCountAsync(x => x.Name.Contains("Test"));
+        // assert
+        Assert.True(result.GetDataValue() > 0);
+    }
+    [Fact, Priority(17)]
+    public async Task GetFilterCustomerGetByPaging()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(18)]
+    public async Task GetFilterCustomerGetByNavigation()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, navigation: ["Contacts"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(19)]
+    public async Task GetFilterCustomerGetByOrderAsc()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, ["Name"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(20)]
+    public async Task GetFilterCustomerGetByOrderDesc()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteria(3, 0, ["Name desc"]);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(21)]
+    public async Task GetFilterCustomerGetByOrderAscExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.OrderByAscendingExpr.Add(x => x.Name);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(22)]
+    public async Task GetFilterCustomerGetByOrderDescExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.OrderByDescendingExpr.Add(x => x.Name);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(23)]
+    public async Task GetFilterCustomerGetByPagingExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    [Fact, Priority(24)]
+    public async Task GetFilterCustomerGetByNavigationExpression()
+    {
+        // arrange
+        CustomerServiceAsync service = serviceProvider.GetRequiredService<CustomerServiceAsync>();
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.NavigationExpr.Add(x => x.Contacts);
+        // act
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name.Contains("Test"), paging);
+        // assert
+        Assert.True(result.HasDataCount(3));
+    }
+    #endregion
 }

@@ -3,293 +3,279 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections
+namespace Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections;
+
+/// <summary>
+/// Service for MongoDB Capped Collection operations.
+/// </summary>
+/// <typeparam name="TDocument">The document type.</typeparam>
+/// <example>
+/// <code>
+/// // Create a capped collection for logs
+/// await cappedService.CreateCappedCollectionAsync("logs", new CappedCollectionOptions
+/// {
+///     MaxSizeBytes = 100 * 1024 * 1024, // 100 MB
+///     MaxDocuments = 1000000 // Max 1 million documents
+/// });
+/// 
+/// // Insert log entries
+/// await cappedService.InsertAsync(new LogEntry
+/// {
+///     Timestamp = DateTime.UtcNow,
+///     Level = "INFO",
+///     Message = "Application started"
+/// });
+/// 
+/// // Get latest logs
+/// var recentLogs = await cappedService.GetLatestAsync(100);
+/// 
+/// // Tail for real-time logs
+/// await cappedService.TailAsync(async log =>
+/// {
+///     Console.WriteLine($"[{log.Level}] {log.Message}");
+/// }, cancellationToken);
+/// </code>
+/// </example>
+/// <remarks>
+/// Initializes a new instance of the <see cref="MongoDbCappedCollectionService{TDocument}"/> class.
+/// </remarks>
+/// <param name="database">The MongoDB database.</param>
+/// <param name="collectionName">The collection name.</param>
+/// <param name="logger">Optional logger.</param>
+public class MongoDbCappedCollectionService<TDocument>(
+    IMongoDatabase database,
+    string collectionName,
+    ILogger<MongoDbCappedCollectionService<TDocument>>? logger = null) : IMongoDbCappedCollectionService<TDocument>
 {
-    /// <summary>
-    /// Service for MongoDB Capped Collection operations.
-    /// </summary>
-    /// <typeparam name="TDocument">The document type.</typeparam>
-    /// <example>
-    /// <code>
-    /// // Create a capped collection for logs
-    /// await cappedService.CreateCappedCollectionAsync("logs", new CappedCollectionOptions
-    /// {
-    ///     MaxSizeBytes = 100 * 1024 * 1024, // 100 MB
-    ///     MaxDocuments = 1000000 // Max 1 million documents
-    /// });
-    /// 
-    /// // Insert log entries
-    /// await cappedService.InsertAsync(new LogEntry
-    /// {
-    ///     Timestamp = DateTime.UtcNow,
-    ///     Level = "INFO",
-    ///     Message = "Application started"
-    /// });
-    /// 
-    /// // Get latest logs
-    /// var recentLogs = await cappedService.GetLatestAsync(100);
-    /// 
-    /// // Tail for real-time logs
-    /// await cappedService.TailAsync(async log =>
-    /// {
-    ///     Console.WriteLine($"[{log.Level}] {log.Message}");
-    /// }, cancellationToken);
-    /// </code>
-    /// </example>
-    public class MongoDbCappedCollectionService<TDocument> : IMongoDbCappedCollectionService<TDocument>
+    private readonly IMongoDatabase _database = database ?? throw new ArgumentNullException(nameof(database));
+    private readonly string _collectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));
+    private readonly ILogger<MongoDbCappedCollectionService<TDocument>>? _logger = logger;
+
+    /// <inheritdoc/>
+    public IMongoCollection<TDocument> Collection { get; private set; } = database.GetCollection<TDocument>(collectionName);
+
+    /// <inheritdoc/>
+    public async Task CreateCappedCollectionAsync(
+        string collectionName,
+        CappedCollectionOptions options,
+        CancellationToken cancellationToken = default)
     {
-        private readonly IMongoDatabase _database;
-        private readonly string _collectionName;
-        private readonly ILogger<MongoDbCappedCollectionService<TDocument>>? _logger;
-        private IMongoCollection<TDocument> _collection;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MongoDbCappedCollectionService{TDocument}"/> class.
-        /// </summary>
-        /// <param name="database">The MongoDB database.</param>
-        /// <param name="collectionName">The collection name.</param>
-        /// <param name="logger">Optional logger.</param>
-        public MongoDbCappedCollectionService(
-            IMongoDatabase database,
-            string collectionName,
-            ILogger<MongoDbCappedCollectionService<TDocument>>? logger = null)
+        if (options == null)
         {
-            _database = database ?? throw new ArgumentNullException(nameof(database));
-            _collectionName = collectionName ?? throw new ArgumentNullException(nameof(collectionName));
-            _logger = logger;
-            _collection = database.GetCollection<TDocument>(collectionName);
+            throw new ArgumentNullException(nameof(options));
         }
 
-        /// <inheritdoc/>
-        public IMongoCollection<TDocument> Collection => _collection;
-
-        /// <inheritdoc/>
-        public async Task CreateCappedCollectionAsync(
-            string collectionName,
-            CappedCollectionOptions options,
-            CancellationToken cancellationToken = default)
+        if (options.MaxSizeBytes <= 0)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (options.MaxSizeBytes <= 0)
-            {
-                throw new ArgumentException("MaxSizeBytes must be greater than 0.", nameof(options));
-            }
-
-            var createOptions = new CreateCollectionOptions
-            {
-                Capped = true,
-                MaxSize = options.MaxSizeBytes,
-                MaxDocuments = options.MaxDocuments
-            };
-
-            await _database.CreateCollectionAsync(collectionName, createOptions, cancellationToken);
-
-            _collection = _database.GetCollection<TDocument>(collectionName);
-
-            _logger?.LogInformation(
-                "Capped collection '{CollectionName}' created with max size {MaxSize} bytes and max {MaxDocs} documents.",
-                collectionName, options.MaxSizeBytes, options.MaxDocuments);
+            throw new ArgumentException("MaxSizeBytes must be greater than 0.", nameof(options));
         }
 
-        /// <inheritdoc/>
-        public async Task ConvertToCappedCollectionAsync(
-            string collectionName,
-            CappedCollectionOptions options,
-            CancellationToken cancellationToken = default)
+        var createOptions = new CreateCollectionOptions
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            Capped = true,
+            MaxSize = options.MaxSizeBytes,
+            MaxDocuments = options.MaxDocuments
+        };
 
-            var command = new BsonDocument
-            {
-                { "convertToCapped", collectionName },
-                { "size", options.MaxSizeBytes }
-            };
+        await _database.CreateCollectionAsync(collectionName, createOptions, cancellationToken);
 
-            if (options.MaxDocuments.HasValue)
-            {
-                command.Add("max", options.MaxDocuments.Value);
-            }
+        Collection = _database.GetCollection<TDocument>(collectionName);
 
-            await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+        _logger?.LogInformation(
+            "Capped collection '{CollectionName}' created with max size {MaxSize} bytes and max {MaxDocs} documents.",
+            collectionName, options.MaxSizeBytes, options.MaxDocuments);
+    }
 
-            _collection = _database.GetCollection<TDocument>(collectionName);
-
-            _logger?.LogInformation("Collection '{CollectionName}' converted to capped.", collectionName);
+    /// <inheritdoc/>
+    public async Task ConvertToCappedCollectionAsync(
+        string collectionName,
+        CappedCollectionOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        if (options == null)
+        {
+            throw new ArgumentNullException(nameof(options));
         }
 
-        /// <inheritdoc/>
-        public async Task InsertAsync(
-            TDocument document,
-            CancellationToken cancellationToken = default)
+        var command = new BsonDocument
         {
-            await _collection.InsertOneAsync(document, cancellationToken: cancellationToken);
+            { "convertToCapped", collectionName },
+            { "size", options.MaxSizeBytes }
+        };
+
+        if (options.MaxDocuments.HasValue)
+        {
+            command.Add("max", options.MaxDocuments.Value);
         }
 
-        /// <inheritdoc/>
-        public async Task InsertManyAsync(
-            IEnumerable<TDocument> documents,
-            CancellationToken cancellationToken = default)
+        await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        Collection = _database.GetCollection<TDocument>(collectionName);
+
+        _logger?.LogInformation("Collection '{CollectionName}' converted to capped.", collectionName);
+    }
+
+    /// <inheritdoc/>
+    public async Task InsertAsync(
+        TDocument document,
+        CancellationToken cancellationToken = default)
+    {
+        await Collection.InsertOneAsync(document, cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task InsertManyAsync(
+        IEnumerable<TDocument> documents,
+        CancellationToken cancellationToken = default)
+    {
+        await Collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<TDocument>> GetLatestAsync(
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        // Use natural order descending to get most recent documents
+        List<TDocument> result = await Collection
+            .Find(FilterDefinition<TDocument>.Empty)
+            .Sort(new BsonDocument("$natural", -1))
+            .Limit(count)
+            .ToListAsync(cancellationToken);
+
+        return result;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<TDocument>> GetOldestAsync(
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        // Use natural order ascending to get oldest documents
+        List<TDocument> result = await Collection
+            .Find(FilterDefinition<TDocument>.Empty)
+            .Sort(new BsonDocument("$natural", 1))
+            .Limit(count)
+            .ToListAsync(cancellationToken);
+
+        return result;
+    }
+
+    /// <inheritdoc/>
+    public async Task TailAsync(
+        Func<TDocument, Task> handler,
+        CancellationToken cancellationToken = default)
+    {
+        if (handler == null)
         {
-            await _collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
+            throw new ArgumentNullException(nameof(handler));
         }
 
-        /// <inheritdoc/>
-        public async Task<IList<TDocument>> GetLatestAsync(
-            int count,
-            CancellationToken cancellationToken = default)
+        var options = new FindOptions<TDocument>
         {
-            // Use natural order descending to get most recent documents
-            List<TDocument> result = await _collection
-                .Find(FilterDefinition<TDocument>.Empty)
-                .Sort(new BsonDocument("$natural", -1))
-                .Limit(count)
-                .ToListAsync(cancellationToken);
+            CursorType = CursorType.TailableAwait,
+            NoCursorTimeout = true
+        };
 
-            return result;
-        }
+        _logger?.LogInformation("Started tailing capped collection '{CollectionName}'.", _collectionName);
 
-        /// <inheritdoc/>
-        public async Task<IList<TDocument>> GetOldestAsync(
-            int count,
-            CancellationToken cancellationToken = default)
+        using IAsyncCursor<TDocument> cursor = await Collection.FindAsync(
+            FilterDefinition<TDocument>.Empty,
+            options,
+            cancellationToken);
+
+        while (await cursor.MoveNextAsync(cancellationToken))
         {
-            // Use natural order ascending to get oldest documents
-            List<TDocument> result = await _collection
-                .Find(FilterDefinition<TDocument>.Empty)
-                .Sort(new BsonDocument("$natural", 1))
-                .Limit(count)
-                .ToListAsync(cancellationToken);
-
-            return result;
-        }
-
-        /// <inheritdoc/>
-        public async Task TailAsync(
-            Func<TDocument, Task> handler,
-            CancellationToken cancellationToken = default)
-        {
-            if (handler == null)
+            foreach (TDocument? document in cursor.Current)
             {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var options = new FindOptions<TDocument>
-            {
-                CursorType = CursorType.TailableAwait,
-                NoCursorTimeout = true
-            };
-
-            _logger?.LogInformation("Started tailing capped collection '{CollectionName}'.", _collectionName);
-
-            using IAsyncCursor<TDocument> cursor = await _collection.FindAsync(
-                FilterDefinition<TDocument>.Empty,
-                options,
-                cancellationToken);
-
-            while (await cursor.MoveNextAsync(cancellationToken))
-            {
-                foreach (TDocument? document in cursor.Current)
+                try
                 {
-                    try
-                    {
-                        await handler(document);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "Error processing document from tailable cursor.");
-                    }
+                    await handler(document);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Error processing document from tailable cursor.");
                 }
             }
         }
+    }
 
-        /// <inheritdoc/>
-        public async Task TailFromAsync(
-            BsonValue lastId,
-            Func<TDocument, Task> handler,
-            CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public async Task TailFromAsync(
+        BsonValue lastId,
+        Func<TDocument, Task> handler,
+        CancellationToken cancellationToken = default)
+    {
+        if (handler == null)
         {
-            if (handler == null)
+            throw new ArgumentNullException(nameof(handler));
+        }
+
+        FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Gt("_id", lastId);
+
+        var options = new FindOptions<TDocument>
+        {
+            CursorType = CursorType.TailableAwait,
+            NoCursorTimeout = true
+        };
+
+        _logger?.LogInformation("Started tailing capped collection '{CollectionName}' from ID {LastId}.",
+            _collectionName, lastId);
+
+        using IAsyncCursor<TDocument> cursor = await Collection.FindAsync(filter, options, cancellationToken);
+
+        while (await cursor.MoveNextAsync(cancellationToken))
+        {
+            foreach (TDocument? document in cursor.Current)
             {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            FilterDefinition<TDocument> filter = Builders<TDocument>.Filter.Gt("_id", lastId);
-
-            var options = new FindOptions<TDocument>
-            {
-                CursorType = CursorType.TailableAwait,
-                NoCursorTimeout = true
-            };
-
-            _logger?.LogInformation("Started tailing capped collection '{CollectionName}' from ID {LastId}.",
-                _collectionName, lastId);
-
-            using IAsyncCursor<TDocument> cursor = await _collection.FindAsync(filter, options, cancellationToken);
-
-            while (await cursor.MoveNextAsync(cancellationToken))
-            {
-                foreach (TDocument? document in cursor.Current)
+                try
                 {
-                    try
-                    {
-                        await handler(document);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "Error processing document from tailable cursor.");
-                    }
+                    await handler(document);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Error processing document from tailable cursor.");
                 }
             }
         }
+    }
 
-        /// <inheritdoc/>
-        public async Task<bool> IsCappedAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public async Task<bool> IsCappedAsync(CancellationToken cancellationToken = default)
+    {
+        CappedCollectionStats stats = await GetStatsAsync(cancellationToken);
+        return stats.IsCapped;
+    }
+
+    /// <inheritdoc/>
+    public async Task<CappedCollectionStats> GetStatsAsync(CancellationToken cancellationToken = default)
+    {
+        var command = new BsonDocument("collStats", _collectionName);
+        BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
+
+        return new CappedCollectionStats
         {
-            CappedCollectionStats stats = await GetStatsAsync(cancellationToken);
-            return stats.IsCapped;
-        }
+            IsCapped = result.Contains("capped") && result["capped"].AsBoolean,
+            MaxSizeBytes = result.Contains("maxSize") ? result["maxSize"].ToInt64() : 0,
+            MaxDocuments = result.Contains("max") ? result["max"].ToInt64() : null,
+            CurrentSizeBytes = result.Contains("size") ? result["size"].ToInt64() : 0,
+            DocumentCount = result.Contains("count") ? result["count"].ToInt64() : 0,
+            StorageSizeBytes = result.Contains("storageSize") ? result["storageSize"].ToInt64() : 0
+        };
+    }
 
-        /// <inheritdoc/>
-        public async Task<CappedCollectionStats> GetStatsAsync(CancellationToken cancellationToken = default)
-        {
-            var command = new BsonDocument("collStats", _collectionName);
-            BsonDocument result = await _database.RunCommandAsync<BsonDocument>(command, cancellationToken: cancellationToken);
-
-            return new CappedCollectionStats
-            {
-                IsCapped = result.Contains("capped") && result["capped"].AsBoolean,
-                MaxSizeBytes = result.Contains("maxSize") ? result["maxSize"].ToInt64() : 0,
-                MaxDocuments = result.Contains("max") ? result["max"].ToInt64() : null,
-                CurrentSizeBytes = result.Contains("size") ? result["size"].ToInt64() : 0,
-                DocumentCount = result.Contains("count") ? result["count"].ToInt64() : 0,
-                StorageSizeBytes = result.Contains("storageSize") ? result["storageSize"].ToInt64() : 0
-            };
-        }
-
-        /// <inheritdoc/>
-        public async Task<IList<TDocument>> GetAllInNaturalOrderAsync(
-            CancellationToken cancellationToken = default)
-        {
-            return await _collection
-                .Find(FilterDefinition<TDocument>.Empty)
-                .Sort(new BsonDocument("$natural", 1))
-                .ToListAsync(cancellationToken);
-        }
+    /// <inheritdoc/>
+    public async Task<IList<TDocument>> GetAllInNaturalOrderAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await Collection
+            .Find(FilterDefinition<TDocument>.Empty)
+            .Sort(new BsonDocument("$natural", 1))
+            .ToListAsync(cancellationToken);
     }
 }
 

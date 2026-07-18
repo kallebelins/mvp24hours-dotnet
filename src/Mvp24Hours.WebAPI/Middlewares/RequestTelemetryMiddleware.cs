@@ -4,13 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
@@ -56,23 +52,17 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursRequestTelemetry();
 /// </code>
 /// </example>
-public class RequestTelemetryMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="RequestTelemetryMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The telemetry options.</param>
+public class RequestTelemetryMiddleware(
+    RequestDelegate next,
+    IOptions<RequestTelemetryOptions> options)
 {
-    private readonly RequestDelegate _next;
-    private readonly RequestTelemetryOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="RequestTelemetryMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The telemetry options.</param>
-    public RequestTelemetryMiddleware(
-        RequestDelegate next,
-        IOptions<RequestTelemetryOptions> options)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly RequestTelemetryOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     /// <summary>
     /// Processes the HTTP request with telemetry collection.
@@ -87,9 +77,9 @@ public class RequestTelemetryMiddleware
             return;
         }
 
-        var method = context.Request.Method;
-        var path = GetNormalizedPath(context);
-        var correlationId = GetOrCreateCorrelationId(context);
+        string method = context.Request.Method;
+        string path = GetNormalizedPath(context);
+        string correlationId = GetOrCreateCorrelationId(context);
 
         // Start activity for tracing
         using Activity? activity = _options.EnableTracing
@@ -128,7 +118,7 @@ public class RequestTelemetryMiddleware
             // Record error
             if (activity != null)
             {
-                var statusCode = GetStatusCodeForException(ex);
+                int statusCode = GetStatusCodeForException(ex);
                 WebApiActivitySource.SetError(activity, ex, statusCode);
                 activity.SetTag(WebApiActivitySource.TagNames.DurationMs, stopwatch.Elapsed.TotalMilliseconds);
             }
@@ -137,13 +127,13 @@ public class RequestTelemetryMiddleware
         }
         finally
         {
-            var durationMs = stopwatch.Elapsed.TotalMilliseconds;
-            var statusCode = exception != null
+            double durationMs = stopwatch.Elapsed.TotalMilliseconds;
+            int statusCode = exception != null
                 ? GetStatusCodeForException(exception)
                 : context.Response.StatusCode;
 
-            var isError = statusCode >= 400;
-            var isSlow = durationMs > _options.DurationBuckets.LastOrDefault();
+            bool isError = statusCode >= 400;
+            bool isSlow = durationMs > _options.DurationBuckets.LastOrDefault();
 
             // Decrement in-progress counter and record metrics
             if (_options.EnableMetrics)
@@ -172,7 +162,9 @@ public class RequestTelemetryMiddleware
     private void EnrichActivity(Activity? activity, HttpContext context)
     {
         if (activity == null)
+        {
             return;
+        }
 
         // Basic enrichment
         activity.SetTag(WebApiActivitySource.TagNames.HttpScheme, context.Request.Scheme);
@@ -187,7 +179,7 @@ public class RequestTelemetryMiddleware
         // User enrichment
         if (_options.EnrichWithUser)
         {
-            var userId = GetUserId(context);
+            string? userId = GetUserId(context);
             if (!string.IsNullOrEmpty(userId))
             {
                 activity.SetTag(WebApiActivitySource.TagNames.UserId, userId);
@@ -197,7 +189,7 @@ public class RequestTelemetryMiddleware
         // Tenant enrichment
         if (_options.EnrichWithTenant)
         {
-            var tenantId = GetTenantId(context);
+            string? tenantId = GetTenantId(context);
             if (!string.IsNullOrEmpty(tenantId))
             {
                 activity.SetTag(WebApiActivitySource.TagNames.TenantId, tenantId);
@@ -205,21 +197,21 @@ public class RequestTelemetryMiddleware
         }
 
         // Causation ID
-        var causationId = context.Request.Headers[_options.CausationIdHeader].FirstOrDefault();
+        string? causationId = context.Request.Headers[_options.CausationIdHeader].FirstOrDefault();
         if (!string.IsNullOrEmpty(causationId))
         {
             activity.SetTag(WebApiActivitySource.TagNames.CausationId, causationId);
         }
 
         // Client IP
-        var clientIp = GetClientIp(context);
+        string? clientIp = GetClientIp(context);
         if (!string.IsNullOrEmpty(clientIp))
         {
             activity.SetTag(WebApiActivitySource.TagNames.ClientIp, clientIp);
         }
 
         // User agent
-        var userAgent = context.Request.Headers.UserAgent.FirstOrDefault();
+        string? userAgent = context.Request.Headers.UserAgent.FirstOrDefault();
         if (!string.IsNullOrEmpty(userAgent))
         {
             activity.SetTag(WebApiActivitySource.TagNames.HttpUserAgent, userAgent);
@@ -235,10 +227,10 @@ public class RequestTelemetryMiddleware
         if (_options.EnrichWithHeaders)
         {
             // Add safe headers (non-sensitive)
-            var safeHeaders = new[] { "Accept", "Accept-Language", "Content-Type", "Origin", "Referer" };
-            foreach (var header in safeHeaders)
+            string[] safeHeaders = ["Accept", "Accept-Language", "Content-Type", "Origin", "Referer"];
+            foreach (string? header in safeHeaders)
             {
-                var value = context.Request.Headers[header].FirstOrDefault();
+                string? value = context.Request.Headers[header].FirstOrDefault();
                 if (!string.IsNullOrEmpty(value))
                 {
                     activity.SetTag($"http.request.header.{header.ToLowerInvariant()}", value);
@@ -249,7 +241,7 @@ public class RequestTelemetryMiddleware
 
     private string GetOrCreateCorrelationId(HttpContext context)
     {
-        var correlationId = context.Request.Headers[_options.CorrelationIdHeader].FirstOrDefault();
+        string? correlationId = context.Request.Headers[_options.CorrelationIdHeader].FirstOrDefault();
 
         if (string.IsNullOrEmpty(correlationId))
         {
@@ -277,9 +269,11 @@ public class RequestTelemetryMiddleware
     private bool ShouldSkipTelemetry(HttpContext context)
     {
         if (!_options.EnableTracing && !_options.EnableMetrics)
+        {
             return true;
+        }
 
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
 
         return _options.ExcludedPaths.Any(pattern => MatchesPattern(path, pattern));
     }
@@ -288,10 +282,12 @@ public class RequestTelemetryMiddleware
     {
         // Exact match
         if (string.Equals(path, pattern, StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Convert glob pattern to regex
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";
@@ -305,19 +301,23 @@ public class RequestTelemetryMiddleware
         Endpoint? endpoint = context.GetEndpoint();
         if (endpoint != null)
         {
-            var routePattern = endpoint.Metadata
+            string? routePattern = endpoint.Metadata
                 .OfType<Microsoft.AspNetCore.Routing.RouteNameMetadata>()
                 .FirstOrDefault()?.RouteName;
 
             if (!string.IsNullOrEmpty(routePattern))
+            {
                 return routePattern;
+            }
 
             // Try to get the route pattern from RouteEndpoint
             if (endpoint is Microsoft.AspNetCore.Routing.RouteEndpoint routeEndpoint)
             {
-                var pattern = routeEndpoint.RoutePattern.RawText;
+                string? pattern = routeEndpoint.RoutePattern.RawText;
                 if (!string.IsNullOrEmpty(pattern))
+                {
                     return "/" + pattern.TrimStart('/');
+                }
             }
         }
 
@@ -328,7 +328,9 @@ public class RequestTelemetryMiddleware
     {
         ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
+        {
             return null;
+        }
 
         return user.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? user.FindFirstValue("sub")
@@ -338,9 +340,11 @@ public class RequestTelemetryMiddleware
     private string? GetTenantId(HttpContext context)
     {
         // Check header first
-        var tenantHeader = context.Request.Headers[_options.TenantIdHeader].FirstOrDefault();
+        string? tenantHeader = context.Request.Headers[_options.TenantIdHeader].FirstOrDefault();
         if (!string.IsNullOrEmpty(tenantHeader))
+        {
             return tenantHeader;
+        }
 
         // Check claims
         return context.User?.FindFirstValue("tenant_id")
@@ -349,13 +353,13 @@ public class RequestTelemetryMiddleware
 
     private static string? GetClientIp(HttpContext context)
     {
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        string? forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(forwardedFor))
         {
             return forwardedFor.Split(',')[0].Trim();
         }
 
-        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+        string? realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
         if (!string.IsNullOrEmpty(realIp))
         {
             return realIp;

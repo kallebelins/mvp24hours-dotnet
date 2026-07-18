@@ -203,7 +203,7 @@ public class EventSourcingTest
         // Arrange
         var store = new InMemoryEventStore();
         var aggregateId = Guid.NewGuid();
-        OrderCreatedEvent[] events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
+        OrderCreatedEvent[] events = [new OrderCreatedEvent { OrderId = aggregateId }];
 
         // Act
         await store.AppendEventsAsync(aggregateId, events, 0);
@@ -220,7 +220,7 @@ public class EventSourcingTest
         // Arrange
         var store = new InMemoryEventStore();
         var aggregateId = Guid.NewGuid();
-        OrderCreatedEvent[] events = new[] { new OrderCreatedEvent { OrderId = aggregateId } };
+        OrderCreatedEvent[] events = [new OrderCreatedEvent { OrderId = aggregateId }];
         await store.AppendEventsAsync(aggregateId, events, 0);
 
         // Act & Assert
@@ -236,16 +236,16 @@ public class EventSourcingTest
         var aggregateId = Guid.NewGuid();
 
         // Act - Initial
-        var version0 = await store.GetCurrentVersionAsync(aggregateId);
+        long version0 = await store.GetCurrentVersionAsync(aggregateId);
         Assert.Equal(0, version0);
 
         // Add events
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderCreatedEvent { OrderId = aggregateId } }, 0);
-        var version1 = await store.GetCurrentVersionAsync(aggregateId);
+        await store.AppendEventsAsync(aggregateId, [new OrderCreatedEvent { OrderId = aggregateId }], 0);
+        long version1 = await store.GetCurrentVersionAsync(aggregateId);
         Assert.Equal(1, version1);
 
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderItemAddedEvent { OrderId = aggregateId } }, 1);
-        var version2 = await store.GetCurrentVersionAsync(aggregateId);
+        await store.AppendEventsAsync(aggregateId, [new OrderItemAddedEvent { OrderId = aggregateId }], 1);
+        long version2 = await store.GetCurrentVersionAsync(aggregateId);
         Assert.Equal(2, version2);
     }
 
@@ -257,14 +257,14 @@ public class EventSourcingTest
         var aggregateId = Guid.NewGuid();
 
         // Act - Before
-        var existsBefore = await store.ExistsAsync(aggregateId);
+        bool existsBefore = await store.ExistsAsync(aggregateId);
         Assert.False(existsBefore);
 
         // Add events
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderCreatedEvent { OrderId = aggregateId } }, 0);
+        await store.AppendEventsAsync(aggregateId, [new OrderCreatedEvent { OrderId = aggregateId }], 0);
 
         // Act - After
-        var existsAfter = await store.ExistsAsync(aggregateId);
+        bool existsAfter = await store.ExistsAsync(aggregateId);
         Assert.True(existsAfter);
     }
 
@@ -274,9 +274,9 @@ public class EventSourcingTest
         // Arrange
         var store = new InMemoryEventStore();
         var aggregateId = Guid.NewGuid();
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderCreatedEvent { OrderId = aggregateId } }, 0);
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderItemAddedEvent { OrderId = aggregateId } }, 1);
-        await store.AppendEventsAsync(aggregateId, new[] { new OrderPaidEvent { OrderId = aggregateId } }, 2);
+        await store.AppendEventsAsync(aggregateId, [new OrderCreatedEvent { OrderId = aggregateId }], 0);
+        await store.AppendEventsAsync(aggregateId, [new OrderItemAddedEvent { OrderId = aggregateId }], 1);
+        await store.AppendEventsAsync(aggregateId, [new OrderPaidEvent { OrderId = aggregateId }], 2);
 
         // Act
         IReadOnlyList<CoreDomainEvent> allEvents = await store.GetEventsAsync(aggregateId, 0);
@@ -511,7 +511,7 @@ public class EventSourcingTest
         };
 
         // Act
-        var json = serializer.Serialize(original);
+        string json = serializer.Serialize(original);
         CoreDomainEvent deserialized = serializer.Deserialize(
             typeof(OrderCreatedEvent).AssemblyQualifiedName!,
             json);
@@ -532,7 +532,7 @@ public class EventSourcingTest
 
         // Act
         Type? type = resolver.Resolve("order.created");
-        var name = resolver.GetTypeName(typeof(OrderCreatedEvent));
+        string name = resolver.GetTypeName(typeof(OrderCreatedEvent));
 
         // Assert
         Assert.Equal(typeof(OrderCreatedEvent), type);

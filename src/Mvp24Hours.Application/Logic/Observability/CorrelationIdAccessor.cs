@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Threading;
 using Mvp24Hours.Application.Contract.Observability;
 
 namespace Mvp24Hours.Application.Logic.Observability;
@@ -160,7 +158,9 @@ public sealed class CorrelationIdScope : IDisposable
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _disposed = true;
 
@@ -204,31 +204,46 @@ public static class CorrelationIdContext
     /// Sets the current correlation ID.
     /// </summary>
     /// <param name="correlationId">The correlation ID to set.</param>
-    public static void SetCurrent(string correlationId) => _instance.SetCorrelationId(correlationId);
+    public static void SetCurrent(string correlationId)
+    {
+        _instance.SetCorrelationId(correlationId);
+    }
 
     /// <summary>
     /// Sets the current causation ID.
     /// </summary>
     /// <param name="causationId">The causation ID to set.</param>
-    public static void SetCausation(string causationId) => _instance.SetCausationId(causationId);
+    public static void SetCausation(string causationId)
+    {
+        _instance.SetCausationId(causationId);
+    }
 
     /// <summary>
     /// Ensures a correlation ID exists, creating one if necessary.
     /// </summary>
     /// <returns>The existing or newly created correlation ID.</returns>
-    public static string Ensure() => _instance.EnsureCorrelationId();
+    public static string Ensure()
+    {
+        return _instance.EnsureCorrelationId();
+    }
 
     /// <summary>
     /// Creates a new scope with the specified correlation ID.
     /// </summary>
     /// <param name="correlationId">The correlation ID for the scope.</param>
     /// <returns>A disposable scope.</returns>
-    public static IDisposable BeginScope(string correlationId) => _instance.BeginScope(correlationId);
+    public static IDisposable BeginScope(string correlationId)
+    {
+        return _instance.BeginScope(correlationId);
+    }
 
     /// <summary>
     /// Creates a new scope with a new correlation ID.
     /// </summary>
     /// <returns>A disposable scope with a new correlation ID.</returns>
-    public static IDisposable BeginScope() => _instance.BeginScope();
+    public static IDisposable BeginScope()
+    {
+        return _instance.BeginScope();
+    }
 }
 

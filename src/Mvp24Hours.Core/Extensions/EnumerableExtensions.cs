@@ -3,147 +3,154 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class EnumerableExtensions
 {
     /// <summary>
     /// 
     /// </summary>
-    public static class EnumerableExtensions
+    public static bool IsList(this object? Value)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool IsList(this object? Value)
+        if (Value == null)
         {
-            if (Value == null) return false;
-            if (Value is string) return false; // Strings implement IEnumerable<char> but should not be considered lists
-            return Value is IEnumerable
-                || Value is ICollection
-                || Value is IList
-                || (Value.GetType().IsGenericType
-                        && Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))
-                || (Value.GetType().IsGenericType
-                        && Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(ArrayList)));
+            return false;
         }
 
-        public static bool IsDictionary(this object? Value)
+        if (Value is string)
         {
-            if (Value == null) return false;
-            return Value is IDictionary &&
-                   Value.GetType().IsGenericType &&
-                   Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(Dictionary<,>));
+            return false; // Strings implement IEnumerable<char> but should not be considered lists
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> list, Action<T> action)
+        return Value is IEnumerable
+            || Value is ICollection
+            || Value is IList
+            || (Value.GetType().IsGenericType
+                    && Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))
+            || (Value.GetType().IsGenericType
+                    && Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(ArrayList)));
+    }
+
+    public static bool IsDictionary(this object? Value)
+    {
+        if (Value == null)
         {
-            foreach (T t in list)
-            {
-                action(t);
-                yield return t;
-            }
+            return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool AnyOrNotNull<T>(this IEnumerable<T>? source)
-        {
-            if (source == null || !source.Any())
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
+        return Value is IDictionary &&
+               Value.GetType().IsGenericType &&
+               Value.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(Dictionary<,>));
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool AnyOrNotNull<T>(this IEnumerable<T>? source, Func<T, bool> predicate)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static IEnumerable<T> ForEach<T>(this IEnumerable<T> list, Action<T> action)
+    {
+        foreach (T t in list)
         {
-            if (source == null || !source.Any(predicate))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            action(t);
+            yield return t;
         }
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool AnyOrNotNull<T>(this IEnumerable<T>? source)
+    {
+        if (source == null || !source.Any())
         {
-            if (source != null && source.Any())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
+        else
+        {
+            return true;
+        }
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source, Func<T, bool> predicate)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool AnyOrNotNull<T>(this IEnumerable<T>? source, Func<T, bool> predicate)
+    {
+        if (source == null || !source.Any(predicate))
         {
-            if (source != null && source.Any(predicate))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
+        else
+        {
+            return true;
+        }
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool ContainsKeySafe<TKey, TValue>(this IDictionary<TKey, TValue>? source, TKey key)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source)
+    {
+        if (source != null && source.Any())
         {
-            if (source != null && source.ContainsKey(key))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return true;
         }
+        else
+        {
+            return false;
+        }
+    }
 
-        public static async Task<TSource?> FirstOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool AnySafe<T>([NotNullWhen(true)] this IEnumerable<T>? source, Func<T, bool> predicate)
+    {
+        if (source != null && source.Any(predicate))
         {
-            IEnumerable<TSource> list = await task ?? [];
-            return predicate == null ? list.FirstOrDefault() : list.FirstOrDefault(predicate);
+            return true;
         }
+        else
+        {
+            return false;
+        }
+    }
 
-        public static async Task<TSource?> LastOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool ContainsKeySafe<TKey, TValue>(this IDictionary<TKey, TValue>? source, TKey key)
+    {
+        if (source != null && source.ContainsKey(key))
         {
-            IEnumerable<TSource> list = await task ?? [];
-            return predicate == null ? list.LastOrDefault() : list.LastOrDefault(predicate);
+            return true;
         }
+        else
+        {
+            return false;
+        }
+    }
 
-        public static async Task<TSource?> ElementAtOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, int index)
-        {
-            IEnumerable<TSource> list = await task ?? [];
-            return list.ElementAtOrDefault(index);
-        }
+    public static async Task<TSource?> FirstOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
+    {
+        IEnumerable<TSource> list = await task ?? [];
+        return predicate == null ? list.FirstOrDefault() : list.FirstOrDefault(predicate);
+    }
+
+    public static async Task<TSource?> LastOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, Func<TSource, bool>? predicate = null)
+    {
+        IEnumerable<TSource> list = await task ?? [];
+        return predicate == null ? list.LastOrDefault() : list.LastOrDefault(predicate);
+    }
+
+    public static async Task<TSource?> ElementAtOrDefaultAsync<TSource>(this Task<IEnumerable<TSource>> task, int index)
+    {
+        IEnumerable<TSource> list = await task ?? [];
+        return list.ElementAtOrDefault(index);
     }
 }

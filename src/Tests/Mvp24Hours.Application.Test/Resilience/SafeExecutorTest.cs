@@ -3,14 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Logic.Resilience;
 using Mvp24Hours.Core.Exceptions;
-using Xunit;
 
 namespace Mvp24Hours.Application.Test.Resilience;
 
@@ -117,7 +114,7 @@ public class SafeExecutorTest
     public void Execute_VoidOperation_ShouldReturnTrueOnSuccess()
     {
         // Arrange
-        var executed = false;
+        bool executed = false;
 
         // Act
         IBusinessResultWithStatus<bool> result = SafeExecutor.Execute(() => { executed = true; }, _mapper, _logger);
@@ -146,7 +143,7 @@ public class SafeExecutorTest
     public void Execute_WithCustomErrorMessage_ShouldIncludeCustomMessage()
     {
         // Arrange
-        var customMessage = "Custom error message";
+        string customMessage = "Custom error message";
 
         // Act
         IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
@@ -246,7 +243,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_VoidOperation_ShouldReturnTrueOnSuccess()
     {
         // Arrange
-        var executed = false;
+        bool executed = false;
 
         // Act
         IBusinessResultWithStatus<bool> result = await SafeExecutor.ExecuteAsync(async () =>
@@ -265,7 +262,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_WithCustomErrorMessage_ShouldIncludeCustomMessage()
     {
         // Arrange
-        var customMessage = "Custom async error message";
+        string customMessage = "Custom async error message";
 
         // Act
         IBusinessResultWithStatus<string> result = await SafeExecutor.ExecuteAsync<string>(
@@ -572,7 +569,7 @@ public class SafeExecutorTest
     public async Task ExecuteAsync_MultipleExceptionsInSequence_ShouldHandleEachIndependently()
     {
         // Arrange
-        var count = 0;
+        int count = 0;
 
         // Act & Assert
         IBusinessResultWithStatus<string> result1 = await SafeExecutor.ExecuteAsync<string>(async () =>

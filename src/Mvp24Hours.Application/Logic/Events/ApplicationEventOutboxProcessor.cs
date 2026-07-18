@@ -4,11 +4,8 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -144,7 +141,7 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
             }
 
             // Deserialize the event
-            var @event = JsonSerializer.Deserialize(entry.Payload, eventType, _jsonOptions);
+            object? @event = JsonSerializer.Deserialize(entry.Payload, eventType, _jsonOptions);
             if (@event == null)
             {
                 _logger?.LogWarning(
@@ -159,17 +156,19 @@ public sealed class ApplicationEventOutboxProcessor : BackgroundService
             IEnumerable<object?> handlers = serviceProvider.GetServices(handlerType);
 
             // Dispatch to handlers
-            foreach (var handler in handlers)
+            foreach (object? handler in handlers)
             {
-                if (handler == null) continue;
+                if (handler == null)
+                {
+                    continue;
+                }
 
                 try
                 {
                     MethodInfo? handleMethod = handlerType.GetMethod("HandleAsync");
                     if (handleMethod != null)
                     {
-                        var task = handleMethod.Invoke(handler, [@event, cancellationToken]) as Task;
-                        if (task != null)
+                        if (handleMethod.Invoke(handler, [@event, cancellationToken]) is Task task)
                         {
                             await task;
                         }

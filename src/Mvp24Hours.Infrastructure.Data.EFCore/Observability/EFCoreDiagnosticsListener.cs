@@ -3,11 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Observability;
@@ -33,10 +30,15 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Observability;
 /// </code>
 /// </para>
 /// </remarks>
-public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, IObserver<KeyValuePair<string, object?>>, IDisposable
+/// <remarks>
+/// Initializes a new instance of <see cref="EFCoreDiagnosticsListener"/>.
+/// </remarks>
+public sealed class EFCoreDiagnosticsListener(
+    ILogger<EFCoreDiagnosticsListener>? logger = null,
+    EFCoreMetrics? metrics = null) : IObserver<DiagnosticListener>, IObserver<KeyValuePair<string, object?>>, IDisposable
 {
-    private readonly ILogger<EFCoreDiagnosticsListener>? _logger;
-    private readonly EFCoreMetrics? _metrics;
+    private readonly ILogger<EFCoreDiagnosticsListener>? _logger = logger;
+    private readonly EFCoreMetrics? _metrics = metrics;
     private readonly List<IDisposable> _subscriptions = [];
     private readonly Dictionary<Guid, Activity> _commandActivities = [];
     private readonly Dictionary<Guid, Stopwatch> _commandTimings = [];
@@ -46,17 +48,6 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
     /// The diagnostic listener name for EF Core.
     /// </summary>
     public const string DiagnosticListenerName = "Microsoft.EntityFrameworkCore";
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="EFCoreDiagnosticsListener"/>.
-    /// </summary>
-    public EFCoreDiagnosticsListener(
-        ILogger<EFCoreDiagnosticsListener>? logger = null,
-        EFCoreMetrics? metrics = null)
-    {
-        _logger = logger;
-        _metrics = metrics;
-    }
 
     /// <summary>
     /// Subscribes to the diagnostic listener.
@@ -146,13 +137,19 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private void OnCommandExecuting(object? payload)
     {
-        if (payload == null) return;
+        if (payload == null)
+        {
+            return;
+        }
 
         Guid commandId = GetCommandId(payload);
-        var commandText = GetCommandText(payload);
-        var dbName = GetDatabaseName(payload);
+        string commandText = GetCommandText(payload);
+        string? dbName = GetDatabaseName(payload);
 
-        if (commandId == Guid.Empty) return;
+        if (commandId == Guid.Empty)
+        {
+            return;
+        }
 
         // Start activity
         Activity? activity = EFCoreActivitySource.Source.StartActivity(
@@ -163,7 +160,9 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
         {
             activity.SetTag(EFCoreActivitySource.TagNames.DbStatement, commandText);
             if (!string.IsNullOrEmpty(dbName))
+            {
                 activity.SetTag(EFCoreActivitySource.TagNames.DbName, dbName);
+            }
 
             lock (_lock)
             {
@@ -180,10 +179,16 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private void OnCommandExecuted(object? payload)
     {
-        if (payload == null) return;
+        if (payload == null)
+        {
+            return;
+        }
 
         Guid commandId = GetCommandId(payload);
-        if (commandId == Guid.Empty) return;
+        if (commandId == Guid.Empty)
+        {
+            return;
+        }
 
         Activity? activity = null;
         Stopwatch? stopwatch = null;
@@ -197,7 +202,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
         }
 
         stopwatch?.Stop();
-        var durationMs = stopwatch?.Elapsed.TotalMilliseconds ?? 0;
+        double durationMs = stopwatch?.Elapsed.TotalMilliseconds ?? 0;
 
         if (activity != null)
         {
@@ -207,17 +212,23 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
         }
 
         // Record metrics
-        var operation = GetOperation(payload);
-        var dbName = GetDatabaseName(payload);
+        string operation = GetOperation(payload);
+        string? dbName = GetDatabaseName(payload);
         _metrics?.RecordQuery(durationMs, operation, dbName);
     }
 
     private void OnCommandError(object? payload)
     {
-        if (payload == null) return;
+        if (payload == null)
+        {
+            return;
+        }
 
         Guid commandId = GetCommandId(payload);
-        if (commandId == Guid.Empty) return;
+        if (commandId == Guid.Empty)
+        {
+            return;
+        }
 
         Activity? activity = null;
         Stopwatch? stopwatch = null;
@@ -236,12 +247,15 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
         if (activity != null)
         {
             if (exception != null)
+            {
                 EFCoreActivitySource.SetError(activity, exception);
+            }
+
             activity.Dispose();
         }
 
         // Record error metrics
-        var dbName = GetDatabaseName(payload);
+        string? dbName = GetDatabaseName(payload);
         _metrics?.RecordQueryError(exception?.GetType().Name ?? "Unknown", dbName);
     }
 
@@ -276,14 +290,14 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private void OnTransactionStarted(object? payload)
     {
-        var dbName = GetDatabaseName(payload);
+        string? dbName = GetDatabaseName(payload);
         _metrics?.RecordTransactionStart(dbName);
         _logger?.LogDebug("Transaction started on database {Database}", dbName);
     }
 
     private void OnTransactionCommitted(object? payload)
     {
-        var dbName = GetDatabaseName(payload);
+        string? dbName = GetDatabaseName(payload);
         TimeSpan duration = GetDuration(payload);
         _metrics?.RecordTransactionCommit(duration.TotalMilliseconds, dbName);
         _logger?.LogDebug("Transaction committed on database {Database} after {DurationMs:F2}ms", dbName, duration.TotalMilliseconds);
@@ -291,7 +305,7 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private void OnTransactionRolledBack(object? payload)
     {
-        var dbName = GetDatabaseName(payload);
+        string? dbName = GetDatabaseName(payload);
         TimeSpan duration = GetDuration(payload);
         _metrics?.RecordTransactionRollback(duration.TotalMilliseconds, null, dbName);
         _logger?.LogWarning("Transaction rolled back on database {Database} after {DurationMs:F2}ms", dbName, duration.TotalMilliseconds);
@@ -317,24 +331,35 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private static Guid GetCommandId(object? payload)
     {
-        if (payload == null) return Guid.Empty;
+        if (payload == null)
+        {
+            return Guid.Empty;
+        }
 
         Type type = payload.GetType();
         PropertyInfo? prop = type.GetProperty("CommandId");
         if (prop?.GetValue(payload) is Guid id)
+        {
             return id;
+        }
 
         return Guid.Empty;
     }
 
     private static string GetCommandText(object? payload)
     {
-        if (payload == null) return string.Empty;
+        if (payload == null)
+        {
+            return string.Empty;
+        }
 
         Type type = payload.GetType();
         PropertyInfo? commandProp = type.GetProperty("Command");
-        var command = commandProp?.GetValue(payload);
-        if (command == null) return string.Empty;
+        object? command = commandProp?.GetValue(payload);
+        if (command == null)
+        {
+            return string.Empty;
+        }
 
         PropertyInfo? textProp = command.GetType().GetProperty("CommandText");
         return textProp?.GetValue(command) as string ?? string.Empty;
@@ -342,13 +367,16 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private static string? GetDatabaseName(object? payload)
     {
-        if (payload == null) return null;
+        if (payload == null)
+        {
+            return null;
+        }
 
         Type type = payload.GetType();
 
         // Try Connection property
         PropertyInfo? connectionProp = type.GetProperty("Connection");
-        var connection = connectionProp?.GetValue(payload);
+        object? connection = connectionProp?.GetValue(payload);
         if (connection != null)
         {
             PropertyInfo? dbProp = connection.GetType().GetProperty("Database");
@@ -357,11 +385,11 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
         // Try DbContext property
         PropertyInfo? contextProp = type.GetProperty("Context");
-        var context = contextProp?.GetValue(payload);
+        object? context = contextProp?.GetValue(payload);
         if (context != null)
         {
             PropertyInfo? databaseProp = context.GetType().GetProperty("Database");
-            var database = databaseProp?.GetValue(context);
+            object? database = databaseProp?.GetValue(context);
             if (database != null)
             {
                 PropertyInfo? currentDbProp = database.GetType().GetProperty("ProviderName");
@@ -374,7 +402,10 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private static Exception? GetException(object? payload)
     {
-        if (payload == null) return null;
+        if (payload == null)
+        {
+            return null;
+        }
 
         Type type = payload.GetType();
         PropertyInfo? prop = type.GetProperty("Exception");
@@ -383,26 +414,49 @@ public sealed class EFCoreDiagnosticsListener : IObserver<DiagnosticListener>, I
 
     private static TimeSpan GetDuration(object? payload)
     {
-        if (payload == null) return TimeSpan.Zero;
+        if (payload == null)
+        {
+            return TimeSpan.Zero;
+        }
 
         Type type = payload.GetType();
         PropertyInfo? prop = type.GetProperty("Duration");
         if (prop?.GetValue(payload) is TimeSpan duration)
+        {
             return duration;
+        }
 
         return TimeSpan.Zero;
     }
 
     private static string GetOperation(object? payload)
     {
-        var commandText = GetCommandText(payload);
-        if (string.IsNullOrEmpty(commandText)) return "UNKNOWN";
+        string commandText = GetCommandText(payload);
+        if (string.IsNullOrEmpty(commandText))
+        {
+            return "UNKNOWN";
+        }
 
-        var normalized = commandText.TrimStart().ToUpperInvariant();
-        if (normalized.StartsWith("SELECT")) return "SELECT";
-        if (normalized.StartsWith("INSERT")) return "INSERT";
-        if (normalized.StartsWith("UPDATE")) return "UPDATE";
-        if (normalized.StartsWith("DELETE")) return "DELETE";
+        string normalized = commandText.TrimStart().ToUpperInvariant();
+        if (normalized.StartsWith("SELECT"))
+        {
+            return "SELECT";
+        }
+
+        if (normalized.StartsWith("INSERT"))
+        {
+            return "INSERT";
+        }
+
+        if (normalized.StartsWith("UPDATE"))
+        {
+            return "UPDATE";
+        }
+
+        if (normalized.StartsWith("DELETE"))
+        {
+            return "DELETE";
+        }
 
         return "OTHER";
     }

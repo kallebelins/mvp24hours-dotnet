@@ -410,7 +410,9 @@ public static class ServiceKeys
         /// <param name="tenantId">The tenant identifier.</param>
         /// <returns>A tenant-specific service key.</returns>
         public static string ForTenant(string serviceCategory, string tenantId)
-            => $"Tenant:{tenantId}:{serviceCategory}";
+        {
+            return $"Tenant:{tenantId}:{serviceCategory}";
+        }
 
         /// <summary>
         /// Creates a tenant-specific database key.
@@ -418,7 +420,9 @@ public static class ServiceKeys
         /// <param name="tenantId">The tenant identifier.</param>
         /// <returns>A tenant-specific database key.</returns>
         public static string DatabaseForTenant(string tenantId)
-            => ForTenant("Database", tenantId);
+        {
+            return ForTenant("Database", tenantId);
+        }
 
         /// <summary>
         /// Creates a tenant-specific cache key.
@@ -426,7 +430,9 @@ public static class ServiceKeys
         /// <param name="tenantId">The tenant identifier.</param>
         /// <returns>A tenant-specific cache key.</returns>
         public static string CacheForTenant(string tenantId)
-            => ForTenant("Cache", tenantId);
+        {
+            return ForTenant("Cache", tenantId);
+        }
 
         /// <summary>
         /// Creates a tenant-specific file storage key.
@@ -434,7 +440,9 @@ public static class ServiceKeys
         /// <param name="tenantId">The tenant identifier.</param>
         /// <returns>A tenant-specific file storage key.</returns>
         public static string FileStorageForTenant(string tenantId)
-            => ForTenant("FileStorage", tenantId);
+        {
+            return ForTenant("FileStorage", tenantId);
+        }
     }
 
     /// <summary>

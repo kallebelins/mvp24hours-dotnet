@@ -3,91 +3,76 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
+
+/// <summary>
+/// Implementation of fault context for handling faulted messages.
+/// </summary>
+/// <typeparam name="TMessage">The type of the faulted message.</typeparam>
+/// <remarks>
+/// Creates a new fault context.
+/// </remarks>
+public class FaultContext<TMessage>(
+    TMessage message,
+    Exception exception,
+    string messageId,
+    string? correlationId,
+    string exchange,
+    string routingKey,
+    string queueName,
+    int retryCount,
+    IServiceProvider serviceProvider) : IFaultContext<TMessage> where TMessage : class
 {
+
+    /// <inheritdoc />
+    public TMessage Message { get; } = message ?? throw new ArgumentNullException(nameof(message));
+
+    /// <inheritdoc />
+    public Exception Exception { get; } = exception ?? throw new ArgumentNullException(nameof(exception));
+
+    /// <inheritdoc />
+    public int RetryCount { get; } = retryCount;
+
+    /// <inheritdoc />
+    public string MessageId { get; } = messageId ?? throw new ArgumentNullException(nameof(messageId));
+
+    /// <inheritdoc />
+    public string? CorrelationId { get; } = correlationId;
+
+    /// <inheritdoc />
+    public string Exchange { get; } = exchange ?? string.Empty;
+
+    /// <inheritdoc />
+    public string RoutingKey { get; } = routingKey ?? string.Empty;
+
+    /// <inheritdoc />
+    public string QueueName { get; } = queueName ?? string.Empty;
+
+    /// <inheritdoc />
+    public DateTimeOffset FaultedAt { get; } = DateTimeOffset.UtcNow;
+
+    /// <inheritdoc />
+    public IServiceProvider ServiceProvider { get; } = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+
     /// <summary>
-    /// Implementation of fault context for handling faulted messages.
+    /// Creates a fault context from a consume context.
     /// </summary>
-    /// <typeparam name="TMessage">The type of the faulted message.</typeparam>
-    public class FaultContext<TMessage> : IFaultContext<TMessage> where TMessage : class
+    public static FaultContext<TMessage> FromConsumeContext(
+        IConsumeContext<TMessage> context,
+        Exception exception)
     {
-        /// <summary>
-        /// Creates a new fault context.
-        /// </summary>
-        public FaultContext(
-            TMessage message,
-            Exception exception,
-            string messageId,
-            string? correlationId,
-            string exchange,
-            string routingKey,
-            string queueName,
-            int retryCount,
-            IServiceProvider serviceProvider)
-        {
-            Message = message ?? throw new ArgumentNullException(nameof(message));
-            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-            MessageId = messageId ?? throw new ArgumentNullException(nameof(messageId));
-            CorrelationId = correlationId;
-            Exchange = exchange ?? string.Empty;
-            RoutingKey = routingKey ?? string.Empty;
-            QueueName = queueName ?? string.Empty;
-            RetryCount = retryCount;
-            ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            FaultedAt = DateTimeOffset.UtcNow;
-        }
-
-        /// <inheritdoc />
-        public TMessage Message { get; }
-
-        /// <inheritdoc />
-        public Exception Exception { get; }
-
-        /// <inheritdoc />
-        public int RetryCount { get; }
-
-        /// <inheritdoc />
-        public string MessageId { get; }
-
-        /// <inheritdoc />
-        public string? CorrelationId { get; }
-
-        /// <inheritdoc />
-        public string Exchange { get; }
-
-        /// <inheritdoc />
-        public string RoutingKey { get; }
-
-        /// <inheritdoc />
-        public string QueueName { get; }
-
-        /// <inheritdoc />
-        public DateTimeOffset FaultedAt { get; }
-
-        /// <inheritdoc />
-        public IServiceProvider ServiceProvider { get; }
-
-        /// <summary>
-        /// Creates a fault context from a consume context.
-        /// </summary>
-        public static FaultContext<TMessage> FromConsumeContext(
-            IConsumeContext<TMessage> context,
-            Exception exception)
-        {
-            return new FaultContext<TMessage>(
-                context.Message,
-                exception,
-                context.MessageId,
-                context.CorrelationId,
-                context.Exchange,
-                context.RoutingKey,
-                context.QueueName,
-                context.RedeliveryCount,
-                context.ServiceProvider);
-        }
+        return new FaultContext<TMessage>(
+            context.Message,
+            exception,
+            context.MessageId,
+            context.CorrelationId,
+            context.Exchange,
+            context.RoutingKey,
+            context.QueueName,
+            context.RedeliveryCount,
+            context.ServiceProvider);
     }
 }
 

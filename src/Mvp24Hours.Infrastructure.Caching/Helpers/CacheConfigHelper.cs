@@ -3,25 +3,23 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace Mvp24Hours.Infrastructure.Caching.Helpers
-{
-    internal static class CacheConfigHelper
-    {
-        public static DateTimeOffset? AbsoluteExpiration { get; set; }
-        public static TimeSpan? AbsoluteExpirationRelativeToNow { get; set; }
-        public static TimeSpan? SlidingExpiration { get; set; }
+namespace Mvp24Hours.Infrastructure.Caching.Helpers;
 
-        public static DistributedCacheEntryOptions GetCacheOptions(DateTimeOffset? time = default)
+internal static class CacheConfigHelper
+{
+    public static DateTimeOffset? AbsoluteExpiration { get; set; }
+    public static TimeSpan? AbsoluteExpirationRelativeToNow { get; set; }
+    public static TimeSpan? SlidingExpiration { get; set; }
+
+    public static DistributedCacheEntryOptions GetCacheOptions(DateTimeOffset? time = default)
+    {
+        return new DistributedCacheEntryOptions
         {
-            return new DistributedCacheEntryOptions
-            {
-                AbsoluteExpiration = time ?? CacheConfigHelper.AbsoluteExpiration,
-                AbsoluteExpirationRelativeToNow = CacheConfigHelper.AbsoluteExpirationRelativeToNow,
-                SlidingExpiration = CacheConfigHelper.SlidingExpiration
-            };
-        }
+            AbsoluteExpiration = time ?? CacheConfigHelper.AbsoluteExpiration,
+            AbsoluteExpirationRelativeToNow = CacheConfigHelper.AbsoluteExpirationRelativeToNow,
+            SlidingExpiration = CacheConfigHelper.SlidingExpiration
+        };
     }
 }

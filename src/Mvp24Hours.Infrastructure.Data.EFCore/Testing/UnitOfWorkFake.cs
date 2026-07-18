@@ -3,11 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 
@@ -137,8 +134,8 @@ public class UnitOfWorkFake : IUnitOfWork, IDisposable
             return SaveChangesResult.Value;
         }
 
-        var changeCount = 0;
-        foreach (var repository in _repositories.Values)
+        int changeCount = 0;
+        foreach (object repository in _repositories.Values)
         {
             if (repository is ICommitChanges commitChanges)
             {
@@ -153,7 +150,7 @@ public class UnitOfWorkFake : IUnitOfWork, IDisposable
     /// <inheritdoc />
     public void Rollback()
     {
-        foreach (var repository in _repositories.Values)
+        foreach (object repository in _repositories.Values)
         {
             if (repository is RepositoryFake<IEntityBase> fake)
             {
@@ -190,7 +187,7 @@ public class UnitOfWorkFake : IUnitOfWork, IDisposable
     /// </summary>
     public void Clear()
     {
-        foreach (var repository in _repositories.Values)
+        foreach (object repository in _repositories.Values)
         {
             if (repository is IDisposable disposable)
             {
@@ -213,7 +210,10 @@ public class UnitOfWorkFake : IUnitOfWork, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
@@ -336,8 +336,8 @@ public class UnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
             return SaveChangesResult.Value;
         }
 
-        var changeCount = 0;
-        foreach (var repository in _repositories.Values)
+        int changeCount = 0;
+        foreach (object repository in _repositories.Values)
         {
             if (repository is ICommitChangesAsync commitChanges)
             {
@@ -352,7 +352,7 @@ public class UnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// <inheritdoc />
     public Task RollbackAsync()
     {
-        foreach (var repository in _repositories.Values)
+        foreach (object repository in _repositories.Values)
         {
             if (repository is RepositoryFakeAsync<IEntityBase> fake)
             {
@@ -390,7 +390,7 @@ public class UnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// </summary>
     public void Clear()
     {
-        foreach (var repository in _repositories.Values)
+        foreach (object repository in _repositories.Values)
         {
             if (repository is IDisposable disposable)
             {
@@ -413,7 +413,10 @@ public class UnitOfWorkFakeAsync : IUnitOfWorkAsync, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {

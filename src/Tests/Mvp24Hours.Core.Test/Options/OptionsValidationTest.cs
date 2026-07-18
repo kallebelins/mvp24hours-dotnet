@@ -3,14 +3,12 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure.Options;
 using Mvp24Hours.Core.Extensions.Options;
-using Xunit;
 
 namespace Mvp24Hours.Core.Test.Options;
 
@@ -72,7 +70,9 @@ public class OptionsValidationTest
         protected override string FailureMessage => "ApiKey is required and must start with 'API_'.";
 
         protected override bool IsValid(SimpleTestOptions options)
-            => !string.IsNullOrEmpty(options.ApiKey) && options.ApiKey.StartsWith("API_");
+        {
+            return !string.IsNullOrEmpty(options.ApiKey) && options.ApiKey.StartsWith("API_");
+        }
     }
 
     #endregion
@@ -95,7 +95,7 @@ public class OptionsValidationTest
     public void OptionsValidationResult_FailSingleMessage_ReturnsSucceededFalse()
     {
         // Arrange
-        var errorMessage = "Connection failed.";
+        string errorMessage = "Connection failed.";
 
         // Act
         var result = OptionsValidationResult.Fail(errorMessage);
@@ -111,7 +111,7 @@ public class OptionsValidationTest
     public void OptionsValidationResult_FailMultipleMessages_CombinesMessages()
     {
         // Arrange
-        var errors = new[] { "Error 1", "Error 2", "Error 3" };
+        string[] errors = ["Error 1", "Error 2", "Error 3"];
 
         // Act
         var result = OptionsValidationResult.Fail(errors);
@@ -306,7 +306,7 @@ public class OptionsValidationTest
             opts => opts.ApiKey == null || opts.ApiKey.Length >= 5,
             "ApiKey must be at least 5 characters.");
 
-        var composite = new CompositeOptionsValidator<SimpleTestOptions>(new[] { validator1, validator2 });
+        var composite = new CompositeOptionsValidator<SimpleTestOptions>([validator1, validator2]);
 
         // Act
         OptionsValidationResult result = composite.Validate(new SimpleTestOptions { ApiKey = "ab" }); // Too short

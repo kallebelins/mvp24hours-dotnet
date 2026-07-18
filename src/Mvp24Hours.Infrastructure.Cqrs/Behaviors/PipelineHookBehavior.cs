@@ -7,7 +7,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -26,24 +25,18 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// (before UnhandledExceptionBehavior) to capture the complete lifecycle including exceptions.
 /// </para>
 /// </remarks>
-public class PipelineHookBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the pipeline hook behavior.
+/// </remarks>
+/// <param name="serviceProvider">Service provider for resolving hooks.</param>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class PipelineHookBehavior<TRequest, TResponse>(
+    IServiceProvider serviceProvider,
+    ILogger<PipelineHookBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<PipelineHookBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the pipeline hook behavior.
-    /// </summary>
-    /// <param name="serviceProvider">Service provider for resolving hooks.</param>
-    /// <param name="logger">Optional logger for diagnostics.</param>
-    public PipelineHookBehavior(
-        IServiceProvider serviceProvider,
-        ILogger<PipelineHookBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<PipelineHookBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(

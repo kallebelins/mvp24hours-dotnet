@@ -5,8 +5,6 @@
 //=====================================================================================
 
 using System.Reflection;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Projections;
 
@@ -178,12 +176,26 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
         foreach (MethodInfo? method in methods)
         {
             ParameterInfo[] parameters = method.GetParameters();
-            if (parameters.Length != 3) continue;
+            if (parameters.Length != 3)
+            {
+                continue;
+            }
 
             Type eventType = parameters[0].ParameterType;
-            if (!typeof(IMediatorDomainEvent).IsAssignableFrom(eventType)) continue;
-            if (parameters[1].ParameterType != typeof(ProjectionContext)) continue;
-            if (parameters[2].ParameterType != typeof(CancellationToken)) continue;
+            if (!typeof(IMediatorDomainEvent).IsAssignableFrom(eventType))
+            {
+                continue;
+            }
+
+            if (parameters[1].ParameterType != typeof(ProjectionContext))
+            {
+                continue;
+            }
+
+            if (parameters[2].ParameterType != typeof(CancellationToken))
+            {
+                continue;
+            }
 
             Func<IMediatorDomainEvent, ProjectionContext, CancellationToken, Task> handler = CreateHandler(method, eventType);
             _handlers[eventType] = handler;
@@ -196,7 +208,7 @@ public abstract class ApplyProjection<TReadModel> : IncrementalProjection<TReadM
     {
         return async (@event, context, ct) =>
         {
-            var result = method.Invoke(this, new object[] { @event, context, ct });
+            object? result = method.Invoke(this, [@event, context, ct]);
             if (result is Task task)
             {
                 await task;
@@ -239,25 +251,20 @@ public interface IBatchProjection : IProjection
 /// Base class for batch projections.
 /// </summary>
 /// <typeparam name="TReadModel">The read model type.</typeparam>
-public abstract class BatchProjection<TReadModel> : ProjectionBase, IBatchProjection
+/// <remarks>
+/// Initializes a new instance of the batch projection.
+/// </remarks>
+/// <param name="repository">The read model repository.</param>
+public abstract class BatchProjection<TReadModel>(IReadModelRepository<TReadModel> repository) : ProjectionBase, IBatchProjection
     where TReadModel : class
 {
     /// <summary>
     /// Gets the read model repository.
     /// </summary>
-    protected IReadModelRepository<TReadModel> Repository { get; }
+    protected IReadModelRepository<TReadModel> Repository { get; } = repository ?? throw new ArgumentNullException(nameof(repository));
 
     /// <inheritdoc />
     public virtual int BatchSize => 100;
-
-    /// <summary>
-    /// Initializes a new instance of the batch projection.
-    /// </summary>
-    /// <param name="repository">The read model repository.</param>
-    protected BatchProjection(IReadModelRepository<TReadModel> repository)
-    {
-        Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
 
     /// <inheritdoc />
     public abstract Task ProcessBatchAsync(

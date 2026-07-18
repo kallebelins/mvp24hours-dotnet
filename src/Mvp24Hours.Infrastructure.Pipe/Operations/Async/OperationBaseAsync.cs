@@ -3,29 +3,27 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Threading.Tasks;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 
-namespace Mvp24Hours.Infrastructure.Pipe.Operations
-{
-    /// <summary>  
-    /// Abstraction of asynchronous base operations
-    /// </summary>
-    public abstract class OperationBaseAsync : IOperationAsync
-    {
-        #region [ Properties / Fields ]
-        public virtual bool IsRequired => false;
-        #endregion
+namespace Mvp24Hours.Infrastructure.Pipe.Operations;
 
-        #region [ Methods ]
-        public abstract Task ExecuteAsync(IPipelineMessage input);
-        /// <summary>
-        /// Rollback execution in an error or eception scenario
-        /// </summary>
-        public virtual async Task RollbackAsync(IPipelineMessage input)
-        {
-            await Task.FromResult(true);
-        }
-        #endregion
+/// <summary>  
+/// Abstraction of asynchronous base operations
+/// </summary>
+public abstract class OperationBaseAsync : IOperationAsync
+{
+    #region [ Properties / Fields ]
+    public virtual bool IsRequired => false;
+    #endregion
+
+    #region [ Methods ]
+    public abstract Task ExecuteAsync(IPipelineMessage input);
+    /// <summary>
+    /// Rollback execution in an error or eception scenario
+    /// </summary>
+    public virtual async Task RollbackAsync(IPipelineMessage input)
+    {
+        await Task.FromResult(true);
     }
+    #endregion
 }

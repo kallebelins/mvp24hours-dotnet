@@ -281,7 +281,7 @@ public class PagedReadModelResult<T>
     /// <summary>
     /// Gets the items in this page.
     /// </summary>
-    public IReadOnlyList<T> Items { get; init; } = Array.Empty<T>();
+    public IReadOnlyList<T> Items { get; init; } = [];
 
     /// <summary>
     /// Gets the total count of all items.

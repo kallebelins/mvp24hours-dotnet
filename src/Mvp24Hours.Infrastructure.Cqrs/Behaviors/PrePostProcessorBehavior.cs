@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 
@@ -34,24 +33,18 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Behaviors;
 /// </list>
 /// </para>
 /// </remarks>
-public class PrePostProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+/// <remarks>
+/// Creates a new instance of the pre/post processor behavior.
+/// </remarks>
+/// <param name="serviceProvider">Service provider for resolving processors.</param>
+/// <param name="logger">Optional logger for diagnostics.</param>
+public class PrePostProcessorBehavior<TRequest, TResponse>(
+    IServiceProvider serviceProvider,
+    ILogger<PrePostProcessorBehavior<TRequest, TResponse>>? logger = null) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<PrePostProcessorBehavior<TRequest, TResponse>>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the pre/post processor behavior.
-    /// </summary>
-    /// <param name="serviceProvider">Service provider for resolving processors.</param>
-    /// <param name="logger">Optional logger for diagnostics.</param>
-    public PrePostProcessorBehavior(
-        IServiceProvider serviceProvider,
-        ILogger<PrePostProcessorBehavior<TRequest, TResponse>>? logger = null)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly ILogger<PrePostProcessorBehavior<TRequest, TResponse>>? _logger = logger;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(

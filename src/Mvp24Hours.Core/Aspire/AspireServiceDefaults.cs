@@ -3,13 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Core.Aspire;
 
@@ -131,10 +129,7 @@ public static class AspireServiceDefaults
         this IHostApplicationBuilder builder,
         string configurationSection)
     {
-        return builder.AddMvp24HoursAspireDefaults(options =>
-        {
-            builder.Configuration.GetSection(configurationSection).Bind(options);
-        });
+        return builder.AddMvp24HoursAspireDefaults(options => builder.Configuration.GetSection(configurationSection).Bind(options));
     }
 
     /// <summary>
@@ -158,7 +153,7 @@ public static class AspireServiceDefaults
         IHealthChecksBuilder healthChecksBuilder = services.AddHealthChecks();
 
         // Add default self health check
-        healthChecksBuilder.AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });
+        healthChecksBuilder.AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
         // Note: Database, cache, and messaging health checks should be added by the specific modules
         // when they are registered (e.g., AddMvp24HoursDbContext adds SQL health check)

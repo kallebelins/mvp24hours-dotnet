@@ -14,26 +14,16 @@
   </PropertyGroup>
 
   <!--
-    Scoped quality gate (task 10.3). The CI `code-quality` job builds with
-    /p:TreatWarningsAsErrors=true so any NEW warning category fails the build.
-    The codes below are the residual warnings accepted in task 10.1 (see
-    tasks/phase10-gate-treatwarningsaserrors-net10-v1.md); they stay warnings
-    (not errors) until the v2 hygiene pass drives them to zero. Do NOT add new
-    codes here without documenting the reason.
-      Nullable (NRT):      CS8600 CS8602 CS8603 CS8604 CS8618 CS8619 CS8620
-                           CS8622 CS8625 CS8629 CS8631 CS8764
-      Obsolete API:        CS0618 (4 residuals: MongoDbResiliencyExtensions.cs
-                           compat shim + EFCore MvpExecutionStrategy auto-obsolete)
-      NuGet (intentional): NU1510 (redundant ref kept for the 7.1 security pin)
-    Zeroed in v2 (removed from the list):
-      LOGGEN002 (task 4.1 — unique EventIds),
-      ASPDEPR006 (task 4.5 — IActionContextAccessor removed),
-      SYSLIB0057 (task 4.4 — X509CertificateLoader),
-      CS0108 (task 4.6 — removed hidden _logger fields),
-      xUnit1031 (task 4.7 — async test converted to await).
+    Strict quality gate (task 7.1 / v2). CI builds with TreatWarningsAsErrors=true.
+    All CS86xx / CS0618 / LOGGEN002 / ASPDEPR006 / SYSLIB0057 / CS0108 / xUnit1031
+    residuals from the v1/v2 hygiene pass are zero. The only remaining entry is
+    NU1510 — intentional: System.Security.Cryptography.Xml is pinned in
+    Infrastructure (NoWarn=NU1510 on the PackageReference) so consumers without
+    AspNetCore.App resolve the patched version (NU1903 / task 7.1 v1). Do NOT add
+    new codes here without documenting the reason.
   -->
   <PropertyGroup>
-    <MvpResidualWarnings>CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8622;CS8625;CS8629;CS8631;CS8764;CS0618;NU1510</MvpResidualWarnings>
+    <MvpResidualWarnings>NU1510</MvpResidualWarnings>
     <WarningsNotAsErrors>$(WarningsNotAsErrors);$(MvpResidualWarnings)</WarningsNotAsErrors>
   </PropertyGroup>
 </Project>

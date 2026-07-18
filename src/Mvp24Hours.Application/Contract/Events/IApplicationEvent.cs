@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-
 namespace Mvp24Hours.Application.Contract.Events;
 
 /// <summary>

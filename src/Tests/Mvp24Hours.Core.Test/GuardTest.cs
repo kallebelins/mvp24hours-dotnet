@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Mvp24Hours.Core.Helpers;
-
 namespace Mvp24Hours.Core.Test;
 
 /// <summary>
@@ -19,10 +17,10 @@ public class GuardTest
     public void Null_WithValidValue_ReturnsValue()
     {
         // Arrange
-        var value = "test";
+        string value = "test";
 
         // Act
-        var result = Guard.Against.Null(value, nameof(value));
+        string result = Guard.Against.Null(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -47,7 +45,7 @@ public class GuardTest
     {
         // Arrange
         string? value = null;
-        var customMessage = "Custom error message";
+        string customMessage = "Custom error message";
 
         // Act
         Func<string> act = () => Guard.Against.Null(value, nameof(value), customMessage);
@@ -65,10 +63,10 @@ public class GuardTest
     public void NullOrEmpty_String_WithValidValue_ReturnsValue()
     {
         // Arrange
-        var value = "test";
+        string value = "test";
 
         // Act
-        var result = Guard.Against.NullOrEmpty(value, nameof(value));
+        string result = Guard.Against.NullOrEmpty(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -92,7 +90,7 @@ public class GuardTest
     public void NullOrEmpty_String_WithEmpty_ThrowsArgumentException()
     {
         // Arrange
-        var value = string.Empty;
+        string value = string.Empty;
 
         // Act
         Func<string> act = () => Guard.Against.NullOrEmpty(value, nameof(value));
@@ -155,10 +153,10 @@ public class GuardTest
     public void NullOrWhiteSpace_WithValidValue_ReturnsValue()
     {
         // Arrange
-        var value = "test";
+        string value = "test";
 
         // Act
-        var result = Guard.Against.NullOrWhiteSpace(value, nameof(value));
+        string result = Guard.Against.NullOrWhiteSpace(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -182,7 +180,7 @@ public class GuardTest
     public void NullOrWhiteSpace_WithWhitespace_ThrowsArgumentException()
     {
         // Arrange
-        var value = "   ";
+        string value = "   ";
 
         // Act
         Func<string> act = () => Guard.Against.NullOrWhiteSpace(value, nameof(value));
@@ -241,7 +239,7 @@ public class GuardTest
     public void Default_WithDefaultInt_ThrowsArgumentException()
     {
         // Arrange
-        var value = default(int);
+        int value = default;
 
         // Act
         Func<int> act = () => Guard.Against.Default(value, nameof(value));
@@ -262,7 +260,7 @@ public class GuardTest
     public void OutOfRange_WithValidValue_ReturnsValue(int value, int min, int max)
     {
         // Act
-        var result = Guard.Against.OutOfRange(value, min, max, nameof(value));
+        int result = Guard.Against.OutOfRange(value, min, max, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -293,7 +291,7 @@ public class GuardTest
     public void NegativeOrZero_Int_WithPositiveValue_ReturnsValue(int value)
     {
         // Act
-        var result = Guard.Against.NegativeOrZero(value, nameof(value));
+        int result = Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -320,7 +318,7 @@ public class GuardTest
     public void NegativeOrZero_Long_WithPositiveValue_ReturnsValue(long value)
     {
         // Act
-        var result = Guard.Against.NegativeOrZero(value, nameof(value));
+        long result = Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -344,10 +342,10 @@ public class GuardTest
     public void NegativeOrZero_Decimal_WithPositiveValue_ReturnsValue()
     {
         // Arrange
-        var value = 1.5m;
+        decimal value = 1.5m;
 
         // Act
-        var result = Guard.Against.NegativeOrZero(value, nameof(value));
+        decimal result = Guard.Against.NegativeOrZero(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -359,7 +357,7 @@ public class GuardTest
     public void NegativeOrZero_Decimal_WithNegativeOrZero_ThrowsArgumentOutOfRangeException(double inputValue)
     {
         // Arrange
-        var value = (decimal)inputValue;
+        decimal value = (decimal)inputValue;
 
         // Act
         Func<decimal> act = () => Guard.Against.NegativeOrZero(value, nameof(value));
@@ -380,7 +378,7 @@ public class GuardTest
     public void Negative_Int_WithNonNegativeValue_ReturnsValue(int value)
     {
         // Act
-        var result = Guard.Against.Negative(value, nameof(value));
+        int result = Guard.Against.Negative(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -405,10 +403,10 @@ public class GuardTest
     public void Negative_Decimal_WithNonNegativeValue_ReturnsValue(double inputValue)
     {
         // Arrange
-        var value = (decimal)inputValue;
+        decimal value = (decimal)inputValue;
 
         // Act
-        var result = Guard.Against.Negative(value, nameof(value));
+        decimal result = Guard.Against.Negative(value, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -418,7 +416,7 @@ public class GuardTest
     public void Negative_Decimal_WithNegativeValue_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var value = -1.5m;
+        decimal value = -1.5m;
 
         // Act
         Func<decimal> act = () => Guard.Against.Negative(value, nameof(value));
@@ -440,7 +438,7 @@ public class GuardTest
     public void InvalidEmail_WithValidEmail_ReturnsValue(string email)
     {
         // Act
-        var result = Guard.Against.InvalidEmail(email, nameof(email));
+        string result = Guard.Against.InvalidEmail(email, nameof(email));
 
         // Assert
         result.Should().Be(email);
@@ -487,7 +485,7 @@ public class GuardTest
     public void InvalidCpf_WithValidCpf_ReturnsValue(string cpf)
     {
         // Act
-        var result = Guard.Against.InvalidCpf(cpf, nameof(cpf));
+        string result = Guard.Against.InvalidCpf(cpf, nameof(cpf));
 
         // Assert
         result.Should().Be(cpf);
@@ -534,7 +532,7 @@ public class GuardTest
     public void InvalidCnpj_WithValidCnpj_ReturnsValue(string cnpj)
     {
         // Act
-        var result = Guard.Against.InvalidCnpj(cnpj, nameof(cnpj));
+        string result = Guard.Against.InvalidCnpj(cnpj, nameof(cnpj));
 
         // Assert
         result.Should().Be(cnpj);
@@ -577,11 +575,11 @@ public class GuardTest
     public void InvalidFormat_WithMatchingPattern_ReturnsValue()
     {
         // Arrange
-        var value = "ABC-123";
-        var pattern = @"^[A-Z]{3}-\d{3}$";
+        string value = "ABC-123";
+        string pattern = @"^[A-Z]{3}-\d{3}$";
 
         // Act
-        var result = Guard.Against.InvalidFormat(value, pattern, nameof(value));
+        string result = Guard.Against.InvalidFormat(value, pattern, nameof(value));
 
         // Assert
         result.Should().Be(value);
@@ -591,8 +589,8 @@ public class GuardTest
     public void InvalidFormat_WithNonMatchingPattern_ThrowsArgumentException()
     {
         // Arrange
-        var value = "ABC123";
-        var pattern = @"^[A-Z]{3}-\d{3}$";
+        string value = "ABC123";
+        string pattern = @"^[A-Z]{3}-\d{3}$";
 
         // Act
         Func<string> act = () => Guard.Against.InvalidFormat(value, pattern, nameof(value));
@@ -651,7 +649,7 @@ public class GuardTest
     public void Condition_WithTrueCondition_ThrowsArgumentException()
     {
         // Arrange
-        var message = "Error message";
+        string message = "Error message";
 
         // Act
         Action act = () => Guard.Against.Condition(true, "param", message);
@@ -679,7 +677,7 @@ public class GuardTest
     public void InvalidOperation_WithTrueCondition_ThrowsInvalidOperationException()
     {
         // Arrange
-        var message = "Invalid state error";
+        string message = "Invalid state error";
 
         // Act
         Action act = () => Guard.Against.InvalidOperation(true, message);

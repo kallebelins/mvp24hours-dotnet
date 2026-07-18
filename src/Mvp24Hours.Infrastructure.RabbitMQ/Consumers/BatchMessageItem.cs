@@ -3,132 +3,132 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers
+namespace Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
+
+/// <summary>
+/// Implementation of a single message item within a batch.
+/// </summary>
+/// <typeparam name="TMessage">The type of the message.</typeparam>
+public class BatchMessageItem<TMessage> : IBatchMessageItem<TMessage> where TMessage : class
 {
+
     /// <summary>
-    /// Implementation of a single message item within a batch.
+    /// Creates a new batch message item.
     /// </summary>
-    /// <typeparam name="TMessage">The type of the message.</typeparam>
-    public class BatchMessageItem<TMessage> : IBatchMessageItem<TMessage> where TMessage : class
+    /// <param name="message">The deserialized message.</param>
+    /// <param name="deliverEventArgs">The delivery event args from RabbitMQ.</param>
+    public BatchMessageItem(TMessage message, BasicDeliverEventArgs deliverEventArgs)
     {
-        private readonly BasicDeliverEventArgs _deliverEventArgs;
+        Message = message ?? throw new ArgumentNullException(nameof(message));
+        DeliverEventArgs = deliverEventArgs ?? throw new ArgumentNullException(nameof(deliverEventArgs));
+        ReceivedAt = DateTimeOffset.UtcNow;
 
-        /// <summary>
-        /// Creates a new batch message item.
-        /// </summary>
-        /// <param name="message">The deserialized message.</param>
-        /// <param name="deliverEventArgs">The delivery event args from RabbitMQ.</param>
-        public BatchMessageItem(TMessage message, BasicDeliverEventArgs deliverEventArgs)
+        // Extract message metadata
+        IBasicProperties? props = deliverEventArgs.BasicProperties;
+        MessageId = props?.MessageId ?? props?.CorrelationId ?? Guid.NewGuid().ToString();
+        CorrelationId = props?.CorrelationId;
+
+        // Parse headers
+        var headers = new Dictionary<string, object>();
+        if (props?.Headers != null)
         {
-            Message = message ?? throw new ArgumentNullException(nameof(message));
-            _deliverEventArgs = deliverEventArgs ?? throw new ArgumentNullException(nameof(deliverEventArgs));
-            ReceivedAt = DateTimeOffset.UtcNow;
-
-            // Extract message metadata
-            IBasicProperties? props = deliverEventArgs.BasicProperties;
-            MessageId = props?.MessageId ?? props?.CorrelationId ?? Guid.NewGuid().ToString();
-            CorrelationId = props?.CorrelationId;
-
-            // Parse headers
-            var headers = new Dictionary<string, object>();
-            if (props?.Headers != null)
+            foreach (KeyValuePair<string, object> header in props.Headers)
             {
-                foreach (KeyValuePair<string, object> header in props.Headers)
-                {
-                    headers[header.Key] = header.Value;
-                }
-            }
-            Headers = headers;
-
-            // Extract additional metadata
-            CausationId = GetHeader<string>("x-causation-id");
-            RedeliveryCount = GetHeader<int?>("x-redelivered-count") ?? (deliverEventArgs.Redelivered ? 1 : 0);
-
-            if (props?.Timestamp.UnixTime > 0)
-            {
-                SentAt = DateTimeOffset.FromUnixTimeSeconds(props.Timestamp.UnixTime);
+                headers[header.Key] = header.Value;
             }
         }
+        Headers = headers;
 
-        /// <inheritdoc />
-        public TMessage Message { get; }
+        // Extract additional metadata
+        CausationId = GetHeader<string>("x-causation-id");
+        RedeliveryCount = GetHeader<int?>("x-redelivered-count") ?? (deliverEventArgs.Redelivered ? 1 : 0);
 
-        /// <inheritdoc />
-        public string MessageId { get; }
-
-        /// <inheritdoc />
-        public string? CorrelationId { get; }
-
-        /// <inheritdoc />
-        public string? CausationId { get; }
-
-        /// <inheritdoc />
-        public IReadOnlyDictionary<string, object> Headers { get; }
-
-        /// <inheritdoc />
-        public string RoutingKey => _deliverEventArgs.RoutingKey;
-
-        /// <inheritdoc />
-        public ulong DeliveryTag => _deliverEventArgs.DeliveryTag;
-
-        /// <inheritdoc />
-        public bool Redelivered => _deliverEventArgs.Redelivered;
-
-        /// <inheritdoc />
-        public int RedeliveryCount { get; }
-
-        /// <inheritdoc />
-        public DateTimeOffset? SentAt { get; }
-
-        /// <inheritdoc />
-        public DateTimeOffset ReceivedAt { get; }
-
-        /// <inheritdoc />
-        public T? GetHeader<T>(string key)
+        if (props?.Timestamp.UnixTime > 0)
         {
-            if (Headers.TryGetValue(key, out var value))
+            SentAt = DateTimeOffset.FromUnixTimeSeconds(props.Timestamp.UnixTime);
+        }
+    }
+
+    /// <inheritdoc />
+    public TMessage Message { get; }
+
+    /// <inheritdoc />
+    public string MessageId { get; }
+
+    /// <inheritdoc />
+    public string? CorrelationId { get; }
+
+    /// <inheritdoc />
+    public string? CausationId { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, object> Headers { get; }
+
+    /// <inheritdoc />
+    public string RoutingKey => DeliverEventArgs.RoutingKey;
+
+    /// <inheritdoc />
+    public ulong DeliveryTag => DeliverEventArgs.DeliveryTag;
+
+    /// <inheritdoc />
+    public bool Redelivered => DeliverEventArgs.Redelivered;
+
+    /// <inheritdoc />
+    public int RedeliveryCount { get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset? SentAt { get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset ReceivedAt { get; }
+
+    /// <inheritdoc />
+    public T? GetHeader<T>(string key)
+    {
+        if (Headers.TryGetValue(key, out object? value))
+        {
+            if (value is T typedValue)
             {
-                if (value is T typedValue)
-                    return typedValue;
+                return typedValue;
+            }
 
-                if (value is byte[] bytes)
+            if (value is byte[] bytes)
+            {
+                string stringValue = System.Text.Encoding.UTF8.GetString(bytes);
+                if (typeof(T) == typeof(string))
                 {
-                    var stringValue = System.Text.Encoding.UTF8.GetString(bytes);
-                    if (typeof(T) == typeof(string))
-                        return (T)(object)stringValue;
-
-                    try
-                    {
-                        return (T)Convert.ChangeType(stringValue, typeof(T));
-                    }
-                    catch
-                    {
-                        return default;
-                    }
+                    return (T)(object)stringValue;
                 }
 
                 try
                 {
-                    return (T)Convert.ChangeType(value, typeof(T));
+                    return (T)Convert.ChangeType(stringValue, typeof(T));
                 }
                 catch
                 {
                     return default;
                 }
             }
-            return default;
-        }
 
-        /// <summary>
-        /// Gets the original delivery event args.
-        /// </summary>
-        internal BasicDeliverEventArgs DeliverEventArgs => _deliverEventArgs;
+            try
+            {
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            catch
+            {
+                return default;
+            }
+        }
+        return default;
     }
+
+    /// <summary>
+    /// Gets the original delivery event args.
+    /// </summary>
+    internal BasicDeliverEventArgs DeliverEventArgs { get; }
 }
 

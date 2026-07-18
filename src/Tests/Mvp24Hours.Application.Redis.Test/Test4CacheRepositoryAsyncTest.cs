@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
@@ -15,113 +13,116 @@ using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.Redis.Test
+namespace Mvp24Hours.Application.Redis.Test;
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class Test4CacheRepositoryAsyncTest : IAsyncLifetime
 {
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Integration")]
-    public class Test4CacheRepositoryAsyncTest : IAsyncLifetime
+    #region [ Container ]
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
+        .WithExposedPort(6379)
+        .WithCleanUp(true)
+        .Build();
+
+    public async Task InitializeAsync()
     {
-        #region [ Container ]
-        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
-            .WithExposedPort(6379)
-            .WithCleanUp(true)
-            .Build();
+        await _redisContainer.StartAsync().ConfigureAwait(false);
+    }
 
-        public async Task InitializeAsync()
-            => await _redisContainer.StartAsync().ConfigureAwait(false);
+    public async Task DisposeAsync()
+    {
+        await _redisContainer.DisposeAsync().ConfigureAwait(false);
+    }
+    #endregion
 
-        public async Task DisposeAsync()
-            => await _redisContainer.DisposeAsync().ConfigureAwait(false);
-        #endregion
+    private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
+    private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
 
-        private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
-        private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
+    private IServiceProvider Setup()
+    {
+        var services = new ServiceCollection();
+        // caching
+        services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
+        services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
 
-        private IServiceProvider Setup()
+        // caching.redis
+        services.AddMvp24HoursCaching();
+        services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
+        return services.BuildServiceProvider();
+    }
+
+    [Fact, Priority(1)]
+    public async Task AddStringCacheAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        var customer = new Customer
         {
-            var services = new ServiceCollection();
-            // caching
-            services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
-            services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        string content = customer.ToSerialize();
 
-            // caching.redis
-            services.AddMvp24HoursCaching();
-            services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
-            return services.BuildServiceProvider();
-        }
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.SetStringAsync(keyString, content);
+        Assert.True(true);
+    }
 
-        [Fact, Priority(1)]
-        public async Task AddStringCacheAsync()
+    [Fact, Priority(2)]
+    public async Task GetStringAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.SetStringAsync(keyString, "Test");
+        string? content = await repo.GetStringAsync(keyString);
+        Assert.False(string.IsNullOrEmpty(content));
+    }
+
+    [Fact, Priority(3)]
+    public async Task RemoveStringAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.RemoveAsync(keyString);
+        string? content = await repo.GetStringAsync(keyString);
+        Assert.True(string.IsNullOrEmpty(content));
+    }
+
+    [Fact, Priority(4)]
+    public async Task AddObjectCacheAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        var customer = new Customer
         {
-            IServiceProvider serviceProvider = Setup();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            string content = customer.ToSerialize();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.SetAsync(keyObject, customer);
+        Assert.True(true);
+    }
 
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.SetStringAsync(keyString, content);
-            Assert.True(true);
-        }
+    [Fact, Priority(5)]
+    public async Task GetObjectAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.SetAsync(keyObject, new Customer { });
+        Customer? customer = await repo.GetAsync(keyObject);
+        Assert.NotNull(customer);
+    }
 
-        [Fact, Priority(2)]
-        public async Task GetStringAsync()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.SetStringAsync(keyString, "Test");
-            string? content = await repo.GetStringAsync(keyString);
-            Assert.False(string.IsNullOrEmpty(content));
-        }
-
-        [Fact, Priority(3)]
-        public async Task RemoveStringAsync()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.RemoveAsync(keyString);
-            string? content = await repo.GetStringAsync(keyString);
-            Assert.True(string.IsNullOrEmpty(content));
-        }
-
-        [Fact, Priority(4)]
-        public async Task AddObjectCacheAsync()
-        {
-            IServiceProvider serviceProvider = Setup();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.SetAsync(keyObject, customer);
-            Assert.True(true);
-        }
-
-        [Fact, Priority(5)]
-        public async Task GetObjectAsync()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.SetAsync(keyObject, new Customer { });
-            Customer? customer = await repo.GetAsync(keyObject);
-            Assert.NotNull(customer);
-        }
-
-        [Fact, Priority(6)]
-        public async Task RemoveObjectAsync()
-        {
-            IServiceProvider serviceProvider = Setup();
-            IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
-            await repo.RemoveAsync(keyObject);
-            Customer? customer = await repo.GetAsync(keyObject);
-            Assert.Null(customer);
-        }
+    [Fact, Priority(6)]
+    public async Task RemoveObjectAsync()
+    {
+        IServiceProvider serviceProvider = Setup();
+        IRepositoryCacheAsync<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCacheAsync<Customer>>();
+        await repo.RemoveAsync(keyObject);
+        Customer? customer = await repo.GetAsync(keyObject);
+        Assert.Null(customer);
     }
 }

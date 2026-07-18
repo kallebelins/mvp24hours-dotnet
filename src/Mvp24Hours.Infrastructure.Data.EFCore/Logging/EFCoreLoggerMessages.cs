@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Microsoft.Extensions.Logging;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Logging;

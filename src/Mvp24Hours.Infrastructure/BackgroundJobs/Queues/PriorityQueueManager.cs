@@ -3,235 +3,231 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Mvp24Hours.Infrastructure.BackgroundJobs.Options;
 
-namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues
+namespace Mvp24Hours.Infrastructure.BackgroundJobs.Queues;
+
+/// <summary>
+/// Manages priority queues for background jobs.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This class provides priority-based job queue management. Jobs are organized by
+/// priority level, with higher priority jobs being executed before lower priority jobs.
+/// </para>
+/// <para>
+/// Priority levels (from highest to lowest):
+/// - Critical (3)
+/// - High (2)
+/// - Normal (1)
+/// - Low (0)
+/// </para>
+/// </remarks>
+internal class PriorityQueueManager
 {
+    private readonly Dictionary<string, Dictionary<JobPriority, Queue<QueuedJob>>> _queues = [];
+    private readonly object _lock = new();
+
     /// <summary>
-    /// Manages priority queues for background jobs.
+    /// Enqueues a job into the appropriate priority queue.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This class provides priority-based job queue management. Jobs are organized by
-    /// priority level, with higher priority jobs being executed before lower priority jobs.
-    /// </para>
-    /// <para>
-    /// Priority levels (from highest to lowest):
-    /// - Critical (3)
-    /// - High (2)
-    /// - Normal (1)
-    /// - Low (0)
-    /// </para>
-    /// </remarks>
-    internal class PriorityQueueManager
+    /// <param name="queueName">The queue name (or "default" if not specified).</param>
+    /// <param name="priority">The job priority.</param>
+    /// <param name="job">The job to enqueue.</param>
+    public void Enqueue(string queueName, JobPriority priority, QueuedJob job)
     {
-        private readonly Dictionary<string, Dictionary<JobPriority, Queue<QueuedJob>>> _queues = [];
-        private readonly object _lock = new();
-
-        /// <summary>
-        /// Enqueues a job into the appropriate priority queue.
-        /// </summary>
-        /// <param name="queueName">The queue name (or "default" if not specified).</param>
-        /// <param name="priority">The job priority.</param>
-        /// <param name="job">The job to enqueue.</param>
-        public void Enqueue(string queueName, JobPriority priority, QueuedJob job)
+        if (job == null)
         {
-            if (job == null)
-            {
-                throw new ArgumentNullException(nameof(job));
-            }
-
-            var normalizedQueueName = NormalizeQueueName(queueName);
-
-            lock (_lock)
-            {
-                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
-                {
-                    priorityQueues = [];
-                    _queues[normalizedQueueName] = priorityQueues;
-                }
-
-                if (!priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue))
-                {
-                    queue = new Queue<QueuedJob>();
-                    priorityQueues[priority] = queue;
-                }
-
-                queue.Enqueue(job);
-            }
+            throw new ArgumentNullException(nameof(job));
         }
 
-        /// <summary>
-        /// Dequeues the next job from the highest priority queue that has jobs available.
-        /// </summary>
-        /// <param name="queueName">The queue name (or "default" if not specified).</param>
-        /// <returns>The next job to execute, or <c>null</c> if no jobs are available.</returns>
-        public QueuedJob? Dequeue(string queueName)
+        string normalizedQueueName = NormalizeQueueName(queueName);
+
+        lock (_lock)
         {
-            var normalizedQueueName = NormalizeQueueName(queueName);
-
-            lock (_lock)
+            if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
             {
-                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
-                {
-                    return null;
-                }
+                priorityQueues = [];
+                _queues[normalizedQueueName] = priorityQueues;
+            }
 
-                // Try to dequeue from highest priority first
-                JobPriority[] priorities = new[] { JobPriority.Critical, JobPriority.High, JobPriority.Normal, JobPriority.Low };
+            if (!priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue))
+            {
+                queue = new Queue<QueuedJob>();
+                priorityQueues[priority] = queue;
+            }
 
-                foreach (JobPriority priority in priorities)
-                {
-                    if (priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue) && queue.Count > 0)
-                    {
-                        return queue.Dequeue();
-                    }
-                }
+            queue.Enqueue(job);
+        }
+    }
 
+    /// <summary>
+    /// Dequeues the next job from the highest priority queue that has jobs available.
+    /// </summary>
+    /// <param name="queueName">The queue name (or "default" if not specified).</param>
+    /// <returns>The next job to execute, or <c>null</c> if no jobs are available.</returns>
+    public QueuedJob? Dequeue(string queueName)
+    {
+        string normalizedQueueName = NormalizeQueueName(queueName);
+
+        lock (_lock)
+        {
+            if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
+            {
                 return null;
             }
-        }
 
-        /// <summary>
-        /// Gets the count of jobs in a specific queue and priority.
-        /// </summary>
-        /// <param name="queueName">The queue name (or "default" if not specified).</param>
-        /// <param name="priority">The priority level.</param>
-        /// <returns>The number of jobs in the queue.</returns>
-        public int GetCount(string queueName, JobPriority? priority = null)
-        {
-            var normalizedQueueName = NormalizeQueueName(queueName);
+            // Try to dequeue from highest priority first
+            JobPriority[] priorities = [JobPriority.Critical, JobPriority.High, JobPriority.Normal, JobPriority.Low];
 
-            lock (_lock)
+            foreach (JobPriority priority in priorities)
             {
-                if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
+                if (priorityQueues.TryGetValue(priority, out Queue<QueuedJob>? queue) && queue.Count > 0)
                 {
-                    return 0;
-                }
-
-                if (priority.HasValue)
-                {
-                    if (priorityQueues.TryGetValue(priority.Value, out Queue<QueuedJob>? queue))
-                    {
-                        return queue.Count;
-                    }
-
-                    return 0;
-                }
-
-                // Return total count across all priorities
-                return priorityQueues.Values.Sum(q => q.Count);
-            }
-        }
-
-        /// <summary>
-        /// Gets the total count of jobs across all queues.
-        /// </summary>
-        /// <returns>The total number of jobs.</returns>
-        public int GetTotalCount()
-        {
-            lock (_lock)
-            {
-                return _queues.Values
-                    .SelectMany(pq => pq.Values)
-                    .Sum(q => q.Count);
-            }
-        }
-
-        /// <summary>
-        /// Clears all jobs from a specific queue.
-        /// </summary>
-        /// <param name="queueName">The queue name (or "default" if not specified).</param>
-        public void Clear(string queueName)
-        {
-            var normalizedQueueName = NormalizeQueueName(queueName);
-
-            lock (_lock)
-            {
-                if (_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
-                {
-                    foreach (Queue<QueuedJob> queue in priorityQueues.Values)
-                    {
-                        queue.Clear();
-                    }
+                    return queue.Dequeue();
                 }
             }
-        }
 
-        /// <summary>
-        /// Clears all jobs from all queues.
-        /// </summary>
-        public void ClearAll()
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the count of jobs in a specific queue and priority.
+    /// </summary>
+    /// <param name="queueName">The queue name (or "default" if not specified).</param>
+    /// <param name="priority">The priority level.</param>
+    /// <returns>The number of jobs in the queue.</returns>
+    public int GetCount(string queueName, JobPriority? priority = null)
+    {
+        string normalizedQueueName = NormalizeQueueName(queueName);
+
+        lock (_lock)
         {
-            lock (_lock)
+            if (!_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
             {
-                _queues.Clear();
+                return 0;
             }
-        }
 
-        /// <summary>
-        /// Gets statistics for all queues.
-        /// </summary>
-        /// <returns>A dictionary mapping queue names to their statistics.</returns>
-        public Dictionary<string, QueueStats> GetQueueStatistics()
-        {
-            lock (_lock)
+            if (priority.HasValue)
             {
-                var stats = new Dictionary<string, QueueStats>();
-
-                foreach (KeyValuePair<string, Dictionary<JobPriority, Queue<QueuedJob>>> kvp in _queues)
+                if (priorityQueues.TryGetValue(priority.Value, out Queue<QueuedJob>? queue))
                 {
-                    var queueStats = new QueueStats
-                    {
-                        QueueName = kvp.Key,
-                        CriticalCount = kvp.Value.TryGetValue(JobPriority.Critical, out Queue<QueuedJob>? cq) ? cq.Count : 0,
-                        HighCount = kvp.Value.TryGetValue(JobPriority.High, out Queue<QueuedJob>? hq) ? hq.Count : 0,
-                        NormalCount = kvp.Value.TryGetValue(JobPriority.Normal, out Queue<QueuedJob>? nq) ? nq.Count : 0,
-                        LowCount = kvp.Value.TryGetValue(JobPriority.Low, out Queue<QueuedJob>? lq) ? lq.Count : 0
-                    };
-
-                    queueStats.TotalCount = queueStats.CriticalCount + queueStats.HighCount +
-                                          queueStats.NormalCount + queueStats.LowCount;
-
-                    stats[kvp.Key] = queueStats;
+                    return queue.Count;
                 }
 
-                return stats;
+                return 0;
+            }
+
+            // Return total count across all priorities
+            return priorityQueues.Values.Sum(q => q.Count);
+        }
+    }
+
+    /// <summary>
+    /// Gets the total count of jobs across all queues.
+    /// </summary>
+    /// <returns>The total number of jobs.</returns>
+    public int GetTotalCount()
+    {
+        lock (_lock)
+        {
+            return _queues.Values
+                .SelectMany(pq => pq.Values)
+                .Sum(q => q.Count);
+        }
+    }
+
+    /// <summary>
+    /// Clears all jobs from a specific queue.
+    /// </summary>
+    /// <param name="queueName">The queue name (or "default" if not specified).</param>
+    public void Clear(string queueName)
+    {
+        string normalizedQueueName = NormalizeQueueName(queueName);
+
+        lock (_lock)
+        {
+            if (_queues.TryGetValue(normalizedQueueName, out Dictionary<JobPriority, Queue<QueuedJob>>? priorityQueues))
+            {
+                foreach (Queue<QueuedJob> queue in priorityQueues.Values)
+                {
+                    queue.Clear();
+                }
             }
         }
+    }
 
-        private static string NormalizeQueueName(string? queueName)
+    /// <summary>
+    /// Clears all jobs from all queues.
+    /// </summary>
+    public void ClearAll()
+    {
+        lock (_lock)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? "default" : queueName;
+            _queues.Clear();
         }
+    }
 
-        /// <summary>
-        /// Represents a job queued for execution.
-        /// </summary>
-        internal class QueuedJob
+    /// <summary>
+    /// Gets statistics for all queues.
+    /// </summary>
+    /// <returns>A dictionary mapping queue names to their statistics.</returns>
+    public Dictionary<string, QueueStats> GetQueueStatistics()
+    {
+        lock (_lock)
         {
-            public string JobId { get; set; } = string.Empty;
-            public string JobType { get; set; } = string.Empty;
-            public string SerializedArgs { get; set; } = string.Empty;
-            public JobOptions Options { get; set; } = JobOptions.Default;
-            public DateTimeOffset ScheduledFor { get; set; }
-        }
+            var stats = new Dictionary<string, QueueStats>();
 
-        /// <summary>
-        /// Represents statistics for a queue.
-        /// </summary>
-        internal class QueueStats
-        {
-            public string QueueName { get; set; } = string.Empty;
-            public int CriticalCount { get; set; }
-            public int HighCount { get; set; }
-            public int NormalCount { get; set; }
-            public int LowCount { get; set; }
-            public int TotalCount { get; set; }
+            foreach (KeyValuePair<string, Dictionary<JobPriority, Queue<QueuedJob>>> kvp in _queues)
+            {
+                var queueStats = new QueueStats
+                {
+                    QueueName = kvp.Key,
+                    CriticalCount = kvp.Value.TryGetValue(JobPriority.Critical, out Queue<QueuedJob>? cq) ? cq.Count : 0,
+                    HighCount = kvp.Value.TryGetValue(JobPriority.High, out Queue<QueuedJob>? hq) ? hq.Count : 0,
+                    NormalCount = kvp.Value.TryGetValue(JobPriority.Normal, out Queue<QueuedJob>? nq) ? nq.Count : 0,
+                    LowCount = kvp.Value.TryGetValue(JobPriority.Low, out Queue<QueuedJob>? lq) ? lq.Count : 0
+                };
+
+                queueStats.TotalCount = queueStats.CriticalCount + queueStats.HighCount +
+                                      queueStats.NormalCount + queueStats.LowCount;
+
+                stats[kvp.Key] = queueStats;
+            }
+
+            return stats;
         }
+    }
+
+    private static string NormalizeQueueName(string? queueName)
+    {
+        return string.IsNullOrWhiteSpace(queueName) ? "default" : queueName;
+    }
+
+    /// <summary>
+    /// Represents a job queued for execution.
+    /// </summary>
+    internal class QueuedJob
+    {
+        public string JobId { get; set; } = string.Empty;
+        public string JobType { get; set; } = string.Empty;
+        public string SerializedArgs { get; set; } = string.Empty;
+        public JobOptions Options { get; set; } = JobOptions.Default;
+        public DateTimeOffset ScheduledFor { get; set; }
+    }
+
+    /// <summary>
+    /// Represents statistics for a queue.
+    /// </summary>
+    internal class QueueStats
+    {
+        public string QueueName { get; set; } = string.Empty;
+        public int CriticalCount { get; set; }
+        public int HighCount { get; set; }
+        public int NormalCount { get; set; }
+        public int LowCount { get; set; }
+        public int TotalCount { get; set; }
     }
 }
 

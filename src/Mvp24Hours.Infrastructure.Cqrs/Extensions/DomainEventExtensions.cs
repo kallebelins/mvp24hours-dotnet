@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Extensions;
@@ -58,7 +57,7 @@ public static class DomainEventExtensions
         ArgumentNullException.ThrowIfNull(dispatcher);
 
         // First, save all changes to the database
-        var result = await unitOfWork.SaveChangesAsync(cancellationToken);
+        int result = await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Then dispatch domain events
         await dispatcher.DispatchEventsAsync(entities, cancellationToken);
@@ -82,7 +81,7 @@ public static class DomainEventExtensions
     {
         return unitOfWork.SaveChangesWithEventsAsync(
             dispatcher,
-            new[] { entity },
+            [entity],
             cancellationToken);
     }
 
@@ -104,7 +103,7 @@ public static class DomainEventExtensions
         ArgumentNullException.ThrowIfNull(dispatcher);
 
         // First, save all changes to the database
-        var result = unitOfWork.SaveChanges(cancellationToken);
+        int result = unitOfWork.SaveChanges(cancellationToken);
 
         // Then dispatch domain events (blocking)
         dispatcher.DispatchEventsAsync(entities, cancellationToken)
@@ -130,7 +129,7 @@ public static class DomainEventExtensions
     {
         return unitOfWork.SaveChangesWithEvents(
             dispatcher,
-            new[] { entity },
+            [entity],
             cancellationToken);
     }
 

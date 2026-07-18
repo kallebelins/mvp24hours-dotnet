@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
@@ -78,7 +77,10 @@ public class TestAggregate : CoreHasDomainEvents
 
     public IReadOnlyCollection<CoreDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 
     public void Register(string email)
     {

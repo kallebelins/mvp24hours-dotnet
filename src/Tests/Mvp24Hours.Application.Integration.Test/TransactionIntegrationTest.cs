@@ -18,17 +18,19 @@ namespace Mvp24Hours.Application.Integration.Test;
 /// </summary>
 [Collection("SqlServer")]
 [Trait("Category", "Integration")]
-public class TransactionIntegrationTest : IAsyncLifetime
+public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAsyncLifetime
 {
-    private readonly SqlServerContainerFixture _fixture;
+    private readonly SqlServerContainerFixture _fixture = fixture;
 
-    public TransactionIntegrationTest(SqlServerContainerFixture fixture)
+    public Task InitializeAsync()
     {
-        _fixture = fixture;
+        return _fixture.ClearDatabaseAsync();
     }
 
-    public Task InitializeAsync() => _fixture.ClearDatabaseAsync();
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     #region [ DbContext Transaction Tests ]
 
@@ -39,7 +41,7 @@ public class TransactionIntegrationTest : IAsyncLifetime
         using IServiceScope scope = _fixture.CreateScope();
         TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
-        var initialCount = await dbContext.Categories.CountAsync();
+        int initialCount = await dbContext.Categories.CountAsync();
 
         // Act - Try to add and then throw exception within transaction
         await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
@@ -63,7 +65,7 @@ public class TransactionIntegrationTest : IAsyncLifetime
         }
 
         // Assert - Count should remain the same
-        var finalCount = await dbContext.Categories.CountAsync();
+        int finalCount = await dbContext.Categories.CountAsync();
         finalCount.Should().Be(initialCount);
     }
 
@@ -74,7 +76,7 @@ public class TransactionIntegrationTest : IAsyncLifetime
         using IServiceScope scope = _fixture.CreateScope();
         TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
-        var initialCount = await dbContext.Categories.CountAsync();
+        int initialCount = await dbContext.Categories.CountAsync();
 
         // Act
         await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
@@ -97,7 +99,7 @@ public class TransactionIntegrationTest : IAsyncLifetime
         }
 
         // Assert
-        var finalCount = await dbContext.Categories.CountAsync();
+        int finalCount = await dbContext.Categories.CountAsync();
         finalCount.Should().Be(initialCount + 1);
     }
 

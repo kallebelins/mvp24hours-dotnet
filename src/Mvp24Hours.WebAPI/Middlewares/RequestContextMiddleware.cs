@@ -4,10 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
@@ -49,23 +46,17 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursRequestContext(); // Should be early in the pipeline
 /// </code>
 /// </example>
-public class RequestContextMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="RequestContextMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The request context options.</param>
+public class RequestContextMiddleware(
+    RequestDelegate next,
+    IOptions<RequestContextOptions> options)
 {
-    private readonly RequestDelegate _next;
-    private readonly RequestContextOptions _options;
-
-    /// <summary>
-    /// Creates a new instance of <see cref="RequestContextMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The request context options.</param>
-    public RequestContextMiddleware(
-        RequestDelegate next,
-        IOptions<RequestContextOptions> options)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly RequestContextOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     /// <summary>
     /// Processes the HTTP request with context establishment.
@@ -74,17 +65,17 @@ public class RequestContextMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         // Extract or generate Correlation ID
-        var correlationId = ExtractOrGenerateCorrelationId(context);
+        string correlationId = ExtractOrGenerateCorrelationId(context);
 
         // Extract Causation ID from header (may be null for initial requests)
-        var causationId = ExtractCausationId(context);
+        string? causationId = ExtractCausationId(context);
 
         // Generate a unique Request ID for this specific request
-        var requestId = GenerateRequestId();
+        string requestId = GenerateRequestId();
 
         // Extract user and tenant information
-        var userId = GetUserId(context);
-        var tenantId = GetTenantId(context);
+        string? userId = GetUserId(context);
+        string? tenantId = GetTenantId(context);
 
         // Store context in HttpContext.Items for access by downstream components
         context.Items[RequestContextKeys.CorrelationId] = correlationId;
@@ -135,7 +126,7 @@ public class RequestContextMiddleware
         }
 
         // Try alternative headers
-        foreach (var header in _options.AlternativeCorrelationHeaders)
+        foreach (string header in _options.AlternativeCorrelationHeaders)
         {
             if (context.Request.Headers.TryGetValue(header, out Microsoft.Extensions.Primitives.StringValues altCorrelationId)
                 && !string.IsNullOrWhiteSpace(altCorrelationId))
@@ -168,7 +159,9 @@ public class RequestContextMiddleware
     {
         ClaimsPrincipal user = context.User;
         if (user?.Identity?.IsAuthenticated != true)
+        {
             return null;
+        }
 
         return user.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? user.FindFirstValue("sub")
@@ -226,7 +219,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The correlation ID, or the trace identifier if not set.</returns>
     public static string GetCorrelationId(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.CorrelationId, out var correlationId))
+        if (context.Items.TryGetValue(RequestContextKeys.CorrelationId, out object? correlationId))
         {
             return correlationId?.ToString() ?? context.TraceIdentifier;
         }
@@ -240,7 +233,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The causation ID, or null if not set.</returns>
     public static string? GetCausationId(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.CausationId, out var causationId))
+        if (context.Items.TryGetValue(RequestContextKeys.CausationId, out object? causationId))
         {
             return causationId?.ToString();
         }
@@ -254,7 +247,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The request ID, or the trace identifier if not set.</returns>
     public static string GetRequestId(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.RequestId, out var requestId))
+        if (context.Items.TryGetValue(RequestContextKeys.RequestId, out object? requestId))
         {
             return requestId?.ToString() ?? context.TraceIdentifier;
         }
@@ -268,7 +261,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The user ID, or null if not authenticated.</returns>
     public static string? GetUserId(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.UserId, out var userId))
+        if (context.Items.TryGetValue(RequestContextKeys.UserId, out object? userId))
         {
             return userId?.ToString();
         }
@@ -282,7 +275,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The tenant ID, or null if not set.</returns>
     public static string? GetTenantId(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.TenantId, out var tenantId))
+        if (context.Items.TryGetValue(RequestContextKeys.TenantId, out object? tenantId))
         {
             return tenantId?.ToString();
         }
@@ -296,7 +289,7 @@ public static class HttpContextRequestContextExtensions
     /// <returns>The timestamp when the request was received.</returns>
     public static DateTimeOffset GetRequestTimestamp(this HttpContext context)
     {
-        if (context.Items.TryGetValue(RequestContextKeys.Timestamp, out var timestamp) && timestamp is DateTimeOffset dto)
+        if (context.Items.TryGetValue(RequestContextKeys.Timestamp, out object? timestamp) && timestamp is DateTimeOffset dto)
         {
             return dto;
         }

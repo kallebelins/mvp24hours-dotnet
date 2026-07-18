@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
-
 namespace Mvp24Hours.Core.Contract.Infrastructure.Channels;
 
 /// <summary>
@@ -95,7 +92,10 @@ public sealed record ChannelMessage<T> : IChannelMessage<T>
     /// </summary>
     /// <param name="payload">The message payload.</param>
     /// <returns>A new channel message.</returns>
-    public static ChannelMessage<T> Create(T payload) => new(payload);
+    public static ChannelMessage<T> Create(T payload)
+    {
+        return new(payload);
+    }
 
     /// <summary>
     /// Creates a new channel message with correlation tracking.
@@ -108,6 +108,8 @@ public sealed record ChannelMessage<T> : IChannelMessage<T>
         T payload,
         string correlationId,
         string? causationId = null)
-        => new(payload, correlationId, causationId);
+    {
+        return new(payload, correlationId, causationId);
+    }
 }
 

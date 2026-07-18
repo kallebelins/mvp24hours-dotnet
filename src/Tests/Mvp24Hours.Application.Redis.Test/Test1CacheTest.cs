@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
@@ -16,159 +14,162 @@ using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Application.Redis.Test
+namespace Mvp24Hours.Application.Redis.Test;
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class Test1CacheTest : IAsyncLifetime
 {
-    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
-    [Trait("Category", "Integration")]
-    public class Test1CacheTest : IAsyncLifetime
+    #region [ Container ]
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
+        .WithExposedPort(6379)
+        .WithCleanUp(true)
+        .Build();
+
+    public async Task InitializeAsync()
     {
-        #region [ Container ]
-        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
-            .WithExposedPort(6379)
-            .WithCleanUp(true)
-            .Build();
+        await _redisContainer.StartAsync().ConfigureAwait(false);
+    }
 
-        public async Task InitializeAsync()
-            => await _redisContainer.StartAsync().ConfigureAwait(false);
+    public async Task DisposeAsync()
+    {
+        await _redisContainer.DisposeAsync().ConfigureAwait(false);
+    }
+    #endregion
 
-        public async Task DisposeAsync()
-            => await _redisContainer.DisposeAsync().ConfigureAwait(false);
-        #endregion
+    private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
+    private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
 
-        private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
-        private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
+    private IServiceProvider Setup()
+    {
+        var services = new ServiceCollection();
+        // caching
+        services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
+        services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
 
-        private IServiceProvider Setup()
+        // caching.redis
+        services.AddMvp24HoursCaching();
+        services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
+        return services.BuildServiceProvider();
+    }
+
+    [Fact, Priority(1)]
+    public void SetString()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            var services = new ServiceCollection();
-            // caching
-            services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
-            services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        string content = customer.ToSerialize();
 
-            // caching.redis
-            services.AddMvp24HoursCaching();
-            services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
-            return services.BuildServiceProvider();
-        }
+        // act
+        cache.SetString(keyString, content);
 
-        [Fact, Priority(1)]
-        public void SetString()
+        // assert
+        Assert.True(cache.GetString(keyString).HasValue());
+    }
+
+    [Fact, Priority(2)]
+    public void GetString()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        // act
+        cache.SetString(keyString, "Test");
+        string? content = cache.GetString(keyString);
+
+        // assert
+        Assert.True(content.HasValue());
+    }
+
+    [Fact, Priority(3)]
+    public void RemoveString()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+
+        //  act
+        cache.SetString(keyString, "Test");
+        cache.Remove(keyString);
+
+        // assert
+        string? content = cache.GetString(keyString);
+        Assert.False(content.HasValue());
+    }
+
+    [Fact, Priority(4)]
+    public void SetObject()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            string content = customer.ToSerialize();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
 
-            // act
-            cache.SetString(keyString, content);
+        //  act
+        cache.SetObject(keyObject, customer);
 
-            // assert
-            Assert.True(cache.GetString(keyString).HasValue());
-        }
+        // assert
+        Customer? result = cache.GetObject<Customer>(keyObject);
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(2)]
-        public void GetString()
+    [Fact, Priority(5)]
+    public void GetObject()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        cache.SetObject(keyObject, customer);
 
-            // act
-            cache.SetString(keyString, "Test");
-            string? content = cache.GetString(keyString);
+        //  act
+        Customer? result = cache.GetObject<Customer>(keyObject);
 
-            // assert
-            Assert.True(content.HasValue());
-        }
+        // assert
+        Assert.NotNull(result);
+    }
 
-        [Fact, Priority(3)]
-        public void RemoveString()
+    [Fact, Priority(6)]
+    public void RemoveObject()
+    {
+        IServiceProvider serviceProvider = Setup();
+        // arrange
+        IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+        var customer = new Customer
         {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
+            Oid = Guid.NewGuid(),
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        };
+        cache.SetObject(keyObject, customer);
 
-            //  act
-            cache.SetString(keyString, "Test");
-            cache.Remove(keyString);
+        //  act
+        cache.Remove(keyObject);
 
-            // assert
-            string? content = cache.GetString(keyString);
-            Assert.False(content.HasValue());
-        }
-
-        [Fact, Priority(4)]
-        public void SetObject()
-        {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-
-            //  act
-            cache.SetObject(keyObject, customer);
-
-            // assert
-            Customer? result = cache.GetObject<Customer>(keyObject);
-            Assert.NotNull(result);
-        }
-
-        [Fact, Priority(5)]
-        public void GetObject()
-        {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            cache.SetObject(keyObject, customer);
-
-            //  act
-            Customer? result = cache.GetObject<Customer>(keyObject);
-
-            // assert
-            Assert.NotNull(result);
-        }
-
-        [Fact, Priority(6)]
-        public void RemoveObject()
-        {
-            IServiceProvider serviceProvider = Setup();
-            // arrange
-            IDistributedCache? cache = serviceProvider.GetRequiredService<IDistributedCache>();
-            var customer = new Customer
-            {
-                Oid = Guid.NewGuid(),
-                Created = DateTime.Now,
-                Name = "Test 1",
-                Active = true
-            };
-            cache.SetObject(keyObject, customer);
-
-            //  act
-            cache.Remove(keyObject);
-
-            // assert
-            Customer? result = cache.GetObject<Customer>(keyObject);
-            Assert.Null(result);
-        }
+        // assert
+        Customer? result = cache.GetObject<Customer>(keyObject);
+        Assert.Null(result);
     }
 }

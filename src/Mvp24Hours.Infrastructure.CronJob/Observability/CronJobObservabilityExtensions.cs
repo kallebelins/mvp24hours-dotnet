@@ -107,7 +107,7 @@ public static class CronJobObservabilityExtensions
         return builder.AddCheck<CronJobHealthCheck>(
             name,
             failureStatus ?? HealthStatus.Unhealthy,
-            tags ?? new[] { "cronjob", "scheduled", "background" },
+            tags ?? ["cronjob", "scheduled", "background"],
             timeout);
     }
 
@@ -141,7 +141,7 @@ public static class CronJobObservabilityExtensions
         return builder.AddCheck<CronJobHealthCheck>(
             name,
             failureStatus ?? HealthStatus.Unhealthy,
-            tags ?? new[] { "cronjob", "scheduled", "background" },
+            tags ?? ["cronjob", "scheduled", "background"],
             timeout);
     }
 

@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -197,7 +194,7 @@ public class GracefulShutdownTest
         var hostLifetimeMock = new Mock<IHostApplicationLifetime>();
         var executionLock = new InMemoryCronJobExecutionLock();
         var circuitBreaker = new CronJobCircuitBreaker();
-        var stopCompleted = false;
+        bool stopCompleted = false;
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();
@@ -218,10 +215,7 @@ public class GracefulShutdownTest
             circuitBreaker,
             NullLogger<ResilientCronJobService<TestResilientCronJob>>.Instance,
             TimeProvider.System,
-            async ct =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5), ct);
-            });
+            async ct => await Task.Delay(TimeSpan.FromSeconds(5), ct));
 
         // Act
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
@@ -302,7 +296,7 @@ public class GracefulShutdownTest
         var hostLifetimeMock = new Mock<IHostApplicationLifetime>();
         var executionLock = new InMemoryCronJobExecutionLock();
         var circuitBreaker = new CronJobCircuitBreaker();
-        var timeoutOccurred = false;
+        bool timeoutOccurred = false;
 
         services.AddSingleton(tracker);
         services.AddSingleton<ICronJobMetrics, CronJobMetricsService>();

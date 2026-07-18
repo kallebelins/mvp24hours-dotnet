@@ -1,8 +1,6 @@
 using System.Diagnostics;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Observability;
-using Xunit;
 
 namespace Mvp24Hours.Core.Test;
 
@@ -18,7 +16,7 @@ public class ObservabilityTest
     public void ActivitySources_AllSourceNames_ShouldContainAllModules()
     {
         // Arrange & Act
-        var allSources = Mvp24HoursActivitySources.AllSourceNames;
+        string[] allSources = Mvp24HoursActivitySources.AllSourceNames;
 
         // Assert
         allSources.Should().NotBeEmpty();
@@ -465,7 +463,7 @@ public class ObservabilityTest
     public void TracePropagation_ParseTraceparent_ShouldParseValidHeader()
     {
         // Arrange
-        var traceparent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
+        string traceparent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
         // Act
         ActivityContext context = ActivityHelper.ParseTraceContext(traceparent);
@@ -519,7 +517,7 @@ public class ObservabilityTest
         {
             GetUserId = () => "user-123",
             GetUserName = () => "John Doe",
-            GetUserRoles = () => new[] { "Admin", "User" }
+            GetUserRoles = () => ["Admin", "User"]
         };
 
         using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
@@ -575,12 +573,12 @@ public class ObservabilityTest
         var userEnricher = new UserContextEnricher { GetUserId = () => "user-1" };
         var tenantEnricher = new TenantContextEnricher { GetTenantId = () => "tenant-1" };
 
-        var composite = new CompositeActivityEnricher(new IActivityEnricher[]
-        {
+        var composite = new CompositeActivityEnricher(
+        [
             correlationEnricher,
             userEnricher,
             tenantEnricher
-        });
+        ]);
 
         using Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("Test");
 

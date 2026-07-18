@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
 using System.Diagnostics;
 
 namespace Mvp24Hours.Application.Logic.Observability;
@@ -116,14 +115,18 @@ public static class ApplicationActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Query, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.ServiceName, serviceName);
         activity.SetTag(TagNames.OperationName, operationName);
         activity.SetTag(TagNames.OperationType, "Query");
 
         if (entityType != null)
+        {
             activity.SetTag(TagNames.EntityType, entityType);
+        }
 
         return activity;
     }
@@ -140,14 +143,18 @@ public static class ApplicationActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Command, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.ServiceName, serviceName);
         activity.SetTag(TagNames.OperationName, operationName);
         activity.SetTag(TagNames.OperationType, "Command");
 
         if (entityType != null)
+        {
             activity.SetTag(TagNames.EntityType, entityType);
+        }
 
         return activity;
     }
@@ -164,14 +171,18 @@ public static class ApplicationActivitySource
         Activity? activity = Source.StartActivity(ActivityNames.Specification, ActivityKind.Internal);
 
         if (activity == null)
+        {
             return null;
+        }
 
         activity.SetTag(TagNames.ServiceName, serviceName);
         activity.SetTag(TagNames.OperationName, specificationName);
         activity.SetTag(TagNames.OperationType, "Specification");
 
         if (entityType != null)
+        {
             activity.SetTag(TagNames.EntityType, entityType);
+        }
 
         return activity;
     }
@@ -192,19 +203,29 @@ public static class ApplicationActivitySource
         string? tenantId = null)
     {
         if (activity == null)
+        {
             return;
+        }
 
         if (correlationId != null)
+        {
             activity.SetTag(TagNames.CorrelationId, correlationId);
+        }
 
         if (causationId != null)
+        {
             activity.SetTag(TagNames.CausationId, causationId);
+        }
 
         if (userId != null)
+        {
             activity.SetTag(TagNames.UserId, userId);
+        }
 
         if (tenantId != null)
+        {
             activity.SetTag(TagNames.TenantId, tenantId);
+        }
     }
 
     /// <summary>
@@ -215,7 +236,9 @@ public static class ApplicationActivitySource
     public static void SetEntityId(Activity? activity, object? entityId)
     {
         if (activity == null || entityId == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.EntityId, entityId.ToString());
     }
@@ -247,7 +270,9 @@ public static class ApplicationActivitySource
     public static void SetSuccess(Activity? activity)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, true);
         activity.SetStatus(ActivityStatusCode.Ok);
@@ -261,7 +286,9 @@ public static class ApplicationActivitySource
     public static void SetError(Activity? activity, Exception exception)
     {
         if (activity == null)
+        {
             return;
+        }
 
         activity.SetTag(TagNames.IsSuccess, false);
         activity.SetTag(TagNames.ErrorType, exception.GetType().FullName);
@@ -286,13 +313,17 @@ public static class ApplicationActivitySource
     public static void RecordEvent(Activity? activity, string eventName, params (string Key, object? Value)[] tags)
     {
         if (activity == null)
+        {
             return;
+        }
 
         var activityTags = new ActivityTagsCollection();
         foreach ((string? key, object? value) in tags)
         {
             if (value != null)
+            {
                 activityTags.Add(key, value);
+            }
         }
 
         activity.AddEvent(new ActivityEvent(eventName, tags: activityTags));

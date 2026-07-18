@@ -3,12 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-namespace Mvp24Hours.WebAPI.Models
+namespace Mvp24Hours.WebAPI.Models;
+
+public enum SwaggerAuthorizationScheme
 {
-    public enum SwaggerAuthorizationScheme
-    {
-        None,
-        Bearer,
-        Basic
-    }
+    None,
+    Bearer,
+    Basic
 }

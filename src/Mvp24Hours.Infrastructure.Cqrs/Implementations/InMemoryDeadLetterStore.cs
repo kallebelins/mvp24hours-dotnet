@@ -6,7 +6,6 @@
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 
@@ -27,24 +26,18 @@ namespace Mvp24Hours.Infrastructure.Cqrs.Implementations;
 /// services.AddSingleton&lt;IDeadLetterStore, InMemoryDeadLetterStore&gt;();
 /// </code>
 /// </example>
-public sealed class InMemoryDeadLetterStore : IDeadLetterStore
+/// <remarks>
+/// Creates a new instance of the InMemoryDeadLetterStore.
+/// </remarks>
+/// <param name="outbox">Optional outbox for requeuing messages.</param>
+/// <param name="logger">Optional logger for recording operations.</param>
+public sealed class InMemoryDeadLetterStore(
+    IIntegrationEventOutbox? outbox = null,
+    ILogger<InMemoryDeadLetterStore>? logger = null) : IDeadLetterStore
 {
     private readonly ConcurrentDictionary<Guid, DeadLetterMessage> _messages = new();
-    private readonly IIntegrationEventOutbox? _outbox;
-    private readonly ILogger<InMemoryDeadLetterStore>? _logger;
-
-    /// <summary>
-    /// Creates a new instance of the InMemoryDeadLetterStore.
-    /// </summary>
-    /// <param name="outbox">Optional outbox for requeuing messages.</param>
-    /// <param name="logger">Optional logger for recording operations.</param>
-    public InMemoryDeadLetterStore(
-        IIntegrationEventOutbox? outbox = null,
-        ILogger<InMemoryDeadLetterStore>? logger = null)
-    {
-        _outbox = outbox;
-        _logger = logger;
-    }
+    private readonly IIntegrationEventOutbox? _outbox = outbox;
+    private readonly ILogger<InMemoryDeadLetterStore>? _logger = logger;
 
     /// <inheritdoc />
     public Task AddAsync(DeadLetterMessage message, CancellationToken cancellationToken = default)
@@ -138,7 +131,7 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     /// <inheritdoc />
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var removed = _messages.TryRemove(id, out DeadLetterMessage? message);
+        bool removed = _messages.TryRemove(id, out _);
 
         if (removed)
         {
@@ -151,7 +144,7 @@ public sealed class InMemoryDeadLetterStore : IDeadLetterStore
     /// <inheritdoc />
     public Task<int> GetCountAsync(CancellationToken cancellationToken = default)
     {
-        var count = _messages.Values.Count(m => m.Status == DeadLetterStatus.Pending);
+        int count = _messages.Values.Count(m => m.Status == DeadLetterStatus.Pending);
         return Task.FromResult(count);
     }
 }

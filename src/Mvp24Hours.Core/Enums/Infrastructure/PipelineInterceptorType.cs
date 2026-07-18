@@ -1,12 +1,11 @@
-namespace Mvp24Hours.Core.Enums.Infrastructure
+namespace Mvp24Hours.Core.Enums.Infrastructure;
+
+public enum PipelineInterceptorType
 {
-    public enum PipelineInterceptorType
-    {
-        PostOperation,
-        PreOperation,
-        Locked,
-        Faulty,
-        FirstOperation,
-        LastOperation
-    }
+    PostOperation,
+    PreOperation,
+    Locked,
+    Faulty,
+    FirstOperation,
+    LastOperation
 }

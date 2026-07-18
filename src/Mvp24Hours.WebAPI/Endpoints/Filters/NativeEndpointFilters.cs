@@ -3,17 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -82,7 +76,7 @@ public class NativeValidationEndpointFilter<TRequest> : IEndpointFilter
                 );
 
             // Add trace ID
-            var traceId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+            string traceId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
             context.HttpContext.Response.Headers.Append("X-Trace-Id", traceId);
 
             return TypedResults.ValidationProblem(errors);
@@ -115,23 +109,17 @@ public class NativeValidationEndpointFilter<TRequest> : IEndpointFilter
 ///    .AddEndpointFilter&lt;ExceptionHandlingEndpointFilter&gt;();
 /// </code>
 /// </example>
-public class ExceptionHandlingEndpointFilter : IEndpointFilter
+/// <remarks>
+/// Initializes a new instance of the exception handling filter.
+/// </remarks>
+/// <param name="logger">The logger instance.</param>
+/// <param name="includeExceptionDetails">Whether to include exception details in responses (development only!).</param>
+public class ExceptionHandlingEndpointFilter(
+    ILogger<ExceptionHandlingEndpointFilter> logger,
+    bool includeExceptionDetails = false) : IEndpointFilter
 {
-    private readonly ILogger<ExceptionHandlingEndpointFilter>? _logger;
-    private readonly bool _includeExceptionDetails;
-
-    /// <summary>
-    /// Initializes a new instance of the exception handling filter.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="includeExceptionDetails">Whether to include exception details in responses (development only!).</param>
-    public ExceptionHandlingEndpointFilter(
-        ILogger<ExceptionHandlingEndpointFilter> logger,
-        bool includeExceptionDetails = false)
-    {
-        _logger = logger;
-        _includeExceptionDetails = includeExceptionDetails;
-    }
+    private readonly ILogger<ExceptionHandlingEndpointFilter>? _logger = logger;
+    private readonly bool _includeExceptionDetails = includeExceptionDetails;
 
     /// <summary>
     /// Catches exceptions and converts them to ProblemDetails responses.
@@ -171,7 +159,7 @@ public class ExceptionHandlingEndpointFilterFactory : IEndpointFilter
         {
             ILogger<ExceptionHandlingEndpointFilterFactory> logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ExceptionHandlingEndpointFilterFactory>>();
             IHostEnvironment? env = context.HttpContext.RequestServices.GetService<Microsoft.Extensions.Hosting.IHostEnvironment>();
-            var includeDetails = env?.EnvironmentName == "Development";
+            bool includeDetails = env?.EnvironmentName == "Development";
 
             logger.LogError(ex, "Exception caught in endpoint filter: {ExceptionType} - {Message}",
                 ex.GetType().Name, ex.Message);
@@ -219,7 +207,7 @@ public class LoggingEndpointFilter : IEndpointFilter
 
         try
         {
-            var result = await next(context);
+            object? result = await next(context);
 
             stopwatch.Stop();
             logger.LogInformation(
@@ -267,7 +255,7 @@ public class CorrelationIdEndpointFilter : IEndpointFilter
     /// </summary>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var correlationId = context.HttpContext.Request.Headers[CorrelationIdHeader].FirstOrDefault()
+        string correlationId = context.HttpContext.Request.Headers[CorrelationIdHeader].FirstOrDefault()
             ?? Activity.Current?.Id
             ?? Guid.NewGuid().ToString();
 
@@ -305,7 +293,7 @@ public class IdempotencyEndpointFilter : IEndpointFilter
     /// </summary>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var idempotencyKey = context.HttpContext.Request.Headers[IdempotencyKeyHeader].FirstOrDefault();
+        string? idempotencyKey = context.HttpContext.Request.Headers[IdempotencyKeyHeader].FirstOrDefault();
 
         // If no idempotency key, proceed without caching
         if (string.IsNullOrEmpty(idempotencyKey))
@@ -318,7 +306,7 @@ public class IdempotencyEndpointFilter : IEndpointFilter
         {
             // Clean up expired entries
             var expiredKeys = _cache.Where(kvp => kvp.Value.ExpiresAt < DateTimeOffset.UtcNow).Select(kvp => kvp.Key).ToList();
-            foreach (var key in expiredKeys)
+            foreach (string? key in expiredKeys)
             {
                 _cache.Remove(key);
             }
@@ -332,7 +320,7 @@ public class IdempotencyEndpointFilter : IEndpointFilter
         }
 
         // Execute the request
-        var result = await next(context);
+        object? result = await next(context);
 
         // Cache the result
         lock (_cache)
@@ -357,18 +345,13 @@ public class IdempotencyEndpointFilter : IEndpointFilter
 /// </list>
 /// </para>
 /// </remarks>
-public class TimeoutEndpointFilter : IEndpointFilter
+/// <remarks>
+/// Initializes a new instance of the timeout filter.
+/// </remarks>
+/// <param name="timeout">The request timeout.</param>
+public class TimeoutEndpointFilter(TimeSpan timeout) : IEndpointFilter
 {
-    private readonly TimeSpan _timeout;
-
-    /// <summary>
-    /// Initializes a new instance of the timeout filter.
-    /// </summary>
-    /// <param name="timeout">The request timeout.</param>
-    public TimeoutEndpointFilter(TimeSpan timeout)
-    {
-        _timeout = timeout;
-    }
+    private readonly TimeSpan _timeout = timeout;
 
     /// <summary>
     /// Applies timeout to the request.
@@ -410,7 +393,9 @@ public class TimeoutEndpointFilterFactory(TimeSpan timeout) : IEndpointFilter
     /// <param name="seconds">The timeout in seconds.</param>
     /// <returns>A new timeout filter factory.</returns>
     public static TimeoutEndpointFilterFactory FromSeconds(int seconds)
-        => new(TimeSpan.FromSeconds(seconds));
+    {
+        return new(TimeSpan.FromSeconds(seconds));
+    }
 
     /// <summary>
     /// Creates a timeout filter with the specified duration.
@@ -418,7 +403,9 @@ public class TimeoutEndpointFilterFactory(TimeSpan timeout) : IEndpointFilter
     /// <param name="milliseconds">The timeout in milliseconds.</param>
     /// <returns>A new timeout filter factory.</returns>
     public static TimeoutEndpointFilterFactory FromMilliseconds(int milliseconds)
-        => new(TimeSpan.FromMilliseconds(milliseconds));
+    {
+        return new(TimeSpan.FromMilliseconds(milliseconds));
+    }
 
     /// <summary>
     /// Applies timeout to the request.

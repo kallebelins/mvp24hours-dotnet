@@ -3,11 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,303 +15,293 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 
-namespace Mvp24Hours.Application.Logic
+namespace Mvp24Hours.Application.Logic;
+
+/// <summary>
+/// Asynchronous command service base class with high-performance bulk operations.
+/// Extends <see cref="CommandServiceBaseAsync{TEntity, TUoW}"/> with optimized batch processing.
+/// </summary>
+/// <typeparam name="TEntity">The entity type to be managed by this service.</typeparam>
+/// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
+/// <remarks>
+/// <para>
+/// This class provides bulk operations that bypass EF Core change tracking for significantly
+/// better performance when processing large datasets (1000+ entities).
+/// </para>
+/// <para>
+/// <strong>Use Cases:</strong>
+/// <list type="bullet">
+/// <item>Importing large datasets from external systems (CSV, Excel, API)</item>
+/// <item>Batch processing of entities (e.g., monthly billing, batch updates)</item>
+/// <item>Data migration scenarios</item>
+/// <item>Synchronization with external systems</item>
+/// </list>
+/// </para>
+/// <para>
+/// <strong>Performance Considerations:</strong>
+/// <list type="bullet">
+/// <item>Bulk operations bypass EF Core change tracking for better performance</item>
+/// <item>Use <see cref="BulkOperationOptions.BatchSize"/> to control memory usage</item>
+/// <item>Progress callback available for monitoring long-running operations</item>
+/// <item>Validation is performed before the bulk operation</item>
+/// </list>
+/// </para>
+/// </remarks>
+/// <example>
+/// <code>
+/// public class CustomerBulkService : BulkCommandServiceBaseAsync&lt;Customer, MyDbContext&gt;
+/// {
+///     public CustomerBulkService(MyDbContext dbContext, IValidator&lt;Customer&gt; validator) 
+///         : base(dbContext, validator) { }
+///     
+///     public async Task&lt;IBusinessResult&lt;BulkOperationResult&gt;&gt; ImportCustomersAsync(
+///         IList&lt;Customer&gt; customers, 
+///         IProgress&lt;(int processed, int total)&gt; progress,
+///         CancellationToken ct = default)
+///     {
+///         var options = new BulkOperationOptions
+///         {
+///             BatchSize = 2000,
+///             ProgressCallback = (processed, total) =&gt; 
+///                 progress.Report((processed, total))
+///         };
+///         
+///         return await BulkAddAsync(customers, options, ct);
+///     }
+/// }
+/// </code>
+/// </example>
+/// <seealso cref="IBulkCommandServiceAsync{TEntity}"/>
+/// <seealso cref="CommandServiceBaseAsync{TEntity, TUoW}"/>
+/// <remarks>
+/// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
+/// </remarks>
+/// <param name="dbContext">The DbContext for database operations.</param>
+/// <param name="validator">The validator for entity validation.</param>
+/// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
+public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>(TUoW dbContext, IValidator<TEntity>? validator)
+    : CommandServiceBaseAsync<TEntity, TUoW>(dbContext, validator), IBulkCommandServiceAsync<TEntity>
+    where TEntity : class, IEntityBase
+    where TUoW : DbContext, IUnitOfWorkAsync
 {
+    #region [ Properties / Fields ]
+
+    private readonly IValidator<TEntity>? _validator = validator;
+    private readonly ILogger _logger = NullLogger.Instance;
+
     /// <summary>
-    /// Asynchronous command service base class with high-performance bulk operations.
-    /// Extends <see cref="CommandServiceBaseAsync{TEntity, TUoW}"/> with optimized batch processing.
+    /// Gets the DbContext for bulk operations.
     /// </summary>
-    /// <typeparam name="TEntity">The entity type to be managed by this service.</typeparam>
-    /// <typeparam name="TUoW">The unit of work/DbContext type.</typeparam>
-    /// <remarks>
-    /// <para>
-    /// This class provides bulk operations that bypass EF Core change tracking for significantly
-    /// better performance when processing large datasets (1000+ entities).
-    /// </para>
-    /// <para>
-    /// <strong>Use Cases:</strong>
-    /// <list type="bullet">
-    /// <item>Importing large datasets from external systems (CSV, Excel, API)</item>
-    /// <item>Batch processing of entities (e.g., monthly billing, batch updates)</item>
-    /// <item>Data migration scenarios</item>
-    /// <item>Synchronization with external systems</item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// <strong>Performance Considerations:</strong>
-    /// <list type="bullet">
-    /// <item>Bulk operations bypass EF Core change tracking for better performance</item>
-    /// <item>Use <see cref="BulkOperationOptions.BatchSize"/> to control memory usage</item>
-    /// <item>Progress callback available for monitoring long-running operations</item>
-    /// <item>Validation is performed before the bulk operation</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// public class CustomerBulkService : BulkCommandServiceBaseAsync&lt;Customer, MyDbContext&gt;
-    /// {
-    ///     public CustomerBulkService(MyDbContext dbContext, IValidator&lt;Customer&gt; validator) 
-    ///         : base(dbContext, validator) { }
-    ///     
-    ///     public async Task&lt;IBusinessResult&lt;BulkOperationResult&gt;&gt; ImportCustomersAsync(
-    ///         IList&lt;Customer&gt; customers, 
-    ///         IProgress&lt;(int processed, int total)&gt; progress,
-    ///         CancellationToken ct = default)
-    ///     {
-    ///         var options = new BulkOperationOptions
-    ///         {
-    ///             BatchSize = 2000,
-    ///             ProgressCallback = (processed, total) =&gt; 
-    ///                 progress.Report((processed, total))
-    ///         };
-    ///         
-    ///         return await BulkAddAsync(customers, options, ct);
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
-    /// <seealso cref="IBulkCommandServiceAsync{TEntity}"/>
-    /// <seealso cref="CommandServiceBaseAsync{TEntity, TUoW}"/>
-    public abstract class BulkCommandServiceBaseAsync<TEntity, TUoW>
-        : CommandServiceBaseAsync<TEntity, TUoW>, IBulkCommandServiceAsync<TEntity>
-        where TEntity : class, IEntityBase
-        where TUoW : DbContext, IUnitOfWorkAsync
+    protected TUoW DbContext { get; } = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+
+    #endregion
+
+    #region [ Constructors ]
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
+    /// </summary>
+    /// <param name="dbContext">The DbContext for database operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
+    protected BulkCommandServiceBaseAsync(TUoW dbContext)
+        : this(dbContext, null)
     {
-        #region [ Properties / Fields ]
+    }
 
-        private readonly TUoW _dbContext;
-        private readonly IValidator<TEntity>? _validator;
-        private readonly ILogger _logger;
+    #endregion
 
-        /// <summary>
-        /// Gets the DbContext for bulk operations.
-        /// </summary>
-        protected TUoW DbContext => _dbContext;
+    #region [ IBulkCommandServiceAsync - Bulk Add ]
 
-        #endregion
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkAddAsync(entities, new BulkOperationOptions(), cancellationToken);
+    }
 
-        #region [ Constructors ]
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
-        /// </summary>
-        /// <param name="dbContext">The DbContext for database operations.</param>
-        /// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
-        protected BulkCommandServiceBaseAsync(TUoW dbContext)
-            : this(dbContext, null)
+        _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
+            entities.Count, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BulkCommandServiceBaseAsync{TEntity, TUoW}"/> class.
-        /// </summary>
-        /// <param name="dbContext">The DbContext for database operations.</param>
-        /// <param name="validator">The validator for entity validation.</param>
-        /// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
-        protected BulkCommandServiceBaseAsync(TUoW dbContext, IValidator<TEntity>? validator)
-            : base(dbContext, validator)
-        {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _validator = validator;
-            _logger = NullLogger.Instance;
-        }
-
-        #endregion
-
-        #region [ IBulkCommandServiceAsync - Bulk Add ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
-        {
-            return BulkAddAsync(entities, new BulkOperationOptions(), cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkAddAsync(
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(entities);
-
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-start Count={Count} BatchSize={BatchSize}",
-                entities.Count, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Validate all entities before bulk operation
-                IBusinessResult<bool> validationResult = ValidateEntities(entities);
-                if (!validationResult.HasData() || !validationResult.Data)
-                {
-                    stopwatch.Stop();
-                    return BulkOperationResult.Failure(
-                        "One or more entities failed validation.",
-                        stopwatch.Elapsed).ToBusiness();
-                }
-
-                // Execute bulk insert
-                BulkOperationResult result = await _dbContext.BulkInsertAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
-
-                return result.ToBusiness();
-            }
-            catch (Exception ex)
+            // Validate all entities before bulk operation
+            IBusinessResult<bool> validationResult = ValidateEntities(entities);
+            if (!validationResult.HasData() || !validationResult.Data)
             {
                 stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandserviceasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+                return BulkOperationResult.Failure(
+                    "One or more entities failed validation.",
+                    stopwatch.Elapsed).ToBusiness();
             }
+
+            // Execute bulk insert
+            BulkOperationResult result = await DbContext.BulkInsertAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandserviceasync-bulkaddasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
+
+            return result.ToBusiness();
         }
-
-        #endregion
-
-        #region [ IBulkCommandServiceAsync - Bulk Modify ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
+        catch (Exception ex)
         {
-            return BulkModifyAsync(entities, new BulkOperationOptions(), cancellationToken);
+            stopwatch.Stop();
+
+            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkaddasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
         }
+    }
 
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
+    #endregion
+
+    #region [ IBulkCommandServiceAsync - Bulk Modify ]
+
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkModifyAsync(entities, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkModifyAsync(
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
+
+        _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
+            entities.Count, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
         {
-            ArgumentNullException.ThrowIfNull(entities);
-
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-start Count={Count} BatchSize={BatchSize}",
-                entities.Count, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Validate all entities before bulk operation
-                IBusinessResult<bool> validationResult = ValidateEntities(entities);
-                if (!validationResult.HasData() || !validationResult.Data)
-                {
-                    stopwatch.Stop();
-                    return BulkOperationResult.Failure(
-                        "One or more entities failed validation.",
-                        stopwatch.Elapsed).ToBusiness();
-                }
-
-                // Execute bulk update
-                BulkOperationResult result = await _dbContext.BulkUpdateAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
-
-                return result.ToBusiness();
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandserviceasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
-            }
-        }
-
-        #endregion
-
-        #region [ IBulkCommandServiceAsync - Bulk Remove ]
-
-        /// <inheritdoc/>
-        public virtual Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
-            IList<TEntity> entities,
-            CancellationToken cancellationToken = default)
-        {
-            return BulkRemoveAsync(entities, new BulkOperationOptions(), cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
-            IList<TEntity> entities,
-            BulkOperationOptions options,
-            CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(entities);
-
-            _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
-                entities.Count, options.BatchSize);
-
-            var stopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Execute bulk delete (no validation needed for delete)
-                BulkOperationResult result = await _dbContext.BulkDeleteAsync(entities, options, cancellationToken);
-
-                stopwatch.Stop();
-
-                _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
-                    result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
-
-                return result.ToBusiness();
-            }
-            catch (Exception ex)
+            // Validate all entities before bulk operation
+            IBusinessResult<bool> validationResult = ValidateEntities(entities);
+            if (!validationResult.HasData() || !validationResult.Data)
             {
                 stopwatch.Stop();
-
-                _logger.LogError(ex, "application-bulkcommandserviceasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
-                    ex.Message, stopwatch.ElapsedMilliseconds);
-
-                return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+                return BulkOperationResult.Failure(
+                    "One or more entities failed validation.",
+                    stopwatch.Elapsed).ToBusiness();
             }
+
+            // Execute bulk update
+            BulkOperationResult result = await DbContext.BulkUpdateAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandserviceasync-bulkmodifyasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
+
+            return result.ToBusiness();
         }
-
-        #endregion
-
-        #region [ Protected Helpers ]
-
-        /// <summary>
-        /// Validates all entities in the collection before bulk operation.
-        /// </summary>
-        /// <param name="entities">The entities to validate.</param>
-        /// <returns>A business result indicating if all entities are valid.</returns>
-        protected virtual IBusinessResult<bool> ValidateEntities(IList<TEntity>? entities)
+        catch (Exception ex)
         {
-            if (entities == null || entities.Count == 0)
-            {
-                return true.ToBusiness();
-            }
+            stopwatch.Stop();
 
-            foreach (TEntity entity in entities)
-            {
-                IList<IMessageResult> errors = entity.TryValidate(_validator);
-                if (errors.AnySafe())
-                {
-                    _logger.LogDebug("application-bulkcommandserviceasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
-                        typeof(TEntity).Name, errors.Count);
-                    return errors.ToBusiness<bool>();
-                }
-            }
+            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkmodifyasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
 
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+        }
+    }
+
+    #endregion
+
+    #region [ IBulkCommandServiceAsync - Bulk Remove ]
+
+    /// <inheritdoc/>
+    public virtual Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
+        IList<TEntity> entities,
+        CancellationToken cancellationToken = default)
+    {
+        return BulkRemoveAsync(entities, new BulkOperationOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async Task<IBusinessResult<BulkOperationResult>> BulkRemoveAsync(
+        IList<TEntity> entities,
+        BulkOperationOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
+
+        _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-start Count={Count} BatchSize={BatchSize}",
+            entities.Count, options.BatchSize);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            // Execute bulk delete (no validation needed for delete)
+            BulkOperationResult result = await DbContext.BulkDeleteAsync(entities, options, cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug("application-bulkcommandserviceasync-bulkremoveasync-end RowsAffected={RowsAffected} ElapsedMs={ElapsedMs} Success={Success}",
+                result.RowsAffected, stopwatch.ElapsedMilliseconds, result.IsSuccess);
+
+            return result.ToBusiness();
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex, "application-bulkcommandserviceasync-bulkremoveasync-error Error={Error} ElapsedMs={ElapsedMs}",
+                ex.Message, stopwatch.ElapsedMilliseconds);
+
+            return BulkOperationResult.Failure(ex.Message, stopwatch.Elapsed).ToBusiness();
+        }
+    }
+
+    #endregion
+
+    #region [ Protected Helpers ]
+
+    /// <summary>
+    /// Validates all entities in the collection before bulk operation.
+    /// </summary>
+    /// <param name="entities">The entities to validate.</param>
+    /// <returns>A business result indicating if all entities are valid.</returns>
+    protected virtual IBusinessResult<bool> ValidateEntities(IList<TEntity>? entities)
+    {
+        if (entities == null || entities.Count == 0)
+        {
             return true.ToBusiness();
         }
 
-        #endregion
+        foreach (TEntity entity in entities)
+        {
+            IList<IMessageResult> errors = entity.TryValidate(_validator);
+            if (errors.AnySafe())
+            {
+                _logger.LogDebug("application-bulkcommandserviceasync-validateentities-failed EntityType={EntityType} ErrorCount={ErrorCount}",
+                    typeof(TEntity).Name, errors.Count);
+                return errors.ToBusiness<bool>();
+            }
+        }
+
+        return true.ToBusiness();
     }
+
+    #endregion
 }
 

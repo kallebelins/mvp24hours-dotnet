@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -307,10 +305,7 @@ public static class ApplicationEventServiceCollectionExtensions
         services.AddMvp24HoursApplicationEventOutboxInMemory();
 
         // Add processor
-        services.AddMvp24HoursApplicationEventOutboxProcessor(options =>
-        {
-            configureProcessor?.Invoke(options);
-        });
+        services.AddMvp24HoursApplicationEventOutboxProcessor(options => configureProcessor?.Invoke(options));
 
         // Add handlers
         if (handlerAssemblies.Length > 0)

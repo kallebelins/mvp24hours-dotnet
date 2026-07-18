@@ -1,11 +1,10 @@
-namespace Mvp24Hours.Application.MongoDb.Test.Support.Enums
+namespace Mvp24Hours.Application.MongoDb.Test.Support.Enums;
+
+public enum ContactType
 {
-    public enum ContactType
-    {
-        CellPhone,
-        HomePhone,
-        CommercialPhone,
-        Email,
-        Other
-    }
+    CellPhone,
+    HomePhone,
+    CommercialPhone,
+    Email,
+    Other
 }

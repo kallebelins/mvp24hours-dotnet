@@ -4,12 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using System;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -47,29 +44,22 @@ namespace Mvp24Hours.WebAPI.Middlewares;
 /// app.UseMvp24HoursAntiForgery();
 /// </code>
 /// </example>
-public class AntiForgeryMiddleware
+/// <remarks>
+/// Creates a new instance of <see cref="AntiForgeryMiddleware"/>.
+/// </remarks>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="options">The anti-forgery options.</param>
+/// <param name="logger">The logger.</param>
+public class AntiForgeryMiddleware(
+    RequestDelegate next,
+    IOptions<AntiForgeryOptions> options,
+    ILogger<AntiForgeryMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly AntiForgeryOptions _options;
-    private readonly ILogger<AntiForgeryMiddleware> _logger;
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly AntiForgeryOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<AntiForgeryMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string TokenContextKey = "Mvp24Hours.AntiForgeryToken";
-
-    /// <summary>
-    /// Creates a new instance of <see cref="AntiForgeryMiddleware"/>.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="options">The anti-forgery options.</param>
-    /// <param name="logger">The logger.</param>
-    public AntiForgeryMiddleware(
-        RequestDelegate next,
-        IOptions<AntiForgeryOptions> options,
-        ILogger<AntiForgeryMiddleware> logger)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Processes the HTTP request with anti-forgery protection.
@@ -93,7 +83,7 @@ public class AntiForgeryMiddleware
             return;
         }
 
-        var path = context.Request.Path.Value ?? "/";
+        string path = context.Request.Path.Value ?? "/";
 
         // Check if path is excluded
         if (IsExcludedPath(path))
@@ -137,7 +127,7 @@ public class AntiForgeryMiddleware
 
     private async Task HandleTokenEndpoint(HttpContext context)
     {
-        var token = GetOrCreateToken(context);
+        string token = GetOrCreateToken(context);
         SetTokenCookie(context, token);
 
         context.Response.StatusCode = StatusCodes.Status200OK;
@@ -151,7 +141,7 @@ public class AntiForgeryMiddleware
     private Task<bool> ValidateToken(HttpContext context)
     {
         // Get token from cookie
-        var cookieToken = context.Request.Cookies[_options.CookieName];
+        string? cookieToken = context.Request.Cookies[_options.CookieName];
 
         // Skip validation if no cookie and configured to do so
         if (string.IsNullOrEmpty(cookieToken) && _options.SkipValidationForRequestsWithoutCookies)
@@ -160,7 +150,7 @@ public class AntiForgeryMiddleware
         }
 
         // Get token from header
-        var headerToken = context.Request.Headers[_options.HeaderName].FirstOrDefault();
+        string? headerToken = context.Request.Headers[_options.HeaderName].FirstOrDefault();
 
         // Both must be present
         if (string.IsNullOrEmpty(cookieToken) || string.IsNullOrEmpty(headerToken))
@@ -169,7 +159,7 @@ public class AntiForgeryMiddleware
         }
 
         // Tokens must match (constant-time comparison for security)
-        var isValid = CryptographicOperations.FixedTimeEquals(
+        bool isValid = CryptographicOperations.FixedTimeEquals(
             System.Text.Encoding.UTF8.GetBytes(cookieToken),
             System.Text.Encoding.UTF8.GetBytes(headerToken));
 
@@ -181,7 +171,7 @@ public class AntiForgeryMiddleware
         // Only set token for GET requests to pages (not API calls without existing token)
         if (context.Request.Method == "GET" && !context.Request.Cookies.ContainsKey(_options.CookieName))
         {
-            var token = GenerateToken();
+            string token = GenerateToken();
             SetTokenCookie(context, token);
         }
 
@@ -190,7 +180,7 @@ public class AntiForgeryMiddleware
 
     private void SetNewToken(HttpContext context)
     {
-        var token = GenerateToken();
+        string token = GenerateToken();
         SetTokenCookie(context, token);
         context.Items[TokenContextKey] = token;
     }
@@ -198,20 +188,20 @@ public class AntiForgeryMiddleware
     private string GetOrCreateToken(HttpContext context)
     {
         // Check if we already have a token in context
-        if (context.Items.TryGetValue(TokenContextKey, out var existingToken) && existingToken is string token)
+        if (context.Items.TryGetValue(TokenContextKey, out object? existingToken) && existingToken is string token)
         {
             return token;
         }
 
         // Generate new token
-        var newToken = GenerateToken();
+        string newToken = GenerateToken();
         context.Items[TokenContextKey] = newToken;
         return newToken;
     }
 
     private static string GenerateToken()
     {
-        var tokenBytes = new byte[32];
+        byte[] tokenBytes = new byte[32];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(tokenBytes);
         return Convert.ToBase64String(tokenBytes);
@@ -243,7 +233,7 @@ public class AntiForgeryMiddleware
         // If protected paths are specified, check if current path matches
         if (_options.ProtectedPaths.Count > 0)
         {
-            var path = context.Request.Path.Value ?? "/";
+            string path = context.Request.Path.Value ?? "/";
             return _options.ProtectedPaths.Any(pattern => MatchesPattern(path, pattern));
         }
 
@@ -275,7 +265,7 @@ public class AntiForgeryMiddleware
 
     private static bool MatchesPattern(string path, string pattern)
     {
-        var regexPattern = "^" + Regex.Escape(pattern)
+        string regexPattern = "^" + Regex.Escape(pattern)
             .Replace("\\*\\*", ".*")
             .Replace("\\*", "[^/]*")
             .Replace("\\?", ".") + "$";

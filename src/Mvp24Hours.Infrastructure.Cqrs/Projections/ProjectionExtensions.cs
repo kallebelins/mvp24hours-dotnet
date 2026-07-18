@@ -56,7 +56,7 @@ public static class ProjectionExtensions
             // Register projections from options
             foreach (ProjectionOptions.ProjectionRegistration registration in options.Registrations)
             {
-                manager.RegisterProjection(registration.Name, registration.HandlerTypes.ToArray());
+                manager.RegisterProjection(registration.Name, [.. registration.HandlerTypes]);
             }
 
             return manager;
@@ -225,7 +225,7 @@ public class ProjectionOptions
         Registrations.Add(new ProjectionRegistration
         {
             Name = name,
-            HandlerTypes = handlerTypes.ToList()
+            HandlerTypes = [.. handlerTypes]
         });
 
         HandlerTypes.AddRange(handlerTypes);

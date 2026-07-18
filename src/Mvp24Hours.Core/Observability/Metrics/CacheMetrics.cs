@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -111,7 +109,7 @@ public sealed class CacheMetrics
 
     private double CalculateHitRatio()
     {
-        var gets = _totalGets;
+        long gets = _totalGets;
         return gets > 0 ? ((double)_totalHits / gets) * 100 : 0;
     }
 
@@ -280,24 +278,33 @@ public sealed class CacheMetrics
         /// <summary>
         /// Marks a get operation as a cache hit.
         /// </summary>
-        public void SetHit() => Hit = true;
+        public void SetHit()
+        {
+            Hit = true;
+        }
 
         /// <summary>
         /// Marks a get operation as a cache miss.
         /// </summary>
-        public void SetMiss() => Hit = false;
+        public void SetMiss()
+        {
+            Hit = false;
+        }
 
         /// <summary>
         /// Sets the size of the cached item.
         /// </summary>
         /// <param name="sizeBytes">Size in bytes.</param>
-        public void SetItemSize(int sizeBytes) => ItemSizeBytes = sizeBytes;
+        public void SetItemSize(int sizeBytes)
+        {
+            ItemSizeBytes = sizeBytes;
+        }
 
         /// <inheritdoc />
         public void Dispose()
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(_startTimestamp);
-            var durationMs = elapsed.TotalMilliseconds;
+            double durationMs = elapsed.TotalMilliseconds;
 
             switch (_operation)
             {

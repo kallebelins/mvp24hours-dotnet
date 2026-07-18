@@ -3,9 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Testing;
@@ -152,19 +149,14 @@ public interface IEntitySeeder<TEntity>
 /// using var context = factory.CreateContextWithData(compositeSeeder);
 /// </code>
 /// </example>
-public class CompositeDataSeeder<TContext> : IDataSeeder<TContext>
+/// <remarks>
+/// Initializes a new instance with the specified seeders.
+/// </remarks>
+/// <param name="seeders">The seeders to compose.</param>
+public class CompositeDataSeeder<TContext>(params IDataSeeder<TContext>[] seeders) : IDataSeeder<TContext>
     where TContext : DbContext
 {
-    private readonly IDataSeeder<TContext>[] _seeders;
-
-    /// <summary>
-    /// Initializes a new instance with the specified seeders.
-    /// </summary>
-    /// <param name="seeders">The seeders to compose.</param>
-    public CompositeDataSeeder(params IDataSeeder<TContext>[] seeders)
-    {
-        _seeders = seeders ?? throw new ArgumentNullException(nameof(seeders));
-    }
+    private readonly IDataSeeder<TContext>[] _seeders = seeders ?? throw new ArgumentNullException(nameof(seeders));
 
     /// <inheritdoc />
     public void Seed(TContext context)
@@ -196,19 +188,14 @@ public class CompositeDataSeeder<TContext> : IDataSeeder<TContext>
 /// using var context = factory.CreateContextWithData(seeder);
 /// </code>
 /// </example>
-public class ActionDataSeeder<TContext> : IDataSeeder<TContext>
+/// <remarks>
+/// Initializes a new instance with the specified seed action.
+/// </remarks>
+/// <param name="seedAction">The action to execute for seeding.</param>
+public class ActionDataSeeder<TContext>(Action<TContext> seedAction) : IDataSeeder<TContext>
     where TContext : DbContext
 {
-    private readonly Action<TContext> _seedAction;
-
-    /// <summary>
-    /// Initializes a new instance with the specified seed action.
-    /// </summary>
-    /// <param name="seedAction">The action to execute for seeding.</param>
-    public ActionDataSeeder(Action<TContext> seedAction)
-    {
-        _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
-    }
+    private readonly Action<TContext> _seedAction = seedAction ?? throw new ArgumentNullException(nameof(seedAction));
 
     /// <inheritdoc />
     public void Seed(TContext context)

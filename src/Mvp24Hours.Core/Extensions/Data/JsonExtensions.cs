@@ -3,109 +3,107 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Mvp24Hours.Extensions
+namespace Mvp24Hours.Extensions;
+
+/// <summary>
+/// 
+/// </summary>
+public static class JsonExtensions
 {
     /// <summary>
     /// 
     /// </summary>
-    public static class JsonExtensions
+    public static string ToSerialize<T>(this T value, JsonSerializerSettings? jsonSerializerSettings = null)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static string ToSerialize<T>(this T value, JsonSerializerSettings? jsonSerializerSettings = null)
+        if (value == null)
         {
-            if (value == null)
-            {
-                return string.Empty;
-            }
-
-            return JsonHelper.Serialize(value, jsonSerializerSettings);
+            return string.Empty;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static T? ToDeserialize<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
-        {
-            if (!value.HasValue())
-            {
-                return default;
-            }
+        return JsonHelper.Serialize(value, jsonSerializerSettings);
+    }
 
-            return JsonHelper.Deserialize<T>(value, jsonSerializerSettings);
+    /// <summary>
+    /// 
+    /// </summary>
+    public static T? ToDeserialize<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
+    {
+        if (!value.HasValue())
+        {
+            return default;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static object? ToDeserialize(this string value, Type type, JsonSerializerSettings? jsonSerializerSettings = null)
-        {
-            if (!value.HasValue())
-            {
-                return default;
-            }
+        return JsonHelper.Deserialize<T>(value, jsonSerializerSettings);
+    }
 
-            return JsonHelper.Deserialize(value, type, jsonSerializerSettings);
+    /// <summary>
+    /// 
+    /// </summary>
+    public static object? ToDeserialize(this string value, Type type, JsonSerializerSettings? jsonSerializerSettings = null)
+    {
+        if (!value.HasValue())
+        {
+            return default;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static T? ToDeserializeAnonymous<T>(this string value, T anonymousType, JsonSerializerSettings? jsonSerializerSettings = null)
-        {
-            if (!value.HasValue())
-            {
-                return default;
-            }
+        return JsonHelper.Deserialize(value, type, jsonSerializerSettings);
+    }
 
-            return JsonHelper.DeserializeAnonymous(value, anonymousType, jsonSerializerSettings);
+    /// <summary>
+    /// 
+    /// </summary>
+    public static T? ToDeserializeAnonymous<T>(this string value, T anonymousType, JsonSerializerSettings? jsonSerializerSettings = null)
+    {
+        if (!value.HasValue())
+        {
+            return default;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IPagingResult<T>? ToDeserializePagingResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
-        {
-            return JsonConvert.DeserializeObject<IPagingResult<T>>(value, JsonHelper.JsonPagingResultSettings<T>(jsonSerializerSettings));
-        }
+        return JsonHelper.DeserializeAnonymous(value, anonymousType, jsonSerializerSettings);
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IBusinessResult<T>? ToDeserializeBusinessResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
-        {
-            return JsonConvert.DeserializeObject<IBusinessResult<T>>(value, JsonHelper.JsonBusinessResultSettings<T>(jsonSerializerSettings));
-        }
+    /// <summary>
+    /// 
+    /// </summary>
+    public static IPagingResult<T>? ToDeserializePagingResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
+    {
+        return JsonConvert.DeserializeObject<IPagingResult<T>>(value, JsonHelper.JsonPagingResultSettings<T>(jsonSerializerSettings));
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static dynamic? ToDynamic<T>(this T obj) where T : notnull
-        {
-            return ObjectHelper.ConvertToDynamic(obj);
-        }
+    /// <summary>
+    /// 
+    /// </summary>
+    public static IBusinessResult<T>? ToDeserializeBusinessResult<T>(this string value, JsonSerializerSettings? jsonSerializerSettings = null)
+    {
+        return JsonConvert.DeserializeObject<IBusinessResult<T>>(value, JsonHelper.JsonBusinessResultSettings<T>(jsonSerializerSettings));
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool IsValidJson(this string src)
+    /// <summary>
+    /// 
+    /// </summary>
+    public static dynamic? ToDynamic<T>(this T obj) where T : notnull
+    {
+        return ObjectHelper.ConvertToDynamic(obj);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool IsValidJson(this string src)
+    {
+        try
         {
-            try
-            {
-                var asToken = JToken.Parse(src);
-                return asToken.Type == JTokenType.Object || asToken.Type == JTokenType.Array;
-            }
-            catch (Exception)  // Typically a JsonReaderException exception if you want to specify.
-            {
-                return false;
-            }
+            var asToken = JToken.Parse(src);
+            return asToken.Type is JTokenType.Object or JTokenType.Array;
+        }
+        catch (Exception)  // Typically a JsonReaderException exception if you want to specify.
+        {
+            return false;
         }
     }
 }

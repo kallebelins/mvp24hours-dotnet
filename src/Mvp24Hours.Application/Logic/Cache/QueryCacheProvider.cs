@@ -3,237 +3,205 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Contract.Cache;
 
-namespace Mvp24Hours.Application.Logic.Cache
+namespace Mvp24Hours.Application.Logic.Cache;
+
+/// <summary>
+/// Default implementation of <see cref="IQueryCacheProvider"/> that provides second-level
+/// caching for query results with support for both memory and distributed cache.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This implementation supports:
+/// <list type="bullet">
+/// <item>Hybrid caching (L1 memory + L2 distributed)</item>
+/// <item>Cache stampede prevention via SemaphoreSlim</item>
+/// <item>Region-based invalidation via key tracking</item>
+/// <item>Pattern-based invalidation</item>
+/// </list>
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="QueryCacheProvider"/> class.
+/// </remarks>
+public class QueryCacheProvider(
+    IDistributedCache distributedCache,
+    ILogger<QueryCacheProvider> logger,
+    IOptions<QueryCacheOptions> options,
+    IMemoryCache? memoryCache = null) : IQueryCacheProvider
 {
-    /// <summary>
-    /// Default implementation of <see cref="IQueryCacheProvider"/> that provides second-level
-    /// caching for query results with support for both memory and distributed cache.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This implementation supports:
-    /// <list type="bullet">
-    /// <item>Hybrid caching (L1 memory + L2 distributed)</item>
-    /// <item>Cache stampede prevention via SemaphoreSlim</item>
-    /// <item>Region-based invalidation via key tracking</item>
-    /// <item>Pattern-based invalidation</item>
-    /// </list>
-    /// </para>
-    /// </remarks>
-    public class QueryCacheProvider : IQueryCacheProvider
+    private readonly IDistributedCache _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+    private readonly IMemoryCache? _memoryCache = memoryCache;
+    private readonly ILogger<QueryCacheProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly QueryCacheOptions _options = options?.Value ?? new QueryCacheOptions();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+    private readonly ConcurrentDictionary<string, ConcurrentBag<string>> _regionKeys = new();
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        private readonly IDistributedCache _distributedCache;
-        private readonly IMemoryCache? _memoryCache;
-        private readonly ILogger<QueryCacheProvider> _logger;
-        private readonly QueryCacheOptions _options;
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
-        private readonly ConcurrentDictionary<string, ConcurrentBag<string>> _regionKeys = new();
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
 
-        private static readonly JsonSerializerOptions JsonOptions = new()
+    /// <inheritdoc/>
+    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="QueryCacheProvider"/> class.
-        /// </summary>
-        public QueryCacheProvider(
-            IDistributedCache distributedCache,
-            ILogger<QueryCacheProvider> logger,
-            IOptions<QueryCacheOptions> options,
-            IMemoryCache? memoryCache = null)
-        {
-            _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options?.Value ?? new QueryCacheOptions();
-            _memoryCache = memoryCache;
+            throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
         }
 
-        /// <inheritdoc/>
-        public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-get-start CacheKey={CacheKey}", key);
+
+        try
         {
-            if (string.IsNullOrWhiteSpace(key))
+            // Try L1 (memory) cache first
+            if (_options.EnableL1Cache && _memoryCache != null)
             {
-                throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
+                if (_memoryCache.TryGetValue(key, out T? memoryCachedValue))
+                {
+                    _logger.LogDebug("Cache hit (L1) for key: {CacheKey}", key);
+                    return memoryCachedValue;
+                }
             }
 
-            _logger.LogDebug("application-cache-get-start CacheKey={CacheKey}", key);
-
-            try
+            // Try L2 (distributed) cache
+            byte[]? cachedBytes = await _distributedCache.GetAsync(key, cancellationToken);
+            if (cachedBytes == null || cachedBytes.Length == 0)
             {
-                // Try L1 (memory) cache first
-                if (_options.EnableL1Cache && _memoryCache != null)
-                {
-                    if (_memoryCache.TryGetValue(key, out T? memoryCachedValue))
-                    {
-                        _logger.LogDebug("Cache hit (L1) for key: {CacheKey}", key);
-                        return memoryCachedValue;
-                    }
-                }
-
-                // Try L2 (distributed) cache
-                var cachedBytes = await _distributedCache.GetAsync(key, cancellationToken);
-                if (cachedBytes == null || cachedBytes.Length == 0)
-                {
-                    _logger.LogDebug("Cache miss for key: {CacheKey}", key);
-                    return default;
-                }
-
-                T? value = JsonSerializer.Deserialize<T>(cachedBytes, JsonOptions);
-                _logger.LogDebug("Cache hit (L2) for key: {CacheKey}", key);
-
-                // Populate L1 cache if enabled
-                if (_options.EnableL1Cache && _memoryCache != null && value != null)
-                {
-                    _memoryCache.Set(key, value, _options.L1CacheDuration);
-                }
-
-                return value;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error retrieving cached value for key: {CacheKey}", key);
+                _logger.LogDebug("Cache miss for key: {CacheKey}", key);
                 return default;
             }
-            finally
+
+            T? value = JsonSerializer.Deserialize<T>(cachedBytes, JsonOptions);
+            _logger.LogDebug("Cache hit (L2) for key: {CacheKey}", key);
+
+            // Populate L1 cache if enabled
+            if (_options.EnableL1Cache && _memoryCache != null && value != null)
             {
-                _logger.LogDebug("application-cache-get-end CacheKey={CacheKey}", key);
+                _memoryCache.Set(key, value, _options.L1CacheDuration);
             }
+
+            return value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error retrieving cached value for key: {CacheKey}", key);
+            return default;
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-get-end CacheKey={CacheKey}", key);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task SetAsync<T>(string key, T value, QueryCacheEntryOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
         }
 
-        /// <inheritdoc/>
-        public async Task SetAsync<T>(string key, T value, QueryCacheEntryOptions? options = null, CancellationToken cancellationToken = default)
+        _logger.LogDebug("application-cache-set-start CacheKey={CacheKey}", key);
+
+        try
         {
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
-            }
-
-            _logger.LogDebug("application-cache-set-start CacheKey={CacheKey}", key);
-
-            try
-            {
-                options ??= new QueryCacheEntryOptions();
-
-                var distributedCacheOptions = new DistributedCacheEntryOptions();
-                if (options.UseSlidingExpiration)
-                {
-                    distributedCacheOptions.SlidingExpiration = options.Duration;
-                }
-                else
-                {
-                    distributedCacheOptions.AbsoluteExpirationRelativeToNow = options.Duration;
-                }
-
-                var serializedValue = JsonSerializer.SerializeToUtf8Bytes(value, JsonOptions);
-                await _distributedCache.SetAsync(key, serializedValue, distributedCacheOptions, cancellationToken);
-
-                // Set in L1 cache if enabled
-                if (_options.EnableL1Cache && _memoryCache != null)
-                {
-                    var memoryCacheOptions = new MemoryCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromTicks(
-                            Math.Min(options.Duration.Ticks, _options.L1CacheDuration.Ticks))
-                    };
-                    _memoryCache.Set(key, value, memoryCacheOptions);
-                }
-
-                // Track key in region if specified
-                if (!string.IsNullOrEmpty(options.Region))
-                {
-                    TrackKeyInRegion(key, options.Region);
-                }
-
-                _logger.LogDebug("Cache set for key: {CacheKey}, Duration: {Duration}", key, options.Duration);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error setting cached value for key: {CacheKey}", key);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-set-end CacheKey={CacheKey}", key);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, QueryCacheEntryOptions? options = null, CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
-            }
-
-            if (factory == null)
-            {
-                throw new ArgumentNullException(nameof(factory));
-            }
-
             options ??= new QueryCacheEntryOptions();
 
-            // Try to get from cache first
-            T? cachedValue = await GetAsync<T>(key, cancellationToken);
-            if (cachedValue != null)
+            var distributedCacheOptions = new DistributedCacheEntryOptions();
+            if (options.UseSlidingExpiration)
             {
-                return cachedValue;
-            }
-
-            // Cache stampede prevention
-            if (options.EnableStampedePrevention)
-            {
-                SemaphoreSlim semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
-
-                try
-                {
-                    var acquired = await semaphore.WaitAsync(options.StampedePreventionTimeout, cancellationToken);
-                    if (!acquired)
-                    {
-                        _logger.LogWarning("Timeout waiting for cache lock on key: {CacheKey}", key);
-                        // Fall through to execute factory anyway
-                    }
-
-                    // Double-check after acquiring lock
-                    cachedValue = await GetAsync<T>(key, cancellationToken);
-                    if (cachedValue != null)
-                    {
-                        return cachedValue;
-                    }
-
-                    // Execute factory and cache result
-                    T? value = await factory();
-                    if (value != null)
-                    {
-                        await SetAsync(key, value, options, cancellationToken);
-                    }
-                    return value;
-                }
-                finally
-                {
-                    semaphore.Release();
-
-                    // Clean up lock if no longer needed
-                    if (semaphore.CurrentCount == 1)
-                    {
-                        _locks.TryRemove(key, out _);
-                    }
-                }
+                distributedCacheOptions.SlidingExpiration = options.Duration;
             }
             else
             {
-                // No stampede prevention - execute factory directly
+                distributedCacheOptions.AbsoluteExpirationRelativeToNow = options.Duration;
+            }
+
+            byte[] serializedValue = JsonSerializer.SerializeToUtf8Bytes(value, JsonOptions);
+            await _distributedCache.SetAsync(key, serializedValue, distributedCacheOptions, cancellationToken);
+
+            // Set in L1 cache if enabled
+            if (_options.EnableL1Cache && _memoryCache != null)
+            {
+                var memoryCacheOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromTicks(
+                        Math.Min(options.Duration.Ticks, _options.L1CacheDuration.Ticks))
+                };
+                _memoryCache.Set(key, value, memoryCacheOptions);
+            }
+
+            // Track key in region if specified
+            if (!string.IsNullOrEmpty(options.Region))
+            {
+                TrackKeyInRegion(key, options.Region);
+            }
+
+            _logger.LogDebug("Cache set for key: {CacheKey}, Duration: {Duration}", key, options.Duration);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error setting cached value for key: {CacheKey}", key);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-set-end CacheKey={CacheKey}", key);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, QueryCacheEntryOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Cache key cannot be null or empty.", nameof(key));
+        }
+
+        if (factory == null)
+        {
+            throw new ArgumentNullException(nameof(factory));
+        }
+
+        options ??= new QueryCacheEntryOptions();
+
+        // Try to get from cache first
+        T? cachedValue = await GetAsync<T>(key, cancellationToken);
+        if (cachedValue != null)
+        {
+            return cachedValue;
+        }
+
+        // Cache stampede prevention
+        if (options.EnableStampedePrevention)
+        {
+            SemaphoreSlim semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+
+            try
+            {
+                bool acquired = await semaphore.WaitAsync(options.StampedePreventionTimeout, cancellationToken);
+                if (!acquired)
+                {
+                    _logger.LogWarning("Timeout waiting for cache lock on key: {CacheKey}", key);
+                    // Fall through to execute factory anyway
+                }
+
+                // Double-check after acquiring lock
+                cachedValue = await GetAsync<T>(key, cancellationToken);
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+
+                // Execute factory and cache result
                 T? value = await factory();
                 if (value != null)
                 {
@@ -241,205 +209,225 @@ namespace Mvp24Hours.Application.Logic.Cache
                 }
                 return value;
             }
-        }
-
-        /// <inheritdoc/>
-        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-remove-start CacheKey={CacheKey}", key);
-
-            try
-            {
-                await _distributedCache.RemoveAsync(key, cancellationToken);
-
-                // Remove from L1 cache if enabled
-                if (_options.EnableL1Cache && _memoryCache != null)
-                {
-                    _memoryCache.Remove(key);
-                }
-
-                _logger.LogDebug("Cache removed for key: {CacheKey}", key);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error removing cached value for key: {CacheKey}", key);
-            }
             finally
             {
-                _logger.LogDebug("application-cache-remove-end CacheKey={CacheKey}", key);
+                semaphore.Release();
+
+                // Clean up lock if no longer needed
+                if (semaphore.CurrentCount == 1)
+                {
+                    _locks.TryRemove(key, out _);
+                }
             }
         }
-
-        /// <inheritdoc/>
-        public async Task InvalidateRegionAsync(string region, CancellationToken cancellationToken = default)
+        else
         {
-            if (string.IsNullOrWhiteSpace(region))
+            // No stampede prevention - execute factory directly
+            T? value = await factory();
+            if (value != null)
             {
-                return;
+                await SetAsync(key, value, options, cancellationToken);
+            }
+            return value;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return;
+        }
+
+        _logger.LogDebug("application-cache-remove-start CacheKey={CacheKey}", key);
+
+        try
+        {
+            await _distributedCache.RemoveAsync(key, cancellationToken);
+
+            // Remove from L1 cache if enabled
+            if (_options.EnableL1Cache && _memoryCache != null)
+            {
+                _memoryCache.Remove(key);
             }
 
-            _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
+            _logger.LogDebug("Cache removed for key: {CacheKey}", key);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error removing cached value for key: {CacheKey}", key);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-remove-end CacheKey={CacheKey}", key);
+        }
+    }
 
-            try
+    /// <inheritdoc/>
+    public async Task InvalidateRegionAsync(string region, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(region))
+        {
+            return;
+        }
+
+        _logger.LogDebug("application-cache-invalidateregion-start Region={Region}", region);
+
+        try
+        {
+            if (_regionKeys.TryGetValue(region, out ConcurrentBag<string>? keys))
             {
-                if (_regionKeys.TryGetValue(region, out ConcurrentBag<string>? keys))
+                foreach (string key in keys)
                 {
-                    foreach (var key in keys)
+                    await RemoveAsync(key, cancellationToken);
+                }
+                _regionKeys.TryRemove(region, out _);
+            }
+
+            _logger.LogDebug("Cache region invalidated: {Region}", region);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache region: {Region}", region);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task InvalidateByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return;
+        }
+
+        _logger.LogDebug("application-cache-invalidatepattern-start Pattern={Pattern}", pattern);
+
+        try
+        {
+            // For in-memory tracking, we can match patterns against tracked keys
+            foreach (KeyValuePair<string, ConcurrentBag<string>> regionKvp in _regionKeys)
+            {
+                foreach (string key in regionKvp.Value)
+                {
+                    if (MatchesPattern(key, pattern))
                     {
                         await RemoveAsync(key, cancellationToken);
                     }
-                    _regionKeys.TryRemove(region, out _);
                 }
+            }
 
-                _logger.LogDebug("Cache region invalidated: {Region}", region);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache region: {Region}", region);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidateregion-end Region={Region}", region);
-            }
+            _logger.LogDebug("Cache invalidated by pattern: {Pattern}", pattern);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache by pattern: {Pattern}", pattern);
+        }
+        finally
+        {
+            _logger.LogDebug("application-cache-invalidatepattern-end Pattern={Pattern}", pattern);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return false;
         }
 
-        /// <inheritdoc/>
-        public async Task InvalidateByPatternAsync(string pattern, CancellationToken cancellationToken = default)
+        try
         {
-            if (string.IsNullOrWhiteSpace(pattern))
+            // Check L1 first
+            if (_options.EnableL1Cache && _memoryCache != null)
             {
-                return;
-            }
-
-            _logger.LogDebug("application-cache-invalidatepattern-start Pattern={Pattern}", pattern);
-
-            try
-            {
-                // For in-memory tracking, we can match patterns against tracked keys
-                foreach (KeyValuePair<string, ConcurrentBag<string>> regionKvp in _regionKeys)
+                if (_memoryCache.TryGetValue(key, out _))
                 {
-                    foreach (var key in regionKvp.Value)
-                    {
-                        if (MatchesPattern(key, pattern))
-                        {
-                            await RemoveAsync(key, cancellationToken);
-                        }
-                    }
+                    return true;
                 }
+            }
 
-                _logger.LogDebug("Cache invalidated by pattern: {Pattern}", pattern);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error invalidating cache by pattern: {Pattern}", pattern);
-            }
-            finally
-            {
-                _logger.LogDebug("application-cache-invalidatepattern-end Pattern={Pattern}", pattern);
-            }
+            // Check L2
+            byte[]? value = await _distributedCache.GetAsync(key, cancellationToken);
+            return value != null && value.Length > 0;
         }
-
-        /// <inheritdoc/>
-        public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
+        catch (Exception ex)
         {
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                return false;
-            }
-
-            try
-            {
-                // Check L1 first
-                if (_options.EnableL1Cache && _memoryCache != null)
-                {
-                    if (_memoryCache.TryGetValue(key, out _))
-                    {
-                        return true;
-                    }
-                }
-
-                // Check L2
-                var value = await _distributedCache.GetAsync(key, cancellationToken);
-                return value != null && value.Length > 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error checking cache existence for key: {CacheKey}", key);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Tracks a cache key in a region for later invalidation.
-        /// </summary>
-        private void TrackKeyInRegion(string key, string region)
-        {
-            ConcurrentBag<string> keys = _regionKeys.GetOrAdd(region, _ => []);
-            keys.Add(key);
-        }
-
-        /// <summary>
-        /// Checks if a key matches a wildcard pattern.
-        /// </summary>
-        private static bool MatchesPattern(string key, string pattern)
-        {
-            if (string.IsNullOrEmpty(pattern))
-            {
-                return false;
-            }
-
-            // Simple wildcard matching (* at end)
-            if (pattern.EndsWith('*'))
-            {
-                var prefix = pattern[..^1];
-                return key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-            }
-
-            // Simple wildcard matching (* at start)
-            if (pattern.StartsWith('*'))
-            {
-                var suffix = pattern[1..];
-                return key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
-            }
-
-            // Exact match
-            return key.Equals(pattern, StringComparison.OrdinalIgnoreCase);
+            _logger.LogWarning(ex, "Error checking cache existence for key: {CacheKey}", key);
+            return false;
         }
     }
 
     /// <summary>
-    /// Configuration options for the query cache provider.
+    /// Tracks a cache key in a region for later invalidation.
     /// </summary>
-    public class QueryCacheOptions
+    private void TrackKeyInRegion(string key, string region)
     {
-        /// <summary>
-        /// Gets or sets whether to enable L1 (memory) cache as a fast local cache.
-        /// </summary>
-        /// <value>True to enable L1 cache; default is true.</value>
-        public bool EnableL1Cache { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the duration for L1 cache entries.
-        /// </summary>
-        /// <value>The L1 cache duration. Default is 1 minute.</value>
-        public TimeSpan L1CacheDuration { get; set; } = TimeSpan.FromMinutes(1);
-
-        /// <summary>
-        /// Gets or sets the default cache duration when not specified.
-        /// </summary>
-        /// <value>The default cache duration. Default is 5 minutes.</value>
-        public TimeSpan DefaultDuration { get; set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
-        /// Gets or sets the key prefix for all cache entries.
-        /// </summary>
-        /// <value>The key prefix. Default is "query:".</value>
-        public string KeyPrefix { get; set; } = "query:";
+        ConcurrentBag<string> keys = _regionKeys.GetOrAdd(region, _ => []);
+        keys.Add(key);
     }
+
+    /// <summary>
+    /// Checks if a key matches a wildcard pattern.
+    /// </summary>
+    private static bool MatchesPattern(string key, string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern))
+        {
+            return false;
+        }
+
+        // Simple wildcard matching (* at end)
+        if (pattern.EndsWith('*'))
+        {
+            string prefix = pattern[..^1];
+            return key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Simple wildcard matching (* at start)
+        if (pattern.StartsWith('*'))
+        {
+            string suffix = pattern[1..];
+            return key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Exact match
+        return key.Equals(pattern, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+/// <summary>
+/// Configuration options for the query cache provider.
+/// </summary>
+public class QueryCacheOptions
+{
+    /// <summary>
+    /// Gets or sets whether to enable L1 (memory) cache as a fast local cache.
+    /// </summary>
+    /// <value>True to enable L1 cache; default is true.</value>
+    public bool EnableL1Cache { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the duration for L1 cache entries.
+    /// </summary>
+    /// <value>The L1 cache duration. Default is 1 minute.</value>
+    public TimeSpan L1CacheDuration { get; set; } = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// Gets or sets the default cache duration when not specified.
+    /// </summary>
+    /// <value>The default cache duration. Default is 5 minutes.</value>
+    public TimeSpan DefaultDuration { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Gets or sets the key prefix for all cache entries.
+    /// </summary>
+    /// <value>The key prefix. Default is "query:".</value>
+    public string KeyPrefix { get; set; } = "query:";
 }
 
