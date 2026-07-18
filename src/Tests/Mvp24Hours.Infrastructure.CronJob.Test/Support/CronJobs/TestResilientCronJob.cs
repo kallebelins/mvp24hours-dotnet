@@ -27,7 +27,7 @@ public class TestResilientCronJob(
     Func<CancellationToken, Task>? workAction = null) : ResilientCronJobService<TestResilientCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
     private readonly Func<CancellationToken, Task>? _workAction = workAction;
-    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.
@@ -72,7 +72,7 @@ public class FailingCronJob(
     int failUntilAttempt = int.MaxValue) : ResilientCronJobService<FailingCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
     private readonly int _failUntilAttempt = failUntilAttempt;
-    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.
@@ -109,7 +109,7 @@ public class SlowCronJob(
     TimeSpan? executionDuration = null) : ResilientCronJobService<SlowCronJob>(config, hostApplication, serviceProvider, executionLock, circuitBreaker, logger, timeProvider)
 {
     private readonly TimeSpan _executionDuration = executionDuration ?? TimeSpan.FromSeconds(5);
-    private readonly ExecutionTracker? _tracker = serviceProvider.GetRequiredService<ExecutionTracker>();
+    private readonly ExecutionTracker? _tracker = serviceProvider.GetService<ExecutionTracker>();
 
     /// <summary>
     /// Gets the number of times DoWork was invoked.

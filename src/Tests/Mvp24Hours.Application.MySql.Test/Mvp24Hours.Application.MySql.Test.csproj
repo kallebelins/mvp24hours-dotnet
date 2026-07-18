@@ -4,8 +4,9 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;InMemory</DefineConstants>
+	<!-- InMemory is the default for local/CI; remove the symbol to hit a real MySQL via appsettings. -->
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);InMemory</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

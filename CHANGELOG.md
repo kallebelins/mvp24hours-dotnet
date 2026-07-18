@@ -8,9 +8,10 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [10.0.0] - 2026-07 🚀 Major Release
 
 > **Migração para .NET 10** — Esta versão alinha toda a solução ao .NET 10 / C# 14, habilita
-> Nullable Reference Types em todos os projetos e remove/substitui APIs obsoletas. Consumidores
-> dos pacotes NuGet devem revisar as mudanças de **assinatura de nulidade** e os membros que
-> passaram a exigir `required` antes de atualizar.
+> Nullable Reference Types em todos os projetos e remove/substitui APIs obsoletas. O gate de
+> qualidade (`TreatWarningsAsErrors`) está estrito (0 avisos em Release; só `NU1510` residual
+> intencional). Consumidores dos pacotes NuGet devem revisar as mudanças de **assinatura de
+> nulidade** e os membros que passaram a exigir `required` antes de atualizar.
 
 ### Mudado
 
@@ -59,25 +60,39 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ### Corrigido
 
-- Redução de avisos de build de **~4235 → 969** em Release (−77%), com o residual explicitamente
-  documentado e aceito para a v2.
+- **Avisos de build zerados em Release:** **~4235 → 0** (−100%). A primeira passada da
+  modernização reduziu a ~969 e aceitou o residual (~948) para uma rodada de higiene; essa dívida
+  foi eliminada (nullable CS86xx em produção e testes, LOGGEN002, CS0618/`MvpExecutionStrategy`,
+  CS0108, xUnit1031 e demais códigos do gate). Baseline: `tasks/warnings-baseline-v2.json`
+  (`total = 0`).
 - Diversos avisos de qualidade eliminados: CS0168 (variável de exceção não usada), CS0219
   (variável nunca usada), CS1718 (comparação consigo mesma), CS0108 (ocultação de membro herdado),
   CA2022 (leitura incompleta de `Stream`), xUnit1031 (bloqueio síncrono em teste assíncrono).
-- Removidos `PackageReference` redundantes (NU1510) já providos via `FrameworkReference`.
+- Removidos `PackageReference` redundantes (NU1510) já providos via `FrameworkReference` (o pin
+  intencional de `System.Security.Cryptography.Xml` em Infrastructure mantém `NoWarn=NU1510` no
+  `PackageReference` para consumidores sem AspNetCore.App).
+- Regras de estilo do `.editorconfig` elevadas de `suggestion` → `warning` (`EnforceCodeStyleInBuild`);
+  `dotnet format` completo aplicado na solução (file-scoped namespaces, primary constructors,
+  collection expressions, usings, etc.).
 
 ### Testes
 
-- Suíte completa executada em .NET 10: **2298 aprovados · 0 falhas · 4 ignorados** (unitários +
-  integração via Testcontainers para MongoDB, SQL Server, Redis e RabbitMQ).
+- Suíte completa revalidada em .NET 10 (Release + Docker): **2294 aprovados · 0 falhas · 4 ignorados**
+  (unitários + integração via Testcontainers para MongoDB, SQL Server, Redis e RabbitMQ).
+  Evidência: `tasks/test-final-report-net10-warnings.md`.
 - Testes categorizados com `[Trait("Category", "Unit")]` / `[Trait("Category", "Integration")]`
   para execução seletiva no CI e localmente sem Docker.
+- `InMemory` disponível em qualquer configuração nos testes EF (MySql/PostgreSql/SQLServer), alinhando
+  Release/CI ao comportamento local em Debug.
 
 ### CI/CD
 
 - Workflows `ci.yml` e `codeql-analysis.yml` atualizados para o SDK **.NET 10** (`10.0.x`).
-- Gate `TreatWarningsAsErrors=true` reativado no job `code-quality`, escopado via
-  `WarningsNotAsErrors` para o residual aceito (redução progressiva planejada para a v2).
+- Gate `TreatWarningsAsErrors=true` **estrito** no job `code-quality`: `MvpResidualWarnings` contém
+  apenas `NU1510` (pin de segurança). `dotnet build … /p:TreatWarningsAsErrors=true` →
+  **0 erro(s) / 0 aviso(s)**.
+- Step de formatação: `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006
+  --verify-no-changes` (escopo completo, sem `--severity error`).
 
 ---
 

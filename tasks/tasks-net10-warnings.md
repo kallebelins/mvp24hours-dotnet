@@ -1,9 +1,10 @@
 # Tasks — Zeragem dos warnings residuais pós-.NET 10 (v2)
 
 > Gerado em 17/07/2026. Continuação de [`tasks-net10-v1.md`](./tasks-net10-v1.md) (Fases 1–10 concluídas).
-> **Ponto de partida:** a solução compila com **0 erro(s)**. A Fase 10 (v1) aceitou um **residual de ~948 avisos** e neutralizou o gate `TreatWarningsAsErrors` via `MvpResidualWarnings` em [`src/Directory.Build.props`](../src/Directory.Build.props). **Este plano zera esse residual e reativa o gate estrito.**
+> **Status final (2026-07-18):** plano **concluído** (Fases 4–7). Release **0 erro(s) / 0 aviso(s)** com gate estrito; `MvpResidualWarnings` = só `NU1510`. Dívida 10.1/10.2/10.3 da v1 encerrada (tarefa 7.4).
+> **Ponto de partida:** a solução compilava com **0 erro(s)**. A Fase 10 (v1) aceitou um **residual de ~948 avisos** e neutralizou o gate `TreatWarningsAsErrors` via `MvpResidualWarnings` em [`src/Directory.Build.props`](../src/Directory.Build.props). **Este plano zerou esse residual e reativou o gate estrito.**
 >
-> **Objetivo:** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**, com `MvpResidualWarnings` **vazio** (exceto `NU1510` intencional, ver §5.3).
+> **Objetivo (atingido):** `dotnet build src/Mvp24Hours.sln -c Release --no-incremental /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**, com `MvpResidualWarnings` **somente `NU1510`** (pin de segurança).
 
 ---
 
@@ -371,15 +372,23 @@ Contagem de linhas de aviso do build `Release` completo (indicativa; o resumo de
   - **CI:** step `🎨 Check code formatting` passou a `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes` (sem `--severity error`). Comentário do gate de análise alinhado à 7.1.
   - `dotnet format ... --verify-no-changes` → **exit 0** (0/1723). `dotnet build ... /p:TreatWarningsAsErrors=true` → **0 erro(s) / 0 aviso(s)**.
 
-[ ] 7.3 - Suíte completa de testes + relatório final
+[x] 7.3 - Suíte completa de testes + relatório final
 - Reexecutar a suíte (unit + integração com Docker) confirmando **0 falhas** e nenhuma regressão introduzida pelas mudanças de nulidade/API. Consolidar TRX + cobertura como na tarefa 9.5 (v1).
 - `src/Mvp24Hours.sln`
 - https://learn.microsoft.com/dotnet/core/testing/unit-testing-code-coverage
+- **Concluído 2026-07-18:** `dotnet test src/Mvp24Hours.sln -c Release --logger trx --collect:"XPlat Code Coverage"` com Docker Desktop **4.79.0** / Engine **29.5.3**. **16** projetos · **2294** aprovados · **0** falhas · **4** ignorados (BulkOperations InMemory) · total **2298** · exit **0**. Evidência: [`test-final-report-net10-warnings.md`](./test-final-report-net10-warnings.md) (+ [`.json`](./test-final-report-net10-warnings.json)); TRX/cobertura em `tasks/test-results-7.3/` (gitignored).
+  - **Fix (Release/CI):** `InMemory` só existia em `Debug|AnyCPU` nos csproj MySql/PostgreSql/SQLServer.Test — Release tentava MySQL/PG/SQL reais. `DefineConstants` passou a incluir `InMemory` em qualquer configuração.
+  - **Fix (CronJob):** `GetRequiredService<ExecutionTracker>` → `GetService` em `TestResilientCronJob`/`FailingCronJob`/`SlowCronJob` (campo já anulável; 2 testes não registravam o tracker → **91/91**).
+  - Cobertura: 28× `coverage.cobertura.xml`; agregado ~6046/91933 linhas (~6,6% — dumps por assembly com sobreposição; evidência de coleta, não KPI único).
 
-[ ] 7.4 - Atualizar `CHANGELOG.md` e encerrar a dívida da v1
+[x] 7.4 - Atualizar `CHANGELOG.md` e encerrar a dívida da v1
 - Registrar no `CHANGELOG.md` a zeragem dos ~948 avisos residuais e a reativação do gate estrito, fechando as pendências "v2" apontadas nas tarefas 10.1/10.2/10.3 da v1.
 - `CHANGELOG.md`, [`tasks-net10-v1.md`](./tasks-net10-v1.md)
 - https://keepachangelog.com/pt-BR/1.1.0/
+- **Concluído 2026-07-18:**
+  - **[`CHANGELOG.md`](../CHANGELOG.md)** entrada `[10.0.0]`: **Corrigido** atualizado para **~4235 → 0** avisos (residual ~948 eliminado); estilo/format completo; **Testes** com suíte 7.3 (2294/0/4); **CI/CD** com gate estrito (`MvpResidualWarnings` = só `NU1510`) e `dotnet format` sem `--severity error`.
+  - **[`tasks-net10-v1.md`](./tasks-net10-v1.md):** cabeçalho com status final; notas **Fechado/Atualizado na v2** em 10.1 (zero warnings), 10.2 (format completo), 10.3 (gate estrito) e 10.4 (changelog).
+- **Com a 7.4, a Fase 7 e o plano v2 (`tasks-net10-warnings.md`) estão concluídos.**
 
 ---
 
