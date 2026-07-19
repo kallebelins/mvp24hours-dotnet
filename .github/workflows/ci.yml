@@ -38,7 +38,18 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: 🧪 Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+      run: dotnet test src/Mvp24Hours.sln --configuration Release --no-build --verbosity normal --logger trx --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results
+
+    - name: 📊 Coverage regression gate
+      if: matrix.os == 'ubuntu-latest'
+      shell: pwsh
+      env:
+        COVERAGE_LINE_MIN: '37'
+        COVERAGE_LINE_TARGET: '95'
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool --ignore-failed-sources
+        reportgenerator -reports:"test-results/**/coverage.cobertura.xml" -targetdir:"./test-results/coverage-report" -reporttypes:"JsonSummary" -assemblyfilters:"+Mvp24Hours*"
+        ./scripts/check-coverage-gate.ps1 -SummaryJsonPath ./test-results/coverage-report/Summary.json -MinimumLineCoverage $env:COVERAGE_LINE_MIN -TargetLineCoverage $env:COVERAGE_LINE_TARGET
 
     - name: 📊 Upload test results
       uses: actions/upload-artifact@v4

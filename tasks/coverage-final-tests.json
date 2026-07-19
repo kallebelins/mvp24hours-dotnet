@@ -1,0 +1,182 @@
+﻿{
+    "generatedAt":  "2026-07-19T04:07:04.9823613Z",
+    "source":  {
+                   "command":  "dotnet test src/Mvp24Hours.sln --settings coverlet.runsettings --collect:\"XPlat Code Coverage\" --results-directory ./test-results",
+                   "reportGenerator":  "reportgenerator -reports:\"test-results/**/coverage.cobertura.xml\" -targetdir:\"./test-results/coverage-report-final\" -reporttypes:\"Html;JsonSummary;Cobertura\" -assemblyfilters:\"+Mvp24Hours*\"",
+                   "htmlReport":  "tasks/coverage-final-report.html",
+                   "jsonSummary":  "test-results/coverage-report-final/Summary.json",
+                   "mergedCobertura":  "test-results/coverage-report-final/Cobertura.xml",
+                   "coverletFiles":  18,
+                   "runSettings":  "coverlet.runsettings",
+                   "testDirectoryBuild":  "src/Tests/Directory.Build.props"
+               },
+    "testRun":  {
+                    "passed":  4492,
+                    "failed":  0,
+                    "skipped":  6,
+                    "total":  4498,
+                    "note":  "18 test projects; 6 skipped BulkOperations InMemory tests (EFCore + SQLServer)."
+                },
+    "summary":  {
+                    "lineCoverage":  37.7,
+                    "coveredLines":  39748,
+                    "coverableLines":  105224,
+                    "branchCoverage":  29.2,
+                    "coveredBranches":  10012,
+                    "totalBranches":  34226,
+                    "methodCoverage":  42.7,
+                    "coveredMethods":  4614,
+                    "totalMethods":  10790,
+                    "assembliesWithCoverageData":  12,
+                    "productionProjectsTotal":  12,
+                    "productionProjectsWithoutCoverageData":  0,
+                    "targetLineCoverage":  95,
+                    "targetMet":  false
+                },
+    "assemblies":  [
+                       {
+                           "methodCoverage":  41.8,
+                           "coverableLines":  9147,
+                           "classCount":  105,
+                           "lineCoverage":  38.1,
+                           "branchCoverage":  27.6,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Application",
+                           "coveredLines":  3489,
+                           "totalMethods":  1000,
+                           "coveredMethods":  418
+                       },
+                       {
+                           "methodCoverage":  42,
+                           "coverableLines":  11178,
+                           "classCount":  247,
+                           "lineCoverage":  34.7,
+                           "branchCoverage":  27.1,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Core",
+                           "coveredLines":  3885,
+                           "totalMethods":  1578,
+                           "coveredMethods":  663
+                       },
+                       {
+                           "methodCoverage":  58.8,
+                           "coverableLines":  15252,
+                           "classCount":  231,
+                           "lineCoverage":  57.5,
+                           "branchCoverage":  47.1,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure",
+                           "coveredLines":  8777,
+                           "totalMethods":  1512,
+                           "coveredMethods":  890
+                       },
+                       {
+                           "methodCoverage":  62.3,
+                           "coverableLines":  4569,
+                           "classCount":  57,
+                           "lineCoverage":  45.9,
+                           "branchCoverage":  35.3,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Caching",
+                           "coveredLines":  2100,
+                           "totalMethods":  337,
+                           "coveredMethods":  210
+                       },
+                       {
+                           "methodCoverage":  50,
+                           "coverableLines":  22,
+                           "classCount":  1,
+                           "lineCoverage":  40.9,
+                           "branchCoverage":  25,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Caching.Redis",
+                           "coveredLines":  9,
+                           "totalMethods":  2,
+                           "coveredMethods":  1
+                       },
+                       {
+                           "methodCoverage":  70.9,
+                           "coverableLines":  6235,
+                           "classCount":  170,
+                           "lineCoverage":  63.1,
+                           "branchCoverage":  44.2,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Cqrs",
+                           "coveredLines":  3940,
+                           "totalMethods":  732,
+                           "coveredMethods":  519
+                       },
+                       {
+                           "methodCoverage":  74.7,
+                           "coverableLines":  2918,
+                           "classCount":  36,
+                           "lineCoverage":  71.2,
+                           "branchCoverage":  56.9,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.CronJob",
+                           "coveredLines":  2078,
+                           "totalMethods":  277,
+                           "coveredMethods":  207
+                       },
+                       {
+                           "methodCoverage":  45.4,
+                           "coverableLines":  9298,
+                           "classCount":  107,
+                           "lineCoverage":  37.7,
+                           "branchCoverage":  26.1,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Data.EFCore",
+                           "coveredLines":  3508,
+                           "totalMethods":  872,
+                           "coveredMethods":  396
+                       },
+                       {
+                           "methodCoverage":  30.3,
+                           "coverableLines":  12561,
+                           "classCount":  141,
+                           "lineCoverage":  25,
+                           "branchCoverage":  16.5,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Data.MongoDb",
+                           "coveredLines":  3147,
+                           "totalMethods":  1246,
+                           "coveredMethods":  378
+                       },
+                       {
+                           "methodCoverage":  34,
+                           "coverableLines":  9266,
+                           "classCount":  150,
+                           "lineCoverage":  33.9,
+                           "branchCoverage":  27.2,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.Pipe",
+                           "coveredLines":  3144,
+                           "totalMethods":  888,
+                           "coveredMethods":  302
+                       },
+                       {
+                           "methodCoverage":  24,
+                           "coverableLines":  11787,
+                           "classCount":  155,
+                           "lineCoverage":  20.7,
+                           "branchCoverage":  16.7,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.Infrastructure.RabbitMQ",
+                           "coveredLines":  2447,
+                           "totalMethods":  1364,
+                           "coveredMethods":  328
+                       },
+                       {
+                           "methodCoverage":  40.9,
+                           "coverableLines":  10904,
+                           "classCount":  132,
+                           "lineCoverage":  29.5,
+                           "branchCoverage":  23.7,
+                           "hasCoverageData":  true,
+                           "name":  "Mvp24Hours.WebAPI",
+                           "coveredLines":  3219,
+                           "totalMethods":  730,
+                           "coveredMethods":  299
+                       }
+                   ]
+}

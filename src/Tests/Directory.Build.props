@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Coverlet instrumentation on .NET 10 SDK fails for project-reference assemblies
+    when framework-provided dependencies are package-pruned from test output
+    (CecilAssemblyResolutionException — coverlet #1718 / SDK 10.0.201+).
+    TargetFramework/LangVersion/Nullable/ImplicitUsings duplicated here because
+    nested Directory.Build.props can prevent inheritance from src/Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
+  </PropertyGroup>
+</Project>

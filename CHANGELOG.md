@@ -82,6 +82,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Suíte completa revalidada em .NET 10 (Release + Docker): **2294 aprovados · 0 falhas · 4 ignorados**
   (unitários + integração via Testcontainers para MongoDB, SQL Server, Redis e RabbitMQ).
   Evidência: `tasks/test-final-report-net10-warnings.md`.
+- **Expansão de cobertura (Fases 2–13):** **4.492 aprovados · 0 falhas · 6 ignorados** em 18 projetos de teste
+  (+~2.198 testes vs baseline). Cobertura consolidada Coverlet: **37,7%** linha (**+9,4 pp** vs baseline 28,3%);
+  **12/12** assemblies de produção instrumentados (baseline: 3/12). Meta **>95%** documentada como pendente —
+  evidência: `tasks/coverage-final-tests.json`, `tasks/coverage-delta-tests.md`, `tasks/coverage-final-report.html`.
+- Gate anti-regressão de cobertura no CI (`scripts/check-coverage-gate.ps1`): piso **37%** linha (ubuntu-latest);
+  alvo de produto permanece **95%**.
+- Instrumentação Coverlet corrigida para .NET 10 SDK (`src/Tests/Directory.Build.props`, `coverlet.runsettings`).
 - Testes categorizados com `[Trait("Category", "Unit")]` / `[Trait("Category", "Integration")]`
   para execução seletiva no CI e localmente sem Docker.
 - `InMemory` disponível em qualquer configuração nos testes EF (MySql/PostgreSql/SQLServer), alinhando
@@ -102,6 +109,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   **0 erro(s) / 0 aviso(s)**.
 - Step de formatação: `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006
   --verify-no-changes` (escopo completo, sem `--severity error`).
+- Gate de cobertura (Fase 13): `dotnet test` com `coverlet.runsettings`; `reportgenerator` + `check-coverage-gate.ps1`
+  no job `build-and-test` (ubuntu). Piso **37%** linha; alvo **95%** registrado em `tasks/coverage-delta-tests.md`.
 
 ---
 
