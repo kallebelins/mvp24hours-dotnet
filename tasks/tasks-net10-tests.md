@@ -474,47 +474,49 @@
 
 > **Objetivo:** O projeto Application (~98 arquivos) tem testes parciais. Expandir cobertura para classes de serviço e resiliência.
 
-[ ] 6.1 - Testes para `Logic/Async/*`
-- Criar testes para `QueryServiceBaseAsync`, `CommandServiceBaseAsync`, `RepositoryServiceAsync`, `RepositoryPagingServiceAsync`, `BulkCommandServiceWithDtoBaseAsync`, `BulkCommandServiceWithSeparateDtosBaseAsync`.
+[x] 6.1 - Testes para `Logic/Async/*`
+- Criados testes para `QueryServiceBaseAsync`, `CommandServiceBaseAsync`, `RepositoryServiceAsync`, `RepositoryPagingServiceAsync`, `BulkCommandServiceWithDtoBaseAsync`, `BulkCommandServiceWithSeparateDtosBaseAsync` (mocks Moq + EF InMemory para bulk). **30** testes aprovados.
 - `src/Mvp24Hours.Application/Logic/Async/*.cs` (7 arquivos)
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Async/*Test.cs`
 
-[ ] 6.2 - Testes para `Logic/Cache/*`
-- Criar testes para `CacheableApplicationServiceBaseAsync`, `CacheableQueryServiceBaseAsync`, `QueryCacheProvider`, `QueryCacheKeyGenerator`, `CacheInvalidator`.
+[x] 6.2 - Testes para `Logic/Cache/*`
+- Criados testes para `CacheableApplicationServiceBaseAsync`, `CacheableQueryServiceBaseAsync`, `QueryCacheProvider`, `QueryCacheKeyGenerator`, `CacheInvalidator`. **24** testes aprovados.
 - `src/Mvp24Hours.Application/Logic/Cache/*.cs` (5 arquivos)
 - https://learn.microsoft.com/aspnet/core/performance/caching/
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Cache/*Test.cs`
 
-[ ] 6.3 - Testes para `Logic/Events/*`
-- Criar testes para `ApplicationEventDispatcher`, `EventAwareCommandServiceBaseAsync`, `MediatorApplicationEventAdapter`, `InMemoryApplicationEventOutbox`.
+[x] 6.3 - Testes para `Logic/Events/*`
+- Criados testes para `ApplicationEventDispatcher`, `EventAwareCommandServiceBaseAsync`, `MediatorApplicationEventAdapter`, `InMemoryApplicationEventOutbox`. **24** testes aprovados.
 - `src/Mvp24Hours.Application/Logic/Events/*.cs` (4 arquivos)
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-events-design-implementation
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Events/*Test.cs`
 
-[ ] 6.4 - Testes para `Logic/Validation/*`
-- Criar testes para `ValidationPipeline`, `ValidationService`, `DataAnnotationValidationStep`, `CustomValidationStep`.
+[x] 6.4 - Testes para `Logic/Validation/*`
+- Criados testes para `ValidationPipeline`, `ValidationService`, `DataAnnotationValidationStep`, `CustomValidationStep` (incl. `RuleBasedValidationStep`, `PredicateValidationStep`). **22** testes aprovados.
 - `src/Mvp24Hours.Application/Logic/Validation/*.cs` (4+ arquivos)
 - https://learn.microsoft.com/aspnet/core/mvc/models/validation
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Validation/*Test.cs`
 
-[ ] 6.5 - Testes para `Logic/Observability/*`
-- Criar testes para `ApplicationActivitySource`, `CorrelationIdAccessor`, `InMemoryApplicationAuditStore`, `ApplicationOperationMetrics`.
+[x] 6.5 - Testes para `Logic/Observability/*`
+- Criados testes para `ApplicationActivitySource`, `CorrelationIdAccessor`, `InMemoryApplicationAuditStore`, `ApplicationOperationMetrics`. **19** testes aprovados.
 - `src/Mvp24Hours.Application/Logic/Observability/*.cs` (4 arquivos)
 - https://learn.microsoft.com/dotnet/core/diagnostics/
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Observability/*Test.cs`
 
-[ ] 6.6 - Testes para `Logic/Resilience/*`
-- Criar/expandir testes para `ResultMessage`, `DefaultErrorMessageLocalizer`.
+[x] 6.6 - Testes para `Logic/Resilience/*`
+- Criados/expandidos testes para `ResultMessage`, `DefaultErrorMessageLocalizer` (além de `SafeExecutor`, `ExceptionToResultMapper`, `BusinessResultWithStatus` já existentes). **14** testes novos em `Logic/Resilience/` + **100** testes pré-existentes em `Resilience/`.
 - `src/Mvp24Hours.Application/Logic/Resilience/*.cs` (4 arquivos)
 - https://learn.microsoft.com/dotnet/core/resilience/
 - `src/Tests/Mvp24Hours.Application.Test/Logic/Resilience/*Test.cs`
 
-[ ] 6.7 - Testes para `Specifications/*`
-- Criar/expandir testes para `SpecificationCombinators`.
+[x] 6.7 - Testes para `Specifications/*`
+- Testes existentes para `SpecificationCombinators` mantidos e validados. **40** testes aprovados.
 - `src/Mvp24Hours.Application/Specifications/*.cs` (1 arquivo)
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core
 - `src/Tests/Mvp24Hours.Application.Test/Specifications/*Test.cs`
+
+> **Resultado Fase 6:** **397 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Application.Test`. Infraestrutura: `Support/ApplicationTestHelpers.cs` (entidades/serviços de teste, `BulkTestDbContext`, `InMemoryQueryCacheProvider`, mocks Moq), `GlobalUsings.cs` ampliado, csproj com AutoMapper/EF InMemory/Caching e referência a `Mvp24Hours.Infrastructure.Data.EFCore.Test`.
 
 ---
 
