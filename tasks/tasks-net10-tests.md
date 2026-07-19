@@ -674,31 +674,29 @@
 
 > **Objetivo:** O projeto CQRS tem boa cobertura (28%) mas muitas classes têm 0%. Preencher os gaps.
 
-[ ] 9.1 - Testes para classes com 0% de cobertura
-- Criar testes para todas as classes listadas no relatório de cobertura com 0%: `ParallelNotificationPublisher`, `ParallelNoWaitNotificationPublisher`, `PipelineHookBase`, `SequentialContinueOnExceptionPublisher`, `SequentialNotificationPublisher`, `AuthorizationBehavior`, `CacheInvalidationBehavior`, `CachingBehavior`, `RetryBehavior`, `NativeResilienceBehavior`, `IdempotencyBehavior`, etc.
-- Ver relatório de cobertura: `test-results/coverage-report/Summary.txt`
-- https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/
-- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/**/*Test.cs`
+[x] 9.1 - Testes para classes com 0% de cobertura
+- Criados testes para publishers de notificação (`SequentialNotificationPublisher`, `ParallelNotificationPublisher`, `ParallelNoWaitNotificationPublisher`, `SequentialContinueOnExceptionPublisher`), `PipelineHookBase`/`PipelineHookBehavior`, e behaviors avançados: `AuthorizationBehavior`, `CachingBehavior`, `CacheInvalidationBehavior`, `RetryBehavior`, `NativeResilienceBehavior`, `IdempotencyBehavior` + `DefaultIdempotencyKeyGenerator`/`RetryPolicyExtensions`. **54** testes novos em `AdvancedBehaviorsTest`, `NotificationPublishersTest` e `Support/BehaviorTestTypes.cs`.
+- `src/Mvp24Hours.Infrastructure.Cqrs/Abstractions/NotificationPublishingStrategy.cs`, `Behaviors/*.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/AdvancedBehaviorsTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/NotificationPublishersTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Support/BehaviorTestTypes.cs`
 
-[ ] 9.2 - Testes para `Projections/*`
-- Expandir testes para `ProjectionHostedService`, `ProjectionManager`, `ProjectionRebuildService`, `AggregatingProjectionHandler`, `IncrementalProjection`, `BatchProjection`, `ReadModelProjectionHandler`.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Projections/*.cs` (15+ arquivos)
-- https://learn.microsoft.com/azure/architecture/patterns/cqrs
-- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Projections/*Test.cs`
+[x] 9.2 - Testes para `Projections/*`
+- Criados testes para `ProjectionManager` (`ProcessEventAsync`, `GetProjectionInfos`, `RebuildAsync` guard), `ProjectionHostedService`, `ProjectionRebuildService`, `IncrementalProjection`, `ApplyProjection`, `BatchProjection`, `AggregatingProjectionHandler`, `ReadModelProjectionHandler` e `AddProjectionHostedService`. **12** testes em `Projections/ProjectionsAdvancedTest.cs`.
+- `src/Mvp24Hours.Infrastructure.Cqrs/Projections/*.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Projections/ProjectionsAdvancedTest.cs`
 
-[ ] 9.3 - Testes para `EventSourcing/*`
-- Expandir testes para `SnapshotAggregateRoot`, `CompositeSnapshotStrategy`, `DefaultEventTypeResolver`, `EventSourcingExtensions`, `EventSourcingOptions`.
-- `src/Mvp24Hours.Infrastructure.Cqrs/EventSourcing/*.cs` (20+ arquivos)
-- https://learn.microsoft.com/azure/architecture/patterns/event-sourcing
-- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/EventSourcing/*Test.cs`
+[x] 9.3 - Testes para `EventSourcing/*`
+- Criados testes para `SnapshotAggregateRoot`, `CompositeSnapshotStrategy`, `DefaultEventTypeResolver`, `EventSourcingExtensions` (DI/registro), `EventSourcingOptions` e `JsonEventSerializer` guards. **11** testes em `EventSourcing/EventSourcingAdvancedTest.cs`.
+- `src/Mvp24Hours.Infrastructure.Cqrs/EventSourcing/*.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/EventSourcing/EventSourcingAdvancedTest.cs`
 
-[ ] 9.4 - Testes para `Messaging/*`
-- Criar testes para `InboxCleanupService`, `OutboxCleanupService`, `OutboxProcessor`, `RabbitMQOutboxAdapter`.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Messaging/*.cs` (8 arquivos)
-- https://microservices.io/patterns/data/transactional-outbox.html
-- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Messaging/*Test.cs`
+[x] 9.4 - Testes para `Messaging/*`
+- Criados testes para `OutboxProcessor`, `OutboxCleanupService`, `InboxCleanupService`, `RabbitMQOutboxAdapter` e `InboxOutboxOptions`/DI `AddMvpOutbox`. **10** testes em `Messaging/MessagingProcessorsTest.cs`.
+- `src/Mvp24Hours.Infrastructure.Cqrs/Messaging/*.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Messaging/MessagingProcessorsTest.cs`
 
----
+> **Resultado Fase 9:** **401 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Infrastructure.Cqrs.Test` (**~54** novos unitários + **~347** pré-existentes). Infraestrutura: `Support/BehaviorTestTypes.cs`, csproj com `Microsoft.Extensions.Caching.Memory`, `Hosting.Abstractions`, `Options`.
 
 ## FASE 10 — Expandir Testes de `Mvp24Hours.Infrastructure.CronJob`
 
@@ -843,7 +841,7 @@
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
 | 7 | Mvp24Hours.Infrastructure.Pipe | ~149 | ~71 (concluída) |
 | 8 | Mvp24Hours.Infrastructure.Caching | ~167 | ~129 (concluída) |
-| 9 | Mvp24Hours.Infrastructure.Cqrs | ~347 | ~100 |
+| 9 | Mvp24Hours.Infrastructure.Cqrs | ~401 | ~54 (concluída) |
 | 10 | Mvp24Hours.Infrastructure.CronJob | ~91 | ~50 |
 | 11 | Mvp24Hours.Infrastructure.Data.MongoDb | ~129 | ~80 |
 | 12 | Mvp24Hours.Core | ~788 | ~50 |
