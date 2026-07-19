@@ -702,59 +702,71 @@
 
 > **Objetivo:** O projeto CronJob tem cobertura de 28.9%. Preencher os gaps.
 
-[ ] 10.1 - Testes para classes com 0% de cobertura
-- Criar testes para: `CronJobConfigurationExtensions`, `CronJobGlobalOptions`, `CronJobContext`, `CronJobContextAccessor`, `CronJobController`, `CronJobDependency`, `CronJobDependencyBuilder`, `InMemoryCronJobDependencyTracker`, `CronJobEventDispatcher`, `CronExpressionParser`, `AdvancedCronJobService`, `InMemoryCronJobStateStore`.
-- Ver relatório de cobertura: `test-results/coverage-report/Summary.txt`
+[x] 10.1 - Testes para classes com 0% de cobertura
+- Criados testes para `CronJobConfigurationExtensions`, `CronJobGlobalOptions`, `CronJobContext`, `CronJobContextAccessor`, `CronJobController`, `CronJobDependency`/`CronJobDependencyBuilder`, `InMemoryCronJobDependencyTracker`, `CronJobEventDispatcher`, `AdvancedCronJobService` e `InMemoryCronJobStateStore`. Cobertura: config DI (global/job/resilient/advanced/instances), contexto (properties/timeout), controller (pause/resume/trigger/status), dependências (success/maxAge/reverse map), eventos (lifecycle + handler fault-tolerant) e state store CRUD/pause/stats. **~75** testes novos em `Configuration/`, `Context/`, `Control/`, `Dependencies/`, `Events/`, `State/`, `Services/`.
+- `src/Mvp24Hours.Infrastructure.CronJob/Configuration/*.cs`, `Context/*.cs`, `Control/*.cs`, `Dependencies/*.cs`, `Events/*.cs`, `State/*.cs`, `Services/AdvancedCronJobService.cs`
 - https://learn.microsoft.com/aspnet/core/fundamentals/host/hosted-services
-- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/**/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Configuration/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Context/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Control/CronJobControllerTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Dependencies/CronJobDependencyTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Events/CronJobEventDispatcherTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/State/InMemoryCronJobStateStoreTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Services/AdvancedCronJobServiceTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Support/CronJobTestHelpers.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Support/CronJobs/TestAdvancedCronJob.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Support/RecordingCronJobEventHandler.cs`
 
-[ ] 10.2 - Testes para `Extensions/*`
-- Criar testes para `ScheduledServiceExtensions`, `CronJobAdvancedExtensions`.
+[x] 10.2 - Testes para `Extensions/*`
+- Criados testes para `ScheduledServiceExtensions` (AddCronJob/RunOnce/Advanced/Resilient/retry/circuit breaker/resilience infrastructure) e `CronJobAdvancedExtensions` (infrastructure options, custom store/lock, event handlers, dependency builder). **~18** testes em `Extensions/CronJobExtensionsTest.cs`.
 - `src/Mvp24Hours.Infrastructure.CronJob/Extensions/*.cs` (2 arquivos)
 - https://learn.microsoft.com/dotnet/core/extensions/dependency-injection
-- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Extensions/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Extensions/CronJobExtensionsTest.cs`
 
-[ ] 10.3 - Testes para `Scheduling/*`
-- Criar testes para `CronExpressionParser`.
+[x] 10.3 - Testes para `Scheduling/*`
+- Criados testes para `CronExpressionParser`: parse/try-parse/validate, auto-detecção 5 vs 6 campos, `GetNextOccurrence`, `Describe` (padrões comuns e inválidos). **~14** testes em `Scheduling/CronExpressionParserTest.cs`.
 - `src/Mvp24Hours.Infrastructure.CronJob/Scheduling/*.cs` (2 arquivos)
 - https://en.wikipedia.org/wiki/Cron
-- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Scheduling/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Scheduling/CronExpressionParserTest.cs`
 
----
+> **Resultado Fase 10:** **203 unitários aprovados · 0 falhas · 0 ignorados** (+ **1** teste de integração lento `CronJobWithCorrectScheduler` · 2 min) no projeto `Mvp24Hours.Infrastructure.CronJob.Test` (**~112** novos unitários + **~91** pré-existentes). Infraestrutura: `Support/CronJobTestHelpers.cs`, `Support/CronJobs/TestAdvancedCronJob.cs`, `Support/RecordingCronJobEventHandler.cs`, csproj com `Microsoft.Extensions.Configuration`/`Logging`.
 
 ## FASE 11 — Expandir Testes de `Mvp24Hours.Infrastructure.Data.MongoDb`
 
 > **Objetivo:** O projeto MongoDb tem testes parciais. Expandir cobertura.
 
-[ ] 11.1 - Testes para `Advanced/*`
-- Criar testes para `MongoDbTextSearchService`, `MongoDbGeospatialService`, `MongoDbShardingService`, `MongoDbGridFsService`, `MongoDbCappedCollectionService`, `MongoDbChangeStreamService`, `MongoDbSchemaValidationService`.
+[x] 11.1 - Testes para `Advanced/*`
+- Criados testes de integração (Testcontainers `mongo:6.0`) para `MongoDbTextSearchService`, `MongoDbGeospatialService`, `MongoDbGridFsService`, `MongoDbCappedCollectionService`, `MongoDbSchemaValidationService` + guards/unitários para `GeoPoint`/`GeoPolygon`, `JsonSchemaBuilder`, `MongoDbChangeStreamService` e `MongoDbShardingService`. Corrigido `GetTextIndexesAsync` para ignorar metadados `_fts` numéricos ao detectar índices text. **~15** testes em `Advanced/AdvancedServicesTest.cs`, `Advanced/ShardingServiceTest.cs`.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Advanced/**/*.cs` (15+ arquivos)
 - https://www.mongodb.com/docs/manual/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Advanced/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Support/MongoDbIntegrationFixture.cs`
 
-[ ] 11.2 - Testes para `Performance/*`
-- Criar testes para `MongoDbIndexManager`, `MongoDbQueryProfiler`, `MongoDbProjection`, `MongoDbConnectionPoolOptions`.
+[x] 11.2 - Testes para `Performance/*`
+- Criados testes de integração para `MongoDbIndexManager`, `MongoDbQueryProfiler` (indexes/stats/hint), `MongoDbProjection` + unitários para `BuildIndexModels`, `MongoDbConnectionPoolOptions`, `MongoDbProjectionOptions`, `QueryExplainResult` e atributos de índice. **~11** testes em `Performance/PerformanceTest.cs`.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Performance/**/*.cs` (6 arquivos)
 - https://www.mongodb.com/docs/manual/indexes/
-- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Performance/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Performance/PerformanceTest.cs`
 
-[ ] 11.3 - Testes para `Security/*`
-- Criar testes para `FieldEncryption`, `MongoDbAuthenticationOptions`.
+[x] 11.3 - Testes para `Security/*`
+- Criados testes para `AesFieldEncryptor`/`IFieldEncryptor`, `EncryptedStringSerializer`, `EncryptionKeyHelper`, `MongoDbAuthenticationOptions` (SCRAM/LDAP/X509) e `MongoDbAuthenticationExtensions`. **~10** testes em `Security/SecurityTest.cs`.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Security/*.cs` (2 arquivos)
 - https://www.mongodb.com/docs/manual/core/security-encryption-at-rest/
-- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Security/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Security/SecurityTest.cs`
 
-[ ] 11.4 - Testes para `Interceptors/*`
-- Criar testes para `MongoDbInterceptorPipeline`, `CommandLogger`, `TenantInterceptor`.
+[x] 11.4 - Testes para `Interceptors/*`
+- Criados testes para `MongoDbInterceptorPipeline` (ordem insert/update/delete soft/suppress), `NoOpInterceptorPipeline`, `TenantInterceptor` (ITenantEntity + ITenantEntity&lt;Guid&gt;), `CommandLogger`. **~10** testes em `Interceptors/InterceptorsTest.cs`.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Interceptors/*.cs` (5 arquivos)
 - https://www.mongodb.com/docs/manual/reference/command/
-- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Interceptors/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Interceptors/InterceptorsTest.cs`
 
-[ ] 11.5 - Testes para `Observability/*`
-- Criar testes para `MongoDbMetrics`, `MongoDbOpenTelemetryInstrumentation`, `MongoDbSlowQueryLogger`, `MongoDbDurationTracker`, `MongoDbStructuredLogger`.
+[x] 11.5 - Testes para `Observability/*`
+- Criados testes para `MongoDbMetrics`, `MongoDbDurationTracker`, `MongoDbOpenTelemetryInstrumentation`, `MongoDbSlowQueryLogger`, `MongoDbStructuredLogger` e `MongoDbObservabilityOptions`. **~7** testes em `Observability/ObservabilityTest.cs`.
 - `src/Mvp24Hours.Infrastructure.Data.MongoDb/Observability/*.cs` (6 arquivos)
 - https://learn.microsoft.com/dotnet/core/diagnostics/
-- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Observability/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Observability/ObservabilityTest.cs`
+
+> **Resultado Fase 11:** **186 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Infrastructure.Data.MongoDb.Test` (**~57** novos unitários + integração · **~129** pré-existentes Resiliency/Testing). Infraestrutura: `GlobalUsings.cs`, `Support/MongoDbIntegrationFixture.cs`, `Support/MongoDbIntegrationCollection.cs`, `Support/MongoDbTestEntities.cs`, csproj com `Testcontainers.MongoDb`, `Microsoft.Extensions.Logging.Abstractions`. Correção produção: `MongoDbTextSearchService.GetTextIndexesAsync` (cast seguro em chaves de índice text).
 
 ---
 
@@ -842,8 +854,8 @@
 | 7 | Mvp24Hours.Infrastructure.Pipe | ~149 | ~71 (concluída) |
 | 8 | Mvp24Hours.Infrastructure.Caching | ~167 | ~129 (concluída) |
 | 9 | Mvp24Hours.Infrastructure.Cqrs | ~401 | ~54 (concluída) |
-| 10 | Mvp24Hours.Infrastructure.CronJob | ~91 | ~50 |
-| 11 | Mvp24Hours.Infrastructure.Data.MongoDb | ~129 | ~80 |
+| 10 | Mvp24Hours.Infrastructure.CronJob | ~204 | ~112 (concluída) |
+| 11 | Mvp24Hours.Infrastructure.Data.MongoDb | ~186 | ~57 (concluída) |
 | 12 | Mvp24Hours.Core | ~788 | ~50 |
 | **Total** | | **~1746** | **~1070** |
 

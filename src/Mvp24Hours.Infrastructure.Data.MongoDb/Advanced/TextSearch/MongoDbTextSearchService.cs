@@ -308,7 +308,7 @@ public class MongoDbTextSearchService<TDocument>(
             foreach (BsonDocument? index in cursor.Current)
             {
                 BsonDocument key = index["key"].AsBsonDocument;
-                if (key.Elements.Any(e => e.Value.AsString == "text"))
+                if (key.Elements.Any(e => e.Value.IsString && e.Value.AsString == "text"))
                 {
                     indexes.Add(index);
                 }
