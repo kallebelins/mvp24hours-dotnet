@@ -276,13 +276,19 @@ public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryO
             return;
         }
 
-        // properties that can not be changed
+        bool hasUserLog = entity.GetType().InheritsOrImplements(typeof(IEntityLog<>))
+            || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>));
 
-        if (entity.GetType().InheritsOrImplements(typeof(IEntityLog<>)) || entity.GetType().InheritsOrImplements(typeof(EntityBaseLog<,>)))
+        bool hasUserLogDate = hasUserLog || entity.GetType().InheritsOrImplements(typeof(IEntityDateLog));
+
+        if (hasUserLog || hasUserLogDate)
         {
             var entityLog = (dynamic)entity;
             entityLog.Removed = TimeZoneHelper.GetTimeZoneNow();
-            entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
+            if (hasUserLog)
+            {
+                entityLog.RemovedBy = (dynamic)(EntityLogBy ?? throw new InvalidOperationException("EntityLogBy is not available."));
+            }
             await ModifyAsync(entity, cancellationToken);
         }
         else

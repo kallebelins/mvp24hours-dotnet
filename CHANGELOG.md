@@ -88,6 +88,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   Release/CI ao comportamento local em Debug.
 - **`Mvp24Hours.Infrastructure.Test` — DistributedLocking**: +97 testes (InMemory, Redis/Moq,
   SqlServer/PostgreSql guards, factory, options, metrics, DI extensions).
+- **`Mvp24Hours.Infrastructure.Data.EFCore.Test` (novo)**: projeto dedicado de testes EF Core —
+  **175 aprovados · 2 ignorados** (CRUD repos, read-only, bulk, streaming, UoW+events,
+  interceptors, specifications, resilience, testing fakes, migrations, converters, CQRS,
+  read/write splitting, schema validation). Soft-delete async alinhado ao sync em
+  `RepositoryAsync.RemoveAsync` (`IEntityDateLog`).
 
 ### CI/CD
 

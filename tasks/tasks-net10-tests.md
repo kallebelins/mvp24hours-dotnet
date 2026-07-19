@@ -185,95 +185,98 @@
 
 > **Objetivo:** O projeto de EF Core (~83 arquivos) é crítico para persistência e não possui projeto de testes dedicado.
 
-[ ] 3.1 - Criar projeto `Mvp24Hours.Infrastructure.Data.EFCore.Test`
-- Criar novo projeto de testes xUnit em `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/`. Configurar InMemory database provider para testes rápidos.
-- `src/Tests/Mvp24Hours.Application.SQLServer.Test/Mvp24Hours.Application.SQLServer.Test.csproj` (como referência)
+[x] 3.1 - Criar projeto `Mvp24Hours.Infrastructure.Data.EFCore.Test`
+- Criado projeto xUnit em `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/` no padrão de `Infrastructure.Test` / `SQLServer.Test`: FluentAssertions, Moq, xunit, coverlet, EF InMemory, Hosting. Referências a Core, Infrastructure e Data.EFCore. Incluído na solution sob `Tests`. Support: `TestDbContext` + entidades (audit/soft-delete/tenant/versioned/domain events) e `EfCoreTestHelpers`.
+- `src/Tests/Mvp24Hours.Application.SQLServer.Test/Mvp24Hours.Application.SQLServer.Test.csproj` (referência)
 - https://learn.microsoft.com/ef/core/testing/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Mvp24Hours.Infrastructure.Data.EFCore.Test.csproj`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Support/*`
 
-[ ] 3.2 - Testes para `Repository.cs` e `RepositoryAsync.cs`
-- Criar testes para os métodos de CRUD síncrono e assíncrono do repositório genérico: `Add`, `Modify`, `Remove`, `GetById`, `List`, `GetBy`, `Any`, `Count`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Repository.cs`, `src/Mvp24Hours.Infrastructure.Data.EFCore/Async/RepositoryAsync.cs`
+[x] 3.2 - Testes para `Repository.cs` e `RepositoryAsync.cs`
+- CRUD sync/async: Add/Modify/Remove/GetById/List/GetBy/Any/Count, paging (`PagingCriteria`), hard-delete vs soft-delete (`IEntityDateLog`). Corrigido `RepositoryAsync.RemoveAsync` para soft-delete de `IEntityDateLog` (alinhado ao sync). **18** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Repository.cs`, `Async/RepositoryAsync.cs`
 - https://learn.microsoft.com/ef/core/querying/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/RepositoryTest.cs`, `RepositoryAsyncTest.cs`
 
-[ ] 3.3 - Testes para `ReadOnlyRepository.cs` e `ReadOnlyRepositoryAsync.cs`
-- Criar testes para os métodos de consulta somente-leitura.
+[x] 3.3 - Testes para `ReadOnlyRepository.cs` e `ReadOnlyRepositoryAsync.cs`
+- Consultas somente-leitura sync/async, `AsNoTracking` (entidades detached), `GetBySpecification`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/ReadOnlyRepository.cs`, `Async/ReadOnlyRepositoryAsync.cs`
 - https://learn.microsoft.com/ef/core/querying/tracking
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/ReadOnlyRepositoryTest.cs`
 
-[ ] 3.4 - Testes para `BulkOperationsRepositoryAsync.cs`
-- Criar testes para operações bulk: `ExecuteUpdate`, `ExecuteDelete`.
+[x] 3.4 - Testes para `BulkOperationsRepositoryAsync.cs`
+- BulkInsert/BulkUpdate/BulkDelete (lista vazia, sucesso, progresso por batch). `ExecuteUpdate`/`ExecuteDelete` **ignorados** (InMemory não suporta; trait `RequiresRealDatabase`). **7** aprovados · **2** ignorados.
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/Async/BulkOperationsRepositoryAsync.cs`
 - https://learn.microsoft.com/ef/core/saving/execute-insert-update-delete
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/BulkOperationsRepositoryAsyncTest.cs`
 
-[ ] 3.5 - Testes para `StreamingRepositoryAsync.cs`
-- Criar testes para streaming de dados via `IAsyncEnumerable`.
+[x] 3.5 - Testes para `StreamingRepositoryAsync.cs`
+- `StreamAllAsync`, `StreamByAsync`, `StreamBatchesAsync`, `StreamProjectedAsync`, `StreamAndProcessAsync` via InMemory. **5** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/Async/StreamingRepositoryAsync.cs`
 - https://learn.microsoft.com/dotnet/csharp/whats-new/tutorials/generate-consume-asynchronous-stream
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/StreamingRepositoryAsyncTest.cs`
 
-[ ] 3.6 - Testes para `UnitOfWorkWithEventsAsync.cs`
-- Criar testes para unit of work com eventos de domínio.
+[x] 3.6 - Testes para `UnitOfWorkWithEventsAsync.cs`
+- `SaveChangesWithEvents`/`SaveChangesWithEventsAsync`, dispatcher capturando eventos, limpeza de domain events, `GetEntitiesWithEvents` (sync + async). **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/Async/UnitOfWorkWithEventsAsync.cs`
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/domain-events-design-implementation
-- `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/UnitOfWorkWithEventsAsyncTest.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/UnitOfWorkWithEventsAsyncTest.cs`, `UnitOfWorkWithEventsTest.cs`
 
-[ ] 3.7 - Testes para `Interceptors/*`
-- Criar testes para `AuditSaveChangesInterceptor`, `SoftDeleteInterceptor`, `TenantSaveChangesInterceptor`, `CommandLoggingInterceptor`, `ConcurrencyInterceptor`, `DomainEventSaveChangesInterceptor`, `StructuredLoggingInterceptor`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Interceptors/*.cs` (7+ arquivos)
+[x] 3.7 - Testes para `Interceptors/*`
+- Audit, SoftDelete, Tenant (`PreventTenantIdChange`), Concurrency (version counter), DomainEvent dispatch, CommandLogging/StructuredLogging/SlowQuery (smoke). **13** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Interceptors/*.cs` (8 arquivos)
 - https://learn.microsoft.com/ef/core/logging-events-diagnostics/interceptors
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Interceptors/*Test.cs`
 
-[ ] 3.8 - Testes para `Specifications/SpecificationEvaluator.cs`
-- Criar testes para avaliador de especificações com EF Core.
+[x] 3.8 - Testes para `Specifications/SpecificationEvaluator.cs`
+- Filtro via `ISpecificationQuery` + OrderBy/Skip/Take via `ISpecificationQueryEnhanced`. **2** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Data.EFCore/Specifications/SpecificationEvaluator.cs`
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Specifications/SpecificationEvaluatorTest.cs`
 
-[ ] 3.9 - Testes para `Resilience/*`
-- Criar testes para `MvpExecutionStrategy`, `DbContextCircuitBreaker`, `DbContextPoolMonitor`, `NativeDbResilienceExtensions`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Resilience/*.cs` (5+ arquivos)
+[x] 3.9 - Testes para `Resilience/*`
+- `DbContextCircuitBreaker` (open/half-open/reset), `DbContextPoolMonitor` stats, `AddNativeDbResilience` + presets SqlServer/PostgreSql/MySql, `MvpExecutionStrategy` metadata (Obsolete). **13** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Resilience/*.cs`
 - https://learn.microsoft.com/ef/core/miscellaneous/connection-resiliency
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Resilience/*Test.cs`
 
-[ ] 3.10 - Testes para `Testing/*`
-- Criar testes para `RepositoryFake`, `RepositoryFakeAsync`, `TestDbContextFactory`, `IDataSeeder`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Testing/*.cs` (5+ arquivos)
+[x] 3.10 - Testes para `Testing/*`
+- `RepositoryFake`/`RepositoryFakeAsync`, `TestDbContextFactory`/`InMemoryDbContextFactory`, `TestingExtensions` DI, `IDataSeeder`. **26** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Testing/*.cs`
 - https://learn.microsoft.com/ef/core/testing/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Testing/*Test.cs`
 
-[ ] 3.11 - Testes para `Migrations/*`
-- Criar testes para `MigrationService`, `MigrationHostedService`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Migrations/*.cs` (4 arquivos)
+[x] 3.11 - Testes para `Migrations/*`
+- `MigrationService` (EnsureCreated/Delete/pending no InMemory), options/result, hosted service smoke, DI extensions. APIs relacionais assertam `InvalidOperationException` no InMemory. **22** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Migrations/*.cs`
 - https://learn.microsoft.com/ef/core/managing-schemas/migrations/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Migrations/*Test.cs`
 
-[ ] 3.12 - Testes para `Converters/*`
-- Criar testes para `EncryptedValueConverters`, `EntityIdValueConverters`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Converters/*.cs` (2 arquivos)
+[x] 3.12 - Testes para `Converters/*`
+- `EntityIdValueConverters` (Guid/Int/Long/String) e `EncryptedValueConverters` (round-trip com provider fake). **14** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Converters/*.cs`
 - https://learn.microsoft.com/ef/core/modeling/value-conversions
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Converters/*Test.cs`
 
-[ ] 3.13 - Testes para `Cqrs/*`
-- Criar testes para `DomainEventDispatcherAdapter`, `NoOpDomainEventDispatcher`, `ReadWriteDbContext`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Cqrs/*.cs` (4 arquivos)
+[x] 3.13 - Testes para `Cqrs/*`
+- `NoOpDomainEventDispatcher`, `DomainEventDispatcherAdapter`, `ReadDbContextBase` (SaveChanges lança) / write context. **12** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/Cqrs/*.cs`
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Cqrs/*Test.cs`
 
-[ ] 3.14 - Testes para `ReadWriteSplitting/*`
-- Criar testes para `ConnectionResolver`, `ReplicaSelector`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/ReadWriteSplitting/*.cs` (4 arquivos)
+[x] 3.14 - Testes para `ReadWriteSplitting/*`
+- `ReplicaSelector` (RoundRobin/Random/Weighted), `ConnectionResolver` (read/write + sticky pós-write), options, DI extensions. **15** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/ReadWriteSplitting/*.cs`
 - https://learn.microsoft.com/azure/azure-sql/database/read-scale-out
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/ReadWriteSplitting/*Test.cs`
 
-[ ] 3.15 - Testes para `SchemaValidation/*`
-- Criar testes para `SchemaValidationExtensions`, `SchemaValidationHostedService`.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/SchemaValidation/*.cs` (4 arquivos)
+[x] 3.15 - Testes para `SchemaValidation/*`
+- Options, `SchemaValidator` (connectivity/summary no InMemory), extensions DI, hosted service smoke. **12** testes aprovados.
+- `src/Mvp24Hours.Infrastructure.Data.EFCore/SchemaValidation/*.cs`
 - https://learn.microsoft.com/ef/core/modeling/
 - `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/SchemaValidation/*Test.cs`
+
+> **Resultado Fase 3:** **175 aprovados · 0 falhas · 2 ignorados** (`ExecuteUpdate`/`ExecuteDelete` — InMemory).
 
 ---
 
@@ -828,7 +831,7 @@
 | Fase | Projeto | Testes Existentes | Estimativa Novos Testes |
 |------|---------|-------------------|------------------------|
 | 2 | Mvp24Hours.Infrastructure | ~1198 | ~200 (concluída) |
-| 3 | Mvp24Hours.Infrastructure.Data.EFCore | 0 | ~150 |
+| 3 | Mvp24Hours.Infrastructure.Data.EFCore | ~177 | ~177 (concluída) |
 | 4 | Mvp24Hours.WebAPI | 5 | ~100 |
 | 5 | Mvp24Hours.Infrastructure.RabbitMQ | 6 | ~150 |
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
