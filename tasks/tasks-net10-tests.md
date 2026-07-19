@@ -596,79 +596,79 @@
 
 > **Objetivo:** O projeto Caching (~59 arquivos) tem apenas 38 testes. Precisa de cobertura mais ampla.
 
-[ ] 8.1 - Testes para `Providers/*`
-- Criar/expandir testes para `MemoryCacheProvider`, `DistributedCacheProvider`, `MultiLevelCache`.
+[x] 8.1 - Testes para `Providers/*`
+- Criados testes para `MemoryCacheProvider`, `DistributedCacheProvider`, `MultiLevelCache`: round-trip typed/string, exists/remove/batch, guards, promoção L1/L2, `GetOrSetAsync`, estatísticas e invalidação via synchronizer. **27** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Providers/*.cs` (3 arquivos)
 - https://learn.microsoft.com/aspnet/core/performance/caching/
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Providers/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Providers/ProvidersTest.cs`
 
-[ ] 8.2 - Testes para `Patterns/*`
-- Criar testes para `ReadThroughCache`, `WriteThroughCache`, `WriteBehindCache`, `RefreshAheadCache`, `CachePatternExtensions`, `CacheAsideExtensions`.
+[x] 8.2 - Testes para `Patterns/*`
+- Criados testes para `ReadThroughCache`, `WriteThroughCache`, `WriteBehindCache`, `RefreshAheadCache`, `CachePatternExtensions`, `CacheAsideExtensions`: hit/miss, ordem write-through, fila/flush/requeue, cache-aside e registro DI. **18** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Patterns/*.cs` (7 arquivos)
 - https://learn.microsoft.com/azure/architecture/patterns/cache-aside
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Patterns/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Patterns/PatternsTest.cs`
 
-[ ] 8.3 - Testes para `Serializers/*`
-- Criar testes para `JsonCacheSerializer`, `CompressedCacheSerializer`, `MessagePackCacheSerializer`.
+[x] 8.3 - Testes para `Serializers/*`
+- Criados testes para `JsonCacheSerializer`, `CompressedCacheSerializer`, `MessagePackCacheSerializer`: round-trip, empty/invalid, threshold compressão e guards. **13** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Serializers/*.cs` (3 arquivos)
 - https://learn.microsoft.com/dotnet/standard/serialization/
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Serializers/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Serializers/SerializersTest.cs`
 
-[ ] 8.4 - Testes para `Invalidation/*`
-- Criar testes para `CacheDependencyManager`, `CacheTagManager`, `CacheStampedePrevention`, `RedisCacheInvalidationEventPublisher`, `InMemoryCacheInvalidationEventPublisher`.
+[x] 8.4 - Testes para `Invalidation/*`
+- Criados testes para `CacheDependencyManager`, `CacheTagManager`, `CacheStampedePrevention`, `RedisCacheInvalidationEventPublisher`, `InMemoryCacheInvalidationEventPublisher`: dependências, tags, concorrência, eventos in-memory e fake Redis via reflection. **18** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Invalidation/*.cs` (5 arquivos)
 - https://learn.microsoft.com/azure/architecture/best-practices/caching
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Invalidation/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Invalidation/InvalidationTest.cs`
 
-[ ] 8.5 - Testes para `Warming/*`
-- Criar testes para `CacheWarmer`, `CacheWarmupHostedService`.
+[x] 8.5 - Testes para `Warming/*`
+- Criados testes para `CacheWarmer`, `CacheWarmupHostedService`: prioridade, falha isolada, cancelamento e hosted service smoke. **7** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Warming/*.cs` (2 arquivos)
 - https://learn.microsoft.com/azure/architecture/best-practices/caching
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Warming/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Warming/WarmingTest.cs`
 
-[ ] 8.6 - Testes para `Prefetching/*`
-- Criar testes para `CachePrefetcher`.
+[x] 8.6 - Testes para `Prefetching/*`
+- Criados testes para `CachePrefetcher`: skip quando cached, load/cache, null factory, falha silenciosa e `PrefetchManyAsync`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Prefetching/*.cs` (1 arquivo)
 - https://learn.microsoft.com/azure/architecture/best-practices/caching
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Prefetching/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Prefetching/PrefetchingTest.cs`
 
-[ ] 8.7 - Testes para `Resilience/*`
-- Criar testes para `ResilientCacheProvider`, `CacheResilienceOptions`.
+[x] 8.7 - Testes para `Resilience/*`
+- Criados testes para `ResilientCacheProvider`, `CacheResilienceOptions`: graceful degradation, defaults e delegação sem pipeline. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Resilience/*.cs` (3 arquivos)
 - https://learn.microsoft.com/dotnet/core/resilience/
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Resilience/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Resilience/ResilienceTest.cs`
 
-[ ] 8.8 - Testes para `Compression/*`
-- Criar testes para `CacheCompressor`.
+[x] 8.8 - Testes para `Compression/*`
+- Criados testes para `CacheCompressor`: round-trip Brotli/Gzip, empty input e header inválido. **4** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Compression/*.cs` (1 arquivo)
 - https://learn.microsoft.com/dotnet/api/system.io.compression
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Compression/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Compression/CompressionTest.cs`
 
-[ ] 8.9 - Testes para `Synchronization/*`
-- Criar testes para `InMemoryCacheSynchronizer`.
+[x] 8.9 - Testes para `Synchronization/*`
+- Criados testes para `InMemoryCacheSynchronizer`: pub/sub, batch, unsubscribe e subscriber com falha. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Synchronization/*.cs` (1 arquivo)
 - https://learn.microsoft.com/azure/architecture/best-practices/caching
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Synchronization/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Synchronization/SynchronizationTest.cs`
 
-[ ] 8.10 - Testes para `Repository/*`
-- Criar testes para `CacheableRepository`.
+[x] 8.10 - Testes para `Repository/*`
+- Criados testes para `CacheableRepository`: cache by default em List/GetById/GetBy, bypass de value types, invalidação em Modify e defaults de options. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Repository/*.cs` (1 arquivo)
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Repository/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Repository/CacheableRepositoryTest.cs`
 
-[ ] 8.11 - Testes para `EFCore/*`
-- Criar testes para `EfCoreCacheInterceptor`.
+[x] 8.11 - Testes para `EFCore/*`
+- Criados testes para `EfCoreCacheInterceptor`: options, guards, detecção SELECT/WRITE, geração de cache key e parse de table name (via reflection). **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/EFCore/*.cs` (1 arquivo)
 - https://learn.microsoft.com/ef/core/logging-events-diagnostics/interceptors
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/EFCore/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/EFCore/EfCoreCacheInterceptorTest.cs`
 
-[ ] 8.12 - Testes para `Observability/*`
-- Criar testes para `CacheHealthCheck`, `CacheMetrics`, `CacheActivitySource`, `ObservableCacheProvider`.
+[x] 8.12 - Testes para `Observability/*`
+- Criados testes para `CacheHealthCheck`, `CacheMetrics`, `CacheActivitySource`, `ObservableCacheProvider`: healthy/degraded/unhealthy, métricas, activity listener e wrapper observável. **14** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Caching/Observability/*.cs` (4 arquivos)
 - https://learn.microsoft.com/dotnet/core/diagnostics/
-- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Observability/*Test.cs`
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Observability/ObservabilityTest.cs`
 
----
+> **Resultado Fase 8:** **167 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Infrastructure.Caching.Test` (**~129** novos unitários + **~38** pré-existentes HybridCache). Infraestrutura: `Support/CacheTestHelpers.cs`, `GlobalUsings.cs` ampliado, csproj com HealthChecks/Hosting.
 
 ## FASE 9 — Expandir Testes de `Mvp24Hours.Infrastructure.Cqrs`
 
@@ -842,7 +842,7 @@
 | 5 | Mvp24Hours.Infrastructure.RabbitMQ | ~122 | ~122 (concluída) |
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
 | 7 | Mvp24Hours.Infrastructure.Pipe | ~149 | ~71 (concluída) |
-| 8 | Mvp24Hours.Infrastructure.Caching | ~38 | ~80 |
+| 8 | Mvp24Hours.Infrastructure.Caching | ~167 | ~129 (concluída) |
 | 9 | Mvp24Hours.Infrastructure.Cqrs | ~347 | ~100 |
 | 10 | Mvp24Hours.Infrastructure.CronJob | ~91 | ~50 |
 | 11 | Mvp24Hours.Infrastructure.Data.MongoDb | ~129 | ~80 |
