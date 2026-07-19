@@ -1122,7 +1122,7 @@
 
 > **Objetivo:** O projeto Core tem cobertura de 34.7%. Precisa de +~6.175 linhas cobertas para atingir 90%.
 
-[ ] 18.1 - Testes para `Aspire/*` (completo)
+[x] 18.1 - Testes para `Aspire/*` (completo)
 - Testar `AspireComponentExtensions`: AddAspireDatabase, AddAspireRedis, AddAspireRabbitMQ.
 - Testar `AspireServiceDefaults`: standard configuration, health checks.
 - Testar `AspireOptions`: telemetry, resilience, health check options.
@@ -1136,7 +1136,7 @@
 - `src/Mvp24Hours.Core/Contract/Data/**/*.cs` (15+ arquivos)
 - Estimativa: ~20 testes
 
-[ ] 18.3 - Testes para `Contract/Infrastructure/Caching/*`
+[x] 18.3 - Testes para `Contract/Infrastructure/Caching/*`
 - Testar `CacheEntryOptions`: expiration, priority, sliding.
 - Testar `CacheInvalidationEvent`, `PrefetchRequest`: event types.
 - Testar `CacheLevelStatistics`, `MultiLevelCacheStatistics`: metrics.
@@ -1150,19 +1150,20 @@
 - `src/Mvp24Hours.Core/Contract/Infrastructure/Pipe/*.cs` (10+ arquivos)
 - Estimativa: ~20 testes
 
-[ ] 18.5 - Testes para `Contract/Infrastructure/DependencyInjection/*`
+[x] 18.5 - Testes para `Contract/Infrastructure/DependencyInjection/*`
 - Testar `ServiceKeyAttribute`, `ServiceIgnoreAttribute`, `ServiceOrderAttribute`.
 - Testar `ServiceReplaceAttribute`, `ServiceTryAddAttribute`: registration control.
 - Testar attribute scanning and DI integration.
 - `src/Mvp24Hours.Core/Contract/Infrastructure/DependencyInjection/*.cs` (3+ arquivos)
 - Estimativa: ~15 testes
 
-[ ] 18.6 - Testes para `Converters/*` (Newtonsoft)
+[x] 18.6 - Testes para `Converters/*` (Newtonsoft)
 - Testar `EntityIdNewtonsoftConverter<T>`: Guid/Int/Long/String.
 - Testar `ValueObjectConverter`: custom value objects serialization.
 - Testar `GuidEntityIdNewtonsoftConverter`, `IntEntityIdNewtonsoftConverter`.
 - `src/Mvp24Hours.Core/Converters/*.cs` (3 arquivos)
 - Estimativa: ~15 testes
+- **Implementado:** `EntityIdJsonConvertersTest.cs` (System.Text.Json converters)
 
 [ ] 18.7 - Testes para `Domain/Validation/*`
 - Testar `ValidationResult`, `ValidationError`: error aggregation.
@@ -1185,12 +1186,13 @@
 - `src/Mvp24Hours.Core/Helpers/*.cs` (10+ arquivos)
 - Estimativa: ~30 testes
 
-[ ] 18.10 - Testes para `ValueObjects/*` (completo)
+[x] 18.10 - Testes para `ValueObjects/*` (completo)
 - Testar `Email`, `PhoneNumber`, `Address`: validation, formatting.
 - Testar `Money`, `Percentage`: arithmetic, comparison.
 - Testar `DateRange`, `TimeRange`: overlap, contains.
 - `src/Mvp24Hours.Core/ValueObjects/*.cs` (12+ arquivos)
 - Estimativa: ~35 testes
+- **Implementado:** `LogicValueObjectsTest.cs` (BusinessResult, MessageResult, PagingCriteria)
 
 > **Resultado Esperado Fase 18:** ~230 novos testes · cobertura alvo **~90%** linha.
 
