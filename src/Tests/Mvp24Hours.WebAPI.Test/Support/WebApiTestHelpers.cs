@@ -168,6 +168,48 @@ internal static class WebApiTestHelpers
     {
         return new TestEndpointFilterInvocationContext(httpContext, arguments);
     }
+
+    public static ModelBindingContext CreatePagingModelBindingContext(
+        string modelName = "paging",
+        string? limit = null,
+        string? offset = null,
+        string? pageSize = null,
+        string? page = null,
+        string? orderBy = null,
+        string? navigation = null,
+        Type? modelType = null)
+    {
+        var queryDict = new Dictionary<string, StringValues>();
+
+        if (limit != null) queryDict["limit"] = limit;
+        if (offset != null) queryDict["offset"] = offset;
+        if (pageSize != null) queryDict["pageSize"] = pageSize;
+        if (page != null) queryDict["page"] = page;
+        if (orderBy != null) queryDict["orderBy"] = orderBy;
+        if (navigation != null) queryDict["navigation"] = navigation;
+
+        var metadataProvider = new EmptyModelMetadataProvider();
+        ModelMetadata metadata = metadataProvider.GetMetadataForType(modelType ?? typeof(Mvp24Hours.Core.ValueObjects.Logic.PagingCriteria));
+
+        var query = new QueryCollection(queryDict);
+        var valueProvider = new QueryStringValueProvider(
+            BindingSource.Query,
+            query,
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        var actionContext = new ActionContext(
+            CreateHttpContext(),
+            new RouteData(),
+            new ActionDescriptor(),
+            new ModelStateDictionary());
+
+        return DefaultModelBindingContext.CreateBindingContext(
+            actionContext,
+            new CompositeValueProvider { valueProvider },
+            metadata,
+            bindingInfo: null,
+            modelName: modelName);
+    }
 }
 
 internal sealed class StubDelegatingHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> handler) : HttpMessageHandler

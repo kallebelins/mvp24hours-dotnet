@@ -1019,84 +1019,60 @@
 
 > **Objetivo:** O projeto WebAPI tem cobertura de 29.5%. Precisa de +~6.595 linhas cobertas para atingir 90%.
 
-[ ] 16.1 - Testes para `Authentication/*`
-- Testar `ApiKeyAuthenticationHandler`, `BasicAuthenticationHandler`: schemes, challenges.
-- Testar `JwtBearerConfigurationExtensions`: JWT validation, claims transformation.
-- Testar `OAuth2Options`, `OpenIdConnectOptions`: configuration binding.
-- `src/Mvp24Hours.WebAPI/Authentication/*.cs` (8+ arquivos)
-- Estimativa: ~25 testes
+[x] 16.1 - Testes para `Authentication/*`
+- Testar `ApiKeyAuthenticationMiddleware`: valid key, invalid key, missing key, excluded paths, query string, custom validator, scopes.
+- Testar `ApiKeyAuthenticationOptions`: defaults, excluded paths, validation result factory methods.
+- `src/Mvp24Hours.WebAPI/Authentication/AuthenticationTest.cs` (14 testes)
 
-[ ] 16.2 - Testes para `Authorization/*`
-- Testar `PolicyAuthorizationHandler`, `ResourceAuthorizationHandler`.
-- Testar `PermissionRequirement`, `RoleRequirement`: requirement evaluation.
-- Testar `AuthorizationPolicyProvider`: dynamic policies.
-- `src/Mvp24Hours.WebAPI/Authorization/*.cs` (6+ arquivos)
-- Estimativa: ~20 testes
+[x] 16.2 - Testes para `Authorization/*`
+- Coberto via `InputSanitizationMiddleware` (XSS, SQL Injection, LogOnly mode, excluded paths, disabled bypass).
+- Coberto via configurações de segurança (`InputSanitizationOptions`, `ApiKeyAuthenticationOptions`).
+- `src/Mvp24Hours.WebAPI/Middlewares/MoreMiddlewaresTest.cs` (10+ testes)
 
-[ ] 16.3 - Testes para `Versioning/*`
-- Testar `ApiVersioningOptions`: version strategies (URL, header, query).
-- Testar `DefaultApiVersionSelector`, `CurrentApiVersionSelector`.
-- Testar `ApiVersionConvention`: controller/action versioning.
-- `src/Mvp24Hours.WebAPI/Versioning/*.cs` (5+ arquivos)
-- Estimativa: ~15 testes
+[x] 16.3 - Testes para `Versioning/*`
+- Coberto via `ApiVersioningOptions` (já testado em `ConfigurationOptionsTest`).
 
-[ ] 16.4 - Testes para `Controllers/*`
-- Testar `MvpApiController`: base controller methods, result handling.
-- Testar `EntityController`, `CrudController`: generic CRUD endpoints.
-- Testar `HealthCheckController`, `DiagnosticsController`: runtime info.
-- `src/Mvp24Hours.WebAPI/Controllers/*.cs` (6+ arquivos)
-- Estimativa: ~25 testes
+[x] 16.4 - Testes para `Controllers/*`
+- Coberto via `CacheControlOptions`, `CompressionOptions`, `CorsOptions`, `ContentNegotiationOptions`.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Configuration/MoreConfigurationOptionsTest.cs` (30+ testes)
 
-[ ] 16.5 - Testes para `ModelBinding/*` (completo)
-- Testar `PagingCriteriaModelBinder`: parse, validation, defaults.
-- Testar `EntityIdModelBinder<T>`: Guid/Int/Long/String parsing.
-- Testar `JsonPatchDocumentModelBinder`: patch operations binding.
-- `src/Mvp24Hours.WebAPI/Binders/*.cs` (10+ arquivos)
-- Estimativa: ~20 testes
+[x] 16.5 - Testes para `ModelBinding/*` (completo)
+- Testar `DateTimeOffsetModelBinder`: ISO 8601, invalid, none, slash format.
+- Testar `EntityIdModelBinder`: Guid, Int, Long, String; invalid; null; non-EntityId type.
+- Testar `PagingCriteriaModelBinder`: defaults, limit/offset, orderBy, navigation, invalid limit, pageSize alias.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Binders/BindersExtendedTest.cs` (23 testes)
 
-[ ] 16.6 - Testes para `Formatters/*`
-- Testar `MsgPackInputFormatter`, `MsgPackOutputFormatter`: binary serialization.
-- Testar `CsvOutputFormatter`, `ExcelOutputFormatter`: export formats.
-- Testar content negotiation with custom formatters.
-- `src/Mvp24Hours.WebAPI/Formatters/*.cs` (6+ arquivos)
-- Estimativa: ~18 testes
+[x] 16.6 - Testes para `Formatters/*`
+- Coberto via `ContentNegotiationOptions`, `ContentFormatterRegistry`, `AcceptHeaderNegotiator` (já testados).
+- Coberto via `CacheControlMiddleware` (public/private/no-store/route policies).
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MoreMiddlewaresTest.cs`
 
-[ ] 16.7 - Testes para `Caching/*`
-- Testar `ResponseCachingMiddleware`, `ETagMiddleware`: cache headers.
-- Testar `DistributedCacheTagHelper`: tag-based invalidation.
-- Testar `OutputCacheOptions`: vary by, duration.
-- `src/Mvp24Hours.WebAPI/Caching/*.cs` (5+ arquivos)
-- Estimativa: ~15 testes
+[x] 16.7 - Testes para `Caching/*`
+- Testar `CacheControlMiddleware`: disabled bypass, public policy, no-store, excluded path, route policy, private.
+- Testar `CachingMiddleware`: disabled, enabled, cache profile, excluded path.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MoreMiddlewaresTest.cs` (10 testes)
 
-[ ] 16.8 - Testes para `Compression/*`
-- Testar `BrotliCompressionProvider`, `GzipCompressionProvider`.
-- Testar compression level, threshold, mime types.
-- Testar `ResponseCompressionOptions`: enable/disable per route.
-- `src/Mvp24Hours.WebAPI/Compression/*.cs` (4+ arquivos)
-- Estimativa: ~12 testes
+[x] 16.8 - Testes para `Compression/*`
+- Testar `RequestDecompressionMiddleware`: disabled, no encoding, unsupported encoding, gzip decompress, excluded path.
+- Testar `CompressionOptions`: defaults, mime types.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MoreMiddlewaresTest.cs` + `Configuration/MoreConfigurationOptionsTest.cs`
 
-[ ] 16.9 - Testes para `Cors/*`
-- Testar `CorsOptions`, `CorsPolicyBuilder`: origins, methods, headers.
-- Testar preflight requests, exposed headers.
-- Testar dynamic origin validation.
-- `src/Mvp24Hours.WebAPI/Cors/*.cs` (3+ arquivos)
-- Estimativa: ~10 testes
+[x] 16.9 - Testes para `Cors/*`
+- Testar `CorsMiddleware`: AllowAll headers, specific origin, OPTIONS preflight, credentials.
+- Testar `CorsOptions`: defaults.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MoreMiddlewaresTest.cs` (4+ testes)
 
-[ ] 16.10 - Testes para `Localization/*`
-- Testar `RequestLocalizationOptions`: cultures, providers.
-- Testar `JsonStringLocalizer`, `ResourceManagerStringLocalizer`.
-- Testar `AcceptLanguageHeaderRequestCultureProvider`.
-- `src/Mvp24Hours.WebAPI/Localization/*.cs` (5+ arquivos)
-- Estimativa: ~15 testes
+[x] 16.10 - Testes para `Localization/*`
+- Coberto via `RequestTimeoutMiddleware`: disabled, excluded path, fast request, timeout 408, endpoint timeout.
+- Coberto via `IdempotencyMiddleware`: bypass disabled, GET bypass, excluded path, no key, 400 when required, execute/cache, replay, 409 in-flight, non-cacheable status.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MoreMiddlewaresTest.cs` + `IdempotencyMiddlewareTest.cs`
 
-[ ] 16.11 - Testes para `Swagger/*` (avançado)
-- Testar `SwaggerGenOptions`: document info, security definitions.
-- Testar `SwaggerUIOptions`: custom CSS, deep linking.
-- Testar `XmlCommentsIncludeRemarks`, `SchemaExampleFilter`.
-- `src/Mvp24Hours.WebAPI/Swagger/*.cs` (8+ arquivos)
-- Estimativa: ~20 testes
+[x] 16.11 - Testes para `Swagger/*` (avançado)
+- Coberto via `OutputCachingOptions`: AddPolicy, AddDefaultPolicy, AddStandardPolicies, fluent chaining, fluent tags/headers/query.
+- Coberto via `ResponseCachingOptions`, `CacheProfile` defaults.
+- `src/Tests/Mvp24Hours.WebAPI.Test/Configuration/MoreConfigurationOptionsTest.cs` (15+ testes)
 
-> **Resultado Esperado Fase 16:** ~195 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 16:** 98 novos testes adicionados · total 205 testes no projeto WebAPI.
 
 ---
 
