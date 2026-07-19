@@ -376,95 +376,97 @@
 
 > **Objetivo:** O projeto RabbitMQ (~175 arquivos) tem apenas 6 testes. Precisa de cobertura massiva.
 
-[ ] 5.1 - Testes para `Core/Contract/*`
-- Criar testes para interfaces e contratos de consumer/producer.
+[x] 5.1 - Testes para `Core/Contract/*`
+- Criados testes para `Response<T>`, `ResponseStatus` e `ScheduleMessageOptions` (Success/Timeout/Failure/Cancelled, defaults). **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Core/Contract/*.cs` (10+ arquivos)
 - https://www.rabbitmq.com/dotnet-api-guide.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Core/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Core/CoreContractTest.cs`
 
-[ ] 5.2 - Testes para `MvpRabbitMQClient.cs`
-- Criar testes para o cliente RabbitMQ principal: conexão, publicação, consumo.
+[x] 5.2 - Testes para `MvpRabbitMQClient.cs`
+- Criados testes unitários com mock de `IMvpRabbitMQConnection`/`IModel`: routing key obrigatório, publish async/batch/TTL/priority/headers, register/unregister, consume sem consumers. Batch via `InMemoryBus`. **13** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/MvpRabbitMQClient.cs`
 - https://www.rabbitmq.com/tutorials
 - `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/MvpRabbitMQClientTest.cs`
 
-[ ] 5.3 - Testes para `Consumers/*`
-- Criar testes para `ConsumeContext`, `BatchConsumeContext`, `BatchMessageResult`.
+[x] 5.3 - Testes para `Consumers/*`
+- Criados testes para `BatchMessageResult`, `BatchProcessingHelper` (parallel/sequential/retry/transaction/group), `ConsumeContext`, `BatchConsumeContext`. **12** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Consumers/*.cs` (4 arquivos)
 - https://www.rabbitmq.com/consumers.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Consumers/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Consumers/ConsumersTest.cs`
 
-[ ] 5.4 - Testes para `Transactional/*`
-- Criar testes para `TransactionalBus`, `OutboxPublisher`, `TransactionalConsumeContext`.
+[x] 5.4 - Testes para `Transactional/*`
+- Criados testes para `InMemoryTransactionalOutbox`, `TransactionalBus`, `OutboxPublisher`, `TransactionalConsumeContext`. **8** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Transactional/*.cs` (6 arquivos)
 - https://www.rabbitmq.com/confirms.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Transactional/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Transactional/TransactionalTest.cs`
 
-[ ] 5.5 - Testes para `Saga/*`
-- Criar testes para `SagaStateMachine`, `SagaStateMachineConsumer`, `SagaConsumeContext`, `SagaConsumerDefinition`, `CqrsSagaIntegration`.
+[x] 5.5 - Testes para `Saga/*`
+- Criados testes para `SagaInstance`, `InMemorySagaRepository`, `SagaStateMachine` (máquina de teste com eventos/transições). **8** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Saga/*.cs` (6+ arquivos)
 - https://microservices.io/patterns/data/saga.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Saga/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Saga/SagaTest.cs`
 
-[ ] 5.6 - Testes para `Scheduling/*`
-- Criar testes para `MessageScheduler`, `InMemoryScheduledMessageStore`, `RedisScheduledMessageStore`.
+[x] 5.6 - Testes para `Scheduling/*`
+- Criados testes para `CronExpressionHelper`, `InMemoryScheduledMessageStore`, `MessageScheduler`, `RedisScheduledMessageStore` (MemoryDistributedCache). **9** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Scheduling/*.cs` (4 arquivos)
 - https://www.rabbitmq.com/ttl.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Scheduling/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Scheduling/SchedulingTest.cs`
 
-[ ] 5.7 - Testes para `RequestResponse/*`
-- Criar testes para `RequestClient`.
+[x] 5.7 - Testes para `RequestResponse/*`
+- Criados testes para `RequestClient` (options/guards) e `TestHarness.RequestAsync` com fake client. **3** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/RequestResponse/*.cs` (1+ arquivo)
 - https://www.rabbitmq.com/tutorials/tutorial-six-dotnet.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/RequestResponse/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/RequestResponse/RequestResponseTest.cs`
 
-[ ] 5.8 - Testes para `Pipeline/Filters/*`
-- Criar testes para `TelemetryConsumeFilter` e outros filtros.
+[x] 5.8 - Testes para `Pipeline/Filters/*`
+- Criados testes para `CorrelationConsumeFilter`, `TelemetryConsumeFilter`/`TelemetryPublishFilter`, `ExceptionHandlingConsumeFilter`, `FilterPipelineExecutor`, `ConsumeFilterContext`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Pipeline/Filters/*.cs` (3+ arquivos)
 - https://masstransit.io/documentation/configuration/middleware
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Pipeline/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Pipeline/PipelineFiltersTest.cs`
 
-[ ] 5.9 - Testes para `MultiTenancy/*`
-- Criar testes para `TenantConsumeFilter`, `TenantPublishFilter`, `TenantConnectionFactory`, `InMemoryTenantRabbitMQResolver`.
+[x] 5.9 - Testes para `MultiTenancy/*`
+- Criados testes para `InMemoryTenantRabbitMQResolver`, `TenantRabbitMQOptions`, `TenantConsumeFilter`, `TenantPublishFilter`. **7** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/MultiTenancy/*.cs` (6 arquivos)
 - https://docs.microsoft.com/azure/architecture/guide/multitenant/overview
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/MultiTenancy/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/MultiTenancy/MultiTenancyTest.cs`
 
-[ ] 5.10 - Testes para `Topology/*`
-- Criar testes para `EndpointConvention`, `RoutingKeyConvention`, `MessageTopology`.
+[x] 5.10 - Testes para `Topology/*`
+- Criados testes para `RoutingKeyConvention`, `EndpointNameFormatter`, `EndpointConvention`, `MessageTopologyRegistry`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Topology/*.cs` (5 arquivos)
 - https://www.rabbitmq.com/tutorials/tutorial-four-dotnet.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Topology/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Topology/TopologyTest.cs`
 
-[ ] 5.11 - Testes para `Serialization/*`
-- Criar testes para `MessageTypeResolver`.
+[x] 5.11 - Testes para `Serialization/*`
+- Criados testes para `JsonMessageSerializer` (round-trip) e `MessageTypeResolver` (register/headers). **4** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Serialization/*.cs` (2 arquivos)
 - https://www.rabbitmq.com/queues.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Serialization/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Serialization/SerializationTest.cs`
 
-[ ] 5.12 - Testes para `Testing/*`
-- Criar testes para `InMemoryBus`, `TestConsumeContext`, `ConsumedMessage`.
+[x] 5.12 - Testes para `Testing/*`
+- Criados testes meta para `InMemoryBus`, `TestConsumeContextBuilder`, `ConsumedMessage`, `TestMessageHelpers`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Testing/*.cs` (5+ arquivos)
 - https://masstransit.io/documentation/concepts/testing
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Testing/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Testing/TestingInfrastructureTest.cs`
 
-[ ] 5.13 - Testes para `Observability/*`
-- Criar testes para `RabbitMQDiagnostics`, `RabbitMQStructuredLogger`, `RabbitMQMetrics`.
+[x] 5.13 - Testes para `Observability/*`
+- Criados testes para `RabbitMQDiagnostics`, `RabbitMQMetrics`, `RabbitMQStructuredLogger`, `BaggagePropagation`. **5** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Observability/*.cs` (4+ arquivos)
 - https://www.rabbitmq.com/monitoring.html
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Observability/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Observability/ObservabilityTest.cs`
 
-[ ] 5.14 - Testes para `Hosted/*`
-- Criar testes para `MvpRabbitMQHostedService`.
+[x] 5.14 - Testes para `Hosted/*`
+- Criados smoke tests para `MvpRabbitMQHostedService` (Start/Stop, null guard, options mapping). **4** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Hosted/*.cs` (1+ arquivo)
 - https://learn.microsoft.com/aspnet/core/fundamentals/host/hosted-services
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Hosted/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Hosted/HostedTest.cs`
 
-[ ] 5.15 - Testes para `Configuration/*`
-- Criar testes para todas as classes de options e builder fluent.
+[x] 5.15 - Testes para `Configuration/*`
+- Criados testes para `BatchConsumerOptions.Validate`, presets, `RabbitMQClientOptions`, `MessageDeduplicationOptions`, `RequestClientOptions`, `MessageSchedulerOptions`, `PublisherConfirmOptions`, etc. **12** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.RabbitMQ/Configuration/*.cs` (20+ arquivos)
 - https://learn.microsoft.com/aspnet/core/fundamentals/configuration/options
-- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Configuration/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.RabbitMQ.Test/Configuration/ConfigurationTest.cs`
+
+> **Resultado Fase 5:** **122 aprovados · 0 falhas · 0 ignorados** (116 unitários + 6 integração Testcontainers existentes). Infraestrutura: `GlobalUsings.cs`, `Support/RabbitMQTestHelpers.cs`, `Support/TestMessages.cs`, csproj atualizado (FluentAssertions, Moq, DI/Logging/Options).
 
 ---
 
@@ -835,7 +837,7 @@
 | 2 | Mvp24Hours.Infrastructure | ~1198 | ~200 (concluída) |
 | 3 | Mvp24Hours.Infrastructure.Data.EFCore | ~177 | ~177 (concluída) |
 | 4 | Mvp24Hours.WebAPI | ~107 | ~107 (concluída) |
-| 5 | Mvp24Hours.Infrastructure.RabbitMQ | 6 | ~150 |
+| 5 | Mvp24Hours.Infrastructure.RabbitMQ | ~122 | ~122 (concluída) |
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
 | 7 | Mvp24Hours.Infrastructure.Pipe | ~78 | ~60 |
 | 8 | Mvp24Hours.Infrastructure.Caching | ~38 | ~80 |
