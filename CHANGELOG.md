@@ -60,6 +60,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ### Corrigido
 
+- **`LockHandleBase.Dispose` / `DisposeAsync`**: liberação do lock agora ocorre antes de marcar
+  `_disposed` (antes `ReleaseAsync` retornava cedo e o recurso ficava preso até expirar).
 - **Avisos de build zerados em Release:** **~4235 → 0** (−100%). A primeira passada da
   modernização reduziu a ~969 e aceitou o residual (~948) para uma rodada de higiene; essa dívida
   foi eliminada (nullable CS86xx em produção e testes, LOGGEN002, CS0618/`MvpExecutionStrategy`,
@@ -84,6 +86,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   para execução seletiva no CI e localmente sem Docker.
 - `InMemory` disponível em qualquer configuração nos testes EF (MySql/PostgreSql/SQLServer), alinhando
   Release/CI ao comportamento local em Debug.
+- **`Mvp24Hours.Infrastructure.Test` — DistributedLocking**: +97 testes (InMemory, Redis/Moq,
+  SqlServer/PostgreSql guards, factory, options, metrics, DI extensions).
 
 ### CI/CD
 

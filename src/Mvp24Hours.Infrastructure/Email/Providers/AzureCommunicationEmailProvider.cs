@@ -121,7 +121,6 @@ public class AzureCommunicationEmailProvider : BaseEmailProvider
 
             httpClient.DefaultRequestHeaders.Add("x-ms-date", dateHeader);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"HMAC-SHA256 SignedHeaders=x-ms-date;host;Signature={signature}");
-            httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
 
             HttpResponseMessage response = await httpClient.PostAsync("/emails:send?api-version=2023-03-31", httpContent, cancellationToken);
 

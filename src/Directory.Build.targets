@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Production .csproj files set GeneratePackageOnBuild=true. Packing on every build
+    locks assemblies on Windows and races with parallel `dotnet test` discovery
+    (FileLoadException: Acesso negado on Mvp24Hours.Application.dll — task 1.2).
+    CI already packs explicitly via `dotnet pack` in .github/workflows/ci.yml.
+    This file is imported after each .csproj, so it overrides that setting.
+  -->
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+</Project>

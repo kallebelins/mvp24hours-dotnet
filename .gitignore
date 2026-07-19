@@ -376,3 +376,4 @@ tasks/test-results*/
 **/TestResults/
 *.trx
 coverage.cobertura.xml
+test-results/

@@ -49,4 +49,8 @@
 		</SonarQubeSetting>
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Mvp24Hours.Infrastructure.Test" />
+	</ItemGroup>
+
 </Project>

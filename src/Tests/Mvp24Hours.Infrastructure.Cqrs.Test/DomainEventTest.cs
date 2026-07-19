@@ -26,11 +26,6 @@ public class DomainEventTest
         services.AddMvpMediator(typeof(UserRegisteredEvent).Assembly);
         _serviceProvider = services.BuildServiceProvider();
         _dispatcher = _serviceProvider.GetRequiredService<IDomainEventDispatcher>();
-
-        // Clear static handlers
-        UserRegisteredEventHandler.HandledEvents.Clear();
-        WelcomeEmailHandler.HandledEvents.Clear();
-        OrderPlacedEventHandler.HandledEvents.Clear();
     }
 
     [Fact, Priority(1)]
@@ -49,16 +44,26 @@ public class DomainEventTest
     public async Task DispatchEventsAsync_ShouldDispatchAllEventsFromEntity()
     {
         // Arrange
-        var aggregate = new TestAggregate { Id = 1 };
-        aggregate.Register("john@example.com");
+        List<string> registered = UserRegisteredEventHandler.BeginCapture();
+        List<string> welcome = WelcomeEmailHandler.BeginCapture();
+        try
+        {
+            var aggregate = new TestAggregate { Id = 1 };
+            aggregate.Register("john@example.com");
 
-        // Act
-        await _dispatcher.DispatchEventsAsync(aggregate);
+            // Act
+            await _dispatcher.DispatchEventsAsync(aggregate);
 
-        // Assert
-        Assert.Single(UserRegisteredEventHandler.HandledEvents);
-        Assert.Single(WelcomeEmailHandler.HandledEvents);
-        Assert.Contains("john@example.com", UserRegisteredEventHandler.HandledEvents[0]);
+            // Assert
+            Assert.Single(registered);
+            Assert.Single(welcome);
+            Assert.Contains("john@example.com", registered[0]);
+        }
+        finally
+        {
+            UserRegisteredEventHandler.EndCapture();
+            WelcomeEmailHandler.EndCapture();
+        }
     }
 
     [Fact, Priority(3)]
@@ -107,22 +112,29 @@ public class DomainEventTest
     public async Task DispatchEventsAsync_WithMultipleEntities_ShouldDispatchFromAll()
     {
         // Arrange
-        UserRegisteredEventHandler.HandledEvents.Clear();
-        WelcomeEmailHandler.HandledEvents.Clear();
-
-        var entities = new List<CoreHasDomainEvents>
+        List<string> registered = UserRegisteredEventHandler.BeginCapture();
+        List<string> welcome = WelcomeEmailHandler.BeginCapture();
+        try
         {
-            CreateAggregateWithRegistration(1, "user1@example.com"),
-            CreateAggregateWithRegistration(2, "user2@example.com"),
-            CreateAggregateWithRegistration(3, "user3@example.com")
-        };
+            var entities = new List<CoreHasDomainEvents>
+            {
+                CreateAggregateWithRegistration(1, "user1@example.com"),
+                CreateAggregateWithRegistration(2, "user2@example.com"),
+                CreateAggregateWithRegistration(3, "user3@example.com")
+            };
 
-        // Act
-        await _dispatcher.DispatchEventsAsync(entities);
+            // Act
+            await _dispatcher.DispatchEventsAsync(entities);
 
-        // Assert
-        Assert.Equal(3, UserRegisteredEventHandler.HandledEvents.Count);
-        Assert.Equal(3, WelcomeEmailHandler.HandledEvents.Count);
+            // Assert
+            Assert.Equal(3, registered.Count);
+            Assert.Equal(3, welcome.Count);
+        }
+        finally
+        {
+            UserRegisteredEventHandler.EndCapture();
+            WelcomeEmailHandler.EndCapture();
+        }
     }
 
     [Fact, Priority(7)]
@@ -165,4 +177,3 @@ public class DomainEventTest
         return aggregate;
     }
 }
-

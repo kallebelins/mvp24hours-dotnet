@@ -18,28 +18,67 @@ public class OrderCreatedNotification : IMediatorNotification
 
 /// <summary>
 /// First handler for OrderCreatedNotification.
+/// Uses <see cref="AsyncLocal{T}"/> so parallel test classes (e.g. BenchmarkTest)
+/// do not pollute notification assertions.
 /// </summary>
 public class OrderCreatedEmailHandler : IMediatorNotificationHandler<OrderCreatedNotification>
 {
-    public static List<string> HandledNotifications { get; } = [];
+    private static readonly AsyncLocal<List<string>?> Current = new();
+
+    /// <summary>
+    /// Starts capturing handled notifications for the current async flow.
+    /// </summary>
+    public static List<string> BeginCapture()
+    {
+        var list = new List<string>();
+        Current.Value = list;
+        return list;
+    }
+
+    /// <summary>
+    /// Stops capturing for the current async flow.
+    /// </summary>
+    public static void EndCapture()
+    {
+        Current.Value = null;
+    }
 
     public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
     {
-        HandledNotifications.Add($"Email sent for order {notification.OrderId} to {notification.CustomerName}");
+        Current.Value?.Add($"Email sent for order {notification.OrderId} to {notification.CustomerName}");
         return Task.CompletedTask;
     }
 }
 
 /// <summary>
 /// Second handler for OrderCreatedNotification.
+/// Uses <see cref="AsyncLocal{T}"/> so parallel test classes do not pollute assertions.
 /// </summary>
 public class OrderCreatedAuditHandler : IMediatorNotificationHandler<OrderCreatedNotification>
 {
-    public static List<string> HandledNotifications { get; } = [];
+    private static readonly AsyncLocal<List<string>?> Current = new();
+
+    /// <summary>
+    /// Starts capturing handled notifications for the current async flow.
+    /// </summary>
+    public static List<string> BeginCapture()
+    {
+        var list = new List<string>();
+        Current.Value = list;
+        return list;
+    }
+
+    /// <summary>
+    /// Stops capturing for the current async flow.
+    /// </summary>
+    public static void EndCapture()
+    {
+        Current.Value = null;
+    }
 
     public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
     {
-        HandledNotifications.Add($"Audit logged for order {notification.OrderId} with amount {notification.Amount}");
+        Current.Value?.Add($"Audit logged for order {notification.OrderId} with amount {notification.Amount}");
         return Task.CompletedTask;
     }
 }
@@ -51,4 +90,3 @@ public class NoHandlerNotification : IMediatorNotification
 {
     public string Message { get; set; } = string.Empty;
 }
-

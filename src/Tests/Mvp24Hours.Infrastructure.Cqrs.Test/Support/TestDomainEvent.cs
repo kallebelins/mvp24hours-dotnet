@@ -25,42 +25,99 @@ public record OrderPlacedEvent(int OrderId, decimal Amount) : MediatorDomainEven
 
 /// <summary>
 /// Handler for UserRegisteredEvent.
+/// Uses <see cref="AsyncLocal{T}"/> so parallel test classes do not pollute assertions.
 /// </summary>
 public class UserRegisteredEventHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
-    public static List<string> HandledEvents { get; } = [];
+    private static readonly AsyncLocal<List<string>?> Current = new();
+
+    /// <summary>
+    /// Starts capturing handled events for the current async flow.
+    /// </summary>
+    public static List<string> BeginCapture()
+    {
+        var list = new List<string>();
+        Current.Value = list;
+        return list;
+    }
+
+    /// <summary>
+    /// Stops capturing for the current async flow.
+    /// </summary>
+    public static void EndCapture()
+    {
+        Current.Value = null;
+    }
 
     public Task Handle(UserRegisteredEvent notification, CancellationToken cancellationToken)
     {
-        HandledEvents.Add($"User {notification.UserId} registered with email {notification.Email}");
+        Current.Value?.Add($"User {notification.UserId} registered with email {notification.Email}");
         return Task.CompletedTask;
     }
 }
 
 /// <summary>
 /// Second handler for UserRegisteredEvent.
+/// Uses <see cref="AsyncLocal{T}"/> so parallel test classes do not pollute assertions.
 /// </summary>
 public class WelcomeEmailHandler : IMediatorDomainEventHandler<UserRegisteredEvent>
 {
-    public static List<string> HandledEvents { get; } = [];
+    private static readonly AsyncLocal<List<string>?> Current = new();
+
+    /// <summary>
+    /// Starts capturing handled events for the current async flow.
+    /// </summary>
+    public static List<string> BeginCapture()
+    {
+        var list = new List<string>();
+        Current.Value = list;
+        return list;
+    }
+
+    /// <summary>
+    /// Stops capturing for the current async flow.
+    /// </summary>
+    public static void EndCapture()
+    {
+        Current.Value = null;
+    }
 
     public Task Handle(UserRegisteredEvent notification, CancellationToken cancellationToken)
     {
-        HandledEvents.Add($"Welcome email sent to {notification.Email}");
+        Current.Value?.Add($"Welcome email sent to {notification.Email}");
         return Task.CompletedTask;
     }
 }
 
 /// <summary>
 /// Handler for OrderPlacedEvent.
+/// Uses <see cref="AsyncLocal{T}"/> so parallel test classes do not pollute assertions.
 /// </summary>
 public class OrderPlacedEventHandler : IMediatorDomainEventHandler<OrderPlacedEvent>
 {
-    public static List<string> HandledEvents { get; } = [];
+    private static readonly AsyncLocal<List<string>?> Current = new();
+
+    /// <summary>
+    /// Starts capturing handled events for the current async flow.
+    /// </summary>
+    public static List<string> BeginCapture()
+    {
+        var list = new List<string>();
+        Current.Value = list;
+        return list;
+    }
+
+    /// <summary>
+    /// Stops capturing for the current async flow.
+    /// </summary>
+    public static void EndCapture()
+    {
+        Current.Value = null;
+    }
 
     public Task Handle(OrderPlacedEvent notification, CancellationToken cancellationToken)
     {
-        HandledEvents.Add($"Order {notification.OrderId} placed with amount {notification.Amount}");
+        Current.Value?.Add($"Order {notification.OrderId} placed with amount {notification.Amount}");
         return Task.CompletedTask;
     }
 }
@@ -93,4 +150,3 @@ public class TestAggregate : CoreHasDomainEvents
         _domainEvents.Add(new OrderPlacedEvent(Id * 100, amount));
     }
 }
-

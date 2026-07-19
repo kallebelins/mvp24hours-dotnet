@@ -25,32 +25,38 @@ public class NotificationTest
         services.AddMvpMediator(typeof(OrderCreatedNotification).Assembly);
         _serviceProvider = services.BuildServiceProvider();
         _mediator = _serviceProvider.GetRequiredService<IMediator>();
-
-        // Clear static handlers for fresh test state
-        OrderCreatedEmailHandler.HandledNotifications.Clear();
-        OrderCreatedAuditHandler.HandledNotifications.Clear();
     }
 
     [Fact, Priority(1)]
     public async Task PublishAsync_ShouldExecuteAllHandlers()
     {
         // Arrange
-        var notification = new OrderCreatedNotification
+        List<string> emailHandled = OrderCreatedEmailHandler.BeginCapture();
+        List<string> auditHandled = OrderCreatedAuditHandler.BeginCapture();
+        try
         {
-            OrderId = 123,
-            CustomerName = "John Doe",
-            Amount = 99.99m
-        };
+            var notification = new OrderCreatedNotification
+            {
+                OrderId = 123,
+                CustomerName = "John Doe",
+                Amount = 99.99m
+            };
 
-        // Act
-        await _mediator.PublishAsync(notification);
+            // Act
+            await _mediator.PublishAsync(notification);
 
-        // Assert
-        Assert.Single(OrderCreatedEmailHandler.HandledNotifications);
-        Assert.Single(OrderCreatedAuditHandler.HandledNotifications);
-        Assert.Contains("123", OrderCreatedEmailHandler.HandledNotifications[0]);
-        Assert.Contains("John Doe", OrderCreatedEmailHandler.HandledNotifications[0]);
-        Assert.Contains("99", OrderCreatedAuditHandler.HandledNotifications[0]);
+            // Assert
+            Assert.Single(emailHandled);
+            Assert.Single(auditHandled);
+            Assert.Contains("123", emailHandled[0]);
+            Assert.Contains("John Doe", emailHandled[0]);
+            Assert.Contains("99", auditHandled[0]);
+        }
+        finally
+        {
+            OrderCreatedEmailHandler.EndCapture();
+            OrderCreatedAuditHandler.EndCapture();
+        }
     }
 
     [Fact, Priority(2)]
@@ -74,35 +80,42 @@ public class NotificationTest
     [Fact, Priority(4)]
     public async Task PublishAsync_ShouldExecuteHandlersSequentially()
     {
-        // Arrange - Clear static lists
-        OrderCreatedEmailHandler.HandledNotifications.Clear();
-        OrderCreatedAuditHandler.HandledNotifications.Clear();
-
-        var notifications = new List<OrderCreatedNotification>();
-        for (int i = 1; i <= 5; i++)
+        // Arrange
+        List<string> emailHandled = OrderCreatedEmailHandler.BeginCapture();
+        List<string> auditHandled = OrderCreatedAuditHandler.BeginCapture();
+        try
         {
-            notifications.Add(new OrderCreatedNotification
+            var notifications = new List<OrderCreatedNotification>();
+            for (int i = 1; i <= 5; i++)
             {
-                OrderId = i,
-                CustomerName = $"Customer {i}",
-                Amount = i * 10
-            });
+                notifications.Add(new OrderCreatedNotification
+                {
+                    OrderId = i,
+                    CustomerName = $"Customer {i}",
+                    Amount = i * 10
+                });
+            }
+
+            // Act
+            foreach (OrderCreatedNotification notification in notifications)
+            {
+                await _mediator.PublishAsync(notification);
+            }
+
+            // Assert
+            Assert.Equal(5, emailHandled.Count);
+            Assert.Equal(5, auditHandled.Count);
+
+            // Verify order
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.Contains($"order {i + 1}", emailHandled[i]);
+            }
         }
-
-        // Act
-        foreach (OrderCreatedNotification notification in notifications)
+        finally
         {
-            await _mediator.PublishAsync(notification);
-        }
-
-        // Assert
-        Assert.Equal(5, OrderCreatedEmailHandler.HandledNotifications.Count);
-        Assert.Equal(5, OrderCreatedAuditHandler.HandledNotifications.Count);
-
-        // Verify order
-        for (int i = 0; i < 5; i++)
-        {
-            Assert.Contains($"order {i + 1}", OrderCreatedEmailHandler.HandledNotifications[i]);
+            OrderCreatedEmailHandler.EndCapture();
+            OrderCreatedAuditHandler.EndCapture();
         }
     }
 
@@ -110,23 +123,29 @@ public class NotificationTest
     public async Task IPublisher_ShouldWorkIndependently()
     {
         // Arrange
-        OrderCreatedEmailHandler.HandledNotifications.Clear();
-        OrderCreatedAuditHandler.HandledNotifications.Clear();
-
-        IPublisher publisher = _serviceProvider.GetRequiredService<IPublisher>();
-        var notification = new OrderCreatedNotification
+        List<string> emailHandled = OrderCreatedEmailHandler.BeginCapture();
+        List<string> auditHandled = OrderCreatedAuditHandler.BeginCapture();
+        try
         {
-            OrderId = 999,
-            CustomerName = "Publisher Test",
-            Amount = 500
-        };
+            IPublisher publisher = _serviceProvider.GetRequiredService<IPublisher>();
+            var notification = new OrderCreatedNotification
+            {
+                OrderId = 999,
+                CustomerName = "Publisher Test",
+                Amount = 500
+            };
 
-        // Act
-        await publisher.PublishAsync(notification);
+            // Act
+            await publisher.PublishAsync(notification);
 
-        // Assert
-        Assert.Single(OrderCreatedEmailHandler.HandledNotifications);
-        Assert.Single(OrderCreatedAuditHandler.HandledNotifications);
+            // Assert
+            Assert.Single(emailHandled);
+            Assert.Single(auditHandled);
+        }
+        finally
+        {
+            OrderCreatedEmailHandler.EndCapture();
+            OrderCreatedAuditHandler.EndCapture();
+        }
     }
 }
-

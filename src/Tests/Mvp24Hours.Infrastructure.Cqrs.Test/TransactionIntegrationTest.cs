@@ -26,8 +26,6 @@ public class TransactionIntegrationTest
         CreateOrderTransactionalCommandHandler.Reset();
         CreateOrderNonTransactionalCommandHandler.Reset();
         CreateAggregateTransactionalCommandHandler.Reset();
-        UserRegisteredEventHandler.HandledEvents.Clear();
-        WelcomeEmailHandler.HandledEvents.Clear();
 
         var services = new ServiceCollection();
         services.AddLogging();

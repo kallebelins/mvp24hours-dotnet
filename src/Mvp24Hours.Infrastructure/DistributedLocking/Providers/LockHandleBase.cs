@@ -183,11 +183,7 @@ public abstract class LockHandleBase : ILockHandle
             return;
         }
 
-        _disposed = true;
-        _renewalCts.Cancel();
-        _renewalCts.Dispose();
-
-        // Release synchronously if possible
+        // Release before marking disposed — ReleaseAsync short-circuits when _disposed is true.
         try
         {
             ReleaseAsync().GetAwaiter().GetResult();
@@ -195,6 +191,16 @@ public abstract class LockHandleBase : ILockHandle
         catch
         {
             // Ignore errors during disposal
+        }
+        finally
+        {
+            _disposed = true;
+            if (!_renewalCts.IsCancellationRequested)
+            {
+                _renewalCts.Cancel();
+            }
+
+            _renewalCts.Dispose();
         }
     }
 
@@ -208,10 +214,7 @@ public abstract class LockHandleBase : ILockHandle
             return;
         }
 
-        _disposed = true;
-        _renewalCts.Cancel();
-        _renewalCts.Dispose();
-
+        // Release before marking disposed — ReleaseAsync short-circuits when _disposed is true.
         try
         {
             await ReleaseAsync();
@@ -219,6 +222,16 @@ public abstract class LockHandleBase : ILockHandle
         catch
         {
             // Ignore errors during disposal
+        }
+        finally
+        {
+            _disposed = true;
+            if (!_renewalCts.IsCancellationRequested)
+            {
+                _renewalCts.Cancel();
+            }
+
+            _renewalCts.Dispose();
         }
     }
 }
