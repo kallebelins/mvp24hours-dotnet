@@ -524,73 +524,73 @@
 
 > **Objetivo:** O projeto Pipe (~104 arquivos) tem testes parciais. Expandir cobertura para operações avançadas.
 
-[ ] 7.1 - Testes para `Typed/*`
-- Criar testes para `TypedPipeline`, `TypedPipelineAsync`, `TypedOperationBase`, `TypedOperationBaseAsync`.
+[x] 7.1 - Testes para `Typed/*`
+- Criados testes para `TypedPipeline`, `TypedPipelineAsync`, `TypedOperationBase`, `TypedOperationBaseAsync`: chaining, rollback, propagação de exceção, operações lambda/action e guards de null. **9** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Typed/*.cs` (4 arquivos)
 - Referência: `src/Tests/Mvp24Hours.Application.Pipe.Test/PipelineTest.cs`
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Typed/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Typed/TypedPipelineTest.cs`
 
-[ ] 7.2 - Testes para `AdvancedFlow/DependencyGraph/*`
-- Criar testes para `DependencyGraphExecutor`, `DependencyGraphNode`.
+[x] 7.2 - Testes para `AdvancedFlow/DependencyGraph/*`
+- Criados testes para `DependencyGraphExecutor`, `DependencyGraphNode` (lambda/base), `DependencyGraph`: ordem de dependências, detecção de ciclo, skip por falha, topological sort e duplicate node. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/AdvancedFlow/DependencyGraph/*.cs` (2 arquivos)
 - https://en.wikipedia.org/wiki/Directed_acyclic_graph
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/DependencyGraph/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/DependencyGraph/DependencyGraphTest.cs`
 
-[ ] 7.3 - Testes para `AdvancedFlow/Saga/*`
-- Criar testes para `PipelineSagaOrchestrator`.
+[x] 7.3 - Testes para `AdvancedFlow/Saga/*`
+- Criados testes para `PipelineSagaOrchestrator`: sucesso, compensação automática, retry com `MaxRetries` e `WithSagaId`. **4** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/AdvancedFlow/Saga/*.cs` (2 arquivos)
 - https://microservices.io/patterns/data/saga.html
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Saga/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Saga/PipelineSagaOrchestratorTest.cs`
 
-[ ] 7.4 - Testes para `AdvancedFlow/Checkpoint/*`
-- Criar testes para `InMemoryCheckpointStore`.
+[x] 7.4 - Testes para `AdvancedFlow/Checkpoint/*`
+- Criados testes para `InMemoryCheckpointStore`: save/get/latest/list/update/delete/cleanup/resumable e guards. **10** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/AdvancedFlow/Checkpoint/*.cs` (2 arquivos)
 - https://learn.microsoft.com/azure/architecture/patterns/compensating-transaction
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Checkpoint/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Checkpoint/InMemoryCheckpointStoreTest.cs`
 
-[ ] 7.5 - Testes para `AdvancedFlow/Priority/*`
-- Criar testes para `PriorityPipeline`, `OperationPriority`.
+[x] 7.5 - Testes para `AdvancedFlow/Priority/*`
+- Criados testes para `PriorityPipeline`, `OperationPriority` (attribute/helper/comparer): ordenação sync/async, break-on-fail e auto-detecção de prioridade. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/AdvancedFlow/Priority/*.cs` (2 arquivos)
 - https://learn.microsoft.com/dotnet/api/system.collections.generic.priorityqueue-2
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Priority/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/AdvancedFlow/Priority/PriorityPipelineTest.cs`
 
-[ ] 7.6 - Testes para `Resiliency/*`
-- Criar testes para `DeadLetterPipelineMiddleware`, `BulkheadPipelineMiddleware`, `RateLimitingPipelineMiddleware`, `InMemoryDeadLetterStore`.
+[x] 7.6 - Testes para `Resiliency/*`
+- Criados testes para `DeadLetterPipelineMiddleware`, `BulkheadPipelineMiddleware`, `RateLimitingPipelineMiddleware`, `InMemoryDeadLetterStore`. **7** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Resiliency/*.cs` (8+ arquivos)
 - https://learn.microsoft.com/dotnet/core/resilience/
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Resiliency/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Resiliency/ResiliencyMiddlewareTest.cs`
 
-[ ] 7.7 - Testes para `Middleware/*`
-- Criar testes para `TimeoutPipelineMiddleware`, `PipelineMiddlewareExecutor`.
+[x] 7.7 - Testes para `Middleware/*`
+- Criados testes para `TimeoutPipelineMiddleware`, `PipelineMiddlewareExecutor` (sync/async, ordem de middleware). **5** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Middleware/*.cs` (2 arquivos)
 - https://learn.microsoft.com/aspnet/core/fundamentals/middleware/
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Middleware/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Middleware/MiddlewareTest.cs`
 
-[ ] 7.8 - Testes para `Observability/*`
-- Criar testes para `PipelineMetrics`, `PipelineHealthCheck`, `PipelineVisualizer`.
+[x] 7.8 - Testes para `Observability/*`
+- Criados testes para `PipelineMetrics`, `PipelineHealthCheck`, `PipelineVisualizer`, `PipelineHealthMonitor`. **7** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Observability/*.cs` (5+ arquivos)
 - https://learn.microsoft.com/dotnet/core/diagnostics/
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Observability/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Observability/ObservabilityTest.cs`
 
-[ ] 7.9 - Testes para `Builders/*`
-- Criar testes para `ParallelOperationBuilder`.
+[x] 7.9 - Testes para `Builders/*`
+- Criados testes para `ParallelOperationBuilder`/`ParallelOperationBuilderAsync` via `BeginParallel`/`AddParallel`. **6** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Builders/*.cs` (1+ arquivo)
 - Referência: `src/Tests/Mvp24Hours.Application.Pipe.Test/PipelineTest.cs`
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Builders/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Builders/ParallelOperationBuilderTest.cs`
 
-[ ] 7.10 - Testes para `ExceptionMapping/*`
-- Criar testes para `DefaultPipelineExceptionMapper`.
+[x] 7.10 - Testes para `ExceptionMapping/*`
+- Criados testes para `DefaultPipelineExceptionMapper`: regras específicas, default mapper, shouldFail/shouldPropagate. **4** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/ExceptionMapping/*.cs` (1 arquivo)
 - https://learn.microsoft.com/aspnet/core/web-api/handle-errors
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/ExceptionMapping/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/ExceptionMapping/DefaultPipelineExceptionMapperTest.cs`
 
-[ ] 7.11 - Testes para `Validation/*`
-- Criar testes para `DefaultPipelineValidator`.
+[x] 7.11 - Testes para `Validation/*`
+- Criados testes para `DefaultPipelineValidator`: max/min operations, required types, duplicates, null e custom rules. **7** testes aprovados.
 - `src/Mvp24Hours.Infrastructure.Pipe/Validation/*.cs` (1 arquivo)
 - https://fluentvalidation.net/
-- `src/Tests/Mvp24Hours.Application.Pipe.Test/Validation/*Test.cs`
+- `src/Tests/Mvp24Hours.Application.Pipe.Test/Validation/DefaultPipelineValidatorTest.cs`
 
----
+> **Resultado Fase 7:** **149 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Application.Pipe.Test` (**~71** novos unitários + **~78** pré-existentes). Infraestrutura: `GlobalUsings.cs`, `Support/PipeTestHelpers.cs`, `Support/PipeTestCollection.cs` (DisableParallelization para estado estático), csproj com FluentAssertions/Moq/HealthChecks/Logging.
 
 ## FASE 8 — Expandir Testes de `Mvp24Hours.Infrastructure.Caching`
 
@@ -841,7 +841,7 @@
 | 4 | Mvp24Hours.WebAPI | ~107 | ~107 (concluída) |
 | 5 | Mvp24Hours.Infrastructure.RabbitMQ | ~122 | ~122 (concluída) |
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
-| 7 | Mvp24Hours.Infrastructure.Pipe | ~78 | ~60 |
+| 7 | Mvp24Hours.Infrastructure.Pipe | ~149 | ~71 (concluída) |
 | 8 | Mvp24Hours.Infrastructure.Caching | ~38 | ~80 |
 | 9 | Mvp24Hours.Infrastructure.Cqrs | ~347 | ~100 |
 | 10 | Mvp24Hours.Infrastructure.CronJob | ~91 | ~50 |
