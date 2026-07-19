@@ -1,0 +1,226 @@
+//=====================================================================================
+// Developed by Kallebe Lins (https://github.com/kallebelins)
+//=====================================================================================
+// Reproduction or sharing is free! Contribute to a better world!
+//=====================================================================================
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using Mvp24Hours.Application.Logic;
+using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
+using Mvp24Hours.Core.Contract.Data;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
+using Mvp24Hours.Extensions;
+using Testcontainers.MongoDb;
+using Xunit;
+using Xunit.Priority;
+
+namespace Mvp24Hours.Application.MongoDb.Test;
+
+public class CustomerServiceAsync(IUnitOfWorkAsync unitOfWork) : RepositoryServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork)
+{
+    // custom async methods here
+}
+
+[TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
+[Trait("Category", "Integration")]
+public class CommandServiceAsyncTest : IAsyncLifetime
+{
+    #region [ Container ]
+
+    private readonly MongoDbContainer _mongoDbContainer =
+        new MongoDbBuilder("mongo:6.0").Build();
+
+    public async Task InitializeAsync()
+    {
+        await _mongoDbContainer.StartAsync().ConfigureAwait(false);
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _mongoDbContainer.DisposeAsync().ConfigureAwait(false);
+    }
+
+    #endregion
+
+    #region [ Configure ]
+
+    private IServiceProvider Setup()
+    {
+        var services = new ServiceCollection();
+        services.AddMvp24HoursDbContext(options =>
+        {
+            options.DatabaseName = "asynctest";
+            options.ConnectionString = _mongoDbContainer.GetConnectionString();
+        });
+        services.AddMvp24HoursRepositoryAsync(repositoryOptions: null);
+        services.AddScoped<CustomerServiceAsync, CustomerServiceAsync>();
+        return services.BuildServiceProvider();
+    }
+
+    private static async Task<ObjectId> SeedCustomerAsync(CustomerServiceAsync service)
+    {
+        var oid = ObjectId.GenerateNewId();
+        await service.AddAsync(new Customer
+        {
+            Oid = oid,
+            Created = DateTime.Now,
+            Name = "Test Customer",
+            Active = true
+        });
+        return oid;
+    }
+
+    #endregion
+
+    #region [ Facts ]
+
+    [Fact]
+    public async Task AddAsync_CustomerIsAdded()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+
+        var oid = await SeedCustomerAsync(service);
+        var result = await service.GetByIdAsync(oid);
+
+        Assert.True(result.HasData());
+    }
+
+    [Fact]
+    public async Task ListAnyAsync_ReturnsTrueWhenDataExists()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        await SeedCustomerAsync(service);
+
+        IBusinessResult<bool> result = await service.ListAnyAsync();
+
+        Assert.True(result.GetDataValue());
+    }
+
+    [Fact]
+    public async Task ListCountAsync_ReturnsCountGreaterThanZero()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        await SeedCustomerAsync(service);
+        await SeedCustomerAsync(service);
+
+        IBusinessResult<int> result = await service.ListCountAsync();
+
+        Assert.True(result.GetDataValue() >= 2);
+    }
+
+    [Fact]
+    public async Task ListAsync_ReturnsAllCustomers()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        await SeedCustomerAsync(service);
+        await SeedCustomerAsync(service);
+        await SeedCustomerAsync(service);
+
+        IBusinessResult<IList<Customer>> result = await service.ListAsync();
+
+        Assert.True(result.GetDataCount() >= 3);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithPaging_ReturnsLimitedResults()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        for (int i = 0; i < 5; i++) await SeedCustomerAsync(service);
+
+        var paging = new PagingCriteria(3, 0);
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
+
+        Assert.True(result.HasDataCount(3));
+    }
+
+    [Fact]
+    public async Task ModifyAsync_UpdatesCustomerName()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+
+        var oid = await SeedCustomerAsync(service);
+        var customer = (await service.GetByIdAsync(oid)).GetDataValue();
+        Assert.NotNull(customer);
+
+        customer.Name = "Updated Name";
+        await service.ModifyAsync(customer);
+
+        var updated = await service.GetByIdAsync(oid);
+        Assert.Equal("Updated Name", updated.Data?.Name);
+    }
+
+    [Fact]
+    public async Task RemoveByIdAsync_DeletesCustomer()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+
+        var oid = await SeedCustomerAsync(service);
+        await service.RemoveByIdAsync(oid);
+
+        var result = await service.GetByIdAsync(oid);
+        Assert.False(result.HasData());
+    }
+
+    [Fact]
+    public async Task GetByAsync_FiltersByName()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        var oid = ObjectId.GenerateNewId();
+
+        await service.AddAsync(new Customer
+        {
+            Oid = oid,
+            Created = DateTime.Now,
+            Name = "UniqueSearchName",
+            Active = true
+        });
+
+        IBusinessResult<IList<Customer>> result = await service.GetByAsync(x => x.Name == "UniqueSearchName");
+
+        Assert.True(result.HasData());
+        Assert.Equal("UniqueSearchName", result.Data?.FirstOrDefault()?.Name);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithOrderBy_ReturnsOrderedResults()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+
+        await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Zebra", Active = true });
+        await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Alpha", Active = true });
+        await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Mango", Active = true });
+
+        var paging = new PagingCriteria(10, 0, ["Name asc"]);
+        var result = await service.ListAsync(paging);
+
+        Assert.True(result.HasData());
+    }
+
+    [Fact]
+    public async Task ListAsync_WithExpressionOrder_ReturnsOrderedResults()
+    {
+        var sp = Setup();
+        var service = sp.GetRequiredService<CustomerServiceAsync>();
+
+        await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Z-Customer", Active = true });
+        await service.AddAsync(new Customer { Created = DateTime.Now, Name = "A-Customer", Active = true });
+
+        var paging = new PagingCriteriaExpression<Customer>(10, 0);
+        paging.OrderByAscendingExpr.Add(x => x.Name);
+        var result = await service.ListAsync(paging);
+
+        Assert.True(result.HasData());
+    }
+
+    #endregion
+}

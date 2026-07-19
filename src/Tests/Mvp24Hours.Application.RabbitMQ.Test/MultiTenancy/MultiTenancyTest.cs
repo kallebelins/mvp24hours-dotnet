@@ -109,4 +109,83 @@ public class MultiTenancyTest
 
         context.Headers.Should().NotContainKey(options.Value.TenantIdHeader);
     }
+
+    [Fact]
+    public void TenantRabbitMQOptions_DefaultValues_ShouldHaveExpectedDefaults()
+    {
+        var options = new TenantRabbitMQOptions();
+
+        options.RejectMessagesWithoutTenant.Should().BeFalse();
+        options.AutoPropagateTenantHeaders.Should().BeTrue();
+        options.TenantIdHeader.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public void TenantRabbitMQOptions_GetQueuePrefix_WithTemplate_ShouldFormatCorrectly()
+    {
+        var options = new TenantRabbitMQOptions
+        {
+            QueuePrefixTemplate = "tnt_{tenantId}_"
+        };
+
+        options.GetQueuePrefix("acme").Should().Be("tnt_acme_");
+    }
+
+    [Fact]
+    public void TenantRabbitMQConfiguration_ShouldHaveDefaultValues()
+    {
+        var config = new TenantRabbitMQConfiguration();
+
+        config.IsEnabled.Should().BeTrue();
+        config.TenantId.Should().BeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task InMemoryTenantRabbitMQResolver_Remove_ShouldRemoveConfiguration()
+    {
+        var resolver = new InMemoryTenantRabbitMQResolver(Options.Create(new TenantRabbitMQOptions()));
+        resolver.AddOrUpdate(new TenantRabbitMQConfiguration
+        {
+            TenantId = "removable",
+            VirtualHost = "/test"
+        });
+
+        resolver.Remove("removable");
+        TenantRabbitMQConfiguration? config = await resolver.ResolveAsync("removable");
+
+        config!.VirtualHost.Should().NotBe("/test");
+    }
+
+    [Fact]
+    public async Task InMemoryTenantRabbitMQResolver_MultipleResolves_ShouldReturnConsistentConfig()
+    {
+        var resolver = new InMemoryTenantRabbitMQResolver(Options.Create(new TenantRabbitMQOptions()));
+        resolver.AddOrUpdate(new TenantRabbitMQConfiguration
+        {
+            TenantId = "consistent",
+            QueuePrefix = "cons_"
+        });
+
+        TenantRabbitMQConfiguration? first = await resolver.ResolveAsync("consistent");
+        TenantRabbitMQConfiguration? second = await resolver.ResolveAsync("consistent");
+
+        first!.QueuePrefix.Should().Be(second!.QueuePrefix);
+    }
+
+    [Fact]
+    public async Task TenantConsumeFilter_WithoutRejectEnabled_ShouldCallNext()
+    {
+        var options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = false });
+        var filter = new TenantConsumeFilter(options);
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        bool nextCalled = false;
+
+        await filter.ConsumeAsync(context, async (_, _) =>
+        {
+            nextCalled = true;
+            await Task.CompletedTask;
+        });
+
+        nextCalled.Should().BeTrue();
+    }
 }

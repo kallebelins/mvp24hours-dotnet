@@ -86,6 +86,88 @@ public class TestingInfrastructureTest
         act.Should().Throw<InvalidOperationException>();
     }
 
+    [Fact]
+    public void InMemoryBus_Clear_ShouldRemoveAllMessages()
+    {
+        InMemoryBus bus = RabbitMQTestHelpers.CreateInMemoryBus();
+        bus.Publish(new TestOrderEvent { Name = "to-clear" }, "route");
+
+        bus.Clear();
+
+        bus.PublishedCount<TestOrderEvent>().Should().Be(0);
+    }
+
+    [Fact]
+    public void InMemoryBus_WasPublished_WithNoMessages_ShouldReturnFalse()
+    {
+        InMemoryBus bus = RabbitMQTestHelpers.CreateInMemoryBus();
+
+        bus.WasPublished<TestOrderEvent>().Should().BeFalse();
+    }
+
+    [Fact]
+    public void InMemoryBus_Publish_MultipleTypes_ShouldTrackSeparately()
+    {
+        InMemoryBus bus = RabbitMQTestHelpers.CreateInMemoryBus();
+        bus.Publish(new TestOrderEvent(), "route1");
+        bus.Publish(new TestPaymentCompletedEvent(), "route2");
+
+        bus.PublishedCount<TestOrderEvent>().Should().Be(1);
+        bus.PublishedCount<TestPaymentCompletedEvent>().Should().Be(1);
+    }
+
+    [Fact]
+    public void TestConsumeContextBuilder_WithCorrelationId_ShouldSetCorrelationId()
+    {
+        string corrId = Guid.NewGuid().ToString();
+
+        TestConsumeContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderEvent(),
+            b => b.WithCorrelationId(corrId));
+
+        context.CorrelationId.Should().Be(corrId);
+    }
+
+    [Fact]
+    public void TestConsumeContextBuilder_WithHeader_ShouldAddCustomHeader()
+    {
+        TestConsumeContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderEvent(),
+            b => b.WithHeader("x-custom", "custom-value"));
+
+        context.GetHeader<string>("x-custom").Should().Be("custom-value");
+    }
+
+    [Fact]
+    public void TestConsumeContextBuilder_WithRedeliveryCount_ShouldSetCount()
+    {
+        TestConsumeContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderEvent(),
+            b => b.WithRedeliveryCount(3));
+
+        context.RedeliveryCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void TestConsumeContextBuilder_WithQueueName_ShouldSetQueue()
+    {
+        TestConsumeContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderEvent(),
+            b => b.WithQueueName("custom-queue"));
+
+        context.QueueName.Should().Be("custom-queue");
+    }
+
+    [Fact]
+    public void TestConsumeContextBuilder_Default_ShouldHaveDefaultValues()
+    {
+        TestConsumeContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderEvent());
+
+        context.MessageId.Should().NotBeNullOrWhiteSpace();
+        context.ReceivedAt.Should().BeOnOrBefore(DateTimeOffset.UtcNow.AddSeconds(1));
+    }
+
     private sealed class TestOrderConsumer : IMessageConsumer<TestOrderEvent>
     {
         public Task ConsumeAsync(IConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)

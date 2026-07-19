@@ -119,4 +119,94 @@ public class ConfigurationTest
         options.Enabled.Should().BeFalse();
         options.MaxBatchSize.Should().BeGreaterThan(0);
     }
+
+    [Fact]
+    public void BatchConsumerOptions_Default_ShouldReturnNewInstance()
+    {
+        var a = BatchConsumerOptions.Default;
+        var b = BatchConsumerOptions.Default;
+
+        a.Should().NotBeSameAs(b);
+    }
+
+    [Fact]
+    public void BatchConsumerOptions_HighThroughput_ShouldEnableParallelProcessing()
+    {
+        BatchConsumerOptions options = BatchConsumerOptions.HighThroughput;
+
+        options.EnableParallelProcessing.Should().BeTrue();
+        options.MaxBatchSize.Should().Be(100);
+    }
+
+    [Fact]
+    public void BatchConsumerOptions_LowLatency_ShouldHaveSmallBatchSize()
+    {
+        BatchConsumerOptions options = BatchConsumerOptions.LowLatency;
+
+        options.MaxBatchSize.Should().BeLessThanOrEqualTo(10);
+    }
+
+    [Fact]
+    public void RabbitMQClientOptions_PriorityQueue_IsDisabledByDefault()
+    {
+        var options = new RabbitMQClientOptions();
+
+        options.PriorityQueue.Enabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RabbitMQClientOptions_MaxRedeliveredCount_ShouldBePositive()
+    {
+        var options = new RabbitMQClientOptions();
+
+        options.MaxRedeliveredCount.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void MessageDeduplicationOptions_ExpirationMinutes_ShouldHaveReasonableDefault()
+    {
+        var options = new MessageDeduplicationOptions();
+
+        options.ExpirationMinutes.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void PublisherConfirmOptions_WaitForConfirmsOrDie_ShouldDefaultToTrue()
+    {
+        var options = new PublisherConfirmOptions();
+
+        options.WaitForConfirmsOrDie.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ConsumerPrefetchOptions_PrefetchCount_ShouldBePositive()
+    {
+        var options = new ConsumerPrefetchOptions();
+
+        options.PrefetchCount.Should().BeGreaterThan((ushort)0);
+    }
+
+    [Fact]
+    public void MessageSchedulerOptions_PollingInterval_ShouldBePositive()
+    {
+        var options = new MessageSchedulerOptions();
+
+        options.PollingInterval.Should().BeGreaterThan(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public void RabbitMQHostedOptions_Period_ShouldDefaultToThreeSeconds()
+    {
+        var options = new RabbitMQHostedOptions { Callback = _ => { } };
+
+        options.Period.Should().Be(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public void BatchPublishOptions_MaxBatchDelayMilliseconds_ShouldBePositive()
+    {
+        var options = new BatchPublishOptions();
+
+        options.MaxBatchDelayMilliseconds.Should().BeGreaterThan(0);
+    }
 }

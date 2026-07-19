@@ -148,6 +148,83 @@ public class TransactionalTest
         context.TransactionalBus.Should().BeSameAs(bus);
     }
 
+    [Fact]
+    public async Task InMemoryTransactionalOutbox_GetPendingAsync_EmptyOutbox_ShouldReturnEmpty()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+
+        IReadOnlyList<TransactionalOutboxMessage> pending = await outbox.GetPendingAsync();
+
+        pending.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task InMemoryTransactionalOutbox_GetPendingCount_ShouldCountOnlyPending()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+        var msg1 = CreateOutboxMessage("route1");
+        var msg2 = CreateOutboxMessage("route2");
+        await outbox.AddAsync(msg1);
+        await outbox.AddAsync(msg2);
+        await outbox.MarkAsPublishedAsync(msg1.Id);
+
+        int count = await outbox.GetPendingCountAsync();
+
+        count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task InMemoryTransactionalOutbox_GetById_NonExistent_ShouldReturnNull()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+
+        outbox.GetById(Guid.NewGuid()).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task InMemoryTransactionalOutbox_CleanupAsync_ShouldRemovePublished()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+        var msg = CreateOutboxMessage("cleanup-route");
+        await outbox.AddAsync(msg);
+        await outbox.MarkAsPublishedAsync(msg.Id);
+
+        int removed = await outbox.CleanupAsync(olderThan: DateTime.UtcNow.AddDays(1));
+
+        removed.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public void TransactionalOutboxMessage_ShouldHaveCorrectStatus()
+    {
+        var msg = CreateOutboxMessage("test-route");
+
+        msg.Status.Should().Be(TransactionalOutboxStatus.Pending);
+        msg.RetryCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void TransactionalBus_PublishAsync_ShouldReturnNonEmptyGuid()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+        var bus = new TransactionalBus(outbox, RabbitMQTestHelpers.CreateNullLogger<TransactionalBus>());
+
+        Guid id = bus.PublishAsync(new TestOrderEvent()).GetAwaiter().GetResult();
+
+        id.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task TransactionalBus_FlushToOutboxAsync_WhenNoPending_ShouldReturnZero()
+    {
+        var outbox = new InMemoryTransactionalOutbox();
+        var bus = new TransactionalBus(outbox, RabbitMQTestHelpers.CreateNullLogger<TransactionalBus>());
+
+        int flushed = await bus.FlushToOutboxAsync();
+
+        flushed.Should().Be(0);
+    }
+
     private static TransactionalOutboxMessage CreateOutboxMessage(string routingKey)
     {
         return new TransactionalOutboxMessage

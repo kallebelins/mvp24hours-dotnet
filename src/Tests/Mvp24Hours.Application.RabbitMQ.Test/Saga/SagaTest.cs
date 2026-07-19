@@ -129,6 +129,213 @@ public class SagaTest
         saga.IsCompleted.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task InMemorySagaRepository_CreateAndFind_ShouldReturnSaga()
+    {
+        var repository = new InMemorySagaRepository<TestOrderSagaData>();
+        Guid id = Guid.NewGuid();
+
+        var created = await repository.CreateAsync(id, "Initial");
+        var retrieved = await repository.FindAsync(id);
+
+        retrieved.Should().NotBeNull();
+        retrieved!.CorrelationId.Should().Be(id);
+        retrieved.CurrentState.Should().Be("Initial");
+        created.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task InMemorySagaRepository_FindNonExistent_ShouldReturnNull()
+    {
+        var repository = new InMemorySagaRepository<TestOrderSagaData>();
+
+        var result = await repository.FindAsync(Guid.NewGuid());
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task InMemorySagaRepository_DeleteAsync_ShouldRemoveSaga()
+    {
+        var repository = new InMemorySagaRepository<TestOrderSagaData>();
+        Guid id = Guid.NewGuid();
+        await repository.CreateAsync(id, "Initial");
+
+        bool deleted = await repository.DeleteAsync(id);
+        var result = await repository.FindAsync(id);
+
+        deleted.Should().BeTrue();
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task InMemorySagaRepository_UpdateAsync_ShouldModifyData()
+    {
+        var repository = new InMemorySagaRepository<TestOrderSagaData>();
+        Guid id = Guid.NewGuid();
+        SagaInstance<TestOrderSagaData> saga = await repository.CreateAsync(id, "Initial");
+
+        bool updated = await repository.UpdateAsync(
+            id,
+            expectedVersion: saga.Version,
+            instance => instance.Data.OrderId = "updated-order");
+
+        var result = await repository.FindAsync(id);
+        updated.Should().BeTrue();
+        result!.Data.OrderId.Should().Be("updated-order");
+    }
+
+    [Fact]
+    public void SagaInstance_MultipleTransitions_ShouldAccumulateHistory()
+    {
+        var saga = new SagaInstance<TestOrderSagaData>();
+
+        saga.TransitionTo("AwaitingPayment");
+        saga.TransitionTo("Shipped");
+        saga.TransitionTo("Delivered");
+
+        saga.StateHistory.Should().HaveCount(3);
+        saga.Version.Should().Be(3);
+    }
+
+    [Fact]
+    public void SagaInstance_AddError_ShouldAccumulateErrors()
+    {
+        var saga = new SagaInstance<TestOrderSagaData>();
+
+        saga.Fault("error one");
+        saga.Fault("error two");
+
+        saga.Errors.Should().HaveCount(2);
+        saga.IsFaulted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SagaInstance_ScheduledTimeouts_InitiallyEmpty()
+    {
+        var saga = new SagaInstance<TestOrderSagaData>();
+
+        saga.ScheduledTimeouts.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void SagaInstance_Metadata_ShouldStoreAndRetrieve()
+    {
+        var saga = new SagaInstance<TestOrderSagaData>();
+
+        saga.Metadata["key1"] = "value1";
+
+        saga.Metadata["key1"].Should().Be("value1");
+    }
+
+    [Fact]
+    public async Task SagaConsumeContext_TransitionToAsync_ShouldUpdateState()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: true);
+
+        await ctx.TransitionToAsync("Processing");
+
+        ctx.CurrentState.Should().Be("Processing");
+        sagaInstance.CurrentState.Should().Be("Processing");
+    }
+
+    [Fact]
+    public async Task SagaConsumeContext_CompleteAsync_ShouldMarkCompleted()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: true);
+
+        await ctx.CompleteAsync();
+
+        ctx.IsCompleted.Should().BeTrue();
+        sagaInstance.IsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SagaConsumeContext_FaultAsync_ShouldMarkFaulted()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: true);
+
+        await ctx.FaultAsync("payment error");
+
+        ctx.IsFaulted.Should().BeTrue();
+        sagaInstance.IsFaulted.Should().BeTrue();
+        sagaInstance.ErrorMessage.Should().Be("payment error");
+    }
+
+    [Fact]
+    public void SagaConsumeContext_SetAndGetMetadata_ShouldWork()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: true);
+
+        ctx.SetMetadata("trackingId", "TRK-123");
+
+        ctx.GetMetadata("trackingId").Should().Be("TRK-123");
+        ctx.GetMetadata("missing").Should().BeNull();
+    }
+
+    [Fact]
+    public void SagaConsumeContext_IsNew_ShouldReflectConstructorValue()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: true);
+
+        ctx.IsNew.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SagaConsumeContext_GetSagaInstance_ShouldReturnSameInstance()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+        var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, sagaInstance, isNew: false);
+
+        ctx.GetSagaInstance().Should().BeSameAs(sagaInstance);
+    }
+
+    [Fact]
+    public void SagaConsumeContext_NullInnerContext_ShouldThrow()
+    {
+        var sagaInstance = new SagaInstance<TestOrderSagaData>();
+
+        Action act = () => new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            null!, sagaInstance, isNew: true);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void SagaConsumeContext_NullInstance_ShouldThrow()
+    {
+        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+            new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
+
+        Action act = () => new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
+            innerContext, null!, isNew: true);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
     private sealed class OrderSagaStateMachine : SagaStateMachine<TestOrderSagaData>
     {
         public OrderSagaStateMachine()
