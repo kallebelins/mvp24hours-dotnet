@@ -284,89 +284,91 @@
 
 > **Objetivo:** O projeto WebAPI (~115 arquivos) tem apenas 5 testes. Precisa de cobertura massiva.
 
-[ ] 4.1 - Testes para `Middlewares/*`
-- Criar testes para todos os middlewares: `ExceptionMiddleware`, `CorrelationIdMiddleware`, `RateLimitingMiddleware`, `RequestLoggingMiddleware`, `SecurityHeadersMiddleware`, `ETagMiddleware`, `ProblemDetailsMiddleware`, `RequestContextMiddleware`, `IpFilteringMiddleware`, `RequestSizeLimitMiddleware`, `RequestTelemetryMiddleware`, `AntiForgeryMiddleware`.
+[x] 4.1 - Testes para `Middlewares/*`
+- Criados testes unitários para 12 middlewares: `ExceptionMiddleware`, `CorrelationIdMiddleware`, `RateLimitingMiddleware`, `RequestLoggingMiddleware`, `SecurityHeadersMiddleware`, `ETagMiddleware`, `ProblemDetailsMiddleware`, `RequestContextMiddleware`, `IpFilteringMiddleware`, `RequestSizeLimitMiddleware`, `RequestTelemetryMiddleware`, `AntiForgeryMiddleware`. Pipeline via `DefaultHttpContext` + Moq para `IRequestLogger`/`IExceptionToProblemDetailsMapper`. **15** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Middlewares/*.cs` (12+ arquivos)
 - https://learn.microsoft.com/aspnet/core/fundamentals/middleware/
-- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Middlewares/MiddlewaresTest.cs`
 
-[ ] 4.2 - Testes para `Filters/*`
-- Criar testes para `ModelStateValidationFilter`, `ProblemDetailsResultFilter`, `ContentNegotiationResultFilter`, e filtros do Swagger.
+[x] 4.2 - Testes para `Filters/*`
+- Criados testes para `ModelStateValidationFilter`, `ProblemDetailsResultFilter`, `ContentNegotiationResultFilter` + filtros Swagger (`CustomSwaggerFilter`, `ExamplesOperationFilter`, `AuthResponsesOperationFilter`, `DeprecationOperationFilter`). **12** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Filters/*.cs`, `src/Mvp24Hours.WebAPI/Filters/Swagger/*.cs` (10+ arquivos)
 - https://learn.microsoft.com/aspnet/core/mvc/controllers/filters
-- `src/Tests/Mvp24Hours.WebAPI.Test/Filters/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Filters/FiltersTest.cs`, `Filters/SwaggerFiltersTest.cs`
 
-[ ] 4.3 - Testes para `Binders/*`
-- Criar testes para `TimeOnlyModelBinder`, `DateOnlyModelBinder`, `Mvp24HoursModelBinderProvider`.
+[x] 4.3 - Testes para `Binders/*`
+- Criados testes para `TimeOnlyModelBinder`, `DateOnlyModelBinder`, `Mvp24HoursModelBinderProvider` (routing para DateOnly/TimeOnly/EntityId/PagingCriteria). **7** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Binders/*.cs` (5+ arquivos)
 - https://learn.microsoft.com/aspnet/core/mvc/advanced/custom-model-binding
-- `src/Tests/Mvp24Hours.WebAPI.Test/Binders/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Binders/BindersTest.cs`
 
-[ ] 4.4 - Testes para `RateLimiting/*`
-- Criar testes para `DefaultRateLimitKeyGenerator`, `RateLimitPartitionResolver`, `IDistributedRateLimiter`.
+[x] 4.4 - Testes para `RateLimiting/*`
+- Criados testes para `DefaultRateLimitKeyGenerator` (IP/user/API key/tenant), `RateLimitPartitionResolver` (bypass/whitelist), `InMemoryRateLimiter` e `RedisDistributedRateLimiter` com `MemoryDistributedCache`. **8** testes aprovados.
 - `src/Mvp24Hours.WebAPI/RateLimiting/*.cs` (5+ arquivos)
 - https://learn.microsoft.com/aspnet/core/performance/rate-limit
-- `src/Tests/Mvp24Hours.WebAPI.Test/RateLimiting/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/RateLimiting/RateLimitingTest.cs`
 
-[ ] 4.5 - Testes para `Idempotency/*`
-- Criar testes para `DefaultIdempotencyKeyGenerator`, `CqrsIdempotencyKeyGenerator`, `DistributedCacheIdempotencyStore`.
+[x] 4.5 - Testes para `Idempotency/*`
+- Criados testes para `DefaultIdempotencyKeyGenerator` (header/body/hash), `CqrsIdempotencyKeyGenerator` (JSON body), `DistributedCacheIdempotencyStore` (lock/replay/complete via `MemoryDistributedCache`). **6** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Idempotency/*.cs` (4 arquivos)
 - https://learn.microsoft.com/azure/architecture/patterns/idempotent-operations
-- `src/Tests/Mvp24Hours.WebAPI.Test/Idempotency/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Idempotency/IdempotencyTest.cs`
 
-[ ] 4.6 - Testes para `ContentNegotiation/*`
-- Criar testes para `AcceptHeaderNegotiator`, `ContentFormatterRegistry`, `ContentNegotiationBuilder`, `ProblemDetailsFormatters`.
+[x] 4.6 - Testes para `ContentNegotiation/*`
+- Criados testes para `AcceptHeaderNegotiator` (Accept header, format param, URL suffix), `ContentFormatterRegistry`, `JsonContentFormatter`/`XmlContentFormatter`, `ProblemDetailsJsonFormatter`/`ProblemDetailsXmlFormatter`. **6** testes aprovados.
 - `src/Mvp24Hours.WebAPI/ContentNegotiation/*.cs` (6 arquivos)
 - https://learn.microsoft.com/aspnet/core/web-api/advanced/formatting
-- `src/Tests/Mvp24Hours.WebAPI.Test/ContentNegotiation/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/ContentNegotiation/ContentNegotiationTest.cs`
 
-[ ] 4.7 - Testes para `Exceptions/*`
-- Criar testes para `DefaultExceptionToProblemDetailsMapper`, `CompositeExceptionToProblemDetailsMapper`, `ValidationProblemDetailsMapper`.
+[x] 4.7 - Testes para `Exceptions/*`
+- Criados testes para `DefaultExceptionToProblemDetailsMapper` (NotFound/Validation/Argument), `ValidationProblemDetailsMapper`, `CompositeExceptionToProblemDetailsMapper` (chain delegation). **5** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Exceptions/*.cs` (4 arquivos)
 - https://learn.microsoft.com/aspnet/core/web-api/handle-errors
-- `src/Tests/Mvp24Hours.WebAPI.Test/Exceptions/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Exceptions/ExceptionMappersTest.cs`
 
-[ ] 4.8 - Testes para `Endpoints/*`
-- Criar testes para `NativeMinimalApiEndpointExtensions`, `NativeTypedResultsExtensions`, `EndpointGroupExtensions`, `ValidationEndpointFilter`, `NativeEndpointFilters`.
+[x] 4.8 - Testes para `Endpoints/*`
+- Criados testes para `ValidationEndpointFilter`, `NativeValidationEndpointFilter`, `ExceptionHandlingEndpointFilter`, `LoggingEndpointFilter`, `CorrelationIdEndpointFilter`, `TimeoutEndpointFilter`, `NativeTypedResultsExtensions`/`TypedResultsExtensions`. **8** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Endpoints/*.cs`, `src/Mvp24Hours.WebAPI/Endpoints/Filters/*.cs` (8+ arquivos)
 - https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/
-- `src/Tests/Mvp24Hours.WebAPI.Test/Endpoints/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Endpoints/EndpointsTest.cs`
 
-[ ] 4.9 - Testes para `Configuration/*`
-- Criar testes para todas as classes de options: `ExceptionOptions`, `CorrelationIdOptions`, `SecurityHeadersOptions`, `ETagOptions`, `RateLimitingOptions`, `ApiVersioningOptions`, `HealthCheckOptions`, `ProblemDetailsOptions`, etc.
+[x] 4.9 - Testes para `Configuration/*`
+- Criados testes para options: `ExceptionOptions`, `CorrelationIdOptions`, `SecurityHeadersOptions`, `ETagOptions`, `RateLimitingOptions`, `ApiVersioningOptions`, `HealthCheckOptions`, `MvpProblemDetailsOptions`, `IdempotencyOptions`, `RequestLoggingOptions`, `IpFilteringOptions`, `AntiForgeryOptions`. **12** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Configuration/*.cs` (20+ arquivos)
 - https://learn.microsoft.com/aspnet/core/fundamentals/configuration/options
-- `src/Tests/Mvp24Hours.WebAPI.Test/Configuration/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Configuration/ConfigurationOptionsTest.cs`
 
-[ ] 4.10 - Testes para `OpenApi/*`
-- Criar testes para `OpenApiDocumentTransformers`.
+[x] 4.10 - Testes para `OpenApi/*`
+- Criados testes para transformers: `SecuritySchemeTransformer`, `CustomHeadersTransformer`, `CommonResponsesTransformer`, `DeprecationTransformer`, `TagFilterTransformer`, `ProblemDetailsTransformer`, `RateLimitHeadersTransformer`. **6** testes aprovados.
 - `src/Mvp24Hours.WebAPI/OpenApi/*.cs` (1+ arquivos)
 - https://learn.microsoft.com/aspnet/core/tutorials/getting-started-with-swashbuckle
-- `src/Tests/Mvp24Hours.WebAPI.Test/OpenApi/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/OpenApi/OpenApiTransformersTest.cs`
 
-[ ] 4.11 - Testes para `Http/*`
-- Criar testes para `CorrelationIdHandler`.
+[x] 4.11 - Testes para `Http/*`
+- Criados testes para `CorrelationIdHandler` (propagação de correlation ID via `IHttpContextAccessor`) e `AsyncLocalCorrelationContextProvider`. **2** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Http/*.cs` (1+ arquivo)
 - https://learn.microsoft.com/aspnet/core/fundamentals/http-requests
-- `src/Tests/Mvp24Hours.WebAPI.Test/Http/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Http/CorrelationIdHandlerTest.cs`
 
-[ ] 4.12 - Testes para `Services/*`
-- Criar testes para `DefaultRequestLogger`.
+[x] 4.12 - Testes para `Services/*`
+- Criados testes para `DefaultRequestLogger` (request/response/exception logging com masking). **3** testes aprovados.
 - `src/Mvp24Hours.WebAPI/Services/*.cs` (1+ arquivo)
 - https://learn.microsoft.com/aspnet/core/fundamentals/logging/
-- `src/Tests/Mvp24Hours.WebAPI.Test/Services/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Services/DefaultRequestLoggerTest.cs`
 
-[ ] 4.13 - Testes para `HealthChecks/*`
-- Criar testes para `BaseHealthCheck`.
+[x] 4.13 - Testes para `HealthChecks/*`
+- Criados testes para `BaseHealthCheck` (via subclass de teste) e `CacheHealthCheck` (MemoryCache + MemoryDistributedCache). **4** testes aprovados.
 - `src/Mvp24Hours.WebAPI/HealthChecks/*.cs` (1+ arquivo)
 - https://learn.microsoft.com/aspnet/core/host-and-deploy/health-checks
-- `src/Tests/Mvp24Hours.WebAPI.Test/HealthChecks/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/HealthChecks/HealthChecksTest.cs`
 
-[ ] 4.14 - Testes para `Extensions/*`
-- Criar testes para `ServiceCollectionExtentions`, `ApplicationBuilderExtensions`, `CorrelationIdExtensions`, `NativeOpenApiApplicationBuilderExtensions`, `HttpContextExtensions`.
+[x] 4.14 - Testes para `Extensions/*`
+- Criados smoke tests para `ServiceCollectionExtentions` (`AddMvp24HoursWeb*`) e `ApplicationBuilderExtensions` (`UseMvp24Hours*`) + 5 testes TestHost existentes em `ApplicationBuilderTest` (exceptions, CORS, correlation ID). Namespace alinhado para `Mvp24Hours.WebAPI.Test`. **13** testes aprovados (8 novos + 5 existentes).
 - `src/Mvp24Hours.WebAPI/Extensions/*.cs` (5+ arquivos)
 - https://learn.microsoft.com/dotnet/core/extensions/dependency-injection
-- `src/Tests/Mvp24Hours.WebAPI.Test/Extensions/*Test.cs`
+- `src/Tests/Mvp24Hours.WebAPI.Test/Extensions/ExtensionsSmokeTest.cs`, `ApplicationBuilderTest.cs`
+
+> **Resultado Fase 4:** **107 aprovados · 0 falhas · 0 ignorados**. Infraestrutura: `GlobalUsings.cs`, `Support/WebApiTestHelpers.cs`, csproj atualizado (FluentAssertions, FrameworkReference).
 
 ---
 
@@ -832,7 +834,7 @@
 |------|---------|-------------------|------------------------|
 | 2 | Mvp24Hours.Infrastructure | ~1198 | ~200 (concluída) |
 | 3 | Mvp24Hours.Infrastructure.Data.EFCore | ~177 | ~177 (concluída) |
-| 4 | Mvp24Hours.WebAPI | 5 | ~100 |
+| 4 | Mvp24Hours.WebAPI | ~107 | ~107 (concluída) |
 | 5 | Mvp24Hours.Infrastructure.RabbitMQ | 6 | ~150 |
 | 6 | Mvp24Hours.Application | ~264 | ~50 |
 | 7 | Mvp24Hours.Infrastructure.Pipe | ~78 | ~60 |

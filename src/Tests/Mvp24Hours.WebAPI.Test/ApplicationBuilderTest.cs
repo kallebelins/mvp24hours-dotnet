@@ -14,7 +14,7 @@ using Mvp24Hours.WebAPI.Extensions;
 using Xunit;
 using Xunit.Priority;
 
-namespace Mvp24Hours.Patterns.Test;
+namespace Mvp24Hours.WebAPI.Test;
 
 /// <summary>
 /// 

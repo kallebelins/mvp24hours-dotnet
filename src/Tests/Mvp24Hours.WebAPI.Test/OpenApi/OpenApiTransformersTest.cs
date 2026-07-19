@@ -1,0 +1,116 @@
+using Microsoft.OpenApi;
+using Mvp24Hours.WebAPI.Configuration;
+using Mvp24Hours.WebAPI.OpenApi;
+
+namespace Mvp24Hours.WebAPI.Test.OpenApi;
+
+[Trait("Category", "Unit")]
+public class OpenApiTransformersTest
+{
+    [Fact]
+    public async Task SecuritySchemeTransformer_Should_AddBearerScheme()
+    {
+        var options = new NativeOpenApiOptions
+        {
+            AuthenticationScheme = OpenApiAuthenticationScheme.Bearer
+        };
+        var document = new OpenApiDocument();
+        var sut = new SecuritySchemeTransformer(options);
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        document.Components.Should().NotBeNull();
+        document.Components!.SecuritySchemes.Should().ContainKey("Bearer");
+    }
+
+    [Fact]
+    public async Task CustomHeadersTransformer_Should_AddHeadersToOperations()
+    {
+        var document = CreateDocumentWithSingleOperation();
+        var sut = new CustomHeadersTransformer(("X-Correlation-ID", "Correlation", false));
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        var operation = document.Paths["/api/orders"].Operations.Values.Single();
+        operation.Parameters.Should().Contain(x => x.Name == "X-Correlation-ID");
+    }
+
+    [Fact]
+    public async Task CommonResponsesTransformer_Should_AddConfiguredResponses()
+    {
+        var document = CreateDocumentWithSingleOperation();
+        var sut = new CommonResponsesTransformer(add401: true, add403: true, add500: true);
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        var responses = document.Paths["/api/orders"].Operations.Values.Single().Responses;
+        responses.Should().ContainKey("401");
+        responses.Should().ContainKey("403");
+        responses.Should().ContainKey("500");
+    }
+
+    [Fact]
+    public async Task ProblemDetailsTransformer_Should_AddSchemasAndResponseContent()
+    {
+        var document = CreateDocumentWithSingleOperation();
+        document.Paths["/api/orders"].Operations.Values.Single().Responses["400"] = new OpenApiResponse { Description = "Bad Request" };
+        var sut = new ProblemDetailsTransformer();
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        document.Components!.Schemas.Should().ContainKey("ProblemDetails");
+        document.Components!.Schemas.Should().ContainKey("ValidationProblemDetails");
+        document.Paths["/api/orders"].Operations.Values.Single().Responses["400"]
+            .Content.Should().ContainKey("application/problem+json");
+    }
+
+    [Fact]
+    public async Task RateLimitHeadersTransformer_Should_AddRateLimitHeadersAnd429()
+    {
+        var document = CreateDocumentWithSingleOperation();
+        var sut = new RateLimitHeadersTransformer();
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        var operation = document.Paths["/api/orders"].Operations.Values.Single();
+        operation.Responses.Should().ContainKey("429");
+    }
+
+    [Fact]
+    public async Task TagFilterTransformer_Should_RemoveOperationsOutsideIncludedTags()
+    {
+        var document = CreateDocumentWithSingleOperation();
+        var operation = document.Paths["/api/orders"].Operations.Values.Single();
+        operation.Tags = new HashSet<OpenApiTagReference>
+        {
+            new OpenApiTagReference("Orders", document)
+        };
+        var sut = new TagFilterTransformer(includeTags: ["Billing"]);
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        document.Paths.Should().BeEmpty();
+    }
+
+    private static OpenApiDocument CreateDocumentWithSingleOperation()
+    {
+        var operation = new OpenApiOperation
+        {
+            Responses = new OpenApiResponses { ["200"] = new OpenApiResponse { Description = "ok" } }
+        };
+
+        return new OpenApiDocument
+        {
+            Paths = new OpenApiPaths
+            {
+                ["/api/orders"] = new OpenApiPathItem
+                {
+                    Operations = new Dictionary<HttpMethod, OpenApiOperation>
+                    {
+                        [HttpMethod.Get] = operation
+                    }
+                }
+            }
+        };
+    }
+}
