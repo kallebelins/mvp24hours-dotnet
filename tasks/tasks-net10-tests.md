@@ -774,41 +774,45 @@
 
 > **Objetivo:** Garantir >95% de cobertura no projeto Core, que é a base da solução.
 
-[ ] 12.1 - Revisar cobertura atual do Core
-- Analisar relatório de cobertura específico para `Mvp24Hours.Core` e identificar classes/métodos não cobertos.
-- `test-results/coverage-report/` (relatório HTML)
+[x] 12.1 - Revisar cobertura atual do Core
+- Baseline (Fase 1): `Mvp24Hours.Core` sem dados Coverlet no run consolidado da solution (instrumentação indireta via outros projetos de teste). Inventário: ~788 testes existentes em `Mvp24Hours.Core.Test` cobrindo Helpers, Extensions, ValueObjects, Observability, RateLimiting, Clock/GUID, Enumeration, Options.
+- Gaps identificados: `Domain/Specifications/*`, `Domain/Entities/*`, `Infrastructure/Channels/*`, `Infrastructure/Security/AesEncryptionProvider`, `Serialization/*`, `Exceptions/*`, contratos concretos em `Contract/**/*` (providers, options, validation context).
+- Verificado pós-Fase 12: **838 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Core.Test` (**~50** novos unitários). Relatório Coverlet isolado do projeto Core retorna XML vazio (mesmo comportamento do baseline); validação consolidada fica para Fase 13.
+- `test-results/core-phase12-v3/` (local, não versionado)
 - https://github.com/coverlet-coverage/coverlet
 - `src/Tests/Mvp24Hours.Core.Test/**/*Test.cs`
 
-[ ] 12.2 - Testes para `Contract/**/*`
-- Criar testes para interfaces e contratos que possuem implementações default ou métodos de extensão.
+[x] 12.2 - Testes para `Contract/**/*`
+- Criados testes para contratos concretos: `CacheEntryOptions`, `MvpChannelOptions`, `AsyncLocalCurrentUserProvider`, `SystemUserProvider`, `AsyncLocalTenantProvider`, `NoTenantProvider`, `DefaultRequestContext`, `PipelineValidationResult`/`PipelineValidationException`, `OptionsValidationContext` (AddError/AtLeastOne/ExactlyOne/When/ToResult). **8** testes em `Contract/ContractTypesTest.cs`.
 - `src/Mvp24Hours.Core/Contract/**/*.cs` (50+ arquivos)
 - https://learn.microsoft.com/dotnet/csharp/fundamentals/types/interfaces
-- `src/Tests/Mvp24Hours.Core.Test/Contract/*Test.cs`
+- `src/Tests/Mvp24Hours.Core.Test/Contract/ContractTypesTest.cs`
 
-[ ] 12.3 - Testes para `Domain/**/*`
-- Expandir testes para `Specification`, `CompositeSpecifications`, `Enumeration`, `EntityBase`, `AuditableEntity`.
+[x] 12.3 - Testes para `Domain/**/*`
+- Criados testes para `Specification`/`CompositeSpecifications` (Create/All/None/operadores &|!/IsSatisfiedBy), `InMemorySpecificationEvaluator` (criteria/order/paging) e entidades `EntityBase`/`GuidEntityBase`, `AuditableEntity`, `SoftDeletableEntity` (equality/transient/soft-delete). **13** testes em `Domain/SpecificationTest.cs`, `Domain/EntityBaseTest.cs`. `Enumeration` já coberto em `EnumerationTest.cs`.
 - `src/Mvp24Hours.Core/Domain/**/*.cs` (10+ arquivos)
 - https://learn.microsoft.com/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/
 - `src/Tests/Mvp24Hours.Core.Test/Domain/*Test.cs`
 
-[ ] 12.4 - Testes para `Infrastructure/**/*`
-- Expandir testes para `ChannelFactory`, `NativeRateLimiterProvider`, geradores de GUID.
+[x] 12.4 - Testes para `Infrastructure/**/*`
+- Criados testes para `ChannelFactory`/`Channels`, `MvpChannel` (write/read/batch), `ProducerConsumer`/`ProducerConsumer<TInput,TOutput>`, `ClockAdapter`, `AesEncryptionProvider`. GUID generators e `NativeRateLimiterProvider` já cobertos em `ClockAndGuidTest.cs`/`RateLimitingTest.cs`. **11** testes em `Infrastructure/ChannelsTest.cs`, `Infrastructure/InfrastructureServicesTest.cs`.
 - `src/Mvp24Hours.Core/Infrastructure/**/*.cs` (10+ arquivos)
 - https://learn.microsoft.com/dotnet/standard/parallel-programming/dataflow-task-parallel-library
 - `src/Tests/Mvp24Hours.Core.Test/Infrastructure/*Test.cs`
 
-[ ] 12.5 - Testes para `Serialization/**/*`
-- Criar testes para `JsonCoreSerializerContext`, `PropertyAndFieldsSerializerResolver`, `CompositeContractResolver`, `ValueObjectConverter`.
+[x] 12.5 - Testes para `Serialization/**/*`
+- Criados testes para `PropertyAndFieldsSerializerResolver`, `CompositeContractResolver`, `ValueObjectConverter`, `Mvp24HoursJsonSerializerContext` (round-trip, `CreateOptions`/`CreateOptionsWithConverters`). **7** testes em `Serialization/SerializationTest.cs`.
 - `src/Mvp24Hours.Core/Serialization/**/*.cs` (6 arquivos)
 - https://learn.microsoft.com/dotnet/standard/serialization/system-text-json/
 - `src/Tests/Mvp24Hours.Core.Test/Serialization/*Test.cs`
 
-[ ] 12.6 - Testes para `Exceptions/*`
-- Criar testes para `NotFoundException`, `UnauthorizedException`, e outras exceções customizadas.
+[x] 12.6 - Testes para `Exceptions/*`
+- Criados testes para `Mvp24HoursException`, `NotFoundException`, `UnauthorizedException`, `ForbiddenException`, `ValidationException`, `ConflictException`, `DomainException`, `PipelineException`, `BusinessException`, `DataException`, `ConfigurationException`, `HttpStatusCodeException`. `RateLimitExceededException` já coberto em `RateLimitingTest.cs`. **11** testes em `Exceptions/ExceptionsTest.cs`.
 - `src/Mvp24Hours.Core/Exceptions/*.cs` (2+ arquivos)
 - https://learn.microsoft.com/dotnet/standard/exceptions/
 - `src/Tests/Mvp24Hours.Core.Test/Exceptions/*Test.cs`
+
+> **Resultado Fase 12:** **838 aprovados · 0 falhas · 0 ignorados** no projeto `Mvp24Hours.Core.Test` (**~50** novos unitários + **~788** pré-existentes). Novos arquivos: `Domain/`, `Infrastructure/`, `Serialization/`, `Exceptions/`, `Contract/`.
 
 ---
 
@@ -856,7 +860,7 @@
 | 9 | Mvp24Hours.Infrastructure.Cqrs | ~401 | ~54 (concluída) |
 | 10 | Mvp24Hours.Infrastructure.CronJob | ~204 | ~112 (concluída) |
 | 11 | Mvp24Hours.Infrastructure.Data.MongoDb | ~186 | ~57 (concluída) |
-| 12 | Mvp24Hours.Core | ~788 | ~50 |
+| 12 | Mvp24Hours.Core | ~838 | ~50 (concluída) |
 | **Total** | | **~1746** | **~1070** |
 
 **Meta:** ~2816 testes para atingir >95% de cobertura.
