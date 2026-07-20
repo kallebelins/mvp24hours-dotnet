@@ -1322,35 +1322,33 @@
 
 > **Objetivo:** O projeto Caching tem cobertura de 45.9%. Precisa de +~2.012 linhas cobertas para atingir 90%.
 
-[ ] 22.1 - Testes para `Distributed/*`
-- Testar `RedisCache`, `SqlServerCache`, `MongoDbCache`: distributed backends.
-- Testar `HybridCache`: L1 + L2 coordination.
-- Testar connection resilience, retry policies.
-- `src/Mvp24Hours.Infrastructure.Caching/Distributed/*.cs` (5+ arquivos)
+[x] 22.1 - Testes para `Distributed/*`
+- API real: não existem `RedisCache`/`SqlServerCache`/`MongoDbCache` dedicados — backends via `DistributedCacheProvider` (`IDistributedCache`) + `MultiLevelCache` (L1/L2).
+- Cobertos: expiration options, guards, GetMany/SetMany/RemoveMany, falha do backend (null/false/throw), `WithResilience` graceful degradation.
+- MultiLevel: promote/demote, GetFromL1/L2, GetString promote, SetMany + invalidation, RemoveBoth/Many, Exists, GetOrSet null factory.
+- `src/Tests/.../Distributed/DistributedCacheTest.cs` (**26** testes)
 - Estimativa: ~25 testes
 
-[ ] 22.2 - Testes para `Tags/*`
-- Testar `CacheTagManager`: AddTag, RemoveTag, GetKeysByTag.
-- Testar `TagBasedInvalidation`: invalidate by tag.
-- Testar tag persistence, cleanup.
-- `src/Mvp24Hours.Infrastructure.Caching/Tags/*.cs` (3+ arquivos)
+[x] 22.2 - Testes para `Tags/*`
+- API real: `Invalidation/CacheTagManager` + `HybridCache/*TagManager` (sem pasta `Tags/`).
+- Cobertos: guards TagKey/Invalidate/Remove, dedupe, `SetWithInvalidationAsync`/`RemoveWithCleanupAsync`/`GetOrSetAsync` com tags.
+- `InMemoryHybridCacheTagManager`: track, invalidate, stats, clear, RemoveKeyFromTags.
+- `src/Tests/.../Tags/CacheTagsTest.cs` (**20** testes)
 - Estimativa: ~15 testes
 
-[ ] 22.3 - Testes para `Locking/*`
-- Testar `DistributedCacheLock`: acquire, release, extend.
-- Testar `CacheLockFactory`: create, timeout.
-- Testar lock contention, retry.
-- `src/Mvp24Hours.Infrastructure.Caching/Locking/*.cs` (3+ arquivos)
+[x] 22.3 - Testes para `Locking/*`
+- API real: **não existe** `DistributedCacheLock`/`CacheLockFactory` — locking via `CacheStampedePrevention` (SemaphoreSlim acquire/release/timeout).
+- Cobertos: empty key, timeout, keys distintas sem bloqueio, cancelamento, DI `AddCacheStampedePrevention`, GetOrSet com/sem stampede (concorrência).
+- `src/Tests/.../Locking/CacheLockingTest.cs` (**12** testes)
 - Estimativa: ~15 testes
 
-[ ] 22.4 - Testes para `Extensions/*` (DI completo)
-- Testar `CachingServiceCollectionExtensions`: AddMvpCaching, options.
-- Testar `CacheBuilderExtensions`: WithSerializer, WithCompression.
-- Testar `CacheProviderExtensions`: GetOrSet, TryGet.
-- `src/Mvp24Hours.Infrastructure.Caching/Extensions/*.cs` (6+ arquivos)
+[x] 22.4 - Testes para `Extensions/*` (DI completo)
+- API real: `CachingServiceExtensions`, `CacheProviderExtensions`, `MvpCachingExtensions`, `MultiLevelCacheExtensions`, `CacheInvalidationServiceExtensions`, `CacheExtensions`/`ObjectCache*`, resilience GetOrSet/GetOrDefault/GetWithFallback.
+- Cobertos: Memory/Distributed/MessagePack DI, fallback memory vs distributed, MultiLevel + sync, invalidation features, SetString/SetObject sync+async.
+- `src/Tests/.../Extensions/CachingExtensionsTest.cs` (**34** testes)
 - Estimativa: ~20 testes
 
-> **Resultado Esperado Fase 22:** ~75 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 22:** **92** novos testes · suíte `Caching.Test` **267 aprovados · 0 falhas · 0 ignorados**.
 
 ---
 
