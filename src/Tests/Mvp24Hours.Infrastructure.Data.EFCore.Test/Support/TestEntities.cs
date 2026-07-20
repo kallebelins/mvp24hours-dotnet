@@ -97,3 +97,37 @@ public sealed class TestDomainEvent : IDomainEvent
     public DateTime OccurredAt { get; }
     public string Message { get; }
 }
+
+public class TestEntityLog : EntityBaseLog<int, string>
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public class TestDbContextNoLog : Mvp24HoursContext
+{
+    public TestDbContextNoLog(DbContextOptions options)
+        : base(options)
+    {
+    }
+
+    public override bool CanApplyEntityLog => false;
+
+    public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
+    public DbSet<TestEntity> Entities => Set<TestEntity>();
+}
+
+public class TestDbContextWithUser : Mvp24HoursContext
+{
+    public TestDbContextWithUser(DbContextOptions options, object? entityLogBy = null)
+        : base(options)
+    {
+        EntityLogBy = entityLogBy;
+    }
+
+    public override bool CanApplyEntityLog => true;
+
+    public override object? EntityLogBy { get; }
+
+    public DbSet<TestEntityLog> EntityLogs => Set<TestEntityLog>();
+    public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
+}

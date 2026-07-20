@@ -1197,64 +1197,52 @@
 ## FASE 19 — Expandir Cobertura de `Mvp24Hours.Infrastructure.Data.EFCore` (37.7% → 90%)
 
 > **Objetivo:** O projeto EFCore tem cobertura de 37.7%. Precisa de +~4.860 linhas cobertas para atingir 90%.
+> Pastas inventariadas (`QueryObjects`, `Conventions`, `ShadowProperties`, `ChangeTracking`, `Transactions`, repos SoftDelete/Auditable/Tenant) **não existem** no código — adaptado aos tipos reais (Context, UoW, Extensions, HealthChecks, Observability, Security).
 
-[ ] 19.1 - Testes para `DbContext/*` (base e variantes)
-- Testar `Mvp24HoursContext`: OnModelCreating, conventions.
-- Testar `AuditableDbContext`: audit columns, tracking.
-- Testar `TenantDbContext`: tenant filtering, isolation.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/*.cs` (DbContext-related)
+[x] 19.1 - Testes para `Mvp24HoursContext` (DbContext base)
+- Testados `SaveChanges`/`SaveChangesAsync`: stamp de `Created`/`Modified` via `ApplyLogRules`, filtro global `IEntityDateLog`, `CanApplyEntityLog=false`, `EntityLogBy` em `EntityBaseLog`.
+- Variantes `AuditableDbContext`/`TenantDbContext` **não existem** (audit/tenant via interceptors já cobertos na Fase 3).
+- `src/Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Mvp24HoursContextTest.cs` (8 testes)
 - Estimativa: ~20 testes
 
-[ ] 19.2 - Testes para `Repositories/*` (variantes especializadas)
-- Testar `SoftDeleteRepository`: soft delete, restore, purge.
-- Testar `AuditableRepository`: audit trail, change tracking.
-- Testar `TenantRepository`: tenant-scoped queries.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Repositories/*.cs` (5+ arquivos)
+[x] 19.2 - Testes para UnitOfWork / RepositoryBase
+- `SoftDeleteRepository`/`AuditableRepository`/`TenantRepository` **não existem**. Cobertos: `UnitOfWork`, `UnitOfWorkAsync` (GetRepository, SaveChanges, Rollback, cancelamento, Dispose) + `RepositoryBase` (GetQuery, paging, OrderBy, GetKeyInfo, TransactionScope).
+- Options: `EFCoreRepositoryOptions`, `EFCoreResilienceOptions` (defaults + factories Production/Development/AzureSql/NoResilience).
+- `src/Tests/.../UnitOfWorkTest.cs`, `UnitOfWorkAsyncTest.cs`, `RepositoryBaseTest.cs`, `Configuration/*Test.cs` (35 testes)
 - Estimativa: ~25 testes
 
-[ ] 19.3 - Testes para `QueryObjects/*`
-- Testar `QueryObject`, `QueryObjectAsync`: query encapsulation.
-- Testar `CompositeQueryObject`: combining multiple queries.
-- Testar `CachedQueryObject`: query caching.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/QueryObjects/*.cs` (4+ arquivos)
+[x] 19.3 - Testes para Query Extensions (em vez de QueryObjects)
+- `QueryObjects/*` **não existe**. Cobertos: `ProjectionExtensions`, `QueryTrackingExtensions`, `QueryPerformanceExtensions`, `QueryTimeoutExtensions` (SQLite), `CompiledQueryExtensions`, `BulkOperationsExtensions`.
+- `src/Tests/.../Extensions/{Projection,QueryTracking,QueryPerformance,QueryTimeout,CompiledQuery,BulkOperations}*Test.cs` (~60 testes)
 - Estimativa: ~15 testes
 
-[ ] 19.4 - Testes para `Conventions/*`
-- Testar `TableNamingConvention`: plural, singular, snake_case.
-- Testar `ColumnNamingConvention`: property naming.
-- Testar `EntityTypeConfigurationConvention`: automatic configuration.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Conventions/*.cs` (4+ arquivos)
+[x] 19.4 - Testes para ModelBuilder Extensions (em vez de Conventions)
+- `Conventions/*` **não existe**. Cobertos: `ApplyGlobalFilters`, `ApplyTenantQueryFilters`/`ApplyTenantAndSoftDeleteFilters`/`ConfigureTenantProperties`, `ApplyStronglyTypedIdConversions` / `Has*EntityIdConversion`.
+- `src/Tests/.../Extensions/{ModelBuilder,TenantModelBuilder,EntityIdModelBuilder}*Test.cs` (11 testes)
 - Estimativa: ~12 testes
 
-[ ] 19.5 - Testes para `ShadowProperties/*`
-- Testar `ShadowPropertyExtensions`: define, get, set shadow properties.
-- Testar audit shadow properties: CreatedAt, UpdatedAt.
-- Testar tenant shadow property: TenantId.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/ShadowProperties/*.cs` (3+ arquivos)
+[x] 19.5 - Testes para Security + Configuration (em vez de ShadowProperties)
+- `ShadowProperties/*` **não existe**. Cobertos: `RowLevelSecurityHelper` (scripts SQL Server/PostgreSQL, drop, combined, null guards) + options em 19.2.
+- `src/Tests/.../Security/RowLevelSecurityHelperTest.cs` (15 testes)
 - Estimativa: ~12 testes
 
-[ ] 19.6 - Testes para `ChangeTracking/*`
-- Testar `ChangeTracker` extensions: GetChanges, HasChanges.
-- Testar `EntityEntryExtensions`: OriginalValues, CurrentValues.
-- Testar `ChangeTrackerAudit`: logging changes.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/ChangeTracking/*.cs` (4+ arquivos)
+[x] 19.6 - Testes para Observability + Logging (em vez de ChangeTracking)
+- `ChangeTracking/*` **não existe**. Cobertos: `EFCoreActivitySource`, `EFCoreMetrics`, `EFCoreDiagnosticsListener`, `EFCoreLoggerMessages` (EventIds).
+- `src/Tests/.../Observability/*Test.cs`, `Logging/EFCoreLoggerMessagesTest.cs` (24 testes)
 - Estimativa: ~15 testes
 
-[ ] 19.7 - Testes para `Transactions/*`
-- Testar `TransactionScope`, `TransactionScopeAsync`: nested transactions.
-- Testar `DistributedTransaction`: across multiple DbContexts.
-- Testar savepoints, rollback to savepoint.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Transactions/*.cs` (4+ arquivos)
+[x] 19.7 - Testes para HealthChecks (em vez de Transactions)
+- `Transactions/*` **não existe** (UoW cobre rollback em 19.2). Cobertos: `DbContextHealthCheck` + options factories, DI `AddMvp24HoursDbContext*Check`, SqlServer/PostgreSql/MySql (Unhealthy/options).
+- SQLite in-memory para APIs relacionais; pacote `Microsoft.EntityFrameworkCore.Sqlite` + override `SQLitePCLRaw.bundle_e_sqlite3` 3.0.3 (NU1903).
+- `src/Tests/.../HealthChecks/*Test.cs` (27 testes)
 - Estimativa: ~18 testes
 
-[ ] 19.8 - Testes para `Extensions/*` (DI completo)
-- Testar `EFCoreServiceCollectionExtensions`: AddMvpDbContext, options.
-- Testar `DbContextOptionsExtensions`: WithResilience, WithInterceptors.
-- Testar `ModelBuilderExtensions`: ApplyConfigurations, AddConventions.
-- `src/Mvp24Hours.Infrastructure.Data.EFCore/Extensions/*.cs` (8+ arquivos)
+[x] 19.8 - Testes para `Extensions/*` (DI completo)
+- Cobertos: `EFCoreServiceExtensions` (Repository/Async/Streaming/Bulk/ReadOnly), `EFCoreCqrsIntegrationExtensions`, `EFCoreObservabilityExtensions`, `ResilienceDbContextExtensions` (WithTimeout/CreateTimeoutScope), `DatabaseExtensions` (ReadSqlScriptFile GO split).
+- `src/Tests/.../Extensions/{EFCoreService,EFCoreCqrs,EFCoreObservability,Resilience,Database}*Test.cs` (~32 testes)
 - Estimativa: ~25 testes
 
-> **Resultado Esperado Fase 19:** ~142 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 19:** ~212 novos testes nesta rodada · suíte `EFCore.Test` **385 aprovados · 0 falhas · 4 ignorados** (ExecuteUpdate/Delete InMemory) · tipos inexistentes adaptados ao código real.
 
 ---
 
