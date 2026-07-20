@@ -361,18 +361,14 @@ MigrationBackup/
 .sonarqube/
 
 
-# Local personal notes (root); tasks/ docs (.md/.json) may be versioned
+# Local personal notes / private planning (do not version — may reference private ADO)
 tasks.md
 **/tasks.md
 /tasks-*.md
 prompts.md
 **/prompts.md
 prompts-*.md
-tasks/*
-!tasks/*.md
-!tasks/*.json
-# Raw TRX/coverage dumps under tasks/ (keep only md/json summaries versioned)
-tasks/test-results*/
+tasks/
 **/TestResults/
 *.trx
 coverage.cobertura.xml
