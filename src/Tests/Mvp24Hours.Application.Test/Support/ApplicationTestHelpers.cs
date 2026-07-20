@@ -100,6 +100,14 @@ public class AppTestEntityValidator : AbstractValidator<AppTestEntity>
     public AppTestEntityValidator() => RuleFor(x => x.Name).NotEmpty();
 }
 
+public sealed class TestAutoMapperProfile : Profile
+{
+    public TestAutoMapperProfile()
+    {
+        CreateMap<AppTestEntity, AppTestEntityDto>().ReverseMap();
+    }
+}
+
 public class AppTestEntityDtoValidator : AbstractValidator<AppTestEntityDto>
 {
     public AppTestEntityDtoValidator() => RuleFor(x => x.Name).NotEmpty();
@@ -126,6 +134,34 @@ public sealed class TestCommandService : CommandServiceBaseAsync<AppTestEntity, 
         : base(unitOfWork, validator) { }
 }
 
+public sealed class TestApplicationServiceAsync : ApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+{
+    public TestApplicationServiceAsync(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null)
+        : base(unitOfWork, validator) { }
+}
+
+public sealed class TestApplicationServiceWithDtoAsync : ApplicationServiceBaseWithDtoAsync<AppTestEntity, AppTestEntityDto, IUnitOfWorkAsync>
+{
+    public TestApplicationServiceWithDtoAsync(
+        IUnitOfWorkAsync unitOfWork,
+        IMapper mapper,
+        IValidator<AppTestEntity>? entityValidator = null,
+        IValidator<AppTestEntityDto>? dtoValidator = null)
+        : base(unitOfWork, mapper, entityValidator, dtoValidator) { }
+}
+
+public sealed class TestApplicationServiceWithSeparateDtosAsync
+    : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWorkAsync>
+{
+    public TestApplicationServiceWithSeparateDtosAsync(
+        IUnitOfWorkAsync unitOfWork,
+        IMapper mapper,
+        IValidator<AppTestEntity>? entityValidator = null,
+        IValidator<AppTestCreateDto>? createValidator = null,
+        IValidator<AppTestUpdateDto>? updateValidator = null)
+        : base(unitOfWork, mapper, entityValidator, createValidator, updateValidator) { }
+}
+
 public sealed class TestRepositoryService : RepositoryServiceAsync<AppTestEntity, IUnitOfWorkAsync>
 {
     public TestRepositoryService(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null)
@@ -135,6 +171,46 @@ public sealed class TestRepositoryService : RepositoryServiceAsync<AppTestEntity
 public sealed class TestRepositoryPagingService : RepositoryPagingServiceAsync<AppTestEntity, IUnitOfWorkAsync>
 {
     public TestRepositoryPagingService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork) { }
+}
+
+public sealed class TestApplicationService : ApplicationServiceBase<AppTestEntity, IUnitOfWork>
+{
+    public TestApplicationService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
+        : base(unitOfWork, validator) { }
+}
+
+public sealed class TestApplicationServiceWithDto : ApplicationServiceBaseWithDto<AppTestEntity, AppTestEntityDto, IUnitOfWork>
+{
+    public TestApplicationServiceWithDto(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestEntityDto>? dtoValidator = null)
+        : base(unitOfWork, mapper, entityValidator, dtoValidator) { }
+}
+
+public sealed class TestApplicationServiceWithSeparateDtos : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWork>
+{
+    public TestApplicationServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestCreateDto>? createValidator = null, IValidator<AppTestUpdateDto>? updateValidator = null)
+        : base(unitOfWork, mapper, entityValidator, createValidator, updateValidator) { }
+}
+
+public sealed class TestSyncQueryService : QueryServiceBase<AppTestEntity, IUnitOfWork>
+{
+    public TestSyncQueryService(IUnitOfWork unitOfWork) : base(unitOfWork) { }
+}
+
+public sealed class TestSyncCommandService : CommandServiceBase<AppTestEntity, IUnitOfWork>
+{
+    public TestSyncCommandService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
+        : base(unitOfWork, validator) { }
+}
+
+public sealed class TestSyncRepositoryService : RepositoryService<AppTestEntity, IUnitOfWork>
+{
+    public TestSyncRepositoryService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
+        : base(unitOfWork, validator) { }
+}
+
+public sealed class TestSyncRepositoryPagingService : RepositoryPagingService<AppTestEntity, IUnitOfWork>
+{
+    public TestSyncRepositoryPagingService(IUnitOfWork unitOfWork) : base(unitOfWork) { }
 }
 
 public sealed class TestCacheableQueryService : CacheableQueryServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
@@ -238,16 +314,38 @@ public static class ApplicationTestHelpers
         return (unitOfWork, repository);
     }
 
+    public static (Mock<IUnitOfWork> UnitOfWork, Mock<IRepository<TEntity>> Repository) CreateSyncRepositoryMocks<TEntity>()
+        where TEntity : class, IEntityBase
+    {
+        var repository = new Mock<IRepository<TEntity>>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.Setup(u => u.GetRepository<TEntity>()).Returns(() => repository.Object);
+        unitOfWork.Setup(u => u.SaveChanges(It.IsAny<CancellationToken>())).Returns(1);
+        return (unitOfWork, repository);
+    }
+
     public static void SetupListAny<TEntity>(Mock<IRepositoryAsync<TEntity>> repository, bool value)
         where TEntity : class, IEntityBase
     {
         repository.Setup(r => r.ListAnyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(value);
     }
 
+    public static void SetupListAny<TEntity>(Mock<IRepository<TEntity>> repository, bool value)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.ListAny()).Returns(value);
+    }
+
     public static void SetupListCount<TEntity>(Mock<IRepositoryAsync<TEntity>> repository, int count)
         where TEntity : class, IEntityBase
     {
         repository.Setup(r => r.ListCountAsync(It.IsAny<CancellationToken>())).ReturnsAsync(count);
+    }
+
+    public static void SetupListCount<TEntity>(Mock<IRepository<TEntity>> repository, int count)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.ListCount()).Returns(count);
     }
 
     public static void SetupList<TEntity>(Mock<IRepositoryAsync<TEntity>> repository, IList<TEntity> items)
@@ -259,6 +357,13 @@ public static class ApplicationTestHelpers
             .ReturnsAsync(items);
     }
 
+    public static void SetupList<TEntity>(Mock<IRepository<TEntity>> repository, IList<TEntity> items)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.List(It.IsAny<IPagingCriteria?>())).Returns(items);
+        repository.Setup(r => r.List()).Returns(items);
+    }
+
     public static void SetupGetById<TEntity>(Mock<IRepositoryAsync<TEntity>> repository, object id, TEntity? entity)
         where TEntity : class, IEntityBase
     {
@@ -266,6 +371,13 @@ public static class ApplicationTestHelpers
             .ReturnsAsync(entity);
         repository.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(entity);
+    }
+
+    public static void SetupGetById<TEntity>(Mock<IRepository<TEntity>> repository, object id, TEntity? entity)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.GetById(id, It.IsAny<IPagingCriteria?>())).Returns(entity);
+        repository.Setup(r => r.GetById(id)).Returns(entity);
     }
 
     public static void SetupGetBy<TEntity>(
@@ -284,6 +396,18 @@ public static class ApplicationTestHelpers
             .ReturnsAsync(items.Count);
     }
 
+    public static void SetupGetBy<TEntity>(
+        Mock<IRepository<TEntity>> repository,
+        Expression<Func<TEntity, bool>> clause,
+        IList<TEntity> items)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.GetBy(clause, It.IsAny<IPagingCriteria?>())).Returns(items);
+        repository.Setup(r => r.GetBy(clause)).Returns(items);
+        repository.Setup(r => r.GetByAny(clause)).Returns(items.Any());
+        repository.Setup(r => r.GetByCount(clause)).Returns(items.Count);
+    }
+
     public static IMapper CreateTestMapper()
     {
         var config = new MapperConfiguration(cfg =>
@@ -293,6 +417,20 @@ public static class ApplicationTestHelpers
             cfg.CreateMap<AppTestCreateDto, TestEntity>()
                 .ForMember(d => d.Id, o => o.Ignore());
             cfg.CreateMap<AppTestUpdateDto, TestEntity>();
+        }, NullLoggerFactory.Instance);
+        return config.CreateMapper();
+    }
+
+    public static IMapper CreateAppEntityMapper()
+    {
+        var config = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<AppTestEntity, AppTestEntityDto>().ReverseMap();
+            cfg.CreateMap<AppTestCreateDto, AppTestEntity>()
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.Active, o => o.MapFrom(_ => true));
+            cfg.CreateMap<AppTestUpdateDto, AppTestEntity>();
+            cfg.CreateMap<AppTestEntity, AppTestUpdateDto>();
         }, NullLoggerFactory.Instance);
         return config.CreateMapper();
     }
@@ -312,6 +450,17 @@ public static class ApplicationTestHelpers
             .ReturnsAsync(items.Count);
     }
 
+    public static void SetupGetByAnyExpression<TEntity>(
+        Mock<IRepository<TEntity>> repository,
+        IList<TEntity> items)
+        where TEntity : class, IEntityBase
+    {
+        repository.Setup(r => r.GetBy(It.IsAny<Expression<Func<TEntity, bool>>>(), It.IsAny<IPagingCriteria?>())).Returns(items);
+        repository.Setup(r => r.GetBy(It.IsAny<Expression<Func<TEntity, bool>>>())).Returns(items);
+        repository.Setup(r => r.GetByAny(It.IsAny<Expression<Func<TEntity, bool>>>())).Returns(items.Any());
+        repository.Setup(r => r.GetByCount(It.IsAny<Expression<Func<TEntity, bool>>>())).Returns(items.Count);
+    }
+
     public static void SetupReadOnlySpecification<TEntity, TSpec>(
         Mock<IRepositoryAsync<TEntity>> repository,
         bool anyResult = true,
@@ -326,6 +475,21 @@ public static class ApplicationTestHelpers
         {
             readOnly.Setup(r => r.GetFirstBySpecificationAsync(It.IsAny<TSpec>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(firstResult);
+        }
+    }
+
+    public static void SetupReadOnlySpecification<TEntity, TSpec>(
+        Mock<IRepository<TEntity>> repository,
+        bool anyResult = true,
+        TEntity? firstResult = null)
+        where TEntity : class, IEntityBase
+        where TSpec : class, ISpecificationQuery<TEntity>
+    {
+        Mock<IReadOnlyRepository<TEntity>> readOnly = repository.As<IReadOnlyRepository<TEntity>>();
+        readOnly.Setup(r => r.AnyBySpecification(It.IsAny<TSpec>())).Returns(anyResult);
+        if (firstResult != null)
+        {
+            readOnly.Setup(r => r.GetFirstBySpecification(It.IsAny<TSpec>())).Returns(firstResult);
         }
     }
 

@@ -1250,65 +1250,57 @@
 
 > **Objetivo:** O projeto Application tem cobertura de 38.1%. Precisa de +~4.743 linhas cobertas para atingir 90%.
 
-[ ] 20.1 - Testes para `Logic/ApplicationServiceBase*` (sync completo)
-- Testar `ApplicationServiceBase<TEntity, TId>`: CRUD operations.
-- Testar `ApplicationServiceBaseWithDto<TEntity, TDto, TId>`: DTO mapping.
-- Testar `ApplicationServiceBaseWithSeparateDtos`: different DTOs per operation.
-- `src/Mvp24Hours.Application/Logic/ApplicationServiceBase*.cs` (3 arquivos)
+[x] 20.1 - Testes para `Logic/ApplicationServiceBase*` (sync completo)
+- Cobertos: CRUD, List/GetBy/GetById, validações, listas vazias, specifications (Any/First) em `ApplicationServiceBase`.
+- DTO mapping + validação entity/DTO em `ApplicationServiceBaseWithDto`.
+- Create/Update/Patch/Remove + NotFound em `ApplicationServiceBaseWithSeparateDtos`.
+- Helpers sync: `CreateSyncRepositoryMocks`, `CreateAppEntityMapper`, serviços `TestApplication*`.
+- `src/Tests/.../Logic/ApplicationServiceBase*Test.cs` (41 testes)
 - Estimativa: ~30 testes
 
-[ ] 20.2 - Testes para `Logic/Async/*` (services base)
-- Testar `ApplicationServiceBaseAsync`, `ApplicationServiceBaseWithDtoAsync`.
-- Testar `ApplicationServiceBaseWithSeparateDtosAsync`: Create/Update/Delete DTOs.
-- Testar cancellation token propagation.
-- `src/Mvp24Hours.Application/Logic/Async/ApplicationServiceBase*.cs` (3 arquivos)
+[x] 20.2 - Testes para `Logic/Async/*` (services base)
+- Cobertos: `ApplicationServiceBaseAsync`, `WithDtoAsync`, `WithSeparateDtosAsync` (CRUD, mapping, Patch, NotFound).
+- Propagação de `CancellationToken` verificada via Moq nos repositórios.
+- `src/Tests/.../Logic/Async/ApplicationServiceBase*AsyncTest.cs` (41 testes)
 - Estimativa: ~30 testes
 
-[ ] 20.3 - Testes para `Logic/CommandServiceBase*` e `QueryServiceBase*` (sync)
-- Testar `CommandServiceBase<TEntity, TId>`: create/update/delete.
-- Testar `QueryServiceBase<TEntity, TId>`: get/list/count/any.
-- Testar `RepositoryService`, `RepositoryPagingService`: paged queries.
-- `src/Mvp24Hours.Application/Logic/CommandServiceBase.cs`, `QueryServiceBase.cs`
+[x] 20.3 - Testes para `Logic/CommandServiceBase*` e `QueryServiceBase*` (sync)
+- Cobertos: `CommandServiceBase` (Add/Modify/Remove/RemoveById), `QueryServiceBase` (Any/Count/List/GetBy).
+- `RepositoryService` + `RepositoryPagingService` (ListWithPagination/GetByWithPagination via `ToBusinessPaging`).
+- `src/Tests/.../Logic/{Command,Query,Repository*}*Test.cs` (23 testes)
 - Estimativa: ~25 testes
 
-[ ] 20.4 - Testes para `Logic/Pagination/*`
-- Testar `PagedResult<T>`, `PagedBusinessResult<T>`: construction, navigation.
-- Testar `CursorPagedResult<T>`, `CompositeCursor`: cursor-based pagination.
-- Testar `PaginationMetadata`, `PaginationHelper`: calculations.
-- `src/Mvp24Hours.Application/Logic/Pagination/*.cs` (4 arquivos)
+[x] 20.4 - Testes para `Logic/Pagination/*`
+- `PagedResult`/`CursorPagedResult`/`PaginationHelper`/`CompositeCursor` já cobertos em fases anteriores.
+- Gap fechado: `PagedBusinessResult` (Success/Failure/HasErrors/Token) + `ToPagedBusinessResult`.
+- `src/Tests/.../Pagination/PagedBusinessResultTest.cs` (7 testes novos)
 - Estimativa: ~20 testes
 
-[ ] 20.5 - Testes para `Logic/Transaction/*`
-- Testar `TransactionScope`, `TransactionScopeSync`: begin/commit/rollback.
-- Testar `TransactionScopeFactory`: async/sync creation.
-- Testar `AmbientTransactionContext`: ambient scopes.
-- `src/Mvp24Hours.Application/Logic/Transaction/*.cs` (4 arquivos)
+[x] 20.5 - Testes para `Logic/Transaction/*`
+- Já cobertos em `TransactionScopeTest.cs` (31 testes): async/sync scopes, ambient context, factory, DI.
+- `TransactionScopeSync` não seta ambient (apenas async) — sem gaps adicionais nesta rodada.
 - Estimativa: ~15 testes
 
-[ ] 20.6 - Testes para `Logic/Validation/*` (steps avançados)
-- Testar `CascadeValidationStep<T>`: nested object validation.
-- Testar `FluentValidationStep<T>`: FluentValidation integration.
-- Testar `NullCheckValidationStep<T>`: null guards.
-- `src/Mvp24Hours.Application/Logic/Validation/ValidationSteps/*.cs` (4 arquivos)
+[x] 20.6 - Testes para `Logic/Validation/*` (steps avançados)
+- Cobertos: `NullCheckValidationStep` (Required/empty/StopOnFirst/path), `FluentValidationStep` (DI/explícito/async), `CascadeValidationStep` (nested/depth/circular/`ValidateNested`).
+- `src/Tests/.../Logic/Validation/{NullCheck,FluentValidation,Cascade}*Test.cs` (24 testes)
 - Estimativa: ~20 testes
 
-[ ] 20.7 - Testes para `Extensions/*` (DI completo)
-- Testar `ApplicationServiceCollectionExtensions`: AddApplicationService*, scanning.
-- Testar `ApplicationModuleServiceCollectionExtensions`: module registration.
-- Testar `ValidationServiceCollectionExtensions`: AddValidation*, steps.
-- `src/Mvp24Hours.Application/Extensions/*.cs` (15+ arquivos)
+[x] 20.7 - Testes para `Extensions/*` (DI completo)
+- Cobertos: AutoMapper/scanning/`AddMvp24HoursApplicationService*`, Validation DI, ApplicationModule, Transaction/Pagination/Resilience extensions.
+- `src/Tests/.../Extensions/*Test.cs` (34 testes)
 - Estimativa: ~40 testes
 
-[ ] 20.8 - Testes para `Contract/*` (tipos concretos)
-- Testar `CacheableAttribute`, `CacheInvalidateAttribute`: caching behavior.
-- Testar `TransactionalAttribute`: transaction wrapping.
-- Testar `ErrorCodes`, `ResultStatusCode`: error categorization.
-- `src/Mvp24Hours.Application/Contract/**/*.cs` (20+ arquivos)
+[x] 20.8 - Testes para `Contract/*` (tipos concretos)
+- Cobertos: `CacheableAttribute`/`CacheInvalidateAttribute` (defaults, tags, keys, ToOptions), `TransactionalAttribute` defaults.
+- `ErrorCodes` (categorias), `ResultStatusCode` (faixas 0/1xx–5xx), `EntityCreated/Updated/DeletedEvent`.
+- `src/Tests/.../Contract/*Test.cs` (26 testes)
 - Estimativa: ~25 testes
 
-> **Resultado Esperado Fase 20:** ~205 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 20:** ~196 novos testes nesta rodada · suíte `Application.Test` **593 aprovados · 0 falhas · 0 ignorados** · Transaction (20.5) reaproveitou cobertura existente.
 
 ---
+
 
 ## FASE 21 — Expandir Cobertura de `Mvp24Hours.Infrastructure.Caching.Redis` (40.9% → 90%)
 
