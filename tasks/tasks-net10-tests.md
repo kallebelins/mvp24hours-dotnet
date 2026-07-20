@@ -1404,35 +1404,31 @@
 
 > **Objetivo:** O projeto CQRS tem cobertura de 63.1%. Precisa de +~1.672 linhas cobertas para atingir 90%.
 
-[ ] 24.1 - Testes para `Handlers/*` (completo)
-- Testar `CommandHandlerBase<TCommand>`, `QueryHandlerBase<TQuery, TResult>`.
-- Testar `CommandWithResultHandler<TCommand, TResult>`.
-- Testar handler registration, validation, logging.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Handlers/*.cs` (6+ arquivos)
+[x] 24.1 - Testes para `Handlers/*` (completo)
+- API real: **não existe** `Handlers/` — handlers via `IMediatorRequestHandler`/`IMediatorCommandHandler` + wrappers do `Mediator`.
+- Cobertos: scanning de stream/command handlers, `AddMvpMediator(params Assembly[])`, pipeline ordering, `CreateStream` sem handler, `PublishAsync` com falha de handler, `LoggingBehavior` (null logger, success/error logs, request id).
+- `src/Tests/.../Handlers/MediatorHandlerRegistrationTest.cs`, `LoggingBehaviorTest.cs` (**~15** testes)
 - Estimativa: ~25 testes
 
-[ ] 24.2 - Testes para `Dispatchers/*`
-- Testar `CommandDispatcher`, `QueryDispatcher`: routing, DI resolution.
-- Testar `EventDispatcher`: domain events, application events.
-- Testar `NotificationDispatcher`: multi-handler notifications.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Dispatchers/*.cs` (4+ arquivos)
+[x] 24.2 - Testes para `Dispatchers/*`
+- API real: `DomainEventDispatcher` + `DomainEventExtensions` (UoW); sem Command/QueryDispatcher dedicados.
+- Cobertos: null guards, skip entidades sem eventos, ordem de dispatch, falha de publish (`TargetInvocationException` + eventos não limpos), logging; `SaveChangesWithEvents(Async)` sync/async, save falha sem dispatch, `WithDomainEvents`.
+- `src/Tests/.../Dispatchers/DomainEventDispatcherAdvancedTest.cs`, `DomainEventExtensionsTest.cs` (**~19** testes)
 - Estimativa: ~20 testes
 
-[ ] 24.3 - Testes para `Validators/*`
-- Testar `CommandValidator<T>`, `QueryValidator<T>`: FluentValidation.
-- Testar `ValidatorBehavior`: pre-validation pipeline.
-- Testar validation error mapping.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Validators/*.cs` (4+ arquivos)
+[x] 24.3 - Testes para `Validators/*`
+- API real: `ValidationBehavior` + FluentValidation `IValidator<T>` (sem CommandValidator/QueryValidator dedicados).
+- Cobertos: pass-through sem validators, multi-validator aggregation, `VALIDATION_ERROR` + `MessageResult` mapping, fallback PropertyName→ErrorCode, warning log, integração via Mediator.
+- `src/Tests/.../Validators/ValidationBehaviorTest.cs` (**~12** testes)
 - Estimativa: ~15 testes
 
-[ ] 24.4 - Testes para `Extensions/*` (DI completo)
-- Testar `CqrsServiceCollectionExtensions`: AddMvpCqrs, scanning.
-- Testar `MediatorExtensions`: Send, Publish, CreateScope.
-- Testar `BehaviorExtensions`: pipeline ordering.
-- `src/Mvp24Hours.Infrastructure.Cqrs/Extensions/*.cs` (6+ arquivos)
+[x] 24.4 - Testes para `Extensions/*` (DI completo)
+- API real: `ServiceCollectionExtensions`/`MediatorOptions`, `MediatorCachingExtensions`, `DomainToIntegrationEventExtensions`, `InboxOutboxExtensions`.
+- Cobertos: presets Observability/Audit/Extensibility/AdvancedResiliency; flags de behaviors; extensibility DI (Pre/Post/Hook/ExceptionHandler); decorator sem IMediator; Memory/Redis cache registration + `MediatorCacheOptions`; convert/queue + `AutoIntegrationEventHandler`; Inbox/Outbox Use*/cleanup/DLQ.
+- `src/Tests/.../Extensions/*AdvancedTest.cs`, `MediatorCachingExtensionsTest.cs`, `DomainToIntegrationEventExtensionsTest.cs` (**~41** testes)
 - Estimativa: ~20 testes
 
-> **Resultado Esperado Fase 24:** ~80 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 24:** **~87** novos testes · suíte `Cqrs.Test` **490 aprovados · 0 falhas · 0 ignorados**. Nomes Handlers/Dispatchers/Validators do plano mapeados para Mediator/DomainEventDispatcher/ValidationBehavior/Extensions reais. Helper: `Support/Phase24TestHelpers.cs`.
 
 ---
 
