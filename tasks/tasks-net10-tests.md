@@ -1436,35 +1436,32 @@
 
 > **Objetivo:** O projeto CronJob tem a maior cobertura (71.2%). Precisa de +~549 linhas cobertas para atingir 90%.
 
-[ ] 25.1 - Testes para `Services/CronJobService.cs` (avançado)
-- Testar `CronJobService`: start/stop, schedule, immediate trigger.
-- Testar lifecycle: initialization, running, completed, failed.
-- Testar multiple jobs coordination.
-- `src/Mvp24Hours.Infrastructure.CronJob/Services/*.cs` (3+ arquivos)
+[x] 25.1 - Testes para `Services/*` (avançado)
+- API real: `CronJobService`, `ResilientCronJobService`, `AdvancedCronJobService` (sem trigger dedicado além do controller).
+- Cobertos: ExecuteOnce (sucesso/falha/cancel), start/stop, dispose idempotente, cancel durante wait agendado, multi-job; callbacks `OnJobFailed`/`OnOverlappingSkipped`/`OnCircuitBreakerStateChange`; Advanced `GetContext`/`SetContextProperty`, cancel→Cancelled, deps failure, Trigger via controller, distributed lock release.
+- Substituído teste flaky de 2 min (`CronJobWithCorrectScheduler`) por smoke execute-once rápido.
+- `src/Tests/.../Services/CronJobServiceAdvancedTest.cs`, `ResilientAndAdvancedServiceAdvancedTest.cs`, `Support/CronJobs/ControllableCronJob.cs` (**~20** testes)
 - Estimativa: ~20 testes
 
-[ ] 25.2 - Testes para `Resilience/*`
-- Testar `ResilientCronJobService`: retry, circuit breaker.
-- Testar `CronJobResilienceOptions`: policies, thresholds.
-- Testar failure handling, recovery.
-- `src/Mvp24Hours.Infrastructure.CronJob/Resilience/*.cs` (3+ arquivos)
+[x] 25.2 - Testes para `Resiliency/*`
+- Pasta real: `Resiliency/` (não `Resilience/`). Sem `ResilientCronJobService` duplicado aqui — foco em lock/config.
+- Cobertos: `InMemoryDistributedCronJobLock` (acquire/conflict/reacquire/expiry/extend/release/Clear/`GetLockInfoAsync`); factories `Default`/`FullResilience`/`ToString` com timeout.
+- `src/Tests/.../Resiliency/InMemoryDistributedCronJobLockTest.cs` (**~12** testes)
 - Estimativa: ~15 testes
 
-[ ] 25.3 - Testes para `Persistence/*`
-- Testar `CronJobPersistence`: state saving, recovery on restart.
-- Testar `RedisCronJobStateStore`, `SqlServerCronJobStateStore`.
-- Testar distributed state coordination.
-- `src/Mvp24Hours.Infrastructure.CronJob/Persistence/*.cs` (4+ arquivos)
+[x] 25.3 - Testes para `State/*`
+- Pasta real: `State/` (não `Persistence/`). **Não existem** `RedisCronJobStateStore` / `SqlServerCronJobStateStore` — apenas `InMemoryCronJobStateStore`.
+- Cobertos: `RecordRetry`/`RecordSkipped`, Properties, nova instância sem estado (restart semantics), delete+pause, concurrent save, zero-duration stats.
+- `src/Tests/.../State/CronJobStateAdvancedTest.cs` (**~10** testes)
 - Estimativa: ~18 testes
 
-[ ] 25.4 - Testes para `Extensions/*` (DI completo)
-- Testar `CronJobServiceCollectionExtensions`: AddCronJob, options validation.
-- Testar `CronJobHostBuilderExtensions`: UseScheduledJobs.
-- Testar job discovery, auto-registration.
-- `src/Mvp24Hours.Infrastructure.CronJob/Extensions/*.cs` (4+ arquivos)
+[x] 25.4 - Testes para `Extensions/*` + validators (DI completo)
+- API real: `ScheduledServiceExtensions`, `CronJobAdvancedExtensions`, `CronJobOptionsValidator`/`CronJobGlobalOptionsValidator` (sem `UseScheduledJobs` / `CronJobServiceCollectionExtensions`).
+- Cobertos: overload cron+timezone; resilient string overload; null guards; observability off; handler parcial; `CreateWithDefaults`/`ApplyDefaultsTo`; validators (CRON, TZ, retry, CB, lock, InstanceName, global health name).
+- `src/Tests/.../Extensions/CronJobExtensionsAdvancedTest.cs` (**~21** testes)
 - Estimativa: ~15 testes
 
-> **Resultado Esperado Fase 25:** ~68 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 25:** **~61** novos testes · suíte `CronJob.Test` **267 aprovados · 0 falhas · 0 ignorados** (~4s). Nomes Resilience/Persistence/HostBuilder do plano mapeados para Resiliency/State/ScheduledServiceExtensions reais.
 
 ---
 
