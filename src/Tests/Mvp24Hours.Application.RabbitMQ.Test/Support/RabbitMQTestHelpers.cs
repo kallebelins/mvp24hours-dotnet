@@ -74,8 +74,8 @@ internal static class RabbitMQTestHelpers
         var propertiesMock = new Mock<IBasicProperties>();
         propertiesMock.SetupAllProperties();
         propertiesMock.Setup(p => p.Headers).Returns(headers ?? new Dictionary<string, object>());
-        propertiesMock.Setup(p => p.CorrelationId).Returns(correlationId);
-        propertiesMock.Setup(p => p.ReplyTo).Returns(replyTo);
+        propertiesMock.Setup(p => p.CorrelationId).Returns(correlationId ?? string.Empty);
+        propertiesMock.Setup(p => p.ReplyTo).Returns(replyTo ?? string.Empty);
 
         return new BasicDeliverEventArgs(
             consumerTag: "consumer-tag",

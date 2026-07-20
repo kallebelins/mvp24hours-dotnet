@@ -47,7 +47,7 @@ public class ApplicationServiceBaseWithSeparateDtosTest
 
         IBusinessResult<AppTestEntityDto> result = service.GetById(1);
 
-        result.Data.Name.Should().Be("Found");
+        result.Data!.Name.Should().Be("Found");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class ApplicationServiceBaseWithSeparateDtosTest
         IBusinessResult<AppTestEntityDto> result = service.Add(createDto);
 
         result.HasErrors.Should().BeFalse();
-        result.Data.Name.Should().Be("Created");
+        result.Data!.Name.Should().Be("Created");
         result.Data.Active.Should().BeTrue();
         repo.Verify(r => r.Add(It.Is<AppTestEntity>(e => e.Name == "Created" && e.Active)), Times.Once);
     }
@@ -133,7 +133,7 @@ public class ApplicationServiceBaseWithSeparateDtosTest
         IBusinessResult<AppTestEntityDto> result = service.Modify(1, new AppTestUpdateDto { Id = 1, Name = "Updated" });
 
         result.HasErrors.Should().BeFalse();
-        result.Data.Name.Should().Be("Updated");
+        result.Data!.Name.Should().Be("Updated");
         repo.Verify(r => r.Modify(existing), Times.Once);
     }
 
@@ -152,7 +152,7 @@ public class ApplicationServiceBaseWithSeparateDtosTest
         IBusinessResult<AppTestEntityDto> result = service.Patch(1, patchDto);
 
         result.HasErrors.Should().BeFalse();
-        result.Data.Name.Should().Be("Patched");
+        result.Data!.Name.Should().Be("Patched");
         existing.Active.Should().BeTrue();
         repo.Verify(r => r.Modify(existing), Times.Once);
     }

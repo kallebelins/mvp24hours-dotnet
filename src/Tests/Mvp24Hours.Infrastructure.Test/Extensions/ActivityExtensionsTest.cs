@@ -14,31 +14,28 @@ public class ActivityExtensionsTest
     [Fact]
     public void GetTraceId_WithNullActivity_ShouldReturnEmptyString()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         Activity activity = null;
-#pragma warning restore CS8600
-
         activity.GetTraceId().Should().BeEmpty();
+#pragma warning restore CS8600, CS8604
     }
 
     [Fact]
     public void GetSpanId_WithNullActivity_ShouldReturnEmptyString()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         Activity activity = null;
-#pragma warning restore CS8600
-
         activity.GetSpanId().Should().BeEmpty();
+#pragma warning restore CS8600, CS8604
     }
 
     [Fact]
     public void GetParentId_WithNullActivity_ShouldReturnEmptyString()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         Activity activity = null;
-#pragma warning restore CS8600
-
         activity.GetParentId().Should().BeEmpty();
+#pragma warning restore CS8600, CS8604
     }
 
     [Fact]
@@ -73,7 +70,7 @@ public class ActivityExtensionsTest
             parent.Start();
 
             using Activity child = new Activity("child");
-            child.SetParentId(parent.Id);
+            child.SetParentId(parent.Id!);
             child.Start();
 
             child.GetParentId().Should().Be(parent.SpanId.ToHexString());
@@ -116,7 +113,7 @@ public class ActivityExtensionsTest
             parent.Start();
 
             using Activity child = new Activity("child");
-            child.SetParentId(parent.Id);
+            child.SetParentId(parent.Id!);
             child.Start();
 
             child.GetParentId().Should().Be(parent.Id);

@@ -31,7 +31,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
 
         IBusinessResult<AppTestEntityDto> result = await service.AddAsync(createDto);
 
-        result.Data.Name.Should().Be("Created");
+        result.Data!.Name.Should().Be("Created");
         result.Data.Active.Should().BeTrue();
         repo.Verify(r => r.AddAsync(It.Is<AppTestEntity>(e => e.Name == "Created" && e.Active), It.IsAny<CancellationToken>()), Times.Once);
         uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -85,7 +85,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
 
         IBusinessResult<AppTestEntityDto> result = await service.ModifyAsync(1, new AppTestUpdateDto { Id = 1, Name = "Updated" });
 
-        result.Data.Name.Should().Be("Updated");
+        result.Data!.Name.Should().Be("Updated");
         repo.Verify(r => r.ModifyAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
         uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -100,7 +100,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
 
         IBusinessResult<AppTestEntityDto> result = await service.PatchAsync(2, new AppTestUpdateDto { Id = 2, Name = "Patched" });
 
-        result.Data.Name.Should().Be("Patched");
+        result.Data!.Name.Should().Be("Patched");
         existing.Name.Should().Be("Patched");
         repo.Verify(r => r.ModifyAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
     }

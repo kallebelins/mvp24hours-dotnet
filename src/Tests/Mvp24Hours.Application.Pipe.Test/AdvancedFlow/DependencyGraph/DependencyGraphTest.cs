@@ -19,7 +19,7 @@ public class DependencyGraphTest
         {
             ctx.Add("process");
             results.TryGetValue("validate", out object? dep);
-            return OperationResult<object>.Success(dep);
+            return OperationResult<object>.Success(dep!);
         }).DependsOn("validate"));
 
         var executor = new DependencyGraphExecutor<List<string>>(graph);

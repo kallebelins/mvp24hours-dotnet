@@ -5,11 +5,11 @@
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
+using Mvp24Hours.Application.MongoDb.Test.Support;
 using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
 using Mvp24Hours.Application.MongoDb.Test.Support.Services;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Testcontainers.MongoDb;
 using Xunit;
 using Xunit.Priority;
 
@@ -18,30 +18,14 @@ namespace Mvp24Hours.Application.MongoDb.Test;
 /// <summary>
 /// 
 /// </summary>
+[Collection(MongoDbIntegrationCollection.Name)]
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
 [Trait("Category", "Integration")]
-public class CommandServiceTest : IAsyncLifetime
+public class CommandServiceTest(MongoDbIntegrationFixture fixture)
 {
-    #region [ Container ]
-    private readonly MongoDbContainer _mongoDbContainer =
-        new MongoDbBuilder("mongo:6.0").Build();
-
-    public async Task InitializeAsync()
-    {
-        await _mongoDbContainer.StartAsync().ConfigureAwait(false);
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _mongoDbContainer.DisposeAsync().ConfigureAwait(false);
-    }
-    #endregion
-
     #region [ Fields ]
     private ObjectId oid;
     #endregion
-
-    public CommandServiceTest() { }
 
     #region [ Configure ]
     private IServiceProvider Setup()
@@ -49,8 +33,8 @@ public class CommandServiceTest : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddMvp24HoursDbContext(options =>
         {
-            options.DatabaseName = "commandservicetest";
-            options.ConnectionString = _mongoDbContainer.GetConnectionString();
+            options.DatabaseName = $"commandservicetest_{Guid.NewGuid():N}";
+            options.ConnectionString = fixture.ConnectionString;
         });
         services.AddMvp24HoursRepository(repositoryOptions: null);
         services.AddScoped<CustomerService, CustomerService>();
@@ -60,7 +44,7 @@ public class CommandServiceTest : IAsyncLifetime
     #endregion
 
     #region [ Facts ]
-    [Fact]
+    [DockerFact]
     public void CreateCustomer()
     {
         IServiceProvider serviceProvider = Setup();
@@ -79,18 +63,24 @@ public class CommandServiceTest : IAsyncLifetime
         Assert.True(result.HasData());
     }
 
-    [Fact]
+    [DockerFact]
     public void UpdateCustomer()
     {
         IServiceProvider serviceProvider = Setup();
-        CreateCustomer();
         CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+
+        service.Add(new Customer
+        {
+            Oid = oid,
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        });
 
         Customer? customer = service.GetById(oid).GetDataValue();
         Assert.NotNull(customer);
 
         customer.Name = "Test Updated";
-
         service.Modify(customer);
 
         IBusinessResult<Customer?> boCustomer = service.GetById(oid);
@@ -98,12 +88,19 @@ public class CommandServiceTest : IAsyncLifetime
         Assert.True(boCustomer != null && boCustomer.Data?.Name == "Test Updated");
     }
 
-    [Fact]
+    [DockerFact]
     public void DeleteCustomer()
     {
         IServiceProvider serviceProvider = Setup();
-        UpdateCustomer();
         CustomerService? service = serviceProvider.GetRequiredService<CustomerService>();
+
+        service.Add(new Customer
+        {
+            Oid = oid,
+            Created = DateTime.Now,
+            Name = "Test 1",
+            Active = true
+        });
 
         service.RemoveById(oid);
 

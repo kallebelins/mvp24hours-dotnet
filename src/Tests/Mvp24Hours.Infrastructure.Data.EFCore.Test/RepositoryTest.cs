@@ -31,7 +31,7 @@ public class RepositoryTest : IDisposable
         unitOfWork.SaveChanges();
 
         entity.Id.Should().BeGreaterThan(0);
-        repository.GetById(entity.Id).Name.Should().Be("Alpha");
+        repository.GetById(entity.Id)!.Name.Should().Be("Alpha");
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class RepositoryTest : IDisposable
         using IServiceScope scope = _provider.CreateScope();
         IRepository<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IRepository<TestEntity>>();
 
-        repository.GetById(entityId).Id.Should().Be(entityId);
+        repository.GetById(entityId)!.Id.Should().Be(entityId);
         repository.GetBy(e => e.Id == entityId, new PagingCriteria(limit: 1, offset: 0))
             .Should().ContainSingle(e => e.Id == entityId);
     }
@@ -106,8 +106,8 @@ public class RepositoryTest : IDisposable
         repository.Modify(entity);
         unitOfWork.SaveChanges();
 
-        repository.GetById(entity.Id).Name.Should().Be("Updated");
-        repository.GetById(entity.Id).Score.Should().Be(999);
+        repository.GetById(entity.Id)!.Name.Should().Be("Updated");
+        repository.GetById(entity.Id)!.Score.Should().Be(999);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class RepositoryTest : IDisposable
         IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
-        TestLogEntity persisted = repository.GetById(logEntity.Id);
+        TestLogEntity persisted = repository.GetById(logEntity.Id)!;
         repository.Remove(persisted);
         unitOfWork.SaveChanges();
 

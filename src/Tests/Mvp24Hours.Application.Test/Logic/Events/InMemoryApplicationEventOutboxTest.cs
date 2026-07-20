@@ -89,10 +89,10 @@ public class InMemoryApplicationEventOutboxTest
     }
 
     [Fact]
-    public void Clear_ShouldRemoveAllEntries()
+    public async Task Clear_ShouldRemoveAllEntries()
     {
         var outbox = new InMemoryApplicationEventOutbox();
-        outbox.AddAsync(new TestApplicationEvent()).GetAwaiter().GetResult();
+        await outbox.AddAsync(new TestApplicationEvent());
 
         outbox.Clear();
 

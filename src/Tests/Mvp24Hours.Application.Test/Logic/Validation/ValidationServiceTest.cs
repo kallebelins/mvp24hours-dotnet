@@ -52,7 +52,7 @@ public class ValidationServiceTest
         ValidationServiceResult result = service.ValidateMany(items);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.Key.StartsWith("[0]."));
+        result.Errors.Should().Contain(e => e.Key!.StartsWith("[0]."));
     }
 
     [Fact]

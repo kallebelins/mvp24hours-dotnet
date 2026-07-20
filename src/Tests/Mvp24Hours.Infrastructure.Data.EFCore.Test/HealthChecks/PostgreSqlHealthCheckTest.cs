@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks;
@@ -67,10 +68,11 @@ public class PostgreSqlHealthCheckTest
 
     private sealed class FailingDbConnection : DbConnection
     {
+        [AllowNull]
         public override string ConnectionString
         {
             get => string.Empty;
-            set { }
+            set => _ = value;
         }
         public override string Database => "test";
         public override string DataSource => "test";

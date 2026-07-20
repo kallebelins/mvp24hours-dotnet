@@ -4,12 +4,12 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Application.MongoDb.Test.Support;
 using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
 using Mvp24Hours.Application.MongoDb.Test.Support.Services;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Testcontainers.MongoDb;
 using Xunit;
 using Xunit.Priority;
 
@@ -18,35 +18,19 @@ namespace Mvp24Hours.Application.MongoDb.Test;
 /// <summary>
 /// 
 /// </summary>
+[Collection(MongoDbIntegrationCollection.Name)]
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
 [Trait("Category", "Integration")]
-public class QueryServiceTest : IAsyncLifetime
+public class QueryServiceTest(MongoDbIntegrationFixture fixture)
 {
-    #region [ Container ]
-    private readonly MongoDbContainer _mongoDbContainer =
-        new MongoDbBuilder("mongo:6.0").Build();
-
-    public async Task InitializeAsync()
-    {
-        await _mongoDbContainer.StartAsync().ConfigureAwait(false);
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _mongoDbContainer.DisposeAsync().ConfigureAwait(false);
-    }
-    #endregion
-
     #region [ Configure ]
-    public QueryServiceTest() { }
-
     private IServiceProvider Setup()
     {
         var services = new ServiceCollection();
         services.AddMvp24HoursDbContext(options =>
         {
-            options.DatabaseName = "queryservicetest";
-            options.ConnectionString = _mongoDbContainer.GetConnectionString();
+            options.DatabaseName = $"queryservicetest_{Guid.NewGuid():N}";
+            options.ConnectionString = fixture.ConnectionString;
         });
         services.AddMvp24HoursRepository(repositoryOptions: null);
         services.AddScoped<CustomerService, CustomerService>();
@@ -72,7 +56,7 @@ public class QueryServiceTest : IAsyncLifetime
     #endregion
 
     #region [ Facts ]
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerList()
     {
         IServiceProvider serviceProvider = Setup();
@@ -81,7 +65,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.GetDataCount() > 0);
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListAny()
     {
         IServiceProvider serviceProvider = Setup();
@@ -90,7 +74,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.GetDataValue());
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListCount()
     {
         IServiceProvider serviceProvider = Setup();
@@ -99,7 +83,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.GetDataValue() > 0);
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListPaging()
     {
         IServiceProvider serviceProvider = Setup();
@@ -109,7 +93,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.HasDataCount(3));
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListOrder()
     {
         IServiceProvider serviceProvider = Setup();
@@ -119,7 +103,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.HasDataCount(3));
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListOrderExpression()
     {
         IServiceProvider serviceProvider = Setup();
@@ -130,7 +114,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.HasDataCount(3));
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerListPagingExpression()
     {
         IServiceProvider serviceProvider = Setup();
@@ -140,7 +124,7 @@ public class QueryServiceTest : IAsyncLifetime
         Assert.True(result.HasDataCount(3));
     }
 
-    [Fact]
+    [DockerFact]
     public void GetFilterCustomerByName()
     {
         IServiceProvider serviceProvider = Setup();

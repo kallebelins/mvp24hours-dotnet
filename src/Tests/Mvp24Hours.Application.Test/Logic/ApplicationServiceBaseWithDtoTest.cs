@@ -33,7 +33,7 @@ public class ApplicationServiceBaseWithDtoTest
 
         IBusinessResult<AppTestEntityDto> result = service.GetById(5);
 
-        result.Data.Name.Should().Be("Mapped");
+        result.Data!.Name.Should().Be("Mapped");
         result.Data.Active.Should().BeTrue();
     }
 

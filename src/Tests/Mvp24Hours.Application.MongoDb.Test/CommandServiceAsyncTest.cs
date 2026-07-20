@@ -6,12 +6,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using Mvp24Hours.Application.Logic;
+using Mvp24Hours.Application.MongoDb.Test.Support;
 using Mvp24Hours.Application.MongoDb.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Testcontainers.MongoDb;
 using Xunit;
 using Xunit.Priority;
 
@@ -22,27 +22,11 @@ public class CustomerServiceAsync(IUnitOfWorkAsync unitOfWork) : RepositoryServi
     // custom async methods here
 }
 
+[Collection(MongoDbIntegrationCollection.Name)]
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
 [Trait("Category", "Integration")]
-public class CommandServiceAsyncTest : IAsyncLifetime
+public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
 {
-    #region [ Container ]
-
-    private readonly MongoDbContainer _mongoDbContainer =
-        new MongoDbBuilder("mongo:6.0").Build();
-
-    public async Task InitializeAsync()
-    {
-        await _mongoDbContainer.StartAsync().ConfigureAwait(false);
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _mongoDbContainer.DisposeAsync().ConfigureAwait(false);
-    }
-
-    #endregion
-
     #region [ Configure ]
 
     private IServiceProvider Setup()
@@ -50,8 +34,8 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddMvp24HoursDbContext(options =>
         {
-            options.DatabaseName = "asynctest";
-            options.ConnectionString = _mongoDbContainer.GetConnectionString();
+            options.DatabaseName = $"asynctest_{Guid.NewGuid():N}";
+            options.ConnectionString = fixture.ConnectionString;
         });
         services.AddMvp24HoursRepositoryAsync(repositoryOptions: null);
         services.AddScoped<CustomerServiceAsync, CustomerServiceAsync>();
@@ -75,7 +59,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
 
     #region [ Facts ]
 
-    [Fact]
+    [DockerFact]
     public async Task AddAsync_CustomerIsAdded()
     {
         var sp = Setup();
@@ -87,7 +71,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.HasData());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAnyAsync_ReturnsTrueWhenDataExists()
     {
         var sp = Setup();
@@ -99,7 +83,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.GetDataValue());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListCountAsync_ReturnsCountGreaterThanZero()
     {
         var sp = Setup();
@@ -112,7 +96,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.GetDataValue() >= 2);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_ReturnsAllCustomers()
     {
         var sp = Setup();
@@ -126,7 +110,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.GetDataCount() >= 3);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_WithPaging_ReturnsLimitedResults()
     {
         var sp = Setup();
@@ -139,7 +123,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.HasDataCount(3));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ModifyAsync_UpdatesCustomerName()
     {
         var sp = Setup();
@@ -156,7 +140,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.Equal("Updated Name", updated.Data?.Name);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task RemoveByIdAsync_DeletesCustomer()
     {
         var sp = Setup();
@@ -169,7 +153,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.False(result.HasData());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByAsync_FiltersByName()
     {
         var sp = Setup();
@@ -190,7 +174,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.Equal("UniqueSearchName", result.Data?.FirstOrDefault()?.Name);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_WithOrderBy_ReturnsOrderedResults()
     {
         var sp = Setup();
@@ -206,7 +190,7 @@ public class CommandServiceAsyncTest : IAsyncLifetime
         Assert.True(result.HasData());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_WithExpressionOrder_ReturnsOrderedResults()
     {
         var sp = Setup();

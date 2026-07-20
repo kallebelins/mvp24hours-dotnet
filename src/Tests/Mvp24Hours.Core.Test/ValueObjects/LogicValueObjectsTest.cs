@@ -317,7 +317,7 @@ public class LogicValueObjectsTest
         // Assert
         result.HasErrors.Should().BeTrue();
         result.Messages!.First().Message.Should().Be("Test exception message");
-        result.Messages.First().Key.Should().Be("InvalidOperationException");
+        result.Messages!.First().Key.Should().Be("InvalidOperationException");
     }
 
     [Fact]

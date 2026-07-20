@@ -69,11 +69,10 @@ public class InMemoryApplicationAuditStoreTest
     }
 
     [Fact]
-    public void Clear_ShouldRemoveAllEntries()
+    public async Task Clear_ShouldRemoveAllEntries()
     {
         var store = new InMemoryApplicationAuditStore();
-        store.SaveAsync(new ApplicationAuditEntry { Id = "x", Timestamp = DateTimeOffset.UtcNow })
-            .GetAwaiter().GetResult();
+        await store.SaveAsync(new ApplicationAuditEntry { Id = "x", Timestamp = DateTimeOffset.UtcNow });
 
         store.Clear();
 

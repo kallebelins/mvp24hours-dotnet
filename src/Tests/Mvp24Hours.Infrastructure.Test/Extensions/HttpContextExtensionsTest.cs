@@ -32,11 +32,10 @@ public class HttpContextExtensionsTest
     [Fact]
     public void GetUserIP_WithNullContext_ShouldReturnDefaultIp()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         HttpContext context = null;
-#pragma warning restore CS8600
-
         context.GetUserIP().Should().Be("0.0.0.0");
+#pragma warning restore CS8600, CS8604
     }
 
     [Fact]
@@ -53,11 +52,10 @@ public class HttpContextExtensionsTest
     [Fact]
     public void GetUserIP_WithNullAccessor_ShouldReturnNull()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         IHttpContextAccessor accessor = null;
-#pragma warning restore CS8600
-
         accessor.GetUserIP().Should().BeNull();
+#pragma warning restore CS8600, CS8604
     }
 
     [Fact]
@@ -87,11 +85,10 @@ public class HttpContextExtensionsTest
     [Fact]
     public void GetBaseUrl_WithNullContext_ShouldReturnNull()
     {
-#pragma warning disable CS8600 // Intentional null extension receiver
+#pragma warning disable CS8600, CS8604 // Intentional null extension receiver
         HttpContext context = null;
-#pragma warning restore CS8600
-
         context.GetBaseUrl().Should().BeNull();
+#pragma warning restore CS8600, CS8604
     }
 
     private static DefaultHttpContext CreateContext(IPAddress remoteIpAddress)

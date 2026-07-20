@@ -15,7 +15,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Advanced;
 [Collection(MongoDbIntegrationCollection.Name)]
 public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
 {
-    [Fact]
+    [DockerFact]
     public async Task TextSearchService_ShouldCreateIndexAndSearch()
     {
         IMongoCollection<TestArticle> collection = fixture.GetCollection<TestArticle>("articles_search");
@@ -39,7 +39,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         count.Should().BeGreaterThan(0);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task TextSearchService_ShouldSearchWithExclusionsAndPhrase()
     {
         IMongoCollection<TestArticle> collection = fixture.GetCollection<TestArticle>("articles_search_excl");
@@ -63,7 +63,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         phrase.Should().NotBeEmpty();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GeospatialService_ShouldFindNearAndWithin()
     {
         IMongoCollection<TestPlace> collection = fixture.GetCollection<TestPlace>("places_geo");
@@ -100,7 +100,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         inPolygon.Should().NotContain(p => p.Name == "Far RJ");
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GridFsService_ShouldUploadDownloadRenameAndDelete()
     {
         var service = new MongoDbGridFsService(fixture.Database);
@@ -127,7 +127,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         (await service.ExistsAsync(fileId)).Should().BeFalse();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task CappedCollectionService_ShouldCreateInsertAndQuery()
     {
         string collectionName = $"logs_{Guid.NewGuid():N}";
@@ -161,7 +161,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         oldest[0].Message.Should().Be("first");
     }
 
-    [Fact]
+    [DockerFact]
     public async Task SchemaValidationService_ShouldCreateValidateAndRemove()
     {
         string collectionName = $"users_{Guid.NewGuid():N}";
@@ -201,7 +201,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         await service.RemoveValidationAsync(collectionName);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task TextSearchService_GetTextIndexesAsync_ShouldIdentifyTextIndexes()
     {
         IMongoCollection<TestArticle> collection = fixture.GetCollection<TestArticle>("articles_text_indexes");

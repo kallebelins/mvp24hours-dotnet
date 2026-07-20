@@ -31,7 +31,7 @@ public class OpenApiTransformersTest
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
-        var operation = document.Paths["/api/orders"].Operations.Values.Single();
+        var operation = GetOrdersOperation(document);
         operation.Parameters.Should().Contain(x => x.Name == "X-Correlation-ID");
     }
 
@@ -43,7 +43,7 @@ public class OpenApiTransformersTest
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
-        var responses = document.Paths["/api/orders"].Operations.Values.Single().Responses;
+        var responses = GetOrdersOperation(document).Responses;
         responses.Should().ContainKey("401");
         responses.Should().ContainKey("403");
         responses.Should().ContainKey("500");
@@ -53,15 +53,14 @@ public class OpenApiTransformersTest
     public async Task ProblemDetailsTransformer_Should_AddSchemasAndResponseContent()
     {
         var document = CreateDocumentWithSingleOperation();
-        document.Paths["/api/orders"].Operations.Values.Single().Responses["400"] = new OpenApiResponse { Description = "Bad Request" };
+        GetOrdersOperation(document).Responses!["400"] = new OpenApiResponse { Description = "Bad Request" };
         var sut = new ProblemDetailsTransformer();
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
         document.Components!.Schemas.Should().ContainKey("ProblemDetails");
         document.Components!.Schemas.Should().ContainKey("ValidationProblemDetails");
-        document.Paths["/api/orders"].Operations.Values.Single().Responses["400"]
-            .Content.Should().ContainKey("application/problem+json");
+        GetOrdersOperation(document).Responses!["400"]!.Content.Should().ContainKey("application/problem+json");
     }
 
     [Fact]
@@ -72,15 +71,14 @@ public class OpenApiTransformersTest
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
-        var operation = document.Paths["/api/orders"].Operations.Values.Single();
-        operation.Responses.Should().ContainKey("429");
+        GetOrdersOperation(document).Responses.Should().ContainKey("429");
     }
 
     [Fact]
     public async Task TagFilterTransformer_Should_RemoveOperationsOutsideIncludedTags()
     {
         var document = CreateDocumentWithSingleOperation();
-        var operation = document.Paths["/api/orders"].Operations.Values.Single();
+        var operation = GetOrdersOperation(document);
         operation.Tags = new HashSet<OpenApiTagReference>
         {
             new OpenApiTagReference("Orders", document)
@@ -91,6 +89,9 @@ public class OpenApiTransformersTest
 
         document.Paths.Should().BeEmpty();
     }
+
+    private static OpenApiOperation GetOrdersOperation(OpenApiDocument document) =>
+        document.Paths!["/api/orders"]!.Operations!.Values.Single();
 
     private static OpenApiDocument CreateDocumentWithSingleOperation()
     {

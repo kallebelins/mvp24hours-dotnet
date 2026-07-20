@@ -69,7 +69,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
 
         IBusinessResult<AppTestEntityDto> result = await service.GetByIdAsync(3);
 
-        result.Data.Name.Should().Be("ById");
+        result.Data!.Name.Should().Be("ById");
     }
 
     [Fact]

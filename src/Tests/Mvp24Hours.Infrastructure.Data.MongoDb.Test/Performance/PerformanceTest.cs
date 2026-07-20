@@ -13,7 +13,7 @@ namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Performance;
 [Collection(MongoDbIntegrationCollection.Name)]
 public class PerformanceIntegrationTest(MongoDbIntegrationFixture fixture)
 {
-    [Fact]
+    [DockerFact]
     public async Task IndexManager_ShouldCreateIndexesFromAttributes()
     {
         IMongoCollection<IndexedCustomer> collection = fixture.GetCollection<IndexedCustomer>();
@@ -28,7 +28,7 @@ public class PerformanceIntegrationTest(MongoDbIntegrationFixture fixture)
         indexes.Select(i => i["name"].AsString).Should().Contain(name => name.StartsWith("idx_", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task QueryProfiler_ShouldExplainFindAndReturnStats()
     {
         IMongoCollection<OrderDocument> collection = fixture.GetCollection<OrderDocument>("orders_profiler");
@@ -57,7 +57,7 @@ public class PerformanceIntegrationTest(MongoDbIntegrationFixture fixture)
         hinted.Should().HaveCountGreaterThan(0);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task Projection_ShouldReturnSelectedFields()
     {
         IMongoCollection<IndexedCustomer> collection = fixture.GetCollection<IndexedCustomer>("projection_customers");

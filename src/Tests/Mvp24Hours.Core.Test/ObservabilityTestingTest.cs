@@ -312,36 +312,33 @@ public class ObservabilityTestingTest
     [Fact]
     public void FakeActivityListener_ShouldCaptureActivities()
     {
-        // Arrange
+        // Unique names avoid pollution from parallel tests on shared Mvp24Hours.* sources.
+        string operationName = $"TestOperation-{Guid.NewGuid():N}";
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
-        // Act
-        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("TestOperation"))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity(operationName))
         {
             activity?.SetTag("test.tag", "test-value");
         }
 
-        // Assert
-        listener.ActivityCount.Should().Be(1);
-        listener.HasActivity("TestOperation").Should().BeTrue();
+        listener.GetActivities(operationName).Should().HaveCount(1);
+        listener.HasActivity(operationName).Should().BeTrue();
     }
 
     [Fact]
     public void FakeActivityListener_ShouldCaptureActivityDetails()
     {
-        // Arrange
+        string operationName = $"DetailedOperation-{Guid.NewGuid():N}";
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
-        // Act
-        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity("DetailedOperation", ActivityKind.Internal))
+        using (Activity? activity = Mvp24HoursActivitySources.Core.Source.StartActivity(operationName, ActivityKind.Internal))
         {
             activity?.SetTag("custom.tag", "custom-value");
             activity?.AddEvent(new ActivityEvent("test-event"));
             activity?.SetStatus(ActivityStatusCode.Ok);
         }
 
-        // Assert
-        RecordedActivity recorded = listener.GetActivities("DetailedOperation").First();
+        RecordedActivity recorded = listener.GetActivities(operationName).Should().ContainSingle().Subject;
         recorded.Kind.Should().Be(ActivityKind.Internal);
         recorded.HasTag("custom.tag").Should().BeTrue();
         recorded.GetTag("custom.tag").Should().Be("custom-value");
@@ -352,41 +349,41 @@ public class ObservabilityTestingTest
     [Fact]
     public void FakeActivityListener_ShouldFilterBySourceName()
     {
-        // Arrange - Listen only to Pipe module
+        string coreName = $"CoreActivity-{Guid.NewGuid():N}";
+        string pipeName = $"PipeActivity-{Guid.NewGuid():N}";
         using var listener = new FakeActivityListener("Mvp24Hours.Pipe");
 
-        // Act
-        using (Mvp24HoursActivitySources.Core.Source.StartActivity("CoreActivity")) { }
-        using (Mvp24HoursActivitySources.Pipe.Source.StartActivity("PipeActivity")) { }
+        using (Mvp24HoursActivitySources.Core.Source.StartActivity(coreName)) { }
+        using (Mvp24HoursActivitySources.Pipe.Source.StartActivity(pipeName)) { }
 
-        // Assert
-        listener.ActivityCount.Should().Be(1);
-        listener.HasActivity("PipeActivity").Should().BeTrue();
-        listener.HasActivity("CoreActivity").Should().BeFalse();
+        listener.GetActivities(pipeName).Should().HaveCount(1);
+        listener.HasActivity(pipeName).Should().BeTrue();
+        listener.HasActivity(coreName).Should().BeFalse();
     }
 
     [Fact]
     public void FakeActivityListener_GetErrorActivities_ShouldReturnOnlyErrors()
     {
-        // Arrange
+        string successName = $"Success-{Guid.NewGuid():N}";
+        string errorName = $"Error-{Guid.NewGuid():N}";
         using var listener = new FakeActivityListener("Mvp24Hours.*");
 
-        // Act
-        using (Activity? successActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Success"))
+        using (Activity? successActivity = Mvp24HoursActivitySources.Core.Source.StartActivity(successName))
         {
             successActivity?.SetStatus(ActivityStatusCode.Ok);
         }
 
-        using (Activity? errorActivity = Mvp24HoursActivitySources.Core.Source.StartActivity("Error"))
+        using (Activity? errorActivity = Mvp24HoursActivitySources.Core.Source.StartActivity(errorName))
         {
             errorActivity?.SetStatus(ActivityStatusCode.Error, "Something failed");
         }
 
-        // Assert
         listener.HasErrors().Should().BeTrue();
-        IReadOnlyList<RecordedActivity> errors = listener.GetErrorActivities();
+        IReadOnlyList<RecordedActivity> errors = listener.GetErrorActivities()
+            .Where(a => a.OperationName == errorName)
+            .ToList();
         errors.Should().HaveCount(1);
-        errors[0].OperationName.Should().Be("Error");
+        errors[0].OperationName.Should().Be(errorName);
     }
 
     #endregion

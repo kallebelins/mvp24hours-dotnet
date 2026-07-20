@@ -198,7 +198,9 @@ public class MvpCachingExtensionsTest
 #pragma warning disable CS0618
         provider.GetRequiredService<IMultiLevelCache>().Should().BeOfType<MultiLevelCache>();
 #pragma warning restore CS0618
+#pragma warning disable CS0618
         provider.GetRequiredService<ICacheProvider>().Should().BeAssignableTo<IMultiLevelCache>();
+#pragma warning restore CS0618
     }
 }
 

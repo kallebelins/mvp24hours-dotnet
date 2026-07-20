@@ -91,12 +91,12 @@ public class TransactionalTest
     }
 
     [Fact]
-    public void TransactionalBus_ClearPending_ShouldRemoveStagedMessages()
+    public async Task TransactionalBus_ClearPending_ShouldRemoveStagedMessages()
     {
         var outbox = new InMemoryTransactionalOutbox();
         var bus = new TransactionalBus(outbox, RabbitMQTestHelpers.CreateNullLogger<TransactionalBus>());
 
-        bus.PublishAsync(new TestOrderEvent()).GetAwaiter().GetResult();
+        await bus.PublishAsync(new TestOrderEvent());
         bus.GetPendingCount().Should().Be(1);
 
         bus.ClearPending();
@@ -204,12 +204,12 @@ public class TransactionalTest
     }
 
     [Fact]
-    public void TransactionalBus_PublishAsync_ShouldReturnNonEmptyGuid()
+    public async Task TransactionalBus_PublishAsync_ShouldReturnNonEmptyGuid()
     {
         var outbox = new InMemoryTransactionalOutbox();
         var bus = new TransactionalBus(outbox, RabbitMQTestHelpers.CreateNullLogger<TransactionalBus>());
 
-        Guid id = bus.PublishAsync(new TestOrderEvent()).GetAwaiter().GetResult();
+        Guid id = await bus.PublishAsync(new TestOrderEvent());
 
         id.Should().NotBeEmpty();
     }

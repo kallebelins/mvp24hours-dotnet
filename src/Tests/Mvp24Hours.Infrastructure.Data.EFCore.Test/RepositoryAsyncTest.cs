@@ -31,7 +31,7 @@ public class RepositoryAsyncTest : IDisposable
         await unitOfWork.SaveChangesAsync();
 
         entity.Id.Should().BeGreaterThan(0);
-        (await repository.GetByIdAsync(entity.Id)).Name.Should().Be("Async-Alpha");
+        (await repository.GetByIdAsync(entity.Id))!.Name.Should().Be("Async-Alpha");
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class RepositoryAsyncTest : IDisposable
         using IServiceScope scope = _provider.CreateScope();
         IRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<TestEntity>>();
 
-        (await repository.GetByIdAsync(entityId)).Id.Should().Be(entityId);
+        (await repository.GetByIdAsync(entityId))!.Id.Should().Be(entityId);
         (await repository.GetByAsync(e => e.Id == entityId, new PagingCriteria(limit: 1, offset: 0)))
             .Should().ContainSingle(e => e.Id == entityId);
     }
@@ -107,8 +107,8 @@ public class RepositoryAsyncTest : IDisposable
         await repository.ModifyAsync(entity);
         await unitOfWork.SaveChangesAsync();
 
-        (await repository.GetByIdAsync(entity.Id)).Name.Should().Be("Async-Updated");
-        (await repository.GetByIdAsync(entity.Id)).Score.Should().Be(777);
+        (await repository.GetByIdAsync(entity.Id))!.Name.Should().Be("Async-Updated");
+        (await repository.GetByIdAsync(entity.Id))!.Score.Should().Be(777);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class RepositoryAsyncTest : IDisposable
         IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
         TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
-        TestLogEntity persisted = await repository.GetByIdAsync(logEntity.Id);
+        TestLogEntity persisted = (await repository.GetByIdAsync(logEntity.Id))!;
         await repository.RemoveAsync(persisted);
         await unitOfWork.SaveChangesAsync();
 

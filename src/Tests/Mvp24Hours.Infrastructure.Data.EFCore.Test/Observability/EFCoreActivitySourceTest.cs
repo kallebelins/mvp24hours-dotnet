@@ -141,7 +141,7 @@ public class EFCoreActivitySourceTest
             .WithDatabaseName("orders")
             .AsSlowQuery(2000, 1000);
 
-        activity.GetTagItem(EFCoreActivitySource.TagNames.DbSystem).Should().Be("sqlserver");
+        activity!.GetTagItem(EFCoreActivitySource.TagNames.DbSystem).Should().Be("sqlserver");
         activity.GetTagItem(EFCoreActivitySource.TagNames.DbName).Should().Be("orders");
         activity.GetTagItem(EFCoreActivitySource.TagNames.IsSlowQuery).Should().Be(true);
         activity.Stop();

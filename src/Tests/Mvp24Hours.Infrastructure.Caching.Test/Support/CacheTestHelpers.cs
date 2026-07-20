@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using MessagePack;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -23,21 +24,21 @@ internal static class CacheTestHelpers
         return new DistributedCacheProvider(cache);
     }
 
+#pragma warning disable CS0618
     internal static MultiLevelCache CreateMultiLevelCache(
         ICacheProvider? l1 = null,
         ICacheProvider? l2 = null,
         ICacheSynchronizer? synchronizer = null)
     {
-#pragma warning disable CS0618
         return new MultiLevelCache(
             l1 ?? CreateMemoryProvider(),
             l2 ?? CreateDistributedProvider(),
             synchronizer);
-#pragma warning restore CS0618
     }
+#pragma warning restore CS0618
 }
 
-[MessagePackObject]
+[MessagePackObject(AllowPrivate = true)]
 internal sealed class MessagePackCacheItem
 {
     [Key(0)]
@@ -58,7 +59,14 @@ public sealed class CacheRepositoryEntity : IEntityBase
 
 internal sealed class TestDbCommand : DbCommand
 {
-    public override string CommandText { get; set; } = string.Empty;
+    private string _commandText = string.Empty;
+
+    [AllowNull]
+    public override string CommandText
+    {
+        get => _commandText;
+        set => _commandText = value ?? string.Empty;
+    }
 
     public override int CommandTimeout { get; set; }
 
@@ -97,17 +105,30 @@ internal sealed class TestDbCommand : DbCommand
 
 internal sealed class TestDbParameter : DbParameter
 {
+    private string _parameterName = string.Empty;
+    private string _sourceColumn = string.Empty;
+
     public override DbType DbType { get; set; } = DbType.String;
 
     public override ParameterDirection Direction { get; set; } = ParameterDirection.Input;
 
     public override bool IsNullable { get; set; } = true;
 
-    public override string ParameterName { get; set; } = string.Empty;
+    [AllowNull]
+    public override string ParameterName
+    {
+        get => _parameterName;
+        set => _parameterName = value ?? string.Empty;
+    }
 
     public override int Size { get; set; }
 
-    public override string SourceColumn { get; set; } = string.Empty;
+    [AllowNull]
+    public override string SourceColumn
+    {
+        get => _sourceColumn;
+        set => _sourceColumn = value ?? string.Empty;
+    }
 
     public override bool SourceColumnNullMapping { get; set; }
 

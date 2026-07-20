@@ -17,7 +17,7 @@ namespace Mvp24Hours.Infrastructure.Test.HealthChecks;
 public class InfrastructureHealthCheckExtensionsTest
 {
     [Fact]
-    public void AddFileStorageHealthCheck_ShouldRegisterAndResolveHealthy()
+    public async Task AddFileStorageHealthCheck_ShouldRegisterAndResolveHealthy()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -34,7 +34,7 @@ public class InfrastructureHealthCheckExtensionsTest
         using ServiceProvider sp = services.BuildServiceProvider();
         HealthCheckService health = sp.GetRequiredService<HealthCheckService>();
 
-        HealthReport report = health.CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await health.CheckHealthAsync();
 
         report.Status.Should().Be(HealthStatus.Healthy);
         report.Entries.Should().ContainKey("fs");
@@ -42,7 +42,7 @@ public class InfrastructureHealthCheckExtensionsTest
     }
 
     [Fact]
-    public void AddEmailServiceHealthCheck_ShouldRegisterWithoutSending()
+    public async Task AddEmailServiceHealthCheck_ShouldRegisterWithoutSending()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -51,15 +51,15 @@ public class InfrastructureHealthCheckExtensionsTest
             .AddEmailServiceHealthCheck("email", o => o.SendTestEmail = false);
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("email");
         report.Entries["email"].Status.Should().Be(HealthStatus.Healthy);
     }
 
     [Fact]
-    public void AddSmsServiceHealthCheck_ShouldRegisterWithoutSending()
+    public async Task AddSmsServiceHealthCheck_ShouldRegisterWithoutSending()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -68,15 +68,15 @@ public class InfrastructureHealthCheckExtensionsTest
             .AddSmsServiceHealthCheck("sms", o => o.SendTestSms = false);
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("sms");
         report.Entries["sms"].Status.Should().Be(HealthStatus.Healthy);
     }
 
     [Fact]
-    public void AddDistributedLockHealthCheck_ShouldRegisterAndResolveHealthy()
+    public async Task AddDistributedLockHealthCheck_ShouldRegisterAndResolveHealthy()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -89,15 +89,15 @@ public class InfrastructureHealthCheckExtensionsTest
             });
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("locks");
         report.Entries["locks"].Status.Should().Be(HealthStatus.Healthy);
     }
 
     [Fact]
-    public void AddBackgroundJobHealthCheck_ShouldRegisterAndResolveHealthy()
+    public async Task AddBackgroundJobHealthCheck_ShouldRegisterAndResolveHealthy()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -106,15 +106,15 @@ public class InfrastructureHealthCheckExtensionsTest
             .AddBackgroundJobHealthCheck("jobs");
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("jobs");
         report.Entries["jobs"].Status.Should().Be(HealthStatus.Healthy);
     }
 
     [Fact]
-    public void AddHttpClientHealthCheck_ShouldRegisterAndResolveHealthy()
+    public async Task AddHttpClientHealthCheck_ShouldRegisterAndResolveHealthy()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -127,15 +127,15 @@ public class InfrastructureHealthCheckExtensionsTest
             });
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("http");
         report.Entries["http"].Status.Should().Be(HealthStatus.Healthy);
     }
 
     [Fact]
-    public void AddHttpClientHealthCheck_WithDefaultName_ShouldUseTypeName()
+    public async Task AddHttpClientHealthCheck_WithDefaultName_ShouldUseTypeName()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -148,28 +148,28 @@ public class InfrastructureHealthCheckExtensionsTest
             });
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().ContainKey("httpclient-HealthCheckTestApi");
     }
 
     [Fact]
-    public void AddInfrastructureHealthChecks_WithNoServices_ShouldNotRegisterEntries()
+    public async Task AddInfrastructureHealthChecks_WithNoServices_ShouldNotRegisterEntries()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHealthChecks().AddInfrastructureHealthChecks();
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Should().BeEmpty();
     }
 
     [Fact]
-    public void AddInfrastructureHealthChecks_WithRegisteredServices_ShouldAddMatchingChecks()
+    public async Task AddInfrastructureHealthChecks_WithRegisteredServices_ShouldAddMatchingChecks()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -192,8 +192,8 @@ public class InfrastructureHealthCheckExtensionsTest
         });
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Keys.Should().BeEquivalentTo(
             "distributed-lock", "file-storage", "email-service", "sms-service", "background-jobs");
@@ -201,7 +201,7 @@ public class InfrastructureHealthCheckExtensionsTest
     }
 
     [Fact]
-    public void AddInfrastructureHealthChecks_WithPartialServices_ShouldOnlyAddRegistered()
+    public async Task AddInfrastructureHealthChecks_WithPartialServices_ShouldOnlyAddRegistered()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -210,8 +210,8 @@ public class InfrastructureHealthCheckExtensionsTest
         services.AddHealthChecks().AddInfrastructureHealthChecks(o => o.Email.SendTestEmail = false);
 
         using ServiceProvider sp = services.BuildServiceProvider();
-        HealthReport report = sp.GetRequiredService<HealthCheckService>()
-            .CheckHealthAsync().GetAwaiter().GetResult();
+        HealthReport report = await sp.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync();
 
         report.Entries.Keys.Should().BeEquivalentTo("email-service");
     }

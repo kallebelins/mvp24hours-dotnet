@@ -4,55 +4,36 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Application.Redis.Test.Support;
 using Mvp24Hours.Application.Redis.Test.Support.Entities;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Helpers;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Caching;
-using Testcontainers.Redis;
 using Xunit;
 using Xunit.Priority;
 
 namespace Mvp24Hours.Application.Redis.Test;
 
+[Collection(RedisIntegrationCollection.Name)]
 [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Name)]
 [Trait("Category", "Integration")]
-public class Test3CacheRepositoryTest : IAsyncLifetime
+public class Test3CacheRepositoryTest(RedisIntegrationFixture fixture)
 {
-    #region [ Container ]
-    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:3.2.5-alpine")
-        .WithExposedPort(6379)
-        .WithCleanUp(true)
-        .Build();
-
-    public async Task InitializeAsync()
-    {
-        await _redisContainer.StartAsync().ConfigureAwait(false);
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _redisContainer.DisposeAsync().ConfigureAwait(false);
-    }
-    #endregion
-
     private readonly string keyString = $"stringtest-{StringHelper.GenerateKey(5)}";
     private readonly string keyObject = $"objecttest-{StringHelper.GenerateKey(5)}";
 
     private IServiceProvider Setup()
     {
         var services = new ServiceCollection();
-        // caching
         services.AddScoped<IRepositoryCache<Customer>, RepositoryCache<Customer>>();
         services.AddScoped<IRepositoryCacheAsync<Customer>, RepositoryCacheAsync<Customer>>();
-
-        // caching.redis
         services.AddMvp24HoursCaching();
-        services.AddMvp24HoursCachingRedis(_redisContainer.GetConnectionString());
+        services.AddMvp24HoursCachingRedis(fixture.ConnectionString);
         return services.BuildServiceProvider();
     }
 
-    [Fact, Priority(1)]
+    [DockerFact, Priority(1)]
     public void SetContentCache()
     {
         IServiceProvider serviceProvider = Setup();
@@ -65,32 +46,33 @@ public class Test3CacheRepositoryTest : IAsyncLifetime
         };
         string content = customer.ToSerialize();
 
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
         repo.SetString(keyString, content);
-        Assert.True(true);
+        Assert.True(repo.GetString(keyString).HasValue());
     }
 
-    [Fact, Priority(2)]
+    [DockerFact, Priority(2)]
     public void GetString()
     {
         IServiceProvider serviceProvider = Setup();
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
         repo.SetString(keyString, "Test");
         string? content = repo.GetString(keyString);
         Assert.True(content.HasValue());
     }
 
-    [Fact, Priority(3)]
+    [DockerFact, Priority(3)]
     public void RemoveString()
     {
         IServiceProvider serviceProvider = Setup();
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.SetString(keyString, "Test");
         repo.Remove(keyString);
         string? content = repo.GetString(keyString);
         Assert.True(string.IsNullOrEmpty(content));
     }
 
-    [Fact, Priority(4)]
+    [DockerFact, Priority(4)]
     public void SetObjectContentCache()
     {
         IServiceProvider serviceProvider = Setup();
@@ -101,26 +83,27 @@ public class Test3CacheRepositoryTest : IAsyncLifetime
             Name = "Test 1",
             Active = true
         };
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
         repo.Set(keyObject, customer);
-        Assert.True(true);
+        Assert.NotNull(repo.Get(keyObject));
     }
 
-    [Fact, Priority(5)]
+    [DockerFact, Priority(5)]
     public void GetObject()
     {
         IServiceProvider serviceProvider = Setup();
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
-        repo.Set(keyObject, new Customer { });
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Set(keyObject, new Customer { Name = "GetObject" });
         Customer? customer = repo.Get(keyObject);
         Assert.NotNull(customer);
     }
 
-    [Fact, Priority(6)]
+    [DockerFact, Priority(6)]
     public void RemoveObject()
     {
         IServiceProvider serviceProvider = Setup();
-        IRepositoryCache<Customer>? repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        IRepositoryCache<Customer> repo = serviceProvider.GetRequiredService<IRepositoryCache<Customer>>();
+        repo.Set(keyObject, new Customer { Name = "RemoveObject" });
         repo.Remove(keyObject);
         Customer? customer = repo.Get(keyObject);
         Assert.Null(customer);

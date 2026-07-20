@@ -4,10 +4,10 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using DotNet.Testcontainers.Builders;
-using MongoDB.Driver;
 using Testcontainers.MongoDb;
+using Xunit;
 
-namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
+namespace Mvp24Hours.Application.MongoDb.Test.Support;
 
 /// <summary>
 /// Shared MongoDB Testcontainer for integration tests. Survives Docker-unavailable scenarios
@@ -17,11 +17,7 @@ public sealed class MongoDbIntegrationFixture : IAsyncLifetime
 {
     private MongoDbContainer? _container;
 
-    public IMongoClient Client { get; private set; } = null!;
-
-    public IMongoDatabase Database { get; private set; } = null!;
-
-    public string DatabaseName { get; } = $"mvp24hours_test_{Guid.NewGuid():N}";
+    public string ConnectionString { get; private set; } = string.Empty;
 
     public bool IsAvailable { get; private set; }
 
@@ -36,39 +32,22 @@ public sealed class MongoDbIntegrationFixture : IAsyncLifetime
         {
             _container = new MongoDbBuilder("mongo:6.0").Build();
             await _container.StartAsync().ConfigureAwait(false);
-            Client = new MongoClient(_container.GetConnectionString());
-            Database = Client.GetDatabase(DatabaseName);
+            ConnectionString = _container.GetConnectionString();
             IsAvailable = true;
         }
         catch (Exception ex) when (IsDockerUnavailable(ex))
         {
             IsAvailable = false;
-            Client = null!;
-            Database = null!;
+            ConnectionString = string.Empty;
         }
     }
 
     public async Task DisposeAsync()
     {
-        if (IsAvailable && Client is not null)
-        {
-            await Client.DropDatabaseAsync(DatabaseName).ConfigureAwait(false);
-        }
-
         if (_container is not null)
         {
             await _container.DisposeAsync().ConfigureAwait(false);
         }
-    }
-
-    public IMongoCollection<T> GetCollection<T>(string? name = null)
-    {
-        if (!IsAvailable || Database is null)
-        {
-            throw new InvalidOperationException(DockerAvailability.SkipReason);
-        }
-
-        return Database.GetCollection<T>(name ?? typeof(T).Name);
     }
 
     private static bool IsDockerUnavailable(Exception ex)
