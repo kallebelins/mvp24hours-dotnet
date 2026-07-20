@@ -1306,14 +1306,15 @@
 
 > **Objetivo:** O projeto Caching.Redis tem cobertura de 40.9%. Precisa de +~11 linhas cobertas (projeto pequeno).
 
-[ ] 21.1 - Testes para `RedisCacheProviderExtensions.cs` (completo)
-- Testar `AddRedisCacheProvider`: configuration, connection string.
-- Testar `UseRedisDistributedCache`: IDistributedCache registration.
-- Testar connection factory, multiplexer options.
-- `src/Mvp24Hours.Infrastructure.Caching.Redis/*.cs` (1 arquivo)
+[x] 21.1 - Testes para `RedisServiceExtensions.cs` (completo)
+- Cobertos: `AddMvp24HoursCachingRedis` (overloads `ConfigurationOptions` e `connectionString`): guards null/empty/whitespace, registro de `IDistributedCache` + `RedisCacheOptions`, `InstanceName` custom (lowercase) vs default (com/sem sufixo `_`).
+- API real: `RedisServiceExtensions` (não existe `AddRedisCacheProvider` / `UseRedisDistributedCache`).
+- Referência `Caching.Redis` adicionada em `Caching.Test`.
+- `src/Mvp24Hours.Infrastructure.Caching.Redis/Extensions/RedisServiceExtensions.cs` (1 arquivo)
+- `src/Tests/Mvp24Hours.Infrastructure.Caching.Test/Extensions/RedisServiceExtensionsTest.cs` (**8** testes)
 - Estimativa: ~5 testes
 
-> **Resultado Esperado Fase 21:** ~5 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 21:** **8** novos testes · suíte `RedisServiceExtensionsTest` **8 aprovados · 0 falhas** · cobertura alvo das extensions Redis.
 
 ---
 
