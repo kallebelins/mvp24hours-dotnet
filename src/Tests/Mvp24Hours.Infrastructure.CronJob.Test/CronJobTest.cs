@@ -4,45 +4,44 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Mvp24Hours.Infrastructure.CronJob.Services;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support.CronJobs;
-using Mvp24Hours.Infrastructure.CronJob.Test.Support.Services;
+using Mvp24Hours.Infrastructure.CronJob.Test.Support.Testing;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;
 
 /// <summary>
-/// Tests for CronJob module functionality.
+/// Smoke tests for CronJob module functionality.
+/// Slow wall-clock scheduler coverage was replaced by <see cref="Services.CronJobServiceAdvancedTest"/>.
 /// </summary>
 [Trait("Category", "Unit")]
 public class CronJobTest
 {
-    #region [ Fields ]
-    #endregion
-
-    #region [ Configure ]
-    #endregion
-
     [Fact]
-    public async Task CronJobWithCorrectScheduler()
+    public async Task CronJob_ExecuteOnce_ShouldRunWorkAndStopHost()
     {
-        var timerService = new TimerService();
+        var tracker = new ExecutionTracker();
         var services = new ServiceCollection();
-        services.AddSingleton(timerService);
+        services.AddSingleton(tracker);
         ServiceProvider serviceProvider = services.BuildServiceProvider();
-        var scheduleConfig = new ScheduleConfig<CustomerCronJob>()
+
+        var hostMock = new Mock<IHostApplicationLifetime>();
+        var config = new ScheduleConfig<ControllableCronJob>
         {
-            TimeZoneInfo = TimeZoneInfo.Utc,
-            CronExpression = "* * * * *"
+            TimeZoneInfo = TimeZoneInfo.Utc
         };
-        var hostApplicationLifetimeMock = new Mock<IHostApplicationLifetime>();
-        NullLogger<CronJobService<CustomerCronJob>> logger = NullLogger<CronJobService<CustomerCronJob>>.Instance;
-        var cronjobHostedService = new CustomerCronJob(scheduleConfig, hostApplicationLifetimeMock.Object, serviceProvider, logger);
 
-        var cts = new CancellationTokenSource();
-        timerService.Start();
-        await cronjobHostedService.StartAsync(cts.Token);
-        await Task.Delay(120 * 1000); // 2 minutes
-        await cronjobHostedService.StopAsync(cts.Token);
+        var job = new ControllableCronJob(
+            config,
+            hostMock.Object,
+            serviceProvider,
+            NullLogger<CronJobService<ControllableCronJob>>.Instance);
 
-        Assert.Equal(2, timerService.Counters.Count);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await job.StartAsync(cts.Token);
+        await Task.Delay(200);
+        await job.StopAsync(CancellationToken.None);
+
+        job.ExecutionCount.Should().Be(1);
+        tracker.ExecutionCount.Should().Be(1);
+        hostMock.Verify(x => x.StopApplication(), Times.AtLeastOnce);
     }
 }
-
