@@ -5,8 +5,11 @@
 //=====================================================================================
 using System.Text;
 using Microsoft.Extensions.Options;
+using Moq;
+using Mvp24Hours.Infrastructure.Email.Contract;
 using Mvp24Hours.Infrastructure.Email.Models;
 using Mvp24Hours.Infrastructure.Email.Options;
+using Mvp24Hours.Infrastructure.Email.Results;
 using Mvp24Hours.Infrastructure.Testing.Http;
 
 namespace Mvp24Hours.Infrastructure.Test.Support;
@@ -108,6 +111,35 @@ internal static class EmailTestHelpers
     public static IHttpClientFactory CreateHttpClientFactory(TestHttpMessageHandler handler)
     {
         return new TestHttpClientFactory(handler);
+    }
+
+    public static Mock<IEmailService> CreateMockEmailService(EmailSendResult? result = null)
+    {
+        var mock = new Mock<IEmailService>();
+        mock.Setup(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result ?? EmailSendResult.Successful("mock-msg-id"));
+        mock.Setup(s => s.SendBatchAsync(It.IsAny<IEnumerable<EmailMessage>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<EmailMessage> messages, CancellationToken _) =>
+                messages.Select(_ => result ?? EmailSendResult.Successful("mock-msg-id")).ToList());
+        return mock;
+    }
+
+    public static async Task WaitUntilAsync(Func<Task<bool>> condition, TimeSpan timeout, TimeSpan? interval = null)
+    {
+        interval ??= TimeSpan.FromMilliseconds(50);
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.Add(timeout);
+
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            if (await condition())
+            {
+                return;
+            }
+
+            await Task.Delay(interval.Value);
+        }
+
+        throw new TimeoutException("Condition was not met within the allotted time.");
     }
 
     private sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory

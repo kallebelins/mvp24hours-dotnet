@@ -1356,56 +1356,47 @@
 
 > **Objetivo:** O projeto Infrastructure tem cobertura de 57.5%. Precisa de +~4.950 linhas cobertas para atingir 90%.
 
-[ ] 23.1 - Testes para `Email/Services/*`
-- Testar `EmailService`: send, batch, attachments, templates.
-- Testar `QueuedEmailService`: background sending, retry.
-- Testar `EmailValidationService`: address validation.
-- `src/Mvp24Hours.Infrastructure/Email/Services/*.cs` (5+ arquivos)
+[x] 23.1 - Testes para `Email/Services/*`
+- API real: **não existe** `Email/Services` — equivalentes em `Email/Queue`, `Email/Bulk`, `Email/RateLimiting`, Models/Results/Options.
+- Cobertos: `InMemoryEmailQueue` (enqueue/schedule/status/cancel/priority), `EmailQueueProcessor` + options (send → Sent, fail → Failed, non-InMemory warning), `EmailBulkSender` (sequential/parallel, progress, rate limiter), `EmailRateLimiter` (Fixed/Sliding/TokenBucket), `EmailMessage`/`EmailAttachment`/`EmbeddedImage`, `EmailSendResult`, `EmailOptions.Validate`.
+- `src/Tests/.../Email/Queue/*`, `Bulk/*`, `RateLimiting/*`, `Models/*`, `Results/*`, `Options/*` (**~83** testes)
 - Estimativa: ~25 testes
 
-[ ] 23.2 - Testes para `Sms/Services/*`
-- Testar `SmsService`: send, batch, status tracking.
-- Testar `QueuedSmsService`: background sending, retry.
-- Testar `SmsValidationService`: phone validation.
-- `src/Mvp24Hours.Infrastructure/Sms/Services/*.cs` (4+ arquivos)
+[x] 23.2 - Testes para `Sms/Services/*`
+- API real: `InMemorySmsTemplateService` + `InMemorySmsRateLimiter` (sem QueuedSms/SmsValidation dedicados).
+- Cobertos: CRUD/templates/`RenderAsync` placeholders, rate limit por destino, normalização de telefone, modo disabled, expiry; `SmsTemplate`/`SmsSendResult`/`SmsOptions`/`SmsRateLimitOptions`.
+- `src/Tests/.../Sms/Services/*`, `Models/*`, `Results/*`, `Options/*` (**~71** testes)
 - Estimativa: ~20 testes
 
-[ ] 23.3 - Testes para `FileStorage/Services/*`
-- Testar `FileStorageService`: upload, download, delete, copy, move.
-- Testar `ChunkedUploadService`: large files, resume.
-- Testar `FileMetadataService`: metadata extraction.
-- `src/Mvp24Hours.Infrastructure/FileStorage/Services/*.cs` (5+ arquivos)
+[x] 23.3 - Testes para `FileStorage/Services/*`
+- API real: **não existe** `FileStorage/Services` — `FileStorageAdvancedExtensions`, `FileMetadata`, Results/Options.
+- Cobertos: `Supports*`/`As*` para 6 interfaces avançadas, `FileMetadata` guards, `FileStorageOptions.Validate` + presets, factories `FileUploadResult`/`FileDownloadResult`/`ChunkedUploadStatus`/`MultipartUploadInfo`/`SoftDeletedFile`/`FileVersion`.
+- `src/Tests/.../FileStorage/Advanced/*`, `Providers/FileMetadataTest`, `Options/*`, `Results/*` (**~83** testes)
 - Estimativa: ~25 testes
 
-[ ] 23.4 - Testes para `BackgroundJobs/Services/*`
-- Testar `BackgroundJobService`: enqueue, schedule, recurring.
-- Testar `JobScheduler`: CRON expressions, timezones.
-- Testar `JobMonitor`: status tracking, cancellation.
-- `src/Mvp24Hours.Infrastructure/BackgroundJobs/Services/*.cs` (5+ arquivos)
+[x] 23.4 - Testes para `BackgroundJobs/Services/*`
+- API real: **não existe** `BackgroundJobs/Services` — `InMemoryJobProvider`, `QuartzJobProvider` (stub), Models/Results/Options/Dashboard.
+- Cobertos: enqueue/schedule/cancel/status/recurring/continue-with/batch/parent-child; Quartz mirrors Hangfire (`NotSupportedException`); `JobContext`/`JobBatch`/`ParentChildJob`; `JobExecutionResult` factories; `JobOptions`/`QuartzJobOptions`; dashboard helpers.
+- Correção produção: `InMemoryJobProvider.ExecuteBatchAsync` respeita cancel (lock + não sobrescreve `Cancelled`).
+- `src/Tests/.../BackgroundJobs/InMemoryJobProviderTest`, `QuartzJobProviderTest`, `Models/*`, `Results/*`, `Options/*`, `Dashboard/*` (**~99** testes)
 - Estimativa: ~25 testes
 
-[ ] 23.5 - Testes para `DistributedLocking/Services/*`
-- Testar `DistributedLockService`: acquire, release, extend.
-- Testar `LockMonitor`: active locks, deadlock detection.
-- Testar `LockScope`: using pattern, auto-release.
-- `src/Mvp24Hours.Infrastructure/DistributedLocking/Services/*.cs` (4+ arquivos)
-- Estimativa: ~20 testes
+[x] 23.5 - Testes para `DistributedLocking/Services/*`
+- API real: **não existe** `DistributedLocking/Services` — cobertura já existente (providers, factory, metrics, options, extensions) reaproveitada; gaps menores (LockHandleBase) exercidos indiretamente.
+- Estimativa: ~20 testes · **reaproveitado** (sem novos testes dedicados nesta fase)
 
-[ ] 23.6 - Testes para `Security/Services/*`
-- Testar `SecretService`: get, rotate, cache.
-- Testar `EncryptionService`: encrypt, decrypt, key management.
-- Testar `DataMaskingService`: PII masking rules.
-- `src/Mvp24Hours.Infrastructure/Security/Services/*.cs` (5+ arquivos)
-- Estimativa: ~25 testes
+[x] 23.6 - Testes para `Security/Services/*`
+- API real: **não existe** `Security/Services` — helpers/providers/extensions/options já cobertos (`SecretRotationHelper`, `SensitiveDataMasker`, `EncryptionHelper`, Azure/AWS/Env providers, `SecretProviderOptionsTest`).
+- Estimativa: ~25 testes · **reaproveitado** (sem novos testes dedicados nesta fase)
 
-[ ] 23.7 - Testes para `Extensions/*` (DI completo)
-- Testar `InfrastructureServiceCollectionExtensions`: AddMvpInfrastructure, modules.
-- Testar `EmailServiceCollectionExtensions`, `SmsServiceCollectionExtensions`.
-- Testar `FileStorageServiceCollectionExtensions`, `SecurityServiceCollectionExtensions`.
-- `src/Mvp24Hours.Infrastructure/Extensions/*.cs` (15+ arquivos)
+[x] 23.7 - Testes para `Extensions/*` (DI completo)
+- API real: extensions por módulo + root (`ServiceCollectionExtensions`, `PredicateExtensions`, `MemoryCacheExtensions`, `ActivityExtensions`, `HttpContextExtensions`).
+- Cobertos: Email/Sms/FileStorage/BackgroundJobs DI (InMemory + providers + null guards); Predicate And/Or/Not; Activity trace/span; HttpContext IP/base URL; MemoryCache.Keys (.NET 10).
+- Correção produção: `MemoryCacheExtensions` usa `MemoryCache.Keys` (reflection `EntriesCollection` quebrada no .NET 10).
+- `src/Tests/.../Email|Sms|FileStorage|BackgroundJobs/Extensions/*` + `Extensions/*` (**~81** testes)
 - Estimativa: ~40 testes
 
-> **Resultado Esperado Fase 23:** ~180 novos testes · cobertura alvo **~90%** linha.
+> **Resultado Fase 23:** **~352** novos testes · suíte `Infrastructure.Test` **1605 aprovados · 0 falhas · 0 ignorados**. Nomes `*/Services` do plano mapeados para Queue/Bulk/Providers/Models/Extensions reais. Fixes: `MemoryCacheExtensions` (net10) + cancel de batch no `InMemoryJobProvider`.
 
 ---
 

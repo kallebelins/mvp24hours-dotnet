@@ -428,8 +428,11 @@ public class InMemoryJobProvider(
 
         if (_batches.TryGetValue(batchId, out BatchInfo? batchInfo))
         {
-            batchInfo.Status = BatchStatus.Cancelled;
-            batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            lock (batchInfo.SyncRoot)
+            {
+                batchInfo.Status = BatchStatus.Cancelled;
+                batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            }
 
             // Cancel all jobs in batch
             foreach (string jobId in batchInfo.Jobs)
@@ -811,8 +814,16 @@ public class InMemoryJobProvider(
             return;
         }
 
-        batchInfo.Status = BatchStatus.Running;
-        batchInfo.StartedAt = DateTimeOffset.UtcNow;
+        lock (batchInfo.SyncRoot)
+        {
+            if (batchInfo.Status == BatchStatus.Cancelled)
+            {
+                return;
+            }
+
+            batchInfo.Status = BatchStatus.Running;
+            batchInfo.StartedAt = DateTimeOffset.UtcNow;
+        }
 
         try
         {
@@ -826,13 +837,31 @@ public class InMemoryJobProvider(
 
             await Task.WhenAll(tasks);
 
-            batchInfo.Status = BatchStatus.Completed;
-            batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            lock (batchInfo.SyncRoot)
+            {
+                // Do not overwrite an explicit cancel that raced with execution.
+                if (batchInfo.Status == BatchStatus.Cancelled)
+                {
+                    return;
+                }
+
+                batchInfo.Status = BatchStatus.Completed;
+                batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            }
         }
         catch (Exception ex)
         {
-            batchInfo.Status = BatchStatus.Failed;
-            batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            lock (batchInfo.SyncRoot)
+            {
+                if (batchInfo.Status == BatchStatus.Cancelled)
+                {
+                    return;
+                }
+
+                batchInfo.Status = BatchStatus.Failed;
+                batchInfo.CompletedAt = DateTimeOffset.UtcNow;
+            }
+
             _logger?.LogError(ex, "Batch {BatchId} failed", batchId);
         }
     }
@@ -919,6 +948,7 @@ public class InMemoryJobProvider(
 
     private class BatchInfo
     {
+        public object SyncRoot { get; } = new();
         public string BatchId { get; set; } = string.Empty;
         public string? Name { get; set; }
         public BatchOptions Options { get; set; } = new BatchOptions();

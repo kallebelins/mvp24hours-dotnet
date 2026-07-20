@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Collections;
-using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Mvp24Hours.Extensions;
@@ -14,18 +13,19 @@ namespace Mvp24Hours.Extensions;
 /// </summary>
 public static class MemoryCacheExtensions
 {
-    private static readonly Func<MemoryCache, object>? GetEntriesCollection = Delegate.CreateDelegate(
-        typeof(Func<MemoryCache, object>),
-        typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance)?.GetGetMethod(true)
-            ?? throw new InvalidOperationException("EntriesCollection property not found on MemoryCache."),
-        throwOnBindFailure: true) as Func<MemoryCache, object>;
-
     /// <summary>
     /// 
     /// </summary>
     public static IEnumerable GetKeys(this IMemoryCache memoryCache)
     {
-        return ((IDictionary)GetEntriesCollection!((MemoryCache)memoryCache)).Keys;
+        ArgumentNullException.ThrowIfNull(memoryCache);
+
+        if (memoryCache is MemoryCache cache)
+        {
+            return cache.Keys;
+        }
+
+        throw new ArgumentException("Memory cache must be an instance of MemoryCache.", nameof(memoryCache));
     }
 
     /// <summary>

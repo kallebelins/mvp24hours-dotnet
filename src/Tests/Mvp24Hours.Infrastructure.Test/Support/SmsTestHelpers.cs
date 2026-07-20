@@ -91,6 +91,40 @@ internal static class SmsTestHelpers
         };
     }
 
+    public static SmsTemplate CreateSmsTemplate(
+        string id = "welcome-message",
+        string name = "Welcome Message",
+        string body = "Welcome {Name}! Your code is {Code}.",
+        string? defaultFrom = null,
+        string templateEngine = "Simple",
+        IDictionary<string, string>? metadata = null)
+    {
+        return new SmsTemplate
+        {
+            Id = id,
+            Name = name,
+            Body = body,
+            DefaultFrom = defaultFrom,
+            TemplateEngine = templateEngine,
+            Metadata = metadata
+        };
+    }
+
+    public static SmsRateLimitOptions CreateSmsRateLimitOptions(
+        bool enabled = true,
+        int maxMessagesPerDestination = 10,
+        TimeSpan? timeWindow = null,
+        bool throwOnExceeded = false)
+    {
+        return new SmsRateLimitOptions
+        {
+            Enabled = enabled,
+            MaxMessagesPerDestination = maxMessagesPerDestination,
+            TimeWindow = timeWindow ?? TimeSpan.FromHours(1),
+            ThrowOnExceeded = throwOnExceeded
+        };
+    }
+
     public static IHttpClientFactory CreateHttpClientFactory(TestHttpMessageHandler handler)
     {
         return new TestHttpClientFactory(handler);
