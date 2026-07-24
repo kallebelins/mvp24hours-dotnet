@@ -14,8 +14,6 @@ This documentation includes ready-to-use rule files for Cursor IDE that enable A
 |------|-------------|----------|
 | [`llms_complete_en.txt`](https://raw.githubusercontent.com/kallebelins/mvp24hours-dotnet/main/docs/llms_complete_en.txt) | Complete rules with detailed instructions | English |
 | [`llms_compact_en.txt`](https://raw.githubusercontent.com/kallebelins/mvp24hours-dotnet/main/docs/llms_compact_en.txt) | Compact rules with keyword index | English |
-| [`llms_complete_pt.txt`](https://raw.githubusercontent.com/kallebelins/mvp24hours-dotnet/main/docs/llms_complete_pt.txt) | Complete rules with detailed instructions | Portuguese |
-| [`llms_compact_pt.txt`](https://raw.githubusercontent.com/kallebelins/mvp24hours-dotnet/main/docs/llms_compact_pt.txt) | Compact rules with keyword index | Portuguese |
 
 ### How to Use with Cursor IDE
 

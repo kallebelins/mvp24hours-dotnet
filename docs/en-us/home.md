@@ -1,6 +1,6 @@
 # <img  style="vertical-align:middle" width="42" height="42" src="../_media/icon.png" alt="Mvp24Hours" /> Mvp24Hours - NET9 (v9.1.210) 🚀
 
-This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/pt-br/training/dotnet/). I used the reference of market solutions for building microservices.
+This project was developed to contribute to the rapid construction of services with [.NET](https://learn.microsoft.com/en-us/training/dotnet/). I used the reference of market solutions for building microservices.
 
 ## 🎯 Characteristics
 
@@ -58,7 +58,7 @@ You can study different solutions with the Mvp24Hours library. Visit the example
 * **MongoDB Advanced**: Change Streams, GridFS, Geospatial
 * **RabbitMQ Enterprise**: Typed consumers, Sagas, Scheduling
 * **Pipeline Advanced**: Typed, Fork/Join, Checkpoint/Resume
-* **50+ Bilingual Docs**: PT-BR and EN-US documentation
+* **50+ Documentation Pages**: Comprehensive documentation in English
 
 ## Donations
 Please consider making a donation if you think this library is useful to you or that my work is valuable. I'm happy if you can help me [buy a cup of coffee](https://www.paypal.com/donate/?hosted_button_id=EKA2L256GJVQC). :heart:

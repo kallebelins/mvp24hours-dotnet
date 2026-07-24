@@ -537,7 +537,7 @@ await indexService.CreateTextIndexAsync<Product>(
     p => p.Description,
     options: new TextIndexOptions
     {
-        DefaultLanguage = "portuguese",
+        DefaultLanguage = "english",
         Weights = new { Name = 10, Description = 5 }
     }
 );

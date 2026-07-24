@@ -166,8 +166,8 @@
 * `IClock` and `IGuidGenerator` for testability
 * Nullable reference types throughout the framework
 
-### 📚 Complete Bilingual Documentation
-* 50+ documents in PT-BR and EN-US
+### 📚 Complete Documentation
+* 50+ documents in English
 * Sections: CQRS, Core, Observability, Modernization
 * Migration guides from MediatR and TelemetryHelper
 * Architecture diagrams

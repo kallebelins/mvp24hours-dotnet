@@ -32,10 +32,6 @@
 
 <body>
 
-  <nav>
-    <a href="#/en-us/home">English</a>
-    <a href="#/pt-br/home">Português</a>
-  </nav>
   <div id="app">Please wait...</div>
   <script>
     window.$docsify = {
@@ -52,60 +48,23 @@
 
       /* copy */
       copyCode: {
-        buttonText: {
-          '/en-us/': 'Copy to clipboard',
-          '/pt-br/': 'copiar para área de transferência',
-          '/': 'Copy to clipboard'
-        },
-        errorText: {
-          '/en-us/': 'Error',
-          '/pt-br/': 'Erro',
-          '/': 'Error'
-        },
-        successText: {
-          '/en-us/': 'Copied',
-          '/pt-br/': 'Copiado',
-          '/': 'Copied'
-        }
+        buttonText: 'Copy to clipboard',
+        errorText: 'Error',
+        successText: 'Copied'
       },
 
-      /* languages */
-      fallbackLanguages: ["en-us", "pt-br"],
-      namespaces: [
-        {
-          id: "lang",
-          values: ["en-us", "pt-br"],
-          optional: true,
-          selector: "#lang-selector",
-        }
-      ],
-
       /* search */
-      search: [
-        '/',
-        '/pt-br/'
-      ],
       search: {
         maxAge: 86400000,
         paths: [],
 
-        placeholder: {
-          '/pt-br/': 'Digite para pesquisar',
-          '/': 'Type to search',
-        },
+        placeholder: 'Type to search',
 
-        noData: {
-          '/pt-br/': 'Sem resultados!',
-          '/': 'No Results!',
-        },
+        noData: 'No Results!',
 
         depth: 2,
 
-        hideOtherSidebarContent: false,
-
-        pathNamespaces: ['/', '/pt-br'],
-
-        pathNamespaces: /^(\/(en-us|pt-br))?(\/(v1|v2))?/
+        hideOtherSidebarContent: false
       },
       executeScript: true,
       ga: 'G-4DFGDVQGPQ'
