@@ -18,7 +18,8 @@ public sealed class KeycloakRolesClaimsTransformation(
 
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
-        ClaimsPrincipal result = principal.Clone();
+        ClaimsPrincipal result = new(
+            principal.Identities.Select(identity => identity.Clone()));
         if (result.Identity is not ClaimsIdentity identity)
         {
             return Task.FromResult(result);
@@ -87,7 +88,7 @@ public sealed class KeycloakRolesClaimsTransformation(
 
     private void AddGroups(ClaimsPrincipal principal, ClaimsIdentity identity)
     {
-        foreach (Claim groupClaim in principal.FindAll(KeycloakClaimTypes.Groups))
+        foreach (Claim groupClaim in principal.FindAll(KeycloakClaimTypes.Groups).ToArray())
         {
             if (TryParseJson(groupClaim.Value, KeycloakClaimTypes.Groups, out JsonDocument groups))
             {
