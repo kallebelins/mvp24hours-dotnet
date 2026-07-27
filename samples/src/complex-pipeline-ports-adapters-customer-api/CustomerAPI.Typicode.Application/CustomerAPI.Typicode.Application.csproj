@@ -10,10 +10,13 @@
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Application\Mvp24Hours.Application.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 		<PackageReference Include="Mvp24Hours.Infrastructure.Pipe" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Pipe\Mvp24Hours.Infrastructure.Pipe.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+		<PackageReference Include="Microsoft.Extensions.Http" />
+		<PackageReference Include="Microsoft.Extensions.Options" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
+		<ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
 	</ItemGroup>
 
 </Project>

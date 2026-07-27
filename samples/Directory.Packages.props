@@ -6,8 +6,8 @@
   <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" />
 
   <ItemGroup>
-    <!-- Health checks — AspNetCore.HealthChecks 8.x is transitional until Phase 1/6.1 decides on net10-native alternatives. -->
-    <PackageVersion Include="AspNetCore.HealthChecks.MongoDb" Version="8.0.0" />
+    <!-- Health checks — MongoDb 9.x required for MongoDB.Driver 3.x (aligned with src/). Other HC packages remain on 8.x until Phase 6.1. -->
+    <PackageVersion Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.0" />
@@ -24,6 +24,7 @@
 
     <!-- Sample tooling not centralized under src/. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
   </ItemGroup>
 

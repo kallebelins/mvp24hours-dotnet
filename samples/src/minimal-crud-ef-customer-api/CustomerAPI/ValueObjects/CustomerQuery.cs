@@ -10,7 +10,7 @@ namespace CustomerAPI.ValueObjects
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Indicates whether the client is active/inactive
         /// </summary>

@@ -1,4 +1,4 @@
-﻿using CustomerAPI.Core.Contract.Logic;
+using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using FluentValidation;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Logic
 {
-    public class ContactService(IUnitOfWorkAsync unitOfWork, IValidator<Contact> validator) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
+    public class ContactService(IUnitOfWorkAsync unitOfWork, IValidator<Contact> validator, TimeProvider timeProvider) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
     {
         #region [ Queries ]
 
@@ -47,7 +47,7 @@ namespace CustomerAPI.Application.Logic
         {
             // sets default values
             entityModel.Active = true;
-            entityModel.Created = DateTime.Now;
+            entityModel.Created = timeProvider.GetUtcNow().UtcDateTime;
             entityModel.CustomerId = customerId;
 
             // apply data validation to the model/entity with FluentValidation or DataAnnotation

@@ -19,23 +19,23 @@ namespace CustomerAPI.Operations
         {
             if (!input.HasContent("customers"))
             {
-                input.Messages.AddMessage("GetByCustomerMapperResponseStep", Messages.RECORD_NOT_FOUND, Mvp24Hours.Core.Enums.MessageType.Error);
+                input.Messages.AddMessage("GetByIdCustomerMapperResponseStep", Messages.RECORD_NOT_FOUND, Mvp24Hours.Core.Enums.MessageType.Error);
             }
 
             if (!input.HasContent("id"))
             {
-                input.Messages.AddMessage("GetByCustomerMapperResponseStep", Messages.PARAMETER_ID_REQUIRED, Mvp24Hours.Core.Enums.MessageType.Error);
+                input.Messages.AddMessage("GetByIdCustomerMapperResponseStep", Messages.PARAMETER_ID_REQUIRED, Mvp24Hours.Core.Enums.MessageType.Error);
             }
 
             if (input.IsFaulty)
             {
-                return await Task.FromResult<CustomerIdResponse>(default);
+                return await Task.FromResult<CustomerIdResponse>(null!);
             }
 
             var id = input.GetContent<int>("id");
             var customers = input.GetContent<dynamic>("customers");
 
-            CustomerIdResponse result = null;
+            CustomerIdResponse? result = null;
 
             foreach (var customer in customers)
             {
@@ -77,7 +77,7 @@ namespace CustomerAPI.Operations
                 }
             }
 
-            return await result.TaskResult();
+            return await result!.TaskResult();
         }
     }
 }

@@ -1,20 +1,23 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CustomerAPI.Typicode.Application.Configuration;
+using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.Typicode.Application.Pipe.Operations.Customers
 {
     /// <summary>
-    /// 
+    /// Fetches customers from Typicode via IHttpClientFactory (resilient named client registered by the host).
     /// </summary>
-    public class GetCustomerClientStep(IConfiguration configuration) : OperationBaseAsync
+    public class GetCustomerClientStep(IHttpClientFactory httpClientFactory, IOptions<TypicodeOptions> options) : OperationBaseAsync
     {
+        public const string HttpClientName = "Typicode";
+
         public override async Task ExecuteAsync(IPipelineMessage input)
         {
-            string url = configuration.GetSection("Settings:TypicodeCustomerUrl").Value;
+            string url = options.Value.TypicodeCustomerUrl;
 
             if (!url.HasValue())
             {
@@ -22,7 +25,8 @@ namespace CustomerAPI.Typicode.Application.Pipe.Operations.Customers
                 return;
             }
 
-            string response = await WebRequestHelper.GetAsync(url);
+            var client = httpClientFactory.CreateClient(HttpClientName);
+            string response = await client.GetStringAsync(url);
 
             // json definition for dynamic type
             var def = new[] {

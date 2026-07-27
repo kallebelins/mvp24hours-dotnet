@@ -1,13 +1,12 @@
 using CustomerAPI.Core.ValueObjects.Customers;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Brokers.Consumers
 {
-    public class DeleteCustomerConsumer(FacadeService facade) : IMvpRabbitMQConsumerAsync
+    public class DeleteCustomerConsumer(FacadeService facade, ILogger<DeleteCustomerConsumer> logger) : IMvpRabbitMQConsumerAsync
     {
         public string RoutingKey => typeof(CustomerDelete).Name;
 
@@ -17,10 +16,10 @@ namespace CustomerAPI.Application.Brokers.Consumers
         {
             if (message is not CustomerDelete dto)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "delete-customer-consumer-received-null", "Received customer delete null.");
+                logger.LogDebug("Received customer delete with null/invalid payload.");
                 return;
             }
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "delete-customer-consumer-received", $"Received customer delete {dto.Id}.");
+            logger.LogDebug("Received customer delete for {CustomerId}", dto.Id);
             var result = await facade.CustomerService.Delete(dto.Id);
             if (result.HasErrors)
             {

@@ -1,4 +1,4 @@
-﻿using CustomerAPI.Application;
+using CustomerAPI.Application;
 using CustomerAPI.Application.Brokers.Consumers;
 using CustomerAPI.Application.Logic;
 using CustomerAPI.Core.Contract.Logic;
@@ -9,13 +9,13 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
-using NLog;
 using System;
-using System.Linq;
+using Mvp24Hours.Core.Extensions.Options;
+using CustomerAPI.WebAPI.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -29,8 +29,11 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyDbContext(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddDbContext<EFDBContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("EFDBContext"))
+                options.UseSqlServer(connectionStrings.EFDBContext)
             );
             services.AddMvp24HoursDbContext<EFDBContext>();
             services.AddMvp24HoursRepositoryAsync(options =>
@@ -46,54 +49,19 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyHealthChecks(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddHealthChecks()
                 .AddSqlServer(
-                    configuration.GetConnectionString("EFDBContext"),
+                    connectionStrings.EFDBContext,
                     healthQuery: "SELECT 1;",
                     name: "SqlServer",
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded)
                 .AddRabbitMQ(
-                    configuration.GetConnectionString("RabbitMQContext"),
+                    connectionStrings.RabbitMQContext,
                     name: "RabbitMQ",
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-            return services;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IServiceCollection AddMyTelemetry(this IServiceCollection services)
-        {
-            Logger logger = LogManager.GetCurrentClassLogger();
-#if DEBUG
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-object"))
-                    {
-                        logger.Info($"{name}|body:{state.ToSerialize()}");
-                    }
-                    else
-                    {
-                        logger.Info($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
-#endif
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Error,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-failure"))
-                    {
-                        logger.Error(state.ElementAtOrDefault(0) as Exception);
-                    }
-                    else
-                    {
-                        logger.Error($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
-            services.AddMvp24HoursTelemetryIgnore("rabbitmq-consumer-basic");
             return services;
         }
 
@@ -113,6 +81,9 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyRabbitMQ(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddScoped<CreateCustomerConsumer>();
             services.AddScoped<DeleteCustomerConsumer>();
             services.AddScoped<UpdateCustomerConsumer>();
@@ -121,7 +92,7 @@ namespace CustomerAPI.WebAPI.Extensions
                 typeof(CreateCustomerConsumer).Assembly,
                 connectionOptions =>
                 {
-                    connectionOptions.ConnectionString = configuration.GetConnectionString("RabbitMQContext");
+                    connectionOptions.ConnectionString = connectionStrings.RabbitMQContext;
                     connectionOptions.DispatchConsumersAsync = true;
                     connectionOptions.RetryCount = 3;
                 },
@@ -154,18 +125,28 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyHostedService(this IServiceCollection services)
         {
-            var provider = services.BuildServiceProvider();
-
-            services.AddMvp24HoursHostedService(options =>
+            // Resolve MvpRabbitMQClient from the real root provider when the hosted service starts
+            // by using a factory registration and preserving the container-managed lifetime.
+            services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService>(sp =>
             {
-                options.Callback = e =>
+                var client = sp.GetRequiredService<MvpRabbitMQClient>();
+                return new MvpRabbitMQHostedService(new RabbitMQHostedOptions
                 {
-                    var client = provider.GetService<MvpRabbitMQClient>();
-                    client?.Consume();
-                };
+                    Callback = _ => client.Consume()
+                });
             });
             return services;
         }
+        /// <summary>
+        /// Binds and validates connection strings used by this host.
+        /// </summary>
+        public static IServiceCollection AddMyOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptionsWithValidation<ConnectionStringsOptions>(
+                configuration.GetSection(ConnectionStringsOptions.SectionName));
+            return services;
+        }
+
 
 
     }

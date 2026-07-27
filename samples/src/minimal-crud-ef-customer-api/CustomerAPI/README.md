@@ -1,115 +1,81 @@
-# CustomerAPI - CRUD - EF - Minimal API
-Minimized API design much simpler than usual.
+# Customer API — Minimal API with EF Core
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Documentation (Swagger); 
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Dependency injection (IoC);
-- Using ExtensionBinder and ModelBinder for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This focused .NET 10 sample implements paged Customer CRUD with Minimal APIs, EF Core, and the Mvp24Hours repository and unit-of-work abstractions.
 
-## Database integrated with EF
+## Status
 
-### SqlServer
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-```csharp
-/// Package Manager Console >
-Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 5.0.10
+## Features
 
-/// Startup.cs
-services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DataContext"))
-);
+- Paged list, get by ID, create, update, and delete endpoints
+- SQL Server persistence through EF Core, repository, and unit of work
+- FluentValidation and Mvp24Hours business-result envelopes
+- `TypedResults`, native OpenAPI, RFC ProblemDetails, and health checks
+- Strongly typed connection-string options validated at startup
+
+## Architecture
+
+- Tier: `Minimal`
+- Shape: one ASP.NET Core Minimal API host
+- Why this shape fits: the service is small and cohesive, so folders provide enough separation without introducing artificial project boundaries
+
+## Folders
+
+- `Entities` — Customer persistence model
+- `Data` — EF Core context, mapping, and development seed
+- `Validations` — request/entity validation rules
+- `Extensions` — focused service and application composition
+- `Configuration` — startup-validated options
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
+
+## Configuration
+
+Keep credentials outside committed files by using environment variables, user secrets, or a secret store.
+
+| Key | Required | Description | Safe example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server connection used by EF Core and health checks | `Server=localhost,1433;Database=CustomerDb;User Id=sa;Password=<secret>;TrustServerCertificate=True` |
+
+The default provider is SQL Server. To use PostgreSQL or MySQL, add the provider package to Central Package Management and replace `UseSqlServer` with `UseNpgsql` or `UseMySql`.
+
+## Run
+
+From `samples/src/minimal-crud-ef-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI/CustomerAPI.csproj
 ```
 
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=sql-server
+In Development, the application creates the database when needed and adds sample records.
 
-### PostgreSQL
+## Explore the API
 
-```csharp
-/// Package Manager Console >
-Install-Package Npgsql.EntityFrameworkCore.PostgreSQL -Version 5.0.10
+- OpenAPI document: `http://localhost:5159/openapi/v1.json`
+- Swagger UI: `http://localhost:5159/swagger`
+- Health endpoint: `http://localhost:5159/hc`
+- Customer collection: `/customer`
+- Customer resource: `/customer/{id}`
 
-/// Startup.cs
-services.AddDbContext<DataContext>(
-    options => options.UseNpgsql(configuration.GetConnectionString("DataContext"),
-    options => options.SetPostgresVersion(new Version(9, 6)))
-);
-```
+Expected validation and not-found outcomes use Mvp24Hours business-result envelopes. Unexpected exceptions are converted to ProblemDetails.
 
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=postgresql
+## Related documentation
 
-### MySql
+- [Minimal API structure](../../../../docs/en-us/guides/architecture/structures/structure-minimal-api.md)
+- [Minimal APIs and TypedResults](../../../../docs/en-us/modernization/minimal-apis.md)
+- [Relational data](../../../../docs/en-us/database/relational.md)
+- [Repository usage](../../../../docs/en-us/database/use-repository.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
 
-```csharp
-/// Package Manager Console >
-Install-Package MySql.EntityFrameworkCore -Version 5.0.8
+## What this sample intentionally does not cover
 
-/// Startup.cs
-services.AddDbContext<DataContext>(options =>
-    options.UseMySQL(configuration.GetConnectionString("EFDBContext"))
-);
-```
-
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=mysql
-
-## Health Check
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.UI.Client -Version 3.1.2
-```
-
-Access: https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#health-checks
-
-### SqlServer
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.SqlServer -Version 3.2.0
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddSqlServer(
-		configuration.GetConnectionString("EFDBContext"),
-		healthQuery: "SELECT 1;",
-		name: "SqlServer", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-
-```
-
-### PostgreSQL
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.Npgsql -Version 3.1.1
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddNpgSql(
-		configuration.GetConnectionString("EFDBContext"),
-		name: "PostgreSql", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-
-```
-
-### MySql
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.MySql -Version 3.2.0
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddMySql(
-		configuration.GetConnectionString("EFDBContext"), 
-		name: "MySql", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-```
+- DTO boundaries or multiple projects; use a Complex sample for a public integration API
+- Authentication, authorization, production migrations, or secret provisioning
+- Docker orchestration and production observability

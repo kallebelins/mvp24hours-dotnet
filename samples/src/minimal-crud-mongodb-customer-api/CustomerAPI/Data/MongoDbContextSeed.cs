@@ -1,46 +1,46 @@
 using CustomerAPI.Entities;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 
-namespace CustomerAPI.Data
+namespace CustomerAPI.Data;
+
+/// <summary>
+/// Seeds development Customer documents when the collection is empty.
+/// </summary>
+public static class MongoDbContextSeed
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class MongoDbContextSeed
+    public static async Task SeedAsync(
+        this IUnitOfWorkAsync unitOfWork,
+        TimeProvider timeProvider,
+        CancellationToken cancellationToken = default)
     {
-        public static void Seed(this IUnitOfWork uoW)
+        IRepositoryAsync<Customer> repository = unitOfWork.GetRepository<Customer>();
+        if (await repository.ListAnyAsync(cancellationToken))
         {
-            // adicionar processamento de dados iniciais para carga
-            TelemetryHelper.Execute(TelemetryLevels.Information, "efdbcontextseed-seedasync", $"Seed database associated with context");
+            return;
+        }
 
-            IRepository<Customer> repository = uoW.GetRepository<Customer>();
-            if (repository.ListAny())
+        await repository.AddAsync(GetCustomers(timeProvider), cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private static List<Customer> GetCustomers(TimeProvider timeProvider)
+    {
+        return
+        [
+            new Customer
             {
-                repository.Add(GetCustomers());
+                Created = timeProvider.GetUtcNow().UtcDateTime,
+                Name = "Cherokee Macdonald",
+                Active = true,
+                Note = "Customer charged via standard charge."
+            },
+            new Customer
+            {
+                Created = timeProvider.GetUtcNow().UtcDateTime,
+                Name = "Jonah Harvey",
+                Active = true,
+                Note = "Customer charged via standard charge."
             }
-        }
-
-        private static List<Customer> GetCustomers()
-        {
-            return
-            [
-                new Customer
-                {
-                    Created = DateTime.Now,
-                    Name = "Cherokee Macdonald",
-                    Active = true,
-                    Note = "Customer charged via standard charge."
-                },
-                new Customer
-                {
-                    Created = DateTime.Now,
-                    Name = "Jonah Harvey",
-                    Active = true,
-                    Note = "Customer charged via standard charge."
-                }
-            ];
-        }
+        ];
     }
 }

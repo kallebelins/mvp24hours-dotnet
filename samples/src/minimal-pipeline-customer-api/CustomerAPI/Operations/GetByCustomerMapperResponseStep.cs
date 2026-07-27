@@ -19,7 +19,7 @@ namespace CustomerAPI.Operations
             if (!input.HasContent("customers"))
             {
                 input.Messages.AddMessage("GetByCustomerMapperResponseStep", Messages.RECORD_NOT_FOUND, Mvp24Hours.Core.Enums.MessageType.Error);
-                return await Task.FromResult<IList<CustomerResponse>>(default);
+                return await Task.FromResult<IList<CustomerResponse>>([]);
             }
 
             var customers = input.GetContent<dynamic>("customers");
@@ -41,7 +41,7 @@ namespace CustomerAPI.Operations
                     }
                     if (filter.Name.HasValue()
                         && customer.name != null
-                        && !((string)customer.name).Contains(filter.Name, StringComparison.InvariantCultureIgnoreCase))
+                        && !((string)customer.name).Contains(filter.Name!, StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

@@ -1,6 +1,7 @@
-﻿using CustomerAPI.Data;
+using CustomerAPI.Data;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.WebAPI.Extensions;
 
 namespace CustomerAPI.Extensions
@@ -13,30 +14,14 @@ namespace CustomerAPI.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IApplicationBuilder Configure(this IApplicationBuilder app, IWebHostEnvironment env)
+        public static WebApplication Configure(this WebApplication app)
         {
-            // check environment
-            app.UseMvp24HoursExceptionHandling();
-
-            app.UseStaticFiles();
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
+            app.UseNativeProblemDetailsHandling();
+            app.MapHealthChecks("/hc", new HealthCheckOptions
             {
-                endpoints.MapControllers();
-                endpoints.MapHealthChecks("/hc", new HealthCheckOptions
-                {
-                    Predicate = _ => true,
-                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-                });
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
-
-            if (!env.IsProduction())
-            {
-                app.UseMvp24HoursSwagger("Customer EF API");
-            }
 
             return app;
         }
@@ -44,13 +29,13 @@ namespace CustomerAPI.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IApplicationBuilder MigrateDatabase(this IApplicationBuilder app)
+        public static async Task MigrateDatabaseAsync(this WebApplication app)
         {
-            using var scope = app.ApplicationServices.CreateScope();
+            await using var scope = app.Services.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
-            db?.Database?.EnsureCreated();
-            db.Seed();
-            return app;
+            var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            await db.Database.EnsureCreatedAsync();
+            db.Seed(timeProvider);
         }
     }
 }

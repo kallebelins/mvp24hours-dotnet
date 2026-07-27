@@ -1,11 +1,17 @@
-﻿using CustomerAPI.Data;
+using CustomerAPI.Data;
 using CustomerAPI.Entities;
 using CustomerAPI.Validations;
 using FluentValidation;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
-using NLog;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Extensions.Options;
+using CustomerAPI.Configuration;
+using Microsoft.Extensions.Options;
+using System;
+
+
 
 namespace CustomerAPI.Extensions
 {
@@ -22,48 +28,60 @@ namespace CustomerAPI.Extensions
             #region [ Mvp24Hours ]
             services.AddMvp24HoursWebEssential();
             services.AddMvp24HoursWebJson();
-            services.AddMvp24HoursWebSwagger("Customer Mongo API");
+            services.AddMvp24HoursNativeOpenApi(options =>
+            {
+                options.Title = "Customer Mongo API";
+                options.Version = "1.0.0";
+                options.EnableSwaggerUI = true;
+            });
             services.AddMvp24HoursWebGzip();
             #endregion
-
-            services.AddMyTelemetry();
+            services.AddMyOptions(configuration);
             services.AddMyServices();
             services.AddMyDbContext(configuration);
             services.AddMyHealthChecks(configuration);
 
-            services.AddEndpointsApiExplorer();
-            services.AddControllers();
-            services.AddMvc();
-
             return services;
         }
+
+
 
         /// <summary>
         /// 
         /// </summary>
         public static IServiceCollection AddMyDbContext(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddMvp24HoursDbContext<MongoDbContext>(options =>
             {
                 options.DatabaseName = "simplecustomers";
-                options.ConnectionString = configuration.GetConnectionString("MongoDbContext");
+                options.ConnectionString = connectionStrings.MongoDbContext;
             });
-            services.AddMvp24HoursRepositoryAsync();
+            services.AddMvp24HoursRepositoryAsync((Mvp24Hours.Infrastructure.Data.MongoDb.Configuration.MongoDbRepositoryOptions _) => { });
             return services;
         }
+
+
 
         /// <summary>
         /// 
         /// </summary>
         public static IServiceCollection AddMyHealthChecks(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddHealthChecks()
                 .AddMongoDb(
-                    configuration.GetConnectionString("MongoDbContext"),
+                    clientFactory: _ => new MongoDB.Driver.MongoClient(connectionStrings.MongoDbContext),
                     name: "MongoDb",
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
             return services;
         }
+
+
 
         /// <summary>
         /// 
@@ -73,42 +91,19 @@ namespace CustomerAPI.Extensions
             services.AddSingleton<IValidator<Customer>, CustomerValidator>();
             return services;
         }
-
         /// <summary>
-        /// 
+        /// Binds and validates connection strings used by this host.
         /// </summary>
-        public static IServiceCollection AddMyTelemetry(this IServiceCollection services)
+        public static IServiceCollection AddMyOptions(this IServiceCollection services, IConfiguration configuration)
         {
-            Logger logger = LogManager.GetCurrentClassLogger();
-#if DEBUG
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-object"))
-                    {
-                        logger.Info($"{name}|body:{state.ToSerialize()}");
-                    }
-                    else
-                    {
-                        logger.Info($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
-#endif
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Error,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-failure"))
-                    {
-                        logger.Error(state.ElementAtOrDefault(0) as Exception);
-                    }
-                    else
-                    {
-                        logger.Error($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
+            services.AddOptionsWithValidation<ConnectionStringsOptions>(
+                configuration.GetSection(ConnectionStringsOptions.SectionName));
             return services;
         }
+
+
+
+
+
     }
 }

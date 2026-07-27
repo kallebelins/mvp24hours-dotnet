@@ -1,6 +1,4 @@
 using CustomerAPI.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,34 +9,33 @@ namespace CustomerAPI.Infrastructure.Data
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S101:Types should be named in PascalCase", Justification = "Abbreviation for Entity Framework Database")]
     public static class EFDBContextSeed
     {
-        public static async Task SeedAsync(EFDBContext dbContext)
+        public static async Task SeedAsync(EFDBContext dbContext, TimeProvider timeProvider)
         {
             // adicionar processamento de dados iniciais para carga
-            TelemetryHelper.Execute(TelemetryLevels.Information, "efdbcontextseed-seedasync", $"Seed database associated with context {dbContext.GetType().Name}");
 
             if (!dbContext.Customer.Any())
             {
-                dbContext.Customer.AddRange(GetCustomers());
+                dbContext.Customer.AddRange(GetCustomers(timeProvider));
                 await dbContext.SaveChangesAsync();
             }
 
             await Task.CompletedTask;
         }
 
-        private static List<Customer> GetCustomers()
+        private static List<Customer> GetCustomers(TimeProvider timeProvider)
         {
             return
             [
                 new Customer
                 {
-                    Created = DateTime.Now,
+                    Created = timeProvider.GetUtcNow().UtcDateTime,
                     Name = "Cherokee Macdonald",
                     Active = true,
                     Note = "Customer charged via standard charge.",
                     Contacts = [
                         new Contact
                         {
-                            Created = DateTime.Now,
+                            Created = timeProvider.GetUtcNow().UtcDateTime,
                             Description = "(800) 997-348",
                             Active = true
                         }
@@ -46,13 +43,13 @@ namespace CustomerAPI.Infrastructure.Data
                 },
                 new Customer
                 {
-                    Created = DateTime.Now,
+                    Created = timeProvider.GetUtcNow().UtcDateTime,
                     Name = "Jonah Harvey",
                     Active = true,
                     Note = "Customer charged via standard charge.",
                     Contacts = [
                         new() {
-                            Created = DateTime.Now,
+                            Created = timeProvider.GetUtcNow().UtcDateTime,
                             Description = "1-392-598-4254",
                             Active = true
                         }

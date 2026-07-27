@@ -1,7 +1,6 @@
-﻿using Dapper;
+using Dapper;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.DTOs.Models;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
@@ -52,7 +51,6 @@ namespace CustomerAPI.Infrastructure.Extensions
         public static async Task<IPagingResult<IEnumerable<T>>> QueryPagingResultAsync<T>(this IDbConnection connection, int limit, int offset, string whereSql = null, dynamic whereParams = null, string orderBySql = "id asc")
             where T : class
         {
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "dapper-querypagingresultasync-start");
             try
             {
                 // get number of rows with filter
@@ -96,7 +94,6 @@ namespace CustomerAPI.Infrastructure.Extensions
             }
             finally
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "dapper-querypagingresultasync-end");
             }
         }
     }

@@ -1,55 +1,91 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using CustomerAPI.WebAPI.Extensions;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using NLog;
+using Mvp24Hours.Extensions;
+using Mvp24Hours.WebAPI.Extensions;
 using NLog.Web;
-using System;
+using NLog;
+using System.Reflection;
 
-namespace CustomerAPI.WebAPI
+
+
+var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+
+
+
+try
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class Program
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static void Main(string[] args)
-        {
-            var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-            try
-            {
-                logger.Debug("Application Starting Up");
-                CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception exception)
-            {
-                //NLog: catch setup errors
-                logger.Error(exception, "Stopped program because of exception");
-                throw;
-            }
-            finally
-            {
-                // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                NLog.LogManager.Shutdown();
-            }
-        }
+    logger.Debug("Application Starting Up");
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-                })
-                .UseNLog();
+
+
+    var builder = WebApplication.CreateBuilder(args);
+
+
+
+    builder.Logging.ClearProviders();
+    builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+    builder.Host.UseNLog();
+
+
+
+    builder.Services.AddTimeProvider();
+    builder.Services.AddMvp24HoursWebEssential();
+    builder.Services.AddMvp24HoursMapService(assemblyMap: Assembly.GetExecutingAssembly());
+    builder.Services.AddMvp24HoursWebJson();
+    builder.Services.AddMvp24HoursNativeOpenApi(options =>
+    {
+        options.Title = "Customer Pipeline API";
+        options.Version = "1.0.0";
+        options.EnableSwaggerUI = true;
+    });
+    builder.Services.AddMvp24HoursWebGzip();
+    builder.Services.AddMvp24HoursPipelineAsync();
+    builder.Services.AddMyOptions(builder.Configuration);
+    builder.Services.AddMyServices();
+    builder.Services.AddMyHealthChecks();
+    builder.Services.AddControllers();
+    builder.Services.AddMvc();
+    builder.Services.AddNativeProblemDetailsAll(builder.Environment);
+
+
+
+    var app = builder.Build();
+
+
+
+    app.UseNativeProblemDetailsHandling();
+    app.UseStaticFiles();
+    app.UseRouting();
+    app.UseAuthorization();
+
+
+
+    app.MapControllers();
+    app.MapHealthChecks("/hc", new HealthCheckOptions
+    {
+        Predicate = _ => true,
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    });
+
+
+
+    if (!app.Environment.IsProduction())
+    {
+        app.MapMvp24HoursNativeOpenApi();
     }
+
+
+
+    await app.RunAsync();
+}
+catch (Exception exception)
+{
+    logger.Error(exception, "Stopped program because of exception");
+    throw;
+}
+finally
+{
+    LogManager.Shutdown();
 }

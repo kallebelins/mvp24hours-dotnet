@@ -2,6 +2,6 @@
 {
     public class CustomerIdResponse : CustomerResponse
     {
-        public IList<ContactIdResponse> Contacts { get; set; }
+        public IList<ContactIdResponse> Contacts { get; set; } = [];
     }
 }

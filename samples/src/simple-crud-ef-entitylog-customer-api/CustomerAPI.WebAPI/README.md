@@ -3,7 +3,7 @@ N-tier project used to develop APIs where the business needs to apply simple rul
 
 ## Features:
 - Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Documentation (Swagger); 
+- Native OpenAPI;
 - Logging (NLog); 
 - Patterns for data validation (FluentValidation and Data Annotations);
 - Unit of Work (Transaction);
@@ -18,6 +18,13 @@ N-tier project used to develop APIs where the business needs to apply simple rul
 - Automatic filter for logically excluded records (Removed column) in any search;
 - Health Checks;
 
+## HTTP contract and runtime defaults
+- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
+- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
+- This controller-based sample uses controller `ActionResult` responses and declared contracts.
+- Settings are strongly typed and validated on startup.
+- Logging uses `ILogger<T>` with the NLog provider.
+
 ## Layers:
 
 ### Core
@@ -31,99 +38,37 @@ Layer that lies on the project boundary. We use this project to make the resourc
 
 ## Database integrated with EF
 
-### SqlServer
+These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+
+For another provider, add its version centrally and reference the package from the project:
+
+- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
+- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
+- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+
+Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
 
 ```csharp
-/// Package Manager Console >
-Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 5.0.10
+var connectionStrings = builder.Configuration
+    .GetSection(ConnectionStringsOptions.SectionName)
+    .Get<ConnectionStringsOptions>()
+    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
 
-/// Startup.cs
-services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DataContext"))
-);
+builder.Services.AddDbContext<EFDBContext>(options =>
+    options.UseSqlServer(connectionStrings.EFDBContext));
 ```
 
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=sql-server
+For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
 
-### PostgreSQL
+## Health checks
 
-```csharp
-/// Package Manager Console >
-Install-Package Npgsql.EntityFrameworkCore.PostgreSQL -Version 5.0.10
-
-/// Startup.cs
-services.AddDbContext<DataContext>(
-    options => options.UseNpgsql(configuration.GetConnectionString("DataContext"),
-    options => options.SetPostgresVersion(new Version(9, 6)))
-);
-```
-
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=postgresql
-
-### MySql
+The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
 
 ```csharp
-/// Package Manager Console >
-Install-Package MySql.EntityFrameworkCore -Version 5.0.8
-
-/// Startup.cs
-services.AddDbContext<DataContext>(options =>
-    options.UseMySQL(configuration.GetConnectionString("CustomerDbContext"))
-);
-```
-
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational?id=mysql
-
-## Health Check
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.UI.Client -Version 3.1.2
-```
-
-Access: https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#health-checks
-
-### SqlServer
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.SqlServer -Version 3.2.0
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddSqlServer(
-		configuration.GetConnectionString("CustomerDbContext"),
-		healthQuery: "SELECT 1;",
-		name: "SqlServer", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-
-```
-
-### PostgreSQL
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.Npgsql -Version 3.1.1
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddNpgSql(
-		configuration.GetConnectionString("CustomerDbContext"),
-		name: "PostgreSql", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
-
-```
-
-### MySql
-
-```csharp
-/// Package Manager Console >
-Install-Package AspNetCore.HealthChecks.MySql -Version 3.2.0
-
-/// ServiceBuilderExtensions
-services.AddHealthChecks()
-	.AddMySql(
-		configuration.GetConnectionString("CustomerDbContext"), 
-		name: "MySql", 
-		failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
+builder.Services.AddHealthChecks()
+    .AddSqlServer(
+        connectionStrings.EFDBContext,
+        healthQuery: "SELECT 1;",
+        name: "SqlServer",
+        failureStatus: HealthStatus.Degraded);
 ```

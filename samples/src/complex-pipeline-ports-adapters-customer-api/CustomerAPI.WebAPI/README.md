@@ -7,13 +7,20 @@ The pipeline pattern is used to perform service integration, since we have contr
 - Pipe and Filters pattern;
 - Pipe operations/filters from constructors (user cases);
 - Ports and Adapters pattern;
-- Documentation (Swagger); 
+- Native OpenAPI;
 - Logging (NLog); 
 - Facade pattern;
 - Dependency injection (IoC);
 - Using ActionResult for API resources (Restful);
 - Middlewares for handling unmanaged failures;
 - DDD concepts;
+
+## HTTP contract and runtime defaults
+- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
+- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
+- This controller-based sample uses controller `ActionResult` responses and declared contracts.
+- Settings are strongly typed and validated on startup.
+- Logging uses `ILogger<T>` with the NLog provider.
 
 ## Layers:
 

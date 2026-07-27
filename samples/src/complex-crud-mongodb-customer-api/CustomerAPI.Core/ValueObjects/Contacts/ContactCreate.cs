@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Enums;
 using Mvp24Hours.Core.Contract.Mappings;
@@ -16,7 +16,7 @@ namespace CustomerAPI.Core.ValueObjects.Contacts
         {
             profile.CreateMap<ContactCreate, Contact>()
                 .MapProperty(x => Guid.NewGuid().ToString(), x => x.Id)
-                .MapProperty(x => DateTime.Now, x => x.Created)
+                .MapProperty(x => TimeProvider.System.GetUtcNow().UtcDateTime, x => x.Created)
                 .MapProperty(x => true, x => x.Active);
         }
     }

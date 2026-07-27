@@ -1,4 +1,4 @@
-﻿using CustomerAPI.Application;
+using CustomerAPI.Application;
 using CustomerAPI.Application.Logic;
 using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
@@ -7,11 +7,11 @@ using CustomerAPI.Infrastructure.Data;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
-using NLog;
 using System;
-using System.Linq;
+using Mvp24Hours.Core.Extensions.Options;
+using CustomerAPI.WebAPI.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -25,12 +25,15 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyDbContext(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddMvp24HoursDbContext<MongoDBContext>(options =>
             {
                 options.DatabaseName = "complexcustomers";
-                options.ConnectionString = configuration.GetConnectionString("MongoDbContext");
+                options.ConnectionString = connectionStrings.MongoDbContext;
             });
-            services.AddMvp24HoursRepositoryAsync();
+            services.AddMvp24HoursRepositoryAsync((Mvp24Hours.Infrastructure.Data.MongoDb.Configuration.MongoDbRepositoryOptions _) => { });
             return services;
         }
 
@@ -52,49 +55,26 @@ namespace CustomerAPI.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddMyHealthChecks(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+                .Get<ConnectionStringsOptions>()
+                ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddHealthChecks()
                 .AddMongoDb(
-                    configuration.GetConnectionString("MongoDbContext"),
+                    clientFactory: _ => new MongoDB.Driver.MongoClient(connectionStrings.MongoDbContext),
                     name: "MongoDb",
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
             return services;
         }
-
         /// <summary>
-        /// 
+        /// Binds and validates connection strings used by this host.
         /// </summary>
-        public static IServiceCollection AddMyTelemetry(this IServiceCollection services)
+        public static IServiceCollection AddMyOptions(this IServiceCollection services, IConfiguration configuration)
         {
-            Logger logger = LogManager.GetCurrentClassLogger();
-#if DEBUG
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-object"))
-                    {
-                        logger.Info($"{name}|body:{state.ToSerialize()}");
-                    }
-                    else
-                    {
-                        logger.Info($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
-#endif
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Error,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-failure"))
-                    {
-                        logger.Error(state.ElementAtOrDefault(0) as Exception);
-                    }
-                    else
-                    {
-                        logger.Error($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
+            services.AddOptionsWithValidation<ConnectionStringsOptions>(
+                configuration.GetSection(ConnectionStringsOptions.SectionName));
             return services;
         }
+
+
     }
 }

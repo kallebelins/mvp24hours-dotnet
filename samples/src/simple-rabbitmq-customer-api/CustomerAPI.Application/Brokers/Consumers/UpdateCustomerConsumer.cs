@@ -1,13 +1,12 @@
 using CustomerAPI.Core.ValueObjects.Customers;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Brokers.Consumers
 {
-    public class UpdateCustomerConsumer(FacadeService facade) : IMvpRabbitMQConsumerAsync
+    public class UpdateCustomerConsumer(FacadeService facade, ILogger<UpdateCustomerConsumer> logger) : IMvpRabbitMQConsumerAsync
     {
         public string RoutingKey => typeof(CustomerUpdate).Name;
 
@@ -17,10 +16,10 @@ namespace CustomerAPI.Application.Brokers.Consumers
         {
             if (message is not CustomerUpdate dto)
             {
-                TelemetryHelper.Execute(TelemetryLevels.Verbose, "update-customer-consumer-received-null", "Received customer update null.");
+                logger.LogDebug("Received customer update with null/invalid payload.");
                 return;
             }
-            TelemetryHelper.Execute(TelemetryLevels.Verbose, "update-customer-consumer-received", $"Received customer update {dto.Name}.");
+            logger.LogDebug("Received customer update for {CustomerName}", dto.Name);
             var result = await facade.CustomerService.Update(dto.Id, dto);
             if (result.HasErrors)
             {

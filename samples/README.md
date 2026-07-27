@@ -28,9 +28,9 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 
 ## Minimal
 
-- **Planned** — [CRUD with EF Core](src/minimal-crud-ef-customer-api/CustomerAPI/): lean relational CRUD and pagination.
-- **Planned** — [CRUD with MongoDB](src/minimal-crud-mongodb-customer-api/CustomerAPI/): lean document-database CRUD and pagination.
-- **Planned** — [Pipeline](src/minimal-pipeline-customer-api/CustomerAPI/): pipeline operations in a Minimal API host.
+- **Migrated** — [CRUD with EF Core](src/minimal-crud-ef-customer-api/CustomerAPI/): lean relational CRUD and pagination.
+- **Migrated** — [CRUD with MongoDB](src/minimal-crud-mongodb-customer-api/CustomerAPI/): lean document-database CRUD and pagination.
+- **Migrated** — [Pipeline](src/minimal-pipeline-customer-api/CustomerAPI/): pipeline operations in a Minimal API host.
 
 ## Simple
 

@@ -1,7 +1,9 @@
-﻿using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+﻿using CustomerAPI.Configuration;
+using Microsoft.Extensions.Options;
+using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Helpers;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
+using System.Net.Http;
 
 namespace CustomerAPI.Operations
 {
@@ -11,14 +13,16 @@ namespace CustomerAPI.Operations
     /// <remarks>
     /// 
     /// </remarks>
-    public class GetCustomerClientStep(IConfiguration configuration) : OperationBaseAsync
+    public class GetCustomerClientStep(IHttpClientFactory httpClientFactory, IOptions<TypicodeOptions> options) : OperationBaseAsync
     {
+        public const string HttpClientName = "Typicode";
+
         /// <summary>
         /// 
         /// </summary>
         public override async Task ExecuteAsync(IPipelineMessage input)
         {
-            string url = configuration.GetSection("Settings:TypicodeCustomerUrl").Value;
+            string url = options.Value.TypicodeCustomerUrl;
 
             if (!url.HasValue())
             {
@@ -26,7 +30,11 @@ namespace CustomerAPI.Operations
                 return;
             }
 
-            string response = await WebRequestHelper.GetAsync(url);
+            var client = httpClientFactory.CreateClient(HttpClientName);
+            var cancellationToken = input.HasContent("cancellationToken")
+                ? input.GetContent<CancellationToken>("cancellationToken")
+                : CancellationToken.None;
+            string response = await client.GetStringAsync(url, cancellationToken);
 
             // json definition for dynamic type
             var def = new[] {

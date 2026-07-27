@@ -1,3 +1,4 @@
+using Mvp24Hours.WebAPI.Extensions;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Extensions;
 using CustomerAPI.Operations;
@@ -9,97 +10,152 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
 
+
+
 #region [ Configure Services ]
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddTimeProvider();
 builder.Services.Configure(builder.Configuration);
+builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 #endregion
+
+
 
 #region [ Configure Application ]
 var app = builder.Build();
-app.Configure(app.Environment);
+app.Configure();
+if (!app.Environment.IsProduction())
+{
+    app.MapMvp24HoursNativeOpenApi();
+}
 #endregion
+
+
 
 #region [ Routes ]
 
+
+
 #region [ Customers ]
 
-app.MapGet("/customer", async (CustomerQueryRequest model, [FromServices] IPipelineAsync pipeline) =>
+
+
+app.MapGet("/customer", async Task<IResult> (
+    CustomerQueryRequest model,
+    [FromServices] IPipelineAsync pipeline,
+    CancellationToken cancellationToken) =>
 {
     // add operations/steps
     pipeline.Add<GetCustomerClientStep>();
     pipeline.Add<GetByCustomerMapperResponseStep>();
 
+
+
     // run pipeline with package with content (int -> id)
-    await pipeline.ExecuteAsync(model.ToMessage());
+    var pipelineMessage = model.ToMessage();
+    pipelineMessage.AddContent("cancellationToken", cancellationToken);
+    await pipeline.ExecuteAsync(pipelineMessage);
+
+
 
     // try to get response content
     var message = pipeline.GetMessage();
 
+
+
     // checks for failure in the notification context
     if (message.IsFaulty)
     {
-        return Results.BadRequest(message.Messages.ToBusiness<IList<CustomerResponse>>());
+        return TypedResults.BadRequest(message.Messages.ToBusiness<IList<CustomerResponse>>());
     }
+
+
 
     // get message content
     var result = message.GetContent<List<CustomerResponse>>();
+
+
 
     // checks if there are any records
     if (!result.AnySafe())
     {
         // reply with standard message for record not found
-        return Results.NotFound(Messages.RECORD_NOT_FOUND
+        return TypedResults.NotFound(Messages.RECORD_NOT_FOUND
             .ToMessageResult(MessageType.Error)
                 .ToBusiness<IList<CustomerResponse>>());
     }
 
-    return Results.Ok(result.ToBusiness());
+
+
+    return TypedResults.Ok(result.ToBusiness());
 })
 .Produces(StatusCodes.Status200OK, typeof(ActionResult<IBusinessResult<IList<CustomerResponse>>>))
 .Produces(StatusCodes.Status404NotFound, typeof(ActionResult<IBusinessResult<IList<CustomerResponse>>>))
-.WithName("CustomerGetBy")
-.WithOpenApi();
+.WithName("CustomerGetBy");
 
-app.MapGet("/customer/{id}", async (int id, [FromServices] IPipelineAsync pipeline) =>
+
+
+app.MapGet("/customer/{id}", async Task<IResult> (
+    int id,
+    [FromServices] IPipelineAsync pipeline,
+    CancellationToken cancellationToken) =>
 {
     // add operations/steps
     pipeline.Add<GetCustomerClientStep>();
     pipeline.Add<GetByIdCustomerMapperResponseStep>();
 
+
+
     // run pipeline with package with content (int -> id)
-    await pipeline.ExecuteAsync(id.ToMessage("id"));
+    var pipelineMessage = id.ToMessage("id");
+    pipelineMessage.AddContent("cancellationToken", cancellationToken);
+    await pipeline.ExecuteAsync(pipelineMessage);
+
+
 
     // try to get response content
     var message = pipeline.GetMessage();
 
+
+
     // checks for failure in the notification context
     if (message.IsFaulty)
     {
-        return Results.BadRequest(message.Messages.ToBusiness<CustomerIdResponse>());
+        return TypedResults.BadRequest(message.Messages.ToBusiness<CustomerIdResponse>());
     }
+
+
 
     // get message content
     var result = message.GetContent<CustomerIdResponse>();
 
+
+
     if (result == null)
     {
         // reply with standard message for record not found
-        return Results.NotFound(Messages.RECORD_NOT_FOUND_FOR_ID
+        return TypedResults.NotFound(Messages.RECORD_NOT_FOUND_FOR_ID
             .ToMessageResult(MessageType.Error)
                 .ToBusiness<CustomerIdResponse>());
     }
 
-    return Results.Ok(result.ToBusiness());
+
+
+    return TypedResults.Ok(result.ToBusiness());
 })
 .Produces(StatusCodes.Status200OK, typeof(ActionResult<IBusinessResult<CustomerIdResponse>>))
 .Produces(StatusCodes.Status404NotFound, typeof(ActionResult<IBusinessResult<CustomerIdResponse>>))
 .Produces(StatusCodes.Status400BadRequest, typeof(ActionResult<IBusinessResult<CustomerIdResponse>>))
-.WithName("CustomerGetById")
-.WithOpenApi();
+.WithName("CustomerGetById");
+
+
 
 #endregion
 
+
+
 #endregion
+
+
 
 app.Run();
-

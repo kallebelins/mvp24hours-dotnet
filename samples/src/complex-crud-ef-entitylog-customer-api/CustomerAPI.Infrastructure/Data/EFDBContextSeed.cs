@@ -1,6 +1,4 @@
 using CustomerAPI.Core.Entities;
-using Mvp24Hours.Core.Enums.Infrastructure;
-using Mvp24Hours.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,8 +10,8 @@ namespace CustomerAPI.Infrastructure.Data
     {
         public static async Task SeedAsync(EFDBContext dbContext)
         {
-            // adicionar processamento de dados iniciais para carga
-            TelemetryHelper.Execute(TelemetryLevels.Information, "efdbcontextseed-seedasync", $"Seed database associated with context {dbContext.GetType().Name}");
+            // Seed initial customer/contact rows when the database is empty.
+            // Entity-log samples rely on EF interceptors/TimeProvider for Created/Modified timestamps.
 
             if (!dbContext.Customer.Any())
             {

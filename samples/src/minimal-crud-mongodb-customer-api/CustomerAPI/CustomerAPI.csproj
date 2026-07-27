@@ -8,11 +8,9 @@
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.MongoDb" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="MongoDB.Driver" />
 		<PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
-		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="Mvp24Hours.Infrastructure.Data.MongoDb" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.MongoDb\Mvp24Hours.Infrastructure.Data.MongoDb.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 		<PackageReference Include="NLog" />

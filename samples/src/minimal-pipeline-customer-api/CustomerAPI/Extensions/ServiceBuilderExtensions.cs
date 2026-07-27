@@ -1,9 +1,13 @@
-﻿using CustomerAPI.Operations;
-using Mvp24Hours.Core.Enums.Infrastructure;
+using CustomerAPI.Operations;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
-using NLog;
-
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Extensions.Options;
+using CustomerAPI.Configuration;
+using Microsoft.Extensions.Options;
+using System;
+using Mvp24Hours.Infrastructure.Http.Resilience;
 namespace CustomerAPI.Extensions
 {
     /// <summary>
@@ -19,21 +23,31 @@ namespace CustomerAPI.Extensions
             #region [ Mvp24Hours ]
             services.AddMvp24HoursWebEssential();
             services.AddMvp24HoursWebJson();
-            services.AddMvp24HoursWebSwagger("Customer Pipeline API");
+            services.AddMvp24HoursNativeOpenApi(options =>
+            {
+                options.Title = "Customer Pipeline API";
+                options.Version = "1.0.0";
+                options.EnableSwaggerUI = true;
+            });
             services.AddMvp24HoursWebGzip();
             #endregion
 
-            services.AddMvp24HoursPipelineAsync();
-            services.AddMyTelemetry();
-            services.AddMyServices(configuration);
+
+
+            services.AddMvp24HoursPipelineAsync(options =>
+            {
+                options.IsBreakOnFail = true;
+            });
+            services.AddMyOptions(configuration);
+            services.AddMyServices();
             services.AddMyHealthChecks(configuration);
 
-            services.AddEndpointsApiExplorer();
-            services.AddControllers();
-            services.AddMvc();
+
 
             return services;
         }
+
+
 
         /// <summary>
         /// 
@@ -44,53 +58,35 @@ namespace CustomerAPI.Extensions
             return services;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IServiceCollection AddMyServices(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddScoped<GetCustomerClientStep>(sp =>
-            {
-                return new GetCustomerClientStep(configuration);
-            });
-            return services;
-        }
+
 
         /// <summary>
         /// 
         /// </summary>
-        public static IServiceCollection AddMyTelemetry(this IServiceCollection services)
+        public static IServiceCollection AddMyServices(this IServiceCollection services)
         {
-            Logger logger = LogManager.GetCurrentClassLogger();
-#if DEBUG
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-object"))
-                    {
-                        logger.Info($"{name}|body:{state.ToSerialize()}");
-                    }
-                    else
-                    {
-                        logger.Info($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
-#endif
-            services.AddMvp24HoursTelemetry(TelemetryLevels.Error,
-                (name, state) =>
-                {
-                    if (name.EndsWith("-failure"))
-                    {
-                        logger.Error(state.ElementAtOrDefault(0) as Exception);
-                    }
-                    else
-                    {
-                        logger.Error($"{name}|{string.Join("|", state)}");
-                    }
-                }
-            );
+            services.AddScoped<GetCustomerClientStep>();
+            services.AddScoped<GetByCustomerMapperResponseStep>();
+            services.AddScoped<GetByIdCustomerMapperResponseStep>();
+            services.AddHttpClientWithStandardResilience(GetCustomerClientStep.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
             return services;
         }
+        /// <summary>
+        /// Binds and validates external integration settings used by this host.
+        /// </summary>
+        public static IServiceCollection AddMyOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptionsWithValidation<TypicodeOptions>(
+                configuration.GetSection(TypicodeOptions.SectionName));
+            return services;
+        }
+
+
+
+
+
     }
 }

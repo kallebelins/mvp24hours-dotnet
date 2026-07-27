@@ -3,7 +3,7 @@ N-tier project used to develop APIs where the business needs to apply simple rul
 
 ## Features:
 - NoSQL database (MongoDb); 
-- Documentation (Swagger); 
+- Native OpenAPI;
 - Logging (NLog); 
 - Patterns for data validation (FluentValidation and Data Annotations);
 - Unit of Work (Transaction);
@@ -15,6 +15,13 @@ N-tier project used to develop APIs where the business needs to apply simple rul
 - Middlewares for handling unmanaged failures;
 - DDD concepts;
 - Health Checks;
+
+## HTTP contract and runtime defaults
+- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
+- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
+- This controller-based sample uses controller `ActionResult` responses and declared contracts.
+- Settings are strongly typed and validated on startup.
+- Logging uses `ILogger<T>` with the NLog provider.
 
 ## Layers:
 

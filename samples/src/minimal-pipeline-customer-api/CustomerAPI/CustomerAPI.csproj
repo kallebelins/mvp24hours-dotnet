@@ -7,11 +7,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
-		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="Mvp24Hours.Infrastructure.Pipe" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Pipe\Mvp24Hours.Infrastructure.Pipe.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 		<PackageReference Include="NLog" />

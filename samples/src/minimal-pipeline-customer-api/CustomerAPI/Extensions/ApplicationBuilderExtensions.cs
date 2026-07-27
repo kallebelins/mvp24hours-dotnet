@@ -1,4 +1,4 @@
-﻿using HealthChecks.UI.Client;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Mvp24Hours.WebAPI.Extensions;
 
@@ -12,30 +12,14 @@ namespace CustomerAPI.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static IApplicationBuilder Configure(this IApplicationBuilder app, IWebHostEnvironment env)
+        public static WebApplication Configure(this WebApplication app)
         {
-            // check environment
-            app.UseMvp24HoursExceptionHandling();
-
-            app.UseStaticFiles();
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
+            app.UseNativeProblemDetailsHandling();
+            app.MapHealthChecks("/hc", new HealthCheckOptions
             {
-                endpoints.MapControllers();
-                endpoints.MapHealthChecks("/hc", new HealthCheckOptions
-                {
-                    Predicate = _ => true,
-                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-                });
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
-
-            if (!env.IsProduction())
-            {
-                app.UseMvp24HoursSwagger("Customer Pipeline API");
-            }
 
             return app;
         }

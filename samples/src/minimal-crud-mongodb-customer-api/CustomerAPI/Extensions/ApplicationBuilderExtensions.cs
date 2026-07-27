@@ -1,43 +1,33 @@
-﻿using HealthChecks.UI.Client;
+using CustomerAPI.Data;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.WebAPI.Extensions;
 
-namespace CustomerAPI.Extensions
+namespace CustomerAPI.Extensions;
+
+/// <summary>
+/// Configures the Minimal API host middleware and development seed hooks.
+/// </summary>
+public static class ApplicationBuilderExtensions
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class ApplicationBuilderExtensions
+    public static WebApplication Configure(this WebApplication app)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static IApplicationBuilder Configure(this IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseNativeProblemDetailsHandling();
+        app.MapHealthChecks("/hc", new HealthCheckOptions
         {
-            // check environment
-            app.UseMvp24HoursExceptionHandling();
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
 
-            app.UseStaticFiles();
-            app.UseRouting();
+        return app;
+    }
 
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-                endpoints.MapHealthChecks("/hc", new HealthCheckOptions
-                {
-                    Predicate = _ => true,
-                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-                });
-            });
-
-            if (!env.IsProduction())
-            {
-                app.UseMvp24HoursSwagger("Customer Mongo API");
-            }
-
-            return app;
-        }
+    public static async Task SeedDatabaseAsync(this WebApplication app)
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        await unitOfWork.SeedAsync(timeProvider);
     }
 }

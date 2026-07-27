@@ -12,6 +12,7 @@
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.MongoDb" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+		<PackageReference Include="MongoDB.Driver" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Mvp24Hours.Infrastructure.Data.MongoDb" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.MongoDb\Mvp24Hours.Infrastructure.Data.MongoDb.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
