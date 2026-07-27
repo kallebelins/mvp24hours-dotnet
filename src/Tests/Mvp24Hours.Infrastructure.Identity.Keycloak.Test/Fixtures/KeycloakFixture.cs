@@ -34,10 +34,23 @@ public sealed class KeycloakFixture : IAsyncLifetime
             BaseAddress = _container.GetBaseAddress();
             IsAvailable = true;
         }
-        catch (DockerUnavailableException)
+        catch (DockerUnavailableException ex)
         {
             IsAvailable = false;
+            if (RequiresDocker())
+            {
+                throw new InvalidOperationException(
+                    "Keycloak integration tests require a running Docker daemon when KEYCLOAK_REQUIRE_DOCKER is enabled.",
+                    ex);
+            }
         }
+    }
+
+    private static bool RequiresDocker()
+    {
+        string? value = Environment.GetEnvironmentVariable("KEYCLOAK_REQUIRE_DOCKER");
+        return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
+            || value == "1";
     }
 
     public ServiceProvider CreateServiceProvider()

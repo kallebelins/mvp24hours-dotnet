@@ -41,6 +41,17 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   vulneráveis.
 - Workflow `security-scan` corrigido para apontar à solução (`.sln`) e falhar em advisories.
 
+### Adicionado
+
+- **`Mvp24Hours.Infrastructure.Identity.Keycloak`**: novo pacote first-party para integração com
+  Keycloak em ASP.NET Core, incluindo autenticação JWT/OIDC, transformação de roles, autorização
+  UMA (decision e RPT), Admin REST API, sincronização de usuários locais e health checks.
+- O pacote não depende de Duende IdentityServer, IdentityModel ou Keycloak.AuthServices; discovery
+  OIDC e operações OAuth são implementadas diretamente sobre a stack nativa do ASP.NET Core.
+- Metadados NuGet completos com README, ícone, licença MIT, tags de descoberta e documentação XML.
+- Pipeline dedicado para build, testes unitários, testes de integração com Keycloak em Docker e
+  geração/validação do pacote NuGet.
+
 ### Substituído (APIs obsoletas modernizadas)
 
 - **`CircuitBreaker<T>` (interno, `[Obsolete]`)** → `NativeResiliencePipeline` (Polly v8 via

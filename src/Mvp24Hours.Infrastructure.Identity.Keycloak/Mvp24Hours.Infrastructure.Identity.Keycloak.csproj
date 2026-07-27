@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<PackageId>Mvp24Hours.Infrastructure.Identity.Keycloak</PackageId>
 		<Authors>Kallebe Lins</Authors>
 		<Description>Keycloak authentication, authorization, and administration integration for Mvp24Hours applications.</Description>
 		<Copyright></Copyright>
@@ -10,12 +11,21 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<!-- DTO properties mirror Keycloak JSON fields; the public integration surface is documented explicitly. -->
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
+		<PackageTags>keycloak;identity;authentication;authorization;oauth2;openid-connect;oidc;uma;aspnetcore;mvp24hours</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>9.1.21</Version>
 		<AssemblyVersion>9.1.2.1</AssemblyVersion>
 		<FileVersion>9.1.2.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Update="README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\_media\icon.png" Pack="true" PackagePath="\" Link="icon.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />

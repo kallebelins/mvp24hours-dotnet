@@ -10,6 +10,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SOLUTION_PATH: src/Mvp24Hours.sln
 
 jobs:
   build-and-test:
@@ -32,13 +33,13 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: 📦 Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
 
     - name: 🏗️ Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
     - name: 🧪 Run tests
-      run: dotnet test src/Mvp24Hours.sln --configuration Release --no-build --verbosity normal --logger trx --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results
+      run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build --verbosity normal --logger trx --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results
 
     - name: 📊 Coverage regression gate
       if: matrix.os == 'ubuntu-latest'
@@ -88,13 +89,13 @@ jobs:
     # Fix All (NamingStyleCodeFixProvider) and stays suggestion in .editorconfig.
     # Solution lives under src/ — a bare `dotnet format` from repo root cannot find a .sln.
     - name: 🎨 Check code formatting
-      run: dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes --verbosity diagnostic
+      run: dotnet format ${{ env.SOLUTION_PATH }} --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes --verbosity diagnostic
 
     # Strict quality gate (task 7.1 / v2): TreatWarningsAsErrors=true. Residual list is
     # only NU1510 (MvpResidualWarnings in src/Directory.Build.props).
     # --no-incremental forces a full recompile so warnings are actually re-emitted.
     - name: 🔍 Run static code analysis
-      run: dotnet build src/Mvp24Hours.sln --configuration Release --no-incremental /p:TreatWarningsAsErrors=true
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-incremental /p:TreatWarningsAsErrors=true
 
   package:
     name: Create NuGet Packages
@@ -114,13 +115,13 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: 📦 Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
 
     - name: 🏗️ Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
     - name: 📦 Pack
-      run: dotnet pack --configuration Release --no-build --output ./artifacts
+      run: dotnet pack ${{ env.SOLUTION_PATH }} --configuration Release --no-build --output ./artifacts
 
     - name: 📤 Upload artifacts
       uses: actions/upload-artifact@v4
