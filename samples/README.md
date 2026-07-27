@@ -34,13 +34,13 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 
 ## Simple
 
-- **Planned** — [CRUD with EF Core](src/simple-crud-ef-customer-api/): simple N-layer relational CRUD.
-- **Planned** — [CRUD with EF Core and Dapper](src/simple-crud-ef-dapper-customer-api/): EF writes with Dapper reads.
-- **Planned** — [CRUD with EF Core entity logging](src/simple-crud-ef-entitylog-customer-api/): auditing and soft-delete fields.
-- **Planned** — [CRUD with MongoDB](src/simple-crud-mongodb-customer-api/): simple N-layer MongoDB CRUD.
-- **Planned** — [CRUD with Redis](src/simple-crud-redis-customer-api/): key-value persistence and caching concepts.
-- **Planned** — [RabbitMQ](src/simple-rabbitmq-customer-api/): asynchronous customer operations through RabbitMQ.
-- **Planned** — [Pipeline](src/simple-pipeline-customer-api/): layered pipeline operations.
+- **Migrated** — [CRUD with EF Core](src/simple-crud-ef-customer-api/CustomerAPI.WebAPI/): simple N-layer relational CRUD.
+- **Migrated** — [CRUD with EF Core and Dapper](src/simple-crud-ef-dapper-customer-api/CustomerAPI.WebAPI/): EF writes with cancelable Dapper reads.
+- **Migrated** — [CRUD with EF Core entity logging](src/simple-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI/): auditing and soft-delete fields.
+- **Migrated** — [CRUD with MongoDB](src/simple-crud-mongodb-customer-api/CustomerAPI.WebAPI/): simple N-layer document CRUD and modeling guidance.
+- **Migrated** — [CRUD with Redis](src/simple-crud-redis-customer-api/CustomerAPI.WebAPI/): key-value persistence and cache-aside guidance.
+- **Migrated** — [RabbitMQ](src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/): asynchronous customer operations with retry and delivery-semantics guidance.
+- **Migrated** — [Pipeline](src/simple-pipeline-customer-api/CustomerAPI.WebAPI/): layered, resilient, cancelable pipeline operations.
 - **Planned** — `simple-webstatus`: health monitoring catalog; the old external-only link remains removed until the sample is recreated.
 
 ## Complex

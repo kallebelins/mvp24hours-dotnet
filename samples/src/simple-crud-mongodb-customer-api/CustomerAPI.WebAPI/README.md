@@ -1,41 +1,76 @@
-# CustomerAPI - CRUD - MongoDb - Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
+# Customer API — Simple MongoDB CRUD
 
-## Features:
-- NoSQL database (MongoDb); 
-- Native OpenAPI;
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Filter, Paging - No navigation;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This .NET 10 sample demonstrates paged Customer CRUD with Mvp24Hours MongoDB repositories in a small N-layer application.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- Asynchronous MongoDB repositories with filtering and pagination
+- Customer and Contact document mappings with FluentValidation
+- Native OpenAPI, RFC ProblemDetails, MongoDB health checks, and `ILogger<T>`
+- Startup-validated connection options and request cancellation
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+## Architecture
 
-## NoSQL Database
+- Tier: `Simple`
+- Shape: N-layers with Core, Infrastructure, and WebAPI projects
+- Why this shape fits: it separates document mapping from HTTP composition without relational or Complex-tier ceremony
 
-### MongoDb (Document Oriented)
-https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/nosql?id=mongodb
+Entities intentionally cross the HTTP boundary. Prefer a Complex DTO-based sample for public or externally versioned APIs.
 
+## Layers
+
+- `CustomerAPI.Core` — entities and validators
+- `CustomerAPI.Infrastructure` — MongoDB context and BSON mappings
+- `CustomerAPI.WebAPI` — controllers, validated options, health checks, and HTTP middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- MongoDB reachable by the configured connection string
+
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:MongoDbContext` | Yes | MongoDB server used by the `simplecustomers` database | `mongodb://localhost:27017` |
+
+Use environment variables or a secret store when credentials are required.
+
+## Run
+
+From `samples/src/simple-crud-mongodb-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
+
+## Document modeling
+
+MongoDB favors data shaped around access patterns. Embed small, bounded data that is normally read with its owner; reference independently changing or unbounded data. Denormalized copies improve reads but must be updated explicitly because there is no relational join or foreign-key enforcement.
+
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [NoSQL databases](../../../../docs/en-us/database/nosql.md)
+- [Advanced MongoDB](../../../../docs/en-us/database/mongodb-advanced.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- Multi-document transactions, sharding, or replica-set operations
+- Relational navigation assumptions or cross-collection joins
+- DTO isolation, authentication, or production observability

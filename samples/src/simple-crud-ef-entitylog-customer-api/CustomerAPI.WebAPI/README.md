@@ -1,74 +1,75 @@
-# CustomerAPI - CRUD - EF - Entity Log - Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
+# Customer API — Simple EF Core Entity Logging
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Native OpenAPI;
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Automatically create, change and delete logs;
-- Automatic filter for logically excluded records (Removed column) in any search;
-- Health Checks;
+This .NET 10 sample demonstrates Mvp24Hours entity audit fields and logical deletion in a compact EF Core N-layer application.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- Automatic created, modified, and removed audit fields through `EntityBaseLog`
+- `TimeProvider` bridged to the audit interceptor for testable UTC timestamps
+- Global EF Core filter that excludes logically removed records
+- Paged Customer and Contact CRUD with FluentValidation and Unit of Work
+- Native OpenAPI, RFC ProblemDetails, SQL Server health checks, and `ILogger<T>`
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+## Architecture
 
-## Database integrated with EF
+- Tier: `Simple`
+- Shape: N-layers with Core, Infrastructure, and WebAPI projects
+- Why this shape fits: the sample isolates audit-aware persistence while keeping entities as HTTP contracts
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+Entity leakage is deliberate for teaching. Public or externally versioned APIs should use Complex samples with DTO boundaries.
 
-For another provider, add its version centrally and reference the package from the project:
+## Layers
 
-- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
-- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
-- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+- `CustomerAPI.Core` — `EntityBaseLog` entities and validators
+- `CustomerAPI.Infrastructure` — audit-enabled context and EF Core mappings
+- `CustomerAPI.WebAPI` — controllers, validated options, and HTTP composition
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+## Prerequisites
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:CustomerDbContext` | Yes | SQL Server database containing audit columns | `Server=localhost,1433;Database=MyTestLogDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+
+Override credentials with environment variables, user secrets, or a secret store.
+
+## Run
+
+From `samples/src/simple-crud-ef-entitylog-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+`EFDBContext.CanApplyEntityLog` enables the legacy entity-log rules and the `Removed == null` global filter. `AuditSaveChangesInterceptor` receives the `IClock` bridge registered by `AddTimeProvider`, so created and modified timestamps use the native time abstraction. Regular repository queries do not return soft-deleted rows.
 
-## Health checks
+## Explore the API
 
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
 
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
-```
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [Entity interfaces](../../../../docs/en-us/core/entity-interfaces.md)
+- [Using entities](../../../../docs/en-us/database/use-entity.md)
+- [EF Core query filters](https://learn.microsoft.com/ef/core/querying/filters)
+
+## What this sample intentionally does not cover
+
+- Per-tenant filters, audit history tables, or restoring removed rows
+- An authenticated user provider; `EntityLogBy` uses the teaching value `SYSTEM`
+- DTO isolation, production observability, or deployment hardening

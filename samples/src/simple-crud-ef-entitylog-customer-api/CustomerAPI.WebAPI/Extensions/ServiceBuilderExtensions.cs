@@ -9,6 +9,7 @@ using Mvp24Hours.Extensions;
 using System;
 using Mvp24Hours.Core.Extensions.Options;
 using CustomerAPI.WebAPI.Configuration;
+using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -25,8 +26,11 @@ namespace CustomerAPI.WebAPI.Extensions
             var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
                 .Get<ConnectionStringsOptions>()
                 ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
-            services.AddDbContext<EFDBContext>(options =>
-                options.UseSqlServer(connectionStrings.CustomerDbContext)
+            services.AddScoped<AuditSaveChangesInterceptor>();
+            services.AddDbContext<EFDBContext>((serviceProvider, options) =>
+                options
+                    .UseSqlServer(connectionStrings.CustomerDbContext)
+                    .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>())
             );
             services.AddMvp24HoursDbContext<EFDBContext>();
             services.AddMvp24HoursRepositoryAsync(options: options =>

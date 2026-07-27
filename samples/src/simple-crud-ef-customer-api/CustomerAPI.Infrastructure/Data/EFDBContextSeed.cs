@@ -11,7 +11,7 @@ namespace CustomerAPI.Infrastructure.Data
     {
         public static async Task SeedAsync(EFDBContext dbContext, TimeProvider timeProvider)
         {
-            // adicionar processamento de dados iniciais para carga
+            // Add initial data used by the sample.
 
             if (!dbContext.Customer.Any())
             {

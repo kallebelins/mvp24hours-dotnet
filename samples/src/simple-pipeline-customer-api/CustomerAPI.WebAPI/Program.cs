@@ -39,7 +39,10 @@ try
         options.EnableSwaggerUI = true;
     });
     builder.Services.AddMvp24HoursWebGzip();
-    builder.Services.AddMvp24HoursPipelineAsync();
+    builder.Services.AddMvp24HoursPipelineAsync(options =>
+    {
+        options.IsBreakOnFail = true;
+    });
     builder.Services.AddMyOptions(builder.Configuration);
     builder.Services.AddMyServices();
     builder.Services.AddMyHealthChecks();

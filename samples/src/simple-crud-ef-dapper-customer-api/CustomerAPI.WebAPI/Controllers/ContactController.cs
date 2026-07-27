@@ -45,18 +45,24 @@ namespace CustomerAPI.WebAPI.Controllers
         #region [ Actions / Resources ]
 
         /// <summary>
-        /// Get paginated list of customers
+        /// Get contacts for a customer
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<Contact>>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<Contact>>>), StatusCodes.Status404NotFound)]
         [Route("{customerId:int}/Contact", Name = "ContactGetBy")]
-        public async Task<ActionResult<IBusinessResult<IList<Contact>>>> GetBy(int customerId)
+        public async Task<ActionResult<IBusinessResult<IList<Contact>>>> GetBy(
+            int customerId,
+            CancellationToken cancellationToken)
         {
             // load all customer contacts by id
+            var command = new CommandDefinition(
+                "select * from Contact where CustomerId = @customerId",
+                new { customerId },
+                cancellationToken: cancellationToken);
             var result = await uoW
                 .GetConnection()
-                .QueryAsync<Contact>("select * from Contact where CustomerId = @customerId", new { customerId });
+                .QueryAsync<Contact>(command);
 
             // checks if there are any records in the database from the filter
             if (!result.AnySafe())

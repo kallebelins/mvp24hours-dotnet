@@ -1,33 +1,79 @@
-# CustomerAPI - CRUD - Redis - Simple
-N-layer project used to develop APIs where the business needs to apply simple rules.
+# Customer API — Simple Redis Key-Value CRUD
 
-## Features:
-- NoSQL database (Redis); 
-- Native OpenAPI;
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Repository (Get, Create, Delete);
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
+This .NET 10 sample demonstrates Mvp24Hours Redis cache repositories as a small key-value Customer API.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Get, set, and remove operations through `IRepositoryCacheAsync<T>`
+- Sliding expiration configured for Customer values
+- FluentValidation, startup-validated Redis options, and request cancellation
+- Native OpenAPI, RFC ProblemDetails, Redis health checks, and `ILogger<T>`
 
-## NoSQL Database
+## Architecture
 
-### Redis (Key-Value Oriented)
-https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/nosql?id=redis
+- Tier: `Simple`
+- Shape: Core contracts plus a WebAPI host backed directly by Redis
+- Why this shape fits: the API teaches key-value storage without pretending Redis is a relational repository
+
+## Layers
+
+- `CustomerAPI.Core` — Customer cache contract and validation
+- `CustomerAPI.WebAPI` — Redis repository registration, controllers, configuration, and HTTP middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Redis reachable by the configured endpoint
+
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:RedisDbContext` | Yes | Redis endpoint used by the cache repository | `127.0.0.1:6379` |
+
+Use environment variables or a secret store when the endpoint includes credentials.
+
+## Run
+
+Start a local Redis instance if needed:
+
+```bash
+docker run --rm --name mvp-redis -p 6379:6379 redis:latest
+```
+
+Then, from `samples/src/simple-crud-redis-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer/{key}`
+
+## Cache-aside versus this sample
+
+This API treats Redis as the key-value store of record. A cache-aside application keeps an authoritative database, reads the cache first, fills it on misses, and invalidates it after writes. Use `HybridCache` for coordinated in-memory and distributed caching; that broader pattern belongs in the dedicated capability sample.
+
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [Advanced caching](../../../../docs/en-us/caching-advanced.md)
+- [HybridCache modernization](../../../../docs/en-us/modernization/hybrid-cache.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- An authoritative relational or document database
+- Cache stampede protection, distributed locking, or HybridCache
+- Authentication, production observability, or Redis cluster operations

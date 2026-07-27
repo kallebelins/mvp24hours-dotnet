@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.DTOs.Models;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.RabbitMQ;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ namespace CustomerAPI.WebAPI.Controllers
     [Produces("application/json")]
     [Route("api/[controller]")]
     [ApiController]
-    public class CustomerController(MvpRabbitMQClient rabbitMQClient, FacadeService facade) : ControllerBase
+    public class CustomerController(IMvpRabbitMQClient rabbitMQClient, FacadeService facade) : ControllerBase
     {
         #region [ Actions / Resources ]
 

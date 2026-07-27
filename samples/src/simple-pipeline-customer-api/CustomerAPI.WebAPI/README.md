@@ -1,33 +1,74 @@
-# CustomerAPI - Pipeline - Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
-Pipeline represents a tunnel with several levels or operations through which a packet/message travels.
-The pipeline pattern is used to perform service integration, since we have control over the entire integration process through filters/operations.
+# Customer API — Simple Pipeline
 
-## Features:
-- Pipe and Filters pattern;
-- Native OpenAPI;
-- Logging (NLog); 
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This .NET 10 sample uses Mvp24Hours Pipes and Filters in a layered controller application to fetch and map customers from JSONPlaceholder.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Scoped asynchronous pipelines composed per Customer use case
+- DI-backed outbound and response-mapping operations
+- Named `HttpClient` with the standard resilience handler
+- Request cancellation propagated to the outbound HTTP call
+- Native OpenAPI, RFC ProblemDetails, health checks, and `ILogger<T>`
 
-## Pipe and Filters
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/pipeline?id=pipeline-pipe-and-filters-pattern
+## Architecture
+
+- Tier: `Simple`
+- Shape: Core contracts plus a controller-based WebAPI containing pipeline operations
+- Why this shape fits: operations remain layered and reusable without the additional projects used by Complex pipeline samples
+
+## Layers
+
+- `CustomerAPI.Core` — request and response contracts, resources, and enums
+- `CustomerAPI.WebAPI/Pipe` — outbound integration and mapping steps
+- `CustomerAPI.WebAPI` — controllers, validated options, resilience, and middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Network access to the configured JSONPlaceholder-compatible endpoint
+
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `Settings:TypicodeCustomerUrl` | Yes | Source endpoint for external Customer records | `https://jsonplaceholder.typicode.com/users` |
+
+Override the URL through environment-specific configuration when needed.
+
+## Run
+
+From `samples/src/simple-pipeline-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer list: `/api/customer`
+- Customer details: `/api/customer/{id}`
+
+Each request adds the integration and use-case-specific mapping steps to its scoped pipeline. Pipeline failures retain Mvp24Hours business envelopes; unexpected host failures use ProblemDetails.
+
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [Pipeline](../../../../docs/en-us/pipeline.md)
+- [HTTP resilience](../../../../docs/en-us/modernization/http-resilience.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- Persistence, transactions, compensating operations, or messaging
+- Builder-based or ports-and-adapters pipeline composition
+- Authentication, production observability, or a private upstream service

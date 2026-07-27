@@ -27,9 +27,7 @@ namespace CustomerAPI.WebAPI.Extensions
                 .Get<ConnectionStringsOptions>()
                 ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
             services.AddMvp24HoursCaching(
-                /* Remove item from cache after duration */
-                AbsoluteExpiration: TimeProvider.System.GetUtcNow().AddMinutes(30),
-                /* Remove item from cache if unsued for the duration */
+                /* Remove an unused item after this duration. */
                 SlidingExpiration: System.TimeSpan.FromMinutes(5)
             );
             services.AddMvp24HoursCachingRedis(connectionStrings.RedisDbContext, instanceName: "customerapi");

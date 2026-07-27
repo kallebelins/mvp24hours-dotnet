@@ -58,7 +58,9 @@ try
     await using (var scope = app.Services.CreateAsyncScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
+        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
         await db.Database.EnsureCreatedAsync();
+        await EFDBContextSeed.SeedAsync(db, timeProvider);
     }
     app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();

@@ -8,6 +8,7 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.WebAPI.Controllers
@@ -38,14 +39,18 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<GetByCustomerResponse>>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<GetByCustomerResponse>>>), StatusCodes.Status404NotFound)]
         [Route("", Name = "CustomerGetBy")]
-        public async Task<ActionResult<IBusinessResult<IList<GetByCustomerResponse>>>> GetBy([FromQuery] GetByCustomerFilterRequest model)
+        public async Task<ActionResult<IBusinessResult<IList<GetByCustomerResponse>>>> GetBy(
+            [FromQuery] GetByCustomerFilterRequest model,
+            CancellationToken cancellationToken)
         {
             // add operations/steps
             Pipeline.Add<GetCustomerClientStep>();
             Pipeline.Add<GetByCustomerMapperResponseStep>();
 
             // run pipeline with package with content (int -> id)
-            await Pipeline.ExecuteAsync(model.ToMessage());
+            var pipelineMessage = model.ToMessage();
+            pipelineMessage.AddContent("cancellationToken", cancellationToken);
+            await Pipeline.ExecuteAsync(pipelineMessage);
 
             // try to get response content
             var message = Pipeline.GetMessage();
@@ -79,14 +84,18 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<GetByIdCustomerResponse>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<GetByIdCustomerResponse>>), StatusCodes.Status400BadRequest)]
         [Route("{id}", Name = "CustomerGetById")]
-        public async Task<ActionResult<IBusinessResult<GetByIdCustomerResponse>>> GetById(int id)
+        public async Task<ActionResult<IBusinessResult<GetByIdCustomerResponse>>> GetById(
+            int id,
+            CancellationToken cancellationToken)
         {
             // add operations/steps
             Pipeline.Add<GetCustomerClientStep>();
             Pipeline.Add<GetByIdCustomerMapperResponseStep>();
 
             // run pipeline with package with content (int -> id)
-            await Pipeline.ExecuteAsync(id.ToMessage("id"));
+            var pipelineMessage = id.ToMessage("id");
+            pipelineMessage.AddContent("cancellationToken", cancellationToken);
+            await Pipeline.ExecuteAsync(pipelineMessage);
 
             // try to get response content
             var message = Pipeline.GetMessage();

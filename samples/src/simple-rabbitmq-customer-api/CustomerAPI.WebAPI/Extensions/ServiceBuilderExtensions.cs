@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
+using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using System;
 using Mvp24Hours.Core.Extensions.Options;
 using CustomerAPI.WebAPI.Configuration;
@@ -84,19 +85,17 @@ namespace CustomerAPI.WebAPI.Extensions
             var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
                 .Get<ConnectionStringsOptions>()
                 ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
-            services.AddScoped<CreateCustomerConsumer>();
-            services.AddScoped<DeleteCustomerConsumer>();
-            services.AddScoped<UpdateCustomerConsumer>();
-
-            services.AddMvp24HoursRabbitMQ(
-                typeof(CreateCustomerConsumer).Assembly,
-                connectionOptions =>
-                {
-                    connectionOptions.ConnectionString = connectionStrings.RabbitMQContext;
-                    connectionOptions.DispatchConsumersAsync = true;
-                    connectionOptions.RetryCount = 3;
-                },
-                clientOptions =>
+            services.AddMvpRabbitMQ(rabbit =>
+            {
+                rabbit.Host(
+                    connectionStrings.RabbitMQContext,
+                    connection =>
+                    {
+                        connection.DispatchConsumersAsync(true);
+                        connection.RetryCount(3);
+                    });
+                rabbit.AddConsumersFromAssemblyContaining<CreateCustomerConsumer>();
+                rabbit.ConfigureClient(clientOptions =>
                 {
                     clientOptions.Exchange = "amq.direct";
                     clientOptions.MaxRedeliveredCount = 1;
@@ -115,26 +114,24 @@ namespace CustomerAPI.WebAPI.Extensions
                             { "x-queue-mode", "lazy" }
                         }
                     };
-                }
-            );
+                });
+            });
             return services;
         }
 
         /// <summary>
-        /// 
+        /// Starts background consumption through the documented RabbitMQ hosted service.
         /// </summary>
         public static IServiceCollection AddMyHostedService(this IServiceCollection services)
         {
-            // Resolve MvpRabbitMQClient from the real root provider when the hosted service starts
-            // by using a factory registration and preserving the container-managed lifetime.
-            services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService>(sp =>
-            {
-                var client = sp.GetRequiredService<MvpRabbitMQClient>();
-                return new MvpRabbitMQHostedService(new RabbitMQHostedOptions
+            services.AddOptions<RabbitMQHostedOptions>()
+                .Configure<IMvpRabbitMQClient>((options, client) =>
                 {
-                    Callback = _ => client.Consume()
+                    options.Callback = _ => client.Consume();
+                    options.DueTime = TimeSpan.Zero;
+                    options.Period = TimeSpan.FromSeconds(3);
                 });
-            });
+            services.AddMvp24HoursHostedService();
             return services;
         }
         /// <summary>

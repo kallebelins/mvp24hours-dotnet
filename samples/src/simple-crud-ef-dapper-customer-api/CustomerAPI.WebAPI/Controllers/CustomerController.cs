@@ -55,13 +55,20 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IPagingResult<IEnumerable<Customer>>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IEnumerable<Customer>>>), StatusCodes.Status404NotFound)]
         [Route("", Name = "CustomerGetBy")]
-        public async Task<ActionResult<IPagingResult<IEnumerable<Customer>>>> GetBy([FromQuery] CustomerQuery model, [FromQuery] PagingCriteriaRequest pagingCriteria)
+        public async Task<ActionResult<IPagingResult<IEnumerable<Customer>>>> GetBy(
+            [FromQuery] CustomerQuery model,
+            [FromQuery] PagingCriteriaRequest pagingCriteria,
+            CancellationToken cancellationToken)
         {
             string whereSql = "(@Active is null or Active = @Active) and (@Name is null or Name like CONCAT('%',@Name,'%'))";
 
             var result = await uoW
                 .GetConnection()
-                .QueryPagingResultAsync<Customer>(pagingCriteria, whereSql, new { model.Name, model.Active });
+                .QueryPagingResultAsync<Customer>(
+                    pagingCriteria,
+                    whereSql,
+                    new { model.Name, model.Active },
+                    cancellationToken: cancellationToken);
 
             // checks if there are any records in the database from the filter
             if (result == null || result.Summary.TotalCount == 0)
@@ -82,7 +89,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
         [Route("{id}", Name = "CustomerGetById")]
-        public async Task<ActionResult<IBusinessResult<Customer>>> GetById(int id)
+        public async Task<ActionResult<IBusinessResult<Customer>>> GetById(int id, CancellationToken cancellationToken)
         {
             // create projection for customer and contact by customer id
             string query = @"
@@ -93,9 +100,10 @@ namespace CustomerAPI.WebAPI.Controllers
             Customer model = null;
 
             // apply multiple queries to load customer and contacts
+            var command = new CommandDefinition(query, new { id }, cancellationToken: cancellationToken);
             using (var result = await uoW
                 .GetConnection()
-                .QueryMultipleAsync(query, new { id }))
+                .QueryMultipleAsync(command))
             {
                 model = await result.ReadFirstOrDefaultAsync<Customer>();
                 if (model != null)

@@ -21,6 +21,8 @@ namespace CustomerAPI.WebAPI.Extensions
         public static IServiceCollection AddMyServices(this IServiceCollection services)
         {
             services.AddScoped<GetCustomerClientStep>();
+            services.AddScoped<GetByCustomerMapperResponseStep>();
+            services.AddScoped<GetByIdCustomerMapperResponseStep>();
             services.AddHttpClientWithStandardResilience(GetCustomerClientStep.HttpClientName, client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);

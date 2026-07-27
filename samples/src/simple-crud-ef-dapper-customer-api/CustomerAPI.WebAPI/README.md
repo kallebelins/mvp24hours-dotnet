@@ -1,72 +1,78 @@
-# CustomerAPI - CRUD - EF - Dapper - Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
+# Customer API — Simple EF Core and Dapper CRUD
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF (actions) and Dapper (queries); 
-- Native OpenAPI;
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This .NET 10 sample uses EF Core for transactional writes and Dapper for focused SQL reads in a small N-layer application.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- EF Core repositories and Unit of Work for create, update, and delete operations
+- Dapper pagination and multi-result queries on the EF-owned connection
+- Cancelable Dapper commands with parameterized filters
+- Native OpenAPI, RFC ProblemDetails, health checks, and NLog through `ILogger<T>`
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+## Architecture
 
-## Database integrated with EF
+- Tier: `Simple`
+- Shape: N-layers with Core, Infrastructure, and WebAPI projects
+- Why this shape fits: Dapper optimizes read SQL while EF Core retains change tracking and transaction boundaries
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+Entities cross the HTTP boundary to keep the sample small. Prefer a Complex DTO-based sample for public or externally versioned APIs.
 
-For another provider, add its version centrally and reference the package from the project:
+## Layers
 
-- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
-- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
-- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+- `CustomerAPI.Core` — entities and validators
+- `CustomerAPI.Infrastructure` — EF Core persistence, development seed data, and Dapper paging extensions
+- `CustomerAPI.WebAPI` — controllers, configuration, and HTTP composition
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+## Prerequisites
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | Shared EF Core and Dapper SQL Server database | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+
+Supply credentials through environment variables, user secrets, or a secret store.
+
+## Run
+
+From `samples/src/simple-crud-ef-dapper-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+Dapper receives the connection owned by the scoped EF Core Unit of Work. The query helpers do not create or retain independent connections, and Dapper opens and closes a previously closed connection around each command.
 
-## Health checks
+## Explore the API
 
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
 
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
-```
+## When to choose Dapper reads
+
+Use Dapper when a read path benefits from explicit SQL, multi-result queries, or projection control. Keep EF Core when LINQ, tracked aggregates, provider portability, and lower SQL maintenance are more valuable.
+
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [Advanced EF Core](../../../../docs/en-us/database/efcore-advanced.md)
+- [Unit of Work](../../../../docs/en-us/database/use-unitofwork.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- CQRS infrastructure or a separately deployed read store
+- DTO isolation, authentication, or production observability
+- Provider-neutral Dapper SQL; the paging query targets SQL Server

@@ -1,81 +1,86 @@
-# CustomerAPI - CRUD - EF - RabbitMQ - Simple
-N-layer project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
+# Customer API — Simple RabbitMQ
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF;
-- Native OpenAPI;
-- Mapping (AutoMapper); 
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Message Broker with RabbitMQ;
-- Hosted service;
-- Health Checks;
+This .NET 10 sample accepts Customer commands over HTTP, publishes them to RabbitMQ, and processes them asynchronously against an EF Core database.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- RabbitMQ producers and asynchronous Mvp24Hours consumers
+- EF Core repositories and Unit of Work in scoped consumer services
+- Retry limits and dead-letter exchange configuration
+- Native OpenAPI, RFC ProblemDetails, SQL Server and RabbitMQ health checks, and `ILogger<T>`
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+## Architecture
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Tier: `Simple`
+- Shape: N-layers with HTTP publishing and background message consumption
+- Why this shape fits: it shows asynchronous command handling while keeping the broker and persistence responsibilities visible
 
-## Message Broker
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/broker?id=rabbitmq
+## Layers
 
-## Database integrated with EF
+- `CustomerAPI.Core` — entities, message contracts, service contracts, and validation
+- `CustomerAPI.Application` — Customer services, facade, and RabbitMQ consumers
+- `CustomerAPI.Infrastructure` — EF Core context, mappings, migrations, and seed data
+- `CustomerAPI.WebAPI` — HTTP producer, broker registration, hosted consumption, and middleware
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+## Prerequisites
 
-For another provider, add its version centrally and reference the package from the project:
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server
+- RabbitMQ
 
-- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
-- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
-- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+## Configuration
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database updated by consumers | `Server=localhost,1433;Database=MyTestDbRabbitMQ;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+| `ConnectionStrings:RabbitMQContext` | Yes | AMQP broker connection | `amqp://guest:guest@localhost:5672` |
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+Never commit production credentials. Override them through environment variables, user secrets, or a secret store.
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
+## Run
+
+Start RabbitMQ locally if needed:
+
+```bash
+docker run --rm --name mvp-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
 ```
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+Then, from `samples/src/simple-rabbitmq-customer-api`:
 
-## Health checks
-
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
-
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
+- RabbitMQ management UI: `http://localhost:15672`
+
+HTTP acceptance means the message was published, not that database processing has completed.
+
+## Delivery semantics
+
+RabbitMQ delivery is at least once: a consumer may receive the same command again after a connection or acknowledgement failure. Production handlers must be idempotent, normally by storing a stable message ID. This focused sample demonstrates retries and dead lettering but not a durable inbox or transactional outbox.
+
+## Related documentation
+
+- [Message broker](../../../../docs/en-us/broker.md)
+- [Advanced RabbitMQ](../../../../docs/en-us/broker-advanced.md)
+- [CQRS integration with RabbitMQ](../../../../docs/en-us/cqrs/integration-rabbitmq.md)
+- [Inbox and outbox](../../../../docs/en-us/cqrs/resilience/inbox-outbox.md)
+
+## What this sample intentionally does not cover
+
+- Exactly-once delivery, durable inbox/outbox, or cross-resource transactions
+- Production idempotency storage, schema evolution, or broker authorization
+- Multi-service deployment and end-to-end distributed tracing

@@ -1,75 +1,76 @@
-# CustomerAPI - CRUD - EF - Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
+# Customer API — Simple EF Core CRUD
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Native OpenAPI;
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This .NET 10 sample demonstrates relational CRUD in a small N-layer application. Persistence entities intentionally cross the HTTP boundary to keep the example compact.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- Paged Customer and Contact CRUD with EF Core and SQL Server
+- Repository and Unit of Work patterns with FluentValidation
+- Native OpenAPI, RFC ProblemDetails, health checks, and NLog through `ILogger<T>`
+- Startup-validated connection options and cancelable asynchronous operations
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+## Architecture
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Tier: `Simple`
+- Shape: N-layers with Core, Infrastructure, and WebAPI projects
+- Why this shape fits: it separates persistence from HTTP composition without DTO and application-service ceremony
 
-## Database integrated with EF
+Entities are API contracts in this teaching sample. For public or externally versioned APIs, use a Complex sample with dedicated request and response DTOs.
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+## Layers
 
-For another provider, add its version centrally and reference the package from the project:
+- `CustomerAPI.Core` — entities and validators
+- `CustomerAPI.Infrastructure` — EF Core context, mappings, and development seed data
+- `CustomerAPI.WebAPI` — controllers, dependency injection, configuration, and HTTP middleware
 
-- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
-- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
-- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+## Prerequisites
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+## Configuration
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
+Override credentials with environment variables, user secrets, or a secret store.
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+
+## Run
+
+From `samples/src/simple-crud-ef-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+The host creates and seeds an empty development database. To use PostgreSQL or MySQL, add the provider through Central Package Management and replace `UseSqlServer` with `UseNpgsql` or `UseMySql`.
 
-## Health checks
+## Explore the API
 
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
 
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
-```
+Expected business failures retain Mvp24Hours business envelopes; unexpected host failures are rendered as ProblemDetails.
+
+## Related documentation
+
+- [Simple N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-simple-nlayers.md)
+- [Repository usage](../../../../docs/en-us/database/use-repository.md)
+- [Relational databases](../../../../docs/en-us/database/relational.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- DTO isolation, mapping, or application services
+- Authentication, production observability, or deployment hardening
+- Production migration orchestration or multiple database providers in one build
