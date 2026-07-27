@@ -1,98 +1,79 @@
-# Samples Mvp24Hours - NET8 (v8.2.101)
-Samples for quick product building using: Relational database (SQL Server, PostgreSql, MySql); NoSql database (MongoDb); Key-value database (Redis); Message Broker (RabbitMQ); Pipeline (Pipe and Filters pattern); Documentation (Swagger); Mapping (AutoMapper); Logging (NLog); Patterns for data validation (FluentValidation and Data Annotations), notification (Notification pattern) and specifications (Specification pattern), unit of work, repository, among others.
-In each project there is a file with the description of the resources and implemented references. Read the "Readme.md" file in the "...WebAPI" folder.
+# Mvp24Hours samples for .NET 10
 
-## Study, share and contribute:
-Visit: https://kallebelins.github.io/mvp24hours-dotnet/
+These samples demonstrate Mvp24Hours with relational and NoSQL databases, Redis, RabbitMQ, pipelines, validation, logging, and several application architecture tiers. The catalog is being modernized for `net10.0`; use each entry's status to distinguish migrated examples from planned work.
 
-## Projects - NLayers
+Start with the [architecture guidance](../docs/en-us/guides/architecture/home.md) and [decision matrix](../docs/en-us/guides/architecture/decision-matrix.md) if you are unsure which tier fits your application.
 
-### Minimal API
-Project used to develop lean APIs.
+## Package consumption
 
-#### Relational database (MySql, PostgreSql, SqlServer)
-**[CRUD - EF - Minimal API](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/minimal-crud-ef-customer-api/CustomerAPI)**
-Lean API that allows you to search with pagination, get an item, create, change and delete in a relational database (MySql, PostgreSql, SqlServer).
+This repository uses the current projects under [`src/`](../src/) by default. [`Directory.Build.props`](Directory.Build.props) sets `Mvp24HoursUseProjectReferences=true`, and each sample maps its Mvp24Hours dependencies to those source projects.
 
-#### NoSql Database - MongoDb
-**[CRUD - MongoDb - Minimal API](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/minimal-crud-mongodb-customer-api/CustomerAPI)**
-Lean API that allows you to search with pagination, get an item, create, change and delete in a MongoDb database.
+For a standalone checkout after matching packages are published, switch to NuGet:
 
-#### Pipeline
-**[Pipeline - Minimal API](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/minimal-pipeline-customer-api/CustomerAPI)**
-Lean API for pipeline with simple operations.
+```bash
+dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
+```
 
-### Simple
-N-tier project used to develop APIs where the business needs to apply simple rules.
+[`Directory.Packages.props`](Directory.Packages.props) imports shared versions from [`src/Directory.Packages.props`](../src/Directory.Packages.props) and adds sample-only packages. Never mix Mvp24Hours 4.x, 8.x, 9.x, and 10.x packages in one sample. The source and published-package modes are alternatives; do not enable both.
 
-#### Health Checks
-**[Simple WebStatus](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-webstatus)**
-Allows you to monitor the health of applications and tools (SqlServer, PostgreSql, MySql, RabbitMQ, MongoDB, Redis, ...).
+## Repository conventions
 
-#### Relational Database (MySql, PostgreSql, SqlServer)
-**[CRUD - EF - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-crud-ef-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete. Operations are performed by transiting a database entity. If you intend to develop a product that will be consumed publicly (outside of a private network), use CRUD - EF - Complex.
+- All sample projects inherit `net10.0`, latest C#, nullable reference types, implicit usings, and the repository analyzers from the files in this directory.
+- Follow the root [`.editorconfig`](../.editorconfig): use file-scoped namespaces, clear primary constructors where they improve readability, and the existing naming and formatting rules.
+- Prefer validated options (`ValidateOnStart` or `IValidateOptions<T>`), `TimeProvider`, `ILogger<T>`, cancellation tokens on public asynchronous APIs, and ProblemDetails-friendly errors.
+- Do not call `BuildServiceProvider()` from registration extensions, instantiate `HttpClient` directly, commit secrets, or introduce a separate sample style guide.
+- New and migrated hosts should base their documentation on the [sample README template](templates/SAMPLE_README.template.md). Sample code, comments, and documentation are English.
 
-**[CRUD - EF - Dapper - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-crud-ef-dapper-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination and get an item (with navigation) using Dapper. The operations to create, change and delete are performed with EF and traffic a database entity. If you intend to develop a product that will be consumed publicly (outside of a private network), use CRUD - EF - Dapper - Complex.
+Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but still needs its catalog migration phase (or has not been created); **Deprecated** is retained only as a historical reference.
 
-**[CRUD - EF - Entity Log - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete. Operations are performed by transiting a database entity. The architecture coordinates created/by, modified/by, and removed/by log fields. It is worth mentioning that all queries will contain the removed filter, taking into account the SoftDelete reference. If you intend to develop a product that will be consumed publicly (outside of a private network), use CRUD - EF - Entity Log - Complex.
+## Minimal
 
-#### Database NoSql - MongoDb
-**[CRUD - MongoDb - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-crud-mongodb-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete. Operations are performed by transiting a database entity. It is worth mentioning that we must create strategies for recording data since there is no relationship. If you intend to develop a product that will be consumed publicly (outside of a private network), use CRUD - MongoDb - Complex.
+- **Planned** — [CRUD with EF Core](src/minimal-crud-ef-customer-api/CustomerAPI/): lean relational CRUD and pagination.
+- **Planned** — [CRUD with MongoDB](src/minimal-crud-mongodb-customer-api/CustomerAPI/): lean document-database CRUD and pagination.
+- **Planned** — [Pipeline](src/minimal-pipeline-customer-api/CustomerAPI/): pipeline operations in a Minimal API host.
 
-#### Database NoSql - Redis
-**[CRUD - Redis - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-crud-redis-customer-api/CustomerAPI.WebAPI)**
-Allows you to get an item, create and delete. Operations are performed by referencing a key to that key-value database. We often use this solution for cache management, as Redis is an in-memory database with incredible performance.
+## Simple
 
-#### Message Broker - RabbitMQ
-**[CRUD - EF - RabbitMQ - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete. Operations are performed asynchronously from a queue managed by RabbitMQ. We use HostedService to consume RabbitMQ messages from the web project, that is, the messages will be processed while the API is running.
+- **Planned** — [CRUD with EF Core](src/simple-crud-ef-customer-api/): simple N-layer relational CRUD.
+- **Planned** — [CRUD with EF Core and Dapper](src/simple-crud-ef-dapper-customer-api/): EF writes with Dapper reads.
+- **Planned** — [CRUD with EF Core entity logging](src/simple-crud-ef-entitylog-customer-api/): auditing and soft-delete fields.
+- **Planned** — [CRUD with MongoDB](src/simple-crud-mongodb-customer-api/): simple N-layer MongoDB CRUD.
+- **Planned** — [CRUD with Redis](src/simple-crud-redis-customer-api/): key-value persistence and caching concepts.
+- **Planned** — [RabbitMQ](src/simple-rabbitmq-customer-api/): asynchronous customer operations through RabbitMQ.
+- **Planned** — [Pipeline](src/simple-pipeline-customer-api/): layered pipeline operations.
+- **Planned** — `simple-webstatus`: health monitoring catalog; the old external-only link remains removed until the sample is recreated.
 
-#### Pipeline
-**[Pipeline - Simple](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/simple-pipeline-customer-api/CustomerAPI.WebAPI)**
-Pipeline pattern with simple operations.
+## Complex
 
-### Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
+- **Planned** — [CRUD with EF Core](src/complex-crud-ef-customer-api/): DTO-based relational CRUD with stronger boundaries.
+- **Planned** — [CRUD with EF Core and Dapper](src/complex-crud-ef-dapper-customer-api/): separated write and read persistence.
+- **Deprecated** — [CRUD using EF entities as API contracts](src/complex-crud-ef-only-entity-customer-api/): retained to explain why public APIs should not leak persistence entities.
+- **Planned** — [CRUD with EF Core entity logging](src/complex-crud-ef-entitylog-customer-api/): DTO boundaries, auditing, and soft delete.
+- **Planned** — [CRUD with MongoDB](src/complex-crud-mongodb-customer-api/): complex-tier document persistence.
+- **Planned** — [Pipeline](src/complex-pipeline-customer-api/): layered pipeline operations.
+- **Planned** — [Pipeline builder](src/complex-pipeline-builder-customer-api/): constructor-composed use-case pipelines.
+- **Planned** — [Pipeline with ports and adapters](src/complex-pipeline-ports-adapters-customer-api/): pipeline-centric hexagonal architecture.
+- **Planned** — [Pipeline with EF Core](src/complex-pipeline-ef-customer-api/): integration pipeline with relational persistence.
 
-#### Relational Database (MySql, PostgreSql, SqlServer)
-**[CRUD - EF - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-crud-ef-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete.
+## Architecture blueprints
 
-**[CRUD - EF - Dapper - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-crud-ef-dapper-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination and get an item (with navigation) using Dapper. The operations to create, change and delete are performed with EF.
+- **Planned** — `complex-cqrs-ef-customer-api`: CQRS with the Mvp24Hours Mediator.
+- **Planned** — `complex-ddd-ef-customer-api`: Domain-Driven Design with aggregates and domain events.
+- **Planned** — `complex-clean-architecture-customer-api`: Clean Architecture dependency boundaries.
+- **Planned** — `complex-hexagonal-customer-api`: first-class ports and adapters.
+- **Planned** — `complex-event-driven-rabbitmq-customer-api`: event-driven processing with inbox and outbox.
+- **Planned** — `microservices-aspire-customer`: multiple services composed with .NET Aspire.
 
-**[CRUD - EF - Only Entity - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-crud-ef-only-entity-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete. We do not create object for traffic and mapping. We use the database entity itself.
+## Capability samples
 
-**[CRUD - EF - Entity Log - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete.
-
-#### Database NoSql - MongoDb
-**[CRUD - MongoDb - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-crud-mongodb-customer-api/CustomerAPI.WebAPI)**
-Allows you to search with pagination, get an item, create, change and delete.
-
-#### Pipeline
-**[Pipeline - Builder - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-pipeline-builder-customer-api/CustomerAPI.WebAPI)**
-Pipeline pattern with operations registered through constructors. Excellent strategy for use cases.
-
-**[Pipeline - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-pipeline-customer-api/CustomerAPI.WebAPI)**
-Pipeline pattern with simple layered operations.
-
-**[Pipeline - Ports and Adapters - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI)**
-Pipeline pattern with operations recorded via constructors. We associate this strategy with the very loosely coupled Ports and Adapters architecture model.
-
-**[Pipeline - EF (MySql, PostgreSql, SqlServer) - Complex](https://github.com/kallebelins/mvp24hours-dotnet-samples/tree/main/src/complex-pipeline-ef-customer-api/CustomerAPI.WebAPI)**
-We generally use it for service integration. The pipeline concept is excellent for tracking all the steps (operations/filters) performed in an integration (adapter/mediator/register/filter). In this solution we obtain the data in an integration and register it in a database with EF.
-
-## Donations
-Please consider donating if you think this library is useful to you or that my work is valuable. Glad if you can help me [buy a cup of coffee](https://www.paypal.com/donate/?hosted_button_id=EKA2L256GJVQC). :heart:
+- **Planned** — `simple-webstatus`: health checks and monitoring.
+- **Planned** — `complex-keycloak-customer-api`: Keycloak identity and admin operations.
+- **Planned** — `simple-cronjob-worker`: scheduled hosted jobs.
+- **Planned** — `simple-observability-customer-api`: OpenTelemetry logs, traces, and metrics.
+- **Planned** — `simple-hybridcache-rate-limit-api`: HybridCache and rate limiting.
+- **Planned** — `complex-saga-rabbitmq-customer-api`: saga coordination and compensation.
+- **Planned** — `complex-event-sourcing-customer-api`: event sourcing reference, conditional on stable library APIs.
 
 ## Community
-Users, interested parties, students, enthusiasts, developers, programmers [connect on LinkedIn](https://www.linkedin.com/in/kallebelins/) to closely follow our growth!
 
-## Sponsors
-Be a sponsor by choosing this project to accelerate your products.
+See the [documentation site](https://kallebelins.github.io/mvp24hours-dotnet/) to study, share feedback, and contribute.

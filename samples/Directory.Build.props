@@ -1,0 +1,20 @@
+<Project>
+  <!-- Shared defaults for every project under samples/. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Enable after Phase 1+ hygiene; legacy samples still emit many IDE style warnings. -->
+    <!-- <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> -->
+
+    <!--
+      In-repository builds use the current source projects. Set this to false
+      only when validating a sample against published Mvp24Hours packages.
+    -->
+    <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">true</Mvp24HoursUseProjectReferences>
+    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
+    <Mvp24HoursSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\src'))</Mvp24HoursSourceRoot>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,41 @@
+<Project>
+  <!--
+    Inherit Central Package Management and shared third-party versions from src/.
+    Sample-only packages (HealthChecks, NLog, Dapper, tooling) are appended below.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" />
+
+  <ItemGroup>
+    <!-- Health checks — AspNetCore.HealthChecks 8.x is transitional until Phase 1/6.1 decides on net10-native alternatives. -->
+    <PackageVersion Include="AspNetCore.HealthChecks.MongoDb" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+
+    <!-- Logging demos (samples only; library prefers ILogger + OpenTelemetry). -->
+    <PackageVersion Include="NLog" Version="5.2.8" />
+    <PackageVersion Include="NLog.Config" Version="4.7.15" />
+    <PackageVersion Include="NLog.Web.AspNetCore" Version="5.3.8" />
+
+    <!-- Dapper hybrid samples. -->
+    <PackageVersion Include="Dapper" Version="2.1.28" />
+    <PackageVersion Include="Dapper.SqlBuilder" Version="2.0.78" />
+
+    <!-- Sample tooling not centralized under src/. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+  </ItemGroup>
+
+  <!-- Published-package fallback for standalone sample consumption. -->
+  <ItemGroup Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'">
+    <PackageVersion Include="Mvp24Hours.Application" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Core" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Caching.Redis" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Data.MongoDb" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.WebAPI" Version="$(Mvp24HoursPackageVersion)" />
+  </ItemGroup>
+</Project>
