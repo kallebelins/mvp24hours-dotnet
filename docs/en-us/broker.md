@@ -1,188 +1,146 @@
-# Message Broker
->Message broker is software that allows applications, systems and services to communicate with each other and exchange information. [Message Broker](https://en.wikipedia.org/wiki/Message_broker)
+# Message Broker with RabbitMQ
 
-## RabbitMQ
+`Mvp24Hours.Infrastructure.RabbitMQ` provides the legacy `IMvpRabbitMQClient` API and the recommended fluent `AddMvpRabbitMQ` configuration API. The examples on this page target .NET 10.
 
-### Setup
-```csharp
-/// Package Manager Console >
-Install-Package Mvp24Hours.Infrastructure.RabbitMQ -Version 9.1.x
+## Install
+
+```bash
+dotnet add package Mvp24Hours.Infrastructure.RabbitMQ
 ```
 
-> 📚 For advanced features (Typed Consumers, Request/Response, Scheduling, Sagas), see [RabbitMQ Advanced](broker-advanced.md).
-
-### Basic Settings
-Basically, we can register a connection with RabbitMQ taking into account all consumers of a project (assembly), asynchronous execution and retrying if failures occur.
+## Recommended registration
 
 ```csharp
-/// Startup.cs
+using Mvp24Hours.Extensions;
 
-services.AddMvp24HoursRabbitMQ(
-    typeof(MyClassConsumer).Assembly,
-    connectionOptions =>
+builder.Services.AddMvpRabbitMQ(
+    builder.Configuration.GetConnectionString("RabbitMQContext")!,
+    rabbit =>
     {
-        connectionOptions.ConnectionString = configuration.GetConnectionString("RabbitMQContext");
-        connectionOptions.DispatchConsumersAsync = true;
-        connectionOptions.RetryCount = 3;
-    }
-);
-
-```
-
-### Basic Settings with List
-Similar to the previous item, with the exception of registered items. At this point, you can register specific consumers for a unique configuration.
-
-```csharp
-/// Startup.cs
-
-services.AddMvp24HoursRabbitMQ(
-    new List<Type> { typeof(CustomerConsumer) },
-    connectionOptions =>
-    {
-        connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
-        connectionOptions.DispatchConsumersAsync = true;
-        connectionOptions.RetryCount = 3;
-    },
-    clientOptions =>
-    {
-        clientOptions.MaxRedeliveredCount = 1;
-    }
-);
-
-```
-
-### Advanced Setting
-If your project needs to perform recovery steps (SAGA) after expected or unforeseen failures, you can use Dead Letter Queue by configuring it like this:
-
-```csharp
-/// Startup.cs
-
-services.AddMvp24HoursRabbitMQ(
-    typeof(MyClassConsumer).Assembly, // ou lista
-    connectionOptions =>
-    {
-        connectionOptions.ConnectionString = configuration.GetConnectionString("RabbitMQContext");
-        connectionOptions.DispatchConsumersAsync = true;
-        connectionOptions.RetryCount = 3;
-    },
-    clientOptions =>
-    {
-        clientOptions.Exchange = "customer.direct";
-        clientOptions.MaxRedeliveredCount = 1;
-        clientOptions.QueueArguments = new System.Collections.Generic.Dictionary<string, object>
+        rabbit.AddConsumersFromAssemblyContaining<OrderCreatedConsumer>();
+        rabbit.AddRequestClient<GetOrderRequest, GetOrderResponse>(request =>
         {
-            { "x-queue-mode", "lazy" },
-            { "x-dead-letter-exchange", "dead-letter-customer.direct" }
-        };
-
-        // dead letter exchanges enabled
-        clientOptions.DeadLetter = new RabbitMQOptions()
+            request.Exchange = "orders";
+            request.RoutingKey = "orders.get";
+            request.TimeoutMilliseconds = 10_000;
+        });
+        rabbit.ConfigureClient(client =>
         {
-            Exchange = "dead-letter-customer.direct",
-            QueueArguments = new System.Collections.Generic.Dictionary<string, object>
-            {
-                { "x-queue-mode", "lazy" }
-            }
-        };
-    }
-);
-
+            client.Exchange = "app.events";
+            client.ExchangeType = MvpRabbitMQExchangeType.topic;
+            client.Durable = true;
+            client.PublisherConfirm.Enabled = true;
+            client.ConsumerPrefetch.PrefetchCount = 16;
+        });
+    });
 ```
 
-### Producer Implementation
+The overloads also accept `host` and `port`, or only an `Action<RabbitMQConfigurationBuilder>`. The older `AddMvp24HoursRabbitMQ(Assembly, ...)` and explicit consumer-list overloads remain available for `IMvpRabbitMQConsumer` implementations.
+
+## Connection options
+
+### `RabbitMQConnectionOptions`
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `ConnectionString` | `string` | `amqp://guest:guest@localhost:5672` | AMQP connection string. |
+| `Configuration` | `RabbitMQConnection?` | `null` | Structured connection settings instead of the connection string. |
+| `RetryCount` | `int` | `3` | Connection retry count. |
+| `DispatchConsumersAsync` | `bool` | `true` | Enables asynchronous consumer dispatch. |
+
+### `RabbitMQOptions`
+
+`RabbitMQClientOptions` inherits these topology and publishing properties.
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `Exchange` | `string` | `amq.direct` | Exchange name. |
+| `ExchangeType` | `MvpRabbitMQExchangeType` | `direct` | Exchange type. |
+| `RoutingKey` | `string` | empty | Default routing key. |
+| `QueueName` | `string` | empty | Queue name. |
+| `Durable` | `bool` | `true` | Declares durable topology. |
+| `Exclusive` | `bool` | `false` | Declares an exclusive queue. |
+| `AutoDelete` | `bool` | `false` | Deletes topology when no longer used. |
+| `ExchangeArguments` | `Dictionary<string, object>?` | `null` | Native exchange arguments. |
+| `QueueArguments` | `Dictionary<string, object>?` | `null` | Native queue arguments, such as `x-queue-type`. |
+| `BasicProperties` | `IBasicProperties?` | `null` | Default RabbitMQ message properties. |
+
+### `RabbitMQClientOptions`
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `MaxRedeliveredCount` | `int` | `3` | Maximum redeliveries before rejection/dead-letter handling. |
+| `DeadLetter` | `RabbitMQOptions?` | `null` | Dead-letter exchange/queue configuration. |
+| `Deduplication` | `MessageDeduplicationOptions` | defaults below | Message-ID deduplication configuration. |
+| `PriorityQueue` | `PriorityQueueOptions` | defaults below | Queue/message priority configuration. |
+| `MessageTtl` | `MessageTtlOptions` | defaults below | Message and queue lifetime configuration. |
+| `HeadersExchange` | `HeadersExchangeOptions` | defaults below | Header-based binding and publishing defaults. |
+| `ConsumerPrefetch` | `ConsumerPrefetchOptions` | defaults below | Consumer QoS and concurrency. |
+| `PublisherConfirm` | `PublisherConfirmOptions` | defaults below | Publisher acknowledgement behavior. |
+| `BatchPublish` | `BatchPublishOptions` | defaults below | Buffered batch publishing. |
+| `EnableStructuredLogging` | `bool` | `false` | Enables structured message logging. |
+| `EnableMetrics` | `bool` | `false` | Enables client metrics collection. |
+
+## Consumer and producer
+
+The legacy consumer contract is still supported:
 
 ```csharp
-/// CustomerService.cs
-var client = serviceProvider.GetService<MvpRabbitMQClient>();
-client.Publish(new CustomerDto
+public sealed class CustomerConsumer : IMvpRabbitMQConsumerAsync
 {
-    Id = 99,
-    Name = "Test 1",
-    Active = true
-}, typeof(CustomerDto).Name);
+    public string RoutingKey => nameof(CustomerChanged);
+    public string QueueName => "customers.changed";
 
-```
-
-### Consumer Implementation
-
-```csharp
-/// CustomerConsumer.cs
-public class CustomerConsumer : IMvpRabbitMQConsumerAsync
-{
-    public string RoutingKey => typeof(CustomerDto).Name;
-
-    public string QueueName => typeof(CustomerDto).Name;
-
-    public async Task ReceivedAsync(object message, string token)
+    public Task ReceivedAsync(object message, string token)
     {
-        // take action
-        await Task.CompletedTask;
+        // Process the deserialized message.
+        return Task.CompletedTask;
     }
 }
 ```
 
-### Implementation of Consumer with Recovery
+Publish through the registered abstraction:
 
 ```csharp
-/// CustomerRecoveryConsumer.cs
-public class CustomerConsumer : IMvpRabbitMQConsumerRecoveryAsync
-{
-    public string RoutingKey => typeof(CustomerDto).Name;
-
-    public string QueueName => typeof(CustomerDto).Name;
-
-    public async Task ReceivedAsync(object message, string token)
-    {
-        // take action
-        await Task.CompletedTask;
-    }
-
-    public async Task FailureAsync(Exception exception, string token)
-    {
-        // perform integration failure handling in RabbitMQ
-        // write to a temporary table, send email, create specialized log, etc.
-        await Task.CompletedTask;
-    }
-
-    public async Task RejectedAsync(object message, string token)
-    {
-        // we tried to consume the resource 3 times, in this case as we did not treat it, we will disregard it
-        // write to a temporary table, send email, create specialized log, etc.
-        await Task.CompletedTask;
-    }
-}
+var client = serviceProvider.GetRequiredService<IMvpRabbitMQClient>();
+client.Publish(new CustomerChanged(customerId), nameof(CustomerChanged));
 ```
 
-### Running Consumers
+For typed consumers, request/response, scheduling, batching, filters, multi-tenancy, TTL, headers, and testing, continue with [RabbitMQ advanced features](broker-advanced.md).
+
+## Background consumption
+
+The legacy client can be hosted without a manual consume loop:
 
 ```csharp
-/// HostService.cs
-var source = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-while (!source.IsCancellationRequested)
+builder.Services.AddMvp24HoursHostedService(options =>
 {
-    var client = serviceProvider.GetService<MvpRabbitMQClient>();
-    client.Consume();
-}
-
+    options.Callback = _ => { };
+    options.DueTime = TimeSpan.Zero;
+    options.Period = TimeSpan.FromSeconds(3);
+});
 ```
 
-### Using Docker
+### `RabbitMQHostedOptions`
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `Callback` | `TimerCallback` | required | Callback used by the hosted consumer. |
+| `State` | `object?` | `null` | Callback state. |
+| `DueTime` | `TimeSpan` | `TimeSpan.Zero` | Delay before the first callback. |
+| `Period` | `TimeSpan` | `3 seconds` | Callback period. |
+
+## Local RabbitMQ
+
+```bash
+docker run --rm --name mvp-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 ```
-// Command
-docker run -d --name my-rabbit -p 5672:5672 -p 5673:5673 -p 15672:15672 rabbitmq:3-management
 
-// Connect
-[127.0.0.1:6379](amqp://guest:guest@localhost:5672)
+The AMQP endpoint is `amqp://guest:guest@localhost:5672`; the management UI is `http://localhost:15672`.
 
-```
+## Related
 
-### Injection vs Standard Instance
-An instance is created dynamically, with the exception of those registered in the service collection for the provider (IServiceProvider).
-
----
-
-## See Also
-
-- [RabbitMQ Advanced Features](broker-advanced.md) - Typed consumers, Request/Response, Sagas, Scheduling
-- [CQRS Integration Events](cqrs/events/integration-events.md) - Using RabbitMQ with CQRS
-- [Message Observability](observability/messaging.md) - OpenTelemetry for message tracing
+- [RabbitMQ advanced features](broker-advanced.md)
+- [CQRS and RabbitMQ](cqrs/integration-rabbitmq.md)
+- [Inbox/outbox](cqrs/resilience/inbox-outbox.md)
+- [Observability](observability/home.md)

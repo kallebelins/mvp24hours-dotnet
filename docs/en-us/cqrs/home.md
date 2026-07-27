@@ -78,4 +78,13 @@ The **Mvp24Hours.Infrastructure.Cqrs** module provides a complete implementation
 - [Commands](commands.md) - Creating and executing commands
 - [Queries](queries.md) - Implementing queries
 - [Behaviors](behaviors.md) - Pipeline behaviors
+- [RabbitMQ integration](integration-rabbitmq.md) - Brokered commands and events
+- [Inbox/Outbox](resilience/inbox-outbox.md) - Reliable messaging
+- [Event Sourcing](event-sourcing/home.md) - Aggregates and projections
+- [Saga](saga/home.md) - Distributed workflows
+- [API Reference](api-reference.md) - Mediator options and registration helpers
+- [Best Practices](best-practices.md) - Recommended CQRS usage
+- [RabbitMQ](../broker.md) - Messaging module
+- [Configuration Reference](../configuration-reference.md) - Options index
+- [CQRS blueprint](../guides/architecture/blueprints/template-cqrs.md) - Solution shape
 

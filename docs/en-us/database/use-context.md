@@ -1,97 +1,62 @@
-# How to implement database context?
-Context represents a session with the database and can be used to query and save entity instances.
+# Database Context
 
-## Basic Configuration
+Register the provider-specific EF Core `DbContext` first, then expose it to Mvp24Hours with `AddMvp24HoursDbContext<TDbContext>()`. The Mvp24Hours extension does not configure a database provider.
+
+## Define the context
+
 ```csharp
-public class MyDataContext : Mvp24HoursContext
+using Microsoft.EntityFrameworkCore;
+using Mvp24Hours.Infrastructure.Data.EFCore;
+
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
+    : Mvp24HoursContext(options)
 {
-    public MyDataContext()
-        : base()
-    {
-    }
-
-    public MyDataContext(DbContextOptions options)
-        : base(options)
-    {
-    }
-
-    public virtual DbSet<MyEntity> MyEntity { get; set; }
+    public DbSet<Customer> Customers => Set<Customer>();
 }
 ```
 
-## Configuration with Log
-If you want to control entity logs dynamically, simply apply the configuration below:
+Inherit directly from `DbContext` if the legacy `IEntityDateLog` automation is not needed.
+
+## Register EF Core and repositories
+
+This setup matches the SQL integration tests:
+
 ```csharp
-public class MyDataContext : Mvp24HoursContext
+string connectionString = builder.Configuration.GetConnectionString("DataContext")
+    ?? throw new InvalidOperationException("ConnectionStrings:DataContext is required.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services.AddMvp24HoursDbContext<AppDbContext>();
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
 {
-    [...]
+    options.MaxQtyByQueryPage = 100;
+    options.DefaultTrackingBehavior = QueryTrackingBehavior.NoTracking;
+});
+```
+
+Use `AddMvp24HoursRepository(...)` for the synchronous contracts. Both registrations are scoped by default.
+
+## Legacy date-log behavior
+
+`Mvp24HoursContext` applies its `IEntityDateLog` rules only when explicitly enabled:
+
+```csharp
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
+    : Mvp24HoursContext(options)
+{
     public override bool CanApplyEntityLog => true;
-}
-```
-Your entity must implement a log interface. [See Entity](use-entity.md)
+    public override object? EntityLogBy => "system";
 
-One of the logging implementations offers the possibility to fill in the ID of the user who is creating, updating or deleting the record (logical deletion). To load logged in user data, I suggest:
-```csharp
-public class MyDataContext : Mvp24HoursContext
-{
-    private readonly IHttpContextAccessor accessor;
-
-    public MyDataContext(IHttpContextAccessor accessor)
-        : base()
-    {
-        this.accessor = accessor;
-    }
-
-    public MyDataContext(DbContextOptions options, IHttpContextAccessor accessor)
-        : base(options)
-    {
-        this.accessor = accessor;
-    }
-
-    public override object EntityLogBy => this.accessor.MyExtensionGetUser();
-
-    public override bool CanApplyEntityLog => true;
-
-    public virtual DbSet<MyEntity> MyEntity { get; set; }
+    public DbSet<CustomerLog> Customers => Set<CustomerLog>();
 }
 ```
 
-## Modern Approach with ICurrentUserProvider and IClock
+This path uses `Created`, `Modified`, and `Removed`. For the newer `IAuditableEntity`, `ISoftDeletable`, and tenant contracts, use the tested interceptors described in [EF Core Advanced](efcore-advanced.md).
 
-For .NET 9+ applications, use the `ICurrentUserProvider` and `IClock` (or `TimeProvider`) interfaces for better testability:
+## Context lifetime
 
-```csharp
-public class MyDataContext : Mvp24HoursContext
-{
-    private readonly ICurrentUserProvider _currentUserProvider;
-    private readonly IClock _clock; // or TimeProvider for .NET 9+
+Treat a context as one unit-of-work scope. Do not keep it in a singleton or share it across concurrent operations. In web applications, the default scoped lifetime creates one instance per request.
 
-    public MyDataContext(
-        DbContextOptions options, 
-        ICurrentUserProvider currentUserProvider,
-        IClock clock)
-        : base(options)
-    {
-        _currentUserProvider = currentUserProvider;
-        _clock = clock;
-    }
-
-    public override object EntityLogBy => _currentUserProvider.GetUserId();
-    
-    public override DateTime GetCurrentDateTime() => _clock.UtcNow.DateTime;
-
-    public override bool CanApplyEntityLog => true;
-
-    public virtual DbSet<MyEntity> MyEntity { get; set; }
-}
-```
-
-Register the providers in your `Program.cs`:
-
-```csharp
-// Program.cs
-builder.Services.AddScoped<ICurrentUserProvider, HttpContextUserProvider>();
-builder.Services.AddSingleton<IClock, SystemClock>();
-// Or for .NET 9+:
-builder.Services.AddSingleton(TimeProvider.System);
-```
+See [Entities](use-entity.md), [Unit of Work](use-unitofwork.md), and [Relational Databases](relational.md).

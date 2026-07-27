@@ -1,22 +1,45 @@
-# Migration Guide to Native .NET 9 APIs
+# Migration Guide to Native .NET 9+ APIs
 
-This guide provides step-by-step instructions for migrating from legacy Mvp24Hours implementations to native .NET 9 APIs.
+This guide provides step-by-step instructions for replacing legacy Mvp24Hours
+implementations with native APIs introduced in .NET 9 and retained in .NET 10.
+For the SDK, target-framework, package, and breaking-change upgrade, use the
+[9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000).
 
 ## Overview
 
-Mvp24Hours has adopted native .NET 9 APIs to reduce custom code, improve performance, and align with industry standards. This guide covers:
+Mvp24Hours adopted native .NET APIs to reduce custom code, improve performance, and align with industry standards. This guide covers:
 
 1. **Identifying deprecated code** - Finding legacy implementations
 2. **Migration strategies** - Step-by-step migration paths
 3. **Testing changes** - Validating migrations work correctly
-4. **Rollback procedures** - Reverting if issues arise
+4. **Validation** - Proving behavior before deployment
+
+## .NET 10 platform addendum
+
+The native patterns introduced during the .NET 9 modernization remain the
+recommended patterns on .NET 10: `HybridCache`, `TimeProvider`, channels,
+keyed services, native OpenAPI, `System.Threading.RateLimiting`,
+`Microsoft.Extensions.Http.Resilience`, and
+`Microsoft.Extensions.Resilience`.
+
+The current source tree targets `net10.0`, uses Central Package Management,
+enables nullable reference types, and defaults to `LangVersion=latest`.
+This does not mean that a `10.0.0` NuGet package is already available: the
+production projects still declare package version `9.1.21`. Check the package
+feed before changing consumer package references.
+
+Use the canonical [9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000)
+for the SDK, target framework, package readiness, nullable diagnostics,
+breaking API changes, security audit, and release-build checklist. The rest of
+this page is intentionally limited to replacing legacy implementations with
+native platform patterns.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         Migration Path Overview                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Legacy (Deprecated)                    Native (.NET 9)                     │
+│  Legacy (Deprecated)                    Native (.NET 9+)                    │
 │  ───────────────────                    ────────────────                    │
 │                                                                             │
 │  TelemetryHelper        ───────────►    ILogger + OpenTelemetry             │
@@ -115,8 +138,11 @@ builder.Services.AddMvp24HoursObservability(options =>
 ```csharp
 // Old way with custom Polly policies
 services.AddHttpClient("MyApi")
-    .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(3))
-    .AddPolicyHandler(HttpPolicyHelper.GetCircuitBreakerPolicy(5, TimeSpan.FromSeconds(30)));
+    .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(HttpStatusCode.RequestTimeout, 3))
+    .AddPolicyHandler(HttpPolicyHelper.GetCircuitBreakerPolicy(
+        HttpStatusCode.ServiceUnavailable,
+        eventsBeforeBreaking: 5,
+        durationOfBreakInSeconds: 30));
 ```
 
 #### After (Native)
@@ -129,13 +155,13 @@ services.AddHttpClient("MyApi", client =>
 })
 .AddMvpStandardResilience()
 // Or with custom configuration:
-.AddMvpResilience(options =>
+.AddMvpResilience(r => r.ConfigureOptions(options =>
 {
-    options.Retry.MaxRetryAttempts = 3;
-    options.Retry.BackoffType = DelayBackoffType.Exponential;
-    options.CircuitBreaker.FailureRatio = 0.5;
-    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
-});
+    options.MaxRetryAttempts = 3;
+    options.RetryDelay = TimeSpan.FromSeconds(2);
+    options.CircuitBreakerFailureRatio = 0.5;
+    options.CircuitBreakerSamplingDuration = TimeSpan.FromSeconds(10);
+}));
 ```
 
 #### Using Presets
@@ -176,8 +202,8 @@ services.AddDbContext<MyDbContext>(options =>
 // New native resilience
 services.AddNativeDbResilience(options =>
 {
-    options.MaxRetryAttempts = 3;
-    options.BaseDelay = TimeSpan.FromMilliseconds(100);
+    options.RetryMaxAttempts = 3;
+    options.RetryDelay = TimeSpan.FromMilliseconds(100);
 });
 
 services.AddDbContext<MyDbContext>(options =>
@@ -234,14 +260,14 @@ var item = await hybridCache.GetOrCreateAsync(
 #### Tag-Based Invalidation
 
 ```csharp
-// Register with tags
+// Register with tags through HybridCache
 await hybridCache.GetOrCreateAsync(
     "user:123",
     async cancel => await LoadUserAsync(123, cancel),
-    tags: new[] { "users", "user:123" });
+    tags: ["users", "user:123"]);
 
-// Invalidate by tag
-await tagManager.InvalidateByTagAsync("users");
+// Invalidate by tag through HybridCacheProvider / ICacheProvider extensions
+await hybridCache.InvalidateByTagAsync("users");
 ```
 
 ---
@@ -254,7 +280,8 @@ await tagManager.InvalidateByTagAsync("users");
 #### Before (Deprecated)
 
 ```csharp
-// Old custom middleware
+// Illustrative legacy registration; AddPipelineResilience is not a current
+// Mvp24Hours extension. Existing applications may have an equivalent wrapper.
 services.AddPipelineResilience(options =>
 {
     options.RetryCount = 3;
@@ -269,9 +296,9 @@ services.AddPipelineResilience(options =>
 // New native resilience middleware
 services.AddNativePipelineResilience(options =>
 {
-    options.Retry.MaxRetryAttempts = 3;
-    options.Retry.Delay = TimeSpan.FromSeconds(1);
-    options.CircuitBreaker.FailureRatio = 0.5;
+    options.RetryMaxAttempts = 3;
+    options.RetryDelay = TimeSpan.FromSeconds(1);
+    options.CircuitBreakerFailureRatio = 0.5;
 });
 ```
 
@@ -285,7 +312,7 @@ services.AddNativePipelineResilience(options =>
 #### Before (Custom)
 
 ```csharp
-// Custom rate limiting implementation
+// Illustrative application-specific API; this is not an Mvp24Hours extension.
 services.AddCustomRateLimiting(options =>
 {
     options.PermitLimit = 100;
@@ -296,25 +323,25 @@ services.AddCustomRateLimiting(options =>
 #### After (Native)
 
 ```csharp
-// Native rate limiting
-services.AddNativeRateLimiting(options =>
-{
-    options.DefaultPolicy = NativeRateLimiterOptions.FixedWindow(
-        permitLimit: 100,
-        window: TimeSpan.FromMinutes(1));
-});
+// Register the provider, then add named limiters
+services.AddNativeRateLimiting();
+services.AddFixedWindowRateLimiter(
+    "api",
+    permitLimit: 100,
+    window: TimeSpan.FromMinutes(1));
 
 // For pipeline operations
 services.AddPipelineRateLimiting();
 
-// For RabbitMQ consumers
-services.AddRabbitMQRateLimiting(options =>
-{
-    options.ConsumerLimit = NativeRateLimiterOptions.SlidingWindow(
-        permitLimit: 50,
-        window: TimeSpan.FromSeconds(10),
-        segmentsPerWindow: 5);
-});
+// For RabbitMQ consumers and publishers
+services.AddRabbitMQRateLimiting(
+    configureConsumeOptions: options =>
+    {
+        options.DefaultRateLimiterOptions = NativeRateLimiterOptions.SlidingWindow(
+            permitLimit: 50,
+            window: TimeSpan.FromSeconds(10),
+            segmentsPerWindow: 5);
+    });
 ```
 
 ---
@@ -539,7 +566,7 @@ public async Task Should_Retry_On_Transient_Failure()
     
     var services = new ServiceCollection();
     services.AddHttpClient("test")
-        .AddMvpResilience(o => o.Retry.MaxRetryAttempts = 2)
+        .AddMvpResilience(r => r.ConfigureOptions(o => o.MaxRetryAttempts = 2))
         .ConfigurePrimaryHttpMessageHandler(() => handler);
     
     var provider = services.BuildServiceProvider();
@@ -556,44 +583,18 @@ public async Task Should_Retry_On_Transient_Failure()
 
 ---
 
-## Rollback Procedures
+## Deployment and rollback
 
-### 1. Feature Flags
+Migrate one subsystem at a time and keep the previous deployable artifact. Use
+your application's existing deployment controls—such as slots, canaries, or
+configuration already supported by that application—to roll back. Mvp24Hours
+does not provide `AddFeatureManagement`, and this guide does not require an
+additional feature-management dependency.
 
-```csharp
-services.AddFeatureManagement();
-
-if (featureManager.IsEnabled("UseNativeResilience"))
-{
-    services.AddHttpClient("api").AddMvpStandardResilience();
-}
-else
-{
-    // Legacy
-    services.AddHttpClient("api")
-        .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(3));
-}
-```
-
-### 2. Configuration-Based Switching
-
-```json
-{
-  "Features": {
-    "UseNativeApis": true,
-    "UseHybridCache": true,
-    "UseNativeOpenApi": false
-  }
-}
-```
-
-```csharp
-var useNative = configuration.GetValue<bool>("Features:UseNativeApis");
-if (useNative)
-{
-    services.AddMvpStandardResilience();
-}
-```
+Before deployment, capture contract tests and operational baselines for retry
+counts, timeouts, cache expiration, health checks, and telemetry. Roll back the
+artifact if those observable contracts regress; do not register both legacy and
+native implementations for the same service in one container.
 
 ---
 
@@ -648,7 +649,9 @@ Use this checklist to track your migration progress:
 
 ## See Also
 
-- [.NET 9 Features Overview](dotnet9-features.md)
+- [.NET 10 Modernization Overview](dotnet9-features.md)
+- [.NET 10 Version Migration](../migration.md?id=_91x-1000)
+- [Resilience Selection Guide](resilience-guide.md)
 - [HTTP Resilience](http-resilience.md)
 - [Generic Resilience](generic-resilience.md)
 - [HybridCache](hybrid-cache.md)

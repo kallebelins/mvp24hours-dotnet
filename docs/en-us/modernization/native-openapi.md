@@ -1,8 +1,11 @@
-# Native OpenAPI (.NET 9)
+# Native OpenAPI (.NET 10)
 
 ## Overview
 
-.NET 9 introduces native OpenAPI support via `Microsoft.AspNetCore.OpenApi`, providing a lightweight, AOT-compatible alternative to Swashbuckle for API documentation. Mvp24Hours integrates this native functionality with convenient extension methods and configuration options.
+Native OpenAPI support via `Microsoft.AspNetCore.OpenApi` was introduced in
+.NET 9 and remains the preferred lightweight, AOT-compatible alternative to
+Swashbuckle on the current `net10.0` source. Mvp24Hours integrates this native
+functionality with convenient extension methods and configuration options.
 
 ## Benefits Over Swashbuckle
 
@@ -18,8 +21,8 @@
 
 Native OpenAPI is included in the Mvp24Hours.WebAPI package. The `Microsoft.AspNetCore.OpenApi` package is automatically referenced.
 
-```xml
-<PackageReference Include="Mvp24Hours.WebAPI" Version="9.x.x" />
+```bash
+dotnet add package Mvp24Hours.WebAPI
 ```
 
 ## Basic Configuration

@@ -282,7 +282,7 @@ public class GetItemsQuery : IStreamRequest<Item> { }
 public record GetItemsQuery : IStreamRequest<Item> { }
 
 // In controller
-await foreach (var item in _mediator.CreateStreamAsync(query))
+await foreach (var item in _mediator.CreateStream(query))
 {
     yield return item;
 }

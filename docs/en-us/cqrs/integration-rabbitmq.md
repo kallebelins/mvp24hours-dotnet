@@ -1,304 +1,181 @@
-# Integration Events via RabbitMQ
+# CQRS Integration with RabbitMQ
 
-## Overview
+The CQRS and RabbitMQ packages share integration-event and outbox abstractions, but they do not provide an automatic `IIntegrationEventPublisher` implementation. Register an application implementation that publishes through `IMvpRabbitMQClient`, and use the provided `RabbitMQOutboxAdapter` when RabbitMQ transactional messaging must reuse a CQRS outbox.
 
-The Mediator integrates with the existing `Mvp24Hours.Infrastructure.RabbitMQ` to publish and consume Integration Events between bounded contexts.
-
-## Configuration
-
-### Installation
+## Install and register
 
 ```bash
-dotnet add package Mvp24Hours.Infrastructure.RabbitMQ
 dotnet add package Mvp24Hours.Infrastructure.Cqrs
+dotnet add package Mvp24Hours.Infrastructure.RabbitMQ
 ```
 
-### Service Registration
-
 ```csharp
-// Configure RabbitMQ
-services.AddMvpRabbitMQ(options =>
+using Mvp24Hours.Extensions;
+
+builder.Services.AddMvpMediator(options =>
+    options.RegisterHandlersFromAssemblyContaining<CreateOrderCommand>());
+
+builder.Services.AddMvpRabbitMQ(
+    builder.Configuration.GetConnectionString("RabbitMQContext")!,
+    rabbit =>
+    {
+        rabbit.AddConsumersFromAssemblyContaining<OrderCreatedConsumer>();
+        rabbit.ConfigureClient(client =>
+        {
+            client.Exchange = "app.events";
+            client.ExchangeType = MvpRabbitMQExchangeType.topic;
+            client.PublisherConfirm.Enabled = true;
+            client.Deduplication.Enabled = true;
+        });
+    });
+
+builder.Services.AddMvpInboxOutbox(options =>
 {
-    options.ConnectionString = "amqp://guest:guest@localhost:5672";
-    options.Exchange = "myapp.events";
-    options.ExchangeType = ExchangeType.Topic;
-    options.QueueName = "myapp.orders";
+    options.OutboxPollingInterval = TimeSpan.FromSeconds(5);
+    options.BatchSize = 100;
+    options.MaxRetries = 5;
 });
 
-// Register publisher
-services.AddScoped<IIntegrationEventPublisher, RabbitMqIntegrationEventPublisher>();
-
-// Register outbox (optional but recommended)
-services.AddScoped<IIntegrationEventOutbox, InMemoryIntegrationEventOutbox>();
-
-// Register Mediator
-services.AddMvpMediator(options =>
-{
-    options.RegisterHandlersFromAssemblyContaining<Program>();
-});
+builder.Services.AddScoped<IIntegrationEventPublisher, RabbitMqEventPublisher>();
+builder.Services.AddScoped<IRabbitMQOutbox, RabbitMQOutboxAdapter>();
 ```
 
-## Publishing Integration Events
+`AddMvpInbox`, `AddMvpOutbox`, and `AddMvpInboxOutbox` use in-memory stores by default. Replace them for production with `UseInboxStore<TStore>()`, `UseOutboxStore<TStore>()`, and `UseDeadLetterStore<TStore>()`. Register a publisher through `UseIntegrationEventPublisher<TPublisher>()`.
 
-### Event Definition
+## Integration-event contract
 
 ```csharp
-public record OrderCreatedIntegrationEvent : IntegrationEventBase
+public sealed record OrderCreatedIntegrationEvent : IntegrationEventBase
 {
-    public Guid OrderId { get; init; }
-    public string CustomerEmail { get; init; } = string.Empty;
-    public decimal TotalAmount { get; init; }
-    public IReadOnlyList<OrderItemDto> Items { get; init; } = Array.Empty<OrderItemDto>();
+    public required Guid OrderId { get; init; }
+    public required decimal Total { get; init; }
 }
 ```
 
-### Direct Publishing
+`IntegrationEventBase` supplies `Id`, `OccurredOn`, `CorrelationId`, and `CausationId`. Consumers can delegate to an `IIntegrationEventHandler<TEvent>`:
 
 ```csharp
-public class CreateOrderCommandHandler 
-    : IMediatorCommandHandler<CreateOrderCommand, OrderDto>
-{
-    private readonly IOrderRepository _repository;
-    private readonly IIntegrationEventPublisher _publisher;
-
-    public async Task<OrderDto> Handle(
-        CreateOrderCommand request, 
-        CancellationToken cancellationToken)
-    {
-        var order = Order.Create(request.CustomerEmail, request.Items);
-        await _repository.AddAsync(order);
-
-        // Publish event directly
-        await _publisher.PublishAsync(new OrderCreatedIntegrationEvent
-        {
-            OrderId = order.Id,
-            CustomerEmail = order.CustomerEmail,
-            TotalAmount = order.TotalAmount,
-            Items = order.Items.Select(i => new OrderItemDto
-            {
-                ProductId = i.ProductId,
-                Quantity = i.Quantity
-            }).ToList()
-        }, cancellationToken);
-
-        return OrderDto.FromEntity(order);
-    }
-}
-```
-
-### Publishing via Outbox (Recommended)
-
-```csharp
-public class CreateOrderCommandHandler 
-    : IMediatorCommandHandler<CreateOrderCommand, OrderDto>
-{
-    private readonly IOrderRepository _repository;
-    private readonly IUnitOfWorkAsync _unitOfWork;
-    private readonly IIntegrationEventOutbox _outbox;
-
-    public async Task<OrderDto> Handle(
-        CreateOrderCommand request, 
-        CancellationToken cancellationToken)
-    {
-        var order = Order.Create(request.CustomerEmail, request.Items);
-        await _repository.AddAsync(order);
-
-        // Add to outbox (same transaction)
-        await _outbox.AddAsync(new OrderCreatedIntegrationEvent
-        {
-            OrderId = order.Id,
-            CustomerEmail = order.CustomerEmail,
-            TotalAmount = order.TotalAmount
-        }, cancellationToken);
-
-        // Save everything atomically
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return OrderDto.FromEntity(order);
-    }
-}
-```
-
-## Outbox Processor
-
-```csharp
-public class OutboxProcessor : BackgroundService
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<OutboxProcessor> _logger;
-    private readonly TimeSpan _pollingInterval = TimeSpan.FromSeconds(5);
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("Outbox processor started");
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await ProcessPendingMessagesAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing outbox messages");
-            }
-
-            await Task.Delay(_pollingInterval, stoppingToken);
-        }
-    }
-
-    private async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var outbox = scope.ServiceProvider.GetRequiredService<IIntegrationEventOutbox>();
-        var publisher = scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>();
-
-        var messages = await outbox.GetPendingAsync(100, cancellationToken);
-        
-        foreach (var message in messages)
-        {
-            try
-            {
-                await publisher.PublishFromOutboxAsync(message, cancellationToken);
-                await outbox.MarkAsPublishedAsync(message.Id, cancellationToken);
-                
-                _logger.LogInformation("Published message {MessageId}", message.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to publish message {MessageId}", message.Id);
-                await outbox.MarkAsFailedAsync(message.Id, ex.Message, cancellationToken);
-            }
-        }
-    }
-}
-
-// Registration
-services.AddHostedService<OutboxProcessor>();
-```
-
-## Consuming Integration Events
-
-### Consumer Handler
-
-```csharp
-public class OrderCreatedIntegrationEventHandler 
+public sealed class OrderCreatedHandler
     : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
 {
-    private readonly IInventoryService _inventoryService;
-    private readonly INotificationService _notificationService;
-    private readonly ILogger<OrderCreatedIntegrationEventHandler> _logger;
+    public Task HandleAsync(
+        OrderCreatedIntegrationEvent @event,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+}
+```
 
-    public async Task HandleAsync(
-        OrderCreatedIntegrationEvent @event, 
+## Direct publishing
+
+`IIntegrationEventPublisher` has `PublishAsync<TEvent>` and `PublishFromOutboxAsync`. A RabbitMQ implementation is application code because exchange, routing, serialization, and schema-version policy are domain-specific:
+
+```csharp
+public sealed class RabbitMqEventPublisher(IMvpRabbitMQClient rabbit)
+    : IIntegrationEventPublisher
+{
+    public Task PublishAsync<TEvent>(
+        TEvent @event,
+        CancellationToken cancellationToken = default)
+        where TEvent : IIntegrationEvent
+    {
+        rabbit.Publish(@event, typeof(TEvent).Name);
+        return Task.CompletedTask;
+    }
+
+    public Task PublishFromOutboxAsync(
+        OutboxMessage message,
+        CancellationToken cancellationToken = default)
+    {
+        // Deserialize according to the application's event registry, then publish.
+        throw new NotImplementedException();
+    }
+}
+```
+
+The second method must be implemented with a safe event-type registry; do not resolve arbitrary CLR types from untrusted message data.
+
+## Transactional outbox
+
+Add an event to the CQRS outbox inside the same application transaction as the aggregate change:
+
+```csharp
+public sealed class CreateOrderHandler(
+    IIntegrationEventOutbox outbox,
+    IUnitOfWorkAsync unitOfWork)
+    : IMediatorCommandHandler<CreateOrderCommand, Guid>
+{
+    public async Task<Guid> Handle(
+        CreateOrderCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation(
-            "Processing OrderCreated event for order {OrderId}",
-            @event.OrderId);
+        var orderId = Guid.NewGuid();
 
-        // Reserve stock
-        foreach (var item in @event.Items)
-        {
-            await _inventoryService.ReserveAsync(
-                item.ProductId, 
-                item.Quantity, 
-                cancellationToken);
-        }
+        await outbox.AddAsync(
+            new OrderCreatedIntegrationEvent
+            {
+                OrderId = orderId,
+                Total = request.Total
+            },
+            cancellationToken);
 
-        // Send notification
-        await _notificationService.SendAsync(
-            @event.CustomerEmail,
-            "Order Confirmed",
-            $"Your order {@event.OrderId} has been confirmed.",
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return orderId;
+    }
+}
+```
+
+The built-in `OutboxProcessor` polls pending events and invokes the registered publisher. `RabbitMQOutboxAdapter` translates `RabbitMQOutboxMessage` records to the CQRS outbox model and supports add, batch add, pending count, published/failed transitions, cleanup, and dead-letter queries.
+
+## `InboxOutboxOptions`
+
+The configuration section constant is `InboxOutbox`.
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `OutboxPollingInterval` | `TimeSpan` | `5 seconds` | Outbox polling frequency. |
+| `BatchSize` | `int` | `100` | Maximum records per poll. |
+| `MaxRetries` | `int` | `5` | Attempts before dead-letter handling. |
+| `RetryBaseDelayMilliseconds` | `int` | `1000` | Initial exponential-backoff delay. |
+| `RetryMaxDelayMilliseconds` | `int` | `60000` | Maximum retry delay. |
+| `OutboxRetentionDays` | `int` | `7` | Processed outbox retention. |
+| `InboxRetentionDays` | `int` | `7` | Inbox deduplication retention. |
+| `CleanupInterval` | `TimeSpan` | `1 hour` | Cleanup frequency. |
+| `EnableAutomaticCleanup` | `bool` | `true` | Registers cleanup hosted services. |
+| `EnableDeadLetterQueue` | `bool` | `true` | Registers dead-letter storage. |
+| `DeadLetterRetentionDays` | `int` | `30` | Dead-letter retention. |
+| `EnableParallelProcessing` | `bool` | `false` | Processes outbox records concurrently. |
+| `MaxDegreeOfParallelism` | `int` | `4` | Parallel-processing limit. |
+
+The in-memory stores are suitable for tests and development only. A production outbox must share the business transaction's durable store.
+
+## Inbox consumption
+
+Use `IInboxProcessor.ProcessAsync` in the RabbitMQ consumer to deduplicate by event ID before invoking the handler:
+
+```csharp
+public sealed class OrderCreatedConsumer(IInboxProcessor inbox)
+{
+    public Task ConsumeAsync(
+        OrderCreatedIntegrationEvent @event,
+        CancellationToken cancellationToken)
+    {
+        return inbox.ProcessAsync(
+            @event,
+            (message, ct) => HandleOrderCreatedAsync(message, ct),
             cancellationToken);
     }
 }
 ```
 
-### Consumer Configuration
+## Testing
 
-```csharp
-// In startup
-services.AddMvpRabbitMQConsumer<OrderCreatedIntegrationEvent, OrderCreatedIntegrationEventHandler>(
-    options =>
-    {
-        options.QueueName = "inventory.order-created";
-        options.RoutingKey = "orders.created";
-        options.AutoAck = false;
-        options.PrefetchCount = 10;
-    });
-```
+For domain-level tests, register `AddInMemoryRabbitMQ()` or `AddRabbitMQTestHarness()` and the CQRS in-memory inbox/outbox. The source test suite verifies `RabbitMQOutboxAdapter` round trips and published transitions without a broker. Use Testcontainers when AMQP topology, acknowledgements, confirms, TTL, or dead-letter behavior is part of the assertion.
 
-## Routing Keys
+## Related
 
-### Naming Convention
-
-```
-{bounded-context}.{aggregate}.{event}
-
-Examples:
-- orders.order.created
-- orders.order.cancelled
-- inventory.stock.reserved
-- payments.payment.processed
-```
-
-### Routing Configuration
-
-```csharp
-services.AddMvpRabbitMQ(options =>
-{
-    options.Exchange = "myapp.events";
-    options.ExchangeType = ExchangeType.Topic;
-});
-
-// Publisher with routing key
-await _publisher.PublishAsync(
-    @event, 
-    routingKey: "orders.order.created",
-    cancellationToken);
-```
-
-## Error Handling
-
-### Retry Policy
-
-```csharp
-services.AddMvpRabbitMQConsumer<OrderCreatedIntegrationEvent, OrderCreatedIntegrationEventHandler>(
-    options =>
-    {
-        options.MaxRetryAttempts = 3;
-        options.RetryDelayMilliseconds = 1000;
-        options.ExponentialBackoff = true;
-        options.DeadLetterExchange = "myapp.dlx";
-    });
-```
-
-### Dead Letter Queue
-
-```csharp
-// Messages that failed after all retries
-// are sent to DLQ for analysis
-services.AddMvpRabbitMQDeadLetterConsumer(options =>
-{
-    options.QueueName = "myapp.dlq";
-    options.OnDeadLetter = async (message, exception) =>
-    {
-        _logger.LogError(exception, 
-            "Message {MessageId} moved to DLQ", 
-            message.Id);
-    };
-});
-```
-
-## Best Practices
-
-1. **Outbox Pattern**: Always use to ensure consistency
-2. **Idempotency**: Handlers must be idempotent
-3. **Correlation ID**: Propagate for distributed tracing
-4. **Routing Keys**: Use consistent convention
-5. **Dead Letter**: Configure for problematic messages
-6. **Monitoring**: Monitor queues and latency
-7. **Serialization**: Use JSON with schema versioning
-
+- [RabbitMQ basics](../broker.md)
+- [RabbitMQ advanced features](../broker-advanced.md)
+- [CQRS behaviors](behaviors.md)
+- [Inbox/outbox](resilience/inbox-outbox.md)

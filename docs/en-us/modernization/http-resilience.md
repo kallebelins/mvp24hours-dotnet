@@ -1,250 +1,74 @@
 # HTTP Resilience with Microsoft.Extensions.Http.Resilience
 
-> **Version**: .NET 9+ | **Package**: `Microsoft.Extensions.Http.Resilience`
+> **Current target**: .NET 10 | **Package**: `Microsoft.Extensions.Http.Resilience`
 
-## Overview
+This page explains the modernization boundary for HTTP resilience. The canonical Mvp24Hours API reference, complete option tables, transport configuration, DI examples, testing guidance, and verified implementation caveats live in [HTTP Clients & Resilience](../infrastructure/http-resilience.md).
 
-.NET 9 introduces native HTTP resilience through the `Microsoft.Extensions.Http.Resilience` package. This replaces manual Polly configurations with a simplified, integrated API that provides:
+## Current direction
 
-- **Simplified Configuration**: Use `IOptions` pattern for configuration
-- **Built-in OpenTelemetry Integration**: Automatic tracing and metrics
-- **Native Metrics Support**: Prometheus-compatible metrics out of the box
-- **Better Performance**: Uses Polly v8 with improved performance
-- **Reduced Boilerplate**: Less code to configure resilience strategies
+The .NET 10 source uses `Microsoft.Extensions.Http.Resilience` for new HTTP resilience code. It builds on Polly v8 and integrates resilience pipelines with `IHttpClientFactory`.
 
-## Standard Resilience Handler
+The standard handler composes:
 
-The standard resilience handler includes four layers of protection:
+1. total request timeout;
+2. retry;
+3. circuit breaker; and
+4. per-attempt timeout.
 
-1. **Total Request Timeout** (30s default) - Overall timeout including retries
-2. **Retry** (3 attempts with exponential backoff) - Automatic retry on transient failures
-3. **Circuit Breaker** (failure ratio based) - Prevents cascading failures
-4. **Attempt Timeout** (10s per attempt) - Timeout for each individual attempt
-
-### Basic Usage
+Start with the standard handler, then use a custom resilience handler when the exact strategy set or ordering must differ:
 
 ```csharp
-// Add HTTP client with standard resilience
-services.AddHttpClient("MyApi", client =>
+builder.Services.AddHttpClient("CatalogApi", client =>
 {
-    client.BaseAddress = new Uri("https://api.example.com");
+    client.BaseAddress = new Uri("https://catalog.example.com");
 }).AddStandardResilienceHandler();
 ```
 
-### Using Mvp24Hours Extensions
+Mvp24Hours provides equivalent named and typed registration helpers:
 
 ```csharp
 using Mvp24Hours.Infrastructure.Http.Resilience;
 
-// Simple approach with standard resilience
-services.AddHttpClientWithStandardResilience("MyApi", client =>
-{
-    client.BaseAddress = new Uri("https://api.example.com");
-});
-
-// With custom options
-services.AddHttpClientWithStandardResilience("MyApi",
-    client => client.BaseAddress = new Uri("https://api.example.com"),
+builder.Services.AddHttpClientWithStandardResilience(
+    "CatalogApi",
+    client => client.BaseAddress = new Uri("https://catalog.example.com"),
     options =>
     {
-        options.Retry.MaxRetryAttempts = 5;
-        options.Retry.Delay = TimeSpan.FromMilliseconds(500);
-        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(60);
-        options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(2);
+        options.Retry.MaxRetryAttempts = 2;
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(20);
     });
 ```
 
-## Custom Resilience Configuration
+Use `AddMvpHttpClient(...).AddMvpResilience(...)` when the client also needs the Infrastructure module's certificate, proxy, propagation, logging, serializer, or telemetry configuration. See the [canonical HTTP guide](../infrastructure/http-resilience.md#recommended-di-registration).
 
-For advanced scenarios, use the custom resilience handler:
+## Legacy boundary
 
-```csharp
-services.AddHttpClientWithCustomResilience("MyApi", "custom-pipeline",
-    client => client.BaseAddress = new Uri("https://api.example.com"),
-    builder =>
-    {
-        builder.AddRetry(new HttpRetryStrategyOptions
-        {
-            MaxRetryAttempts = 3,
-            Delay = TimeSpan.FromMilliseconds(200),
-            BackoffType = DelayBackoffType.Exponential,
-            UseJitter = true
-        });
-        
-        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
-        {
-            FailureRatio = 0.5,
-            SamplingDuration = TimeSpan.FromSeconds(30),
-            MinimumThroughput = 10,
-            BreakDuration = TimeSpan.FromSeconds(60)
-        });
-        
-        builder.AddTimeout(TimeSpan.FromSeconds(30));
-    });
-```
+The tree still references `Microsoft.Extensions.Http.Polly` and retains `IAsyncPolicy<HttpResponseMessage>`-based retry, circuit-breaker, timeout, bulkhead, fallback, and policy-wrap implementations for compatibility. `AddHttpClientWithPolly` and `HttpResiliencePolicyBuilder` are marked obsolete.
 
-## Fluent Builder API
+Do not combine the legacy policy properties in `HttpClientOptions` with a native standard handler unless nested retry and timeout behavior is intentional. For migration details and a full map of legacy option behavior, see [Legacy Polly path](../infrastructure/http-resilience.md#legacy-polly-path).
 
-Mvp24Hours provides a fluent builder for common scenarios:
+## HTTP versus generic resilience
 
-```csharp
-services.AddHttpClient("MyApi")
-    .AddMvpResilience(builder => builder
-        .WithOptions(NativeResilienceOptions.HighAvailability)
-        .OnRetry((args, delay) => 
-            logger.LogWarning("Retry attempt {Attempt} after {Delay}", 
-                args.AttemptNumber, delay))
-        .OnCircuitBreak(args => 
-            logger.LogError("Circuit opened due to {Exception}", 
-                args.Outcome.Exception?.Message)));
-```
+- HTTP clients use `Microsoft.Extensions.Http.Resilience` and the HTTP `NativeResilienceOptions` in `Mvp24Hours.Infrastructure.Http.Resilience`.
+- Non-HTTP operations use `Microsoft.Extensions.Resilience` and the separate generic `NativeResilienceOptions` in `Mvp24Hours.Infrastructure.Resilience.Native`.
 
-### Preset Options
+The same class name exists in two namespaces, so qualify it when both namespaces are imported. Continue with [Generic Resilience](generic-resilience.md) for non-HTTP pipelines.
 
-Use preset options for common scenarios:
+## Observability and testing
 
-```csharp
-// High availability - more retries, longer timeouts
-services.AddHttpClient("CriticalApi")
-    .AddMvpResilience(NativeResilienceOptions.HighAvailability);
+The Microsoft/Polly path exposes resilience telemetry through its platform integration. Mvp24Hours can additionally emit structured HTTP logs and activities from `Mvp24Hours.Infrastructure.Http`.
 
-// Low latency - fewer retries, shorter timeouts
-services.AddHttpClient("RealTimeApi")
-    .AddMvpResilience(NativeResilienceOptions.LowLatency);
+Test registrations and failure behavior without live endpoints by using `TestHttpMessageHandler` or `HttpClientTestFixture`. The canonical guide includes the tested capabilities and an example:
 
-// Batch processing - tolerance for failures
-services.AddHttpClient("BatchApi")
-    .AddMvpResilience(NativeResilienceOptions.BatchProcessing);
+- [Observability](../infrastructure/http-resilience.md#observability)
+- [Testing](../infrastructure/http-resilience.md#testing)
 
-// Testing - no resilience
-services.AddHttpClient("TestApi")
-    .AddMvpResilience(NativeResilienceOptions.Disabled);
-```
+## See also
 
-## Typed HTTP Clients
-
-For typed HTTP clients:
-
-```csharp
-// Using Mvp24Hours typed client with resilience
-services.AddMvpTypedHttpClient<IMyApi>(options =>
-{
-    options.BaseAddress = new Uri("https://api.example.com");
-    options.Timeout = TimeSpan.FromSeconds(30);
-}).AddStandardResilienceHandler();
-
-// Or with preset options
-services.AddTypedHttpClientWithStandardResilience<IMyApiClient>(client =>
-{
-    client.BaseAddress = new Uri("https://api.example.com");
-});
-```
-
-## Migration from Legacy API
-
-### Before (Deprecated)
-
-```csharp
-// ❌ Old approach - DEPRECATED
-services.AddHttpClient("MyApi")
-    .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(HttpStatusCode.TooManyRequests, 3))
-    .AddPolicyHandler(HttpPolicyHelper.GetCircuitBreakerPolicy(HttpStatusCode.ServiceUnavailable));
-
-// Or using the old extensions
-services.AddHttpClientWithPolly("MyApi", builder =>
-{
-    builder.AddRetryPolicy(o => o.MaxRetries = 3);
-    builder.AddCircuitBreakerPolicy(o => o.BreakDuration = TimeSpan.FromSeconds(30));
-});
-```
-
-### After (Recommended)
-
-```csharp
-// ✅ New approach - Recommended
-services.AddHttpClient("MyApi", client =>
-{
-    client.BaseAddress = new Uri("https://api.example.com");
-}).AddStandardResilienceHandler();
-
-// Or with custom configuration
-services.AddHttpClient("MyApi")
-    .AddMvpResilience(builder => builder
-        .ConfigureOptions(o =>
-        {
-            o.MaxRetryAttempts = 3;
-            o.CircuitBreakerBreakDuration = TimeSpan.FromSeconds(30);
-        }));
-```
-
-## Configuration via appsettings.json
-
-Configure resilience options via configuration:
-
-```json
-{
-  "HttpClients": {
-    "MyApi": {
-      "BaseAddress": "https://api.example.com",
-      "Resilience": {
-        "TotalRequestTimeout": "00:02:00",
-        "Retry": {
-          "MaxRetryAttempts": 5,
-          "Delay": "00:00:02"
-        },
-        "CircuitBreaker": {
-          "FailureRatio": 0.1,
-          "BreakDuration": "00:00:30"
-        }
-      }
-    }
-  }
-}
-```
-
-```csharp
-services.AddHttpClient("MyApi")
-    .AddStandardResilienceHandler(options =>
-    {
-        configuration.GetSection("HttpClients:MyApi:Resilience").Bind(options);
-    });
-```
-
-## Observability
-
-The native API automatically integrates with OpenTelemetry:
-
-```csharp
-services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing
-        .AddHttpClientInstrumentation()
-        .AddSource("Polly"))
-    .WithMetrics(metrics => metrics
-        .AddHttpClientInstrumentation()
-        .AddMeter("Polly"));
-```
-
-### Available Metrics
-
-- `http.client.request.duration` - Request duration histogram
-- `polly.resilience.pipeline.duration` - Pipeline execution duration
-- `polly.strategy.attempt_count` - Number of attempts per strategy
-
-## Best Practices
-
-1. **Use Standard Handler by Default**: Start with `AddStandardResilienceHandler()` and customize only when needed
-
-2. **Configure Appropriate Timeouts**: Set timeouts based on your SLA requirements
-
-3. **Monitor Circuit Breaker State**: Use callbacks to log circuit breaker state changes
-
-4. **Use Jitter**: Enable jitter to prevent thundering herd problems
-
-5. **Test Resilience**: Test your resilience configuration under failure conditions
-
-## See Also
-
-- [Microsoft.Extensions.Http.Resilience Documentation](https://learn.microsoft.com/en-us/dotnet/core/resilience/http-resilience)
-- [Polly v8 Documentation](https://www.thepollyproject.org/)
-- [OpenTelemetry Integration](../observability/tracing.md)
-
+- [Resilience Selection Guide](resilience-guide.md)
+- [HTTP Clients & Resilience — canonical reference](../infrastructure/http-resilience.md)
+- [Generic Resilience](generic-resilience.md)
+- [Tracing](../observability/tracing.md)
+- [Microsoft HTTP resilience documentation](https://learn.microsoft.com/en-us/dotnet/core/resilience/http-resilience)
+- [Polly v8 documentation](https://www.pollydocs.org/)

@@ -1,6 +1,7 @@
 # Options Configuration
 
-This document describes the Options Pattern implementation in Mvp24Hours, following .NET 9 best practices for typed configuration.
+This document describes the Options Pattern implementation in Mvp24Hours,
+following current .NET best practices for typed configuration on `net10.0`.
 
 ## Overview
 

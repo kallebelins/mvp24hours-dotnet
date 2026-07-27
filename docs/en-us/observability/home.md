@@ -1,186 +1,71 @@
 # Observability
 
-> Modern observability for the Mvp24Hours framework using ILogger + OpenTelemetry.
+This is the canonical starting point for Mvp24Hours logging, tracing and metrics on .NET 10. The library supplies DI services, activity sources, meters and exporter option models. The OpenTelemetry SDK still owns instrumentation and exporter pipelines.
 
-## Overview
+## Entry points
 
-Mvp24Hours provides a comprehensive observability solution built on modern .NET standards:
-
-- **Logging**: Structured logging with `ILogger<T>` (Microsoft.Extensions.Logging)
-- **Tracing**: Distributed tracing with OpenTelemetry and `Activity` API
-- **Metrics**: Performance metrics with OpenTelemetry `Meter` and counters
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      Mvp24Hours Observability                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                 │
-│   │   Logging   │    │   Tracing   │    │   Metrics   │                 │
-│   │  (ILogger)  │    │ (Activity)  │    │   (Meter)   │                 │
-│   └──────┬──────┘    └──────┬──────┘    └──────┬──────┘                 │
-│          │                  │                  │                        │
-│          ▼                  ▼                  ▼                        │
-│   ┌─────────────────────────────────────────────────────────────┐       │
-│   │              OpenTelemetry Collector / OTLP                  │       │
-│   └─────────────────────────────────────────────────────────────┘       │
-│          │                  │                  │                        │
-│          ▼                  ▼                  ▼                        │
-│   ┌───────────┐      ┌───────────┐      ┌───────────┐                   │
-│   │  Console  │      │   Jaeger  │      │Prometheus │                   │
-│   │  Serilog  │      │   Zipkin  │      │  Grafana  │                   │
-│   │   Seq     │      │   Tempo   │      │           │                   │
-│   └───────────┘      └───────────┘      └───────────┘                   │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-## Quick Start
-
-### 1. Install Package
-
-```bash
-dotnet add package Mvp24Hours.Core
-dotnet add package OpenTelemetry.Extensions.Hosting
-dotnet add package OpenTelemetry.Exporter.Console
-```
-
-### 2. Configure Observability
+| Need | Mvp24Hours API | Continue with |
+|---|---|---|
+| All three pillars | `AddMvp24HoursObservability` | [Unified options](#unified-options) |
+| Logging context | `AddMvp24HoursLogging` | [Logging](logging.md) |
+| Tracing context | `AddMvp24HoursTracing` | [Tracing](tracing.md) |
+| Metric instruments | `AddMvp24HoursMetrics` | [Metrics](metrics.md) |
+| Exporter configuration model | `AddMvp24HoursOpenTelemetry` | [Exporters](exporters.md) |
+| Legacy migration | — | [Migration](migration.md) |
+| Health probes | Module-owned checks | [Health Checks Catalog](../infrastructure/health-checks.md) |
+| Resilience selection | Area wrappers | [Resilience Selection Guide](../modernization/resilience-guide.md) |
+| Compatibility logging overview | Root overview | [Logging Overview](../logging.md) |
 
 ```csharp
-using Mvp24Hours.Core.Observability;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Option 1: All-in-one configuration
 builder.Services.AddMvp24HoursObservability(options =>
 {
-    options.ServiceName = "MyService";
+    options.ServiceName = "Orders";
     options.ServiceVersion = "1.0.0";
-    options.EnableTracing = true;
-    options.EnableMetrics = true;
-    options.EnableLogging = true;
+    options.Environment = builder.Environment.EnvironmentName;
 });
 
-// Option 2: Configure each pillar separately
-builder.Services.AddMvp24HoursLogging(options =>
-{
-    options.EnableTraceCorrelation = true;
-});
+builder.Logging.AddMvp24HoursDefaults();
 
-builder.Services.AddMvp24HoursTracing(options =>
-{
-    options.ServiceName = "MyService";
-});
-
-builder.Services.AddMvp24HoursMetrics(options =>
-{
-    options.ServiceName = "MyService";
-});
-```
-
-### 3. Use with OpenTelemetry
-
-```csharp
-builder.Services.AddMvp24HoursOpenTelemetry(options =>
-{
-    options.ServiceName = "MyService";
-    options.ServiceVersion = "1.0.0";
-    options.OtlpEndpoint = "http://localhost:4317"; // Jaeger/Tempo/Collector
-    
-    // Include Mvp24Hours activity sources
-    options.AddMvp24HoursActivitySources = true;
-    options.AddMvp24HoursMeters = true;
-});
-```
-
-## Activity Sources
-
-Mvp24Hours provides dedicated `ActivitySource` for each module:
-
-| Module | ActivitySource Name | Description |
-|--------|---------------------|-------------|
-| Core | `Mvp24Hours.Core` | Core operations |
-| Pipeline | `Mvp24Hours.Pipe` | Pipeline execution |
-| CQRS | `Mvp24Hours.Cqrs` | Commands, Queries, Notifications |
-| EF Core | `Mvp24Hours.EFCore` | Database operations |
-| RabbitMQ | `Mvp24Hours.RabbitMQ` | Messaging operations |
-| Caching | `Mvp24Hours.Caching` | Cache operations |
-| CronJob | `Mvp24Hours.CronJob` | Scheduled jobs |
-| HTTP | `Mvp24Hours.Infrastructure.Http` | HTTP client calls |
-
-### Configure ActivitySources in OpenTelemetry
-
-```csharp
 builder.Services.AddOpenTelemetry()
-    .WithTracing(builder =>
-    {
-        builder
-            .AddSource(Mvp24HoursActivitySources.Core.SourceName)
-            .AddSource(Mvp24HoursActivitySources.Pipe.SourceName)
-            .AddSource(Mvp24HoursActivitySources.Cqrs.SourceName)
-            .AddSource(Mvp24HoursActivitySources.Data.SourceName)
-            .AddSource(Mvp24HoursActivitySources.RabbitMQ.SourceName)
-            .AddSource(Mvp24HoursActivitySources.Caching.SourceName)
-            .AddSource(CronJobActivitySource.SourceName)
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddOtlpExporter();
-    });
+    .WithTracing(tracing => tracing
+        .AddSource(OpenTelemetryBuilderExtensions.GetMvp24HoursActivitySourceNames())
+        .AddAspNetCoreInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(metrics => metrics
+        .AddMeter(OpenTelemetryMeterBuilderExtensions.GetMvp24HoursMeterNames())
+        .AddAspNetCoreInstrumentation()
+        .AddOtlpExporter());
 ```
 
-## Correlation and Context
+## Unified options
 
-Mvp24Hours automatically propagates context across:
+### `ObservabilityOptions`
 
-- HTTP requests (via W3C Trace Context headers)
-- RabbitMQ messages (via baggage)
-- Pipeline operations
-- CQRS handlers
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `ServiceName` | `string?` | `null` | Resource service name. |
+| `ServiceVersion` | `string?` | `null` | Resource service version. |
+| `Environment` | `string?` | `null` | Deployment environment. |
+| `EnableLogging` | `bool` | `true` | Registers logging services. |
+| `EnableTracing` | `bool` | `true` | Registers tracing services. |
+| `EnableMetrics` | `bool` | `true` | Registers metric classes. |
+| `Logging` | `ObservabilityLoggingOptions` | new instance | Nested logging switches. |
+| `Tracing` | `ObservabilityTracingOptions` | new instance | Nested tracing switches. |
+| `Metrics` | `ObservabilityMetricsOptions` | new instance | Nested module metric switches. |
+| `ResourceAttributes` | `Dictionary<string,object>` | empty | Reserved unified resource attributes. |
 
-### Correlation ID Propagation
+The overload accepting `IConfiguration` binds `Mvp24Hours:Observability`.
 
-```csharp
-// Extract from current context
-var correlationId = CorrelationIdPropagation.GetCorrelationId();
+## Sources and meters
 
-// Set in current context
-CorrelationIdPropagation.SetCorrelationId(correlationId);
+`Mvp24HoursActivitySources.AllSourceNames` and `Mvp24HoursMeters.AllMeterNames` cover Core, Pipe, CQRS, Data, RabbitMQ, WebAPI, Caching, CronJob and Infrastructure. Prefer the builder helper methods shown above over duplicating the list.
 
-// Use with ILogger scope
-using (logger.BeginTraceScope())
-{
-    logger.LogInformation("Operation completed");
-}
-```
+## Aspire
 
-## Documentation
+.NET Aspire service defaults normally configure OpenTelemetry and provide the OTLP destination. Register Mvp24Hours sources/meters in that pipeline; Aspire then displays the emitted telemetry. `AddMvp24HoursOpenTelemetry` stores exporter choices but does not replace the OpenTelemetry SDK or Aspire service defaults.
 
-| Topic | Description |
-|-------|-------------|
-| [Logging](logging.md) | Structured logging with ILogger |
-| [Tracing](tracing.md) | Distributed tracing with OpenTelemetry |
-| [Metrics](metrics.md) | Performance metrics |
-| [Exporters](exporters.md) | Configure OTLP, Console, Prometheus |
-| [Migration](migration.md) | Migrate from TelemetryHelper |
+See [.NET Aspire integration](../modernization/aspire.md).
 
-## Deprecation Notice
+## Deprecation
 
-> ⚠️ **DEPRECATED**: The legacy `TelemetryHelper` and `ITelemetryService` have been deprecated.
-> Please use `ILogger<T>` and OpenTelemetry instead.
-> See [Migration Guide](migration.md) for details.
-
-## Best Practices
-
-1. **Use ILogger<T>**: Inject `ILogger<T>` for all logging needs
-2. **Enable Correlation**: Use `BeginTraceScope()` for automatic correlation
-3. **Add Semantic Tags**: Use `SemanticTags` constants for consistent tagging
-4. **Configure Sampling**: Use sampling for high-volume production environments
-5. **Export to OTLP**: Use OTLP for maximum compatibility with backends
-
-## See Also
-
-- [OpenTelemetry .NET Documentation](https://opentelemetry.io/docs/instrumentation/net/)
-- [Microsoft.Extensions.Logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging)
-- [W3C Trace Context](https://www.w3.org/TR/trace-context/)
-
+`TelemetryHelper` and `ITelemetryService` are deprecated. Use `ILogger<T>`, `ActivitySource`, `Meter`, and the APIs above. Follow [Migration from legacy telemetry](migration.md).

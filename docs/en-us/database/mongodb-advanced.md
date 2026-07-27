@@ -1,716 +1,482 @@
-# MongoDB Advanced Features
+# MongoDB Advanced
 
-> The Mvp24Hours.Infrastructure.Data.MongoDb module provides advanced features for enterprise applications including interceptors, bulk operations, multi-tenancy, resilience patterns, observability, and MongoDB-specific features like GridFS, Change Streams, and Geospatial queries.
+Install `Mvp24Hours.Infrastructure.Data.MongoDb`. The package references the MongoDB driver; applications normally install only the Mvp24Hours package.
 
-## Installation
-
-```bash
-Install-Package MongoDB.Driver -Version 2.23.1
-Install-Package Mvp24Hours.Infrastructure.Data.MongoDb -Version 9.1.x
-```
-
-## Table of Contents
-
-- [Interceptors](#interceptors)
-- [Bulk Operations](#bulk-operations)
-- [Multi-Tenancy](#multi-tenancy)
-- [Specification Pattern](#specification-pattern)
-- [Resilience](#resilience)
-- [Health Checks](#health-checks)
-- [Observability](#observability)
-- [Advanced MongoDB Features](#advanced-mongodb-features)
-- [Testing](#testing)
-
----
-
-## Interceptors
-
-MongoDB interceptors allow automatic modification of documents during CRUD operations.
-
-### Setup with Interceptors
-
-```csharp
-services.AddMvp24HoursDbContext(options =>
-{
-    options.DatabaseName = "MyDatabase";
-    options.ConnectionString = "mongodb://localhost:27017";
-})
-.AddMvp24HoursRepositoryAsyncWithInterceptors()
-.AddAllMongoDbInterceptors(options =>
-{
-    options.EnableAuditInterceptor = true;
-    options.EnableSoftDelete = true;
-    options.EnableCommandLogging = true;
-});
-```
-
-### Audit Interceptor
-
-Automatically populates audit fields on entities implementing `IAuditableEntity`.
-
-```csharp
-// Register audit interceptor
-services.AddMvp24HoursRepositoryAsyncWithInterceptors()
-        .AddMongoDbAuditInterceptor();
-
-// Your entity
-public class Product : IAuditableEntity
-{
-    [BsonId]
-    public ObjectId Id { get; set; }
-    public string Name { get; set; }
-    
-    // Automatically populated
-    public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; }
-    public DateTime? ModifiedAt { get; set; }
-    public string ModifiedBy { get; set; }
-}
-```
-
-### Soft Delete Interceptor
-
-Converts physical deletes to soft deletes.
-
-```csharp
-// Register soft delete interceptor
-services.AddMvp24HoursRepositoryAsyncWithInterceptors()
-        .AddMongoDbSoftDeleteInterceptor();
-
-// Your entity
-public class Customer : ISoftDeletable
-{
-    [BsonId]
-    public ObjectId Id { get; set; }
-    public string Name { get; set; }
-    
-    // Populated on delete
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
-    public string DeletedBy { get; set; }
-}
-```
-
-### Tenant Interceptor
-
-Automatically manages TenantId for multi-tenant applications.
-
-```csharp
-services.AddMvp24HoursRepositoryAsyncWithInterceptors()
-        .AddMongoDbTenantInterceptor();
-```
-
-### Command Logger
-
-Logs all MongoDB commands for debugging.
-
-```csharp
-services.AddMvp24HoursRepositoryAsyncWithInterceptors()
-        .AddMongoDbCommandLogger(options =>
-        {
-            options.LogLevel = LogLevel.Debug;
-            options.IncludeDocuments = true;  // Only in development!
-        });
-```
-
----
-
-## Bulk Operations
-
-High-performance bulk operations for large datasets.
-
-### Setup
-
-```csharp
-services.AddMvp24HoursDbContext(options =>
-{
-    options.DatabaseName = "MyDatabase";
-    options.ConnectionString = connectionString;
-})
-.AddMvp24HoursBulkOperationsRepositoryAsync();
-```
-
-### Bulk Insert
-
-```csharp
-public class ImportService
-{
-    private readonly IBulkOperationsRepositoryAsync<Customer> _repository;
-
-    public async Task ImportCustomers(IList<Customer> customers)
-    {
-        var result = await _repository.BulkInsertAsync(customers, new MongoDbBulkOperationOptions
-        {
-            BatchSize = 5000,
-            IsOrdered = false,  // Unordered for better performance
-            ProgressCallback = (processed, total) => 
-                Console.WriteLine($"Progress: {processed}/{total}")
-        });
-        
-        Console.WriteLine($"Inserted {result.InsertedCount} documents in {result.ElapsedTime}");
-    }
-}
-```
-
-### Bulk Update
-
-```csharp
-var result = await _repository.BulkUpdateAsync(customersToUpdate, new MongoDbBulkOperationOptions
-{
-    BatchSize = 1000,
-    BypassDocumentValidation = false
-});
-```
-
-### Bulk Delete
-
-```csharp
-var result = await _repository.BulkDeleteAsync(customersToDelete);
-```
-
----
-
-## Multi-Tenancy
-
-Automatic tenant isolation for SaaS applications.
-
-### Setup
-
-```csharp
-services.AddMvp24HoursDbContext(options =>
-{
-    options.DatabaseName = "MyDatabase";
-    options.ConnectionString = connectionString;
-})
-.AddMvp24HoursRepositoryAsyncWithInterceptors()
-.AddMongoDbMultiTenancy<HttpHeaderTenantProvider>(options =>
-{
-    options.RequireTenant = true;
-    options.TenantIdField = "TenantId";
-});
-```
-
-### Custom Tenant Provider
-
-```csharp
-public class HttpHeaderTenantProvider : ITenantProvider
-{
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public string TenantId => 
-        _httpContextAccessor.HttpContext?.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-
-    public bool HasTenant => !string.IsNullOrEmpty(TenantId);
-}
-```
-
----
-
-## Specification Pattern
-
-Expressive, reusable query specifications.
-
-### Create a Specification
-
-```csharp
-public class ActiveCustomerSpecification : MongoDbSpecification<Customer>
-{
-    public ActiveCustomerSpecification()
-    {
-        // Filter
-        AddCriteria(c => c.IsActive);
-        
-        // Sorting
-        AddOrderBy(c => c.Name);
-        
-        // Pagination
-        ApplyPaging(skip: 0, take: 50);
-    }
-}
-```
-
-### Use with Repository
-
-```csharp
-public class CustomerQueryHandler
-{
-    private readonly IReadOnlyRepositoryAsync<Customer> _repository;
-
-    public async Task<IList<Customer>> GetActiveCustomers()
-    {
-        var spec = new ActiveCustomerSpecification();
-        return await _repository.GetBySpecificationAsync(spec);
-    }
-}
-```
-
----
-
-## Resilience
-
-Connection resiliency and circuit breaker patterns.
-
-### Native Resilience (.NET 9+)
-
-For .NET 9+, use `Microsoft.Extensions.Resilience` for native resilience patterns:
-
-```csharp
-// Program.cs
-builder.Services.AddNativeMongoDbResilience(options =>
-{
-    options.MaxRetryAttempts = 3;
-    options.BaseDelay = TimeSpan.FromMilliseconds(100);
-    options.UseExponentialBackoff = true;
-    options.MaxDelay = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddMvp24HoursDbContext(options =>
-{
-    options.DatabaseName = "MyDatabase";
-    options.ConnectionString = connectionString;
-});
-```
-
-> 📚 See [Native Resilience](../modernization/generic-resilience.md) for complete guide.
-
-### Configure Resilience Options (Legacy)
+## Context and repository
 
 ```csharp
 builder.Services.AddMvp24HoursDbContext(options =>
 {
-    options.DatabaseName = "MyDatabase";
-    options.ConnectionString = connectionString;
-})
-.AddMvp24HoursMongoDbResiliency(options =>
-{
-    // Retry policy
-    options.EnableRetry = true;
-    options.MaxRetryAttempts = 5;
-    options.RetryDelayMs = 200;
-    options.MaxRetryDelayMs = 5000;
-    
-    // Circuit breaker
-    options.EnableCircuitBreaker = true;
-    options.CircuitBreakerFailureThreshold = 5;
-    options.CircuitBreakerDurationSeconds = 30;
-    options.CircuitBreakerSamplingDurationSeconds = 60;
-    options.CircuitBreakerMinimumThroughput = 10;
-    
-    // Timeouts
-    options.ConnectionTimeoutMs = 30000;
-    options.SocketTimeoutMs = 30000;
-    options.ServerSelectionTimeoutMs = 30000;
+    options.DatabaseName = "customers";
+    options.ConnectionString = builder.Configuration.GetConnectionString("MongoDb")
+        ?? throw new InvalidOperationException("ConnectionStrings:MongoDb is required.");
+    options.RetryReads = true;
+    options.RetryWrites = true;
 });
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
+    options.MaxQtyByQueryPage = 100);
 ```
 
-### Circuit Breaker
+### MongoDbOptions
 
-The circuit breaker prevents cascade failures by temporarily blocking requests when the database is experiencing issues.
+| Name | Type | Default | Description |
+|---|---|---|---|
+| DatabaseName | string | `""` | Database name. |
+| ConnectionString | string | `""` | MongoDB connection string. |
+| EnableTls | bool | `false` | Enables TLS. |
+| EnableTransaction | bool | `false` | Enables transaction behavior; requires a replica set or sharded cluster. |
+| Authentication | MongoDbAuthenticationOptions? | `null` | Explicit authentication and TLS settings. |
+| EnableMultiTenancy | bool | `false` | Enables tenant behavior. |
+| TenantValidateOnUpdate | bool | `true` | Validates update ownership. |
+| TenantValidateOnDelete | bool | `true` | Validates delete ownership. |
+| TenantThrowOnMissing | bool | `true` | Throws when tenant context is absent. |
+| EncryptionKey | string? | `null` | Base64 256-bit field-encryption key. |
+| ReadPreference | string? | `null` | Driver read preference. |
+| WriteConcern | string? | `null` | Driver write concern. |
+| ReadConcern | string? | `null` | Driver read concern. |
+| ConnectionTimeoutSeconds | int? | `null` | Connection timeout override. |
+| SocketTimeoutSeconds | int? | `null` | Socket timeout override. |
+| MaxConnectionPoolSize | int? | `null` | Maximum pool size override. |
+| MinConnectionPoolSize | int? | `null` | Minimum pool size override. |
+| EnableCommandLogging | bool | `false` | Enables command logging. |
+| RetryReads | bool | `true` | Enables driver retryable reads. |
+| RetryWrites | bool | `true` | Enables driver retryable writes. |
 
-```csharp
-// Circuit breaker states:
-// - Closed: Normal operation, requests pass through
-// - Open: Too many failures, requests fail immediately
-// - HalfOpen: Testing if service recovered
+### MongoDbRepositoryOptions
 
-// Manual circuit breaker control
-var circuitBreaker = serviceProvider.GetRequiredService<IMongoDbCircuitBreaker>();
+| Name | Type | Default | Description |
+|---|---|---|---|
+| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` | Maximum page size. |
 
-// Check state
-if (circuitBreaker.AllowRequest())
-{
-    try
-    {
-        // Execute operation
-        circuitBreaker.RecordSuccess();
-    }
-    catch (Exception ex)
-    {
-        circuitBreaker.RecordFailure(ex);
-        throw;
-    }
-}
-else
-{
-    throw new CircuitBreakerOpenException("Database circuit breaker is open");
-}
-
-// Manual trip and reset
-circuitBreaker.Trip();     // Force open
-circuitBreaker.ResetState();  // Reset to closed
-
-// Get statistics
-var stats = new
-{
-    State = circuitBreaker.State,
-    SuccessCount = circuitBreaker.TotalSuccessCount,
-    FailureCount = circuitBreaker.TotalFailureCount,
-    RejectedCount = circuitBreaker.TotalRejectedCount,
-    FailureRate = circuitBreaker.CurrentFailureRate,
-    TripCount = circuitBreaker.CircuitTripCount,
-    RemainingDuration = circuitBreaker.GetRemainingOpenDuration()
-};
-```
-
-### Retry Policy
+## Interceptors and multi-tenancy
 
 ```csharp
-// Configure retry policy
-services.AddMvp24HoursMongoDbRetryPolicy(options =>
-{
-    options.MaxRetryAttempts = 5;
-    options.UseExponentialBackoff = true;
-    options.RetryDelayMs = 100;
-    options.MaxRetryDelayMs = 5000;
-    
-    // Only retry specific exceptions
-    options.RetryableExceptions.Add(typeof(MongoConnectionException));
-    options.RetryableExceptions.Add(typeof(MongoNotPrimaryException));
-});
-```
-
----
-
-## Health Checks
-
-Database health monitoring for Kubernetes and load balancers.
-
-### Setup
-
-```csharp
-services.AddHealthChecks()
-    // Basic MongoDB health check
-    .AddMvp24HoursMongoDbCheck(connectionString, "mongodb", options =>
+builder.Services
+    .AddMvp24HoursRepositoryAsyncWithInterceptors()
+    .AddAllMongoDbInterceptors(options =>
     {
-        options.HealthQuery = "{ ping: 1 }";
-        options.DegradedThresholdMs = 100;
-        options.FailureThresholdMs = 500;
-    })
-    
-    // Replica set health check
-    .AddMvp24HoursMongoDbReplicaSetCheck(connectionString, "mongodb-replicaset", options =>
-    {
-        options.CheckReplicationLag = true;
-        options.MaxReplicationLagSeconds = 10;
+        options.EnableAuditInterceptor = true;
+        options.EnableSoftDelete = true;
+        options.EnableTenantInterceptor = true;
+        options.TenantValidateOnUpdate = true;
+        options.TenantValidateOnDelete = true;
     });
 ```
 
----
+Register an `ITenantProvider` implementation or use `AddMongoDbAsyncLocalTenantProvider()`. Enabling tenant behavior does not select a tenant by itself.
+
+### MongoDbInterceptorOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| EnableAuditInterceptor | bool | `true` | Populates audit fields. |
+| EnableSoftDelete | bool | `true` | Converts supported deletes to soft deletes. |
+| EnableCommandLogger | bool | `false` | Logs MongoDB commands. |
+| EnableAuditTrail | bool | `false` | Records audit trail entries. |
+| EnableTenantInterceptor | bool | `false` | Enables tenant isolation. |
+| LogSlowOperationsOnly | bool | `false` | Limits logs to slow operations. |
+| SlowOperationThreshold | TimeSpan | `500 ms` | Slow-operation threshold. |
+| DefaultUser | string | `"System"` | Audit fallback user. |
+| LogEntityDataInAuditTrail | bool | `false` | Includes entity data in audit records. |
+| TenantValidateOnUpdate | bool | `true` | Validates update ownership. |
+| TenantValidateOnDelete | bool | `true` | Validates delete ownership. |
+| TenantThrowOnMissing | bool | `true` | Throws when no tenant is set. |
+
+## Authentication
+
+```csharp
+builder.Services.AddMvp24HoursDbContext(options =>
+{
+    options.ConnectionString = "mongodb://cluster.example:27017";
+    options.DatabaseName = "orders";
+    options.EnableTls = true;
+    options.Authentication = new MongoDbAuthenticationOptions
+    {
+        Mechanism = MongoDbAuthMechanism.ScramSha256,
+        Username = mongoUser,
+        Password = mongoPassword,
+        AuthDatabase = "admin"
+    };
+});
+```
+
+Supported mechanisms are `Default`, `ScramSha1`, `ScramSha256`, `X509`, `AwsIam`, `Ldap`, and `Gssapi`. With `AwsIam` and no explicit key, the driver relies on environment variables or instance metadata.
+
+### MongoDbAuthenticationOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| Mechanism | MongoDbAuthMechanism | `Default` | Authentication mechanism. |
+| Username | string? | `null` | SCRAM/LDAP/GSSAPI username. |
+| Password | string? | `null` | User password. |
+| AuthDatabase | string | `"admin"` | Authentication database. |
+| CertificatePath | string? | `null` | Client PFX/PKCS#12 path. |
+| CertificatePassword | string? | `null` | Client certificate password. |
+| Certificate | X509Certificate2? | `null` | Client certificate instance. |
+| CaCertificatePath | string? | `null` | Custom CA certificate path. |
+| ValidateServerCertificate | bool | `true` | Validates server certificates. |
+| AwsAccessKeyId | string? | `null` | Explicit AWS access key. |
+| AwsSecretAccessKey | string? | `null` | Explicit AWS secret key. |
+| AwsSessionToken | string? | `null` | Temporary AWS session token. |
+| LdapBindDn | string? | `null` | LDAP bind DN. |
+| KerberosServiceName | string? | `null` | GSSAPI service name. |
+| AllowedTlsProtocols | SslProtocols | `Tls12 \| Tls13` | Allowed TLS versions. |
+
+## Resiliency
+
+```csharp
+builder.Services.AddMongoDbResiliency(options =>
+{
+    options.EnableAutoReconnect = true;
+    options.RetryCount = 3;
+    options.EnableCircuitBreaker = true;
+    options.DefaultOperationTimeoutSeconds = 30;
+});
+```
+
+`AddMongoDbResiliencyForProduction()` and `AddMongoDbResiliencyForDevelopment()` apply the `CreateProduction()` and `CreateDevelopment()` presets. This layer complements the driver's `RetryReads` and `RetryWrites`.
+
+### MongoDbResiliencyOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| EnableAutoReconnect | bool | `true` | Enables managed reconnect. |
+| MaxReconnectAttempts | int | `5` | Reconnect attempts. |
+| ReconnectDelayMilliseconds | int | `1000` | Initial reconnect delay. |
+| MaxReconnectDelayMilliseconds | int | `30000` | Reconnect delay cap. |
+| UseExponentialBackoffForReconnect | bool | `true` | Uses reconnect backoff. |
+| ReconnectJitterFactor | double | `0.2` | Reconnect jitter. |
+| EnableRetry | bool | `true` | Enables transient retry. |
+| RetryCount | int | `3` | Retry count. |
+| RetryBaseDelayMilliseconds | int | `100` | Initial retry delay. |
+| RetryMaxDelayMilliseconds | int | `5000` | Retry delay cap. |
+| UseExponentialBackoff | bool | `true` | Uses retry backoff. |
+| RetryJitterFactor | double | `0.2` | Retry jitter. |
+| AdditionalRetryableExceptions | List<Type> | empty | Extra retryable exceptions. |
+| NonRetryableExceptions | List<Type> | empty | Fail-fast exceptions. |
+| EnableCircuitBreaker | bool | `true` | Enables circuit breaker. |
+| CircuitBreakerFailureThreshold | int | `5` | Failure count threshold. |
+| CircuitBreakerSamplingDurationSeconds | int | `60` | Sampling window. |
+| CircuitBreakerDurationSeconds | int | `30` | Open duration. |
+| CircuitBreakerMinimumThroughput | int | `10` | Minimum sampled operations. |
+| CircuitBreakerFailureRateThreshold | double? | `null` | Optional failure-rate threshold. |
+| TrackCircuitBreakerMetrics | bool | `true` | Captures breaker metrics. |
+| EnableOperationTimeout | bool | `true` | Enables operation timeouts. |
+| DefaultOperationTimeoutSeconds | int | `30` | Default timeout. |
+| ReadOperationTimeoutSeconds | int? | `null` | Read timeout override. |
+| WriteOperationTimeoutSeconds | int? | `null` | Write timeout override. |
+| BulkOperationTimeoutSeconds | int | `120` | Bulk timeout. |
+| EnableAutomaticFailover | bool | `true` | Enables replica-set failover. |
+| ServerSelectionTimeoutSeconds | int | `30` | Server selection timeout. |
+| HeartbeatFrequencySeconds | int | `10` | Heartbeat interval. |
+| EnableServerMonitoring | bool | `true` | Enables topology monitoring. |
+| AllowReadsWithoutPrimary | bool | `true` | Allows secondary reads during election. |
+| LogRetryAttempts | bool | `true` | Logs retries. |
+| LogCircuitBreakerStateChanges | bool | `true` | Logs breaker transitions. |
+| LogConnectionEvents | bool | `true` | Logs connection events. |
+| LogTimeoutEvents | bool | `true` | Logs timeouts. |
+
+## Bulk operations
+
+```csharp
+builder.Services.AddMvp24HoursBulkOperationsRepositoryAsync();
+
+var result = await repository.BulkInsertAsync(
+    customers,
+    MongoDbBulkOperationOptions.HighIntegrity,
+    cancellationToken);
+```
+
+Presets are `Default`, `HighThroughput`, and `HighIntegrity`.
+
+### MongoDbBulkOperationOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| BatchSize | int | `1000` | Documents per batch. |
+| UseTransaction | bool | `true` | Wraps the operation in a transaction. |
+| ProgressCallback | BulkProgressCallback? | `null` | Progress callback. |
+| TimeoutSeconds | int | `300` | Operation timeout. |
+| IsOrdered | bool | `true` | Stops after the first failed write. |
+| BypassDocumentValidation | bool | `false` | Bypasses server validation. |
+| WriteConcern | string | `""` | Optional bulk write concern. |
+| MaxRetryAttempts | int | `3` | Transient retries. |
+| RetryDelayMilliseconds | int | `100` | Retry delay. |
+
+## Advanced service registration
+
+Register all core advanced services:
+
+```csharp
+builder.Services.AddMvpMongoDbAdvanced();
+builder.Services.AddMvpMongoDbChangeStream<Customer>("customers");
+builder.Services.AddMvpMongoDbTextSearch<Customer>("customers");
+builder.Services.AddMvpMongoDbTimeSeries<SensorReading>(
+    "sensor_readings", "Timestamp", "Metadata");
+builder.Services.AddMvpMongoDbCappedCollection<LogEntry>("logs");
+builder.Services.AddMvpMongoDbGeospatial<Store>("stores");
+```
+
+`AddMvpMongoDbAdvanced()` registers transactions, GridFS, schema validation, and sharding. Feature-specific services accept the option objects below when creating collections, indexes, or running operations; registration itself does not create server resources.
+
+### MongoDbTextSearchOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| Language | string? | `null` | Text-search language. |
+| CaseSensitive | bool | `false` | Case-sensitive search. |
+| DiacriticSensitive | bool | `false` | Diacritic-sensitive search. |
+| IncludeScore | bool | `true` | Includes text score. |
+| MinScore | double? | `null` | Minimum score. |
+| Limit | int? | `null` | Result limit. |
+| Skip | int? | `null` | Result offset. |
+| SortByScore | bool | `true` | Sorts by score descending. |
+
+### TimeSeriesOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| TimeField | string | `""` | Required timestamp field. |
+| MetaField | string? | `null` | Metadata field. |
+| Granularity | string | `"seconds"` | `seconds`, `minutes`, or `hours`. |
+| BucketMaxSpanSeconds | int? | `null` | Maximum bucket span. |
+| BucketRoundingSeconds | int? | `null` | Bucket rounding interval. |
+| ExpireAfter | TimeSpan? | `null` | Automatic document expiration. |
+
+### CappedCollectionOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| MaxSizeBytes | long | `0` | Required maximum collection size. |
+| MaxDocuments | long? | `null` | Optional document limit. |
+| AutoIndexId | bool | `true` | Creates the `_id` index. |
+
+### MongoDbCollationOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| Locale | string | `"en"` | Collation locale. |
+| CaseLevel | bool? | `null` | Enables case-level comparison. |
+| CaseFirst | CollationCaseFirst | `Off` | Case ordering. |
+| Strength | CollationStrength | `Tertiary` | Comparison strength. |
+| NumericOrdering | bool | `false` | Sorts numeric strings numerically. |
+| Alternate | CollationAlternate | `NonIgnorable` | Punctuation handling. |
+| MaxVariable | CollationMaxVariable | `Punctuation` | Maximum ignored variable class. |
+| Normalization | bool? | `null` | Enables normalization. |
+| Backwards | bool? | `null` | Uses backwards diacritic ordering. |
+
+Collation presets include case-insensitive English, Portuguese, and Spanish, numeric ordering, combined case-insensitive numeric ordering, and simple binary comparison.
+
+### MongoDbShardingOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| ShardKeyFields | List<ShardKeyField> | empty | Ordered shard-key fields. |
+| UseHashedShardKey | bool | `false` | Uses a hashed key. |
+| UniqueShardKey | bool | `false` | Requires key uniqueness. |
+| NumInitialChunks | int? | `null` | Initial pre-split chunk count. |
+
+`ShardKeyField` has `FieldName` (`string`, `""`) and `Order` (`BsonValue`, `1`); use `Ascending(...)`, `Descending(...)`, or `Hashed(...)`.
+
+### MongoDbSchemaValidationOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| ValidationLevel | SchemaValidationLevel | `Strict` | `Off`, `Strict`, or `Moderate`. |
+| ValidationAction | SchemaValidationAction | `Error` | Rejects or warns. |
+| JsonSchema | BsonDocument? | `null` | MongoDB JSON Schema document. |
+
+## Transactions and concerns
+
+```csharp
+builder.Services.AddMvpMongoDbTransactions(options =>
+{
+    options.DefaultReadConcern = ReadConcern.Snapshot;
+    options.DefaultWriteConcern = WriteConcern.WMajority;
+    options.MaxTransactionRetries = 3;
+});
+```
+
+### MongoDbTransactionOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| DefaultReadConcern | ReadConcern | `Snapshot` | Transaction read concern. |
+| DefaultWriteConcern | WriteConcern | `WMajority` | Transaction write concern. |
+| DefaultReadPreference | ReadPreference | `Primary` | Transaction read preference. |
+| MaxCommitTime | TimeSpan? | `null` | Commit time limit. |
+| MaxTransactionRetries | int | `3` | Transaction retries. |
+| MaxCommitRetries | int | `3` | Unknown-commit retries. |
+| RetryDelayMs | int | `100` | Retry delay. |
+| AutoRetryReads | bool | `true` | Retries transaction reads. |
+| AutoRetryWrites | bool | `true` | Retries transaction writes. |
+
+### MongoDbConcernOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| ReadConcernLevel | ReadConcernLevel? | `null` | Read visibility. |
+| WriteConcernMode | WriteConcernMode? | `null` | Write acknowledgment preset. |
+| W | int? | `null` | Required acknowledgments; `-1` means majority. |
+| WTimeout | TimeSpan? | `null` | Write acknowledgment timeout. |
+| Journal | bool? | `null` | Requires journal acknowledgment. |
+| ReadPreferenceMode | ReadPreferenceMode? | `null` | Node-selection preference. |
+| MaxStaleness | TimeSpan? | `null` | Maximum secondary staleness. |
+
+Concern presets are `MaxDurability`, `MaxConsistency`, `MaxPerformance`, `Balanced`, `FireAndForget`, and `Analytics`.
+
+## Connection pool
+
+```csharp
+builder.Services.ConfigureMongoDbConnectionPool(options =>
+{
+    options.MinPoolSize = 10;
+    options.MaxPoolSize = 200;
+    options.WaitQueueTimeoutSeconds = 30;
+});
+```
+
+### MongoDbConnectionPoolOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| MinPoolSize | int | `0` | Minimum connections. |
+| MaxPoolSize | int | `100` | Maximum connections. |
+| WaitQueueTimeoutSeconds | int | `120` | Wait for a pooled connection. |
+| MaxConnectionIdleTimeSeconds | int | `600` | Maximum idle time. |
+| MaxConnectionLifetimeSeconds | int | `1800` | Maximum connection lifetime. |
+| ConnectTimeoutSeconds | int | `30` | Socket connection timeout. |
+| SocketTimeoutSeconds | int | `0` | Response timeout; `0` leaves driver default. |
+| ServerSelectionTimeoutSeconds | int | `30` | Server selection timeout. |
+| HeartbeatFrequencySeconds | int | `10` | Heartbeat interval. |
+| IPv6 | bool | `false` | Enables IPv6. |
+| DirectConnection | bool | `false` | Connects directly to one server. |
+| Compressors | string[]? | `null` | Requested compressor names. |
+| LocalThresholdMilliseconds | int | `15` | Latency window for server selection. |
 
 ## Observability
 
-### OpenTelemetry Integration
-
 ```csharp
-services.AddMvp24HoursMongoDbObservability(options =>
+builder.Services.AddMongoDbObservability(options =>
 {
-    options.EnableTracing = true;
-    options.EnableMetrics = true;
-    options.IncludeCommandText = false;  // Set true only in development
-    options.ActivitySourceName = "Mvp24Hours.MongoDB";
+    options.EnableSlowQueryLogging = true;
+    options.EnableOpenTelemetry = true;
+    options.EnableConnectionPoolMetrics = true;
 });
 ```
 
-### Slow Query Logger
+### MongoDbObservabilityOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| EnableSlowQueryLogging | bool | `true` | Logs slow queries. |
+| SlowQueryThreshold | TimeSpan | `500 ms` | Slow-query threshold. |
+| LogSlowQueryFilter | bool | `false` | Logs filters; may expose data. |
+| IncludeExplainForSlowQueries | bool | `false` | Adds explain output. |
+| MaxSlowQueriesPerMinute | int | `100` | Rate limit. |
+| EnableOpenTelemetry | bool | `false` | Enables tracing. |
+| ActivitySourceName | string | `"Mvp24Hours.MongoDb"` | Activity source. |
+| RecordExceptions | bool | `true` | Records trace exceptions. |
+| IncludeStatementInTrace | bool | `false` | Includes statements; may expose data. |
+| AdditionalTraceTags | string[] | empty | Additional trace tags. |
+| EnableConnectionPoolMetrics | bool | `true` | Captures pool metrics. |
+| ConnectionPoolMetricsInterval | TimeSpan | `30 seconds` | Collection interval. |
+| EnableConnectionPoolAlerts | bool | `true` | Enables utilization alerts. |
+| ConnectionPoolAlertThreshold | double | `0.8` | Alert utilization. |
+| EnableStructuredLogging | bool | Debug: `true`; Release: `false` | Enables structured logs. |
+| LogCommandParameters | bool | `false` | Logs parameters; may expose data. |
+| LogResultCounts | bool | `true` | Logs result counts. |
+| MaxLogMessageLength | int | `4096` | Log truncation length. |
+| SensitiveFields | string[] | built-in list | Masked field names. |
+| EnableDurationTracking | bool | `true` | Tracks durations. |
+| TrackIndividualOperations | bool | `true` | Tracks each operation. |
+| CollectDurationPercentiles | bool | `true` | Captures p50/p95/p99. |
+| DurationAggregationWindow | TimeSpan | `1 minute` | Aggregation window. |
+| DurationHistogramBuckets | int | `20` | Histogram buckets. |
+| EnableAll | bool (set-only) | not applicable | Toggles logging, pool metrics, and duration features. |
+| ServiceName | string? | `null` | Telemetry service name. |
+| Environment | string? | `null` | Telemetry environment. |
+
+## Health checks
 
 ```csharp
-services.AddMvp24HoursMongoDbSlowQueryLogger(options =>
-{
-    options.ThresholdMs = 500;  // Log queries slower than 500ms
-    options.IncludeStackTrace = true;
-    options.LogLevel = LogLevel.Warning;
-});
-```
-
-### Metrics
-
-```csharp
-// Connection pool metrics
-services.AddMvp24HoursMongoDbConnectionPoolMetrics();
-
-// Access metrics
-var metrics = serviceProvider.GetRequiredService<IMongoDbMetrics>();
-var poolStats = metrics.GetConnectionPoolStats();
-
-Console.WriteLine($"Active connections: {poolStats.ActiveConnections}");
-Console.WriteLine($"Available connections: {poolStats.AvailableConnections}");
-Console.WriteLine($"Waiting requests: {poolStats.WaitingRequests}");
-```
-
----
-
-## Advanced MongoDB Features
-
-### GridFS (Large File Storage)
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbGridFS(options =>
+builder.Services.AddHealthChecks()
+    .AddMongoDbHealthCheck(
+        name: "mongodb",
+        configureOptions: options =>
         {
-            options.BucketName = "files";
-            options.ChunkSizeBytes = 261120;  // 255KB
-        });
-
-// Usage
-var gridFsService = serviceProvider.GetRequiredService<IMongoDbGridFSService>();
-
-// Upload file
-var fileId = await gridFsService.UploadAsync(fileStream, "document.pdf", new GridFSMetadata
-{
-    ContentType = "application/pdf",
-    CustomData = new { UserId = "user123" }
-});
-
-// Download file
-using var downloadStream = await gridFsService.DownloadAsync(fileId);
-
-// Delete file
-await gridFsService.DeleteAsync(fileId);
+            options.VerifyDatabaseAccess = true;
+            options.IncludeServerStatus = false;
+        },
+        tags: ["database", "ready"]);
 ```
 
-### Change Streams (Real-time Events)
+### MongoDbHealthCheckOptions
 
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbChangeStreams<Customer>();
+| Name | Type | Default | Description |
+|---|---|---|---|
+| VerifyDatabaseAccess | bool | `false` | Executes a database-level probe. |
+| IncludeServerStatus | bool | `false` | Includes server status. |
+| ConnectionTimeoutSeconds | int | `5` | Connection timeout. |
+| ServerSelectionTimeoutSeconds | int | `5` | Server selection timeout. |
 
-// Usage
-var changeStreamService = serviceProvider.GetRequiredService<IMongoDbChangeStreamService<Customer>>();
+`AddMongoDbReplicaSetHealthCheck(...)` is available for replica topology and lag checks.
 
-// Watch for changes
-await foreach (var change in changeStreamService.WatchAsync())
-{
-    switch (change.OperationType)
-    {
-        case ChangeStreamOperationType.Insert:
-            Console.WriteLine($"New customer: {change.FullDocument.Name}");
-            break;
-        case ChangeStreamOperationType.Update:
-            Console.WriteLine($"Updated customer: {change.DocumentKey}");
-            break;
-        case ChangeStreamOperationType.Delete:
-            Console.WriteLine($"Deleted customer: {change.DocumentKey}");
-            break;
-    }
-}
-```
+### MongoDbReplicaSetHealthCheckOptions
 
-### Geospatial Queries
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbGeospatial();
-
-// Create geospatial index
-await indexService.CreateGeoIndex<Store>(s => s.Location);
-
-// Your entity with location
-public class Store
-{
-    [BsonId]
-    public ObjectId Id { get; set; }
-    public string Name { get; set; }
-    public GeoJsonPoint<GeoJson2DGeographicCoordinates> Location { get; set; }
-}
-
-// Find stores near a point
-var geoService = serviceProvider.GetRequiredService<IMongoDbGeospatialService>();
-var nearbyStores = await geoService.FindNearAsync<Store>(
-    longitude: -46.6333,
-    latitude: -23.5505,
-    maxDistanceMeters: 5000
-);
-
-// Find stores within polygon
-var storesInArea = await geoService.FindWithinPolygonAsync<Store>(polygonCoordinates);
-```
-
-### Text Search
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbTextSearch();
-
-// Create text index
-await indexService.CreateTextIndexAsync<Product>(
-    p => p.Name,
-    p => p.Description,
-    options: new TextIndexOptions
-    {
-        DefaultLanguage = "english",
-        Weights = new { Name = 10, Description = 5 }
-    }
-);
-
-// Search
-var textSearchService = serviceProvider.GetRequiredService<IMongoDbTextSearchService>();
-var results = await textSearchService.SearchAsync<Product>("smartphone premium");
-```
-
-### Time Series Collections
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbTimeSeries<SensorReading>(options =>
-        {
-            options.TimeField = "timestamp";
-            options.MetaField = "metadata";
-            options.Granularity = TimeSeriesGranularity.Seconds;
-            options.ExpireAfterSeconds = 86400 * 30;  // 30 days
-        });
-
-// Your time series document
-public class SensorReading
-{
-    public DateTime Timestamp { get; set; }
-    public SensorMetadata Metadata { get; set; }
-    public double Value { get; set; }
-}
-```
-
-### Transactions
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbTransactions();
-
-// Usage
-var transactionService = serviceProvider.GetRequiredService<IMongoDbTransactionService>();
-
-await transactionService.ExecuteAsync(async session =>
-{
-    await _orderRepository.AddAsync(order, session);
-    await _inventoryRepository.UpdateAsync(inventory, session);
-    await _paymentRepository.AddAsync(payment, session);
-});
-```
-
-### Capped Collections
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbCappedCollection<LogEntry>(options =>
-        {
-            options.MaxSize = 1024 * 1024 * 100;  // 100MB
-            options.MaxDocuments = 100000;
-        });
-```
-
-### Schema Validation
-
-```csharp
-services.AddMvp24HoursMongoDbAdvanced()
-        .AddMongoDbSchemaValidation<Customer>(options =>
-        {
-            options.ValidationLevel = DocumentValidationLevel.Strict;
-            options.ValidationAction = DocumentValidationAction.Error;
-        });
-```
-
----
+| Name | Type | Default | Description |
+|---|---|---|---|
+| MinSecondaryNodes | int | `0` | Required secondary count. |
+| MaxReplicationLagSeconds | int | `0` | Maximum lag; `0` disables the limit. |
+| AllowUnhealthyMembers | bool | `true` | Tolerates unhealthy members. |
+| AllowStandaloneMode | bool | `false` | Accepts a non-replica deployment. |
+| IncludeMemberDetails | bool | `true` | Adds member details to health data. |
+| ConnectionTimeoutSeconds | int | `5` | Connection timeout. |
+| ServerSelectionTimeoutSeconds | int | `5` | Server selection timeout. |
 
 ## Testing
 
-### In-Memory Provider for Unit Tests
+The in-memory helpers still require a reachable MongoDB-compatible connection; they provide isolated database names and fakes, not an embedded server.
 
 ```csharp
-public class CustomerServiceTests
-{
-    private readonly IServiceProvider _serviceProvider;
-
-    public CustomerServiceTests()
-    {
-        var services = new ServiceCollection();
-        
-        // Use in-memory MongoDB provider
-        services.AddMvp24HoursMongoDbInMemory("TestDb");
-        services.AddMvp24HoursRepositoryAsync();
-        
-        _serviceProvider = services.BuildServiceProvider();
-    }
-
-    [Fact]
-    public async Task CreateCustomer_ShouldSucceed()
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<Customer>>();
-
-        var customer = new Customer { Name = "Test" };
-        await repository.AddAsync(customer);
-
-        var saved = await repository.GetByIdAsync(customer.Id);
-        Assert.NotNull(saved);
-    }
-}
+builder.Services.AddMvp24HoursMongoTestInfrastructure(
+    mongoContainer.GetConnectionString(),
+    options => options.EnableTransaction = false);
 ```
 
-### Repository Fake
+Use `AddMvp24HoursMongoFakeTestInfrastructure()` for repository-only unit tests, or `AddMvp24HoursMongoContextFactory(...)` for isolated integration contexts.
 
-```csharp
-public class CustomerServiceTests
-{
-    [Fact]
-    public async Task GetActiveCustomers_ShouldReturnOnlyActive()
-    {
-        // Arrange
-        var fakeRepository = new MongoDbRepositoryFakeAsync<Customer>();
-        fakeRepository.AddRange(new[]
-        {
-            new Customer { Id = ObjectId.GenerateNewId(), Name = "Active", IsActive = true },
-            new Customer { Id = ObjectId.GenerateNewId(), Name = "Inactive", IsActive = false }
-        });
+### MongoDbInMemoryOptions
 
-        var service = new CustomerService(fakeRepository);
+| Name | Type | Default | Description |
+|---|---|---|---|
+| DatabaseNamePrefix | string | `"InMemoryMongoTestDb"` | Generated database prefix. |
+| DatabaseName | string? | `null` | Fixed base name. |
+| UseUniqueDatabaseName | bool | `true` | Appends a GUID. |
+| ConnectionString | string? | `null` | Test server connection. |
+| EnableLogging | bool | `true` | Enables test logging. |
+| EnableTransaction | bool | `false` | Enables transactions when supported. |
+| EnableMultiTenancy | bool | `false` | Enables tenant behavior. |
+| TimeoutSeconds | int | `30` | Operation timeout. |
+| ConfigureOptions | Action<MongoDbOptions>? | `null` | Additional context configuration. |
 
-        // Act
-        var result = await service.GetActiveCustomersAsync();
+Presets are `ForUnitTesting()`, `ForIntegrationTesting()`, and `ForSharedDatabase(...)`.
 
-        // Assert
-        Assert.Single(result);
-    }
-}
-```
+For Testcontainers, pass the container connection string and one of the tested presets (`ForBasicTesting()`, `ForAuthenticatedTesting(...)`, or `ForReplicaSetTesting()`) to the static `MongoDbTestcontainersHelper.CreateContextFactory(...)` or `CreateOptions(...)` helper.
 
-### Testcontainers
+### MongoDbTestcontainersOptions
 
-```csharp
-public class IntegrationTests : IAsyncLifetime
-{
-    private MongoDbContainer _container;
-    private IServiceProvider _serviceProvider;
+| Name | Type | Default | Description |
+|---|---|---|---|
+| ImageTag | string | `"latest"` | MongoDB image tag. |
+| DatabaseName | string | `"testdb"` | Base test database name. |
+| UseUniqueDatabaseName | bool | `true` | Appends a GUID. |
+| Port | int? | `null` | Optional host port. |
+| Username | string? | `null` | Optional root username. |
+| Password | string? | `null` | Optional root password. |
+| EnableReplicaSet | bool | `false` | Enables replica-set setup. |
+| StartupTimeoutSeconds | int | `60` | Container startup timeout. |
+| AutoRemove | bool | `true` | Removes the container after use. |
+| ContainerNamePrefix | string | `"mvp24hours-mongodb-test"` | Container name prefix. |
 
-    public async Task InitializeAsync()
-    {
-        _container = new MongoDbBuilder()
-            .WithImage("mongo:6.0")
-            .Build();
-        
-        await _container.StartAsync();
-        
-        var services = new ServiceCollection();
-        services.AddMvp24HoursDbContext(options =>
-        {
-            options.ConnectionString = _container.GetConnectionString();
-            options.DatabaseName = "TestDb";
-        });
-        services.AddMvp24HoursRepositoryAsync();
-        
-        _serviceProvider = services.BuildServiceProvider();
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _container.DisposeAsync();
-    }
-}
-```
-
----
-
-## See Also
-
-- [Basic NoSQL Configuration](nosql.md)
-- [Repository Pattern](use-repository.md)
-- [Unit of Work](use-unitofwork.md)
-- [CQRS Module](../cqrs/home.md)
-
+See [NoSQL](nosql.md), [Repository](use-repository.md), and [Unit of Work](use-unitofwork.md).

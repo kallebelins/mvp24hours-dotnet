@@ -213,7 +213,7 @@ CqrsLoggerMessages.CommandCompleted(_logger, commandName, elapsed, true);
 
 ## Related Documentation
 
-- [.NET 9 Features](dotnet9-features.md)
+- [.NET 10 Modernization Overview](dotnet9-features.md)
 - [Migration Guide](migration-guide.md)
 - [Observability](../observability/home.md)
 

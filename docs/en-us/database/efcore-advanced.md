@@ -1,765 +1,477 @@
-# EF Core Advanced Features
+# EF Core Advanced
 
-> The Mvp24Hours.Infrastructure.Data.EFCore module provides advanced features for enterprise applications including interceptors, bulk operations, multi-tenancy, resilience patterns, and observability.
+Install `Mvp24Hours.Infrastructure.Data.EFCore`. The examples target .NET 10 and use public APIs exercised by `Mvp24Hours.Infrastructure.Data.EFCore.Test`.
 
-## Installation
-
-```bash
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
-```
-
-## Table of Contents
-
-- [Interceptors](#interceptors)
-- [Bulk Operations](#bulk-operations)
-- [Multi-Tenancy](#multi-tenancy)
-- [Specification Pattern](#specification-pattern)
-- [Resilience](#resilience)
-- [Streaming](#streaming)
-- [Health Checks](#health-checks)
-- [Performance Optimization](#performance-optimization)
-- [Testing](#testing)
-
----
-
-## Interceptors
-
-EF Core interceptors allow you to automatically modify entity behavior during SaveChanges operations.
-
-### Audit Interceptor
-
-Automatically populates audit fields (CreatedAt, CreatedBy, ModifiedAt, ModifiedBy) on entities implementing `IAuditableEntity`.
+## Complete registration
 
 ```csharp
-// Register in Program.cs
-builder.Services.AddDbContext<AppDbContext>((sp, options) =>
-{
-    var currentUserProvider = sp.GetService<ICurrentUserProvider>();
-    var clock = sp.GetService<IClock>(); // or TimeProvider for .NET 9+
-    
-    options.UseSqlServer(connectionString)
-           .AddInterceptors(new AuditSaveChangesInterceptor(currentUserProvider, clock));
-});
+string connectionString = builder.Configuration.GetConnectionString("DataContext")
+    ?? throw new InvalidOperationException("ConnectionStrings:DataContext is required.");
 
-// Your entity
-public class Product : IAuditableEntity
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    
-    // These are automatically populated
-    public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; }
-    public DateTime? ModifiedAt { get; set; }
-    public string ModifiedBy { get; set; }
-}
-```
-
-### Soft Delete Interceptor
-
-Converts physical deletes to soft deletes for entities implementing `ISoftDeletable`.
-
-```csharp
-// Register interceptor
-services.AddDbContext<AppDbContext>((sp, options) =>
-{
-    var currentUserProvider = sp.GetService<ICurrentUserProvider>();
-    var clock = sp.GetService<IClock>();
-    
-    options.UseSqlServer(connectionString)
-           .AddInterceptors(new SoftDeleteInterceptor(currentUserProvider, clock));
-});
-
-// Configure global query filter in DbContext
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    base.OnModelCreating(modelBuilder);
-    modelBuilder.ApplySoftDeleteGlobalFilter();
-}
-
-// Your entity
-public class Customer : ISoftDeletable
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    
-    // These are automatically populated on delete
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
-    public string DeletedBy { get; set; }
-}
-```
-
-### Slow Query Interceptor
-
-Logs queries that exceed a threshold time for performance monitoring.
-
-```csharp
-services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlServer(connectionString)
-           .AddInterceptors(new SlowQueryInterceptor(
-               thresholdMs: 500,  // Log queries slower than 500ms
-               logger: loggerFactory.CreateLogger<SlowQueryInterceptor>()));
-});
-```
-
-### Command Logging Interceptor
-
-Logs all SQL commands with parameters for debugging.
-
-```csharp
-services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlServer(connectionString)
-           .AddInterceptors(new CommandLoggingInterceptor(
-               loggerFactory.CreateLogger<CommandLoggingInterceptor>(),
-               enableSensitiveDataLogging: true)); // Only in development!
-});
-```
-
----
-
-## Bulk Operations
-
-High-performance bulk operations for large datasets.
-
-### Setup
-
-```csharp
-services.AddMvp24HoursBulkOperationsRepositoryAsync(options =>
-{
-    options.DefaultTrackingBehavior = QueryTrackingBehavior.NoTracking;
-});
-```
-
-### Bulk Insert
-
-```csharp
-public class ImportService
-{
-    private readonly IBulkOperationsRepositoryAsync<Customer> _repository;
-
-    public async Task ImportCustomers(IList<Customer> customers)
-    {
-        var result = await _repository.BulkInsertAsync(customers, new BulkOperationOptions
-        {
-            BatchSize = 5000,
-            UseTransaction = true,
-            ProgressCallback = (processed, total) => 
-                Console.WriteLine($"Progress: {processed}/{total}")
-        });
-        
-        Console.WriteLine($"Inserted {result.RowsAffected} rows in {result.ElapsedTime}");
-    }
-}
-```
-
-### Bulk Update
-
-```csharp
-// Update existing entities
-var result = await _repository.BulkUpdateAsync(customersToUpdate, new BulkOperationOptions
-{
-    BatchSize = 1000
-});
-```
-
-### Bulk Delete
-
-```csharp
-// Delete by entities
-var result = await _repository.BulkDeleteAsync(customersToDelete);
-```
-
-### ExecuteUpdate and ExecuteDelete (.NET 7+)
-
-```csharp
-// Update all matching records in a single query (no entity loading)
-var rowsUpdated = await _repository.ExecuteUpdateAsync(
-    c => c.IsActive == false,           // Filter
-    c => c.Status,                       // Property to update
-    "Inactive"                           // New value
-);
-
-// Delete all matching records in a single query
-var rowsDeleted = await _repository.ExecuteDeleteAsync(
-    c => c.CreatedAt < DateTime.UtcNow.AddYears(-5)  // Delete old records
-);
-```
-
-### BulkOperationOptions
-
-| Property | Description | Default |
-|----------|-------------|---------|
-| BatchSize | Number of records per batch | 1000 |
-| UseTransaction | Wrap in transaction | true |
-| TimeoutSeconds | Operation timeout | 300 |
-| ProgressCallback | Progress reporting callback | null |
-| BypassChangeTracking | Skip EF change tracking | true |
-
----
-
-## Multi-Tenancy
-
-Automatic tenant isolation for SaaS applications.
-
-### Setup
-
-```csharp
-// Register tenant provider
-services.AddMvp24HoursMultiTenancy<HttpHeaderTenantProvider>(options =>
-{
-    options.RequireTenant = true;
-    options.ValidateTenantOnModify = true;
-});
-
-// Register DbContext with tenant interceptor
-services.AddDbContext<AppDbContext>((sp, options) =>
-{
-    var tenantInterceptor = sp.GetRequiredService<TenantSaveChangesInterceptor>();
-    options.UseSqlServer(connectionString)
-           .AddInterceptors(tenantInterceptor);
-});
-```
-
-### Custom Tenant Provider
-
-```csharp
-public class HttpHeaderTenantProvider : ITenantProvider
-{
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public HttpHeaderTenantProvider(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
-    public string TenantId => 
-        _httpContextAccessor.HttpContext?.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-
-    public bool HasTenant => !string.IsNullOrEmpty(TenantId);
-}
-```
-
-### Configure Query Filters
-
-```csharp
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    // Apply tenant filter to all tenant entities
-    modelBuilder.ApplyTenantQueryFilters<IMultiTenant>(_tenantProvider);
-}
-
-// Your tenant entity
-public class Order : IMultiTenant
-{
-    public int Id { get; set; }
-    public string TenantId { get; set; }  // Automatically set on insert
-    public decimal Total { get; set; }
-}
-```
-
----
-
-## Specification Pattern
-
-Expressive, reusable query specifications for clean architecture.
-
-### Setup
-
-```csharp
-services.AddMvp24HoursReadOnlyRepositoryAsync(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddMvp24HoursDbContext<AppDbContext>();
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
 {
     options.MaxQtyByQueryPage = 100;
+    options.DefaultTrackingBehavior = QueryTrackingBehavior.NoTracking;
+    options.UseSplitQueries = true;
 });
 ```
 
-### Create a Specification
+### EFCoreRepositoryOptions
 
-```csharp
-public class ActiveCustomerSpecification : Specification<Customer>
-{
-    public ActiveCustomerSpecification()
-    {
-        // Filter
-        AddCriteria(c => c.IsActive);
-        
-        // Ordering
-        AddOrderBy(c => c.Name);
-        
-        // Include related data
-        AddInclude(c => c.Orders);
-    }
-}
-```
-
-### Use with Repository
-
-```csharp
-public class CustomerQueryHandler
-{
-    private readonly IReadOnlyRepositoryAsync<Customer> _repository;
-
-    public async Task<IList<Customer>> GetActiveCustomers()
-    {
-        var spec = new ActiveCustomerSpecification();
-        return await _repository.GetBySpecificationAsync(spec);
-    }
-
-    public async Task<int> CountActiveCustomers()
-    {
-        var spec = new ActiveCustomerSpecification();
-        return await _repository.CountBySpecificationAsync(spec);
-    }
-
-    public async Task<bool> HasActiveCustomers()
-    {
-        var spec = new ActiveCustomerSpecification();
-        return await _repository.AnyBySpecificationAsync(spec);
-    }
-}
-```
-
-### Composing Specifications
-
-```csharp
-var activeSpec = new ActiveCustomerSpecification();
-var premiumSpec = Specification<Customer>.Create(c => c.IsPremium);
-
-// Combine with AND
-var activePremiumSpec = activeSpec & premiumSpec;
-
-// Combine with OR
-var activeOrPremiumSpec = activeSpec | premiumSpec;
-
-// Negate
-var inactiveSpec = !activeSpec;
-```
-
-### Keyset (Cursor) Pagination
-
-```csharp
-// More efficient than OFFSET for large datasets
-var page = await _repository.GetByKeysetPaginationAsync(
-    clause: c => c.IsActive,
-    keySelector: c => c.Id,
-    lastKey: lastSeenId,      // null for first page
-    pageSize: 20
-);
-```
-
----
+| Name | Type | Default | Description |
+|---|---|---|---|
+| MaxQtyByQueryPage | int | `ContantsHelper.Data.MaxQtyByQueryPage` | Maximum page size. |
+| TransactionIsolationLevel | IsolationLevel? | `null` | Transaction isolation, or provider default. |
+| DefaultTrackingBehavior | QueryTrackingBehavior | `TrackAll` | Default EF query tracking. |
+| UseSplitQueries | bool | `false` | Uses split queries for includes. |
+| EnableQueryTags | bool | `false` | Adds repository query tags. |
+| QueryTagPrefix | string | `"Mvp24Hours"` | Prefix for generated tags. |
+| EnableSensitiveDataLogging | bool | `false` | Includes parameter values in logs. |
+| SlowQueryThresholdMs | int | `1000` | Slow-query threshold; `0` disables it. |
+| StreamingBufferSize | int | `100` | Default streaming buffer size. |
+| UseAutoMapperProjection | bool | `false` | Enables AutoMapper `ProjectTo` projections. |
 
 ## Resilience
 
-Connection resiliency and circuit breaker patterns.
-
-### Native Resilience (.NET 9+)
-
-For .NET 9+, use `Microsoft.Extensions.Resilience` for native resilience patterns:
+`AddMvp24HoursDbContextWithResilience<TDbContext>` configures the SQL Server execution strategy, command timeout, and optional pooling. Register circuit breaker and pool monitoring explicitly when needed.
 
 ```csharp
-// Program.cs
-builder.Services.AddNativeDbResilience(options =>
-{
-    options.MaxRetryAttempts = 3;
-    options.BaseDelay = TimeSpan.FromMilliseconds(100);
-    options.UseExponentialBackoff = true;
-    options.MaxDelay = TimeSpan.FromSeconds(30);
-});
+builder.Services.AddMvp24HoursDbContextWithResilience<AppDbContext>(
+    connectionString,
+    options =>
+    {
+        options.EnableRetryOnFailure = true;
+        options.MaxRetryCount = 6;
+        options.CommandTimeoutSeconds = 30;
+        options.EnableDbContextPooling = true;
+    });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlServer(connectionString);
-});
-```
-
-> 📚 See [Native Resilience](../modernization/generic-resilience.md) for complete guide.
-
-### Configure Resilience Options (Legacy)
-
-```csharp
-builder.Services.AddMvp24HoursDbContextWithResilience<AppDbContext>(options =>
-{
-    options.ConnectionString = connectionString;
-    options.EnableRetryOnFailure = true;
-    options.MaxRetryCount = 6;
-    options.MaxRetryDelaySeconds = 30;
-    options.CommandTimeoutSeconds = 60;
-    options.EnableDbContextPooling = true;
-    options.PoolSize = 1024;
-});
-```
-
-### Preset Configurations
-
-```csharp
-// Production settings
-var prodOptions = EFCoreResilienceOptions.Production();
-
-// Development settings (more verbose logging)
-var devOptions = EFCoreResilienceOptions.Development();
-
-// Azure SQL optimized
-var azureOptions = EFCoreResilienceOptions.AzureSql();
-
-// No resilience (for testing)
-var testOptions = EFCoreResilienceOptions.NoResilience();
-```
-
-### Circuit Breaker
-
-```csharp
-services.AddMvp24HoursDbContextCircuitBreaker(options =>
+builder.Services.AddMvp24HoursDbContextResilienceInfrastructure(options =>
 {
     options.EnableCircuitBreaker = true;
-    options.CircuitBreakerFailureThreshold = 5;   // Opens after 5 failures
-    options.CircuitBreakerDurationSeconds = 30;   // Stays open for 30s
+    options.CircuitBreakerFailureThreshold = 5;
 });
+```
 
-// Usage in code
-public class DataService
+### EFCoreResilienceOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| EnableRetryOnFailure | bool | `true` | Enables transient-failure retry. |
+| MaxRetryCount | int | `6` | Maximum retry count. |
+| MaxRetryDelaySeconds | int | `30` | Maximum delay between retries. |
+| AdditionalTransientErrorNumbers | ICollection<int> | empty | Additional provider error numbers. |
+| TransientExceptionTypes | ICollection<Type> | empty | Additional retryable exception types. |
+| CommandTimeoutSeconds | int | `30` | Default command timeout. |
+| ReadCommandTimeoutSeconds | int? | `null` | Read timeout override. |
+| WriteCommandTimeoutSeconds | int? | `null` | Write timeout override. |
+| BulkCommandTimeoutSeconds | int | `120` | Bulk timeout. |
+| MigrationCommandTimeoutSeconds | int | `300` | Migration timeout. |
+| EnableDbContextPooling | bool | `true` | Enables context pooling. |
+| PoolSize | int | `1024` | Maximum retained contexts. |
+| EnableCircuitBreaker | bool | `false` | Enables the database circuit breaker. |
+| CircuitBreakerFailureThreshold | int | `5` | Failures before opening. |
+| CircuitBreakerDurationSeconds | int | `30` | Open-state duration. |
+| LogRetryAttempts | bool | `true` | Logs retries. |
+| LogPoolStatistics | bool | `false` | Logs pool statistics. |
+| PoolStatisticsLogIntervalSeconds | int | `60` | Pool-log interval. |
+
+Presets are `Production()`, `Development()`, `AzureSql()`, and `NoResilience()`.
+
+## Migrations
+
+```csharp
+builder.Services.AddMvp24HoursMigrationService<AppDbContext>(options =>
 {
-    private readonly DbContextCircuitBreaker _circuitBreaker;
+    options.AutoMigrateOnStartup = false;
+    options.ThrowOnPendingMigrations = true;
+    options.UseDistributedLock = true;
+});
+```
 
-    public async Task<List<Customer>> GetCustomers()
+Use automatic migration cautiously in production. The available presets are `Development()`, `Staging()`, `Production()`, and `LogOnly()`.
+
+Generate and apply migrations with the EF Core CLI against the infrastructure and host projects:
+
+```bash
+dotnet ef migrations add InitialCreate -p src/Product.Infrastructure -s src/Product.WebAPI
+dotnet ef database update -p src/Product.Infrastructure -s src/Product.WebAPI
+dotnet ef migrations script -p src/Product.Infrastructure -s src/Product.WebAPI -o migration.sql
+```
+
+For small static reference data, `HasData` in `OnModelCreating` is acceptable. Prefer dedicated seeders with `EnableDataSeeding` when seed logic is environment-specific or volume grows.
+
+### Hybrid Dapper reads
+
+When a hot read path needs SQL that EF Core does not express cleanly, open the EF connection and query with Dapper while still using EF for writes and unit of work:
+
+```csharp
+public sealed class OrderReadQueries(AppDbContext context)
+{
+    public async Task<IReadOnlyList<OrderSummaryDto>> GetActiveAsync(
+        CancellationToken cancellationToken)
     {
-        _circuitBreaker.EnsureCircuitClosed();  // Throws if circuit is open
-        
-        try
+        var connection = context.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
         {
-            var result = await _dbContext.Customers.ToListAsync();
-            _circuitBreaker.RecordSuccess();
-            return result;
+            await connection.OpenAsync(cancellationToken);
         }
-        catch (Exception ex)
-        {
-            _circuitBreaker.RecordFailure();
-            throw;
-        }
+
+        var rows = await connection.QueryAsync<OrderSummaryDto>(
+            new CommandDefinition(
+                """
+                SELECT Id, CustomerName, Total
+                FROM Orders
+                WHERE Active = 1
+                """,
+                cancellationToken: cancellationToken));
+
+        return rows.ToList();
     }
 }
 ```
 
----
+Keep Dapper queries in the infrastructure/read side. Do not bypass the unit of work for writes that must participate in the same transaction as EF changes.
 
-## Streaming
+### MigrationOptions
 
-Memory-efficient data streaming with `IAsyncEnumerable`.
+| Name | Type | Default | Description |
+|---|---|---|---|
+| AutoMigrateOnStartup | bool | `false` | Applies pending migrations at startup. |
+| ThrowOnPendingMigrations | bool | `false` | Fails startup when migrations remain. |
+| LogPendingMigrations | bool | `true` | Logs pending migrations. |
+| MigrationTimeout | TimeSpan | `5 minutes` | Migration time limit. |
+| UseTransactions | bool | `true` | Uses a transaction per migration. |
+| EnsureDatabaseCreated | bool | `true` | Creates the database when absent. |
+| EnableDataSeeding | bool | `false` | Runs registered seeders. |
+| SeedOnlyOnMigration | bool | `true` | Seeds only after creation/migration. |
+| SeedInTransaction | bool | `true` | Wraps seeding in a transaction. |
+| ValidateSchemaBeforeMigration | bool | `false` | Validates before migration. |
+| ValidateSchemaAfterMigration | bool | `false` | Validates after migration. |
+| CreateSchemaSnapshot | bool | `false` | Creates a pre-migration snapshot. |
+| SchemaSnapshotPath | string | `"./migrations/snapshots"` | Snapshot directory. |
+| MaxSchemaSnapshots | int | `10` | Retained snapshots. |
+| MaxRetryAttempts | int | `3` | Migration retries. |
+| RetryDelay | TimeSpan | `5 seconds` | Initial retry delay. |
+| UseExponentialBackoff | bool | `true` | Increases retry delay. |
+| RetryableExceptions | ICollection<Type> | empty | Additional retryable exceptions. |
+| UseDistributedLock | bool | `true` | Prevents concurrent migrations. |
+| LockName | string | `"ef-core-migration-lock"` | Distributed lock name. |
+| LockTimeout | TimeSpan | `5 minutes` | Lock acquisition timeout. |
+| LockDuration | TimeSpan | `30 minutes` | Automatic lock expiry. |
+| EnableDetailedLogging | bool | `true` | Logs migration details. |
+| LogMigrationSql | bool | `false` | Logs migration SQL; may expose data. |
+| EnableTelemetry | bool | `true` | Emits migration telemetry. |
 
-### Setup
+## Schema validation
 
 ```csharp
-services.AddMvp24HoursStreamingRepositoryAsync(options =>
+builder.Services.AddMvp24HoursSchemaValidationOnStartup<AppDbContext>(
+    SchemaValidationOptions.Production());
+```
+
+Presets are `Development()`, `Staging()`, `Production()`, and `ContinuousIntegration()`.
+
+### SchemaValidationOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| ValidateOnStartup | bool | `false` | Runs validation at startup. |
+| ThrowOnValidationFailure | bool | `false` | Throws instead of logging. |
+| CheckPendingMigrations | bool | `true` | Includes migration status. |
+| ValidateTables | bool | `true` | Checks mapped tables. |
+| ValidateColumns | bool | `false` | Checks columns and types. |
+| ValidateIndexes | bool | `false` | Checks indexes. |
+| ValidateForeignKeys | bool | `false` | Checks foreign keys. |
+| ValidationTimeout | TimeSpan | `30 seconds` | Query timeout. |
+| ExcludedTables | ICollection<string> | empty | Tables omitted from validation. |
+| EnableDetailedLogging | bool | `true` | Logs validation progress. |
+| CacheValidationResults | bool | `true` | Caches results. |
+| CacheDuration | TimeSpan | `1 hour` | Result cache duration. |
+
+## Read/write splitting
+
+The registration below adds `IReplicaSelector`, scoped
+`IConnectionResolver`, and `AppDbContext`. The context itself is created with
+the primary SQL Server connection; selecting a replica does not transparently
+replace the connection used by an already-created context.
+
+```csharp
+builder.Services.AddMvp24HoursReadWriteSplitting<AppDbContext>(options =>
 {
-    options.DefaultTrackingBehavior = QueryTrackingBehavior.NoTracking;
-    options.StreamingBufferSize = 100;
+    options.PrimaryConnectionString = primaryConnectionString;
+    options.ReplicaConnectionStrings = [replica1, replica2];
+    options.LoadBalancing = ReplicaLoadBalancing.RoundRobin;
+    options.EnableReadAfterWriteConsistency = true;
 });
 ```
 
-### Usage
+Resolve the connection explicitly at the operation boundary. Notify the
+resolver after a successful write when read-after-write consistency is enabled:
 
 ```csharp
-public class ExportService
+public sealed class OrderConnectionRouter(IConnectionResolver resolver)
 {
-    private readonly IStreamingRepositoryAsync<Customer> _repository;
+    public Task<string> GetReadConnectionAsync(CancellationToken cancellationToken) =>
+        resolver.GetReadConnectionStringAsync(cancellationToken);
 
-    public async Task ExportAllCustomers(StreamWriter writer)
-    {
-        // Streams data without loading everything into memory
-        await foreach (var customer in _repository.StreamAllAsync())
-        {
-            await writer.WriteLineAsync($"{customer.Id},{customer.Name}");
-        }
-    }
+    public string GetWriteConnection() => resolver.GetWriteConnectionString();
 
-    public async Task ProcessLargeDataset()
-    {
-        await foreach (var batch in _repository.StreamBatchesAsync(batchSize: 1000))
-        {
-            await ProcessBatchAsync(batch);
-        }
-    }
+    public void WriteCommitted() => resolver.NotifyWritePerformed();
 }
 ```
 
----
+`ForceReadFromPrimary()` and `ResetReadFromPrimary()` provide an explicit
+consistency boundary. The resolver is scoped, so the read-after-write window is
+also scoped; it is not a cross-request consistency guarantee.
 
-## Health Checks
-
-Database health monitoring for Kubernetes and load balancers.
-
-### Setup
+Convenience registrations are:
 
 ```csharp
-services.AddHealthChecks()
-    // Generic DbContext check
+services.AddMvp24HoursSimpleReadWriteSplitting<AppDbContext>(
+    primaryConnectionString,
+    replicaConnectionString);
+
+services.AddMvp24HoursAzureSqlGeoReplica<AppDbContext>(
+    primaryConnectionString,
+    replica1,
+    replica2);
+```
+
+`AddMvp24HoursPostgreSqlStreaming<TContext>` configures the PostgreSQL preset,
+but the current common registration still calls `UseSqlServer`. Do not use
+that convenience method as a complete PostgreSQL `DbContext` registration
+without reviewing and replacing the provider wiring.
+
+`ReplicaSelector` supports `RoundRobin`, `Random`, `Weighted`,
+`LeastLatency`, `LeastConnections`, and `Failover`. The option factories are
+`SimpleSetup(...)`, `AzureSqlGeoReplica(...)`, and
+`PostgreSqlStreaming(...)`.
+
+### Current implementation boundaries
+
+- `AutoDetectOperationType` is an option contract; the registration does not
+  intercept EF operations to route reads and writes automatically.
+- `EnableReplicaHealthChecks`, `HealthCheckInterval`, and
+  `HealthCheckTimeout` do not register a background probe. Replica state
+  changes through `MarkReplicaFailed(...)`, `MarkReplicaRecovered(...)`, and
+  recovery timeout handling.
+- `LeastLatency` and `LeastConnections` require state measurements, but the
+  current public selector API has no measurement-update operation. Without
+  supplied measurements, selection falls back to the first healthy candidate.
+- `MaxReplicaRetries` and `RetryOnDifferentReplica` are configuration
+  contracts; callers remain responsible for retrying failed operations and
+  reporting replica state.
+- When no healthy replica is returned, `IConnectionResolver` uses the primary
+  connection. This happens even when the selector's
+  `FallbackToPrimaryOnReplicaFailure` option is `false`.
+
+### ReadWriteOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| PrimaryConnectionString | string | `""` | Primary/write connection. |
+| ReplicaConnectionStrings | IList<string> | empty | Read replicas. |
+| FallbackToPrimaryOnReplicaFailure | bool | `true` | Used by `ReplicaSelector` when no healthy replica remains. |
+| LoadBalancing | ReplicaLoadBalancing | `RoundRobin` | Replica selection strategy. |
+| ReplicaWeights | IList<int> | empty | Weights for weighted selection. |
+| EnableReplicaHealthChecks | bool | `true` | Configuration contract; no background probe is registered. |
+| HealthCheckInterval | TimeSpan | `30 seconds` | Configuration contract; unused by current probe code. |
+| HealthCheckTimeout | TimeSpan | `5 seconds` | Configuration contract; unused by current probe code. |
+| FailureThreshold | int | `3` | Failures before `MarkReplicaFailed` marks a replica unhealthy. |
+| RecoveryTimeout | TimeSpan | `60 seconds` | Delay before retrying a previously unhealthy replica. |
+| EnableReadAfterWriteConsistency | bool | `false` | Routes post-write reads to primary after `NotifyWritePerformed()`. |
+| ReadAfterWriteWindow | TimeSpan | `5 seconds` | Primary-read window after a write. |
+| AutoDetectOperationType | bool | `true` | Configuration contract; no automatic EF operation interception. |
+| LogReplicaSelection | bool | `false` | Logs selection decisions. |
+| MaxReplicaRetries | int | `2` | Configuration contract; callers own retry loops. |
+| RetryOnDifferentReplica | bool | `true` | Configuration contract; callers own replica switching. |
+
+Preset defaults differ: `AzureSqlGeoReplica` uses `LeastLatency` with a 10-second
+read-after-write window; `PostgreSqlStreaming` keeps `RoundRobin` with a
+2-second window. A CQRS alternative with separate read and write contexts is
+`AddMvp24HoursCqrsDbContexts<TReadContext,TWriteContext>(...)`; those CQRS
+interfaces are not the same as the unused ReadWriteSplitting marker interfaces.
+
+## Health checks
+
+```csharp
+builder.Services.AddHealthChecks()
     .AddMvp24HoursDbContextCheck<AppDbContext>("database", options =>
     {
         options.HealthQuery = "SELECT 1";
         options.CheckPendingMigrations = true;
-        options.DegradedThresholdMs = 100;
-        options.FailureThresholdMs = 500;
     })
-    
-    // SQL Server specific
-    .AddMvp24HoursSqlServerCheck(connectionString, "sqlserver", options =>
-    {
-        options.CheckDatabaseState = true;
-        options.CheckBlockingSessions = true;
-    })
-    
-    // PostgreSQL specific
-    .AddMvp24HoursPostgreSqlCheck<NpgsqlConnection>(connectionString, "postgresql", options =>
-    {
-        options.CheckConnectionUsage = true;
-        options.CheckReplicationLag = true;
-    })
-    
-    // MySQL specific
-    .AddMvp24HoursMySqlCheck<MySqlConnection>(connectionString, "mysql", options =>
-    {
-        options.CheckConnectionUsage = true;
-    });
-```
-
-### Liveness vs Readiness
-
-```csharp
-services.AddHealthChecks()
-    // Liveness: Is the app alive? (minimal check)
     .AddMvp24HoursDbContextLivenessCheck<AppDbContext>()
-    
-    // Readiness: Is the app ready to serve traffic? (includes migrations check)
     .AddMvp24HoursDbContextReadinessCheck<AppDbContext>();
 ```
 
----
+### DbContextHealthCheckOptions
 
-## Performance Optimization
+| Name | Type | Default | Description |
+|---|---|---|---|
+| HealthQuery | string? | `"SELECT 1"` | Probe SQL; `null` checks connectivity. |
+| QueryTimeoutSeconds | int | `5` | Probe timeout. |
+| DegradedThresholdMs | int | `500` | Degraded latency. |
+| FailureThresholdMs | int | `2000` | Unhealthy latency. |
+| CheckPendingMigrations | bool | `false` | Checks pending migrations. |
+| FailOnPendingMigrations | bool | `false` | Marks pending migrations as failure. |
+| Tags | IEnumerable<string> | `db,database,efcore` | Health-check tags. |
+| Name | string? | `null` | Optional check name. |
+| FailureStatus | HealthStatus | `Unhealthy` | Complete-failure status. |
 
-### Read-Optimized Repository
+Presets are `SqlServer()`, `PostgreSql()`, `MySql()`, `Strict()`, and `Liveness()`.
+
+## Interceptors and filters
+
+The module includes `AuditSaveChangesInterceptor`, `SoftDeleteInterceptor`, `TenantSaveChangesInterceptor`, `ConcurrencyInterceptor`, `DomainEventSaveChangesInterceptor`, `SlowQueryInterceptor`, `CommandLoggingInterceptor`, and `StructuredLoggingInterceptor`. Register interceptors in DI and resolve them inside `AddDbContext`:
 
 ```csharp
-services.AddMvp24HoursReadOptimizedRepository(options =>
-{
-    options.MaxQtyByQueryPage = 200;
-});
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddScoped<SoftDeleteInterceptor>();
 
-// Pre-configured with:
-// - NoTracking by default
-// - Split queries enabled
-// - Query tags for profiling
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(
+            serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>(),
+            serviceProvider.GetRequiredService<SoftDeleteInterceptor>()));
 ```
 
-### Write-Optimized Repository
+Apply `ApplySoftDeleteGlobalFilter()` and `ApplyTenantQueryFilters(...)` in `OnModelCreating`; interceptors modify writes, while filters isolate reads.
+
+## Field encryption
+
+The real APIs are EF value converters: `HasEncryptedConversion(...)`, `HasEncryptedJsonConversion(...)`, and `ApplyEncryptedConverters(...)`. Supply an `IEncryptionProvider`; encrypted values generally cannot be queried by plaintext.
 
 ```csharp
-services.AddMvp24HoursWriteOptimizedRepository(options =>
+string encryptionKey = builder.Configuration["Encryption:Key"]
+    ?? throw new InvalidOperationException("Encryption:Key is required.");
+
+builder.Services.AddMvp24HoursEncryptionProvider(_ =>
+    new AesEncryptionProvider(new EncryptionOptions
+    {
+        Key = encryptionKey,
+        KeyId = "customer-data-v1"
+    }));
+
+public sealed class AppDbContext(
+    DbContextOptions<AppDbContext> options,
+    IEncryptionProvider encryptionProvider)
+    : Mvp24HoursContext(options)
 {
-    options.TransactionIsolationLevel = IsolationLevel.ReadCommitted;
-});
-
-// Pre-configured with:
-// - Tracking enabled (required for updates)
-// - Single queries
-// - Minimal overhead
-```
-
-### Development Repository
-
-```csharp
-if (env.IsDevelopment())
-{
-    services.AddMvp24HoursDevRepository();
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Customer>()
+            .Property(customer => customer.TaxId)
+            .HasEncryptedConversion(encryptionProvider, maxPlainTextLength: 32);
+    }
 }
-
-// Pre-configured with:
-// - Detailed query tags
-// - Sensitive data logging
-// - Low slow query threshold (200ms)
 ```
 
-### Query Tags
+Other supported mappings are encrypted binary values through
+`IExtendedEncryptionProvider` and encrypted JSON for reference types:
 
 ```csharp
-var customers = await _dbContext.Customers
-    .TagWith("GetActiveCustomers - CustomerService")
-    .Where(c => c.IsActive)
-    .ToListAsync();
+modelBuilder.Entity<Customer>()
+    .Property(customer => customer.Profile)
+    .HasEncryptedJsonConversion(encryptionProvider);
 
-// Output in SQL:
-// -- GetActiveCustomers - CustomerService
-// SELECT * FROM Customers WHERE IsActive = 1
+modelBuilder.Entity<Customer>()
+    .Property(customer => customer.PrivateDocument)
+    .HasEncryptedConversion(extendedEncryptionProvider);
 ```
 
----
+`EncryptedAttribute` can mark string properties before calling
+`modelBuilder.ApplyEncryptedConverters(_encryptionProvider)`. Its
+`CreateBlindIndex` and `BlindIndexPropertyName` properties are metadata only in
+the current converter application; they do not create or maintain an index.
+
+### EncryptionOptions
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| Key | string | required | Base64 AES-256 key that decodes to exactly 32 bytes. |
+| InitializationVector | string? | `null` | Fixed IV; otherwise a random IV is generated. |
+| Deterministic | bool | `false` | Produces repeatable ciphertext with reduced security. |
+| KeyId | string? | `null` | Key-rotation identifier. |
+| BlindIndexSalt | string? | `null` | Salt for blind-index computation. |
+
+`Key` is a required member in the .NET 10 source baseline. Keep it outside
+source control and inject it from a secret provider. Wrong key length throws at
+provider construction. A fixed `InitializationVector` or `Deterministic=true`
+can reveal equality patterns; use either only after a threat-model review.
+Changing a key, IV strategy, or provider does not re-encrypt existing rows, so
+plan and test a data migration before rotation. See
+[Secrets & Security](../infrastructure/secrets-security.md) for key management
+and [migration encryption notes](../migration.md).
+
+`AddMvp24HoursEncryptionProvider<TEncryptionProvider>()` and the factory
+overload both register `IEncryptionProvider`. Binary encryption requires
+`IExtendedEncryptionProvider`. `ComputeBlindIndex` exists on the extended
+provider, but `[Encrypted].CreateBlindIndex` is not applied by
+`ApplyEncryptedConverters`.
+
+Value converters run on materialization and save. They do not make arbitrary
+SQL predicates encryption-aware, and provider-side filtering, ordering, or
+indexing over ciphertext will not behave like plaintext operations. This is
+application-level AES through EF converters, not SQL Server Always Encrypted.
+
+## Row-level security
+
+`RowLevelSecurityHelper` generates SQL Server or PostgreSQL RLS scripts for `ITenantEntity` models. Apply generated scripts through a reviewed migration; generation does not execute DDL automatically. Runtime extensions are `SetTenantContextForSqlServerAsync(...)` and `SetTenantContextForPostgreSqlAsync(...)`.
+
+Generate and review a provider-specific migration script:
+
+```csharp
+var helper = new RowLevelSecurityHelper();
+string sql = helper.GenerateSqlServerRls<Order>("sales", "Orders");
+
+// In a reviewed EF migration:
+migrationBuilder.Sql(sql);
+```
+
+For all mapped `ITenantEntity` types, use
+`GenerateRlsScriptsForModel(...)` or `GenerateCombinedRlsScript(...)`. Drop
+helpers are available for both providers when a migration must remove a
+policy.
+
+Set the tenant on every opened database session before executing tenant-bound
+commands:
+
+```csharp
+await dbContext.SetTenantContextForSqlServerAsync(
+    tenantId,
+    cancellationToken: cancellationToken);
+```
+
+The generated policies deliberately allow access when the session tenant value
+is absent. They therefore do not provide fail-closed tenant isolation by
+themselves. Review that predicate for your threat model, ensure pooled
+connections cannot retain a previous tenant value, clear/reset context at the
+operation boundary, and integration-test with the real database provider.
+PostgreSQL tenant context is currently composed into a raw `SET` statement;
+pass only trusted tenant identifiers until the implementation is parameterized.
+
+## CQRS and domain events
+
+```csharp
+builder.Services.AddMvp24HoursEFCoreCqrs<AppDbContext>(
+    (serviceProvider, options) => options.UseSqlServer(connectionString),
+    cqrs =>
+    {
+        cqrs.UseDomainEventInterceptor = true;
+        cqrs.UseUnitOfWorkWithEvents = true;
+    });
+```
+
+For separate models, use `AddMvp24HoursCqrsDbContexts<TReadContext,TWriteContext>(...)`. Event-aware alternatives are `AddMvp24HoursUnitOfWorkWithEvents()` and `AddMvp24HoursRepositoryWithEvents()`.
 
 ## Testing
 
-### In-Memory Testing
+Integration tests use `AddDbContext<TContext>(options => options.UseInMemoryDatabase(...))`, followed by `AddMvp24HoursDbContext<TContext>()` and the repository registration. Provider-specific behavior, migrations, transactions, and raw SQL require a real provider or Testcontainers.
 
-```csharp
-public class CustomerServiceTests
-{
-    private readonly IServiceProvider _serviceProvider;
-
-    public CustomerServiceTests()
-    {
-        var services = new ServiceCollection();
-        
-        services.AddDbContext<DataContext>(options =>
-        {
-            options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
-        });
-        
-        services.AddMvp24HoursRepositoryAsync();
-        
-        _serviceProvider = services.BuildServiceProvider();
-    }
-
-    [Fact]
-    public async Task CreateCustomer_ShouldSucceed()
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IRepositoryAsync<Customer>>();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-
-        var customer = new Customer { Name = "Test" };
-        await repository.AddAsync(customer);
-        await unitOfWork.SaveChangesAsync();
-
-        Assert.True(customer.Id > 0);
-    }
-}
-```
-
-### Repository Fake for Unit Tests
-
-```csharp
-public class CustomerServiceTests
-{
-    [Fact]
-    public async Task GetActiveCustomers_ShouldReturnOnlyActive()
-    {
-        // Arrange
-        var fakeRepository = new RepositoryFakeAsync<Customer>();
-        fakeRepository.AddRange(new[]
-        {
-            new Customer { Id = 1, Name = "Active", IsActive = true },
-            new Customer { Id = 2, Name = "Inactive", IsActive = false }
-        });
-
-        var service = new CustomerService(fakeRepository);
-
-        // Act
-        var result = await service.GetActiveCustomersAsync();
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal("Active", result[0].Name);
-    }
-}
-```
-
-### Data Seeder
-
-```csharp
-public class CustomerDataSeeder : IDataSeeder<Customer>
-{
-    public IEnumerable<Customer> Seed()
-    {
-        return new[]
-        {
-            new Customer { Name = "Customer 1", IsActive = true },
-            new Customer { Name = "Customer 2", IsActive = true },
-            new Customer { Name = "Customer 3", IsActive = false }
-        };
-    }
-}
-
-// Usage
-services.AddTransient<IDataSeeder<Customer>, CustomerDataSeeder>();
-
-// In test setup
-var seeder = serviceProvider.GetRequiredService<IDataSeeder<Customer>>();
-var customers = seeder.Seed();
-await dbContext.Customers.AddRangeAsync(customers);
-await dbContext.SaveChangesAsync();
-```
-
----
-
-## CQRS Integration
-
-Complete setup for Command Query Responsibility Segregation.
-
-```csharp
-// Register both read and write repositories
-builder.Services.AddMvp24HoursCqrsRepositories(options =>
-{
-    options.MaxQtyByQueryPage = 100;
-});
-
-// Query handler uses read-only repository
-public class GetCustomerQueryHandler
-{
-    private readonly IReadOnlyRepositoryAsync<Customer> _repository;
-    
-    public async Task<Customer> Handle(GetCustomerQuery query)
-    {
-        return await _repository.GetByIdAsync(query.Id);
-    }
-}
-
-// Command handler uses full repository with UnitOfWork
-public class CreateCustomerCommandHandler
-{
-    private readonly IRepositoryAsync<Customer> _repository;
-    private readonly IUnitOfWorkAsync _unitOfWork;
-    
-    public async Task Handle(CreateCustomerCommand command)
-    {
-        var customer = new Customer { Name = command.Name };
-        await _repository.AddAsync(customer);
-        await _unitOfWork.SaveChangesAsync();
-    }
-}
-```
-
-### Domain Events with SaveChanges
-
-```csharp
-// Use SaveChangesWithEventsAsync to dispatch domain events
-public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, OrderResult>
-{
-    private readonly IRepositoryAsync<Order> _repository;
-    private readonly IUnitOfWorkAsync _unitOfWork;
-    
-    public async Task<OrderResult> Handle(CreateOrderCommand command, CancellationToken ct)
-    {
-        var order = new Order(command.CustomerId, command.Items);
-        order.AddDomainEvent(new OrderCreatedEvent(order.Id));
-        
-        await _repository.AddAsync(order);
-        
-        // This dispatches domain events after commit
-        await _unitOfWork.SaveChangesWithEventsAsync(ct);
-        
-        return new OrderResult(order.Id);
-    }
-}
-```
-
-> 📚 See [CQRS Documentation](../cqrs/home.md) for complete guide.
-
----
-
-## See Also
-
-- [Basic Database Configuration](relational.md)
-- [Repository Pattern](use-repository.md)
-- [Unit of Work](use-unitofwork.md)
-- [CQRS Module](../cqrs/home.md)
-
+See [Context](use-context.md), [Repository](use-repository.md), [Unit of Work](use-unitofwork.md), and [CQRS](../cqrs/home.md).

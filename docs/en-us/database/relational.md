@@ -16,12 +16,10 @@ You may be able to use direct database connection, which is not recommended. Acc
 
 ## SQL Server
 ### Setup
-```csharp
-/// Package Manager Console >
-
-Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
-Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 9.0.0
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
+```bash
+dotnet add package Microsoft.Extensions.DependencyInjection
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Mvp24Hours.Infrastructure.Data.EFCore
 ```
 ### Settings
 ```csharp
@@ -39,23 +37,20 @@ builder.Services.AddMvp24HoursRepository(options =>
 
 ```
 ### Using Docker
-```
-// Command
+```bash
 docker run --name sqlserver -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=MyPass@word" -p 1433:1433 -d mcr.microsoft.com/mssql/server
+```
 
-// ConnectionString
+```text
 Data Source=.,1433;Initial Catalog=MyTestDb;Persist Security Info=True;User ID=sa;Password=MyPass@word;Pooling=False;TrustServerCertificate=True
-
 ```
 
 ## PostgreSql
 ### Setup
-```csharp
-/// Package Manager Console >
-
-Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
-Install-Package Npgsql.EntityFrameworkCore.PostgreSQL -Version 9.0.0
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
+```bash
+dotnet add package Microsoft.Extensions.DependencyInjection
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+dotnet add package Mvp24Hours.Infrastructure.Data.EFCore
 ```
 ### Settings
 ```csharp
@@ -74,23 +69,20 @@ builder.Services.AddMvp24HoursRepository(options =>
 
 ```
 ### Using Docker
-```
-// Command
+```bash
 docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=MyPass@word -d postgres:16-alpine
+```
 
-// ConnectionString
+```text
 Host=localhost;Port=5432;Pooling=true;Database=MyTestDb;User Id=postgres;Password=MyPass@word;
-
 ```
 
 ## MySql
 ### Setup
-```csharp
-/// Package Manager Console >
-
-Install-Package Microsoft.Extensions.DependencyInjection -Version 9.0.0
-Install-Package Pomelo.EntityFrameworkCore.MySql -Version 9.0.0
-Install-Package Mvp24Hours.Infrastructure.Data.EFCore -Version 9.1.x
+```bash
+dotnet add package Microsoft.Extensions.DependencyInjection
+dotnet add package Pomelo.EntityFrameworkCore.MySql
+dotnet add package Mvp24Hours.Infrastructure.Data.EFCore
 ```
 ### Settings
 ```csharp
@@ -110,13 +102,12 @@ builder.Services.AddMvp24HoursRepository(options =>
 
 ```
 ### Using Docker
-```
-// Command
+```bash
 docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=MyPass@word -d mysql:8
+```
 
-// ConnectionString
+```text
 server=localhost;user=root;password=MyPass@word;database=MyTestDb
-
 ```
 
 ---

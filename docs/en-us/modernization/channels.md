@@ -1,440 +1,198 @@
-# System.Threading.Channels (Producer/Consumer)
+# Channels and Producer/Consumer Processing
 
-## Overview
+Mvp24Hours.Core wraps `System.Threading.Channels` with DI-friendly contracts, timeouts, batching, presets, and high-level producer/consumer workers. Use bounded channels when producers must experience backpressure.
 
-**System.Threading.Channels** is a .NET native library for implementing high-performance producer/consumer patterns. It provides thread-safe, async-friendly data structures that enable efficient communication between producers and consumers.
-
-Mvp24Hours integrates with System.Threading.Channels to provide:
-
-- **High-performance in-memory queues** with backpressure support
-- **Pipeline operation communication** for streaming data processing
-- **RabbitMQ batch processing** with efficient message buffering
-- **Generic producer/consumer patterns** for any async workload
-
-## Why Use Channels?
-
-Channels replace traditional approaches like `ConcurrentQueue`, `BlockingCollection`, and manual locking with a modern, async-first API:
-
-| Traditional Approach | Channel Approach |
-|---------------------|------------------|
-| `ConcurrentQueue + AutoResetEvent` | `Channel<T>` |
-| Manual backpressure with semaphores | `BoundedChannel` automatic backpressure |
-| Blocking `Take()` calls | Async `ReadAsync()` |
-| Complex cancellation handling | Built-in `CancellationToken` support |
-
-## Core Concepts
-
-### Channel Types
+## Create a channel
 
 ```csharp
-// Unbounded: No limit, no backpressure
-using var unbounded = Channels.CreateUnbounded<Order>();
-
-// Bounded: Limited capacity, applies backpressure
-using var bounded = Channels.CreateBounded<Order>(100);
-
-// High-throughput: Optimized for performance
-using var fast = Channels.CreateHighThroughput<Order>(1000);
-
-// Drop strategies: Handle overflow gracefully
-using var dropOldest = Channels.CreateDropOldest<Order>(100);
-using var dropNewest = Channels.CreateDropNewest<Order>(100);
-```
-
-### Bounded Channel Full Modes
-
-| Mode | Behavior |
-|------|----------|
-| `Wait` | Block producer until space available (default) |
-| `DropOldest` | Remove oldest item to make room |
-| `DropNewest` | Discard the new item being written |
-| `DropWrite` | Return false for TryWrite, throw for WriteAsync |
-
-## Basic Usage
-
-### Creating a Channel
-
-```csharp
-using Mvp24Hours.Core.Infrastructure.Channels;
 using Mvp24Hours.Core.Contract.Infrastructure.Channels;
+using Mvp24Hours.Core.Infrastructure.Channels;
 
-// Using factory (DI-friendly)
-var factory = new ChannelFactory();
-using var channel = factory.CreateBounded<Order>(100);
+using IChannel<Order> channel =
+    Channels.CreateBounded<Order>(capacity: 100);
 
-// Using static helper
-using var channel = Channels.CreateBounded<Order>(100);
+await channel.Writer.WriteAsync(order);
 
-// Using constructor with options
-using var channel = new MvpChannel<Order>(new ChannelOptions
+if (channel.Reader.TryRead(out Order? queued))
 {
-    IsBounded = true,
-    Capacity = 100,
-    FullMode = BoundedChannelFullMode.Wait
-});
-```
-
-### Writing to a Channel
-
-```csharp
-// Single item
-await channel.Writer.WriteAsync(new Order { Id = 1 });
-
-// Multiple items
-await channel.Writer.WriteManyAsync(orders);
-
-// Non-blocking write
-if (channel.Writer.TryWrite(order))
-{
-    Console.WriteLine("Order queued");
-}
-else
-{
-    Console.WriteLine("Channel full!");
+    await ProcessAsync(queued);
 }
 
-// Signal completion
 channel.Writer.TryComplete();
 ```
 
-### Reading from a Channel
+`Channels` is the static Mvp24Hours factory, not `System.Threading.Channels.Channel`. `ChannelFactory` provides the same basic creation through `IChannelFactory`.
+
+## MvpChannelOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `IsBounded` | `bool` | `true` | Use a bounded channel |
+| `Capacity` | `int` | `100` | Maximum buffered items when bounded |
+| `FullMode` | `BoundedChannelFullMode` | `Wait` | Behavior when the buffer is full |
+| `AllowSynchronousContinuations` | `bool` | `false` | Permit continuations on the completing thread |
+| `SingleReader` | `bool` | `false` | Optimize when exactly one reader is guaranteed |
+| `SingleWriter` | `bool` | `false` | Optimize when exactly one writer is guaranteed |
+| `WriteTimeout` | `TimeSpan?` | `null` | Write timeout; `null` waits indefinitely |
+| `ReadTimeout` | `TimeSpan?` | `null` | Read timeout; `null` waits indefinitely |
+
+### Presets
+
+| Factory | Important values |
+|---|---|
+| `Unbounded()` | `IsBounded = false` |
+| `Bounded(capacity, fullMode)` | Bounded with caller capacity; mode defaults to `Wait` |
+| `HighThroughput(capacity = 1000)` | `Wait`, synchronous continuations, single reader |
+| `DropOldest(capacity = 100)` | Removes the oldest buffered item |
+| `DropNewest(capacity = 100)` | Removes the newest buffered item |
+| `DropWrite(capacity = 100)` | Drops the item being written |
+
+For `Wait`, `WriteAsync` asynchronously waits for space. Drop modes trade delivery guarantees for bounded latency and memory.
+
+## Read, write, and batch
 
 ```csharp
-// Single item
-var order = await channel.Reader.ReadAsync();
+await channel.Writer.WriteManyAsync(orders, cancellationToken);
 
-// All items (streaming)
-await foreach (var order in channel.Reader.ReadAllAsync())
-{
-    await ProcessOrderAsync(order);
-}
-
-// Batch reading
-await foreach (var batch in channel.Reader.ReadBatchAsync(
-    batchSize: 10, 
-    timeout: TimeSpan.FromSeconds(5)))
-{
-    await ProcessBatchAsync(batch);
-}
-
-// Non-blocking read
-if (channel.Reader.TryRead(out var order))
-{
-    await ProcessOrderAsync(order);
-}
-```
-
-## Producer/Consumer Pattern
-
-### Simple Producer/Consumer
-
-```csharp
-using Mvp24Hours.Core.Infrastructure.Channels;
-
-// Create producer-consumer with 4 workers
-await using var pc = new ProducerConsumer<Order>(
-    processor: async (order, ct) => 
-    {
-        await SaveOrderAsync(order, ct);
-        await SendConfirmationAsync(order, ct);
-    },
-    workerCount: 4,
-    options: new ProducerConsumerOptions 
-    { 
-        Capacity = 100,
-        ContinueOnError = true 
-    });
-
-// Start workers
-pc.Start();
-
-// Produce items
-foreach (var order in orders)
-{
-    await pc.ProduceAsync(order);
-}
-
-// Signal completion and wait
-pc.Complete();
-await pc.WaitForCompletionAsync();
-```
-
-### Producer/Consumer with Results
-
-```csharp
-await using var pc = new ProducerConsumer<Order, ProcessedOrder>(
-    processor: async (order, ct) => 
-    {
-        var result = await ProcessOrderAsync(order, ct);
-        return new ProcessedOrder { OrderId = order.Id, Result = result };
-    },
-    workerCount: Environment.ProcessorCount);
-
-pc.Start();
-
-// Produce in background
-_ = Task.Run(async () =>
-{
-    foreach (var order in orders)
-    {
-        await pc.ProduceAsync(order);
-    }
-    pc.Complete();
-});
-
-// Consume results
-await foreach (var result in pc.GetResultsAsync())
-{
-    Console.WriteLine($"Order {result.OrderId}: {result.Result}");
-}
-```
-
-## Pipeline Integration
-
-### Channel Pipeline
-
-```csharp
-using Mvp24Hours.Infrastructure.Pipe.Channels;
-
-// Create a multi-stage pipeline
-var pipeline = new ChannelPipeline<RawOrder, ProcessedOrder>(
-    options: new ChannelPipelineOptions
-    {
-        ChannelCapacity = 100,
-        MaxDegreeOfParallelism = 4
-    },
-    logger: logger);
-
-// Add processing stages
-pipeline
-    .AddStage<RawOrder, ValidatedOrder>(order => ValidateOrder(order))
-    .AddStageAsync<ValidatedOrder, EnrichedOrder>(
-        async (order, ct) => await EnrichOrderAsync(order, ct))
-    .AddStage<EnrichedOrder, ProcessedOrder>(order => FinalizeOrder(order));
-
-// Process items with streaming output
-await foreach (var result in pipeline.ProcessAsync(rawOrders))
-{
-    await SaveResultAsync(result);
-}
-
-// Or process in parallel
-await foreach (var result in pipeline.ProcessParallelAsync(
-    rawOrders, 
-    maxDegreeOfParallelism: 4))
-{
-    await SaveResultAsync(result);
-}
-```
-
-## RabbitMQ Integration
-
-### Channel-Based Batch Processing
-
-```csharp
-using Mvp24Hours.Infrastructure.RabbitMQ.Channels;
-
-// Create channel batch processor
-await using var processor = new ChannelBatchProcessor<Order>(
-    options: new BatchConsumerOptions
-    {
-        MaxBatchSize = 100,
-        MinBatchSize = 10,
-        BatchTimeout = TimeSpan.FromSeconds(5)
-    },
-    serviceProvider: serviceProvider,
-    messageSerializer: serializer,
-    logger: logger,
-    channel: rabbitChannel);
-
-// Start background processing
-processor.Start();
-
-// Messages are added via RabbitMQ consumer
-consumer.Received += async (s, e) =>
-{
-    await processor.AddMessageAsync(e);
-};
-
-// Graceful shutdown
-await processor.FlushAsync();
-```
-
-## Dependency Injection
-
-### Registration
-
-```csharp
-using Mvp24Hours.Core.Extensions;
-
-// Basic registration
-services.AddMvpChannels();
-
-// Register specific channels
-services.AddBoundedChannel<Order>(100);
-services.AddUnboundedChannel<Event>();
-services.AddHighThroughputChannel<LogEntry>(1000);
-services.AddDropOldestChannel<Metric>(500);
-
-// Register with custom options
-services.AddChannel<Message>(options =>
-{
-    options.Capacity = 200;
-    options.FullMode = BoundedChannelFullMode.DropNewest;
-    options.SingleReader = true;
-});
-
-// Keyed channels for different purposes
-services.AddKeyedBoundedChannel<Order>("priority", 50);
-services.AddKeyedBoundedChannel<Order>("standard", 200);
-```
-
-### Usage in Services
-
-```csharp
-public class OrderProcessor
-{
-    private readonly IChannel<Order> _orderChannel;
-    private readonly IChannelWriter<Order> _writer;
-    private readonly IChannelReader<Order> _reader;
-
-    public OrderProcessor(IChannel<Order> channel)
-    {
-        _orderChannel = channel;
-        _writer = channel.Writer;
-        _reader = channel.Reader;
-    }
-
-    public async Task QueueOrderAsync(Order order)
-    {
-        await _writer.WriteAsync(order);
-    }
-
-    public async Task ProcessOrdersAsync(CancellationToken ct)
-    {
-        await foreach (var order in _reader.ReadAllAsync(ct))
-        {
-            await ProcessAsync(order);
-        }
-    }
-}
-```
-
-## Best Practices
-
-### 1. Choose the Right Channel Type
-
-```csharp
-// For producer-consumer with flow control
-var channel = Channels.CreateBounded<T>(capacity);
-
-// For event streaming where latest matters
-var channel = Channels.CreateDropOldest<T>(capacity);
-
-// For fire-and-forget with unlimited buffering
-var channel = Channels.CreateUnbounded<T>();
-```
-
-### 2. Handle Backpressure
-
-```csharp
-// Option 1: Wait (default)
-await channel.Writer.WriteAsync(item); // Blocks when full
-
-// Option 2: Try non-blocking
-if (!channel.Writer.TryWrite(item))
-{
-    // Handle overflow
-    await _fallbackQueue.EnqueueAsync(item);
-}
-
-// Option 3: Use drop strategies
-var channel = Channels.CreateDropOldest<T>(capacity);
-```
-
-### 3. Always Complete Writers
-
-```csharp
-try
-{
-    foreach (var item in items)
-    {
-        await channel.Writer.WriteAsync(item);
-    }
-}
-finally
-{
-    channel.Writer.TryComplete();
-}
-```
-
-### 4. Use Cancellation Tokens
-
-```csharp
-await foreach (var item in channel.Reader.ReadAllAsync(cancellationToken))
+await foreach (Order item in channel.Reader.ReadAllAsync(cancellationToken))
 {
     await ProcessAsync(item, cancellationToken);
 }
 ```
 
-## Performance Considerations
-
-| Scenario | Recommendation |
-|----------|----------------|
-| High-throughput | Use `SingleReader`/`SingleWriter` when applicable |
-| Memory-sensitive | Use bounded channels with appropriate capacity |
-| Real-time data | Use `DropOldest` to prioritize recent data |
-| Batch processing | Use `ReadBatchAsync` to reduce overhead |
-
-## Migration from ConcurrentQueue
-
-### Before (ConcurrentQueue)
+Batch reads are available on the Mvp24Hours reader:
 
 ```csharp
-private readonly ConcurrentQueue<Order> _queue = new();
-private readonly AutoResetEvent _signal = new(false);
-
-public void Enqueue(Order order)
+await foreach (IReadOnlyList<Order> batch in channel.Reader.ReadBatchAsync(
+    batchSize: 20,
+    timeout: TimeSpan.FromSeconds(2),
+    cancellationToken))
 {
-    _queue.Enqueue(order);
-    _signal.Set();
-}
-
-public async Task ProcessAsync(CancellationToken ct)
-{
-    while (!ct.IsCancellationRequested)
-    {
-        _signal.WaitOne(TimeSpan.FromSeconds(1));
-        while (_queue.TryDequeue(out var order))
-        {
-            await ProcessOrderAsync(order);
-        }
-    }
+    await ProcessBatchAsync(batch, cancellationToken);
 }
 ```
 
-### After (Channel)
+Complete the writer when no more items will arrive. Dispose the channel when its owning service stops.
+
+## Dependency injection
 
 ```csharp
-private readonly IChannel<Order> _channel;
+using Mvp24Hours.Core.Extensions;
 
-public async Task EnqueueAsync(Order order)
-{
-    await _channel.Writer.WriteAsync(order);
-}
+services.AddMvpChannels();
+services.AddBoundedChannel<Order>(100);
+services.AddUnboundedChannel<DomainEvent>();
+services.AddHighThroughputChannel<Metric>(1000);
+services.AddDropOldestChannel<Snapshot>(50);
+services.AddDropWriteChannel<DiagnosticEvent>(500);
+```
 
-public async Task ProcessAsync(CancellationToken ct)
+`AddChannel<T>` registers `IChannel<T>`, `IChannelReader<T>`, and `IChannelWriter<T>` as singletons:
+
+```csharp
+services.AddChannel<Order>(options =>
 {
-    await foreach (var order in _channel.Reader.ReadAllAsync(ct))
-    {
-        await ProcessOrderAsync(order);
-    }
+    options.Capacity = 200;
+    options.FullMode = BoundedChannelFullMode.Wait;
+    options.SingleReader = true;
+    options.WriteTimeout = TimeSpan.FromSeconds(5);
+});
+```
+
+Use a keyed channel when several queues carry the same type:
+
+```csharp
+services.AddKeyedBoundedChannel<Order>("priority", 50);
+
+public sealed class PriorityDispatcher(
+    [FromKeyedServices("priority")] IChannel<Order> channel)
+{
+    public ValueTask DispatchAsync(Order order, CancellationToken cancellationToken) =>
+        channel.Writer.WriteAsync(order, cancellationToken);
 }
 ```
 
-## See Also
+The keyed registration exposes the keyed `IChannel<T>` itself; it does not separately register keyed reader and writer contracts.
 
-- [Rate Limiting](rate-limiting.md) - Rate limiting with `System.Threading.RateLimiting`
-- [Periodic Timer](periodic-timer.md) - Modern timer patterns
-- [Time Provider](time-provider.md) - Time abstraction for testing
+## ProducerConsumer
 
+`ProducerConsumer<TItem>` owns its internal channel and starts one or more worker tasks:
+
+```csharp
+await using var processor = new ProducerConsumer<Order>(
+    async (order, cancellationToken) =>
+        await ProcessAsync(order, cancellationToken),
+    workerCount: 4,
+    options: new ProducerConsumerOptions
+    {
+        Capacity = 100,
+        FullMode = BoundedChannelFullMode.Wait,
+        ContinueOnError = false
+    });
+
+processor.Start();
+await processor.ProduceManyAsync(orders, cancellationToken);
+processor.Complete();
+await processor.WaitForCompletionAsync(cancellationToken);
+```
+
+`WaitForCompletionAsync` starts workers if needed. `RunAsync` wraps start, producer execution, completion, and waiting. Producing after `Complete()` throws `InvalidOperationException`.
+
+### ProducerConsumerOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `IsBounded` | `bool` | `true` | Bound the internal queue |
+| `Capacity` | `int` | `100` | Internal queue capacity |
+| `FullMode` | `BoundedChannelFullMode` | `Wait` | Full-buffer behavior |
+| `ContinueOnError` | `bool` | `true` | Log a processor exception and continue; when `false`, fail the worker |
+| `AllowSynchronousContinuations` | `bool` | `false` | Permit synchronous channel continuations |
+
+When `workerCount` is omitted, it defaults to `Environment.ProcessorCount`.
+
+## Transforming results
+
+`ProducerConsumer<TInput, TOutput>` publishes processed values as an async stream:
+
+```csharp
+await using var processor = new ProducerConsumer<Order, Receipt>(
+    (order, cancellationToken) => CreateReceiptAsync(order, cancellationToken),
+    workerCount: 2);
+
+processor.Start();
+
+foreach (Order order in orders)
+{
+    await processor.ProduceAsync(order, cancellationToken);
+}
+
+processor.Complete();
+
+await foreach (Receipt receipt in processor.GetResultsAsync(cancellationToken))
+{
+    await SaveAsync(receipt, cancellationToken);
+}
+```
+
+The output stream completes after all workers complete. Dispose cancels outstanding work and waits for workers.
+
+## Choosing a strategy
+
+| Requirement | Choice |
+|---|---|
+| Delivery with flow control | Bounded + `Wait` |
+| Latest data matters most | `DropOldest` |
+| Preserve older buffered data | `DropNewest` |
+| Best-effort diagnostics | `DropWrite` |
+| Unknown but safely bounded workload | Default `MvpChannelOptions` |
+| Parallel item processing | `ProducerConsumer<T>` |
+| Parallel transformation with streamed output | `ProducerConsumer<TInput, TOutput>` |
+
+Unbounded channels have no backpressure and can grow until the process runs out of memory. Use them only when growth is externally constrained.
+
+## Related documentation
+
+- [Core infrastructure abstractions](../core/infrastructure-abstractions.md)
+- [Keyed services](keyed-services.md)
+- [Pipeline](../pipeline.md)
+- [`System.Threading.Channels`](https://learn.microsoft.com/dotnet/core/extensions/channels)

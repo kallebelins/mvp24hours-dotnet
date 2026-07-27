@@ -1,411 +1,258 @@
-# Migration
+# Migration guide
 
-## Version v4.2.101
-### IBsonClassMap
-Remove generic typing from IBsonClassMap<T>:
-```csharp
-// before
-public class MyEntityConfiguration : IBsonClassMap<MyEntity>
+Use the section matching your installed package version. This page covers
+version upgrades; migrations from legacy Mvp24Hours abstractions to native .NET
+APIs live in the [.NET 9+ modernization guide](modernization/migration-guide.md).
 
-// after
-public class MyEntityConfiguration : IBsonClassMap
+## 9.1.x → 10.0.0
+
+> **Package availability:** the repository and changelog describe 10.0.0, but
+> production package metadata remains at `9.1.21` and the public
+> `Mvp24Hours.Core` feed has no 10.0.0 package. Complete the preparation and
+> validation steps below, but do not request 10.0.0 until publication is
+> confirmed.
+
+### 1. Prepare the toolchain
+
+1. Install the .NET 10 SDK.
+2. Change application and test projects to `<TargetFramework>net10.0</TargetFramework>`.
+3. Enable Nullable in consumer projects if it is not already enabled:
+
+```xml
+<PropertyGroup>
+  <TargetFramework>net10.0</TargetFramework>
+  <Nullable>enable</Nullable>
+  <ImplicitUsings>enable</ImplicitUsings>
+</PropertyGroup>
 ```
 
-## Version v8.2.102
-### EntityBase
+4. Build once before changing package versions and record the current warning
+   and test baseline.
+
+### 2. Upgrade packages together
+
+Keep all Mvp24Hours packages on the same release. After 10.0.0 is published:
+
+```bash
+dotnet add package Mvp24Hours.Core --version 10.0.0
+dotnet add package Mvp24Hours.Application --version 10.0.0
+dotnet add package Mvp24Hours.Infrastructure --version 10.0.0
+dotnet add package Mvp24Hours.Infrastructure.Cqrs --version 10.0.0
+dotnet add package Mvp24Hours.WebAPI --version 10.0.0
+```
+
+Install only the modules your application uses. Restore and verify that no
+transitive reference selects an older Mvp24Hours package.
+
+### 3. Resolve compiler changes
+
+Review new Nullable diagnostics instead of suppressing them globally. Public
+signatures were corrected where runtime values can be null, so existing callers
+may need null checks, nullable annotations, or explicit fallback behavior.
+
+Two object-initializer members are now required:
+
 ```csharp
-// before
+var propertyCall = new SetPropertyCall
+{
+    Property = entity => entity.Name,
+    Value = "Updated"
+};
+
+var encryption = new EncryptionOptions
+{
+    Key = keyFromASecretProvider
+};
+```
+
+Do not embed encryption keys in source or configuration committed to version
+control.
+
+### 4. Review behavior changes
+
+#### SMTP certificate validation
+
+`SmtpEmailOptions.ServerCertificateValidationCallback` is ignored in 10.0.0.
+The old implementation relied on the obsolete process-wide
+`ServicePointManager.ServerCertificateValidationCallback`. SMTP now uses the
+operating system trust store and logs a warning if the callback is configured.
+
+- Remove the callback from application configuration.
+- Install the required CA/intermediate certificates in the host trust store.
+- Test TLS negotiation against the production SMTP server.
+- Do not replace this with a global certificate bypass.
+
+#### SQL Server client
+
+SQL Server distributed locking and EF Core helpers use
+`Microsoft.Data.SqlClient`. If consumer code handles provider-specific
+connections, exceptions, parameters, or connection-string options, replace
+`System.Data.SqlClient` types and retest authentication and encryption defaults.
+
+#### AWS credential resolution
+
+AWS Secrets Manager now uses the AWS SDK v4 default credentials identity
+resolver. Test every deployed identity source—environment variables, shared
+profiles, workload identity, ECS task roles, or EC2 instance roles—and do not
+assume the previous fallback-chain ordering.
+
+#### Encryption compatibility
+
+Password-based key derivation now uses static
+`Rfc2898DeriveBytes.Pbkdf2`. `CHANGELOG.md` reports byte-for-byte equivalence,
+and source has key-derivation coverage, but there is no dedicated named
+ciphertext-compatibility regression suite in `src/Tests`. Treat existing
+ciphertext as a consumer verification step before rollout:
+
+1. decrypt representative values with the old release;
+2. decrypt the same values with 10.0.0;
+3. encrypt new values with 10.0.0 and verify round trips;
+4. retain a tested rollback and key-recovery procedure.
+
+### 5. Audit dependencies and build strictly
+
+```bash
+dotnet restore
+dotnet list package --vulnerable --include-transitive
+dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+```
+
+The 10.0.0 source pins `System.Security.Cryptography.Xml` to `10.0.10`. Do not
+downgrade or remove that direct pin without confirming that the transitive
+`System.ServiceModel` dependency is patched.
+
+### 6. Run the integration checklist
+
+- [ ] Unit tests pass on .NET 10.
+- [ ] SQL Server/PostgreSQL/MySQL repository and migration tests pass.
+- [ ] MongoDB, Redis, and RabbitMQ integrations pass where used.
+- [ ] SMTP TLS succeeds with the operating system trust store.
+- [ ] AWS Secrets Manager resolves credentials in every deployment environment.
+- [ ] Existing encrypted data decrypts and new ciphertext round-trips.
+- [ ] Distributed locks release on both `Dispose` and `DisposeAsync`.
+- [ ] Health, readiness, and liveness endpoints pass.
+- [ ] Release build completes with warnings treated as errors.
+- [ ] The vulnerable-package audit is clean.
+
+## 9.0.x → 9.1.x
+
+Version 9.1 introduced the Mvp24Hours Mediator and expanded observability and
+infrastructure modules. Register CQRS with the APIs that exist in the current
+source:
+
+```csharp
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.WithDefaultBehaviors();
+});
+```
+
+Commands implement `IMediatorCommand<TResponse>` and handlers implement
+`IMediatorCommandHandler<TCommand, TResponse>` (a semantic alias of
+`IMediatorRequestHandler<TRequest, TResponse>`):
+
+```csharp
+public sealed record CreateOrderCommand(string CustomerId)
+    : IMediatorCommand<OrderResult>;
+
+public sealed class CreateOrderHandler
+    : IMediatorCommandHandler<CreateOrderCommand, OrderResult>
+{
+    public Task<OrderResult> Handle(
+        CreateOrderCommand request,
+        CancellationToken cancellationToken)
+    {
+        // Create and persist the order.
+        throw new NotImplementedException();
+    }
+}
+```
+
+Choose behavior groups explicitly when needed:
+
+```csharp
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.WithObservabilityBehaviors();
+    options.WithAuditBehavior(auditAllCommands: true);
+    options.WithSecurityBehaviors();
+    options.WithResiliencyBehaviors();
+});
+```
+
+See [CQRS Getting Started](cqrs/getting-started.md) for the canonical API guide.
+
+For Telemetry, HTTP/database resilience, cache, Pipeline, OpenAPI, time, and
+Options transitions, use the
+[.NET 9+ modernization guide](modernization/migration-guide.md). Detailed
+Telemetry steps remain in the
+[TelemetryHelper migration](observability/migration.md).
+
+## 8.x → 9.x
+
+1. Move the application to .NET 9.
+2. Replace legacy Telemetry with `ILogger<T>` and OpenTelemetry.
+3. Prefer native resilience, HybridCache, TimeProvider, native rate limiting,
+   Channels, ProblemDetails, and Native OpenAPI where they fit.
+4. Retest background services after moving timer logic to `PeriodicTimer`.
+
+The task-oriented procedures are maintained in the
+[.NET 9+ modernization guide](modernization/migration-guide.md); they are not
+duplicated here.
+
+## 4.x → 8.x
+
+The following source migrations remain relevant for older applications.
+
+### EntityBase
+
+```csharp
+// Before
 public class MyEntity : EntityBase<MyEntity, int>
 
-// after
+// After
 public class MyEntity : EntityBase<int>
 ```
 
 ### IMapFrom
-Remove generic typing from IMapFrom<T>:
+
 ```csharp
-// before
+// Before
 public class MyDto : IMapFrom<MyEntity>
 
-// after
+// After
 public class MyDto : IMapFrom
 ```
 
-### TelemetryLevel
-Update TelemetryLevel enumerator name to plural:
-```csharp
-// before
-TelemetryHelper.Execute(TelemetryLevel.Verbose, "jwt-test", $"token:xxx");
-
-// after
-TelemetryHelper.Execute(TelemetryLevels.Verbose, "jwt-test", $"token:xxx");
-```
-
 ### Mapping
+
+Inject `IMapper`; replace the old singleton helper and `MapTo` calls:
+
 ```csharp
-// injection into service class construction
-private readonly IMapper mapper;
-public MyEntityService(IUnitOfWorkAsync unitOfWork, IValidator<MyEntity> validator, IMapper mapper)
-	: base(unitOfWork, validator)
+public sealed class MyService(IMapper mapper)
 {
-	this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    public MyEntity Map(MyDto dto) => mapper.Map<MyEntity>(dto);
 }
 ```
 
-#### AutoMapperHelper
-```csharp
-// before - anti-pattern singleton
-AutoMapperHelper.Map<MyEntity>(entity, dto);
+### Service access and startup
 
-// after
-mapper.Map(dto, entity);
-```
+- Replace `ServiceProviderHelper` and static facades with constructor injection.
+- Remove the obsolete `UseMvp24Hours()` startup call.
+- Move `Startup.cs` registration to the minimal hosting model when the target
+  ASP.NET Core version supports it.
 
-#### MapTo
-```csharp
-// before
-var entity = dto.MapTo<MyEntity>();
+### MongoDB class maps
 
-// after
-var entity = mapper.Map<MyEntity>(dto);
-```
+For applications predating 4.2.101, remove the generic type from
+`IBsonClassMap<T>` implementations and implement `IBsonClassMap`.
 
-```csharp
-// before
-return result.MapBusinessTo<IList<MyEntity>, IList<MyEntityIdResult>>();
+## Related resources
 
-// after
-mapper.MapBusinessTo<IList<MyEntity>, IList<MyEntityIdResult>>(result);
-```
-
-### ServiceProviderHelper
-```csharp
-// before - anti-pattern singleton
-public static IMyEntityService MyEntityService
-{
-	get { return ServiceProviderHelper.GetService<IMyEntityService>(); }
-}
-
-// after - injection into class construction
-private readonly IServiceProvider provider;
-public FacadeService(IServiceProvider provider)
-{
-	this.provider = provider;
-}
-public IMyEntityService MyEntityService
-{
-	get { return provider.GetService<IMyEntityService>(); }
-}
-```
-
-### FacadeService
-```csharp
-// injection in controller class construction
-private readonly FacadeService facade;
-public MyEntityController(FacadeService facade)
-{
-	this.facade = facade;
-}
-```
-
-```csharp
-// before
-var result = await FacadeService.MyEntityService.GetBy(myEntityId, cancellationToken: cancellationToken);
-
-// after
-var result = await facade.MyEntityService.GetBy(myEntityId, cancellationToken: cancellationToken);
-```
-
-### Startup
-Removed UseMvp24Hours() from the Startup class.
-```csharp
-public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-	// ...
-	//app.UseMvp24Hours();
-}
-```
-
----
-
-## Version v9.0.x
-
-Version 9.0.x introduces major modernizations aligned with .NET 9 native APIs.
-
-### TelemetryHelper → ILogger
-
-> ⚠️ **Deprecated:** `TelemetryHelper` is deprecated. Use `ILogger<T>` instead.
-
-```csharp
-// before
-TelemetryHelper.Execute(TelemetryLevels.Information, "order-processing", orderId);
-
-// after
-private readonly ILogger<OrderService> _logger;
-
-public OrderService(ILogger<OrderService> logger)
-{
-    _logger = logger;
-}
-
-public void ProcessOrder(int orderId)
-{
-    _logger.LogInformation("Processing order {OrderId}", orderId);
-}
-```
-
-#### Configuration
-
-```csharp
-// before
-services.AddMvp24HoursTelemetry(TelemetryLevels.Information | TelemetryLevels.Verbose,
-    (name, state) => Console.WriteLine($"{name}|{string.Join("|", state)}"));
-
-// after
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.SetMinimumLevel(LogLevel.Debug);
-});
-
-// or with OpenTelemetry
-builder.Services.AddMvp24HoursObservability(options =>
-{
-    options.ServiceName = "MyService";
-    options.EnableTracing = true;
-    options.EnableMetrics = true;
-});
-```
-
-> 📚 For complete migration guide, see [Telemetry Migration](observability/migration.md).
-
-### HttpClientExtensions → Microsoft.Extensions.Http.Resilience
-
-> ⚠️ **Deprecated:** Custom `HttpClientExtensions` and `HttpPolicyHelper` are deprecated. Use native resilience.
-
-```csharp
-// before
-services.AddHttpClient("MyApi")
-    .AddPolicyHandler(HttpPolicyHelper.GetRetryPolicy(3))
-    .AddPolicyHandler(HttpPolicyHelper.GetCircuitBreakerPolicy(5, TimeSpan.FromSeconds(30)));
-
-// after
-services.AddHttpClient("MyApi", client =>
-{
-    client.BaseAddress = new Uri("https://api.example.com");
-})
-.AddMvpStandardResilience();
-// or with custom configuration:
-.AddMvpResilience(options =>
-{
-    options.Retry.MaxRetryAttempts = 3;
-    options.Retry.BackoffType = DelayBackoffType.Exponential;
-    options.CircuitBreaker.FailureRatio = 0.5;
-});
-```
-
-### MultiLevelCache → HybridCache
-
-> ⚠️ **Deprecated:** `MultiLevelCache` is deprecated. Use .NET 9 `HybridCache` instead.
-
-```csharp
-// before
-services.AddMultiLevelCache(options =>
-{
-    options.L1Options.SizeLimit = 1000;
-    options.L2ConnectionString = "redis:6379";
-});
-
-var item = await multiLevelCache.GetOrSetAsync("key", 
-    async () => await LoadDataAsync(), 
-    TimeSpan.FromMinutes(5));
-
-// after
-services.AddMvpHybridCache(options =>
-{
-    options.DefaultEntryOptions.Expiration = TimeSpan.FromMinutes(5);
-    options.DefaultEntryOptions.LocalCacheExpiration = TimeSpan.FromMinutes(1);
-});
-
-var item = await hybridCache.GetOrCreateAsync("key",
-    async cancel => await LoadDataAsync(cancel),
-    new HybridCacheEntryOptions
-    {
-        Expiration = TimeSpan.FromMinutes(5),
-        LocalCacheExpiration = TimeSpan.FromMinutes(1)
-    });
-```
-
-### Swagger → Native OpenAPI
-
-> ⚠️ **Note:** Swashbuckle is still supported but Native OpenAPI is preferred for .NET 9+.
-
-```csharp
-// before (Swashbuckle)
-services.AddMvp24HoursSwagger("My API", version: "v1", 
-    oAuthScheme: SwaggerAuthorizationScheme.Bearer);
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-// after (Native OpenAPI)
-services.AddMvp24HoursNativeOpenApi(options =>
-{
-    options.Title = "My API";
-    options.Version = "1.0.0";
-    options.EnableSwaggerUI = true;
-    options.AuthenticationScheme = OpenApiAuthenticationScheme.Bearer;
-});
-
-app.MapMvp24HoursNativeOpenApi();
-```
-
-### Startup.cs → Program.cs (Minimal Hosting)
-
-.NET 6+ uses minimal hosting model with `Program.cs`:
-
-```csharp
-// before (Startup.cs)
-public class Startup
-{
-    public void ConfigureServices(IServiceCollection services)
-    {
-        services.AddMvp24HoursDbContext<MyDbContext>(...);
-    }
-    
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        app.UseRouting();
-        app.UseEndpoints(endpoints => ...);
-    }
-}
-
-// after (Program.cs)
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddMvp24HoursDbContext<MyDbContext>(...);
-
-var app = builder.Build();
-
-app.UseRouting();
-app.MapControllers();
-
-app.Run();
-```
-
----
-
-## Version v9.1.x
-
-Version 9.1.x adds CQRS, enhanced observability, and new infrastructure features.
-
-### CQRS Integration
-
-New CQRS implementation with MediatR-compatible API:
-
-```csharp
-// Register CQRS services
-builder.Services.AddMvp24HoursCqrs(cfg =>
-{
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-});
-
-// Define a command
-public record CreateOrderCommand(string CustomerId, List<OrderItem> Items) 
-    : ICommand<OrderResult>;
-
-// Define a handler
-public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, OrderResult>
-{
-    public async Task<OrderResult> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
-    {
-        // ... implementation
-    }
-}
-
-// Usage with IMediator
-var result = await _mediator.Send(new CreateOrderCommand(customerId, items));
-```
-
-> 📚 See [CQRS Documentation](cqrs/getting-started.md) for complete guide.
-
-### ValidationBehavior for CQRS
-
-```csharp
-// Register validation behavior
-builder.Services.AddMvp24HoursCqrs(cfg =>
-{
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    cfg.AddValidationBehavior(); // Automatic validation
-});
-
-// Define validator
-public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
-{
-    public CreateOrderCommandValidator()
-    {
-        RuleFor(x => x.CustomerId).NotEmpty();
-        RuleFor(x => x.Items).NotEmpty();
-    }
-}
-```
-
-> 📚 See [Validation Behavior](cqrs/validation-behavior.md) for details.
-
-### Observability (Logs, Traces, Metrics)
-
-```csharp
-// All-in-one observability configuration
-builder.Services.AddMvp24HoursObservability(options =>
-{
-    options.ServiceName = "MyService";
-    options.ServiceVersion = "1.0.0";
-    
-    options.EnableLogging = true;
-    options.EnableTracing = true;
-    options.EnableMetrics = true;
-    
-    options.Logging.EnableTraceCorrelation = true;
-    options.Tracing.EnableCorrelationIdPropagation = true;
-});
-```
-
-> 📚 See [Observability Documentation](observability/home.md) for complete guide.
-
-### TimeProvider Integration
-
-```csharp
-// before
-var now = DateTime.UtcNow;
-
-// after
-private readonly TimeProvider _timeProvider;
-
-public MyService(TimeProvider timeProvider)
-{
-    _timeProvider = timeProvider;
-}
-
-public void DoWork()
-{
-    var now = _timeProvider.GetUtcNow();
-}
-
-// Registration
-services.AddTimeProvider();
-
-// For testing
-var fakeTime = new FakeTimeProvider(new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.Zero));
-services.ReplaceTimeProvider(fakeTime);
-```
-
----
-
-## Migration Resources
-
-For complete migration documentation:
-
-- [.NET 9 Native APIs Migration Guide](modernization/migration-guide.md) - Complete guide to all native API migrations
-- [TelemetryHelper Migration](observability/migration.md) - Detailed ILogger/OpenTelemetry migration
-- [CQRS Getting Started](cqrs/getting-started.md) - CQRS implementation guide
-- [Native OpenAPI](modernization/native-openapi.md) - OpenAPI migration guide
-- [HybridCache](modernization/hybrid-cache.md) - Cache modernization guide
+- [Release notes](release.md)
+- [.NET 9+ native API modernization](modernization/migration-guide.md)
+- [Observability migration](observability/migration.md)
+- [CQRS Getting Started](cqrs/getting-started.md)
+- [Native OpenAPI](modernization/native-openapi.md)

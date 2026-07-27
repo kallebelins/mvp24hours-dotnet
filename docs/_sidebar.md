@@ -1,6 +1,9 @@
-* [Home](en-us/home.md)
-* [Getting Started](en-us/getting-started.md)
-* Core Module
+* Start
+  * [Home](en-us/home.md)
+  * [Getting Started](en-us/getting-started.md)
+  * [Testing Cookbook](en-us/testing/home.md)
+  * [Configuration Reference](en-us/configuration-reference.md)
+* Core & Domain
   * [Overview](en-us/core/home.md)
   * [Guard Clauses](en-us/core/guard-clauses.md)
   * [Value Objects](en-us/core/value-objects.md)
@@ -8,9 +11,11 @@
   * [Functional Patterns](en-us/core/functional-patterns.md)
   * [Smart Enums](en-us/core/smart-enums.md)
   * [Entity Interfaces](en-us/core/entity-interfaces.md)
-  * [Infrastructure](en-us/core/infrastructure-abstractions.md)
+  * [Abstractions](en-us/core/infrastructure-abstractions.md)
+  * [Options Validation](en-us/core/options-validation.md)
   * [Exceptions](en-us/core/exceptions.md)
-* Database
+  * [Specification](en-us/specification.md)
+* Data & Persistence
   * [Relational Database](en-us/database/relational.md)
   * [EF Core Advanced](en-us/database/efcore-advanced.md)
   * [NoSQL Database](en-us/database/nosql.md)
@@ -20,28 +25,26 @@
   * [Unit of Work](en-us/database/use-unitofwork.md)
   * [Repository](en-us/database/use-repository.md)
   * [Repository Service](en-us/database/use-service.md)
-* Infrastructure
-  * [Message Broker](en-us/broker.md)
-  * [Message Broker Advanced](en-us/broker-advanced.md)
-  * [Pipeline](en-us/pipeline.md)
-  * [Caching](en-us/caching-advanced.md)
-* [Application Services](en-us/application-services.md)
-* CQRS/Mediator
-  * [Overview](en-us/cqrs/home.md)
-  * [Getting Started](en-us/cqrs/getting-started.md)
-  * [Concepts Comparison](en-us/cqrs/concepts-comparison.md)
-  * Core Concepts
+* Application Layer
+  * [Application Services](en-us/application-services.md)
+  * [Mapping](en-us/mapping.md)
+  * [Data Validation](en-us/validation.md)
+* CQRS & Messaging
+  * Mediator
+    * [Overview](en-us/cqrs/home.md)
+    * [Getting Started](en-us/cqrs/getting-started.md)
+    * [Concepts Comparison](en-us/cqrs/concepts-comparison.md)
     * [Mediator](en-us/cqrs/mediator.md)
     * [Commands](en-us/cqrs/commands.md)
     * [Queries](en-us/cqrs/queries.md)
     * [Notifications](en-us/cqrs/notifications.md)
-    * [Domain Events](en-us/cqrs/domain-events.md)
-    * [Integration Events](en-us/cqrs/integration-events.md)
     * [Pipeline Behaviors](en-us/cqrs/behaviors.md)
     * [Validation](en-us/cqrs/validation-behavior.md)
     * [Specifications](en-us/cqrs/specifications.md)
-  * Integrations
-    * [UnitOfWork](en-us/cqrs/integration-unitofwork.md)
+  * Events & Integrations
+    * [Domain Events](en-us/cqrs/domain-events.md)
+    * [Integration Events](en-us/cqrs/integration-events.md)
+    * [Unit of Work](en-us/cqrs/integration-unitofwork.md)
     * [Repository](en-us/cqrs/integration-repository.md)
     * [RabbitMQ](en-us/cqrs/integration-rabbitmq.md)
     * [Caching with Redis](en-us/cqrs/integration-caching.md)
@@ -55,7 +58,7 @@
     * [Circuit Breaker](en-us/cqrs/resilience/circuit-breaker.md)
     * [Retry Policies](en-us/cqrs/resilience/retry.md)
   * Observability
-    * [CorrelationId and Tracing](en-us/cqrs/observability/tracing.md)
+    * [Correlation and Tracing](en-us/cqrs/observability/tracing.md)
     * [Telemetry](en-us/cqrs/observability/telemetry.md)
     * [Audit Trail](en-us/cqrs/observability/audit.md)
   * Event Sourcing
@@ -68,108 +71,87 @@
     * [Overview](en-us/cqrs/saga/home.md)
     * [Implementation](en-us/cqrs/saga/implementation.md)
     * [Compensation](en-us/cqrs/saga/compensation.md)
-  * Reference
+  * Messaging
+    * [RabbitMQ](en-us/broker.md)
+    * [RabbitMQ Advanced](en-us/broker-advanced.md)
+  * Guidance
     * [Best Practices](en-us/cqrs/best-practices.md)
     * [API Reference](en-us/cqrs/api-reference.md)
     * [MediatR Migration](en-us/cqrs/migration-mediatr.md)
-* ASP.NET Web API
-  * [Basics](en-us/webapi.md)
-  * [Advanced Features](en-us/webapi-advanced.md)
-* Observability
-  * [Overview](en-us/observability/home.md)
-  * [Logging](en-us/logging.md)
-  * [Telemetry](en-us/telemetry.md)
+* Infrastructure Modules
+  * [Overview](en-us/infrastructure/home.md)
+  * [Pipeline](en-us/pipeline.md)
+  * [Caching](en-us/caching-advanced.md)
+  * [Email](en-us/infrastructure/email.md)
+  * [SMS](en-us/infrastructure/sms.md)
+  * [File Storage](en-us/infrastructure/file-storage.md)
+  * [Secrets & Security](en-us/infrastructure/secrets-security.md)
+  * [Distributed Locking](en-us/infrastructure/distributed-locking.md)
+  * [HTTP Clients & Resilience](en-us/infrastructure/http-resilience.md)
+  * [Testing Helpers](en-us/testing/home.md)
+  * Native APIs
+    * [HybridCache](en-us/modernization/hybrid-cache.md)
+    * [Channels](en-us/modernization/channels.md)
+    * [Keyed Services](en-us/modernization/keyed-services.md)
+    * [Options Configuration](en-us/modernization/options-configuration.md)
+* Web API & Background Jobs
+  * [Web API Basics](en-us/webapi.md)
+  * [Web API Advanced](en-us/webapi-advanced.md)
+  * [OpenAPI / Swagger](en-us/documentation.md)
+  * [ProblemDetails](en-us/modernization/problem-details.md)
+  * [Minimal APIs with TypedResults](en-us/modernization/minimal-apis.md)
+  * [Native OpenAPI](en-us/modernization/native-openapi.md)
+  * [Output Caching](en-us/modernization/output-caching.md)
+  * CronJob
+    * [Overview](en-us/cronjob.md)
+    * [Advanced Features](en-us/cronjob-advanced.md)
+    * [Resilience](en-us/cronjob-resilience.md)
+    * [Observability](en-us/cronjob-observability.md)
+  * [Background Jobs (Hangfire / Quartz)](en-us/infrastructure/background-jobs.md)
+* Observability & Resilience
+  * [Observability Overview](en-us/observability/home.md)
+  * [Logging Overview](en-us/logging.md)
+  * [Legacy Telemetry](en-us/telemetry.md)
   * [OpenTelemetry Logging](en-us/observability/logging.md)
   * [OpenTelemetry Tracing](en-us/observability/tracing.md)
   * [OpenTelemetry Metrics](en-us/observability/metrics.md)
   * [OpenTelemetry Exporters](en-us/observability/exporters.md)
-  * [Migration from TelemetryHelper](en-us/observability/migration.md)
-* CronJob
-  * [Overview](en-us/cronjob.md)
-  * [Advanced Features](en-us/cronjob-advanced.md)
-  * [Resilience](en-us/cronjob-resilience.md)
-  * [Observability](en-us/cronjob-observability.md)
-* Modernization (.NET 9)
-  * [Overview](en-us/modernization/dotnet9-features.md)
-  * [Migration Guide](en-us/modernization/migration-guide.md)
+  * [Telemetry Migration](en-us/observability/migration.md)
   * Resilience
+    * [Selection Guide](en-us/modernization/resilience-guide.md)
     * [HTTP Resilience](en-us/modernization/http-resilience.md)
     * [Generic Resilience](en-us/modernization/generic-resilience.md)
     * [Rate Limiting](en-us/modernization/rate-limiting.md)
   * Time & Scheduling
     * [TimeProvider](en-us/modernization/time-provider.md)
     * [PeriodicTimer](en-us/modernization/periodic-timer.md)
-  * Caching
-    * [HybridCache](en-us/modernization/hybrid-cache.md)
-    * [Output Caching](en-us/modernization/output-caching.md)
-  * Configuration & DI
-    * [Options Configuration](en-us/modernization/options-configuration.md)
-    * [Keyed Services](en-us/modernization/keyed-services.md)
-  * Async Patterns
-    * [Channels (Producer/Consumer)](en-us/modernization/channels.md)
-  * APIs
-    * [ProblemDetails (RFC 7807)](en-us/modernization/problem-details.md)
-    * [Minimal APIs with TypedResults](en-us/modernization/minimal-apis.md)
-    * [Native OpenAPI (.NET 9)](en-us/modernization/native-openapi.md)
-  * Performance
+  * Cloud & Performance
+    * [.NET Aspire](en-us/modernization/aspire.md)
     * [Source Generators](en-us/modernization/source-generators.md)
-  * Cloud
-    * [.NET Aspire 9](en-us/modernization/aspire.md)
-* AI Context (For AI Agents)
-  * [Overview](en-us/ai-context/home.md)
-  * [Architecture Templates](en-us/ai-context/architecture-templates.md)
-  * [Decision Matrix](en-us/ai-context/decision-matrix.md)
-  * Patterns
-    * [Database Patterns](en-us/ai-context/database-patterns.md)
-    * [Messaging Patterns](en-us/ai-context/messaging-patterns.md)
-    * [Observability Patterns](en-us/ai-context/observability-patterns.md)
-    * [Modernization Patterns](en-us/ai-context/modernization-patterns.md)
-  * Project Structure
-    * [Overview](en-us/ai-context/project-structure.md)
-    * [Minimal API Structure](en-us/ai-context/structure-minimal-api.md)
-    * [Simple N-Layers Structure](en-us/ai-context/structure-simple-nlayers.md)
-    * [Complex N-Layers Structure](en-us/ai-context/structure-complex-nlayers.md)
-  * Architecture Templates
-    * [CQRS Template](en-us/ai-context/template-cqrs.md)
-    * [Event-Driven Template](en-us/ai-context/template-event-driven.md)
-    * [Hexagonal Template](en-us/ai-context/template-hexagonal.md)
-    * [Clean Architecture Template](en-us/ai-context/template-clean-architecture.md)
-    * [DDD Template](en-us/ai-context/template-ddd.md)
-    * [Microservices Template](en-us/ai-context/template-microservices.md)
-  * Best Practices
-    * [Testing Patterns](en-us/ai-context/testing-patterns.md)
-    * [Security Patterns](en-us/ai-context/security-patterns.md)
-    * [Error Handling Patterns](en-us/ai-context/error-handling-patterns.md)
-    * [API Versioning Patterns](en-us/ai-context/api-versioning-patterns.md)
-    * [Containerization Patterns](en-us/ai-context/containerization-patterns.md)
-  * AI Implementation
-    * [Implementation Index](en-us/ai-context/ai-implementation-index.md)
-    * [Decision Matrix](en-us/ai-context/ai-decision-matrix.md)
-    * Semantic Kernel
-      * [Chat Completion](en-us/ai-context/template-sk-chat-completion.md)
-      * [Plugins & Functions](en-us/ai-context/template-sk-plugins.md)
-      * [RAG Basic](en-us/ai-context/template-sk-rag-basic.md)
-      * [Planners](en-us/ai-context/template-sk-planners.md)
-    * Semantic Kernel Graph
-      * [Graph Executor](en-us/ai-context/template-skg-graph-executor.md)
-      * [ReAct Agent](en-us/ai-context/template-skg-react-agent.md)
-      * [Chain of Thought](en-us/ai-context/template-skg-chain-of-thought.md)
-      * [Chatbot with Memory](en-us/ai-context/template-skg-chatbot-memory.md)
-      * [Multi-Agent](en-us/ai-context/template-skg-multi-agent.md)
-      * [Document Pipeline](en-us/ai-context/template-skg-document-pipeline.md)
-      * [Human-in-the-Loop](en-us/ai-context/template-skg-human-in-loop.md)
-      * [Checkpointing](en-us/ai-context/template-skg-checkpointing.md)
-      * [Streaming](en-us/ai-context/template-skg-streaming.md)
-      * [Observability](en-us/ai-context/template-skg-observability.md)
-    * Agent Framework
-      * [Agent Framework Basic](en-us/ai-context/template-agent-framework-basic.md)
-      * [Graph Workflows](en-us/ai-context/template-agent-framework-workflows.md)
-      * [Multi-Agent](en-us/ai-context/template-agent-framework-multi-agent.md)
-      * [Middleware](en-us/ai-context/template-agent-framework-middleware.md)
-* Reference
-  * [Documentation](en-us/documentation.md)
-  * [Mapping](en-us/mapping.md)
-  * [Data Validation](en-us/validation.md)
-  * [Specification](en-us/specification.md)
-  * [Release](en-us/release.md)
-  * [Migration](en-us/migration.md)
+  * [Health Checks Catalog](en-us/infrastructure/health-checks.md)
+* Architecture Guides
+  * [Overview](en-us/guides/architecture/home.md)
+  * [Decision Matrix](en-us/guides/architecture/decision-matrix.md)
+  * [Project Structure](en-us/guides/architecture/project-structure.md)
+  * Project Structures
+    * [Minimal API](en-us/guides/architecture/structures/structure-minimal-api.md)
+    * [Simple N-Layers](en-us/guides/architecture/structures/structure-simple-nlayers.md)
+    * [Complex N-Layers](en-us/guides/architecture/structures/structure-complex-nlayers.md)
+  * Blueprints
+    * [CQRS](en-us/guides/architecture/blueprints/template-cqrs.md)
+    * [Event-Driven](en-us/guides/architecture/blueprints/template-event-driven.md)
+    * [Hexagonal](en-us/guides/architecture/blueprints/template-hexagonal.md)
+    * [Clean Architecture](en-us/guides/architecture/blueprints/template-clean-architecture.md)
+    * [Domain-Driven Design](en-us/guides/architecture/blueprints/template-ddd.md)
+    * [Microservices](en-us/guides/architecture/blueprints/template-microservices.md)
+  * [Containerization](en-us/guides/deployment/containerization.md)
+* Release & Migration
+  * [Release Notes](en-us/release.md)
+  * [Version Migration](en-us/migration.md)
+  * [.NET 9+ Native API Migration](en-us/modernization/migration-guide.md)
+  * [.NET 10 Modernization Overview](en-us/modernization/dotnet9-features.md)
+* AI & MCP Resources
+  * [Overview](en-us/ai-resources/home.md)
+  * [Cursor Rule](mvp24hours.mdc)
+  * [Compact LLM Context](llms_compact_en.txt)
+  * [Complete LLM Context](llms_complete_en.txt)

@@ -13,6 +13,9 @@ The Core module is the foundation of the Mvp24Hours framework. It contains essen
 | **Smart Enums** | Enumeration&lt;T&gt; base class for rich enumerations |
 | **Entity Interfaces** | IEntity, IAuditableEntity, ISoftDeletable, ITenantEntity, IVersionedEntity |
 | **Infrastructure** | IClock, IGuidGenerator with test-friendly implementations |
+| **Native integrations** | TimeProvider adapters, Channels, keyed services, and rate limiting hooks |
+| **Configuration** | Options binding, validation, monitoring, and startup checks |
+| **Cloud-native defaults** | Aspire options, health endpoints, and correlation context |
 | **Exceptions** | BusinessException, ValidationException, NotFoundException, and more |
 
 ## Installation
@@ -105,5 +108,14 @@ if (order == null)
 - [Smart Enums](smart-enums.md) - Enumeration pattern
 - [Entity Interfaces](entity-interfaces.md) - IEntity, IAuditable, etc.
 - [Infrastructure](infrastructure-abstractions.md) - IClock, IGuidGenerator
+- [Options Validation](options-validation.md) - Data Annotations, custom validators, monitor, and snapshot
 - [Exceptions](exceptions.md) - Exception hierarchy
+- [Specification Pattern](../specification.md) - Composable domain and query rules
+- [Channels](../modernization/channels.md) - Bounded queues and producer/consumer processing
+- [Keyed Services](../modernization/keyed-services.md) - Native keyed dependency injection
+- [Rate Limiting](../modernization/rate-limiting.md) - Rate limiter abstractions and providers
+- [.NET Aspire](../modernization/aspire.md) - Service defaults and complete options reference
+- [Configuration Reference](../configuration-reference.md) - Options index and appsettings templates
+- [Getting Started](../getting-started.md) - Product learning path
+- [Architecture Guides](../guides/architecture/home.md) - Solution shapes and blueprints
 

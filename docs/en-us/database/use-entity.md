@@ -1,72 +1,81 @@
-# How to implement entities?
-An entity can be any class that has few properties with a unique ID.
+# Entities
 
-## Basic Configuration
+Mvp24Hours repositories accept classes that implement `IEntityBase`. New domain models can use the strongly typed `IEntity<TId>` contract; `IEntityBase` remains the compatibility contract used by repositories.
+
+## Basic entity
+
 ```csharp
-public class MyEntity : IEntityBase
+using Mvp24Hours.Core.Contract.Domain.Entity;
+
+public sealed class Customer : IEntity<Guid>
 {
-    public object EntityKey => this.MyId; // returns class identifier (ID)
+    public Guid Id { get; set; }
+    public required string Name { get; set; }
+
+    object? IEntityBase.EntityKey => Id;
 }
 ```
 
-It is worth remembering that the entity loaded in the context of the Entity Framework must have some characteristics:
+`EntityBase<TKey>` from `Mvp24Hours.Core.Entities` is the legacy convenience base class:
+
 ```csharp
-public class MyEntity : IEntityBase
+public sealed class Customer : EntityBase<Guid>
 {
-    [JsonIgnore] // prevents duplicating the key if serialized
-    [IgnoreDataMember] // prevents sending column to the database and generating exceptions
-    public object EntityKey => this.MyId;
-
-    [Key] // indicates that this property represents the entity identifier
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // automatically generates value for the column at the time of persistence
-    public int Id { get; set; }
-
-    [...]
+    public required string Name { get; set; }
 }
 ```
 
-You can create a base class or use the one from the architecture:
+For EF Core, map `Id` normally with conventions, data annotations, or `IEntityTypeConfiguration<T>`. `EntityKey` is a CLR contract and does not need to be stored as a second column.
+
+## Audit contracts
+
+Two audit models exist:
+
+- `IEntityDateLog` uses `Created`, `Modified`, and `Removed`. `Mvp24HoursContext` can populate these fields and filters rows whose `Removed` is not null when `CanApplyEntityLog` is enabled.
+- `IEntityLog<TUserId>` adds `CreatedBy`, `ModifiedBy`, and `RemovedBy`.
+- `IAuditableEntity` and `IAuditableEntity<TUserId>` use `CreatedAt`, `CreatedBy`, `ModifiedAt`, and `ModifiedBy`; use them with `AuditSaveChangesInterceptor`.
+
 ```csharp
-public class MyEntity : EntityBase<int> // ID column data type
+public sealed class Order : EntityBase<int>, IAuditableEntity
 {
-    [...]
+    public decimal Total { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
+    public DateTime? ModifiedAt { get; set; }
+    public string? ModifiedBy { get; set; }
 }
 ```
 
-## Configuration with Log
-We have two dynamic implementations for entity update logging through context. To reference record update date and time, use:
+## Soft delete
+
+`ISoftDeletable` exposes `IsDeleted`, `DeletedAt`, and `DeletedBy`. Register `SoftDeleteInterceptor` and add its global filter; implementing the interface alone does not hide deleted rows.
+
 ```csharp
-public class MyEntityWithLog : EntityBase<int>, IEntityDateLog
+public sealed class Product : EntityBase<int>, ISoftDeletable
 {
-    [Required]
-    public DateTime Created { get; set; }
+    public required string Name { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string DeletedBy { get; set; } = string.Empty;
+}
 
-    public DateTime? Modified { get; set; }
-
-    public DateTime? Removed { get; set; }
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+    modelBuilder.ApplySoftDeleteGlobalFilter();
 }
 ```
 
-If you need to update the record of the user who performed the action:
+## Tenant ownership
+
+Use `ITenantEntity` for string tenant identifiers or `ITenantEntity<TTenantId>` for another identifier type. EF Core tenant filtering and automatic assignment require a registered `ITenantProvider`, query filters, and `TenantSaveChangesInterceptor`; MongoDB uses the matching MongoDB tenant interceptor.
+
 ```csharp
-public class MyEntityWithLog : EntityBase<int>, IEntityLog<int?> // user id column data type
+public sealed class Invoice : EntityBase<Guid>, ITenantEntity
 {
-    public DateTime Created { get; set; }
-    public int CreatedBy { get; set; }
-    public DateTime? Modified { get; set; }
-    public int ModifiedBy { get; set; }
-    public DateTime? Removed { get; set; }
-    public int RemovedBy { get; set; }
+    public string TenantId { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
 }
 ```
 
-You can create a base class or use the one from the architecture:
-```csharp
-public class MyEntityWithLog : EntityBaseLog<int, int?> // column data type id and user id
-{
-    [...]
-}
-```
-
-## Common Question
-But how will I use these columns with already defined names? Simple. You can configure the column name in the database via Fluent or Data Annotation.
+See [Context](use-context.md), [Repository](use-repository.md), and [EF Core Advanced](efcore-advanced.md).

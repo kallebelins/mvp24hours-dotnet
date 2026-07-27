@@ -1,378 +1,89 @@
-# CronJob Resilience
+# CronJob resilience
 
-The CronJob module provides comprehensive resilience patterns for production-grade background job execution. This includes retry policies, circuit breaker pattern, overlapping execution prevention, and graceful shutdown handling.
+Use `ResilientCronJobService<T>` with `AddResilientCronJob` or `AddResilientCronJobWithOptions`. Per-job shortcut properties shared with `CronJobOptions<T>` are listed in [advanced configuration](cronjob-advanced.md); this page owns the complete `CronJobResilienceConfig<T>` reference.
 
-## Features
-
-- **Retry Policy**: Configurable retry with exponential backoff and jitter
-- **Circuit Breaker**: Prevents repeated execution of failing jobs
-- **Overlapping Prevention**: Ensures only one execution runs at a time
-- **Graceful Shutdown**: Properly handles application shutdown with configurable timeout
-- **Execution Timeout**: Cancels long-running jobs after a configured duration
-- **CancellationToken Propagation**: Correctly propagates cancellation to all nested operations
-- **OpenTelemetry Integration**: All resilience operations are instrumented for observability
-
-## Installation
-
-The resilience features are included in the base package:
-
-```bash
-dotnet add package Mvp24Hours.Infrastructure.CronJob
-```
-
-## Creating a Resilient CronJob
-
-Inherit from `ResilientCronJobService<T>` instead of `CronJobService<T>`:
+## Register a resilient job
 
 ```csharp
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Mvp24Hours.Infrastructure.CronJob.Interfaces;
-using Mvp24Hours.Infrastructure.CronJob.Resiliency;
-using Mvp24Hours.Infrastructure.CronJob.Services;
-
-public class MyResilientJob : ResilientCronJobService<MyResilientJob>
+services.AddResilientCronJob<ImportJob>(config =>
 {
-    public MyResilientJob(
-        IResilientScheduleConfig<MyResilientJob> config,
-        IHostApplicationLifetime hostApplication,
-        IServiceProvider rootServiceProvider,
-        ICronJobExecutionLock executionLock,
-        CronJobCircuitBreaker circuitBreaker,
-        ILogger<ResilientCronJobService<MyResilientJob>> logger,
-        TimeProvider? timeProvider = null)
-        : base(config, hostApplication, rootServiceProvider, executionLock, circuitBreaker, logger, timeProvider)
-    {
-    }
-
-    public override async Task DoWork(CancellationToken cancellationToken)
-    {
-        // Your job logic here
-        // Retries, circuit breaker, and overlapping prevention are handled automatically
-        
-        var service = _serviceProvider!.GetRequiredService<IMyService>();
-        await service.ProcessAsync(cancellationToken);
-    }
-}
-```
-
-## Configuration
-
-### Full Resilience Configuration
-
-```csharp
-services.AddResilientCronJob<MyResilientJob>(config =>
-{
-    // Schedule configuration
-    config.CronExpression = "*/5 * * * *"; // Every 5 minutes
+    config.CronExpression = "*/5 * * * *";
     config.TimeZoneInfo = TimeZoneInfo.Utc;
-    
-    // Retry configuration
     config.Resilience.EnableRetry = true;
     config.Resilience.MaxRetryAttempts = 3;
-    config.Resilience.RetryDelay = TimeSpan.FromSeconds(1);
-    config.Resilience.UseExponentialBackoff = true;
-    config.Resilience.MaxRetryDelay = TimeSpan.FromSeconds(30);
-    config.Resilience.RetryJitterFactor = 0.2; // 20% jitter
-    
-    // Circuit breaker configuration
     config.Resilience.EnableCircuitBreaker = true;
-    config.Resilience.CircuitBreakerFailureThreshold = 5;
-    config.Resilience.CircuitBreakerDuration = TimeSpan.FromSeconds(30);
-    config.Resilience.CircuitBreakerSuccessThreshold = 1;
-    config.Resilience.CircuitBreakerSamplingDuration = TimeSpan.FromSeconds(60);
-    
-    // Overlapping prevention
     config.Resilience.PreventOverlapping = true;
-    config.Resilience.LogOverlappingSkipped = true;
-    config.Resilience.OverlappingWaitTimeout = TimeSpan.Zero; // Skip immediately
-    
-    // Graceful shutdown
-    config.Resilience.GracefulShutdownTimeout = TimeSpan.FromSeconds(30);
-    config.Resilience.WaitForExecutionOnShutdown = true;
-    
-    // Execution timeout
-    config.Resilience.ExecutionTimeout = TimeSpan.FromMinutes(5);
-    config.Resilience.PropagateCancellation = true;
-    
-    // Callbacks
-    config.Resilience.OnRetry = (ex, attempt, delay) =>
-    {
-        Console.WriteLine($"Retry {attempt}, waiting {delay.TotalSeconds}s: {ex.Message}");
-    };
-    
-    config.Resilience.OnCircuitBreakerStateChange = (oldState, newState) =>
-    {
-        Console.WriteLine($"Circuit breaker: {oldState} -> {newState}");
-    };
-    
-    config.Resilience.OnOverlappingSkipped = () =>
-    {
-        Console.WriteLine("Execution skipped - previous still running");
-    };
-    
-    config.Resilience.OnJobFailed = (ex) =>
-    {
-        Console.WriteLine($"Job failed after all retries: {ex.Message}");
-    };
+    config.Resilience.ExecutionTimeout = TimeSpan.FromMinutes(4);
 });
 ```
 
-### Convenience Methods
+Option-based registration is bindable and startup-validated:
 
 ```csharp
-// Simple resilient job (overlapping prevention only)
-services.AddResilientCronJob<MyJob>("*/5 * * * *");
-
-// Full resilience (retry + circuit breaker + overlapping)
-services.AddResilientCronJobWithFullResilience<MyJob>("*/5 * * * *", TimeZoneInfo.Utc);
-
-// With retry only
-services.AddResilientCronJobWithRetry<MyJob>(
-    "0 * * * *",
-    maxRetryAttempts: 5,
-    useExponentialBackoff: true);
-
-// With circuit breaker only
-services.AddResilientCronJobWithCircuitBreaker<MyJob>(
-    "* * * * *",
-    failureThreshold: 3,
-    breakDuration: TimeSpan.FromMinutes(1));
-```
-
-## Retry Policy
-
-The retry policy automatically retries failed job executions with configurable behavior.
-
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `EnableRetry` | `false` | Enable retry policy |
-| `MaxRetryAttempts` | `3` | Maximum number of retry attempts |
-| `RetryDelay` | `1 second` | Initial delay between retries |
-| `UseExponentialBackoff` | `true` | Use exponential backoff (1s, 2s, 4s, ...) |
-| `MaxRetryDelay` | `30 seconds` | Maximum delay when using exponential backoff |
-| `RetryJitterFactor` | `0.2` | Jitter factor (0-1) to prevent thundering herd |
-| `ShouldRetryOnException` | `null` | Predicate to filter retryable exceptions |
-
-### Exponential Backoff with Jitter
-
-When `UseExponentialBackoff` is enabled, delays follow the pattern:
-
-```
-delay = min(initialDelay * 2^(attempt-1), maxDelay) ± jitter
-```
-
-Example with default settings:
-- Attempt 1: ~1s (800ms - 1.2s with jitter)
-- Attempt 2: ~2s (1.6s - 2.4s with jitter)
-- Attempt 3: ~4s (3.2s - 4.8s with jitter)
-
-### Filtering Retryable Exceptions
-
-```csharp
-config.Resilience.ShouldRetryOnException = ex =>
+services.AddResilientCronJobWithOptions<ImportJob>(options =>
 {
-    // Only retry transient errors
-    return ex is HttpRequestException 
-        || ex is TimeoutException
-        || ex is SqlException { IsTransient: true };
-};
+    options.CronExpression = "*/5 * * * *";
+    options.TimeZone = "UTC";
+    options.EnableRetry = true;
+    options.EnableCircuitBreaker = true;
+});
 ```
 
-## Circuit Breaker
+## `CronJobResilienceConfig<T>`
 
-The circuit breaker pattern prevents repeated execution of a job that's consistently failing, allowing the system to recover.
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `EnableRetry` | `bool` | `false` | Enables retry after a failed execution. |
+| `MaxRetryAttempts` | `int` | `3` | Maximum configured attempts. |
+| `RetryDelay` | `TimeSpan` | `1 s` | Initial delay. |
+| `UseExponentialBackoff` | `bool` | `true` | Increases delay exponentially. |
+| `MaxRetryDelay` | `TimeSpan` | `30 s` | Backoff ceiling. |
+| `RetryJitterFactor` | `double` | `0.2` | Random delay factor. |
+| `ShouldRetryOnException` | `Func<Exception, bool>?` | `null` | Optional retry filter. |
+| `EnableCircuitBreaker` | `bool` | `false` | Enables the circuit breaker. |
+| `CircuitBreakerFailureThreshold` | `int` | `5` | Failures before opening. |
+| `CircuitBreakerDuration` | `TimeSpan` | `30 s` | Open-state duration. |
+| `CircuitBreakerSuccessThreshold` | `int` | `1` | Half-open successes required to close. |
+| `CircuitBreakerSamplingDuration` | `TimeSpan` | `60 s` | Failure sampling window. |
+| `PreventOverlapping` | `bool` | `true` | Prevents concurrent execution in one process. |
+| `LogOverlappingSkipped` | `bool` | `true` | Logs skipped overlaps. |
+| `OverlappingWaitTimeout` | `TimeSpan` | `TimeSpan.Zero` | Local-lock wait; zero skips immediately. |
+| `GracefulShutdownTimeout` | `TimeSpan` | `30 s` | Maximum shutdown wait. |
+| `WaitForExecutionOnShutdown` | `bool` | `true` | Waits for an active execution. |
+| `PropagateCancellation` | `bool` | `true` | Passes cancellation into job work. |
+| `ExecutionTimeout` | `TimeSpan?` | `null` | Optional execution deadline. |
+| `OnRetry` | `Action<Exception,int,TimeSpan>?` | `null` | Retry callback. |
+| `OnCircuitBreakerStateChange` | `Action<CircuitBreakerState,CircuitBreakerState>?` | `null` | State-change callback. |
+| `OnOverlappingSkipped` | `Action?` | `null` | Overlap callback. |
+| `OnJobFailed` | `Action<Exception>?` | `null` | Terminal failure callback. |
 
-### States
+Factory methods are `Default()`, `WithRetry(...)`, `WithCircuitBreaker(...)`, and `FullResilience()`.
 
-| State | Description |
-|-------|-------------|
-| **Closed** | Normal operation, executions allowed |
-| **Open** | Executions blocked after reaching failure threshold |
-| **Half-Open** | Test executions allowed after break duration |
+## Local versus distributed overlap prevention
 
-### State Transitions
-
-```
-Closed ─── failures ≥ threshold ──→ Open
-  ↑                                   │
-  │                                   │ break duration elapsed
-  │                                   ↓
-  └──── success ≥ threshold ──── Half-Open
-                                      │
-                                      │ failure
-                                      ↓
-                                    Open
-```
-
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `EnableCircuitBreaker` | `false` | Enable circuit breaker |
-| `CircuitBreakerFailureThreshold` | `5` | Failures before opening |
-| `CircuitBreakerDuration` | `30 seconds` | How long circuit stays open |
-| `CircuitBreakerSuccessThreshold` | `1` | Successes needed to close from half-open |
-| `CircuitBreakerSamplingDuration` | `60 seconds` | Window for counting failures |
-
-### Monitoring Circuit Breaker State
+`ICronJobExecutionLock` and `PreventOverlapping` protect one process. Cluster deployments must additionally use advanced `IDistributedCronJobLock` infrastructure and a production implementation registered through `AddCronJobDistributedLock<TLock>()`.
 
 ```csharp
-public class MyJob : ResilientCronJobService<MyJob>
+services.AddCronJobAdvancedInfrastructure(o => o.UseDistributedLocking = true);
+services.AddCronJobDistributedLock<RedisCronJobLock>();
+services.AddAdvancedCronJobWithOptions<ImportJob>(o =>
 {
-    public override async Task DoWork(CancellationToken cancellationToken)
-    {
-        // Access current state
-        var state = CircuitBreakerState;
-        _logger.LogInformation("Current circuit breaker state: {State}", state);
-        
-        // Execution count and skip count are available
-        _logger.LogInformation("Executions: {Count}, Skipped: {Skipped}", 
-            ExecutionCount, SkippedCount);
-    }
-}
+    o.CronExpression = "*/5 * * * *";
+    o.EnableDistributedLocking = true;
+    o.DistributedLockExpiry = TimeSpan.FromMinutes(5);
+});
 ```
 
-## Overlapping Prevention
+Do not describe the built-in `InMemoryDistributedCronJobLock` as cluster safe.
 
-Prevents concurrent executions of the same job, useful for jobs that shouldn't run in parallel.
+## Operational guidance
 
-### Configuration Options
+- Retry only transient failures; use `ShouldRetryOnException`.
+- Keep the job duration below its schedule interval or deliberately skip overlaps.
+- Set distributed lease duration beyond the normal execution time and design renewal in the custom provider when required.
+- Observe circuit transitions, retries and skips through [CronJob observability](cronjob-observability.md).
+- Always honor the cancellation token in long loops and I/O.
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `PreventOverlapping` | `true` | Enable overlapping prevention |
-| `LogOverlappingSkipped` | `true` | Log when execution is skipped |
-| `OverlappingWaitTimeout` | `TimeSpan.Zero` | Time to wait for lock (0 = skip immediately) |
+## Test reference
 
-### Behavior
-
-- **Immediate Skip**: With `OverlappingWaitTimeout = TimeSpan.Zero`, if a previous execution is still running, the new execution is skipped immediately.
-- **Wait with Timeout**: Set a timeout to wait for the previous execution to complete before skipping.
-
-```csharp
-// Wait up to 10 seconds for lock before skipping
-config.Resilience.OverlappingWaitTimeout = TimeSpan.FromSeconds(10);
-```
-
-## Graceful Shutdown
-
-Properly handles application shutdown, giving running jobs time to complete.
-
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `GracefulShutdownTimeout` | `30 seconds` | Maximum time to wait for job completion |
-| `WaitForExecutionOnShutdown` | `true` | Whether to wait for current execution |
-
-### Behavior
-
-1. When shutdown is requested, the job receives cancellation
-2. The framework waits up to `GracefulShutdownTimeout` for completion
-3. If timeout is exceeded, the job is forcefully cancelled
-4. Resources are properly disposed
-
-```csharp
-public override async Task DoWork(CancellationToken cancellationToken)
-{
-    // Check cancellation periodically for responsive shutdown
-    foreach (var item in items)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        await ProcessItemAsync(item, cancellationToken);
-    }
-}
-```
-
-## Execution Timeout
-
-Automatically cancels job executions that take too long.
-
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `ExecutionTimeout` | `null` | Maximum execution time (null = no timeout) |
-| `PropagateCancellation` | `true` | Propagate cancellation to nested operations |
-
-```csharp
-// Cancel execution after 5 minutes
-config.Resilience.ExecutionTimeout = TimeSpan.FromMinutes(5);
-```
-
-## OpenTelemetry Tracing
-
-Resilience operations are fully instrumented:
-
-### Additional Tags
-
-| Tag | Description |
-|-----|-------------|
-| `cronjob.resilience.retry_enabled` | Whether retry is enabled |
-| `cronjob.resilience.retry_attempt` | Current retry attempt |
-| `cronjob.resilience.retry_count` | Total retries across all executions |
-| `cronjob.resilience.circuit_breaker_enabled` | Whether circuit breaker is enabled |
-| `cronjob.resilience.circuit_breaker_state` | Current circuit breaker state |
-| `cronjob.resilience.prevent_overlapping` | Whether overlapping prevention is enabled |
-| `cronjob.resilience.execution_skipped` | Whether execution was skipped |
-| `cronjob.resilience.skip_reason` | Reason for skipping |
-| `cronjob.resilience.timed_out` | Whether execution timed out |
-
-## Distributed Lock Implementation
-
-For multi-instance deployments, implement `ICronJobExecutionLock`:
-
-```csharp
-public class RedisDistributedCronJobLock : ICronJobExecutionLock
-{
-    private readonly IDistributedLockFactory _lockFactory;
-    
-    public async Task<ICronJobLockHandle?> TryAcquireAsync(
-        string jobName,
-        TimeSpan timeout,
-        CancellationToken cancellationToken)
-    {
-        var lockKey = $"cronjob:lock:{jobName}";
-        var handle = await _lockFactory.TryAcquireAsync(lockKey, timeout);
-        
-        return handle != null ? new RedisLockHandle(handle, jobName) : null;
-    }
-    
-    // ... implement other methods
-}
-
-// Register custom lock
-services.AddCronJobResilienceInfrastructure<RedisDistributedCronJobLock>();
-```
-
-## Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `ExecutionCount` | `long` | Total number of executions |
-| `RetryCount` | `long` | Total retries across all executions |
-| `SkippedCount` | `long` | Executions skipped (overlapping/circuit breaker) |
-| `CircuitBreakerState` | `CircuitBreakerState` | Current circuit breaker state |
-
-## Best Practices
-
-1. **Start Conservative**: Begin with low retry counts and increase based on observed behavior
-2. **Use Jitter**: Always enable jitter to prevent thundering herd problems
-3. **Monitor Circuit Breaker**: Set up alerts for circuit breaker state changes
-4. **Respect Cancellation**: Always check `cancellationToken` in long-running operations
-5. **Log Appropriately**: Use the callback hooks to implement custom logging/alerting
-6. **Test Failure Scenarios**: Write tests that simulate failures to verify resilience behavior
-
-## See Also
-
-- [CronJob Basics](cronjob.md)
-- [Advanced Features](cronjob-advanced.md) - Context, dependencies, distributed locking, event hooks
-- [CronJob Observability](cronjob-observability.md) - Health checks, metrics, structured logging
-- [PeriodicTimer Modernization](modernization/periodic-timer.md)
-- [TimeProvider Abstraction](modernization/time-provider.md)
-- [Generic Resilience](modernization/generic-resilience.md)
-- [Observability](observability/home.md)
-
+The module tests cover retry delay and jitter, circuit transitions, local overlap locks, cancellation, timeouts, graceful shutdown and the in-memory distributed lock under `src/Tests/Mvp24Hours.Infrastructure.CronJob.Test/Resiliency`.

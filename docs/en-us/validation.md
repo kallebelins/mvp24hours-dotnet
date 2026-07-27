@@ -75,27 +75,27 @@ if (errors.AnySafe())
 
 ## CQRS ValidationBehavior
 
-When using CQRS pattern, you can use `ValidationBehavior` for automatic validation of commands and queries:
+When using CQRS, register FluentValidation validators and enable the Mediator
+`ValidationBehavior` so commands and queries are validated before handlers run.
 
 ### Setup
 
 ```csharp
-/// Program.cs
-builder.Services.AddMvp24HoursCqrs(cfg =>
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddMvpMediator(options =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    cfg.AddValidationBehavior(); // Enable automatic validation
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.RegisterValidationBehavior = true;
 });
 ```
 
 ### Command Validator
 
 ```csharp
-// CreateOrderCommand.cs
-public record CreateOrderCommand(string CustomerId, List<OrderItem> Items) 
-    : ICommand<OrderResult>;
+public record CreateOrderCommand(string CustomerId, List<OrderItem> Items)
+    : IMediatorCommand<OrderResult>;
 
-// CreateOrderCommandValidator.cs
 public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {
     public CreateOrderCommandValidator()
@@ -103,24 +103,23 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
         RuleFor(x => x.CustomerId)
             .NotEmpty()
             .WithMessage("Customer ID is required.");
-            
+
         RuleFor(x => x.Items)
             .NotEmpty()
             .WithMessage("Order must have at least one item.");
-            
+
         RuleForEach(x => x.Items)
             .SetValidator(new OrderItemValidator());
     }
 }
 
-// OrderItemValidator.cs
 public class OrderItemValidator : AbstractValidator<OrderItem>
 {
     public OrderItemValidator()
     {
         RuleFor(x => x.ProductId)
             .NotEmpty();
-            
+
         RuleFor(x => x.Quantity)
             .GreaterThan(0)
             .WithMessage("Quantity must be greater than zero.");
@@ -131,14 +130,14 @@ public class OrderItemValidator : AbstractValidator<OrderItem>
 ### Usage
 
 ```csharp
-// Validation is automatic when sending command
-var result = await _mediator.Send(new CreateOrderCommand(customerId, items));
+// Validation runs automatically before the handler
+var result = await _mediator.SendAsync(new CreateOrderCommand(customerId, items));
 
-// If validation fails, ValidationException is thrown
+// Validation failures throw ValidationException
 // Configure exception handling middleware to return ProblemDetails
 ```
 
-> 📚 See [CQRS Validation Behavior](cqrs/validation-behavior.md) for complete documentation.
+> See [CQRS Validation Behavior](cqrs/validation-behavior.md) for complete documentation.
 
 ---
 

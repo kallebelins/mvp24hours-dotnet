@@ -1,58 +1,73 @@
-# How to use a service repository?
-You will be able to reduce the complexity of building services at the application layer using Mvp24Hours architecture patterns.
+# Repository and Application Services
 
-## Prerequisites
-Perform installation and configuration to use a [relational](relational.md) or [NoSQL](nosql.md) database.
+The Application package provides two service families:
 
-## Core Repository Service
-### Inheritance
+- `RepositoryService<TEntity, TUoW>` and `RepositoryServiceAsync<TEntity, TUoW>` expose repository-oriented query and command methods that return `IBusinessResult<T>`.
+- `ApplicationServiceBase<TEntity, TUoW>` and `ApplicationServiceBaseAsync<TEntity, TUoW>` are extensible application-layer bases with validation and logging support. DTO and separate create/update DTO variants are also available.
+
+## Repository service
+
+This is the pattern exercised by the SQL and MongoDB application tests:
+
 ```csharp
-public class EntityService : RepositoryService<Entity, IUnitOfWork> { ... } // async => RepositoryServiceAsync<Entity, IUnitOfWorkAsync>
-```
-
-### Predefined Methods
-We use the BusinessService / BusinessObject pattern to encapsulate the response data in the application layer. The methods are:
-```csharp
-IBusinessResult<bool> ListAny(); // async => Task<IBusinessResult<bool>> ListAnyAsync
-IBusinessResult<int> ListCount(); // async => Task<IBusinessResult<int>> ListCountAsync
-IBusinessResult<IList<TEntity>> List(); // async => Task<IBusinessResult<IList<TEntity>>> ListAsync
-IBusinessResult<IList<TEntity>> List(IPagingCriteria criteria); // async => Task<IBusinessResult<IList<TEntity>>> ListAsync
-IBusinessResult<bool> GetByAny(Expression<Func<TEntity, bool>> clause); // async => Task<IBusinessResult<bool>> GetByAnyAsync
-IBusinessResult<int> GetByCount(Expression<Func<TEntity, bool>> clause); // async => Task<IBusinessResult<int>> GetByCountAsync
-IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause); // async => Task<IBusinessResult<IList<TEntity>>> GetByAsync
-IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria); // async => Task<IBusinessResult<IList<TEntity>>> GetByAsync
-IBusinessResult<TEntity> GetById(object id); // async => Task<IBusinessResult<TEntity>> GetByIdAsync
-IBusinessResult<TEntity> GetById(object id, IPagingCriteria criteria); // async => Task<IBusinessResult<TEntity>> GetByIdAsync
-
-// For paginated results use:
-IPagingResult<IList<TEntity>> ListWithPagination(IPagingCriteria criteria = null); // async => Task<IPagingResult<IList<TEntity>>> ListWithPaginationAsync
-IPagingResult<IList<TEntity>> GetByWithPagination(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria = null); // async => Task<IPagingResult<IList<TEntity>>> GetByWithPaginationAsync
-```
-
-### User Defined Methods
-In this example we will use the reference to obtain customer contacts. Up to two contacts for each customer will be uploaded, see:
-```csharp
-public IList<Customer> GetWithContacts()
+public sealed class CustomerService(IUnitOfWorkAsync unitOfWork)
+    : RepositoryServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork)
 {
-    // create pagination for client
-    var paging = new PagingCriteria(3, 0);
-
-    // get client repository instance
-    var rpCustomer = UnitOfWork.GetRepository<Customer>();
-
-    // applies filter to customers who have contacts with pagination
-    var customers = rpCustomer.GetBy(x => x.Contacts.Any(), paging);
-
-    //scroll through customer results to load contacts (late load with filter and/or pagination)
-    foreach (var customer in customers)
+    public Task<IBusinessResult<IList<Customer>>> GetActiveAsync(
+        CancellationToken cancellationToken = default)
     {
-        rpCustomer.LoadRelation(customer, x => x.Contacts, clause: c => c.Active, limit: 2);
+        return GetByAsync(customer => customer.Active, cancellationToken: cancellationToken);
     }
-    return customers;
 }
 ```
 
-## Base Services
-You will be able to reference the following services as a basis for expertise (Mvp24Hours.Application.Logic):
-* RepositoryService: query and commands;
-* RepositoryPagingService: query, paged query and commands.
+Register the provider, repository, and concrete service with the same scoped lifetime:
+
+```csharp
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddMvp24HoursDbContext<AppDbContext>();
+builder.Services.AddMvp24HoursRepositoryAsync();
+builder.Services.AddScoped<CustomerService>();
+```
+
+For MongoDB:
+
+```csharp
+builder.Services.AddMvp24HoursDbContext(options =>
+{
+    options.DatabaseName = "customers";
+    options.ConnectionString = mongoConnectionString;
+});
+builder.Services.AddMvp24HoursRepositoryAsync(repositoryOptions: null);
+builder.Services.AddScoped<CustomerService>();
+```
+
+The base service exposes list/count/exists/get-by-id queries and add/modify/remove commands. `RepositoryPagingService<TEntity, TUoW>` and `RepositoryPagingServiceAsync<TEntity, TUoW>` add paginated result methods.
+
+## Application service base
+
+Use an application service base when the application boundary needs validation, logging, DTO mapping, or separately modeled create/update inputs:
+
+```csharp
+public sealed class CustomerApplicationService(
+    IUnitOfWorkAsync unitOfWork,
+    IValidator<Customer> validator,
+    ILogger<CustomerApplicationService> logger)
+    : ApplicationServiceBaseAsync<Customer, IUnitOfWorkAsync>(
+        unitOfWork,
+        validator,
+        logger);
+```
+
+Available variants include:
+
+- `ApplicationServiceBaseWithDto` / `ApplicationServiceBaseWithDtoAsync`
+- `ApplicationServiceBaseWithSeparateDtos` / `ApplicationServiceBaseWithSeparateDtosAsync`
+- `QueryServiceBase` / `QueryServiceBaseAsync`
+- `EventAwareCommandServiceBaseAsync`
+- `CacheableApplicationServiceBaseAsync`
+
+Choose one base and add domain-specific methods in the concrete service. Keep transaction boundaries in the service or handler, and inject services rather than resolving them from `IServiceProvider`.
+
+See [Application Services](../application-services.md), [Repository](use-repository.md), and [Unit of Work](use-unitofwork.md).

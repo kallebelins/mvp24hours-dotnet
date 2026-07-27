@@ -1,10 +1,14 @@
 # Generic Resilience with Microsoft.Extensions.Resilience
 
-> **New in Mvp24Hours for .NET 9**: Native resilience using `Microsoft.Extensions.Resilience` and Polly v8.
+> Native resilience using `Microsoft.Extensions.Resilience` and Polly v8.
+> Introduced with the .NET 9 modernization and retained on `net10.0`.
 
 ## Overview
 
-Starting with .NET 9, Mvp24Hours adopts the native `Microsoft.Extensions.Resilience` package for generic (non-HTTP) resilience operations. This replaces custom implementations of retry policies, circuit breakers, and timeouts with industry-standard, well-tested components.
+Mvp24Hours uses the native `Microsoft.Extensions.Resilience` package for
+generic (non-HTTP) resilience operations. This replaces custom implementations
+of retry policies, circuit breakers, and timeouts with industry-standard,
+well-tested components.
 
 ## Benefits of Native Resilience
 
@@ -13,12 +17,12 @@ Starting with .NET 9, Mvp24Hours adopts the native `Microsoft.Extensions.Resilie
 | **Configuration** | Custom options classes | IOptions pattern + IConfiguration |
 | **Telemetry** | Manual integration | Automatic OpenTelemetry integration |
 | **DI Integration** | Custom registrations | Built-in with Keyed Services |
-| **Performance** | Variable | Optimized for .NET 9 |
+| **Performance** | Variable | Optimized for current .NET |
 | **Maintenance** | Mvp24Hours team | Microsoft + Polly team |
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Microsoft.Extensions.Resilience               │
 │                         (Polly v8 foundation)                    │
@@ -366,8 +370,9 @@ services.AddOpenTelemetry()
 
 ## See Also
 
+- [Resilience Selection Guide](resilience-guide.md)
 - [HTTP Resilience (Microsoft.Extensions.Http.Resilience)](http-resilience.md)
-- [Rate Limiting (.NET 9)](rate-limiting.md)
+- [Rate Limiting](rate-limiting.md)
 - [Polly v8 Documentation](https://www.pollydocs.org/)
 - [Microsoft.Extensions.Resilience Documentation](https://learn.microsoft.com/en-us/dotnet/core/resilience/)
 

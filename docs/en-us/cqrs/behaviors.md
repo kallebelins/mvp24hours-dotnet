@@ -1,215 +1,177 @@
-# Pipeline Behaviors
+# CQRS Pipeline Behaviors
 
-## Overview
+Behaviors wrap `IMediatorRequestHandler<TRequest,TResponse>` execution. Register them through `MediatorOptions`; the container preserves the order shown below.
 
-Pipeline Behaviors are interceptors that process requests before and after the handler. They enable implementing cross-cutting concerns in a modular way.
-
-## Execution Flow
-
-```
-Request → [Behavior1 → [Behavior2 → [Handler] ← Behavior2] ← Behavior1] → Response
-```
-
-## Available Behaviors
-
-### LoggingBehavior
-Logs start, end, and duration of each request.
+## Registration
 
 ```csharp
-options.RegisterLoggingBehavior = true;
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<CreateOrderCommand>();
+    options.WithDefaultBehaviors();
+    options.WithObservabilityBehaviors();
+    options.WithAuditBehavior(auditAllCommands: false);
+    options.WithAdvancedResiliency(defaultTimeoutMs: 30_000);
+    options.RegisterValidationBehavior = true;
+    options.RegisterCachingBehavior = true;
+    options.RegisterTransactionBehavior = true;
+});
 ```
 
-**Example log:**
-```
-[Information] Handling CreateOrderCommand
-[Information] Handled CreateOrderCommand in 45ms
-```
+`WithAllBehaviors()` also enables behaviors that need external services. Ensure FluentValidation, `IDistributedCache`, `IUnitOfWorkAsync`, and `IUserContext` are registered before using the corresponding behavior.
 
-### PerformanceBehavior
-Alerts about slow requests.
+## Execution order
+
+The built-in registration order is:
+
+1. `UnhandledExceptionBehavior`
+2. `RequestContextBehavior`
+3. `TracingBehavior`
+4. `TelemetryBehavior`
+5. `LoggingBehavior`
+6. `PerformanceBehavior`
+7. `AuditBehavior`
+8. `AuthorizationBehavior`
+9. `ValidationBehavior`
+10. `IdempotencyBehavior`
+11. `CachingBehavior`
+12. `RetryBehavior`
+13. `TransactionBehavior`
+14. `TenantBehavior`
+15. `CurrentUserBehavior`
+16. `TimeoutBehavior`
+17. `CircuitBreakerBehavior`
+18. extensibility behaviors
+19. handler
+
+Outer behaviors observe failures from inner behaviors. A behavior registered later is closer to the handler.
+
+## Unhandled exceptions
 
 ```csharp
-options.RegisterPerformanceBehavior = true;
-options.PerformanceThresholdMilliseconds = 500; // Default: 500ms
+options.RegisterUnhandledExceptionBehavior = true;
 ```
 
-**Example log:**
-```
-[Warning] CreateOrderCommand took 1250ms - Performance threshold exceeded!
+`UnhandledExceptionBehavior` logs the request type, exception type, and message, then rethrows the original exception. It does not convert, swallow, or retry errors. `WithDefaultBehaviors()` enables it with logging and performance tracking.
+
+For typed recovery, enable `WithExceptionHandlers()` and register `IExceptionHandler<TRequest,TResponse,TException>` or a global exception handler. These are distinct from the final unhandled-exception logger.
+
+## Timeout
+
+```csharp
+options.RegisterTimeoutBehavior = true;
+options.DefaultTimeoutMilliseconds = 30_000;
 ```
 
-### ValidationBehavior
-Validates requests using FluentValidation.
+Set zero to disable the global timeout. A request can override it:
+
+```csharp
+public sealed record GenerateReport : IMediatorCommand<Report>, IHasTimeout
+{
+    public int? TimeoutMilliseconds => 120_000;
+}
+```
+
+The behavior races handler completion against the timeout and throws `TimeoutException` when the timeout wins. It links caller cancellation with its timeout token, but `RequestHandlerDelegate<TResponse>` has no token parameter; handlers must continue honoring the cancellation token originally supplied by the mediator.
+
+`WithAdvancedResiliency()` enables timeout, circuit breaker, retry, and idempotency. See the focused [retry](resilience/retry.md), [circuit breaker](resilience/circuit-breaker.md), and [idempotency](resilience/idempotency.md) guides.
+
+## Validation
 
 ```csharp
 options.RegisterValidationBehavior = true;
-
-// Create validator
-public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
-{
-    public CreateOrderCommandValidator()
-    {
-        RuleFor(x => x.CustomerName)
-            .NotEmpty()
-            .MaximumLength(100);
-            
-        RuleFor(x => x.Items)
-            .NotEmpty()
-            .WithMessage("Order must have at least one item");
-    }
-}
-
-// Register validators
-services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderValidator>();
 ```
 
-### CachingBehavior
-Stores query responses in cache.
+`ValidationBehavior` runs registered FluentValidation validators and fails before the handler when validation errors exist.
+
+## Caching and invalidation
 
 ```csharp
 options.RegisterCachingBehavior = true;
-
-// Implement ICacheableRequest interface
-public record GetOrderByIdQuery : IMediatorQuery<OrderDto>, ICacheableRequest
-{
-    public Guid OrderId { get; init; }
-    
-    public string CacheKey => $"order:{OrderId}";
-    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-}
 ```
 
-### TransactionBehavior
-Wraps commands in transactions.
+Queries implement `ICacheable`; invalidating commands implement `ICacheInvalidator`. Register an `IDistributedCache` provider first. See [CQRS caching](integration-caching.md) for the exact interfaces and Redis registration.
+
+## Transactions
 
 ```csharp
 options.RegisterTransactionBehavior = true;
 
-// Mark command as transactional
-public record CreateOrderCommand : IMediatorCommand<OrderDto>, ITransactionalCommand
-{
-    // ...
-}
+public sealed record CreateOrder(...) : IMediatorCommand<Guid>, ITransactional;
 ```
 
-### AuthorizationBehavior
-Checks authorization before executing requests.
+`TransactionBehavior` uses `IUnitOfWorkAsync`, saves on success, and rolls back on failure. `WithPipelineCompatibility()` enables transaction behavior and sets `IsBreakOnFail` and `ForceRollbackOnFailure`.
+
+## Authorization
 
 ```csharp
 options.RegisterAuthorizationBehavior = true;
 
-// Implement IUserContext
-public interface IUserContext
+public sealed record DeleteOrder(Guid Id)
+    : IMediatorCommand, IAuthorized
 {
-    string? UserId { get; }
-    IEnumerable<string> Roles { get; }
-    bool HasPermission(string permission);
-}
-
-// Mark request as authorized
-public record DeleteOrderCommand : IMediatorCommand, IAuthorizedRequest
-{
-    public Guid OrderId { get; init; }
-    
-    public IEnumerable<string> RequiredRoles => new[] { "Admin", "Manager" };
-    public IEnumerable<string> RequiredPermissions => new[] { "orders:delete" };
+    public IEnumerable<string> RequiredRoles => ["Admin"];
+    public IEnumerable<string> RequiredPermissions => ["orders:delete"];
+    public IEnumerable<string> RequiredPolicies => [];
 }
 ```
 
-### RetryBehavior
-Implements retry with exponential backoff.
+Register an application `IUserContext`.
+
+## Retry and idempotency
 
 ```csharp
 options.RegisterRetryBehavior = true;
+options.RegisterIdempotencyBehavior = true;
 options.MaxRetryAttempts = 3;
 options.RetryBaseDelayMilliseconds = 100;
-
-// Mark request as retryable
-public record ProcessPaymentCommand : IMediatorCommand<PaymentResult>, IRetryableRequest
-{
-    public int MaxRetries => 3;
-    public TimeSpan BaseDelay => TimeSpan.FromMilliseconds(100);
-    
-    public bool ShouldRetry(Exception ex) => ex is HttpRequestException;
-}
-```
-
-### IdempotencyBehavior
-Prevents duplicate command processing.
-
-```csharp
-options.RegisterIdempotencyBehavior = true;
 options.IdempotencyDurationHours = 24;
-
-// Mark command as idempotent
-public record ProcessPaymentCommand : IMediatorCommand<PaymentResult>, IIdempotentCommand
-{
-    public Guid PaymentId { get; init; }
-    
-    // Custom key based on payment ID
-    public string? IdempotencyKey => $"payment:{PaymentId}";
-    public TimeSpan? IdempotencyDuration => TimeSpan.FromHours(24);
-}
 ```
 
-## Creating Custom Behaviors
+`IRetryable` exposes `MaxRetryAttempts`, `RetryDelay`, `UseExponentialBackoff`, and `IsTransientException`. `IIdempotentCommand` exposes optional `IdempotencyKey` and `IdempotencyDuration`. Strict concurrent deduplication additionally requires a distributed lock.
+
+See [idempotency](resilience/idempotency.md) and [inbox/outbox](resilience/inbox-outbox.md).
+
+## Observability and audit helpers
 
 ```csharp
-public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+options.WithObservabilityBehaviors();
+options.WithAuditBehavior(auditAllCommands: false);
+```
+
+`WithObservabilityBehaviors()` enables request context, Activity tracing, and telemetry. `WithAuditBehavior()` enables `AuditBehavior`; DI supplies `InMemoryAuditStore` unless a custom `IAuditStore` is registered. The in-memory store is for development/testing, not durable audit retention.
+
+Implement `IAuditable` to control request/response payload capture and metadata. Payload capture defaults to false to avoid leaking sensitive data.
+
+## Custom behavior
+
+```csharp
+public sealed class CorrelationBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMediatorRequest<TResponse>
 {
-    private readonly IAuditService _auditService;
-    private readonly IUserContext _userContext;
-
-    public AuditBehavior(IAuditService auditService, IUserContext userContext)
-    {
-        _auditService = auditService;
-        _userContext = userContext;
-    }
-
     public async Task<TResponse> Handle(
-        TRequest request, 
-        RequestHandlerDelegate<TResponse> next, 
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        // Before handler
-        var startTime = DateTime.UtcNow;
-        
-        // Execute next behavior or handler
-        var response = await next();
-        
-        // After handler
-        await _auditService.LogAsync(new AuditEntry
-        {
-            UserId = _userContext.UserId,
-            RequestType = typeof(TRequest).Name,
-            ExecutedAt = startTime,
-            Duration = DateTime.UtcNow - startTime
-        });
-        
-        return response;
+        return await next();
     }
 }
 
-// Register custom behavior
-services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuditBehavior<,>));
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(CorrelationBehavior<,>));
 ```
 
-## Execution Order
+## Related
 
-Behaviors execute in the order they are registered:
-
-1. UnhandledExceptionBehavior (first - catches all exceptions)
-2. LoggingBehavior
-3. PerformanceBehavior
-4. AuthorizationBehavior
-5. ValidationBehavior
-6. IdempotencyBehavior
-7. CachingBehavior
-8. RetryBehavior
-9. TransactionBehavior (last before handler)
-
-**Handler executes here**
-
-Behaviors then return in reverse order.
-
+- [API reference](api-reference.md)
+- [CQRS caching](integration-caching.md)
+- [CQRS and RabbitMQ](integration-rabbitmq.md)
+- [Retry resilience](resilience/retry.md)
+- [Idempotency](resilience/idempotency.md)
+- [Inbox/outbox](resilience/inbox-outbox.md)

@@ -1,130 +1,113 @@
 # Specification Pattern
-The specification standard we use as requirements for search filters. Each specification must be created with the aim of defining concrete cases. Each specification can be part of a composition or applied individually.
 
->In computer programming, specification pattern is a specific software design pattern through which business rules can be recombined by chaining business rules together using Boolean logic. The pattern is often used in the context of domain-driven design. [Wikipedia](https://en.wikipedia.org/wiki/Specification_pattern)
+A specification gives a business rule a name and exposes it as an expression that can be evaluated in memory or translated by an `IQueryable` provider. Mvp24Hours supports the small `ISpecificationQuery<T>` contract and the richer `Specification<T>` base class.
 
-## Basic Example
-In this example we created a specification that filters people who have a cell phone number in the contact record.
+> For the pattern background, see Martin Fowler's [Specification](https://martinfowler.com/apsupp/spec.pdf).
+
+## Which page should I use?
+
+- Stay on this page to model, compose, and evaluate domain rules.
+- Go to [CQRS specifications](cqrs/specifications.md) to apply specifications in query handlers, repositories, paging, and EF Core.
+
+## A small query specification
+
+Use `ISpecificationQuery<T>` when a named predicate is enough:
 
 ```csharp
-/// CustomerHasCellContactSpec.cs
+using System.Linq.Expressions;
+using Mvp24Hours.Core.Contract.Domain.Specifications;
 
-public class CustomerHasCellContactSpec : ISpecificationQuery<Customer>
+public sealed class ActiveProductSpecification : ISpecificationQuery<Product>
 {
-    public Expression<Func<Customer, bool>> IsSatisfiedByExpression => x => x.Contacts.Any(y => y.Type == ContactType.CellPhone);
+    public Expression<Func<Product, bool>> IsSatisfiedByExpression =>
+        product => product.IsActive;
 }
 
-/// CustomerService.cs -> Get Method
-
-Expression<Func<Customer, bool>> filter = x => x.Active;
-filter = filter.And<Customer, CustomerHasCellContactSpec>();
-var paging = new PagingCriteriaExpression<Customer>(3, 0);
-paging.NavigationExpr.Add(x => x.Contacts);
-var boResult = service.GetBy(filter, paging);
+var specification = new ActiveProductSpecification();
+IQueryable<Product> query = products.Where(specification.IsSatisfiedByExpression);
 ```
 
-## Specification Composition
+This is the same contract used by the Application integration tests for active products, price ranges, and low stock.
 
-Specifications can be composed using logical operators `And`, `Or`, and `Not`:
+## Rich specifications
 
-### Using And Operator
-
-```csharp
-// Combine multiple specifications with AND
-Expression<Func<Customer, bool>> filter = x => x.Active;
-filter = filter
-    .And<Customer, CustomerHasCellContactSpec>()
-    .And<Customer, CustomerHasEmailSpec>();
-```
-
-### Using Or Operator
+Derive from `Specification<T>` when the rule also needs in-memory evaluation, includes, ordering, or paging. `Criteria` is `protected`; consumers use `IsSatisfiedByExpression`.
 
 ```csharp
-// Combine specifications with OR
-Expression<Func<Customer, bool>> filter = x => x.Active;
-filter = filter.Or<Customer, CustomerIsVIPSpec>();
-```
+using System.Linq.Expressions;
+using Mvp24Hours.Core.Domain.Specifications;
 
-### Using Not Operator
-
-```csharp
-// Negate a specification
-Expression<Func<Customer, bool>> filter = x => x.Active;
-filter = filter.Not<Customer, CustomerIsBlockedSpec>();
-```
-
-## Specification Base Class
-
-For more complex specifications, use the `Specification<T>` base class:
-
-```csharp
-public class ActiveCustomerWithContactsSpec : Specification<Customer>
+public sealed class ActiveProductsByPriceSpecification : Specification<Product>
 {
-    public override Expression<Func<Customer, bool>> ToExpression()
+    private readonly decimal _minimumPrice;
+
+    public ActiveProductsByPriceSpecification(decimal minimumPrice)
     {
-        return customer => customer.Active && customer.Contacts.Any();
+        _minimumPrice = minimumPrice;
+        AddOrderByDescending(product => product.Price);
     }
+
+    protected override Expression<Func<Product, bool>> Criteria =>
+        product => product.IsActive && product.Price >= _minimumPrice;
 }
 
-// Usage
-var spec = new ActiveCustomerWithContactsSpec();
-var customers = await repository.GetByAsync(spec.ToExpression());
+var specification = new ActiveProductsByPriceSpecification(20m);
+bool matches = specification.IsSatisfiedBy(product);
+IQueryable<Product> query = products.Where(specification.IsSatisfiedByExpression);
 ```
 
-## SpecificationEvaluator for EF Core
+The protected builder methods are:
 
-Use `SpecificationEvaluator<T>` for advanced queries with EF Core:
+| Method | Effect |
+|---|---|
+| `AddInclude(expression)` | Adds a typed navigation include |
+| `AddInclude(string)` | Adds a string navigation path |
+| `AddOrderBy(expression)` | Adds ascending ordering |
+| `AddOrderByDescending(expression)` | Adds descending ordering |
+| `ApplyPaging(skip, take)` | Sets `Skip`, `Take`, and `IsPagingEnabled` |
+
+## Factory methods and composition
+
+`Specification<T>` exposes `Create`, `All`, and `None` as methods. Specifications compose with operators or the `AndSpec`, `OrSpec`, and `NotSpec` extensions:
 
 ```csharp
-public class CustomerByStatusSpec : Specification<Customer>
-{
-    private readonly CustomerStatus _status;
-    
-    public CustomerByStatusSpec(CustomerStatus status)
-    {
-        _status = status;
-    }
-    
-    public override Expression<Func<Customer, bool>> ToExpression()
-    {
-        return customer => customer.Status == _status;
-    }
-}
+using Mvp24Hours.Extensions;
 
-// With SpecificationEvaluator
-var spec = new CustomerByStatusSpec(CustomerStatus.Active);
-var query = SpecificationEvaluator<Customer>.GetQuery(dbContext.Customers, spec);
-var results = await query.ToListAsync();
+Specification<Product> active =
+    Specification<Product>.Create(product => product.IsActive);
+Specification<Product> inStock =
+    Specification<Product>.Create(product => product.StockQuantity > 0);
+
+Specification<Product> available = active & inStock;
+Specification<Product> visible = available | !active;
+
+// Equivalent extension form:
+Specification<Product> availableAgain = active.AndSpec(inStock);
 ```
 
-## Parameterized Specifications
-
-Create reusable specifications with parameters:
+The composition keeps a single expression tree, so the result works with both `IsSatisfiedBy` and `IQueryable.Where`. `SpecificationCombinators` in the Application package additionally provides `And`, `Or`, `Not`, `AndAll`, `OrAll`, `If`, and `IfElse`.
 
 ```csharp
-public class CustomerByNameSpec : ISpecificationQuery<Customer>
-{
-    private readonly string _name;
-    
-    public CustomerByNameSpec(string name)
-    {
-        _name = name;
-    }
-    
-    public Expression<Func<Customer, bool>> IsSatisfiedByExpression => 
-        x => x.Name.Contains(_name);
-}
+using Mvp24Hours.Application.Specifications;
 
-// Usage
-var spec = new CustomerByNameSpec("John");
-var filter = Expression<Func<Customer, bool>>.And(
-    x => x.Active,
-    spec.IsSatisfiedByExpression);
+Specification<Product> filtered = SpecificationCombinators.If(
+    activeOnly,
+    Specification<Product>.Create(product => product.IsActive));
 ```
 
----
+## In-memory evaluation
 
-## Related Documentation
+Call `IsSatisfiedBy` for one object. It returns `false` for `null` and caches the compiled predicate. Use `InMemorySpecificationEvaluator<T>` when ordering and paging must also be applied:
 
-- [CQRS Specifications](cqrs/specifications.md) - Using specifications with CQRS pattern
-- [Repository Pattern](database/use-repository.md) - Repository with specifications
+```csharp
+List<Product> result = InMemorySpecificationEvaluator<Product>.Default
+    .GetQuery(products.AsQueryable(), specification)
+    .ToList();
+```
+
+For database includes and server-side paging, continue with [CQRS specifications](cqrs/specifications.md).
+
+## Related documentation
+
+- [CQRS specifications](cqrs/specifications.md)
+- [Repository pattern](database/use-repository.md)

@@ -2,6 +2,17 @@
 
 The Mvp24Hours.Core module provides a comprehensive exception hierarchy for handling different error scenarios in your application.
 
+## Layer strategy
+
+| Layer | Prefer | Notes |
+|---|---|---|
+| Domain | `DomainException`, `BusinessException` | Represent invariant and business-rule failures. |
+| Application | `IBusinessResult<T>` or mapped exceptions | Convert expected failures into results; leave unexpected faults for the host. |
+| Web API | Problem Details middleware | Map library exceptions to RFC 7807 responses. See [ProblemDetails](../modernization/problem-details.md). |
+| Pipeline / CQRS | Validation and unhandled-exception behaviors | Do not invent a second exception hierarchy for handlers. |
+
+Use the hierarchy below instead of project-local `DomainException` copies. For service-level result mapping, see [Application Services](../application-services.md).
+
 ## Exception Hierarchy
 
 All custom exceptions inherit from `Mvp24HoursException`:

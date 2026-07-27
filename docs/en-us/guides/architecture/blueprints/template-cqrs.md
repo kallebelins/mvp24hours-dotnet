@@ -1,0 +1,47 @@
+# CQRS Blueprint
+
+CQRS separates state-changing commands from read-only queries. Use it when the models, scaling needs, authorization, validation, or cross-cutting behavior genuinely differ.
+
+## Mvp24Hours shape
+
+```csharp
+public sealed record CreateOrderCommand(string Customer)
+    : IMediatorCommand<OrderDto>;
+
+public sealed class CreateOrderHandler
+    : IMediatorCommandHandler<CreateOrderCommand, OrderDto>
+{
+    public Task<OrderDto> Handle(
+        CreateOrderCommand request,
+        CancellationToken cancellationToken)
+    {
+        // Coordinate domain work and persistence.
+        throw new NotImplementedException();
+    }
+}
+```
+
+```csharp
+services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<CreateOrderHandler>();
+    options.WithDefaultBehaviors();
+});
+```
+
+Inject `IMediator` and call `SendAsync`. Use `IMediatorCommand<T>`, `IMediatorQuery<T>`, and their Mvp24Hours handler interfaces. Do not use `IRequest<T>`, `IRequestHandler<,>`, `ISender`, `AddMediatR`, or MediatR pipeline APIs in this blueprint.
+
+## Suggested feature layout
+
+```text
+Application/
+└── Orders/
+    ├── Commands/CreateOrder/
+    ├── Queries/GetOrder/
+    ├── Contracts/
+    └── Validation/
+```
+
+Keep transaction boundaries in command handling. Queries must not introduce side effects. Add caching, validation, retries, idempotency, and inbox/outbox through documented mediator integrations instead of copying custom behaviors.
+
+See [CQRS Getting Started](../../../cqrs/getting-started.md), [Behaviors](../../../cqrs/behaviors.md), [Queries](../../../cqrs/queries.md), and [Inbox/Outbox](../../../cqrs/resilience/inbox-outbox.md).

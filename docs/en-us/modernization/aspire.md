@@ -1,393 +1,337 @@
-# .NET Aspire 9 Integration
+# .NET Aspire Integration
 
-## Overview
+.NET Aspire provides orchestration and tooling for observable, cloud-native .NET
+applications. Mvp24Hours.Core supplies service-default options, a correlation
+accessor, a self health check, Aspire-compatible health endpoints, and
+connection-name helpers for .NET 10 applications.
 
-.NET Aspire 9 is Microsoft's official stack for building observable, cloud-native applications. It provides a unified approach to telemetry, health checks, resilience, and service discovery, making it easier to develop and operate distributed systems.
+There are **no presets** on Aspire option types. Configure them through
+`appsettings.json`, a registration callback, or application-owned factories.
 
-Mvp24Hours provides seamless integration with .NET Aspire, allowing you to leverage its powerful features while using the Mvp24Hours framework.
+## What Core actually registers
 
-## Key Features
+| Registration | Condition |
+|---|---|
+| `AspireOptions` singleton | Always |
+| Core `ICorrelationIdAccessor` → `CorrelationIdAccessor` | Always |
+| Health Checks plus a healthy `self` check tagged `live` | `EnableHealthChecks == true` |
+| Empty `ConfigureHttpClientDefaults` hook | `EnableResilience == true` |
 
-### Observability
-- **OpenTelemetry Integration**: Built-in support for logs, traces, and metrics
-- **Developer Dashboard**: Real-time visualization of telemetry data
-- **Browser Telemetry**: Support for SPAs to send telemetry directly to the dashboard
+The following properties are configuration contracts only. Core stores them on
+the singleton but does not install exporters, instrumentation packages, service
+discovery, module health checks, timeouts, or concrete resilience strategies
+from them:
 
-### Orchestration
-- **AppHost Pattern**: Simplified local development with container orchestration
-- **Service Discovery**: Automatic connection string injection
-- **Health Checks**: Liveness and readiness probes out of the box
+- `EnableOpenTelemetry`
+- `EnableServiceDiscovery`
+- `OtlpEndpoint`
+- `Telemetry` and `ResourceAttributes`
+- nested health enable flags and `TimeoutSeconds`
+- nested `Resilience` properties
 
-### Resilience
-- **Retry Policies**: Automatic retry with exponential backoff
-- **Circuit Breaker**: Protection against cascading failures
-- **Timeout Policies**: Configurable timeouts for all operations
+Wire those integrations through the consuming service and the relevant
+Mvp24Hours observability, HTTP resilience, and module packages.
 
-## Installation
+## Registration
 
-Add the required NuGet packages to your project:
-
-```bash
-# For the API/Service project
-dotnet add package Aspire.Hosting.AppHost --version 9.*
-
-# For component integrations
-dotnet add package Aspire.StackExchange.Redis
-dotnet add package Aspire.RabbitMQ.Client
-dotnet add package Aspire.Microsoft.EntityFrameworkCore.SqlServer
-dotnet add package Aspire.MongoDB.Driver
-```
-
-## Quick Start
-
-### 1. Create an AppHost Project
-
-The AppHost project orchestrates your distributed application:
+`AddMvp24HoursAspireDefaults` extends `IHostApplicationBuilder`. It first binds
+the `Aspire` configuration section, then applies the callback, fills service
+identity defaults when still null, and registers the resulting `AspireOptions`
+singleton. It does **not** register `IOptions<AspireOptions>` or options
+validation.
 
 ```csharp
-// AppHost/Program.cs
-var builder = DistributedApplication.CreateBuilder(args);
+using Mvp24Hours.Core.Aspire;
 
-// Add infrastructure components
-var redis = builder.AddRedis("cache")
-    .WithDataVolume();
-
-var rabbitmq = builder.AddRabbitMQ("messaging")
-    .WithManagementPlugin();
-
-var sql = builder.AddSqlServer("sql")
-    .WithDataVolume()
-    .AddDatabase("appdb");
-
-var mongo = builder.AddMongoDB("mongo")
-    .AddDatabase("documents");
-
-// Add your API project with references
-builder.AddProject<Projects.MyApi>("api")
-    .WithReference(redis)
-    .WithReference(rabbitmq)
-    .WithReference(sql)
-    .WithReference(mongo)
-    .WithExternalHttpEndpoints();
-
-builder.Build().Run();
-```
-
-### 2. Configure Your API Project
-
-Use Mvp24Hours Aspire extensions in your API:
-
-```csharp
-// Program.cs
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Aspire service defaults with Mvp24Hours integration
 builder.AddMvp24HoursAspireDefaults(options =>
 {
-    options.ServiceName = "MyApi";
-    options.EnableOpenTelemetry = true;
-    options.EnableHealthChecks = true;
-    options.EnableResilience = true;
-    
-    // Configure telemetry
-    options.Telemetry.EnableTracing = true;
-    options.Telemetry.EnableMetrics = true;
-    options.Telemetry.EnableMvp24HoursInstrumentation = true;
+    options.ServiceName = "orders-api";
+    options.ServiceVersion = "10.0.0";
+    options.ResourceAttributes["service.region"] = "us-east-1";
 });
 
-// Add Mvp24Hours components using Aspire connections
-builder.Services.AddMvp24HoursRedisFromAspire("cache");
-builder.Services.AddMvp24HoursRabbitMQFromAspire("messaging");
-builder.Services.AddMvp24HoursSqlServerFromAspire("appdb");
-builder.Services.AddMvp24HoursMongoDbFromAspire("documents");
-
-// Add your services
-builder.Services.AddMvp24HoursDbContext<MyDbContext>();
-builder.Services.AddMvpRabbitMQ();
-
 var app = builder.Build();
-
-// Map Aspire health check endpoints
 app.MapMvp24HoursAspireHealthChecks();
-
 app.Run();
 ```
 
-## Configuration Options
-
-### AspireOptions
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `ServiceName` | string | Assembly name | Service name for telemetry |
-| `ServiceVersion` | string | Assembly version | Service version for telemetry |
-| `Environment` | string | Host environment | Deployment environment |
-| `EnableOpenTelemetry` | bool | true | Enable OpenTelemetry integration |
-| `EnableHealthChecks` | bool | true | Enable health checks |
-| `EnableResilience` | bool | true | Enable resilience policies |
-| `EnableServiceDiscovery` | bool | true | Enable service discovery |
-| `OtlpEndpoint` | string | null | OTLP exporter endpoint |
-
-### Telemetry Options
+To bind another section, pass its name:
 
 ```csharp
-options.Telemetry.EnableLogging = true;
-options.Telemetry.EnableTracing = true;
-options.Telemetry.EnableMetrics = true;
-options.Telemetry.EnableAspNetCoreInstrumentation = true;
-options.Telemetry.EnableHttpClientInstrumentation = true;
-options.Telemetry.EnableEfCoreInstrumentation = true;
-options.Telemetry.EnableMvp24HoursInstrumentation = true;
-options.Telemetry.TraceSamplingRatio = 1.0;
+builder.AddMvp24HoursAspireDefaults("Platform:Aspire");
 ```
 
-### Health Check Options
+The default overload always reads `Aspire` before applying the callback. The
+named-section overload still binds `Aspire` first and then binds the named
+section in the callback, so values from the named section take precedence.
+Service-name fallback still inspects the fixed key `Aspire:ServiceName` even
+when a custom section name is used.
+
+Identity defaults filled only when still null:
+
+- `ServiceName` ← `OTEL_SERVICE_NAME`, `Aspire:ServiceName`, entry assembly
+  name, or `Mvp24HoursService`
+- `ServiceVersion` ← entry assembly version or `1.0.0`
+- `Environment` ← `IHostEnvironment.EnvironmentName`
+
+## AspireOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `ServiceName` | `string?` | `null` | Telemetry service name; filled as described above |
+| `ServiceVersion` | `string?` | `null` | Service version; filled from the entry assembly or `1.0.0` |
+| `Environment` | `string?` | `null` | Filled from `IHostEnvironment.EnvironmentName` |
+| `EnableOpenTelemetry` | `bool` | `true` | Intent flag for OpenTelemetry integration |
+| `EnableHealthChecks` | `bool` | `true` | Registers Health Checks and the `self` check |
+| `EnableResilience` | `bool` | `true` | Runs the default HTTP-client resilience configuration hook |
+| `EnableServiceDiscovery` | `bool` | `true` | Intent flag for service discovery |
+| `OtlpEndpoint` | `string?` | `null` | Intended OTLP endpoint; otherwise use `OTEL_EXPORTER_OTLP_ENDPOINT` |
+| `Telemetry` | `AspireTelemetryOptions` | New instance | Nested telemetry settings |
+| `HealthChecks` | `AspireHealthCheckOptions` | New instance | Nested health settings |
+| `Resilience` | `AspireResilienceOptions` | New instance | Nested resilience settings |
+| `ResourceAttributes` | `Dictionary<string, object>` | Empty | Additional OpenTelemetry resource attributes |
+
+## AspireTelemetryOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `EnableLogging` | `bool` | `true` | Enable OTLP log export |
+| `EnableTracing` | `bool` | `true` | Enable distributed tracing |
+| `EnableMetrics` | `bool` | `true` | Enable metrics |
+| `EnableAspNetCoreInstrumentation` | `bool` | `true` | Enable ASP.NET Core instrumentation |
+| `EnableHttpClientInstrumentation` | `bool` | `true` | Enable HttpClient instrumentation |
+| `EnableEfCoreInstrumentation` | `bool` | `true` | Enable EF Core instrumentation |
+| `EnableMvp24HoursInstrumentation` | `bool` | `true` | Enable Mvp24Hours activity/meter sources |
+| `TraceSamplingRatio` | `double` | `1.0` | Trace sampling ratio (`1.0` means all) |
+| `AdditionalActivitySources` | `List<string>` | Empty | Additional `ActivitySource` names |
+| `AdditionalMeterNames` | `List<string>` | Empty | Additional meter names |
+
+## AspireHealthCheckOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `LivenessPath` | `string` | `/health/live` | Liveness endpoint |
+| `ReadinessPath` | `string` | `/health/ready` | Readiness endpoint |
+| `StartupPath` | `string` | `/health/startup` | Startup endpoint |
+| `EnableDatabaseHealthChecks` | `bool` | `true` | Intent flag for database checks |
+| `EnableCacheHealthChecks` | `bool` | `true` | Intent flag for cache checks |
+| `EnableMessagingHealthChecks` | `bool` | `true` | Intent flag for messaging checks |
+| `TimeoutSeconds` | `int` | `5` | Intended health-check timeout |
+
+`AddMvp24HoursAspireDefaults` adds only a healthy `self` check tagged `live`.
+Database, cache, and messaging modules must register their own checks. The
+three enable flags and `TimeoutSeconds` do not add or configure those checks in
+Core, and endpoint mapping does not apply `TimeoutSeconds`.
+
+## AspireResilienceOptions
+
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `EnableRetry` | `bool` | `true` | Intent flag for HTTP retry |
+| `EnableCircuitBreaker` | `bool` | `true` | Intent flag for an HTTP circuit breaker |
+| `EnableTimeout` | `bool` | `true` | Intent flag for timeout |
+| `MaxRetryAttempts` | `int` | `3` | Maximum retry attempts |
+| `CircuitBreakerFailureThreshold` | `int` | `5` | Failure-count threshold |
+| `CircuitBreakerBreakDurationSeconds` | `int` | `30` | Open-circuit duration |
+| `TimeoutSeconds` | `int` | `30` | Default timeout |
+
+The current hook calls `ConfigureHttpClientDefaults` but does not add a
+standard resilience handler or translate this nested object into policies.
+Configure concrete HTTP resilience through
+[HTTP resilience](http-resilience.md) or the
+[resilience selection guide](resilience-guide.md).
+
+## Component connection helpers
+
+These methods extend `IServiceCollection` and register metadata singletons
+only. They do not register Redis, RabbitMQ, EF Core, MongoDB clients, or health
+checks. Resolve the Aspire connection string and call the module registration
+yourself.
 
 ```csharp
-options.HealthChecks.LivenessPath = "/health/live";
-options.HealthChecks.ReadinessPath = "/health/ready";
-options.HealthChecks.StartupPath = "/health/startup";
-options.HealthChecks.EnableDatabaseHealthChecks = true;
-options.HealthChecks.EnableCacheHealthChecks = true;
-options.HealthChecks.EnableMessagingHealthChecks = true;
-```
+builder.AddMvp24HoursAspireDefaults();
 
-### Resilience Options
-
-```csharp
-options.Resilience.EnableRetry = true;
-options.Resilience.EnableCircuitBreaker = true;
-options.Resilience.EnableTimeout = true;
-options.Resilience.MaxRetryAttempts = 3;
-options.Resilience.CircuitBreakerFailureThreshold = 5;
-options.Resilience.CircuitBreakerBreakDurationSeconds = 30;
-options.Resilience.TimeoutSeconds = 30;
-```
-
-## Component Integration
-
-### Redis
-
-```csharp
-// In AppHost
-var redis = builder.AddRedis("cache");
-
-// In API
 builder.Services.AddMvp24HoursRedisFromAspire("cache");
-
-// Use with Mvp24Hours caching
-builder.Services.AddMvpHybridCache();
-```
-
-### RabbitMQ
-
-```csharp
-// In AppHost
-var rabbitmq = builder.AddRabbitMQ("messaging");
-
-// In API
 builder.Services.AddMvp24HoursRabbitMQFromAspire("messaging", options =>
 {
-    options.AutoDeclareQueues = true;
-    options.EnableMessageDeduplication = true;
-    options.PrefetchCount = 10;
+    options.PrefetchCount = 20;
 });
+builder.Services.AddMvp24HoursSqlServerFromAspire("sqldb");
+builder.Services.AddMvp24HoursPostgreSqlFromAspire("postgresdb");
+builder.Services.AddMvp24HoursMongoDbFromAspire("mongodb");
 
-// Use with Mvp24Hours messaging
-builder.Services.AddMvpRabbitMQ(cfg =>
-{
-    cfg.ConfigureEndpoints(context);
-});
+string? redis = builder.GetAspireConnectionString("cache");
+// Still required: AddMvpHybridCache / AddMvpRabbitMQ / AddMvp24HoursDbContext
+// using that connection string.
 ```
 
-### SQL Server
+`GetAspireConnectionString` returns `GetConnectionString(connectionName)` or
+`Configuration["ConnectionStrings:{connectionName}"]`.
 
-```csharp
-// In AppHost
-var sql = builder.AddSqlServer("sql").AddDatabase("mydb");
+`AspireDatabaseType.MySql` exists on the enum, but there is no
+`AddMvp24HoursMySqlFromAspire` helper.
 
-// In API
-builder.Services.AddMvp24HoursSqlServerFromAspire("mydb");
+### AspireRedisOptions
 
-// Use with Mvp24Hours EFCore
-builder.Services.AddMvp24HoursDbContext<MyDbContext>(options =>
-{
-    options.UseSqlServer(builder.GetAspireConnectionString("mydb"));
-});
-```
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `ConnectionName` | `string` | `"cache"` | Aspire connection name |
+| `InstanceName` | `string?` | `null` | Redis cache instance name |
 
-### MongoDB
+### AspireRabbitMQOptions
 
-```csharp
-// In AppHost
-var mongo = builder.AddMongoDB("mongo").AddDatabase("documents");
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `ConnectionName` | `string` | `"messaging"` | Aspire connection name |
+| `AutoDeclareQueues` | `bool` | `true` | Automatic queue declaration intent |
+| `EnableMessageDeduplication` | `bool` | `true` | Message deduplication intent |
+| `PrefetchCount` | `ushort` | `10` | Consumer prefetch count |
 
-// In API
-builder.Services.AddMvp24HoursMongoDbFromAspire("documents");
+### AspireDatabaseOptions
 
-// Use with Mvp24Hours MongoDB
-builder.Services.AddMvp24HoursMongoDb<MyContext>();
-```
+| Property | Type | Default | Meaning |
+|---|---|---|---|
+| `ConnectionName` | `string` | `"database"` | Aspire connection name; helpers override per call |
+| `DatabaseType` | `AspireDatabaseType` | enum default | Set by the helper (`SqlServer`, `PostgreSql`, `MySql`, `MongoDB`) |
+| `EnableAutoMigration` | `bool` | `false` | Automatic migrations intent |
+| `EnableResiliency` | `bool` | `true` | Connection resiliency intent |
+| `CommandTimeoutSeconds` | `int` | `30` | Command timeout intent |
 
-## Health Check Endpoints
+## Configuration example
 
-The integration provides standard Kubernetes-compatible health check endpoints:
-
-| Endpoint | Purpose | Tags |
-|----------|---------|------|
-| `/health/live` | Liveness probe | live |
-| `/health/ready` | Readiness probe | ready |
-| `/health/startup` | Startup probe | startup, live |
-| `/health` | Overall health | all |
-
-### Health Check Response
+All nested properties bind through the normal .NET configuration binder:
 
 ```json
 {
-  "status": "Healthy",
-  "duration": 45.23,
-  "checks": [
-    {
-      "name": "self",
-      "status": "Healthy",
-      "duration": 0.12,
-      "tags": ["live"]
+  "Aspire": {
+    "ServiceName": "orders-api",
+    "ServiceVersion": "10.0.0",
+    "Environment": "Production",
+    "EnableOpenTelemetry": true,
+    "EnableHealthChecks": true,
+    "EnableResilience": true,
+    "EnableServiceDiscovery": true,
+    "OtlpEndpoint": "http://otel-collector:4317",
+    "Telemetry": {
+      "EnableLogging": true,
+      "EnableTracing": true,
+      "EnableMetrics": true,
+      "EnableAspNetCoreInstrumentation": true,
+      "EnableHttpClientInstrumentation": true,
+      "EnableEfCoreInstrumentation": true,
+      "EnableMvp24HoursInstrumentation": true,
+      "TraceSamplingRatio": 0.25,
+      "AdditionalActivitySources": [ "Orders.Application" ],
+      "AdditionalMeterNames": [ "Orders.Application" ]
     },
-    {
-      "name": "redis-cache",
-      "status": "Healthy",
-      "duration": 15.45,
-      "tags": ["ready"]
+    "HealthChecks": {
+      "LivenessPath": "/health/live",
+      "ReadinessPath": "/health/ready",
+      "StartupPath": "/health/startup",
+      "EnableDatabaseHealthChecks": true,
+      "EnableCacheHealthChecks": true,
+      "EnableMessagingHealthChecks": true,
+      "TimeoutSeconds": 5
     },
-    {
-      "name": "sqlserver-mydb",
-      "status": "Healthy",
-      "duration": 28.67,
-      "tags": ["ready"]
+    "Resilience": {
+      "EnableRetry": true,
+      "EnableCircuitBreaker": true,
+      "EnableTimeout": true,
+      "MaxRetryAttempts": 3,
+      "CircuitBreakerFailureThreshold": 5,
+      "CircuitBreakerBreakDurationSeconds": 30,
+      "TimeoutSeconds": 30
+    },
+    "ResourceAttributes": {
+      "deployment.environment": "production",
+      "service.region": "us-east-1"
     }
-  ]
+  }
 }
 ```
 
-## Developer Dashboard
+## Health endpoints
 
-The Aspire Developer Dashboard provides real-time observability:
+`MapMvp24HoursAspireHealthChecks(options)` maps:
 
-### Features
-- **Structured Logs**: Filter and search logs with trace correlation
-- **Distributed Traces**: Visualize request flows across services
-- **Metrics**: View graphs and dashboards for key metrics
-- **Resources**: Monitor health and status of all components
+| Endpoint | Selection | Unhealthy status |
+|---|---|---|
+| `LivenessPath` | Fixed healthy JSON; does not call `HealthCheckService` | Not applicable |
+| `ReadinessPath` | Checks tagged `ready` | `503` |
+| `StartupPath` | Checks tagged `startup` or `live` | `503` |
+| `/health` | All registered checks; path is hard-coded | `503` |
 
-### Accessing the Dashboard
+Degraded reports return `200`. Responses contain overall status, total duration
+in milliseconds, and each check's name, status, duration, description,
+exception message, and tags.
 
-When running with the AppHost, the dashboard URL is displayed in the console:
-
-```
-Dashboard: https://localhost:18888
-```
-
-## Comparison: Aspire vs Manual Configuration
-
-| Feature | Aspire | Manual |
-|---------|--------|--------|
-| OpenTelemetry Setup | Automatic | Manual configuration required |
-| Health Checks | Built-in endpoints | Manual mapping |
-| Connection Strings | Injected automatically | Manual configuration |
-| Service Discovery | Built-in | External library required |
-| Container Orchestration | Integrated | Docker Compose/K8s |
-| Developer Dashboard | Included | External tools (Jaeger, Grafana) |
-
-### When to Use Aspire
-
-- New cloud-native applications
-- Microservices architectures
-- Applications requiring comprehensive observability
-- Teams wanting simplified local development
-
-### When to Use Manual Configuration
-
-- Existing applications with custom observability
-- Simple applications without distribution
-- Environments without container support
-- Specific compliance requirements
-
-## Best Practices
-
-### 1. Service Naming
-
-Use consistent, descriptive service names:
+Pass the configured nested object when custom paths are used:
 
 ```csharp
-options.ServiceName = "order-api";
-options.ServiceVersion = "1.2.3";
+AspireOptions options = app.Services.GetRequiredService<AspireOptions>();
+app.MapMvp24HoursAspireHealthChecks(options.HealthChecks);
 ```
 
-### 2. Health Check Tags
+Calling `MapMvp24HoursAspireHealthChecks()` without an argument creates a fresh
+`AspireHealthCheckOptions`; it does not resolve the registered `AspireOptions`.
 
-Use appropriate tags for probes:
+## Dashboard support
+
+`UseAspireDashboardSupport` adds permissive CORS
+(`AllowAnyOrigin` / `AllowAnyMethod` / `AllowAnyHeader`). It does not configure
+OTLP, exporters, or Aspire dashboard endpoints.
 
 ```csharp
-services.AddHealthChecks()
-    .AddCheck("db", () => ..., tags: new[] { "ready" })
-    .AddCheck("cache", () => ..., tags: new[] { "ready" })
-    .AddCheck("self", () => ..., tags: new[] { "live" });
+app.UseAspireDashboardSupport();
 ```
 
-### 3. Resilience Configuration
+## Correlation context
 
-Configure resilience based on your SLOs:
+Registration adds singleton Core
+`Mvp24Hours.Core.Aspire.ICorrelationIdAccessor` backed by `AsyncLocal<string?>`:
 
 ```csharp
-options.Resilience.MaxRetryAttempts = 3;
-options.Resilience.TimeoutSeconds = 30;
-options.Resilience.CircuitBreakerFailureThreshold = 10;
+using Mvp24Hours.Core.Aspire;
+
+public sealed class Worker(ICorrelationIdAccessor correlation)
+{
+    public void Begin(string correlationId) =>
+        correlation.SetCorrelationId(correlationId);
+}
 ```
 
-### 4. Telemetry Sampling
+Application has a different type with the same short name:
+`Mvp24Hours.Application.Contract.Observability.ICorrelationIdAccessor`. The
+Application accessor is read-oriented and also exposes causation metadata.
+Qualify the namespace when both packages are referenced. Prefer the Application
+accessor when Application services own correlation propagation.
 
-Adjust sampling for production environments:
+## Packages for full Aspire-style observability
 
-```csharp
-options.Telemetry.TraceSamplingRatio = 0.1; // 10% sampling in production
-```
+Core itself does not install these packages. Full Aspire-style telemetry and
+HTTP resilience typically require:
 
-## Troubleshooting
+- `OpenTelemetry.Extensions.Hosting`
+- `OpenTelemetry.Instrumentation.AspNetCore`
+- `OpenTelemetry.Instrumentation.Http`
+- `OpenTelemetry.Exporter.OpenTelemetryProtocol`
+- `Microsoft.Extensions.Http.Resilience`
+- optional `AspNetCore.HealthChecks.*` packages for module checks
 
-### Connection String Not Found
+## Testing
 
-Ensure the connection name matches in AppHost and API:
+`src/Tests/Mvp24Hours.Core.Test/Aspire/AspireOptionsTest.cs` covers option
+defaults, setters, and the Core correlation accessor. There are currently no DI
+or HTTP health-endpoint integration tests for Aspire helpers.
 
-```csharp
-// AppHost
-var redis = builder.AddRedis("cache"); // name: "cache"
+## See also
 
-// API
-builder.Services.AddMvp24HoursRedisFromAspire("cache"); // must match
-```
-
-### Health Checks Failing
-
-Check that services are properly referenced:
-
-```csharp
-builder.AddProject<Projects.Api>("api")
-    .WithReference(redis)  // Add reference
-    .WithReference(sql);   // Add reference
-```
-
-### Telemetry Not Appearing
-
-Verify OTLP endpoint is configured:
-
-```csharp
-options.OtlpEndpoint = "http://localhost:4317"; // Or use OTEL_EXPORTER_OTLP_ENDPOINT env var
-```
-
-## See Also
-
-- [Observability Overview](../observability/home.md)
-- [OpenTelemetry Configuration](../observability/exporters.md)
-- [Health Checks](../webapi/health-checks.md)
-- [.NET Aspire Documentation](https://learn.microsoft.com/dotnet/aspire/)
-
+- [Observability overview](../observability/home.md)
+- [OpenTelemetry exporters](../observability/exporters.md)
+- [Health Checks catalog](../infrastructure/health-checks.md)
+- [HTTP resilience](http-resilience.md)
+- [Resilience selection guide](resilience-guide.md)
+- [Options validation](../core/options-validation.md)
+- [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)

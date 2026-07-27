@@ -310,6 +310,6 @@ while (!cancellationToken.IsCancellationRequested)
 ## See Also
 
 - [TimeProvider Abstraction](time-provider.md)
-- [.NET 9 Features](dotnet9-features.md)
+- [.NET 10 Modernization Overview](dotnet9-features.md)
 - [Microsoft Documentation](https://learn.microsoft.com/en-us/dotnet/api/system.threading.periodictimer)
 

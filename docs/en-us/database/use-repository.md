@@ -1,120 +1,88 @@
-# How to use a repository?
-We use the repository pattern to interact with the database. According to Martin Fowler:
-> Mediates between the domain and data mapping layers using a collection-like interface to access domain objects. [Repository](http://martinfowler.com/eaaCatalog/repository.html)
-
-## Prerequisites
-Perform installation and configuration to use a [relational](relational.md) or [NoSQL](nosql.md) database.
-
 # Repository
-Use the unit of work to load the repository, like this:
+
+Repositories provide query and command operations for `IEntityBase` entities. Resolve one from the unit of work so all repositories in the scope share the same context and transaction.
+
 ```csharp
-IRepository<Entity> rpEntity = UnitOfWork.GetRepository<Entity>(); // async => IRepositoryAsync = UnitOfWorkAsync.GetRepository
-```
-
-## Predefined Methods
-```csharp
-// IQuery / IQueryAsync
-bool ListAny(); // async => ListAnyAsync
-int ListCount(); // async => ListCountAsync
-IList<TEntity> List(); // async => ListAsync
-IList<TEntity> List(IPagingCriteria criteria); // async => ListAsync
-bool GetByAny(Expression<Func<TEntity, bool>> clause); // async => GetByAnyAsync
-int GetByCount(Expression<Func<TEntity, bool>> clause); // async => GetByCountAsync
-IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause); // async => GetByAsync
-IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria criteria); // async => GetByAsync
-TEntity GetById(object id); // async => GetByIdAsync
-TEntity GetById(object id, IPagingCriteria criteria); // async => GetByIdAsync
-
-// ICommand /  ICommandAsync
-void Add(TEntity entity); // async => AddAsync
-void Add(IList<TEntity> entities); // async => AddAsync
-void Modify(TEntity entity); // async => ModifyAsync
-void Modify(IList<TEntity> entities); // async => ModifyAsync
-void Remove(TEntity entity); // async => RemoveAsync
-void Remove(IList<TEntity> entities); // async => RemoveAsync
-void RemoveById(object id); // async => RemoveByIdAsync
-void RemoveById(IList<object> ids); // async => RemoveByIdAsync
-
-// IRelation / IRelationAsync
-void LoadRelation<TProperty>(TEntity entity,
-	Expression<Func<TEntity, TProperty>> propertyExpression)
-	where TProperty : class; // async => LoadRelationAsync
-void LoadRelation<TProperty>(TEntity entity,
-	Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
-	Expression<Func<TProperty, bool>> clause = null,
-	int limit = 0)
-	where TProperty : class; // async => LoadRelationAsync
-void LoadRelationSortByAscending<TProperty, TKey>(TEntity entity,
-	Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
-	Expression<Func<TProperty, TKey>> orderKey,
-	Expression<Func<TProperty, bool>> clause = null,
-	int limit = 0)
-	where TProperty : class; // async => LoadRelationSortByAscendingAsync
-void LoadRelationSortByDescending<TProperty, TKey>(TEntity entity,
-	Expression<Func<TEntity, IEnumerable<TProperty>>> propertyExpression,
-	Expression<Func<TProperty, TKey>> orderKey,
-	Expression<Func<TProperty, bool>> clause = null,
-	int limit = 0)
-	where TProperty : class; // async => LoadRelationSortByDescendingAsync
-```
-
-## Example of use
-```csharp
-IRepository<Entity> rpEntity = UnitOfWork.GetRepository<Entity>(); // async => IRepositoryAsync = UnitOfWorkAsync.GetRepository
-
-// list all
-var entities = rpEntity.List();
-
-// list everything with pagination
-var paging = new PagingCriteria(3, 0); //  limit, offset
-var entities = rpEntity.List(paging);
-
-// apply filter
-var entities = rpEntity.GetBy(x => x.PropertyName == null);
-
-// apply filter with pagination
-var paging = new PagingCriteria(3, 0); //  limit, offset
-var entities = rpEntity.GetBy(x => x.PropertyName == null, paging);
-
-// load navigation/relationships
-var paging = new PagingCriteria(1, 0, navigation: new List<string> { "PropertyName" });
-var entities = rpEntity.List(paging);
-
-// load navigation/relationships with expression
-var paging = new PagingCriteriaExpression<Entity>(3, 0); //  limit, offset
-paging.NavigationExpr.Add(x => x.PropertyName);
-var entities = rpEntity.List(paging);
-
-// apply ordering
-var paging = new PagingCriteria(3, 0, orderBy: new List<string> { "PropertyName desc" });
-var entities = rpEntity.List(paging);
-
-// apply ordering with expression
-var paging = new PagingCriteriaExpression<Entity>(3, 0); //  limit, offset
-paging.OrderByDescendingExpr.Add(x => x.PropertyName);
-var entities = rpEntity.List(paging);
-
-// load list navigation/relationships with filter and/or pagination
-var paging = new PagingCriteria(1, 0, navigation: new List<string> { "PropertyList" });
-var entities = rpEntity.List(paging);
-foreach (var entity in entities)
+public sealed class CustomerStore(IUnitOfWorkAsync unitOfWork)
 {
-	rpEntity.LoadRelation(entity, x => x.PropertyList, clause: c => c.Active, limit: 1);
+    private readonly IRepositoryAsync<Customer> _customers =
+        unitOfWork.GetRepository<Customer>();
 }
-
-// load navigation/list relationships with expression with filter and/or pagination
-var paging = new PagingCriteriaExpression<Entity>(3, 0); //  limit, offset
-paging.NavigationExpr.Add(x => x.PropertyList);
-var entities = rpEntity.List(paging);
-foreach (var entity in entities)
-{
-	rpEntity.LoadRelation(entity, x => x.PropertyList, clause: c => c.Active, limit: 1);
-}
-
-// create new criteria from an existing one
-var pagingNew = paging.NewCriteria(navigation: new List<string> { "PropertyList" });
-
-// create new expression criteria from an existing one
-var pagingExpr = paging.NewCriteriaExpression<Entity>();
-pagingExpr.NavigationExpr.Add(x => x.PropertyList);
 ```
+
+Register synchronous or asynchronous contracts:
+
+```csharp
+builder.Services.AddMvp24HoursRepository(options =>
+    options.MaxQtyByQueryPage = 100);
+
+// Or:
+builder.Services.AddMvp24HoursRepositoryAsync(options =>
+{
+    options.MaxQtyByQueryPage = 100;
+    options.DefaultTrackingBehavior = QueryTrackingBehavior.NoTracking;
+});
+```
+
+## Queries
+
+The core query surface includes `List`, `ListCount`, `ListAny`, `GetBy`, `GetByCount`, `GetByAny`, and `GetById`, with `Async` counterparts on `IRepositoryAsync<T>`.
+
+```csharp
+var repository = unitOfWork.GetRepository<Customer>();
+
+IList<Customer> active = await repository.GetByAsync(
+    customer => customer.Active,
+    new PagingCriteria(limit: 20, offset: 0),
+    cancellationToken);
+
+Customer? customer = await repository.GetByIdAsync(customerId, cancellationToken: cancellationToken);
+```
+
+Use `PagingCriteria` for string-based navigation/order configuration or `PagingCriteriaExpression<TEntity>` for compile-time checked expressions:
+
+```csharp
+var paging = new PagingCriteriaExpression<Customer>(limit: 20, offset: 0);
+paging.NavigationExpr.Add(customer => customer.Contacts);
+paging.OrderByAscendingExpr.Add(customer => customer.Name);
+
+var page = await repository.ListAsync(paging, cancellationToken);
+```
+
+## Commands
+
+`Add`, `Modify`, `Remove`, and `RemoveById` accept one entity or a list; asynchronous repositories expose the corresponding `Async` methods. Repository commands stage changes. Commit them through the unit of work.
+
+```csharp
+await repository.AddAsync(customer, cancellationToken: cancellationToken);
+customer.Name = "Updated";
+await repository.ModifyAsync(customer, cancellationToken: cancellationToken);
+await unitOfWork.SaveChangesAsync(cancellationToken);
+```
+
+## Relations
+
+`LoadRelation` / `LoadRelationAsync` load a reference or collection explicitly. Collection overloads support a filter and limit, plus ascending and descending variants.
+
+```csharp
+await repository.LoadRelationAsync(
+    customer,
+    entity => entity.Contacts,
+    clause: contact => contact.Active,
+    limit: 2,
+    cancellationToken: cancellationToken);
+```
+
+MongoDB repositories do not support EF Core navigation loading.
+
+## Bulk and streaming
+
+EF Core and MongoDB add specialized asynchronous contracts:
+
+- `IBulkOperationsRepositoryAsync<TEntity>` for bulk insert, update, and delete.
+- EF Core repositories support `ExecuteUpdateAsync` and `ExecuteDeleteAsync`.
+- `IStreamingRepositoryAsync<TEntity>` exposes `IAsyncEnumerable<TEntity>` for large result sets.
+
+Use the module registration methods documented in [EF Core Advanced](efcore-advanced.md) and [MongoDB Advanced](mongodb-advanced.md); do not register interfaces manually unless replacing their implementations.
+
+See [Unit of Work](use-unitofwork.md), [Services](use-service.md), and [Specification Pattern](../specification.md).

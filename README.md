@@ -1,4 +1,4 @@
-# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 9 (v9.1.200) 🚀
+# <img src="docs/_media/icon.png" width="32" height="32" alt="icon" /> Mvp24Hours - .NET 10 (v10.0.0 source) 🚀
 
 Enterprise-ready library for rapid .NET application development with CQRS, Event Sourcing, Domain Events, and modern observability.
 
@@ -10,8 +10,8 @@ Enterprise-ready library for rapid .NET application development with CQRS, Event
 | **Data** | SQL Server, PostgreSQL, MySQL (EF Core), MongoDB, Redis |
 | **Messaging** | RabbitMQ (Typed Consumers, Request/Response, Sagas, Scheduling) |
 | **Observability** | OpenTelemetry (Tracing, Metrics, Logs), ILogger integration |
-| **Resilience** | Native .NET 9 resilience, Circuit Breaker, Retry, Rate Limiting |
-| **Modern .NET 9** | HybridCache, TimeProvider, Channels, TypedResults, Source Generators |
+| **Resilience** | Native .NET resilience, Circuit Breaker, Retry, Rate Limiting |
+| **Modern .NET 10** | HybridCache, TimeProvider, Channels, TypedResults, Source Generators |
 | **Patterns** | Repository, Unit of Work, Specification, Pipeline (Pipe & Filters) |
 
 ## 📦 Quick Start
@@ -27,16 +27,24 @@ dotnet add package Mvp24Hours.WebAPI
 
 - 🌐 **Website**: [mvp24hours.dev](https://mvp24hours.dev/#/)
 - 📖 **Documentation**: [English Documentation](https://mvp24hours.dev/#/en-us/home)
-- 🧪 **Samples**: [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples)
+- 🧪 **Samples**: [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples) (external; currently .NET 8 — see [Getting Started sample map](https://mvp24hours.dev/#/en-us/getting-started?id=🧪-runnable-samples))
 
-## 🆕 What's New in v9.1.200
+> Samples currently target **.NET 8 (v8.2.101)** and may still use NLog. Treat
+> them as structural references until the samples repository is upgraded to
+> `net10.0`.
+>
+> **Release status:** the repository targets `net10.0`, but its package project metadata
+> remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not include 10.0.0.
+> Treat 10.0.0 as the source release until metadata is finalized and publication is confirmed.
 
-- ⭐ **Complete CQRS Library** - Full Mediator implementation (MediatR replacement)
-- 📊 **OpenTelemetry** - Tracing, Metrics, Logs with OTLP/Prometheus exporters
-- 🔄 **.NET 9 Modernization** - HybridCache, TimeProvider, RateLimiting, Channels
-- 🗄️ **Advanced EF Core** - Interceptors, Multi-tenancy, Bulk Operations
-- 🐇 **Enterprise RabbitMQ** - Typed Consumers, Sagas, Scheduling
-- 📦 **Advanced Pipeline** - Typed, Fork/Join, Checkpoint/Resume
+## 🆕 What's New in v10.0.0
+
+- 🔄 **.NET 10** - All production and test projects target `net10.0`; C# defaults to `latest`
+- ✅ **Strict quality gate** - Nullable enabled and Release builds run with warnings as errors
+- 🔐 **Security updates** - Patched `System.Security.Cryptography.Xml` dependency chain
+- 🧰 **Modernized internals** - `Microsoft.Data.SqlClient`, current AWS credential resolution, and non-obsolete cryptography APIs
+- 🐛 **Distributed lock fix** - Lock handles now release the resource before marking themselves disposed
+- 🧪 **Expanded test coverage** - 18 test projects on .NET 10, a 37% CI coverage floor, and CHANGELOG-recorded expansion to 4,492 passing tests
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md) | [Release Notes](https://mvp24hours.dev/#/en-us/release)
 

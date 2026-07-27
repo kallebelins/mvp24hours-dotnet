@@ -1,6 +1,8 @@
-# Minimal APIs with TypedResults (.NET 9)
+# Minimal APIs with TypedResults (.NET 10)
 
-> Extensions for creating type-safe, AOT-friendly Minimal API endpoints using native .NET 9 TypedResults.
+> Extensions for creating type-safe, AOT-friendly Minimal API endpoints using
+> TypedResults. The pattern was adopted in .NET 9 and remains current on
+> `net10.0`.
 
 ## Overview
 

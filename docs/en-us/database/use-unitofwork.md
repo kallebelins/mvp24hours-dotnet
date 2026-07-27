@@ -1,34 +1,64 @@
-# How to use a unit of work?
-We use the unit of work standard to control transactions. According to Martin Fowler:
-> Maintains a list of objects affected by a business transaction and coordinates recording changes and resolving concurrency issues. [Unit Of Work](http://martinfowler.com/eaaCatalog/unitOfWork.html)
-
-## Prerequisites
-Perform installation and configuration to use a [relational](relational.md) or [NoSQL](nosql.md) database.
-
 # Unit of Work
-To obtain this, simply apply the injection concept through the constructor or use the Mvp24Hours architecture help provider, like this:
-```csharp
-IUnitOfWork unitOfWork = serviceProvider.GetService<IUnitOfWork>(); // async => IUnitOfWorkAsync
-```
 
-## Predefined Methods
-```csharp
-// IUnitOfWork / IUnitOfWorkAsync
-int SaveChanges(CancellationToken cancellationToken = default); // async => SaveChangesAsync
-void Rollback(); // async => RollbackAsync
-IRepository<T> GetRepository<T>() where T : class, IEntityBase;
-IDbConnection GetConnection();
-```
+`IUnitOfWork` and `IUnitOfWorkAsync` coordinate repositories that share the same database context. Obtain them through constructor injection; avoid resolving them from the root service provider.
 
-## Using Dapper
-Below is a package for installing and executing SQL commands/queries with Dapper.
+## Registration and use
 
 ```csharp
-/// Package Manager Console >
-Install-Package Dapper -Version 2.1.x
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddMvp24HoursDbContext<AppDbContext>();
+builder.Services.AddMvp24HoursRepositoryAsync();
 
-/// Example
-var result = await UnitOfWork
-    .GetConnection()
-    .QueryAsync<Contact>("select * from Contact where CustomerId = @customerId;", new { customerId });
+public sealed class CreateCustomerHandler(IUnitOfWorkAsync unitOfWork)
+{
+    public async Task<Guid> HandleAsync(string name, CancellationToken cancellationToken)
+    {
+        var customer = new Customer { Id = Guid.NewGuid(), Name = name };
+        await unitOfWork.GetRepository<Customer>()
+            .AddAsync(customer, cancellationToken: cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return customer.Id;
+    }
+}
 ```
+
+The synchronous equivalents are `GetRepository<T>()`, `SaveChanges(...)`, and `Rollback()`. The asynchronous rollback method is `RollbackAsync()`.
+
+## Multiple repositories, one commit
+
+```csharp
+var customers = unitOfWork.GetRepository<Customer>();
+var orders = unitOfWork.GetRepository<Order>();
+
+await customers.AddAsync(customer, cancellationToken: cancellationToken);
+await orders.AddAsync(order, cancellationToken: cancellationToken);
+await unitOfWork.SaveChangesAsync(cancellationToken);
+```
+
+Call `SaveChanges` only after all changes for the business transaction are staged. `GetConnection()` exposes the context connection for advanced SQL/Dapper scenarios; do not dispose that connection yourself.
+
+## Domain events
+
+EF Core provides event-aware unit-of-work registrations. The tested registration is:
+
+```csharp
+builder.Services.AddMvp24HoursRepositoryWithEvents(options =>
+    options.MaxQtyByQueryPage = 100);
+```
+
+Inject `IUnitOfWorkWithEvents` and call `SaveChangesWithEvents(...)`, or inject `IUnitOfWorkWithEventsAsync` and call `SaveChangesWithEventsAsync(...)`. Events are collected from tracked domain-event entities, persisted, dispatched, and then cleared. Configure the dispatcher before using the event-aware unit of work; `AddMvp24HoursEFCoreCqrs<TDbContext>` can wire the EF Core CQRS path.
+
+```csharp
+public sealed class PlaceOrderHandler(IUnitOfWorkWithEventsAsync unitOfWork)
+{
+    public async Task HandleAsync(Order order, CancellationToken cancellationToken)
+    {
+        await unitOfWork.GetRepository<Order>()
+            .AddAsync(order, cancellationToken: cancellationToken);
+        await unitOfWork.SaveChangesWithEventsAsync(cancellationToken);
+    }
+}
+```
+
+See [Repository](use-repository.md), [Services](use-service.md), and [EF Core Advanced](efcore-advanced.md).

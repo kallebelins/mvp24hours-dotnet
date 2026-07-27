@@ -200,13 +200,12 @@ public record TransferFundsCommand
 ```csharp
 // ✅ Cache with parameter-based key
 public record GetProductQuery 
-    : IMediatorQuery<ProductDto>, ICacheableRequest
+    : IMediatorQuery<ProductDto>, ICacheable
 {
     public required Guid ProductId { get; init; }
     
     public string CacheKey => $"product:{ProductId}";
-    public TimeSpan? AbsoluteExpiration => TimeSpan.FromMinutes(15);
-    public TimeSpan? SlidingExpiration => TimeSpan.FromMinutes(5);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
 }
 ```
 
@@ -293,7 +292,7 @@ public async Task<IReadOnlyList<OrderListItemDto>> Handle(...)
 - [ ] Validation via FluentValidation
 - [ ] Handlers are simple and focused
 - [ ] Transactions marked with ITransactional
-- [ ] Cacheable queries marked with ICacheableRequest
+- [ ] Cacheable queries marked with `ICacheable`
 - [ ] Domain-specific exceptions
 - [ ] Avoid N+1 queries
 - [ ] Use projection in queries

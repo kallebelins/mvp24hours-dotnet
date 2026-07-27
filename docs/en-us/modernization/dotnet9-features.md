@@ -1,281 +1,153 @@
-# .NET 9 Native Features
+# .NET 10 Modernization Overview
 
-This document provides a comprehensive overview of the native .NET 9 features adopted by Mvp24Hours, replacing custom implementations with modern, standardized APIs.
+Mvp24Hours currently targets `net10.0` and builds on native platform features
+adopted across .NET 9 and .NET 10. This page is the map of those features. Use
+the linked module pages for API and option details.
 
-## Overview
+> **Package readiness:** the source tree targets .NET 10, but production
+> projects still declare package version `9.1.21`. Verify the NuGet feed before
+> referencing `10.0.0`. See the
+> [9.1.x → 10.0.0 migration](../migration.md?id=_91x-1000).
 
-.NET 9 introduces several APIs that make custom implementations obsolete. Mvp24Hours has adopted these native features to:
+## Platform baseline
 
-- **Reduce maintenance burden** - Less custom code means fewer bugs
-- **Improve performance** - Native APIs are highly optimized
-- **Enhance compatibility** - Better integration with the .NET ecosystem
-- **Simplify upgrades** - Following Microsoft patterns ensures smooth version transitions
+The repository baseline is:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         .NET 9 Native Features in Mvp24Hours               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
-│  │   Resilience    │  │    Caching      │  │   Observability │             │
-│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤             │
-│  │ Http.Resilience │  │  HybridCache    │  │  OpenTelemetry  │             │
-│  │ Extensions.     │  │  Output Cache   │  │  ILogger        │             │
-│  │  Resilience     │  │  IMemoryCache   │  │  ActivitySource │             │
-│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘             │
-│           │                    │                    │                       │
-│  ┌────────┴────────┐  ┌────────┴────────┐  ┌────────┴────────┐             │
-│  │   Rate Limiting │  │  Configuration  │  │     Hosting     │             │
-│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤             │
-│  │ RateLimiter     │  │  IOptions<T>    │  │  .NET Aspire    │             │
-│  │ FixedWindow     │  │  TimeProvider   │  │  Keyed Services │             │
-│  │ SlidingWindow   │  │  PeriodicTimer  │  │  Source Gen     │             │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
-│                                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
-│  │      APIs       │  │    Channels     │  │  Error Handling │             │
-│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤             │
-│  │  Minimal APIs   │  │  Channel<T>     │  │ ProblemDetails  │             │
-│  │  TypedResults   │  │  BoundedChannel │  │  RFC 7807       │             │
-│  │  Native OpenAPI │  │  Producer/      │  │  TypedResults   │             │
-│  │                 │  │   Consumer      │  │   .Problem()    │             │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- `net10.0`;
+- nullable reference types enabled;
+- `LangVersion=latest` by default (the MongoDB project currently overrides it
+  with C# 12);
+- Central Package Management through `Directory.Packages.props`;
+- .NET 10 Microsoft.Extensions, ASP.NET Core, and EF Core dependencies.
 
-## Feature Categories
+These build settings are separate from package publication. Target-framework
+adoption alone does not prove that a matching package version has shipped.
 
-### 1. Resilience and Fault Tolerance
+## Feature map
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **HTTP Resilience** | `Microsoft.Extensions.Http.Resilience` for HTTP clients | [HTTP Resilience](http-resilience.md) |
-| **Generic Resilience** | `Microsoft.Extensions.Resilience` for any operation | [Generic Resilience](generic-resilience.md) |
-| **Rate Limiting** | `System.Threading.RateLimiting` for throttling | [Rate Limiting](rate-limiting.md) |
+### Resilience and rate limiting
 
-### 2. Caching
+| Capability | Current path | Documentation |
+|---|---|---|
+| HTTP resilience | `Microsoft.Extensions.Http.Resilience` with Mvp24Hours named/typed client helpers | [HTTP resilience](http-resilience.md) |
+| Generic operations | `Microsoft.Extensions.Resilience` and Polly v8 pipelines | [Generic resilience](generic-resilience.md) |
+| Area-specific policies | EF Core, MongoDB, cache, CronJob, pipeline, and CQRS integrations | [Resilience selection guide](resilience-guide.md) |
+| Rate limiting | `System.Threading.RateLimiting` providers and module adapters | [Rate limiting](rate-limiting.md) |
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **HybridCache** | L1 (memory) + L2 (distributed) cache | [HybridCache](hybrid-cache.md) |
-| **Output Caching** | HTTP response caching | [Output Caching](output-caching.md) |
+HTTP and generic resilience both expose a `NativeResilienceOptions` type in
+different namespaces. Qualify the type name when both namespaces are imported.
 
-### 3. Time and Scheduling
+### Caching
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **TimeProvider** | Abstraction for `DateTime.Now` / `DateTime.UtcNow` | [TimeProvider](time-provider.md) |
-| **PeriodicTimer** | Modern timer with async support | [PeriodicTimer](periodic-timer.md) |
+| Capability | Current path | Documentation |
+|---|---|---|
+| Hybrid cache | `HybridCache` with local and distributed tiers, stampede protection, tags, warming, and Mvp24Hours adapters | [HybridCache](hybrid-cache.md) |
+| HTTP output cache | ASP.NET Core Output Caching integration | [Output caching](output-caching.md) |
 
-### 4. Configuration
+`HybridCache` became stable in .NET 9 and remains the preferred native cache
+abstraction on .NET 10.
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **IOptions<T>** | Strongly-typed configuration | [Options Configuration](options-configuration.md) |
-| **Keyed Services** | DI with key-based resolution | [Keyed Services](keyed-services.md) |
+### Time, concurrency, and dependency injection
 
-### 5. Communication
+| Capability | Current path | Documentation |
+|---|---|---|
+| Testable time | `TimeProvider` and `FakeTimeProvider` | [TimeProvider](time-provider.md) |
+| Async periodic work | `PeriodicTimer` | [PeriodicTimer](periodic-timer.md) |
+| Producer/consumer flows | `Channel<T>` and bounded channels | [Channels](channels.md) |
+| Multiple implementations | Keyed DI services | [Keyed services](keyed-services.md) |
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **Channels** | High-performance producer/consumer | [Channels](channels.md) |
+### Web APIs
 
-### 6. APIs and Documentation
+| Capability | Current path | Documentation |
+|---|---|---|
+| Lightweight endpoints | Minimal APIs and typed results | [Minimal APIs](minimal-apis.md) |
+| Error contracts | ASP.NET Core Problem Details | [Problem Details](problem-details.md) |
+| API description | `Microsoft.AspNetCore.OpenApi` plus Mvp24Hours registration and mapping helpers | [Native OpenAPI](native-openapi.md) |
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **Minimal APIs** | Lightweight endpoints with TypedResults | [Minimal APIs](minimal-apis.md) |
-| **ProblemDetails** | RFC 7807 error responses | [ProblemDetails](problem-details.md) |
-| **Native OpenAPI** | Built-in OpenAPI support | [Native OpenAPI](native-openapi.md) |
+Native OpenAPI support was introduced in ASP.NET Core 9 and remains current in
+ASP.NET Core 10. Swagger UI is still a separate visualization concern.
 
-### 7. Performance
+### Configuration and generated code
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **Source Generators** | AOT-friendly code generation | [Source Generators](source-generators.md) |
+| Capability | Current path | Documentation |
+|---|---|---|
+| Strongly typed settings | Options binding, validation, and `ValidateOnStart` | [Options configuration](options-configuration.md) |
+| Generated implementations | AOT-oriented source generators supplied by the library | [Source generators](source-generators.md) |
 
-### 8. Cloud-Native
+### Cloud-native operation
 
-| Feature | Description | Documentation |
-|---------|-------------|---------------|
-| **.NET Aspire** | Observability and orchestration | [.NET Aspire](aspire.md) |
+| Capability | Current path | Documentation |
+|---|---|---|
+| Service defaults contract | `AddMvp24HoursAspireDefaults`, health endpoints, service identity, and correlation context | [.NET Aspire](aspire.md) |
+| Telemetry | OpenTelemetry logs, traces, metrics, and exporters | [Observability](../observability/home.md) |
 
-## What's New in .NET 9
+The current Core Aspire integration does not install an AppHost, exporters,
+service-discovery provider, or concrete resilience strategies. Its nested
+telemetry, discovery, and resilience settings are configuration contracts;
+wire the corresponding consuming-service integrations explicitly.
 
-### HybridCache (Stable)
+## Minimal composition example
 
-HybridCache is now stable in .NET 9, providing:
-
-- **L1 + L2 caching** - Memory and distributed cache combined
-- **Stampede protection** - Prevents cache stampede automatically
-- **Tag-based invalidation** - Invalidate related entries efficiently
+Register only the capabilities the application uses:
 
 ```csharp
-// Register HybridCache
-services.AddMvpHybridCache(options =>
+var builder = WebApplication.CreateBuilder(args);
+
+builder.AddMvp24HoursAspireDefaults(options =>
 {
-    options.DefaultEntryOptions.Expiration = TimeSpan.FromMinutes(5);
-    options.DefaultEntryOptions.LocalCacheExpiration = TimeSpan.FromMinutes(1);
+    options.ServiceName = "orders-api";
+    options.ServiceVersion = "10.0.0";
 });
 
-// Use in your code
-var user = await hybridCache.GetOrCreateAsync(
-    $"user:{userId}",
-    async cancel => await userRepository.GetByIdAsync(userId, cancel),
-    options: new() { Expiration = TimeSpan.FromHours(1) }
-);
-```
-
-### Native OpenAPI
-
-.NET 9 includes built-in OpenAPI support via `Microsoft.AspNetCore.OpenAPI`:
-
-```csharp
-// Add native OpenAPI
+builder.Services.AddMvpHybridCache();
+builder.Services.AddTimeProvider();
 builder.Services.AddMvp24HoursNativeOpenApi(options =>
 {
-    options.Title = "My API";
+    options.Title = "Orders API";
     options.Version = "v1";
-    options.EnableSecuritySchemes = true;
 });
 
-// Map OpenAPI endpoint
-app.MapMvp24HoursNativeOpenApi();
-```
-
-### TypedResults.InternalServerError
-
-.NET 9 adds `TypedResults.InternalServerError()`:
-
-```csharp
-// Before .NET 9
-return Results.StatusCode(500);
-
-// .NET 9+
-return TypedResults.InternalServerError();
-
-// With Mvp24Hours
-return businessResult.ToNativeTypedResult();
-```
-
-### .NET Aspire 9
-
-.NET Aspire 9 provides comprehensive cloud-native support:
-
-```csharp
-// Add Aspire service defaults
-builder.AddMvp24HoursAspireDefaults();
-
-// Add Redis from Aspire configuration
-builder.AddMvp24HoursRedisFromAspire("cache");
-
-// Add RabbitMQ from Aspire configuration
-builder.AddMvp24HoursRabbitMQFromAspire("messaging");
-```
-
-## Quick Start
-
-### 1. Enable All Modern Features
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-// Add Mvp24Hours with .NET 9 features
 builder.Services
-    // Observability
-    .AddMvp24HoursObservability()
-    
-    // Caching
-    .AddMvpHybridCache()
-    
-    // Resilience
-    .AddMvpStandardResilience()
-    
-    // Configuration validation
-    .AddOptionsWithValidation<MyOptions>("MyOptions")
-    
-    // Time abstraction
-    .AddTimeProvider();
+    .AddHttpClient("Payments", client =>
+        client.BaseAddress = new Uri("https://payments.example.com"))
+    .AddMvpStandardResilience();
 
 var app = builder.Build();
-
-// Add middleware
-app.UseNativeProblemDetailsHandling();
-
-// Add native OpenAPI
 app.MapMvp24HoursNativeOpenApi();
-
-// Add Output Caching
-app.UseOutputCache();
-
-app.Run();
-```
-
-### 2. Enable Aspire Integration
-
-For cloud-native applications:
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-// Add Aspire service defaults (includes observability, health checks, resilience)
-builder.AddMvp24HoursAspireDefaults();
-
-// Add distributed components
-builder.AddMvp24HoursRedisFromAspire("redis");
-builder.AddMvp24HoursSqlServerFromAspire("sql");
-builder.AddMvp24HoursRabbitMQFromAspire("rabbitmq");
-
-var app = builder.Build();
-
-// Map health checks for Aspire dashboard
 app.MapMvp24HoursAspireHealthChecks();
-
 app.Run();
 ```
 
-## Migration Path
+The `AddMvp24HoursAspireDefaults` flags do not replace the explicit
+observability, HTTP-resilience, cache, database, or messaging registrations
+required by those modules.
 
-For detailed migration instructions from legacy Mvp24Hours implementations to native .NET 9 APIs, see the [Migration Guide](migration-guide.md).
+## What changed for the .NET 10 source baseline
 
-### Summary of Breaking Changes
+- Projects now target `net10.0`.
+- Microsoft platform dependencies and EF Core use .NET 10-compatible versions
+  through Central Package Management.
+- Nullable reference types and strict Release builds expose compatibility
+  issues that may not appear in older consumers.
+- Native patterns adopted in .NET 9 remain current; consumers do not need a
+  second implementation migration merely because the target framework changed.
 
-| Legacy (Deprecated) | Native (.NET 9) |
-|---------------------|-----------------|
-| `TelemetryHelper` | `ILogger` + OpenTelemetry |
-| `HttpClientExtensions` | `Microsoft.Extensions.Http.Resilience` |
-| `MvpExecutionStrategy` | `Microsoft.Extensions.Resilience` |
-| `MultiLevelCache` | `HybridCache` |
-| `RetryPipelineMiddleware` | `NativePipelineResilienceMiddleware` |
-| `CircuitBreakerPipelineMiddleware` | `NativePipelineResilienceMiddleware` |
-| Custom Rate Limiting | `System.Threading.RateLimiting` |
-| Custom Timers | `TimeProvider` + `PeriodicTimer` |
+For source-level breaking changes such as required option members, SMTP
+certificate validation, SQL client changes, and security verification, follow
+the canonical [version migration](../migration.md?id=_91x-1000).
 
-## Compatibility
+## Choose the right migration
 
-### Minimum Requirements
+- Moving a consumer from 9.1.x to the .NET 10 source/package line:
+  [version migration](../migration.md?id=_91x-1000).
+- Replacing legacy custom implementations with native platform APIs:
+  [native API migration](migration-guide.md).
+- Choosing among overlapping retry, timeout, and circuit-breaker integrations:
+  [resilience selection guide](resilience-guide.md).
 
-- **.NET 9.0** or later
-- **C# 13** for full language feature support
+## See also
 
-### Backward Compatibility
-
-All deprecated APIs remain functional but will emit compiler warnings. Migrate to native APIs at your convenience before the next major version.
-
-## Performance Benefits
-
-| Feature | Improvement |
-|---------|-------------|
-| HybridCache | Up to 50% faster than custom multi-level cache |
-| Source Generators | Near-zero runtime reflection overhead |
-| Native OpenAPI | 30% faster document generation |
-| PeriodicTimer | Reduced memory allocations vs System.Timers.Timer |
-| Channels | Lock-free producer/consumer patterns |
-
-## See Also
-
-- [Migration Guide](migration-guide.md) - Step-by-step migration instructions
-- [.NET 9 What's New](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-9/overview)
-- [ASP.NET Core 9 What's New](https://learn.microsoft.com/aspnet/core/release-notes/aspnetcore-9.0)
-
+- [.NET 10 overview](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-10/overview)
+- [ASP.NET Core 10 release notes](https://learn.microsoft.com/aspnet/core/release-notes/aspnetcore-10.0)
+- [.NET 10 version migration](../migration.md?id=_91x-1000)
+- [Migration to native APIs](migration-guide.md)

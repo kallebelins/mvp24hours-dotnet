@@ -61,7 +61,7 @@ public class PagedResult<T>
 ### Cached Query
 
 ```csharp
-public record GetOrderByIdQuery : IMediatorQuery<OrderDto>, ICacheableRequest
+public record GetOrderByIdQuery : IMediatorQuery<OrderDto>, ICacheable
 {
     public Guid OrderId { get; init; }
     
@@ -255,7 +255,7 @@ public class OrderController : ControllerBase
 ## Best Practices
 
 1. **Read-Only**: Queries should never modify state
-2. **Cache**: Use `ICacheableRequest` for frequently accessed data
+2. **Cache**: Use `ICacheable` for frequently accessed data
 3. **Pagination**: Always paginate large lists
 4. **Projection**: Return only necessary fields (specific DTOs)
 5. **Streaming**: Use `IStreamRequest` for large volumes

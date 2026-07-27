@@ -1,238 +1,182 @@
-# CachingBehavior with Redis
+# CQRS Caching Integration
 
-## Overview
+The mediator caching behaviors use `Microsoft.Extensions.Caching.Distributed.IDistributedCache`. They do not use Mvp24Hours `ICacheProvider` directly. Configure one distributed cache implementation, enable the query behavior, and opt individual requests into caching.
 
-The `CachingBehavior` enables automatic caching of query results using `IDistributedCache`, with support for Redis or memory.
+## Registration
 
-## Configuration
+Process-local development:
 
-### In-Memory Cache
+```csharp
+builder.Services.AddMediatorMemoryCache();
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.RegisterCachingBehavior = true;
+});
+```
+
+Shared Redis cache:
+
+```csharp
+string redis = builder.Configuration
+    .GetConnectionString("RedisDbContext")
+    ?? throw new InvalidOperationException("RedisDbContext is required.");
+
+builder.Services.AddMediatorRedisCache(redis, instanceName: "orders:");
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.RegisterCachingBehavior = true;
+    options.RegisterIdempotencyBehavior = true;
+});
+```
+
+Advanced Redis configuration uses the real `RedisCacheOptions` overload:
+
+```csharp
+builder.Services.AddMediatorRedisCache(options =>
+{
+    options.Configuration = redis;
+    options.InstanceName = "orders:";
+    options.ConfigurationOptions = new ConfigurationOptions
+    {
+        AbortOnConnectFail = false,
+        ConnectTimeout = 5_000,
+        SyncTimeout = 5_000
+    };
+});
+```
+
+The `Mvp24Hours.Infrastructure.Caching.Redis` package also registers `IDistributedCache`, so `AddMvp24HoursCachingRedis` can supply the mediator dependency. Do not register two competing `IDistributedCache` providers.
+
+## Cacheable queries
+
+```csharp
+public sealed record GetProductQuery(Guid ProductId)
+    : IMediatorQuery<ProductDto?>, ICacheable
+{
+    public string CacheKey => $"product:{ProductId}";
+    public TimeSpan CacheDuration => TimeSpan.FromMinutes(10);
+}
+
+public sealed class GetProductHandler(IProductRepository repository)
+    : IMediatorQueryHandler<GetProductQuery, ProductDto?>
+{
+    public Task<ProductDto?> Handle(
+        GetProductQuery request,
+        CancellationToken cancellationToken)
+    {
+        return repository.GetAsync(request.ProductId, cancellationToken);
+    }
+}
+```
+
+`CachingBehavior<TRequest,TResponse>`:
+
+1. ignores requests that do not implement `ICacheable`;
+2. reads `mediator:{CacheKey}` from `IDistributedCache`;
+3. deserializes a hit with `System.Text.Json`;
+4. invokes the handler on a miss;
+5. serializes non-null results with absolute expiration.
+
+### `ICacheable`
+
+| Member | Type | Default | Description |
+|---|---|---|---|
+| `CacheKey` | `string?` | `null` | Logical key; the behavior prepends `mediator:`. |
+| `CacheDuration` | `TimeSpan?` | `null` | Absolute TTL; defaults to five minutes. |
+
+When `CacheKey` is null, the behavior derives a key from the request type and `string.GetHashCode()` of its JSON representation. Because that hash is not stable across every process/runtime, provide an explicit deterministic key for Redis and multi-instance deployments.
+
+## Invalidation after commands
+
+`CacheInvalidationBehavior<TRequest,TResponse>` is available, but `MediatorOptions.RegisterCachingBehavior` does not register it. Register it explicitly:
+
+```csharp
+builder.Services.AddMvpMediator(options =>
+{
+    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.RegisterCachingBehavior = true;
+});
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(CacheInvalidationBehavior<,>));
+```
+
+```csharp
+public sealed record UpdateProductCommand(Guid ProductId, string Name)
+    : IMediatorCommand<ProductDto>, ICacheInvalidator
+{
+    public IEnumerable<string> CacheKeysToInvalidate =>
+        [$"product:{ProductId}", "products:all"];
+}
+```
+
+Invalidation runs after a successful handler and removes `mediator:{key}` for every value in `CacheKeysToInvalidate`. Removal failures are logged and do not replace the successful command response.
+
+| `ICacheInvalidator` member | Type | Description |
+|---|---|---|
+| `CacheKeysToInvalidate` | `IEnumerable<string>` | Logical keys removed after successful execution. |
+
+## Idempotent commands
+
+The idempotency behavior uses the same `IDistributedCache` infrastructure:
+
+```csharp
+public sealed record CapturePaymentCommand(
+    Guid PaymentId,
+    decimal Amount)
+    : IMediatorCommand<PaymentResult>, IIdempotentCommand
+{
+    public string IdempotencyKey => $"payment:{PaymentId}";
+    public TimeSpan IdempotencyDuration => TimeSpan.FromHours(24);
+}
+```
+
+Enable `RegisterIdempotencyBehavior`. For horizontally scaled applications, Redis is required for shared results. Use a business identifier as the key; the generated fallback also relies on serialized request data.
+
+| `IIdempotentCommand` member | Type | Default | Description |
+|---|---|---|---|
+| `IdempotencyKey` | `string?` | `null` | Business idempotency key. |
+| `IdempotencyDuration` | `TimeSpan?` | `null` | Result TTL; behavior default is 24 hours. |
+
+## `MediatorCacheOptions`
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `DefaultQueryCacheDuration` | `TimeSpan` | `5 minutes` | Intended query cache default. |
+| `DefaultIdempotencyDuration` | `TimeSpan` | `24 hours` | Intended idempotency default. |
+| `KeyPrefix` | `string` | `mvp24mediator:` | Intended common key prefix. |
+| `UseSlidingExpiration` | `bool` | `false` | Intended sliding-expiration switch. |
+
+`MediatorCacheOptions` exists in the public API, but the current caching and idempotency behavior constructors do not consume it. Do not document `services.Configure<MediatorCacheOptions>` as changing runtime behavior until it is wired into those behaviors. Current behavior constants are `mediator:` plus five minutes for query caching and `idempotency:` plus 24 hours for idempotency.
+
+## HybridCache boundary
+
+`AddMvpHybridCacheWithRedis` registers Redis through `IDistributedCache`, so it can provide the mediator's distributed dependency, but mediator responses still use `IDistributedCache` directly and do not receive HybridCache L1/stampede/tag features. To use those features inside CQRS, implement cache-aside in a handler through `ICacheProvider`, or provide a custom `IPipelineBehavior<,>`.
+
+See [HybridCache](../modernization/hybrid-cache.md) and [Caching advanced](../caching-advanced.md).
+
+## Failure behavior
+
+The query behavior treats cache read, serialization, and write errors as cache misses: it logs and returns the handler result. This is graceful degradation, not retry or circuit breaking. Apply Redis client settings and application resilience independently; avoid extending handler latency excessively during a cache outage.
+
+## Testing
 
 ```csharp
 services.AddMediatorMemoryCache();
-
 services.AddMvpMediator(options =>
 {
-    options.RegisterHandlersFromAssemblyContaining<Program>();
+    options.RegisterHandlersFromAssemblyContaining<GetProductHandler>();
     options.RegisterCachingBehavior = true;
 });
 ```
 
-### Redis Cache
+Verify handler invocation count, TTL, deterministic keys, null results, invalidation after success, no invalidation after handler failure, and cross-instance behavior against Redis. Because these are standard request behaviors, they do not run for mediator streaming requests.
 
-```csharp
-services.AddMediatorRedisCache(
-    connectionString: "localhost:6379",
-    instanceName: "myapp");
+## Related
 
-services.AddMvpMediator(options =>
-{
-    options.RegisterHandlersFromAssemblyContaining<Program>();
-    options.RegisterCachingBehavior = true;
-});
-```
-
-## Cache Interfaces
-
-### ICacheableRequest
-
-Marks queries that can be cached:
-
-```csharp
-public interface ICacheableRequest
-{
-    string CacheKey { get; }
-    TimeSpan? AbsoluteExpiration { get; }
-    TimeSpan? SlidingExpiration { get; }
-}
-```
-
-### ICacheInvalidator
-
-Marks commands that invalidate cache:
-
-```csharp
-public interface ICacheInvalidator
-{
-    IEnumerable<string> CacheKeysToInvalidate { get; }
-}
-```
-
-## Cacheable Queries
-
-### Basic Query with Cache
-
-```csharp
-public record GetProductByIdQuery : IMediatorQuery<ProductDto>, ICacheableRequest
-{
-    public Guid ProductId { get; init; }
-    
-    public string CacheKey => $"product:{ProductId}";
-    public TimeSpan? AbsoluteExpiration => TimeSpan.FromMinutes(30);
-    public TimeSpan? SlidingExpiration => TimeSpan.FromMinutes(10);
-}
-```
-
-### Query with Dynamic Cache
-
-```csharp
-public record GetProductsQuery : IMediatorQuery<IReadOnlyList<ProductDto>>, ICacheableRequest
-{
-    public string? Category { get; init; }
-    public decimal? MinPrice { get; init; }
-    public decimal? MaxPrice { get; init; }
-    
-    public string CacheKey => $"products:{Category ?? "all"}:{MinPrice}:{MaxPrice}";
-    public TimeSpan? AbsoluteExpiration => TimeSpan.FromMinutes(15);
-    public TimeSpan? SlidingExpiration => null;
-}
-```
-
-### Paginated Query with Cache
-
-```csharp
-public record GetOrdersQuery : IMediatorQuery<PagedResult<OrderDto>>, ICacheableRequest
-{
-    public int Page { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
-    public string? Status { get; init; }
-    
-    public string CacheKey => $"orders:page{Page}:size{PageSize}:status{Status ?? "all"}";
-    public TimeSpan? AbsoluteExpiration => TimeSpan.FromMinutes(5);
-    public TimeSpan? SlidingExpiration => TimeSpan.FromMinutes(2);
-}
-```
-
-## Cache Invalidation
-
-### Command that Invalidates Cache
-
-```csharp
-public record UpdateProductCommand : IMediatorCommand<ProductDto>, ICacheInvalidator
-{
-    public Guid ProductId { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public decimal Price { get; init; }
-    
-    public IEnumerable<string> CacheKeysToInvalidate => new[]
-    {
-        $"product:{ProductId}",
-        "products:*" // Pattern to invalidate multiple keys
-    };
-}
-
-public record DeleteProductCommand : IMediatorCommand, ICacheInvalidator
-{
-    public Guid ProductId { get; init; }
-    
-    public IEnumerable<string> CacheKeysToInvalidate => new[]
-    {
-        $"product:{ProductId}",
-        "products:*"
-    };
-}
-```
-
-## How It Works
-
-### CachingBehavior
-
-```csharp
-public sealed class CachingBehavior<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : ICacheableRequest
-{
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<CachingBehavior<TRequest, TResponse>> _logger;
-
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        var cacheKey = request.CacheKey;
-        
-        // Try to get from cache
-        var cached = await _cache.GetStringAsync(cacheKey, cancellationToken);
-        if (cached is not null)
-        {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return JsonSerializer.Deserialize<TResponse>(cached)!;
-        }
-
-        _logger.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        
-        // Execute handler
-        var result = await next();
-
-        // Store in cache
-        var options = new DistributedCacheEntryOptions();
-        
-        if (request.AbsoluteExpiration.HasValue)
-            options.AbsoluteExpirationRelativeToNow = request.AbsoluteExpiration;
-        
-        if (request.SlidingExpiration.HasValue)
-            options.SlidingExpiration = request.SlidingExpiration;
-
-        await _cache.SetStringAsync(
-            cacheKey,
-            JsonSerializer.Serialize(result),
-            options,
-            cancellationToken);
-
-        return result;
-    }
-}
-```
-
-### CacheInvalidationBehavior
-
-```csharp
-public sealed class CacheInvalidationBehavior<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : ICacheInvalidator
-{
-    private readonly IDistributedCache _cache;
-
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        var result = await next();
-
-        foreach (var key in request.CacheKeysToInvalidate)
-        {
-            await _cache.RemoveAsync(key, cancellationToken);
-        }
-
-        return result;
-    }
-}
-```
-
-## Advanced Configuration
-
-### MediatorCacheOptions
-
-```csharp
-services.AddMediatorRedisCache(
-    "localhost:6379",
-    configure: options =>
-    {
-        options.DefaultAbsoluteExpiration = TimeSpan.FromMinutes(30);
-        options.DefaultSlidingExpiration = TimeSpan.FromMinutes(10);
-        options.EnableCompression = true;
-        options.KeyPrefix = "myapp:cache:";
-    });
-```
-
-## Best Practices
-
-1. **Unique Keys**: Use keys that uniquely identify the query
-2. **Appropriate Expiration**: Configure TTL based on update frequency
-3. **Consistent Invalidation**: Always invalidate when modifying data
-4. **Efficient Serialization**: Use JSON or MessagePack
-5. **Monitoring**: Monitor hit/miss ratio
-6. **Fallback**: Handle cache errors gracefully
-
+- [Behaviors](behaviors.md)
+- [CQRS API reference](api-reference.md)
+- [Caching advanced](../caching-advanced.md)
+- [HybridCache](../modernization/hybrid-cache.md)

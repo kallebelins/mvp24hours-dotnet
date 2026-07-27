@@ -1,431 +1,166 @@
-# HybridCache - .NET 9 Native Multi-Level Caching
+# HybridCache on .NET 10
 
-## Overview
+`AddMvpHybridCache` integrates the native `Microsoft.Extensions.Caching.Hybrid.HybridCache` with Mvp24Hours `ICacheProvider`. It combines local L1 caching, optional `IDistributedCache` L2 storage, stampede protection, and tag invalidation.
 
-**HybridCache** is the native .NET 9 solution for multi-level caching that combines the best of both worlds:
-
-- **L1 (In-Memory):** Fast, local cache per application instance
-- **L2 (Distributed):** Shared cache via IDistributedCache (Redis, SQL Server, etc.)
-- **Stampede Protection:** Built-in prevention of cache stampedes
-
-## Why Use HybridCache?
-
-| Feature | MultiLevelCache (Custom) | HybridCache (.NET 9) |
-|---------|--------------------------|----------------------|
-| L1 + L2 Support | ✅ Manual implementation | ✅ Native |
-| Stampede Protection | ⚠️ Custom SemaphoreSlim | ✅ Built-in |
-| Tag-based Invalidation | ⚠️ Custom implementation | ✅ Native RemoveByTagAsync |
-| Serialization | ⚠️ Custom setup | ✅ Optimized native |
-| Performance | Good | Better (native optimization) |
-| Maintenance | Framework code | .NET Runtime |
-
-## Getting Started
-
-### Basic Setup (In-Memory Only)
+## Registration
 
 ```csharp
-// Program.cs
-services.AddMvpHybridCache();
+using Mvp24Hours.Infrastructure.Caching.HybridCache;
+
+builder.Services.AddMvpHybridCache();
 ```
 
-### With Redis as L2 (Distributed)
+Redis L2:
 
 ```csharp
-// Program.cs
-services.AddMvpHybridCache(options =>
+string redis = builder.Configuration
+    .GetConnectionString("RedisDbContext")
+    ?? throw new InvalidOperationException("RedisDbContext is required.");
+
+builder.Services.AddMvpHybridCacheWithRedis(redis, options =>
 {
+    options.RedisInstanceName = "orders:";
     options.DefaultExpiration = TimeSpan.FromMinutes(10);
-    options.UseRedisAsL2 = true;
-    options.RedisConnectionString = "localhost:6379";
-    options.RedisInstanceName = "myapp:";
+    options.DefaultLocalCacheExpiration = TimeSpan.FromMinutes(1);
+    options.DefaultTags = ["orders-v1"];
 });
 ```
 
-### Using the Convenience Method
-
-```csharp
-// Shorthand for Redis configuration
-services.AddMvpHybridCacheWithRedis("localhost:6379", options =>
+```json
 {
-    options.DefaultExpiration = TimeSpan.FromMinutes(30);
-});
+  "ConnectionStrings": {
+    "RedisDbContext": "localhost:6379,abortConnect=false"
+  }
+}
 ```
 
-## Usage Patterns
+`AddMvpHybridCacheWithRedis` sets `UseRedisAsL2` and the connection string, then invokes the supplied callback. `ReplaceCacheProviderWithHybridCache` removes existing `ICacheProvider` registrations before adding HybridCache.
 
-### GetOrCreateAsync (Recommended)
+## `MvpHybridCacheOptions`
 
-The `GetOrCreateAsync` pattern is the **recommended** way to use HybridCache. It provides:
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `DefaultExpiration` | `TimeSpan` | `5 minutes` | Default L2/entry expiration. |
+| `DefaultLocalCacheExpiration` | `TimeSpan?` | `null` | L1 expiration; falls back to `DefaultExpiration`. |
+| `MaximumPayloadBytes` | `long` | `1048576` | Maximum payload accepted by native HybridCache. |
+| `MaximumKeyLength` | `int` | `1024` | Maximum native key length. |
+| `UseRedisAsL2` | `bool` | `false` | Registers Redis as `IDistributedCache`. |
+| `RedisConnectionString` | `string?` | `null` | Required when Redis L2 is enabled. |
+| `RedisInstanceName` | `string?` | `mvp24h:` | Redis key prefix. |
+| `EnableStampedeProtection` | `bool` | `true` | Mvp24Hours feature flag for stampede-protected use. |
+| `ReportTagStatistics` | `bool` | `true` | Enables tag-manager statistics. |
+| `DefaultTags` | `IList<string>` | empty | Tags applied by the provider to entries. |
+| `EnableCompression` | `bool` | `false` | Enables provider compression. |
+| `CompressionThresholdBytes` | `int` | `1024` | Compression threshold. |
+| `EnableDetailedLogging` | `bool` | `false` | Enables detailed provider logs. |
+| `KeyPrefix` | `string?` | `null` | Application/tenant key prefix. |
+| `SerializerType` | `HybridCacheSerializerType` | `SystemTextJson` | `SystemTextJson`, `MessagePack`, or `Custom`. |
+| `SerializerOptions` | `object?` | `null` | Serializer-specific settings. |
 
-- Automatic cache lookup before factory execution
-- Native stampede protection
-- Single factory call even with concurrent requests
+The native registration currently maps expiration, local expiration, payload size, and key length into `HybridCacheOptions`. Redis settings register `StackExchangeRedisCache`. `HybridCacheProvider` consumes key prefix, default tags, and detailed logging; the current implementation does not wire the compression, serializer-selection, stampede flag, or tag-statistics flags into additional runtime behavior. Native `GetOrCreateAsync` still provides stampede protection.
+
+## Cache-aside usage
 
 ```csharp
-public class ProductService
+public sealed class ProductReader(ICacheProvider cache, IProductStore store)
 {
-    private readonly ICacheProvider _cache;
-    private readonly IProductRepository _repository;
-
-    public ProductService(ICacheProvider cache, IProductRepository repository)
+    public Task<Product?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        _cache = cache;
-        _repository = repository;
-    }
-
-    public async Task<Product> GetProductAsync(int id, CancellationToken ct = default)
-    {
-        return await _cache.GetOrCreateAsync(
+        return cache.GetOrCreateAsync(
             $"product:{id}",
-            async token => await _repository.GetByIdAsync(id, token),
-            new CacheEntryOptions 
-            { 
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) 
+            token => store.GetAsync(id, token),
+            new CacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
             },
-            tags: new[] { "products", $"product:{id}" },
-            ct);
+            tags: ["products", $"product:{id}"],
+            cancellationToken);
     }
 }
 ```
 
-### Simple Get/Set Pattern
+Use `GetOrCreateAsync` to benefit from native stampede protection. The provider also supports normal `ICacheProvider` get/set/remove APIs.
+
+## Tag invalidation
 
 ```csharp
-// Get from cache
-var product = await _cache.GetAsync<Product>($"product:{id}");
-
-if (product == null)
-{
-    // Load from database
-    product = await _repository.GetByIdAsync(id);
-    
-    // Store in cache with tags
-    await _cache.SetWithTagsAsync(
-        $"product:{id}",
-        product,
-        tags: new[] { "products", $"category:{product.CategoryId}" },
-        expirationMinutes: 30);
-}
-
-return product;
+await cache.InvalidateByTagAsync("products", cancellationToken);
+await cache.InvalidateByTagsAsync(
+    ["products", "inventory"],
+    cancellationToken);
 ```
 
-### Tag-Based Invalidation
+These extensions require `HybridCacheProvider` and throw `InvalidOperationException` with a registration hint when used with another provider.
 
-Tags allow you to invalidate groups of related cache entries:
-
-```csharp
-// Invalidate all products when catalog changes
-await _cache.InvalidateByTagAsync("products");
-
-// Invalidate all entries for a specific category
-await _cache.InvalidateByTagAsync($"category:{categoryId}");
-
-// Invalidate multiple tags at once
-await _cache.InvalidateByTagsAsync(new[] { "products", "categories", "inventory" });
-```
-
-## Configuration Options
-
-### MvpHybridCacheOptions
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `DefaultExpiration` | TimeSpan | 5 minutes | Default expiration for cache entries |
-| `DefaultLocalCacheExpiration` | TimeSpan? | null | L1 cache expiration (defaults to DefaultExpiration) |
-| `MaximumPayloadBytes` | long | 1MB | Max size for L1 cache entries |
-| `MaximumKeyLength` | int | 1024 | Max key length before hashing |
-| `UseRedisAsL2` | bool | false | Enable Redis as L2 cache |
-| `RedisConnectionString` | string? | null | Redis connection string |
-| `RedisInstanceName` | string? | "mvp24h:" | Redis key prefix |
-| `EnableStampedeProtection` | bool | true | Enable stampede protection |
-| `DefaultTags` | IList<string> | [] | Tags applied to all entries |
-| `EnableCompression` | bool | false | Compress large values |
-| `CompressionThresholdBytes` | int | 1024 | Min size for compression |
-| `EnableDetailedLogging` | bool | false | Enable debug logging |
-| `KeyPrefix` | string? | null | Prefix for all keys |
-| `SerializerType` | enum | SystemTextJson | Serializer to use |
-
-### Full Configuration Example
+The default `InMemoryHybridCacheTagManager` is process-local. Multi-instance deployments can register the Redis implementation:
 
 ```csharp
-services.AddMvpHybridCache(options =>
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    _ => ConnectionMultiplexer.Connect(redis));
+builder.Services.Configure<RedisHybridCacheTagManagerOptions>(options =>
 {
-    // Expiration
-    options.DefaultExpiration = TimeSpan.FromMinutes(15);
-    options.DefaultLocalCacheExpiration = TimeSpan.FromMinutes(5);
-    
-    // Size limits
-    options.MaximumPayloadBytes = 2 * 1024 * 1024; // 2MB
-    options.MaximumKeyLength = 512;
-    
-    // Redis L2
-    options.UseRedisAsL2 = true;
-    options.RedisConnectionString = "localhost:6379,abortConnect=false";
-    options.RedisInstanceName = "myapp:cache:";
-    
-    // Features
-    options.EnableStampedeProtection = true;
-    options.EnableCompression = true;
-    options.CompressionThresholdBytes = 4096; // 4KB
-    
-    // Tags
-    options.DefaultTags = new List<string> { "v1" };
-    
-    // Multi-tenancy
-    options.KeyPrefix = "tenant-123:";
-    
-    // Development
-    options.EnableDetailedLogging = true;
+    options.DatabaseId = 0;
+    options.KeyPrefix = "orders:tags:";
+    options.TagExpiration = TimeSpan.FromDays(1);
+    options.KeyTagsMappingExpiration = TimeSpan.FromDays(1);
 });
+builder.Services
+    .AddHybridCacheTagManager<RedisHybridCacheTagManager>();
 ```
 
-## Tag Management
+### `RedisHybridCacheTagManagerOptions`
 
-### In-Memory Tag Manager (Default)
-
-For single-instance applications:
-
-```csharp
-// Already registered by default
-services.AddMvpHybridCache();
-```
-
-### Redis Tag Manager (Distributed)
-
-For multi-instance applications sharing cache:
-
-```csharp
-services.AddMvpHybridCache(options =>
-{
-    options.UseRedisAsL2 = true;
-    options.RedisConnectionString = "localhost:6379";
-});
-
-// Replace default tag manager with Redis-based one
-services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect("localhost:6379"));
-services.AddHybridCacheTagManager<RedisHybridCacheTagManager>();
-
-// Configure Redis tag manager options
-services.Configure<RedisHybridCacheTagManagerOptions>(options =>
-{
-    options.DatabaseId = 1; // Use different DB for tags
-    options.KeyPrefix = "myapp:tags:";
-    options.TagExpiration = TimeSpan.FromHours(24);
-});
-```
-
-### Tag Statistics
-
-Monitor tag usage for optimization:
-
-```csharp
-public class CacheMonitorController : ControllerBase
-{
-    private readonly IHybridCacheTagManager _tagManager;
-
-    [HttpGet("stats")]
-    public IActionResult GetTagStatistics()
-    {
-        var stats = _tagManager.GetStatistics();
-        return Ok(new
-        {
-            TotalTags = stats.TotalTags,
-            TotalAssociations = stats.TotalAssociations,
-            TagInvalidations = stats.TagInvalidations,
-            KeysPerTag = stats.KeysPerTag
-        });
-    }
-}
-```
-
-## Migration from MultiLevelCache
-
-### Before (MultiLevelCache - Deprecated)
-
-```csharp
-// Registration
-services.AddSingleton<ICacheProvider>(sp =>
-{
-    var memory = sp.GetRequiredService<IMemoryCache>();
-    var distributed = sp.GetRequiredService<IDistributedCache>();
-    return new MultiLevelCache(
-        new MemoryCacheProvider(memory),
-        new DistributedCacheProvider(distributed));
-});
-
-// Usage
-var value = await _cache.GetOrSetAsync(
-    "key",
-    async ct => await LoadDataAsync(),
-    new CacheEntryOptions { ... });
-```
-
-### After (HybridCache - Recommended)
-
-```csharp
-// Registration (much simpler!)
-services.AddMvpHybridCache(options =>
-{
-    options.UseRedisAsL2 = true;
-    options.RedisConnectionString = "localhost:6379";
-});
-
-// Usage (same interface, better performance)
-var value = await _cache.GetOrCreateAsync(
-    "key",
-    async ct => await LoadDataAsync(),
-    new CacheEntryOptions { ... },
-    tags: new[] { "data" });
-```
-
-### Replace Existing Provider
-
-```csharp
-// Remove existing ICacheProvider and replace with HybridCache
-services.ReplaceCacheProviderWithHybridCache(options =>
-{
-    options.UseRedisAsL2 = true;
-    options.RedisConnectionString = "localhost:6379";
-});
-```
-
-## Best Practices
-
-### 1. Use Tags for Related Data
-
-```csharp
-// Products tagged by entity type and category
-await _cache.SetWithTagsAsync(
-    $"product:{product.Id}",
-    product,
-    new[] { "products", $"category:{product.CategoryId}", $"brand:{product.BrandId}" });
-
-// When category changes, invalidate all related products
-await _cache.InvalidateByTagAsync($"category:{categoryId}");
-```
-
-### 2. Use GetOrCreateAsync Instead of Get/Set
-
-```csharp
-// ❌ Avoid: Race condition, no stampede protection
-var data = await _cache.GetAsync<Data>(key);
-if (data == null)
-{
-    data = await LoadDataAsync();
-    await _cache.SetAsync(key, data);
-}
-
-// ✅ Prefer: Atomic, stampede-protected
-var data = await _cache.GetOrCreateAsync(key, ct => LoadDataAsync());
-```
-
-### 3. Configure Appropriate Expirations
-
-```csharp
-// Static data: longer expiration
-options.DefaultExpiration = TimeSpan.FromHours(1);
-
-// Frequently changing data: shorter L1 expiration
-options.DefaultLocalCacheExpiration = TimeSpan.FromMinutes(1);
-```
-
-### 4. Monitor Cache Performance
-
-```csharp
-// Use built-in metrics with OpenTelemetry
-services.AddOpenTelemetry()
-    .WithMetrics(metrics =>
-    {
-        metrics.AddMvp24HoursMetrics();
-    });
-```
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `DatabaseId` | `int` | `0` | Redis logical database. |
+| `KeyPrefix` | `string` | `mvp24h:tags:` | Tag metadata prefix. |
+| `TagExpiration` | `TimeSpan?` | `null` | Tag-set expiration. |
+| `KeyTagsMappingExpiration` | `TimeSpan?` | `null` | Key-to-tag mapping expiration. |
 
 ## Serialization
 
-### System.Text.Json (Default)
-
-Best compatibility, good performance:
-
 ```csharp
-options.SerializerType = HybridCacheSerializerType.SystemTextJson;
-options.SerializerOptions = new JsonSerializerOptions
+builder.Services.AddMvpHybridCache(options =>
 {
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    WriteIndented = false
-};
+    options.SerializerType = HybridCacheSerializerType.SystemTextJson;
+    options.SerializerOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+});
 ```
 
-### MessagePack (Faster)
+`SerializerType` and `SerializerOptions` are retained in the registered Mvp24Hours options, but the current extension does not translate them into native HybridCache serializer registrations. Register the required native serializer/factory separately; changing only these two properties does not switch serialization.
 
-Smaller payloads, better performance:
+## Migration from custom multi-level cache
 
 ```csharp
-options.SerializerType = HybridCacheSerializerType.MessagePack;
+builder.Services.ReplaceCacheProviderWithHybridCache(options =>
+{
+    options.UseRedisAsL2 = true;
+    options.RedisConnectionString = redis;
+    options.RedisInstanceName = "orders:";
+});
 ```
 
-## Troubleshooting
+Review key prefixes, serialized payload compatibility, expiration behavior, and distributed tag storage before cutover. HybridCache does not make Redis mandatory: with `UseRedisAsL2=false`, entries are local to each process.
 
-### Cache Miss When Expected Hit
+## Resilience
 
-1. Check key consistency (use key generation helper)
-2. Verify expiration settings
-3. Check L2 connection (Redis)
-4. Enable detailed logging
+HybridCache provides stampede protection, not remote-store retry/circuit breaking. For explicit cache failure handling, wrap the registered `ICacheProvider` with `CacheResilienceOptions`; see [Caching advanced](../caching-advanced.md#resilience).
 
-```csharp
-options.EnableDetailedLogging = true;
-```
+## Testing
 
-### High Memory Usage
+Use `AddMvpHybridCache()` for fast process-local tests. Use a Redis container when asserting cross-instance L2 behavior or Redis tag invalidation. Tests should verify:
 
-1. Reduce `MaximumPayloadBytes`
-2. Enable compression
-3. Use shorter L1 expiration
+- one factory invocation under concurrent same-key requests;
+- L1 and L2 expiration differences;
+- tag invalidation;
+- Redis outage fallback/resilience;
+- serialization compatibility.
 
-```csharp
-options.MaximumPayloadBytes = 512 * 1024; // 512KB
-options.EnableCompression = true;
-options.DefaultLocalCacheExpiration = TimeSpan.FromMinutes(2);
-```
+## Related
 
-### Tags Not Working
-
-1. Ensure HybridCacheProvider is registered
-2. For distributed apps, use RedisHybridCacheTagManager
-3. Check tag format consistency
-
-## API Reference
-
-### ICacheProvider Extensions
-
-| Method | Description |
-|--------|-------------|
-| `GetOrCreateAsync<T>` | Get or create with factory and tags |
-| `GetOrDefaultAsync<T>` | Get with default value fallback |
-| `SetWithTagsAsync<T>` | Set with tags |
-| `InvalidateByTagAsync` | Invalidate all entries with tag |
-| `InvalidateByTagsAsync` | Invalidate multiple tags |
-| `SetWithSlidingExpirationAsync<T>` | Set with sliding expiration |
-| `ContainsKeyAsync` | Check if key exists |
-| `RemoveByPrefixAsync` | Remove keys by prefix |
-
-### IHybridCacheTagManager
-
-| Method | Description |
-|--------|-------------|
-| `TrackKeyWithTagsAsync` | Associate key with tags |
-| `RemoveKeyFromTagsAsync` | Remove key from tag tracking |
-| `GetKeysByTagAsync` | Get all keys for a tag |
-| `GetTagsByKeyAsync` | Get all tags for a key |
-| `InvalidateTagAsync` | Invalidate a tag |
-| `GetStatistics` | Get tag usage statistics |
-| `ClearAsync` | Clear all tag tracking |
-
-## See Also
-
-- [Rate Limiting](rate-limiting.md) - Native rate limiting with System.Threading.RateLimiting
-- [Time Provider](time-provider.md) - Time abstraction for testability
-- [Observability](../observability/home.md) - Logging, tracing, and metrics
-
+- [Caching advanced](../caching-advanced.md)
+- [CQRS caching](../cqrs/integration-caching.md)
+- [.NET platform features](dotnet9-features.md)
