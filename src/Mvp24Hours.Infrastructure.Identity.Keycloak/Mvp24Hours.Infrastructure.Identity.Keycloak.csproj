@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Authors>Kallebe Lins</Authors>
+		<Description>Keycloak authentication, authorization, and administration integration for Mvp24Hours applications.</Description>
+		<Copyright></Copyright>
+		<PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
+		<Company>Kallebe Lins</Company>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>9.1.21</Version>
+		<AssemblyVersion>9.1.2.1</AssemblyVersion>
+		<FileVersion>9.1.2.1</FileVersion>
+		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Mvp24Hours.Core\Mvp24Hours.Core.csproj" />
+		<ProjectReference Include="..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<SonarQubeSetting Include="sonar.stylecop.projectFilePath">
+			<Value>$(MSBuildProjectFullPath)</Value>
+		</SonarQubeSetting>
+	</ItemGroup>
+
+</Project>
