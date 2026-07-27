@@ -25,9 +25,9 @@ dotnet add package Mvp24Hours.WebAPI
 
 ## 📚 Documentation
 
-- 🌐 **Website**: [mvp24hours.dev](https://mvp24hours.dev/#/)
-- 📖 **Documentation**: [English Documentation](https://mvp24hours.dev/#/en-us/home)
-- 🧪 **Samples**: [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples) (external; currently .NET 8 — see [Getting Started sample map](https://mvp24hours.dev/#/en-us/getting-started?id=🧪-runnable-samples))
+- 🌐 **Website**: [kallebelins.github.io/mvp24hours-dotnet](https://kallebelins.github.io/mvp24hours-dotnet/#/)
+- 📖 **Documentation**: [English Documentation](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/home)
+- 🧪 **Samples**: [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples) (external; currently .NET 8 — see [Getting Started sample map](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/getting-started?id=🧪-runnable-samples))
 
 > Samples currently target **.NET 8 (v8.2.101)** and may still use NLog. Treat
 > them as structural references until the samples repository is upgraded to
@@ -46,7 +46,7 @@ dotnet add package Mvp24Hours.WebAPI
 - 🐛 **Distributed lock fix** - Lock handles now release the resource before marking themselves disposed
 - 🧪 **Expanded test coverage** - 18 test projects on .NET 10, a 37% CI coverage floor, and CHANGELOG-recorded expansion to 4,492 passing tests
 
-See full changelog: [CHANGELOG.md](CHANGELOG.md) | [Release Notes](https://mvp24hours.dev/#/en-us/release)
+See full changelog: [CHANGELOG.md](CHANGELOG.md) | [Release Notes](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/release)
 
 ## 💖 Support
 

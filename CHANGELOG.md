@@ -925,7 +925,7 @@ Formato: `MAJOR.MINOR.PATCH` (ex: 8.3.261)
 
 ## Links
 
-- [Documentação](https://mvp24hours.dev)
+- [Documentação](https://kallebelins.github.io/mvp24hours-dotnet)
 - [Repositório](https://github.com/kallebelins/mvp24hours-dotnet)
 - [Exemplos](https://github.com/kallebelins/mvp24hours-dotnet-samples)
 - [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues)

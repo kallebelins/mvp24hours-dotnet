@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>12.0</LangVersion>
+		<InvariantGlobalization>false</InvariantGlobalization>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile>.\CustomerAPI.WebAPI.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Mvp24Hours.WebAPI" Version="8.2.101" />
+		<PackageReference Include="NLog" Version="5.2.8" />
+		<PackageReference Include="NLog.Web.AspNetCore" Version="5.3.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CustomerAPI.Application\CustomerAPI.Application.csproj" />
+		<ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
+		<ProjectReference Include="..\CustomerAPI.Typicode.Application\CustomerAPI.Typicode.Application.csproj" />
+	</ItemGroup>
+
+
+</Project>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>12.0</LangVersion>
+		<InvariantGlobalization>false</InvariantGlobalization>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Mvp24Hours.Application" Version="8.2.101" />
+		<PackageReference Include="Mvp24Hours.Infrastructure.Pipe" Version="8.2.101" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
+		<ProjectReference Include="..\CustomerAPI.Infrastructure\CustomerAPI.Infrastructure.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -14,7 +14,7 @@ assignees: ''
 
 <!-- Descreva o que você já tentou ou pesquisou -->
 
-- [ ] Li a [documentação](https://mvp24hours.dev)
+- [ ] Li a [documentação](https://kallebelins.github.io/mvp24hours-dotnet)
 - [ ] Pesquisei em issues existentes
 - [ ] Tentei pesquisar no Google/Stack Overflow
 - [ ] Revisei os [exemplos](https://github.com/kallebelins/mvp24hours-dotnet-samples)

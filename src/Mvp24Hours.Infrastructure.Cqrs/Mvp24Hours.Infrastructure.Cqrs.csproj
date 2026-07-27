@@ -1,20 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<PackageId>Mvp24Hours.Infrastructure.Cqrs</PackageId>
 		<Authors>Kallebe Lins</Authors>
 		<Description>CQRS/Mediator implementation for Mvp24Hours. Provides request/response mediation, pipeline behaviors, notifications, and command/query separation.</Description>
 		<Copyright></Copyright>
-		<PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
+		<PackageProjectUrl>https://kallebelins.github.io/mvp24hours-dotnet</PackageProjectUrl>
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>9.1.21</Version>
-		<AssemblyVersion>9.1.2.1</AssemblyVersion>
-		<FileVersion>9.1.2.1</FileVersion>
+		<Version>10.0.0</Version>
+		<AssemblyVersion>10.0.0.1</AssemblyVersion>
+		<FileVersion>10.0.0.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
-		<PackageTags>mediator;cqrs;mvp24hours;ddd;clean-architecture</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>mediator;cqrs;commands;queries;domain-events;inbox-outbox;event-sourcing;saga;mvp24hours;aspnetcore</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Update="README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\_media\icon.png" Pack="true" PackagePath="\" Link="icon.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />

@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Documentação
-    url: https://mvp24hours.dev
+    url: https://kallebelins.github.io/mvp24hours-dotnet
     about: Consulte a documentação oficial do Mvp24Hours
   - name: 💬 GitHub Discussions
     url: https://github.com/kallebelins/mvp24hours-dotnet/discussions

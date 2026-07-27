@@ -600,7 +600,7 @@ dotnet test /p:CollectCoverage=true /p:CoverletOutput=./coverage/
 
 ### Onde Obter Ajuda
 
-- 📖 [Documentação](https://mvp24hours.dev)
+- 📖 [Documentação](https://kallebelins.github.io/mvp24hours-dotnet)
 - 💬 [GitHub Discussions](https://github.com/kallebelins/mvp24hours-dotnet/discussions)
 - 🐛 [GitHub Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues)
 - 💼 [LinkedIn - Kallebe Lins](https://www.linkedin.com/in/kallebelins/)

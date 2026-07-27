@@ -1,18 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<PackageId>Mvp24Hours.Infrastructure.Pipe</PackageId>
 		<Authors>Kallebe Lins</Authors>
-		<Description>Series architectures for fast product construction.</Description>
+		<Description>Composable synchronous and asynchronous pipelines with validation, resilience, rate limiting, caching, and observability.</Description>
 		<Copyright></Copyright>
-		<PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
+		<PackageProjectUrl>https://kallebelins.github.io/mvp24hours-dotnet</PackageProjectUrl>
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+		<PackageTags>pipeline;chain-of-responsibility;middleware;resilience;rate-limiting;fluentvalidation;mvp24hours</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>9.1.21</Version>
-		<AssemblyVersion>9.1.2.1</AssemblyVersion>
-		<FileVersion>9.1.2.1</FileVersion>
+		<Version>10.0.0</Version>
+		<AssemblyVersion>10.0.0.1</AssemblyVersion>
+		<FileVersion>10.0.0.1</FileVersion>
 		<RepositoryUrl>https://github.com/kallebelins/mvp24hours-dotnet</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Update="README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\_media\icon.png" Pack="true" PackagePath="\" Link="icon.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />

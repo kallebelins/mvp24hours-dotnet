@@ -61,7 +61,7 @@ Cole aqui os logs relevantes e stack traces
 
 - [ ] Verifiquei se já não existe uma issue sobre este bug
 - [ ] Testei com a versão mais recente do Mvp24Hours
-- [ ] Li a [documentação](https://mvp24hours.dev)
+- [ ] Li a [documentação](https://kallebelins.github.io/mvp24hours-dotnet)
 - [ ] Consegui reproduzir o bug consistentemente
 
 ## 🔗 Issues Relacionadas
