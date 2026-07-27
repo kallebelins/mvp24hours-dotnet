@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Http.DelegatingHandlers;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Application.Logic;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic;
@@ -19,9 +20,8 @@ using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authenticati
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization.Decision;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization.RPT;
+using Mvp24Hours.Infrastructure.Identity.Keycloak.Infrastructure.Clients;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Infrastructure.Extensions;
-using KeycloakTokenClient =
-    Mvp24Hours.Infrastructure.Identity.Keycloak.Infrastructure.Clients.TokenClient;
 
 namespace Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;
 
@@ -29,44 +29,43 @@ public static class KeycloakExtensions
 {
     public static IServiceCollection AddKeycloakAuthentication(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        string sectionName = KeycloakOptions.SectionName)
     {
-        JwtBearerOptions jwtOptions = configuration.GetSection("JwtBearer").Get<JwtBearerOptions>()
-            ?? throw new InvalidOperationException("The JwtBearer configuration section is required.");
-        KeycloakAuthorizationOptions authorizationOptions =
-            configuration.GetSection(KeycloakAuthorizationOptions.SectionName)
-                .Get<KeycloakAuthorizationOptions>()
-            ?? new KeycloakAuthorizationOptions();
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
 
-        services.AddHttpContextAccessor();
-        services.Configure<KeycloakOptions>(
-            configuration.GetSection(KeycloakOptions.SectionName));
-        services.Configure<KeycloakAuthorizationOptions>(
-            configuration.GetSection(KeycloakAuthorizationOptions.SectionName));
-        services.TryAddSingleton<IKeycloakJwtTokenParser, KeycloakJwtTokenParser>();
-        services
-            .AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.Authority = jwtOptions.Authority;
-                options.Audience = jwtOptions.Audience;
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateAudience = false,
-                    ValidateIssuer = false,
-                    ValidateLifetime = true,
-                    NameClaimType = KeycloakClaimTypes.PreferredUserName,
-                    RoleClaimType = authorizationOptions.RealmRoleClaimType
-                };
-                options.Events = CreateJwtBearerEvents();
-            });
+        ConfigureKeycloakOptions(
+            services,
+            configuration.GetSection(sectionName));
+        ConfigureAuthorizationOptions(
+            services,
+            configuration.GetSection($"{sectionName}:Authorization"));
+        AddAuthenticationServices(services);
 
-        services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
+        return services;
+    }
+
+    public static IServiceCollection AddKeycloakAuthentication(
+        this IServiceCollection services,
+        Action<KeycloakOptions> configure,
+        Action<KeycloakAuthorizationOptions>? configureAuthorization = null)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+
+        services.AddOptions<KeycloakOptions>()
+            .Configure(configure)
+            .Validate(
+                options => options.Validate().Count == 0,
+                "Invalid Keycloak authentication configuration.")
+            .ValidateOnStart();
+        services.AddOptions<KeycloakAuthorizationOptions>()
+            .Configure(configureAuthorization ?? (_ => { }))
+            .Validate(
+                options => options.Validate().Count == 0,
+                "Invalid Keycloak authorization configuration.")
+            .ValidateOnStart();
+        AddAuthenticationServices(services);
 
         return services;
     }
@@ -90,16 +89,42 @@ public static class KeycloakExtensions
         Dictionary<string, List<IAuthorizationRequirement>>? resourceRequirements = null)
     {
         services.AddHttpContextAccessor();
-        services.AddHttpClient("KeycloakDecision");
+        AddCoreServices(services);
+        services.AddHttpClient("KeycloakDecision").AddStandardResilienceHandler();
+        services.AddHttpClient("KeycloakRpt").AddStandardResilienceHandler();
+        services.TryAddScoped<IAuthorizationHandler, DecisionRequirementHandler>();
+        services.TryAddScoped<IAuthorizationHandler, RptRequirementHandler>();
         services.AddAuthorization(options =>
         {
             AddRolePolicies(options, roles);
-            AddDecisionPolicies(services, options, decisionRequirements);
-            AddRptPolicies(services, options, rptRequirements);
+            AddDecisionPolicies(options, decisionRequirements);
+            AddRptPolicies(options, rptRequirements);
             AddResourcePolicies(options, resourceRequirements);
         });
 
         return services;
+    }
+
+    public static IServiceCollection AddKeycloakAuthorization(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string sectionName = KeycloakAuthorizationOptions.SectionName,
+        Dictionary<string, List<string>>? roles = null,
+        Dictionary<string, List<DecisionRequirement>>? decisionRequirements = null,
+        Dictionary<string, List<RptRequirement>>? rptRequirements = null,
+        Dictionary<string, List<IAuthorizationRequirement>>? resourceRequirements = null)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
+
+        ConfigureAuthorizationOptions(
+            services,
+            configuration.GetSection(sectionName));
+        return services.AddKeycloakAuthorization(
+            roles,
+            decisionRequirements,
+            rptRequirements,
+            resourceRequirements);
     }
 
     public static IServiceCollection AddKeycloakPolicies(
@@ -114,27 +139,160 @@ public static class KeycloakExtensions
             resourceRequirements);
     }
 
+    public static IServiceCollection AddKeycloakServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string sectionName = KeycloakOptions.SectionName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
+
+        services.AddKeycloakAuthentication(configuration, sectionName);
+        services.AddKeycloakAuthorization(
+            configuration,
+            $"{sectionName}:Authorization");
+        ConfigureAdminOptions(
+            services,
+            configuration.GetSection($"{sectionName}:Admin"));
+        AddAdminServices(services);
+        return services;
+    }
+
+    public static IServiceCollection AddKeycloakAdminServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string sectionName = KeycloakOptions.SectionName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sectionName);
+
+        ConfigureKeycloakOptions(services, configuration.GetSection(sectionName));
+        ConfigureAdminOptions(
+            services,
+            configuration.GetSection($"{sectionName}:Admin"));
+        AddCoreServices(services);
+        AddAdminServices(services);
+        return services;
+    }
+
+    [Obsolete("Use AddKeycloakServices instead.")]
     public static IServiceCollection AddKeycloakService(
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddHttpContextAccessor();
-        services.AddHttpClient<KeycloakService>(client =>
-        {
-            string resourceUrl = configuration["KeycloakResourceUrl"]
-                ?? throw new InvalidOperationException("KeycloakResourceUrl is required.");
-            client.BaseAddress = new Uri(resourceUrl);
-        })
-            .AddHttpMessageHandler<PropagationAuthorizationDelegatingHandler>();
-        services.TryAddTransient<PropagationAuthorizationDelegatingHandler>();
-        services.AddHttpClient<KeycloakTokenClient>();
-        services.AddSingleton(_ =>
-            configuration.GetSection("ClientCredentialsTokenRequest")
-                .Get<ClientCredentialsTokenRequest>()
-            ?? throw new InvalidOperationException(
-                "The ClientCredentialsTokenRequest configuration section is required."));
+        return services.AddKeycloakServices(configuration);
+    }
 
-        return services;
+    private static void AddAuthenticationServices(IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.TryAddSingleton<IKeycloakJwtTokenParser, KeycloakJwtTokenParser>();
+        services.TryAddScoped<IKeycloakCurrentUser, KeycloakCurrentUser>();
+        services
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer();
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<KeycloakOptions>, IOptions<KeycloakAuthorizationOptions>>(
+                (jwtOptions, keycloakOptions, authorizationOptions) =>
+                {
+                    KeycloakOptions keycloak = keycloakOptions.Value;
+                    jwtOptions.Authority = keycloak.Authority;
+                    jwtOptions.Audience = keycloak.Audience;
+                    if (!string.IsNullOrWhiteSpace(keycloak.MetadataAddress))
+                    {
+                        jwtOptions.MetadataAddress = keycloak.MetadataAddress;
+                    }
+
+                    jwtOptions.RequireHttpsMetadata = keycloak.RequireHttpsMetadata;
+                    jwtOptions.MapInboundClaims = false;
+                    jwtOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = keycloak.ValidateAudience,
+                        ValidateIssuer = keycloak.ValidateIssuer,
+                        ValidateLifetime = true,
+                        ClockSkew = keycloak.TokenClockSkew,
+                        NameClaimType = KeycloakClaimTypes.PreferredUserName,
+                        RoleClaimType = authorizationOptions.Value.RealmRoleClaimType
+                    };
+                    jwtOptions.Events = CreateJwtBearerEvents();
+                });
+        services.TryAddEnumerable(
+            ServiceDescriptor.Transient<
+                IClaimsTransformation,
+                KeycloakRolesClaimsTransformation>());
+    }
+
+    private static void AddCoreServices(IServiceCollection services)
+    {
+        services.AddMemoryCache();
+        services.AddHttpClient("KeycloakDiscovery").AddStandardResilienceHandler();
+        services.AddHttpClient("KeycloakToken").AddStandardResilienceHandler();
+        services.TryAddSingleton<IKeycloakDiscoveryService, KeycloakDiscoveryService>();
+        services.TryAddSingleton<KeycloakTokenClient>();
+        services.TryAddSingleton<IKeycloakTokenService, KeycloakTokenService>();
+    }
+
+    private static void AddAdminServices(IServiceCollection services)
+    {
+        services.TryAddTransient<KeycloakAdminBearerDelegatingHandler>();
+        services.AddHttpClient(
+                "KeycloakAdmin",
+                (serviceProvider, client) =>
+                {
+                    KeycloakAdminOptions options = serviceProvider
+                        .GetRequiredService<IOptions<KeycloakAdminOptions>>()
+                        .Value;
+                    client.BaseAddress = new Uri(
+                        $"{options.AdminBaseUrl.TrimEnd('/')}/");
+                    client.Timeout = options.Timeout;
+                })
+            .AddHttpMessageHandler<KeycloakAdminBearerDelegatingHandler>()
+            .AddStandardResilienceHandler(
+                options => options.Retry.MaxRetryAttempts = 3);
+        services.TryAddScoped<KeycloakAdminHttpClient>();
+        services.TryAddScoped<IKeycloakUserService, KeycloakUserService>();
+        services.TryAddScoped<IKeycloakRoleService, KeycloakRoleService>();
+        services.TryAddScoped<IKeycloakGroupService, KeycloakGroupService>();
+    }
+
+    private static void ConfigureKeycloakOptions(
+        IServiceCollection services,
+        IConfiguration section)
+    {
+        services.AddOptions<KeycloakOptions>()
+            .Bind(section)
+            .Validate(
+                options => options.Validate().Count == 0,
+                "Invalid Keycloak authentication configuration.")
+            .ValidateOnStart();
+    }
+
+    private static void ConfigureAuthorizationOptions(
+        IServiceCollection services,
+        IConfiguration section)
+    {
+        services.AddOptions<KeycloakAuthorizationOptions>()
+            .Bind(section)
+            .Validate(
+                options => options.Validate().Count == 0,
+                "Invalid Keycloak authorization configuration.")
+            .ValidateOnStart();
+    }
+
+    private static void ConfigureAdminOptions(
+        IServiceCollection services,
+        IConfiguration section)
+    {
+        services.AddOptions<KeycloakAdminOptions>()
+            .Bind(section)
+            .Validate(
+                options => options.Validate().Count == 0,
+                "Invalid Keycloak Admin API configuration.")
+            .ValidateOnStart();
     }
 
     private static JwtBearerEvents CreateJwtBearerEvents()
@@ -233,7 +391,6 @@ public static class KeycloakExtensions
     }
 
     private static void AddDecisionPolicies(
-        IServiceCollection services,
         AuthorizationOptions options,
         Dictionary<string, List<DecisionRequirement>>? requirements)
     {
@@ -242,7 +399,6 @@ public static class KeycloakExtensions
             return;
         }
 
-        services.TryAddScoped<IAuthorizationHandler, DecisionRequirementHandler>();
         foreach ((string? name, List<DecisionRequirement>? policyRequirements) in requirements)
         {
             if (policyRequirements.Count > 0)
@@ -255,7 +411,6 @@ public static class KeycloakExtensions
     }
 
     private static void AddRptPolicies(
-        IServiceCollection services,
         AuthorizationOptions options,
         Dictionary<string, List<RptRequirement>>? requirements)
     {
@@ -264,7 +419,6 @@ public static class KeycloakExtensions
             return;
         }
 
-        services.TryAddScoped<IAuthorizationHandler, RptRequirementHandler>();
         foreach ((string? name, List<RptRequirement>? policyRequirements) in requirements)
         {
             if (policyRequirements.Count > 0)

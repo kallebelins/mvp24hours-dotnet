@@ -19,7 +19,13 @@ public static class KeycloakHttpContextExtensions
 
     public static UserToken? GetUserToken(this IHttpContextAccessor httpContextAccessor)
     {
-        IKeycloakJwtTokenParser? parser = httpContextAccessor.HttpContext?
+        HttpContext? context = httpContextAccessor.HttpContext;
+        if (context?.Items[KeycloakHttpContextKeys.User] is UserToken currentUser)
+        {
+            return currentUser;
+        }
+
+        IKeycloakJwtTokenParser? parser = context?
             .RequestServices
             .GetService<IKeycloakJwtTokenParser>();
         return parser?.ParseUserToken(httpContextAccessor.GetAuthorization());
@@ -32,9 +38,6 @@ public static class KeycloakHttpContextExtensions
 
     public static Guid? GetUserId(this IHttpContextAccessor httpContextAccessor)
     {
-        IKeycloakJwtTokenParser? parser = httpContextAccessor.HttpContext?
-            .RequestServices
-            .GetService<IKeycloakJwtTokenParser>();
-        return parser?.ParseUserId(httpContextAccessor.GetAuthorization());
+        return httpContextAccessor.GetUserToken()?.Id;
     }
 }
