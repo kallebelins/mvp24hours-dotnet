@@ -8,17 +8,35 @@ namespace Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Options;
 /// </summary>
 public class KeycloakAuthorizationOptions
 {
+    /// <summary>
+    /// Default authorization configuration section name.
+    /// </summary>
     public const string SectionName = "Keycloak:Authorization";
 
+    /// <summary>
+    /// Gets or sets the behavior used when no matching permission is found.
+    /// </summary>
     public KeycloakPolicyEnforcementMode PolicyEnforcementMode { get; set; }
         = KeycloakPolicyEnforcementMode.Enforcing;
 
+    /// <summary>
+    /// Gets or sets whether authorization handlers use the UMA decision response mode.
+    /// </summary>
     public bool UseDecisionEndpoint { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets whether authorization handlers request and inspect an RPT.
+    /// </summary>
     public bool UseRptEndpoint { get; set; }
 
+    /// <summary>
+    /// Gets or sets the claim type that stores RPT permissions.
+    /// </summary>
     public string PermissionClaimType { get; set; } = "permissions";
 
+    /// <summary>
+    /// Gets or sets the claim type used by ASP.NET Core role authorization.
+    /// </summary>
     public string RealmRoleClaimType { get; set; } = ClaimTypes.Role;
 
     /// <summary>

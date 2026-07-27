@@ -228,6 +228,28 @@ The check acquires and releases a uniquely named lock. Acquisition failure is `U
 
 The current implementation returns `Healthy` after resolving `IJobScheduler`; it does not contact provider storage. Setting `ScheduleTestJob = true` still does not schedule a job, and the declared latency thresholds are not evaluated. See [Background Jobs](background-jobs.md) for provider status.
 
+### Keycloak
+
+```csharp
+using Mvp24Hours.Infrastructure.Identity.Keycloak.HealthChecks;
+
+services.AddHealthChecks()
+    .AddKeycloakHealthCheck(
+        name: "keycloak",
+        tags: ["identity", "ready"],
+        timeout: TimeSpan.FromSeconds(5));
+```
+
+| Item | Default |
+|---|---|
+| Registration | `AddKeycloakHealthCheck` |
+| Name / failure status | `keycloak` / framework default when `null` |
+| Tags / registration timeout | none / `null` |
+| Options | none; uses registered `IKeycloakDiscoveryService` |
+| Status rules | Successful OIDC discovery is `Healthy`; discovery failures map to the registration failure status |
+
+Register Keycloak authentication or services first so discovery is available. The check verifies metadata reachability; it does not prove Admin API permissions or authorization policies. See [Keycloak](../identity/keycloak.md).
+
 ### CronJob
 
 ```csharp
@@ -268,7 +290,7 @@ services.AddHealthChecks()
     });
 ```
 
-It does not add HTTP checks because each requires a typed client. It also does not add WebAPI cache, `ICacheProvider`, EF Core, MongoDB, RabbitMQ, or CronJob checks; register those explicitly.
+It does not add HTTP checks because each requires a typed client. It also does not add WebAPI cache, `ICacheProvider`, EF Core, MongoDB, RabbitMQ, CronJob, or Keycloak checks; register those explicitly.
 
 ## Probe design guidance
 
@@ -288,4 +310,5 @@ It does not add HTTP checks because each requires a typed client. It also does n
 - [MongoDB advanced](../database/mongodb-advanced.md)
 - [RabbitMQ](../broker.md)
 - [Background Jobs](background-jobs.md)
+- [Keycloak](../identity/keycloak.md)
 - [CronJob observability](../cronjob-observability.md)

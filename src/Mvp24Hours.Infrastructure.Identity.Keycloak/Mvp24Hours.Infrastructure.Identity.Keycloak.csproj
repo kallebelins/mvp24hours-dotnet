@@ -7,6 +7,9 @@
 		<PackageProjectUrl>https://mvp24hours.dev</PackageProjectUrl>
 		<Company>Kallebe Lins</Company>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<!-- DTO properties mirror Keycloak JSON fields; the public integration surface is documented explicitly. -->
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>9.1.21</Version>
 		<AssemblyVersion>9.1.2.1</AssemblyVersion>

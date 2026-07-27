@@ -23,6 +23,7 @@ dotnet add package Mvp24Hours.Infrastructure
 | SMS delivery | [SMS](sms.md) | Twilio, Azure Communication Services, throttling, validation, and test fakes |
 | File storage | [File Storage](file-storage.md) | Local, Azure Blob, AWS S3, and in-memory providers |
 | Secrets and security | [Secrets & Security](secrets-security.md) | Environment variables, Azure Key Vault, AWS Secrets Manager, rotation, and masking |
+| Identity provider | [Keycloak](../identity/keycloak.md) | JWT bearer authentication, UMA/RPT authorization, Admin REST clients, and user sync |
 | Cross-process coordination | [Distributed Locking](distributed-locking.md) | In-memory, Redis, RedLock, SQL Server, and PostgreSQL locks |
 | Durable or provider-backed jobs | [Background Jobs](background-jobs.md) | In-memory, Hangfire, and Quartz job scheduling |
 | Scheduled hosted services | [CronJob](../cronjob.md) | Cron-based recurring work hosted directly by the application |

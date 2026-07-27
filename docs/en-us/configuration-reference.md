@@ -47,6 +47,10 @@ Connection/client/hosted options, outbox, batching, prefetch, publisher confirms
 
 `CronJobOptions<T>`, `CronJobGlobalOptions`, advanced options, and health-check options are owned by [CronJob](cronjob.md), [Advanced configuration](cronjob-advanced.md), [Resilience](cronjob-resilience.md), and [Observability](cronjob-observability.md).
 
+### Identity
+
+`KeycloakOptions`, `KeycloakAuthorizationOptions`, and `KeycloakAdminOptions` are owned by [Keycloak](identity/keycloak.md). The default bound sections are `Keycloak`, `Keycloak:Authorization`, and `Keycloak:Admin`.
+
 ### Infrastructure modules
 
 Start from the [Infrastructure Modules](infrastructure/home.md) catalog, then open the owning page for property tables and DI examples:

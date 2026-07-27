@@ -6,6 +6,9 @@ namespace Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Options;
 /// </summary>
 public class KeycloakOptions
 {
+    /// <summary>
+    /// Default configuration section name.
+    /// </summary>
     public const string SectionName = "Keycloak";
 
     /// <summary>
@@ -13,20 +16,44 @@ public class KeycloakOptions
     /// </summary>
     public string Authority { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the Keycloak realm name.
+    /// </summary>
     public string Realm { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the OIDC client identifier.
+    /// </summary>
     public string ClientId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the confidential-client secret used for token operations.
+    /// </summary>
     public string? ClientSecret { get; set; }
 
+    /// <summary>
+    /// Gets or sets the expected access-token audience.
+    /// </summary>
     public string? Audience { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether discovery metadata must use HTTPS.
+    /// </summary>
     public bool RequireHttpsMetadata { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets whether the token issuer is validated.
+    /// </summary>
     public bool ValidateIssuer { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets whether the token audience is validated.
+    /// </summary>
     public bool ValidateAudience { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the allowed clock difference during token validation.
+    /// </summary>
     public TimeSpan TokenClockSkew { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>

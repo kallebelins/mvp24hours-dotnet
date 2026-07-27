@@ -174,37 +174,25 @@ Mark controllers with `[ApiVersion("1.0")]` and route templates such as `api/v{v
 | Method | Library ownership | Guidance |
 |---|---|---|
 | API key | Mvp24Hours (`AddMvp24HoursApiKeyAuthentication`) | Prefer for service-to-service or partner keys stored in a secret provider. |
-| JWT Bearer | ASP.NET Core application pattern | Use `Microsoft.AspNetCore.Authentication.JwtBearer` when end-user identity is required. |
+| JWT Bearer | ASP.NET Core application pattern | Use `Microsoft.AspNetCore.Authentication.JwtBearer` for generic JWT APIs. For Keycloak, prefer the dedicated package. |
+| Keycloak | `Mvp24Hours.Infrastructure.Identity.Keycloak` | JWT bearer, role mapping, UMA/RPT policies, Admin REST, and optional local-user sync. |
 | Cookie / anti-forgery | Partial (`AntiForgeryOptions`) | Use for browser cookie sessions with unsafe methods. |
 
-API-key authentication is documented in the production matrix above. JWT remains an application composition concern:
+API-key authentication is documented in the production matrix above. For Keycloak-backed APIs, use [Keycloak identity integration](identity/keycloak.md):
 
 ```csharp
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-        };
-    });
+using Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("OrdersRead", policy =>
-        policy.RequireRole("Orders.Reader", "Orders.Admin"));
-});
+builder.Services.AddKeycloakServices(builder.Configuration);
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+app.UseAuthentication();
+app.UseKeycloakCurrentUser();
+app.UseAuthorization();
 ```
 
-Store signing keys with [Secrets & Security](infrastructure/secrets-security.md). Do not invent a Mvp24Hours JWT Options class; none exists in `src/`.
+For non-Keycloak JWT issuers, compose ASP.NET Core JWT bearer authentication directly and store signing keys with [Secrets & Security](infrastructure/secrets-security.md).
 
 ## Focused examples
 

@@ -8,6 +8,9 @@ namespace Mvp24Hours.Infrastructure.Identity.Keycloak.HealthChecks;
 /// </summary>
 public static class KeycloakHealthCheckExtensions
 {
+    /// <summary>
+    /// Adds a health check that verifies Keycloak OIDC discovery metadata.
+    /// </summary>
     public static IHealthChecksBuilder AddKeycloakHealthCheck(
         this IHealthChecksBuilder builder,
         string name = "keycloak",

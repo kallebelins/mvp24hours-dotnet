@@ -25,8 +25,15 @@ using Mvp24Hours.Infrastructure.Identity.Keycloak.Infrastructure.Extensions;
 
 namespace Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;
 
+/// <summary>
+/// Dependency injection extensions for Keycloak authentication, authorization,
+/// Admin REST clients, and local-user synchronization.
+/// </summary>
 public static class KeycloakExtensions
 {
+    /// <summary>
+    /// Registers JWT bearer authentication from a configuration section.
+    /// </summary>
     public static IServiceCollection AddKeycloakAuthentication(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -46,6 +53,9 @@ public static class KeycloakExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers JWT bearer authentication using programmatic option delegates.
+    /// </summary>
     public static IServiceCollection AddKeycloakAuthentication(
         this IServiceCollection services,
         Action<KeycloakOptions> configure,
@@ -81,6 +91,9 @@ public static class KeycloakExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers Keycloak role, UMA decision, RPT, and custom resource policies.
+    /// </summary>
     public static IServiceCollection AddKeycloakAuthorization(
         this IServiceCollection services,
         Dictionary<string, List<string>>? roles = null,
@@ -105,6 +118,9 @@ public static class KeycloakExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers Keycloak authorization and binds its options from configuration.
+    /// </summary>
     public static IServiceCollection AddKeycloakAuthorization(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -127,6 +143,10 @@ public static class KeycloakExtensions
             resourceRequirements);
     }
 
+    /// <summary>
+    /// Discovers role and <c>resource#scope</c> policies from authorization
+    /// attributes in an assembly and registers them.
+    /// </summary>
     public static IServiceCollection AddKeycloakPolicies(
         this IServiceCollection services,
         Assembly assembly,
@@ -139,6 +159,9 @@ public static class KeycloakExtensions
             resourceRequirements);
     }
 
+    /// <summary>
+    /// Registers authentication, authorization, token, and Admin REST services.
+    /// </summary>
     public static IServiceCollection AddKeycloakServices(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -158,6 +181,9 @@ public static class KeycloakExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers token support and Admin REST services without JWT authentication.
+    /// </summary>
     public static IServiceCollection AddKeycloakAdminServices(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -175,6 +201,10 @@ public static class KeycloakExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers all Keycloak services.
+    /// </summary>
+    /// <remarks>Use <see cref="AddKeycloakServices"/> for new code.</remarks>
     [Obsolete("Use AddKeycloakServices instead.")]
     public static IServiceCollection AddKeycloakService(
         this IServiceCollection services,

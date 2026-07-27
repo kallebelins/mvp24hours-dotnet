@@ -6,6 +6,9 @@ namespace Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Options;
 /// </summary>
 public class KeycloakAdminOptions
 {
+    /// <summary>
+    /// Default Admin API configuration section name.
+    /// </summary>
     public const string SectionName = "Keycloak:Admin";
 
     /// <summary>
@@ -13,6 +16,9 @@ public class KeycloakAdminOptions
     /// </summary>
     public string AdminBaseUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the realm managed by the Admin API client.
+    /// </summary>
     public string Realm { get; set; } = string.Empty;
 
     /// <summary>
@@ -20,12 +26,24 @@ public class KeycloakAdminOptions
     /// </summary>
     public string ClientId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the confidential service-account client secret.
+    /// </summary>
     public string? ClientSecret { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether the configured client uses a service account.
+    /// </summary>
     public bool ServiceAccountEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the Admin API HTTP request timeout.
+    /// </summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Gets or sets the configured transient retry count.
+    /// </summary>
     public int RetryCount { get; set; } = 3;
 
     /// <summary>

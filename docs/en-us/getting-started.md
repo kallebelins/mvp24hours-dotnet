@@ -211,6 +211,7 @@ The [Infrastructure overview](infrastructure/home.md) maps the cross-cutting mod
 |--------|-------|
 | **Email and SMS** | [Email](infrastructure/email.md) · [SMS](infrastructure/sms.md) |
 | **File Storage and Secrets** | [File Storage](infrastructure/file-storage.md) · [Secrets & Security](infrastructure/secrets-security.md) |
+| **Identity** | [Keycloak](identity/keycloak.md) |
 | **Distributed Locking** | [Distributed Locking](infrastructure/distributed-locking.md) |
 | **Background Jobs** | [Background Jobs](infrastructure/background-jobs.md) · [CronJob](cronjob.md) |
 | **HTTP clients and resilience** | [HTTP Clients & Resilience](infrastructure/http-resilience.md) |

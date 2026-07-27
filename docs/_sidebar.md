@@ -94,6 +94,8 @@
     * [Channels](en-us/modernization/channels.md)
     * [Keyed Services](en-us/modernization/keyed-services.md)
     * [Options Configuration](en-us/modernization/options-configuration.md)
+* Identity & Security
+  * [Keycloak](en-us/identity/keycloak.md)
 * Web API & Background Jobs
   * [Web API Basics](en-us/webapi.md)
   * [Web API Advanced](en-us/webapi-advanced.md)
