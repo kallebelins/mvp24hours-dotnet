@@ -30,6 +30,11 @@ public class KeycloakOptions
     public TimeSpan TokenClockSkew { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
+    /// Duration for which the OpenID Connect discovery document is cached.
+    /// </summary>
+    public TimeSpan DiscoveryCacheTtl { get; set; } = TimeSpan.FromHours(24);
+
+    /// <summary>
     /// Optional override for OpenID Connect discovery metadata URL.
     /// </summary>
     public string? MetadataAddress { get; set; }
@@ -69,6 +74,11 @@ public class KeycloakOptions
         if (TokenClockSkew < TimeSpan.Zero)
         {
             errors.Add($"{nameof(TokenClockSkew)} cannot be negative.");
+        }
+
+        if (DiscoveryCacheTtl <= TimeSpan.Zero)
+        {
+            errors.Add($"{nameof(DiscoveryCacheTtl)} must be greater than zero.");
         }
 
         if (!string.IsNullOrWhiteSpace(MetadataAddress)

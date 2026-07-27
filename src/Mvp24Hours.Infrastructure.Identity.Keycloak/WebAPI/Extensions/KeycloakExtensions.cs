@@ -12,7 +12,9 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Http.DelegatingHandlers;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Application.Logic;
+using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic;
+using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Options;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authentication;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization.Decision;
@@ -31,8 +33,17 @@ public static class KeycloakExtensions
     {
         JwtBearerOptions jwtOptions = configuration.GetSection("JwtBearer").Get<JwtBearerOptions>()
             ?? throw new InvalidOperationException("The JwtBearer configuration section is required.");
+        KeycloakAuthorizationOptions authorizationOptions =
+            configuration.GetSection(KeycloakAuthorizationOptions.SectionName)
+                .Get<KeycloakAuthorizationOptions>()
+            ?? new KeycloakAuthorizationOptions();
 
         services.AddHttpContextAccessor();
+        services.Configure<KeycloakOptions>(
+            configuration.GetSection(KeycloakOptions.SectionName));
+        services.Configure<KeycloakAuthorizationOptions>(
+            configuration.GetSection(KeycloakAuthorizationOptions.SectionName));
+        services.TryAddSingleton<IKeycloakJwtTokenParser, KeycloakJwtTokenParser>();
         services
             .AddAuthentication(options =>
             {
@@ -50,16 +61,24 @@ public static class KeycloakExtensions
                     ValidateIssuer = false,
                     ValidateLifetime = true,
                     NameClaimType = KeycloakClaimTypes.PreferredUserName,
-                    RoleClaimType = KeycloakClaimTypes.Role
+                    RoleClaimType = authorizationOptions.RealmRoleClaimType
                 };
                 options.Events = CreateJwtBearerEvents();
             });
 
-        services.AddTransient<IClaimsTransformation>(_ =>
-            new KeycloakRolesClaimsTransformation(
-                KeycloakClaimTypes.Role,
-                KeycloakClaimTypes.RealmAccess));
+        services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
 
+        return services;
+    }
+
+    /// <summary>
+    /// Registers an application-specific Keycloak user synchronization service.
+    /// </summary>
+    public static IServiceCollection AddKeycloakUserSync<TService>(
+        this IServiceCollection services)
+        where TService : class, IUserKeycloakService
+    {
+        services.AddScoped<IUserKeycloakService, TService>();
         return services;
     }
 
@@ -164,12 +183,12 @@ public static class KeycloakExtensions
         if (localUserService is not null && user?.Id is Guid userId)
         {
             logger.LogDebug("JWT Bearer: Starting user integration");
-            IBusinessResult<bool> anyUserResult = await localUserService.GetAnyLocalUserById(
+            IBusinessResult<bool> anyUserResult = await localUserService.GetAnyLocalUserByIdAsync(
                 userId,
                 context.HttpContext.RequestAborted);
             if (!anyUserResult.GetDataValue() || anyUserResult.HasErrors)
             {
-                IBusinessResult<object> localUserResult = await localUserService.CreateOrUpdateLocalUser(
+                IBusinessResult<object> localUserResult = await localUserService.CreateOrUpdateLocalUserAsync(
                     user,
                     context.HttpContext.RequestAborted);
                 if (localUserResult.HasErrors)
@@ -208,7 +227,7 @@ public static class KeycloakExtensions
             {
                 options.AddPolicy(
                     name,
-                    policy => policy.RequireClaim(KeycloakClaimTypes.Role, policyRoles));
+                    policy => policy.RequireRole([.. policyRoles]));
             }
         }
     }
