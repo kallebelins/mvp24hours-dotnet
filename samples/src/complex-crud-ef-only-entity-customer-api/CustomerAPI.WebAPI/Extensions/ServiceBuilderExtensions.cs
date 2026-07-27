@@ -4,24 +4,24 @@ using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Validations.Customers;
 using CustomerAPI.Infrastructure.Data;
+using CustomerAPI.WebAPI.Configuration;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Extensions.Options;
 using Mvp24Hours.Extensions;
 using System;
-using Mvp24Hours.Core.Extensions.Options;
-using CustomerAPI.WebAPI.Configuration;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
     /// <summary>
-    /// 
+    /// Registers sample-specific services, options, persistence, and health checks.
     /// </summary>
     public static class ServiceBuilderExtensions
     {
         /// <summary>
-        /// 
+        /// Registers EF Core, Unit of Work, and repository defaults.
         /// </summary>
         public static IServiceCollection AddMyDbContext(this IServiceCollection services, IConfiguration configuration)
         {
@@ -32,7 +32,7 @@ namespace CustomerAPI.WebAPI.Extensions
                 options.UseSqlServer(connectionStrings.EFDBContext)
             );
             services.AddMvp24HoursDbContext<EFDBContext>();
-            services.AddMvp24HoursRepositoryAsync(options: options =>
+            services.AddMvp24HoursRepositoryAsync(options =>
             {
                 options.MaxQtyByQueryPage = 100;
                 options.TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted;
@@ -41,7 +41,7 @@ namespace CustomerAPI.WebAPI.Extensions
         }
 
         /// <summary>
-        /// 
+        /// Registers Facade, application services, and FluentValidation validators.
         /// </summary>
         public static void AddMyServices(this IServiceCollection services)
         {
@@ -55,7 +55,7 @@ namespace CustomerAPI.WebAPI.Extensions
         }
 
         /// <summary>
-        /// 
+        /// Registers SQL Server health checks for this host.
         /// </summary>
         public static IServiceCollection AddMyHealthChecks(this IServiceCollection services, IConfiguration configuration)
         {
@@ -70,6 +70,7 @@ namespace CustomerAPI.WebAPI.Extensions
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
             return services;
         }
+
         /// <summary>
         /// Binds and validates connection strings used by this host.
         /// </summary>
@@ -79,7 +80,5 @@ namespace CustomerAPI.WebAPI.Extensions
                 configuration.GetSection(ConnectionStringsOptions.SectionName));
             return services;
         }
-
-
     }
 }

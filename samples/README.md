@@ -45,15 +45,15 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 
 ## Complex
 
-- **Planned** — [CRUD with EF Core](src/complex-crud-ef-customer-api/): DTO-based relational CRUD with stronger boundaries.
-- **Planned** — [CRUD with EF Core and Dapper](src/complex-crud-ef-dapper-customer-api/): separated write and read persistence.
-- **Deprecated** — [CRUD using EF entities as API contracts](src/complex-crud-ef-only-entity-customer-api/): retained to explain why public APIs should not leak persistence entities.
-- **Planned** — [CRUD with EF Core entity logging](src/complex-crud-ef-entitylog-customer-api/): DTO boundaries, auditing, and soft delete.
-- **Planned** — [CRUD with MongoDB](src/complex-crud-mongodb-customer-api/): complex-tier document persistence.
-- **Planned** — [Pipeline](src/complex-pipeline-customer-api/): layered pipeline operations.
-- **Planned** — [Pipeline builder](src/complex-pipeline-builder-customer-api/): constructor-composed use-case pipelines.
-- **Planned** — [Pipeline with ports and adapters](src/complex-pipeline-ports-adapters-customer-api/): pipeline-centric hexagonal architecture.
-- **Planned** — [Pipeline with EF Core](src/complex-pipeline-ef-customer-api/): integration pipeline with relational persistence.
+- **Migrated** — [CRUD with EF Core](src/complex-crud-ef-customer-api/CustomerAPI.WebAPI/): DTO-based relational CRUD with stronger boundaries.
+- **Migrated** — [CRUD with EF Core and Dapper](src/complex-crud-ef-dapper-customer-api/CustomerAPI.WebAPI/): EF writes with cancelable Dapper reads.
+- **Deprecated** — [CRUD using EF entities as API contracts](src/complex-crud-ef-only-entity-customer-api/CustomerAPI.WebAPI/): migrated teaching sample retained to explain why public APIs should not leak persistence entities.
+- **Migrated** — [CRUD with EF Core entity logging](src/complex-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI/): DTO boundaries, auditing, and soft delete.
+- **Migrated** — [CRUD with MongoDB](src/complex-crud-mongodb-customer-api/CustomerAPI.WebAPI/): complex-tier document persistence and modeling guidance.
+- **Migrated** — [Pipeline](src/complex-pipeline-customer-api/CustomerAPI.WebAPI/): layered, cancelable pipeline operations.
+- **Migrated** — [Pipeline builder](src/complex-pipeline-builder-customer-api/CustomerAPI.WebAPI/): constructor-composed, DI-friendly use-case pipelines.
+- **Migrated** — [Pipeline with ports and adapters](src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/): pipeline-centric hexagonal teaching sample with resilient HTTP.
+- **Migrated** — [Pipeline with EF Core](src/complex-pipeline-ef-customer-api/CustomerAPI.WebAPI/): integration pipeline with relational persistence and clear UoW boundaries.
 
 ## Architecture blueprints
 

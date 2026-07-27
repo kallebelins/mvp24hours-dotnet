@@ -15,14 +15,14 @@ namespace CustomerAPI.Application
         /// </summary>
         public ICustomerService CustomerService
         {
-            get { return provider.GetService<ICustomerService>(); }
+            get { return provider.GetRequiredService<ICustomerService>(); }
         }
         /// <summary>
         /// <see cref="CustomerAPI.Core.Contract.Logic.IContactService"/>
         /// </summary>
         public IContactService ContactService
         {
-            get { return provider.GetService<IContactService>(); }
+            get { return provider.GetRequiredService<IContactService>(); }
         }
         #endregion
     }

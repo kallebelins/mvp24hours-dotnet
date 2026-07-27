@@ -1,76 +1,95 @@
-# CustomerAPI - CRUD - EF - Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
+# Customer API — Complex EF Core with Entity Traffic
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Native OpenAPI;
-- Mapping (AutoMapper); 
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Specification pattern;
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
+This .NET 10 Complex sample keeps entities as HTTP request and response contracts on purpose. Use it only to compare trade-offs against the DTO-based Complex EF sample.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated` (teaching / contrast sample)
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+- Recommendation: do **not** expose this shape on the public internet
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- Persistence entities intentionally cross the HTTP boundary
+- FluentValidation, specifications, Facade, repository, and Unit of Work
+- EF Core migrations and development seed data
+- Native OpenAPI, RFC ProblemDetails, health checks, and NLog through `ILogger<T>`
+- Startup-validated connection options and cancelable asynchronous operations
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+## Architecture
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Tier: `Complex`
+- Shape: flat four-project N-layers (`Core`, `Application`, `Infrastructure`, `WebAPI`)
+- Why this shape fits: it demonstrates Complex layering without DTO/mapping ceremony so readers can compare coupling costs
 
-## Database integrated with EF
+### Trade-offs vs DTO Complex sample
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+| Concern | This sample (entity traffic) | `complex-crud-ef-customer-api` (DTO traffic) |
+| --- | --- | --- |
+| HTTP contract stability | Tightly coupled to persistence model | Versionable request/response shapes |
+| Over-posting / under-exposure | Harder to control | Explicit fields per operation |
+| Mapping cost | None | AutoMapper / value objects |
+| Public API readiness | Discouraged | Preferred |
 
-For another provider, add its version centrally and reference the package from the project:
+Prefer the DTO Complex sample for public or externally versioned APIs. See the [decision matrix](../../../../docs/en-us/guides/architecture/decision-matrix.md).
 
-- SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
-- PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
-- MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
+## Layers
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+- `CustomerAPI.Core` — entities, query filters, validators, specifications, contracts, and messages
+- `CustomerAPI.Application` — application services and Facade
+- `CustomerAPI.Infrastructure` — EF Core context, configurations, migrations, and seed
+- `CustomerAPI.WebAPI` — controllers, dependency injection, configuration, and HTTP middleware
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+## Prerequisites
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
+
+## Configuration
+
+Override credentials with environment variables, user secrets, or a secret store. Never commit real passwords.
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+
+## Run
+
+From `samples/src/complex-crud-ef-only-entity-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+On startup the host applies pending EF migrations and seeds an empty database.
 
-## Health checks
+### Database providers
 
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
+Default provider is SQL Server via CPM. Switch to PostgreSQL (`UseNpgsql`) or MySQL (`UseMySql`) by adding the provider package centrally.
 
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
-```
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
+- Contact resources: `/api/customer/{customerId}/contact`
+
+Expected business failures retain Mvp24Hours business envelopes; unexpected host failures are rendered as ProblemDetails.
+
+## Related documentation
+
+- [Decision matrix](../../../../docs/en-us/guides/architecture/decision-matrix.md)
+- [Complex N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-complex-nlayers.md)
+- [Application services](../../../../docs/en-us/application-services.md)
+- [Validation](../../../../docs/en-us/validation.md)
+- [Specification](../../../../docs/en-us/specification.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- DTO isolation, AutoMapper profiles, or field-level API versioning
+- Safe public-internet exposure patterns
+- Authentication, authorization, or production observability hardening

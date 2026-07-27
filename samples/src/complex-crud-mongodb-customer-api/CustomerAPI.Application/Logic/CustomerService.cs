@@ -5,6 +5,8 @@ using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.Specifications.Customers;
 using CustomerAPI.Core.ValueObjects.Customers;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -18,10 +20,17 @@ using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Logic
 {
-    public class CustomerService(IUnitOfWorkAsync unitOfWork, IValidator<Customer> validator, IMapper mapper) : RepositoryPagingServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork, validator), ICustomerService
+    public class CustomerService(
+        IUnitOfWorkAsync unitOfWork,
+        IValidator<Customer> validator,
+        IMapper mapper,
+        TimeProvider timeProvider,
+        ILogger<CustomerService> logger) : RepositoryPagingServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork, validator), ICustomerService
     {
         #region [ Fields ]
         private readonly IMapper mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        private readonly TimeProvider timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        private readonly ILogger<CustomerService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
         #endregion
 
         #region [ Queries ]
@@ -93,6 +102,7 @@ namespace CustomerAPI.Application.Logic
         public async Task<IBusinessResult<string>> Create(CustomerCreate dto, CancellationToken cancellationToken = default)
         {
             var entity = mapper.Map<Customer>(dto);
+            ApplyCreateDefaults(entity);
 
             // apply data validation to the model/entity with FluentValidation or DataAnnotation
             var errors = entity.TryValidate(Validator);
@@ -105,12 +115,13 @@ namespace CustomerAPI.Application.Logic
             await Repository.AddAsync(entity, cancellationToken: cancellationToken);
             if (await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken) > 0)
             {
-                return entity.Id.ToString().ToBusiness(
+                return entity.Id.ToBusiness(
                     Messages.OPERATION_SUCCESS
                         .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
             }
 
             // unknown error
+            logger.LogWarning("Customer create failed after validation for {CustomerName}", entity.Name);
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<string>();
@@ -178,6 +189,29 @@ namespace CustomerAPI.Application.Logic
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<int>();
+        }
+
+        #endregion
+
+        #region [ Helpers ]
+
+        private void ApplyCreateDefaults(Customer entity)
+        {
+            var utcNow = timeProvider.GetUtcNow().UtcDateTime;
+            entity.Id ??= ObjectId.GenerateNewId().ToString();
+            entity.Created = utcNow;
+
+            if (entity.Contacts == null)
+            {
+                return;
+            }
+
+            foreach (var contact in entity.Contacts)
+            {
+                contact.Id ??= ObjectId.GenerateNewId().ToString();
+                contact.Created = utcNow;
+                contact.CustomerId = entity.Id;
+            }
         }
 
         #endregion

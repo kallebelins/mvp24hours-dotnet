@@ -11,15 +11,12 @@ namespace CustomerAPI.Infrastructure.Data
     {
         public static async Task SeedAsync(EFDBContext dbContext, TimeProvider timeProvider)
         {
-            // adicionar processamento de dados iniciais para carga
-
+            // Seed baseline customers when the database is empty.
             if (!dbContext.Customer.Any())
             {
                 dbContext.Customer.AddRange(GetCustomers(timeProvider));
                 await dbContext.SaveChangesAsync();
             }
-
-            await Task.CompletedTask;
         }
 
         private static List<Customer> GetCustomers(TimeProvider timeProvider)

@@ -4,12 +4,13 @@ using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Pipe.Operations.Customers
 {
     /// <summary>
-    /// 
+    /// Fetches customers from the configured Typicode-compatible endpoint.
     /// </summary>
     public class GetCustomerClientStep(IHttpClientFactory httpClientFactory, IOptions<TypicodeOptions> options) : OperationBaseAsync
     {
@@ -26,7 +27,10 @@ namespace CustomerAPI.Application.Pipe.Operations.Customers
             }
 
             var client = httpClientFactory.CreateClient(HttpClientName);
-            string response = await client.GetStringAsync(url);
+            var cancellationToken = input.HasContent("cancellationToken")
+                ? input.GetContent<CancellationToken>("cancellationToken")
+                : CancellationToken.None;
+            string response = await client.GetStringAsync(url, cancellationToken);
 
             // json definition for dynamic type
             var def = new[] {

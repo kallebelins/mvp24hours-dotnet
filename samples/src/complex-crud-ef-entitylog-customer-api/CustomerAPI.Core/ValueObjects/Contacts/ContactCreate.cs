@@ -3,7 +3,6 @@ using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Enums;
 using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Extensions;
-using System;
 
 namespace CustomerAPI.Core.ValueObjects.Contacts
 {
@@ -14,8 +13,8 @@ namespace CustomerAPI.Core.ValueObjects.Contacts
 
         public virtual void Mapping(Profile profile)
         {
+            // Audit Created/CreatedBy are set by AuditSaveChangesInterceptor + TimeProvider.
             profile.CreateMap<ContactCreate, Contact>()
-                .MapProperty(x => TimeProvider.System.GetUtcNow().UtcDateTime, x => x.Created)
                 .MapProperty(x => true, x => x.Active);
         }
     }

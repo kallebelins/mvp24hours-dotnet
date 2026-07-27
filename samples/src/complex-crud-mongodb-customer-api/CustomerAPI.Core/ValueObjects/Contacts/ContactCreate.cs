@@ -3,7 +3,6 @@ using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Enums;
 using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Extensions;
-using System;
 
 namespace CustomerAPI.Core.ValueObjects.Contacts
 {
@@ -14,9 +13,8 @@ namespace CustomerAPI.Core.ValueObjects.Contacts
 
         public virtual void Mapping(Profile profile)
         {
+            // Id and Created are assigned in CustomerService with ObjectId + TimeProvider.
             profile.CreateMap<ContactCreate, Contact>()
-                .MapProperty(x => Guid.NewGuid().ToString(), x => x.Id)
-                .MapProperty(x => TimeProvider.System.GetUtcNow().UtcDateTime, x => x.Created)
                 .MapProperty(x => true, x => x.Active);
         }
     }

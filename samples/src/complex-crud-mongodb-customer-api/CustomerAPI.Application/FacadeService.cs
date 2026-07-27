@@ -15,7 +15,7 @@ namespace CustomerAPI.Application
         /// </summary>
         public ICustomerService CustomerService
         {
-            get { return provider.GetService<ICustomerService>(); }
+            get { return provider.GetRequiredService<ICustomerService>(); }
         }
         #endregion
     }

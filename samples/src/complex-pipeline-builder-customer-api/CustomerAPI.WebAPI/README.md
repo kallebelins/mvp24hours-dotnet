@@ -1,37 +1,75 @@
-# CustomerAPI - Pipeline - Builder - Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
-Pipeline represents a tunnel with several levels or operations through which a packet/message travels.
-The pipeline pattern is used to perform service integration, since we have control over the entire integration process through filters/operations.
+# Customer API — Complex Pipeline Builder
 
-## Features:
-- Pipe and Filters pattern;
-- Pipe operations/filters from constructors (user cases);
-- Native OpenAPI;
-- Logging (NLog); 
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
+This .NET 10 sample shows the recommended Complex-tier pipeline style: each Customer use case is composed by a DI-registered builder that aggregates injectable operations.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+- Builder-registered asynchronous pipelines per Customer use case
+- Constructor-injected builders and steps (unit-testable without a service locator)
+- Named `HttpClient` with `IHttpClientFactory` and Microsoft.Extensions.Http.Resilience
+- Request cancellation propagated to the outbound HTTP call
+- Facade, DTOs/value objects, native OpenAPI, RFC ProblemDetails, health checks, and `ILogger<T>`
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+## Architecture
 
-## Pipe and Filters
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/pipeline?id=pipeline-pipe-and-filters-pattern
+- Tier: `Complex`
+- Shape: Core contracts, Application builders/operations, controller-based WebAPI
+- Why this shape fits: builders keep use-case composition explicit and reusable while the host stays thin
+
+## Layers
+
+- `CustomerAPI.Core` — contracts, builders interfaces, value objects, resources
+- `CustomerAPI.Application` — facade, services, builders, and pipeline operations
+- `CustomerAPI.WebAPI` — hosting, validated options, resilience, controllers, and middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Network access to the configured JSONPlaceholder-compatible endpoint
+
+## Configuration
+
+Configure secrets with environment variables, user secrets, or a secret store. Never commit credentials.
+
+| Key | Required | Description | Example |
+| --- | --- | --- | --- |
+| `Settings:TypicodeCustomerUrl` | Yes | Source endpoint for external Customer records | `https://jsonplaceholder.typicode.com/users` |
+
+## Run
+
+From `samples/src/complex-pipeline-builder-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer list: `/api/customer`
+- Customer details: `/api/customer/{id}`
+
+Builders compose the shared outbound step with a use-case-specific mapper. Pipeline failures retain Mvp24Hours business envelopes; unexpected host failures use ProblemDetails.
+
+## Related documentation
+
+- [Complex N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-complex-nlayers.md)
+- [Pipeline](../../../../docs/en-us/pipeline.md)
+- [HTTP resilience](../../../../docs/en-us/modernization/http-resilience.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+- [Dependency injection guidelines](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines)
+
+## What this sample intentionally does not cover
+
+- Persistence, Unit of Work, compensating operations, or messaging
+- Ports-and-adapters project split (see `complex-pipeline-ports-adapters-customer-api`)
+- Authentication, production observability, or a private upstream service

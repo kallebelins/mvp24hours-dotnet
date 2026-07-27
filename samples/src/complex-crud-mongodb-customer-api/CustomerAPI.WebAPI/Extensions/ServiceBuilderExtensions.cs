@@ -4,14 +4,13 @@ using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Validations.Customers;
 using CustomerAPI.Infrastructure.Data;
+using CustomerAPI.WebAPI.Configuration;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Extensions.Options;
 using Mvp24Hours.Extensions;
 using System;
-using Mvp24Hours.Core.Extensions.Options;
-using CustomerAPI.WebAPI.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -32,15 +31,20 @@ namespace CustomerAPI.WebAPI.Extensions
             {
                 options.DatabaseName = "complexcustomers";
                 options.ConnectionString = connectionStrings.MongoDbContext;
+                options.RetryReads = true;
+                options.RetryWrites = true;
             });
-            services.AddMvp24HoursRepositoryAsync((Mvp24Hours.Infrastructure.Data.MongoDb.Configuration.MongoDbRepositoryOptions _) => { });
+            services.AddMvp24HoursRepositoryAsync((Mvp24Hours.Infrastructure.Data.MongoDb.Configuration.MongoDbRepositoryOptions options) =>
+            {
+                options.MaxQtyByQueryPage = 100;
+            });
             return services;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static void AddMyServices(this IServiceCollection services)
+        public static IServiceCollection AddMyServices(this IServiceCollection services)
         {
             services.AddScoped<FacadeService>();
 
@@ -48,6 +52,7 @@ namespace CustomerAPI.WebAPI.Extensions
 
             services.AddSingleton<IValidator<Customer>, CustomerValidator>();
             services.AddSingleton<IValidator<Contact>, ContactValidator>();
+            return services;
         }
 
         /// <summary>
@@ -65,6 +70,7 @@ namespace CustomerAPI.WebAPI.Extensions
                     failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded);
             return services;
         }
+
         /// <summary>
         /// Binds and validates connection strings used by this host.
         /// </summary>
@@ -74,7 +80,5 @@ namespace CustomerAPI.WebAPI.Extensions
                 configuration.GetSection(ConnectionStringsOptions.SectionName));
             return services;
         }
-
-
     }
 }

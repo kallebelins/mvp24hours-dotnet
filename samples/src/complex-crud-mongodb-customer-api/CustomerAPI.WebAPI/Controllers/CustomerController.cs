@@ -1,5 +1,4 @@
 ﻿using CustomerAPI.Application;
-using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Customers;
 using Microsoft.AspNetCore.Http;
@@ -106,11 +105,11 @@ namespace CustomerAPI.WebAPI.Controllers
         /// Delete customer
         /// </summary>
         [HttpDelete]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [Route("{id}", Name = "CustomerDelete")]
-        public async Task<ActionResult<IBusinessResult<Customer>>> Delete(string id, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<int>>> Delete(string id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.Delete(id, cancellationToken: cancellationToken);
             if (result.HasErrors)

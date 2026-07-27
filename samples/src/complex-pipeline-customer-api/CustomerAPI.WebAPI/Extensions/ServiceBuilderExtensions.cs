@@ -5,10 +5,9 @@ using CustomerAPI.Application.Pipe.Operations.Customers;
 using CustomerAPI.Core.Contract.Logic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Extensions;
-using System;
 using Mvp24Hours.Core.Extensions.Options;
 using Mvp24Hours.Infrastructure.Http.Resilience;
+using System;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -20,17 +19,20 @@ namespace CustomerAPI.WebAPI.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static void AddMyServices(this IServiceCollection services)
+        public static IServiceCollection AddMyServices(this IServiceCollection services)
         {
             services.AddScoped<FacadeService>();
 
             services.AddScoped<ICustomerService, CustomerService>();
 
             services.AddScoped<GetCustomerClientStep>();
+            services.AddScoped<GetByCustomerMapperResponseStep>();
+            services.AddScoped<GetByIdCustomerMapperResponseStep>();
             services.AddHttpClientWithStandardResilience(GetCustomerClientStep.HttpClientName, client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
             });
+            return services;
         }
 
         /// <summary>
@@ -41,6 +43,7 @@ namespace CustomerAPI.WebAPI.Extensions
             services.AddHealthChecks();
             return services;
         }
+
         /// <summary>
         /// Binds and validates external integration settings used by this host.
         /// </summary>
@@ -50,6 +53,5 @@ namespace CustomerAPI.WebAPI.Extensions
                 configuration.GetSection(TypicodeOptions.SectionName));
             return services;
         }
-
     }
 }

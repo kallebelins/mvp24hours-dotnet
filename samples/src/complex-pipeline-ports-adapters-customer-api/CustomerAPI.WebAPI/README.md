@@ -1,37 +1,78 @@
-# CustomerAPI - Pipeline - Ports and Adapters - Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
-Pipeline represents a tunnel with several levels or operations through which a packet/message travels.
-The pipeline pattern is used to perform service integration, since we have control over the entire integration process through filters/operations.
+# Customer API — Complex Pipeline Ports and Adapters
 
-## Features:
-- Pipe and Filters pattern;
-- Pipe operations/filters from constructors (user cases);
-- Ports and Adapters pattern;
-- Native OpenAPI;
-- Logging (NLog); 
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
+This .NET 10 sample is the transitional Hexagonal teaching sample for pipeline-centric outbound adapters. Core defines builder ports; `CustomerAPI.Typicode.Application` implements them with a resilient HTTP client. A dedicated Hexagonal blueprint sample (`complex-hexagonal-customer-api`, Phase 5.4) will cover inbound + outbound ports beyond pipelines.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+- Pipeline builders as application ports implemented by a Typicode outbound adapter project
+- Named `HttpClient` via `IHttpClientFactory` with Microsoft.Extensions.Http.Resilience
+- Request cancellation propagated to the outbound HTTP call
+- Facade, DTOs/value objects, native OpenAPI, RFC ProblemDetails, health checks, and `ILogger<T>`
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+## Architecture
 
-## Pipe and Filters
-Access: https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/pipeline?id=pipeline-pipe-and-filters-pattern
+- Tier: `Complex`
+- Shape: Hexagonal-leaning ports and adapters focused on pipeline composition
+- Why this shape fits: Core stays free of HTTP SDK details while the Typicode project owns the outbound adapter
+
+## Layers
+
+- `CustomerAPI.Core` — contracts, builder ports, value objects, resources
+- `CustomerAPI.Application` — facade and application services that depend only on Core ports
+- `CustomerAPI.Typicode.Application` — outbound adapter (HTTP client step, mappers, builders)
+- `CustomerAPI.WebAPI` — hosting, validated options, resilience registration, controllers, and middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Network access to the configured JSONPlaceholder-compatible endpoint
+
+## Configuration
+
+Configure secrets with environment variables, user secrets, or a secret store. Never commit credentials.
+
+| Key | Required | Description | Example |
+| --- | --- | --- | --- |
+| `Settings:TypicodeCustomerUrl` | Yes | Source endpoint for external Customer records | `https://jsonplaceholder.typicode.com/users` |
+
+## Run
+
+From `samples/src/complex-pipeline-ports-adapters-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer list: `/api/customer`
+- Customer details: `/api/customer/{id}`
+
+## Related documentation
+
+- [Hexagonal blueprint](../../../../docs/en-us/guides/architecture/blueprints/template-hexagonal.md)
+- [Complex N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-complex-nlayers.md)
+- [Pipeline](../../../../docs/en-us/pipeline.md)
+- [HTTP resilience](../../../../docs/en-us/modernization/http-resilience.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+Sibling samples:
+
+- Builder-only composition: `complex-pipeline-builder-customer-api`
+- Planned first-class Hexagonal host: `complex-hexagonal-customer-api` (Phase 5.4)
+
+## What this sample intentionally does not cover
+
+- Full Hexagonal inbound adapters (messaging, multiple delivery mechanisms)
+- Persistence, Unit of Work, compensating operations, or messaging
+- Authentication, production observability, or a private upstream service

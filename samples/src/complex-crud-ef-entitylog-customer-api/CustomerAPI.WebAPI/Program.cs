@@ -2,6 +2,7 @@ using CustomerAPI.Infrastructure.Data;
 using CustomerAPI.WebAPI.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
@@ -59,6 +60,7 @@ try
     await using (var scope = app.Services.CreateAsyncScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
+        await db.Database.EnsureCreatedAsync();
         await EFDBContextSeed.SeedAsync(db);
     }
     app.UseNativeProblemDetailsHandling();

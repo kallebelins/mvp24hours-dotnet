@@ -21,7 +21,7 @@ namespace CustomerAPI.Core.Validations.Customers
                     .WithMessage("Incorrect email.");
             });
 
-            // validate telefone
+            // validate phone number
             When(x => x.Type == ContactType.CellPhone || x.Type == ContactType.HomePhone || x.Type == ContactType.CommercialPhone, () =>
             {
                 RuleFor(y => y.Description)

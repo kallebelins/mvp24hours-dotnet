@@ -5,25 +5,22 @@ using System;
 namespace CustomerAPI.Application
 {
     /// <summary>
-    /// Provides all services available for use in this project
+    /// Provides all services available for use in this project.
     /// </summary>
     public class FacadeService(IServiceProvider provider)
     {
         #region [ Services ]
+
         /// <summary>
-        /// <see cref="CustomerAPI.Core.Contract.Logic.ICustomerService"/>
+        /// <see cref="ICustomerService"/>
         /// </summary>
-        public ICustomerService CustomerService
-        {
-            get { return provider.GetService<ICustomerService>(); }
-        }
+        public ICustomerService CustomerService => provider.GetRequiredService<ICustomerService>();
+
         /// <summary>
-        /// <see cref="CustomerAPI.Core.Contract.Logic.IContactService"/>
+        /// <see cref="IContactService"/>
         /// </summary>
-        public IContactService ContactService
-        {
-            get { return provider.GetService<IContactService>(); }
-        }
+        public IContactService ContactService => provider.GetRequiredService<IContactService>();
+
         #endregion
     }
 }

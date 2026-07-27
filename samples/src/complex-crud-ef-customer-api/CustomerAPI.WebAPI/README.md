@@ -1,79 +1,91 @@
-# CustomerAPI - CRUD - EF - Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
+# Customer API — Complex EF Core CRUD
 
-## Features:
-- Relational database (SQL Server, PostgreSql, MySql) with EF; 
-- Native OpenAPI;
-- Mapping (AutoMapper); 
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Specification pattern;
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Navigation, Filter, Paging;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
-- Health Checks;
-- Migrations;
-- Initial data load (seed);
+This .NET 10 sample is the canonical Complex N-layers Customer API. It isolates HTTP traffic behind DTOs and value objects, validates with FluentValidation, filters with specifications, persists through EF Core repositories and Unit of Work, maps with AutoMapper, and exposes application services through a Facade.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- DTO and value-object request/response contracts (no entity leakage on the HTTP boundary)
+- FluentValidation, specifications, AutoMapper, Facade, repository, and Unit of Work
+- EF Core migrations and development seed data
+- Native OpenAPI, RFC ProblemDetails, health checks, and NLog through `ILogger<T>`
+- Startup-validated connection options and cancelable asynchronous operations
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+## Architecture
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Tier: `Complex`
+- Shape: flat four-project N-layers (`Core`, `Application`, `Infrastructure`, `WebAPI`) as a teaching simplification of the modular Complex layout in `structure-complex-nlayers.md`
+- Why this shape fits: Complex rules, validation, mapping, and application boundaries without premature multi-module ceremony
 
-## Database integrated with EF
+Prefer this sample for public or externally versioned APIs. The modular `Modules/` layout in the Complex structure guide is the scale-up path when multiple bounded contexts appear.
 
-These .NET 10 samples use SQL Server by default. Central Package Management (CPM) in `samples/Directory.Packages.props` controls the default `Microsoft.EntityFrameworkCore.SqlServer` and health-check package versions, so project files do not specify versions.
+## Layers
 
-For another provider, add its version centrally and reference the package from the project:
+- `CustomerAPI.Core` — entities, DTOs/value objects, validators, specifications, contracts, and messages
+- `CustomerAPI.Application` — application services and Facade
+- `CustomerAPI.Infrastructure` — EF Core context, Fluent API configurations, migrations, and seed
+- `CustomerAPI.WebAPI` — controllers, dependency injection, configuration, and HTTP middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string
+
+## Configuration
+
+Override credentials with environment variables, user secrets, or a secret store. Never commit real passwords.
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+
+## Run
+
+From `samples/src/complex-crud-ef-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+On startup the host applies pending EF migrations and seeds an empty database. For production, prefer running migrations out-of-band.
+
+### Database providers
+
+These samples use SQL Server by default. Central Package Management in `samples/Directory.Packages.props` controls package versions.
 
 - SQL Server: `Microsoft.EntityFrameworkCore.SqlServer` with `UseSqlServer`
 - PostgreSQL: `Npgsql.EntityFrameworkCore.PostgreSQL` with `UseNpgsql`
 - MySQL: `Pomelo.EntityFrameworkCore.MySql` with `UseMySql`
 
-Bind and validate connection settings at startup, then configure EF from the strongly typed options in `Program.cs` or a service extension:
+## Explore the API
 
-```csharp
-var connectionStrings = builder.Configuration
-    .GetSection(ConnectionStringsOptions.SectionName)
-    .Get<ConnectionStringsOptions>()
-    ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
+- Contact resources: `/api/customer/{customerId}/contact`
 
-builder.Services.AddDbContext<EFDBContext>(options =>
-    options.UseSqlServer(connectionStrings.EFDBContext));
-```
+Expected business failures retain Mvp24Hours business envelopes; unexpected host failures are rendered as ProblemDetails.
 
-For PostgreSQL, use `options.UseNpgsql(connectionStrings.EFDBContext)`. For MySQL, use `options.UseMySql(connectionStrings.EFDBContext, ServerVersion.AutoDetect(connectionStrings.EFDBContext))`. See the [relational database guide](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/relational).
+## Related documentation
 
-## Health checks
+- [Complex N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-complex-nlayers.md)
+- [Application services](../../../../docs/en-us/application-services.md)
+- [Validation](../../../../docs/en-us/validation.md)
+- [Specification](../../../../docs/en-us/specification.md)
+- [Mapping](../../../../docs/en-us/mapping.md)
+- [Unit of Work](../../../../docs/en-us/database/use-unitofwork.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
 
-The default SQL Server sample uses `AspNetCore.HealthChecks.SqlServer` and `AspNetCore.HealthChecks.UI.Client`, with versions controlled by CPM. Optional providers use `AspNetCore.HealthChecks.Npgsql` or `AspNetCore.HealthChecks.MySql`; add their versions centrally before referencing them.
+## What this sample intentionally does not cover
 
-```csharp
-builder.Services.AddHealthChecks()
-    .AddSqlServer(
-        connectionStrings.EFDBContext,
-        healthQuery: "SELECT 1;",
-        name: "SqlServer",
-        failureStatus: HealthStatus.Degraded);
-```
+- Multi-module modular monolith packaging (`Modules/Sales`, `Modules/Billing`)
+- Authentication, authorization, or production observability hardening
+- CQRS mediator dispatch or a separately deployed read store
+- Provider-neutral SQL beyond the documented EF provider switch

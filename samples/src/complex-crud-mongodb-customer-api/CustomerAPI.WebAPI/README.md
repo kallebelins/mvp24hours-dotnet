@@ -1,44 +1,83 @@
-# CustomerAPI - CRUD - MongoDb - Complex
-N-tier project used to develop APIs where the business needs to apply complex rules, higher level of security, less data traffic, validation of sensitive data and separation of responsibilities or consumption by other technologies and projects.
+# Customer API — Complex MongoDB CRUD
 
-## Features:
-- NoSQL database (MongoDb); 
-- Native OpenAPI;
-- Mapping (AutoMapper); 
-- Logging (NLog); 
-- Patterns for data validation (FluentValidation and Data Annotations);
-- Specification pattern;
-- Unit of Work (Transaction);
-- Repository (Paging, List, Create, Update, Delete) - Query apply: Filter, Paging - No navigation;
-- FluentAPI configuration EF;
-- Facade pattern;
-- Dependency injection (IoC);
-- Using ActionResult for API resources (Restful);
-- Middlewares for handling unmanaged failures;
-- DDD concepts;
+This .NET 10 sample demonstrates Complex-tier Customer CRUD with DTOs, FluentValidation, and specifications on MongoDB document storage.
 
-## HTTP contract and runtime defaults
-- In non-production environments, native OpenAPI JSON is available at `/openapi/v1.json`, with Swagger UI at `/swagger`.
-- Expected validation and not-found outcomes keep the existing Mvp24Hours business and notification envelopes; unexpected exceptions use RFC ProblemDetails.
-- This controller-based sample uses controller `ActionResult` responses and declared contracts.
-- Settings are strongly typed and validated on startup.
-- Logging uses `ILogger<T>` with the NLog provider.
+## Status
 
-## Layers:
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
 
-### Core
-Heart of the application. In this project we define the business: entities, valueobjects/dtos, validations, service contracts, enumerators, messages, specifications, builders or any other business definition.
+## Features
 
-### Infrastructure
-Layer used to deal with issues related to infrastructure: database, web requests, reading/writing files, or rather, any connection to machine or network resources.
+- Asynchronous MongoDB repositories with filtering, pagination, retry reads/writes, and page-size limits
+- DTO traffic boundary with AutoMapper, FluentValidation, and query specifications
+- Embedded Contact documents on the Customer document
+- Development seed with varied contacts and notes to exercise specification filters
+- Native OpenAPI, RFC ProblemDetails, MongoDB health checks, and `ILogger<T>`
+- Startup-validated connection options and request cancellation
 
-### Application
-Layer where we implement/develop the rules defined in the "Core". We use this project as a gateway to the business frontier, which means that we will be able to consume business rules in different technologies (desktop, web api, web services, web mvc, web forms, hosted services, etc.).
+## Architecture
 
-### WebAPI
-Layer that lies on the project boundary. We use this project to make the resources (data and actions) of our API available. Our client will connect via HTTP requests to get resources in JSON format ("application/json").
+- Tier: `Complex`
+- Shape: N-layers with Core, Infrastructure, Application, and WebAPI projects
+- Why this shape fits: public APIs keep DTO contracts while Mongo modeling stays focused on access patterns
 
-## NoSQL Database
+## Layers
 
-### MongoDb (Document Oriented)
-https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/database/nosql?id=mongodb
+- `CustomerAPI.Core` — entities, DTOs, validators, and specifications
+- `CustomerAPI.Infrastructure` — MongoDB context, BSON mappings, and seed data
+- `CustomerAPI.Application` — Facade and application services
+- `CustomerAPI.WebAPI` — controllers, validated options, health checks, and HTTP middleware
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- MongoDB reachable by the configured connection string
+
+## Configuration
+
+| Key | Required | Description | Development example |
+| --- | --- | --- | --- |
+| `ConnectionStrings:MongoDbContext` | Yes | MongoDB server used by the `complexcustomers` database | `mongodb://localhost:27017` |
+
+Use environment variables or a secret store when credentials are required.
+
+## Run
+
+From `samples/src/complex-crud-mongodb-customer-api`:
+
+```bash
+dotnet restore
+dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
+```
+
+## Explore the API
+
+- OpenAPI document: `http://localhost:5000/openapi/v1.json`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health endpoint: `http://localhost:5000/hc`
+- Customer resources: `/api/customer`
+
+## Document modeling and consistency
+
+- Contacts are **embedded** in the Customer document because they share the Customer lifecycle and are read with the owner.
+- A single Customer write is atomic at the document boundary. There is no relational foreign-key enforcement across collections.
+- Denormalized fields must be updated explicitly; MongoDB does not provide joins for this sample.
+- Identifiers use MongoDB `ObjectId` string values (`EntityBase<string>`), assigned with `TimeProvider` timestamps on create.
+- This sample does not use multi-document transactions. Cross-document consistency is intentionally out of scope.
+
+## Related documentation
+
+- [Complex N-layers structure](../../../../docs/en-us/guides/architecture/structures/structure-complex-nlayers.md)
+- [NoSQL databases](../../../../docs/en-us/database/nosql.md)
+- [Advanced MongoDB](../../../../docs/en-us/database/mongodb-advanced.md)
+- [Specification](../../../../docs/en-us/specification.md)
+- [Validation](../../../../docs/en-us/validation.md)
+- [ProblemDetails](../../../../docs/en-us/modernization/problem-details.md)
+
+## What this sample intentionally does not cover
+
+- Multi-document transactions, sharding, or replica-set operations
+- Separate Contact collection CRUD endpoints
+- Authentication, production observability, or deployment hardening

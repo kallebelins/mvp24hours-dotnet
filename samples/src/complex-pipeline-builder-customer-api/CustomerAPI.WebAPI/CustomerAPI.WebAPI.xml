@@ -6,91 +6,77 @@
     <members>
         <member name="T:CustomerAPI.WebAPI.Controllers.CustomerController">
             <summary>
-            
+            Customer resources composed through pipeline builders.
             </summary>
         </member>
         <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.#ctor(CustomerAPI.Application.FacadeService)">
             <summary>
-            
+            Customer resources composed through pipeline builders.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetBy(CustomerAPI.Core.ValueObjects.Customers.CustomerQuery)">
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetBy(CustomerAPI.Core.ValueObjects.Customers.CustomerQuery,System.Threading.CancellationToken)">
             <summary>
             Get list of customers
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetById(System.Int32)">
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetById(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Get customer with contact list
             </summary>
         </member>
-        <member name="T:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions">
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyOptions(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            
+            Binds and validates external integration settings used by this host.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+        <member name="T:Program">
             <summary>
-            
+            Auto-generated public partial Program class for top-level statement apps.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyTelemetry(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
             <summary>
-            
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyHealthChecks(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
             <summary>
-            
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
             </summary>
         </member>
-        <member name="T:CustomerAPI.WebAPI.Program">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
             <summary>
-            
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Program.Main(System.String[])">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
             <summary>
-            
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Program.CreateHostBuilder(System.String[])">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
             <summary>
-            
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
             </summary>
         </member>
-        <member name="T:CustomerAPI.WebAPI.Startup">
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
             <summary>
-            
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
             </summary>
-            <remarks>
-            
-            </remarks>
-            <param name="configuration"></param>
-        </member>
-        <member name="M:CustomerAPI.WebAPI.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
-            <summary>
-            
-            </summary>
-            <remarks>
-            
-            </remarks>
-            <param name="configuration"></param>
-        </member>
-        <member name="P:CustomerAPI.WebAPI.Startup.Configuration">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:CustomerAPI.WebAPI.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            This method gets called by the runtime. Use this method to add services to the container.
-            </summary>
-        </member>
-        <member name="M:CustomerAPI.WebAPI.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
-            <summary>
-            This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
         </member>
     </members>
 </doc>

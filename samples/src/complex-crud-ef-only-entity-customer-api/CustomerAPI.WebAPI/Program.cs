@@ -2,12 +2,12 @@ using CustomerAPI.Infrastructure.Data;
 using CustomerAPI.WebAPI.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
 using NLog.Web;
 using NLog;
-using System.Reflection;
 
 
 
@@ -33,11 +33,10 @@ try
 
     builder.Services.AddTimeProvider();
     builder.Services.AddMvp24HoursWebEssential();
-    builder.Services.AddMvp24HoursMapService(assemblyMap: Assembly.GetExecutingAssembly());
     builder.Services.AddMvp24HoursWebJson();
     builder.Services.AddMvp24HoursNativeOpenApi(options =>
     {
-        options.Title = "Customer EF API";
+        options.Title = "Customer EF Entity Traffic API";
         options.Version = "1.0.0";
         options.EnableSwaggerUI = true;
     });
@@ -47,7 +46,6 @@ try
     builder.Services.AddMyDbContext(builder.Configuration);
     builder.Services.AddMyHealthChecks(builder.Configuration);
     builder.Services.AddControllers();
-    builder.Services.AddMvc();
     builder.Services.AddNativeProblemDetailsAll(builder.Environment);
 
 
@@ -60,6 +58,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
         var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        await db.Database.MigrateAsync();
         await EFDBContextSeed.SeedAsync(db, timeProvider);
     }
     app.UseNativeProblemDetailsHandling();

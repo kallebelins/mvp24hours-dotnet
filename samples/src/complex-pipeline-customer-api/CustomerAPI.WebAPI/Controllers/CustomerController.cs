@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.WebAPI.Controllers
@@ -27,10 +28,11 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<CustomerResult>>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<CustomerResult>>>), StatusCodes.Status400BadRequest)]
         [Route("", Name = "CustomerGetBy")]
-        public async Task<ActionResult<IBusinessResult<IList<CustomerResult>>>> GetBy([FromQuery] CustomerQuery model)
+        public async Task<ActionResult<IBusinessResult<IList<CustomerResult>>>> GetBy(
+            [FromQuery] CustomerQuery model,
+            CancellationToken cancellationToken)
         {
-            var result = await facade.CustomerService.GetBy(model);
-            // checks for failure in the notification context
+            var result = await facade.CustomerService.GetBy(model, cancellationToken);
             if (result.HasErrors)
             {
                 return BadRequest(result);
@@ -50,10 +52,11 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status400BadRequest)]
         [Route("{id}", Name = "CustomerGetById")]
-        public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(int id)
+        public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(
+            int id,
+            CancellationToken cancellationToken)
         {
-            var result = await facade.CustomerService.GetById(id);
-            // checks for failure in the notification context
+            var result = await facade.CustomerService.GetById(id, cancellationToken);
             if (result.HasErrors)
             {
                 return BadRequest(result);

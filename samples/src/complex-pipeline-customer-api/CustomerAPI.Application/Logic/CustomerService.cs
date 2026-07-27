@@ -2,39 +2,48 @@
 using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Customers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Logic
 {
     /// <summary>
-    /// 
+    /// Composes cancelable pipeline operations for Customer queries.
     /// </summary>
-    public class CustomerService(IPipelineAsync _pipeline) : ICustomerService
+    public class CustomerService(IPipelineAsync pipeline, ILogger<CustomerService> logger) : ICustomerService
     {
+        private readonly IPipelineAsync pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+        private readonly ILogger<CustomerService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
         #region [ Actions ]
 
-        public async Task<IBusinessResult<IList<CustomerResult>>> GetBy(CustomerQuery filter)
+        public async Task<IBusinessResult<IList<CustomerResult>>> GetBy(CustomerQuery filter, CancellationToken cancellationToken = default)
         {
-            // add operations/steps
-            _pipeline.Add<GetCustomerClientStep>();
-            _pipeline.Add<GetByCustomerMapperResponseStep>();
+            pipeline.Add<GetCustomerClientStep>();
+            pipeline.Add<GetByCustomerMapperResponseStep>();
 
-            // run pipeline with package with content (int -> id)
-            await _pipeline.ExecuteAsync(filter.ToMessage());
+            var message = filter.ToMessage();
+            message.AddContent("cancellationToken", cancellationToken);
+            await pipeline.ExecuteAsync(message);
 
-            // try to get response content
-            IList<CustomerResult> result = _pipeline.GetMessage()
-                .GetContent<List<CustomerResult>>();
+            var pipelineMessage = pipeline.GetMessage();
+            if (pipelineMessage.IsFaulty)
+            {
+                logger.LogWarning("Customer list pipeline failed with {MessageCount} messages", pipelineMessage.Messages?.Count ?? 0);
+                return pipelineMessage.Messages.ToBusiness<IList<CustomerResult>>();
+            }
 
-            // checks if there are any records
+            IList<CustomerResult> result = pipelineMessage.GetContent<List<CustomerResult>>();
+
             if (!result.AnySafe())
             {
-                // reply with standard message for record not found
                 return Messages.RECORD_NOT_FOUND
                     .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
                         .ToBusiness<IList<CustomerResult>>();
@@ -43,23 +52,26 @@ namespace CustomerAPI.Application.Logic
             return result.ToBusiness();
         }
 
-        public async Task<IBusinessResult<CustomerIdResult>> GetById(int id)
+        public async Task<IBusinessResult<CustomerIdResult>> GetById(int id, CancellationToken cancellationToken = default)
         {
-            // add operations/steps
-            _pipeline.Add<GetCustomerClientStep>();
-            _pipeline.Add<GetByIdCustomerMapperResponseStep>();
+            pipeline.Add<GetCustomerClientStep>();
+            pipeline.Add<GetByIdCustomerMapperResponseStep>();
 
-            // run pipeline with package with content (int -> id)
-            await _pipeline.ExecuteAsync(id.ToMessage("id"));
+            var message = id.ToMessage("id");
+            message.AddContent("cancellationToken", cancellationToken);
+            await pipeline.ExecuteAsync(message);
 
-            // try to get response content
-            var result = _pipeline.GetMessage()
-                .GetContent<CustomerIdResult>();
+            var pipelineMessage = pipeline.GetMessage();
+            if (pipelineMessage.IsFaulty)
+            {
+                logger.LogWarning("Customer get-by-id pipeline failed for {CustomerId}", id);
+                return pipelineMessage.Messages.ToBusiness<CustomerIdResult>();
+            }
 
-            // checks if there are any records
+            var result = pipelineMessage.GetContent<CustomerIdResult>();
+
             if (result == null)
             {
-                // reply with standard message for record not found
                 return Messages.RECORD_NOT_FOUND_FOR_ID
                     .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND_FOR_ID), MessageType.Error)
                         .ToBusiness<CustomerIdResult>();

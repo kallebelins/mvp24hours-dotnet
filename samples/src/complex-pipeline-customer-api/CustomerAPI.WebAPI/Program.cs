@@ -6,7 +6,6 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
 using NLog.Web;
 using NLog;
-using System.Reflection;
 
 
 
@@ -32,7 +31,6 @@ try
 
     builder.Services.AddTimeProvider();
     builder.Services.AddMvp24HoursWebEssential();
-    builder.Services.AddMvp24HoursMapService(assemblyMap: Assembly.GetExecutingAssembly());
     builder.Services.AddMvp24HoursWebJson();
     builder.Services.AddMvp24HoursNativeOpenApi(options =>
     {
@@ -41,7 +39,10 @@ try
         options.EnableSwaggerUI = true;
     });
     builder.Services.AddMvp24HoursWebGzip();
-    builder.Services.AddMvp24HoursPipelineAsync();
+    builder.Services.AddMvp24HoursPipelineAsync(options =>
+    {
+        options.IsBreakOnFail = true;
+    });
     builder.Services.AddMyOptions(builder.Configuration);
     builder.Services.AddMyServices();
     builder.Services.AddMyHealthChecks();

@@ -5,6 +5,7 @@ using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Contacts;
 using Dapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -17,33 +18,40 @@ using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Logic
 {
-    public class ContactService(IUnitOfWorkAsync unitOfWork, IValidator<Contact> validator, IMapper mapper) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
+    public class ContactService(
+        IUnitOfWorkAsync unitOfWork,
+        IValidator<Contact> validator,
+        IMapper mapper,
+        TimeProvider timeProvider,
+        ILogger<ContactService> logger) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
     {
         #region [ Fields ]
         private readonly IMapper mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        private readonly TimeProvider timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        private readonly ILogger<ContactService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
         #endregion
 
         #region [ Queries ]
 
         public async Task<IBusinessResult<IList<ContactIdResult>>> GetBy(int customerId, CancellationToken cancellationToken = default)
         {
-            // load all customer contacts by id
+            var command = new CommandDefinition(
+                "select * from Contact where CustomerId = @customerId;",
+                new { customerId },
+                cancellationToken: cancellationToken);
+
             var result = await UnitOfWork
                 .GetConnection()
-                .QueryAsync<Contact>("select * from Contact where CustomerId = @customerId;", new { customerId });
+                .QueryAsync<Contact>(command);
 
-            // checks if there are any records in the database from the filter
             if (!result.AnySafe())
             {
-                // reply with standard message for record not found
                 return Messages.RECORD_NOT_FOUND
                     .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
-                    .ToBusinessPaging<IList<ContactIdResult>>();
+                    .ToBusiness<IList<ContactIdResult>>();
             }
 
-            // map result
-            return mapper.Map<IList<ContactIdResult>>(result)
-                .ToBusiness();
+            return mapper.Map<IList<ContactIdResult>>(result).ToBusiness();
         }
 
         #endregion
@@ -54,24 +62,24 @@ namespace CustomerAPI.Application.Logic
         {
             var entity = mapper.Map<Contact>(dto);
             entity.CustomerId = customerId;
+            entity.Created = timeProvider.GetUtcNow().UtcDateTime;
+            entity.Active = true;
 
-            // apply data validation to the model/entity with FluentValidation or DataAnnotation
             var errors = entity.TryValidate(Validator);
             if (errors.AnySafe())
             {
                 return errors.ToBusiness<int>();
             }
 
-            // perform create action on the database
             await Repository.AddAsync(entity, cancellationToken: cancellationToken);
             if (await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken) > 0)
             {
+                logger.LogInformation("Created contact {ContactId} for customer {CustomerId}", entity.Id, customerId);
                 return entity.Id.ToBusiness(
                     Messages.OPERATION_SUCCESS
                         .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
             }
 
-            // unknown error
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<int>();
@@ -79,7 +87,6 @@ namespace CustomerAPI.Application.Logic
 
         public async Task<IBusinessResult<int>> Update(int customerId, int id, ContactUpdate dto, CancellationToken cancellationToken = default)
         {
-            // gets entity through the identifier informed in the resource
             var entity = await Repository.GetByAsync(x => x.Id == id && x.CustomerId == customerId, cancellationToken: cancellationToken).FirstOrDefaultAsync();
             if (entity == null)
             {
@@ -88,27 +95,24 @@ namespace CustomerAPI.Application.Logic
                         .ToBusiness<int>();
             }
 
-            // entity populating with DTO properties
             mapper.Map(dto, entity);
 
-            // apply data validation to the model/entity with FluentValidation or DataAnnotation
             var errors = entity.TryValidate(Validator);
             if (errors.AnySafe())
             {
                 return errors.ToBusiness<int>();
             }
 
-            // apply changes to database
             await Repository.ModifyAsync(entity, cancellationToken: cancellationToken);
             int affectedRows = await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
             if (affectedRows > 0)
             {
+                logger.LogInformation("Updated contact {ContactId} for customer {CustomerId}", id, customerId);
                 return affectedRows.ToBusiness(
                     Messages.OPERATION_SUCCESS
                         .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
             }
 
-            // unknown error
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<int>();
@@ -116,7 +120,6 @@ namespace CustomerAPI.Application.Logic
 
         public async Task<IBusinessResult<int>> Delete(int customerId, int id, CancellationToken cancellationToken = default)
         {
-            // try to retrieve entity by identifier
             var entity = await Repository.GetByAsync(x => x.Id == id && x.CustomerId == customerId, cancellationToken: cancellationToken).FirstOrDefaultAsync();
             if (entity == null)
             {
@@ -125,17 +128,16 @@ namespace CustomerAPI.Application.Logic
                         .ToBusiness<int>();
             }
 
-            // performs delete action on the database
             await Repository.RemoveAsync(entity, cancellationToken: cancellationToken);
             int affectedRows = await UnitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
             if (affectedRows > 0)
             {
+                logger.LogInformation("Deleted contact {ContactId} for customer {CustomerId}", id, customerId);
                 return affectedRows.ToBusiness(
                     Messages.OPERATION_SUCCESS
                         .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
             }
 
-            // unknown error
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<int>();

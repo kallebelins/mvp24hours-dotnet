@@ -7,14 +7,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.EFCore\Mvp24Hours.Infrastructure.Data.EFCore.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 		<PackageReference Include="Dapper" />
 		<PackageReference Include="Dapper.SqlBuilder" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 

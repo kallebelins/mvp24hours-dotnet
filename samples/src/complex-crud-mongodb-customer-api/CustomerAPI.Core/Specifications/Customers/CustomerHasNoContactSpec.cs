@@ -11,6 +11,7 @@ namespace CustomerAPI.Core.Specifications.Customers
     /// </summary>
     public class CustomerHasNoContactSpec : ISpecificationQuery<Customer>
     {
-        public Expression<Func<Customer, bool>> IsSatisfiedByExpression => x => !x.Contacts.Any(y => x.Active);
+        public Expression<Func<Customer, bool>> IsSatisfiedByExpression =>
+            x => x.Contacts == null || !x.Contacts.Any();
     }
 }

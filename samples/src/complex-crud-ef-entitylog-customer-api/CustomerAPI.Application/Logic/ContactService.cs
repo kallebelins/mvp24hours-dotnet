@@ -4,6 +4,7 @@ using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Contacts;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
@@ -17,10 +18,15 @@ using System.Threading.Tasks;
 
 namespace CustomerAPI.Application.Logic
 {
-    public class ContactService(IUnitOfWorkAsync unitOfWork, IValidator<Contact> validator, IMapper mapper) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
+    public class ContactService(
+        IUnitOfWorkAsync unitOfWork,
+        IValidator<Contact> validator,
+        IMapper mapper,
+        ILogger<ContactService> logger) : RepositoryPagingServiceAsync<Contact, IUnitOfWorkAsync>(unitOfWork, validator), IContactService
     {
         #region [ Fields ]
         private readonly IMapper mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        private readonly ILogger<ContactService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
         #endregion
 
         #region [ Queries ]
@@ -72,6 +78,7 @@ namespace CustomerAPI.Application.Logic
             }
 
             // unknown error
+            logger.LogWarning("Contact create failed for customer {CustomerId}", customerId);
             return Messages.OPERATION_FAIL
                 .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
                 .ToBusiness<int>();

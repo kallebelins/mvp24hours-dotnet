@@ -4,14 +4,15 @@ using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Validations.Customers;
 using CustomerAPI.Infrastructure.Data;
+using CustomerAPI.WebAPI.Configuration;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Extensions;
-using System;
 using Mvp24Hours.Core.Extensions.Options;
-using CustomerAPI.WebAPI.Configuration;
+using Mvp24Hours.Extensions;
+using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
+using System;
 
 namespace CustomerAPI.WebAPI.Extensions
 {
@@ -28,8 +29,11 @@ namespace CustomerAPI.WebAPI.Extensions
             var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
                 .Get<ConnectionStringsOptions>()
                 ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
-            services.AddDbContext<EFDBContext>(options =>
-                options.UseSqlServer(connectionStrings.EFDBContext)
+            services.AddScoped<AuditSaveChangesInterceptor>();
+            services.AddDbContext<EFDBContext>((serviceProvider, options) =>
+                options
+                    .UseSqlServer(connectionStrings.EFDBContext)
+                    .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>())
             );
             services.AddMvp24HoursDbContext<EFDBContext>();
             services.AddMvp24HoursRepositoryAsync(options: options =>
@@ -43,7 +47,7 @@ namespace CustomerAPI.WebAPI.Extensions
         /// <summary>
         /// 
         /// </summary>
-        public static void AddMyServices(this IServiceCollection services)
+        public static IServiceCollection AddMyServices(this IServiceCollection services)
         {
             services.AddScoped<FacadeService>();
 
@@ -52,6 +56,7 @@ namespace CustomerAPI.WebAPI.Extensions
 
             services.AddSingleton<IValidator<Customer>, CustomerValidator>();
             services.AddSingleton<IValidator<Contact>, ContactValidator>();
+            return services;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 ﻿using CustomerAPI.Application;
-using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Contacts;
 using Microsoft.AspNetCore.Http;
@@ -24,13 +23,13 @@ namespace CustomerAPI.WebAPI.Controllers
         #region [ Actions / Resources ]
 
         /// <summary>
-        /// Get paginated list of customers
+        /// Get contacts for a customer
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<Contact>>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<Contact>>>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<ContactIdResult>>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<IList<ContactIdResult>>>), StatusCodes.Status404NotFound)]
         [Route("{customerId:int}/Contact", Name = "ContactGetBy")]
-        public async Task<ActionResult<IBusinessResult<IList<Contact>>>> GetBy(int customerId, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<IList<ContactIdResult>>>> GetBy(int customerId, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.GetBy(customerId, cancellationToken: cancellationToken);
             if (result.HasData())
@@ -47,7 +46,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [Route("{customerId:int}/Contact", Name = "ContactCreate")]
-        public async Task<ActionResult<IBusinessResult<IList<int>>>> Create(int customerId, [FromBody] ContactCreate model, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<int>>> Create(int customerId, [FromBody] ContactCreate model, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.Create(customerId, model, cancellationToken: cancellationToken);
             if (result.HasErrors)
@@ -61,12 +60,12 @@ namespace CustomerAPI.WebAPI.Controllers
         /// Update customer contact
         /// </summary>
         [HttpPut]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
         [Route("{customerId:int}/Contact/{id}", Name = "ContactUpdate")]
-        public async Task<ActionResult<IBusinessResult<IList<int>>>> Update(int customerId, int id, [FromBody] ContactUpdate model, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<int>>> Update(int customerId, int id, [FromBody] ContactUpdate model, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.Update(customerId, id, model, cancellationToken: cancellationToken);
             if (result.HasErrors)
@@ -92,7 +91,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [Route("{customerId:int}/Contact/{id}", Name = "ContactDelete")]
-        public async Task<ActionResult<IBusinessResult<IList<int>>>> Delete(int customerId, int id, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<int>>> Delete(int customerId, int id, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.Delete(customerId, id, cancellationToken: cancellationToken);
             if (result.HasErrors)

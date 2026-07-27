@@ -2,7 +2,6 @@ using AutoMapper;
 using CustomerAPI.Core.Entities;
 using Mvp24Hours.Core.Contract.Mappings;
 using Mvp24Hours.Extensions;
-using System;
 
 namespace CustomerAPI.Core.ValueObjects.Customers
 {
@@ -13,8 +12,8 @@ namespace CustomerAPI.Core.ValueObjects.Customers
 
         public virtual void Mapping(Profile profile)
         {
+            // Audit Created/CreatedBy are set by AuditSaveChangesInterceptor + TimeProvider.
             profile.CreateMap<CustomerCreate, Customer>()
-                .MapProperty(x => TimeProvider.System.GetUtcNow().UtcDateTime, x => x.Created)
                 .MapProperty(x => true, x => x.Active);
         }
     }

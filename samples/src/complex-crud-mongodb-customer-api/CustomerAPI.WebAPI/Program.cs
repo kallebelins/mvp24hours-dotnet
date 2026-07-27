@@ -1,7 +1,9 @@
+using CustomerAPI.Infrastructure.Data;
 using CustomerAPI.WebAPI.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
 using NLog.Web;
@@ -55,6 +57,12 @@ try
 
 
 
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        await MongoDBContextSeed.SeedAsync(unitOfWork, timeProvider);
+    }
     app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
     app.UseRouting();

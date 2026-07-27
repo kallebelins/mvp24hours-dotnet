@@ -12,16 +12,11 @@
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 		<PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
 		<PackageReference Include="NLog" />
 		<PackageReference Include="NLog.Web.AspNetCore" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,6 +24,5 @@
 		<ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
 		<ProjectReference Include="..\CustomerAPI.Infrastructure\CustomerAPI.Infrastructure.csproj" />
 	</ItemGroup>
-
 
 </Project>

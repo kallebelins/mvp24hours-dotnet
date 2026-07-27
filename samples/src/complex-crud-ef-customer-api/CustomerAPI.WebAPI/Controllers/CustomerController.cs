@@ -1,11 +1,9 @@
 ﻿using CustomerAPI.Application;
-using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Customers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.DTOs;
 using Mvp24Hours.Core.DTOs.Models;
 using Mvp24Hours.Extensions;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ using System.Threading.Tasks;
 namespace CustomerAPI.WebAPI.Controllers
 {
     /// <summary>
-    /// 
+    /// Customer HTTP resources with DTO contracts.
     /// </summary>
     [Produces("application/json")]
     [Route("api/[controller]")]
@@ -60,7 +58,7 @@ namespace CustomerAPI.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Create customer - allows you to send contacts
+        /// Create customer
         /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status201Created)]
@@ -80,8 +78,8 @@ namespace CustomerAPI.WebAPI.Controllers
         /// Update customer data
         /// </summary>
         [HttpPut]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<VoidResult>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<VoidResult>>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
         [Route("{id}", Name = "CustomerUpdate")]
         public async Task<ActionResult<IBusinessResult<int>>> Update(int id, [FromBody] CustomerUpdate model, CancellationToken cancellationToken)
@@ -106,11 +104,11 @@ namespace CustomerAPI.WebAPI.Controllers
         /// Delete customer
         /// </summary>
         [HttpDelete]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [Route("{id}", Name = "CustomerDelete")]
-        public async Task<ActionResult<IBusinessResult<Customer>>> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ActionResult<IBusinessResult<int>>> Delete(int id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.Delete(id, cancellationToken: cancellationToken);
             if (result.HasErrors)

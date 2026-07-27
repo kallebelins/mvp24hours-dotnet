@@ -5,6 +5,7 @@ using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.Specifications.Customers;
 using CustomerAPI.Core.ValueObjects.Customers;
+using Microsoft.Extensions.Logging;
 using Mvp24Hours.Application.Logic;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
@@ -18,116 +19,112 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CustomerAPI.Application.Logic
+namespace CustomerAPI.Application.Logic;
+
+/// <summary>
+/// Customer queries use the repository/UoW path. Integration seeding uses a correlated pipeline with explicit persistence boundaries.
+/// </summary>
+public class CustomerService(
+    IUnitOfWorkAsync unitOfWork,
+    IPipelineAsync pipeline,
+    IMapper mapper,
+    ILogger<CustomerService> logger) : RepositoryPagingServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork), ICustomerService
 {
-    public class CustomerService(IUnitOfWorkAsync unitOfWork, IPipelineAsync pipeline, IMapper mapper) : RepositoryPagingServiceAsync<Customer, IUnitOfWorkAsync>(unitOfWork), ICustomerService
+    public async Task<IPagingResult<IList<CustomerResult>>> GetBy(CustomerQuery filter, IPagingCriteria criteria, CancellationToken cancellationToken = default)
     {
-        #region [ Queries ]
+        Expression<Func<Customer, bool>> clause =
+            x => (string.IsNullOrEmpty(filter.Name) || x.Name.Contains(filter.Name))
+                && (filter.Active == null || filter.Active.Value);
 
-        public async Task<IPagingResult<IList<CustomerResult>>> GetBy(CustomerQuery filter, IPagingCriteria criteria, CancellationToken cancellationToken = default)
+        if (filter.HasCellContact)
         {
-            // apply filter default
-            Expression<Func<Customer, bool>> clause =
-                x => (string.IsNullOrEmpty(filter.Name) || x.Name.Contains(filter.Name))
-                    && (filter.Active == null || filter.Active.Value);
-
-            // has cell
-            if (filter.HasCellContact)
-            {
-                clause = clause.And<Customer, CustomerHasCellContactSpec>();
-            }
-
-            // has email
-            if (filter.HasEmailContact)
-            {
-                clause = clause.And<Customer, CustomerHasEmailContactSpec>();
-            }
-
-            // has no
-            if (filter.HasNoContact)
-            {
-                clause = clause.And<Customer, CustomerHasNoContactSpec>();
-            }
-
-            // is prospect
-            if (filter.IsProspect)
-            {
-                clause = clause.And<Customer, CustomerIsPropectSpec>();
-            }
-
-            // apply filter with pagination
-            var result = await GetByWithPaginationAsync(clause, criteria, cancellationToken: cancellationToken);
-
-            // checks if there are any records in the database from the filter
-            if (!result.HasData())
-            {
-                // reply with standard message for record not found
-                return Messages.RECORD_NOT_FOUND
-                    .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
-                    .ToBusinessPaging<IList<CustomerResult>>();
-            }
-
-            // apply mapping
-            return mapper.MapPagingTo<IList<Customer>, IList<CustomerResult>>(result);
+            clause = clause.And<Customer, CustomerHasCellContactSpec>();
         }
 
-        public async Task<IBusinessResult<CustomerIdResult>> GetById(int id, CancellationToken cancellationToken = default)
+        if (filter.HasEmailContact)
         {
-            // create criteria to load navigation (contact)
-            var paging = new PagingCriteriaExpression<Customer>(3, 0);
-            paging.NavigationExpr.Add(x => x.Contacts);
-
-            // try to retrieve identifier with navigation property
-            return await mapper
-                .MapBusinessToAsync<Customer, CustomerIdResult>(GetByIdAsync(id, paging, cancellationToken));
+            clause = clause.And<Customer, CustomerHasEmailContactSpec>();
         }
 
-        #endregion
-
-        #region [ Pipelines ]
-
-        public async Task<IBusinessResult<int>> RunDataSeed(CancellationToken cancellationToken = default)
+        if (filter.HasNoContact)
         {
-            // add operations/steps
-            pipeline
-                .Add<ValidateCustomerRepositoryStep>()
-                .Add<GetCustomerClientStep>()
-                .Add<GetByCustomerMapperResponseStep>()
-                .Add<CreateCustomerRepositoryStep>();
-
-            // run pipeline
-            await pipeline.ExecuteAsync();
-
-            // get message
-            var message = pipeline.GetMessage();
-
-            // checks if there is a failure record in context
-            if (message.IsFaulty)
-            {
-                return message.Messages
-                    .ToBusiness<int>(
-                        defaultMessage: Messages.OPERATION_FAIL
-                            .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error)
-                );
-            }
-
-            // try to get response content
-            var numberOfRecords = message.GetContent<int>("numberOfRecords");
-
-            // checks if there are any records
-            if (numberOfRecords == 0)
-            {
-                // reply with standard message for record not found
-                return Messages.RECORD_NOT_FOUND
-                    .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
-                        .ToBusiness<int>();
-            }
-
-            return numberOfRecords.ToBusiness(
-                Messages.OPERATION_SUCCESS
-                    .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
+            clause = clause.And<Customer, CustomerHasNoContactSpec>();
         }
 
-        #endregion
+        if (filter.IsProspect)
+        {
+            clause = clause.And<Customer, CustomerIsPropectSpec>();
+        }
+
+        var result = await GetByWithPaginationAsync(clause, criteria, cancellationToken: cancellationToken);
+
+        if (!result.HasData())
+        {
+            return Messages.RECORD_NOT_FOUND
+                .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
+                .ToBusinessPaging<IList<CustomerResult>>();
+        }
+
+        return mapper.MapPagingTo<IList<Customer>, IList<CustomerResult>>(result);
+    }
+
+    public async Task<IBusinessResult<CustomerIdResult>> GetById(int id, CancellationToken cancellationToken = default)
+    {
+        var paging = new PagingCriteriaExpression<Customer>(3, 0);
+        paging.NavigationExpr.Add(x => x.Contacts);
+
+        return await mapper
+            .MapBusinessToAsync<Customer, CustomerIdResult>(GetByIdAsync(id, paging, cancellationToken));
+    }
+
+    /// <summary>
+    /// Integration pipeline: validate store (read) → fetch remote → map (ACL) → persist (single UoW SaveChanges).
+    /// Correlation id travels on the pipeline message for step logging.
+    /// </summary>
+    public async Task<IBusinessResult<int>> RunDataSeed(CancellationToken cancellationToken = default)
+    {
+        var correlationId = Guid.NewGuid().ToString("N");
+
+        pipeline
+            .Add<ValidateCustomerRepositoryStep>()
+            .Add<GetCustomerClientStep>()
+            .Add<GetByCustomerMapperResponseStep>()
+            .Add<CreateCustomerRepositoryStep>();
+
+        var message = new Mvp24Hours.Infrastructure.Pipe.PipelineMessage();
+        message.AddContent("correlationId", correlationId);
+        message.AddContent("cancellationToken", cancellationToken);
+
+        logger.LogInformation("Starting integration seed pipeline. CorrelationId={CorrelationId}", correlationId);
+        await pipeline.ExecuteAsync(message);
+
+        var pipelineMessage = pipeline.GetMessage();
+
+        if (pipelineMessage.IsFaulty)
+        {
+            logger.LogWarning("Integration seed pipeline failed. CorrelationId={CorrelationId}", correlationId);
+            return pipelineMessage.Messages
+                .ToBusiness<int>(
+                    defaultMessage: Messages.OPERATION_FAIL
+                        .ToMessageResult(nameof(Messages.OPERATION_FAIL), MessageType.Error));
+        }
+
+        var numberOfRecords = pipelineMessage.GetContent<int>("numberOfRecords");
+
+        if (numberOfRecords == 0)
+        {
+            return Messages.RECORD_NOT_FOUND
+                .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND), MessageType.Error)
+                .ToBusiness<int>();
+        }
+
+        logger.LogInformation(
+            "Integration seed completed. CorrelationId={CorrelationId}, Records={RecordCount}",
+            correlationId,
+            numberOfRecords);
+
+        return numberOfRecords.ToBusiness(
+            Messages.OPERATION_SUCCESS
+                .ToMessageResult(nameof(Messages.OPERATION_SUCCESS), MessageType.Success));
     }
 }
