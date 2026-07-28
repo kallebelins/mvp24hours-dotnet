@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerAPI.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerAPI.WebAPI.Controllers.OnboardingController">
+            <summary>
+            Orchestrates the customer onboarding saga.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.#ctor(Mvp24Hours.Infrastructure.Cqrs.Saga.ISagaOrchestrator,CustomerAPI.Domain.Repositories.ICustomerRepository)">
+            <summary>
+            Orchestrates the customer onboarding saga.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.StartOnboarding(CustomerAPI.WebAPI.Controllers.OnboardCustomerRequest,System.Threading.CancellationToken)">
+            <summary>
+            Starts the customer onboarding saga.
+            </summary>
+            <remarks>
+            Set <c>simulateGiftFailure = true</c> to trigger a failure at Step 2
+            and observe the saga compensating Step 1 (customer deletion).
+            </remarks>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.GetCustomers(System.Threading.CancellationToken)">
+            <summary>
+            Returns all customers currently stored in the in-memory repository.
+            Useful to verify compensation (customer should be absent after a compensated run).
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.GetStatus(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Returns the current status of a saga by ID.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>CronJobWorker</AssemblyName>
+    <RootNamespace>CronJobWorker</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+    <!-- Worker deployed as container; no HTTPS cert required. -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Mvp24Hours CronJob infrastructure — project reference (default) or NuGet package. -->
+    <PackageReference Include="Mvp24Hours.Infrastructure.CronJob"
+                      Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.CronJob\Mvp24Hours.Infrastructure.CronJob.csproj"
+                      Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+
+    <!-- Health checks UI client for ASP.NET Core /health endpoint response writers. -->
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+  </ItemGroup>
+
+</Project>

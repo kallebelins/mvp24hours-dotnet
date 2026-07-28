@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerAPI.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerAPI.WebAPI.Controllers.AdminController">
+            <summary>
+            Internal Keycloak Admin API flows: create user, reset password, assign realm role.
+            Requires the <c>realm-admin</c> role — restrict to internal networks in production.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.#ctor(Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic.IKeycloakUserService,Microsoft.Extensions.Logging.ILogger{CustomerAPI.WebAPI.Controllers.AdminController})">
+            <summary>
+            Internal Keycloak Admin API flows: create user, reset password, assign realm role.
+            Requires the <c>realm-admin</c> role — restrict to internal networks in production.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.CreateUser(CustomerAPI.Core.DTOs.Admin.CreateKeycloakUserDto,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new user in the Keycloak realm.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.GetUser(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a Keycloak user by identifier.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.ResetPassword(CustomerAPI.Core.DTOs.Admin.ResetPasswordDto,System.Threading.CancellationToken)">
+            <summary>
+            Resets a user's password in the Keycloak realm.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.AssignRole(CustomerAPI.Core.DTOs.Admin.AssignRoleDto,System.Threading.CancellationToken)">
+            <summary>
+            Assigns a realm role to an existing Keycloak user.
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Controllers.CustomerController">
+            <summary>
+            Customer read operations. All endpoints require a valid Keycloak JWT.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.#ctor(CustomerAPI.WebAPI.Data.InMemoryCustomerStore)">
+            <summary>
+            Customer read operations. All endpoints require a valid Keycloak JWT.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetAll">
+            <summary>
+            Returns all active customers.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetById(System.Guid)">
+            <summary>
+            Returns a single customer by identifier.
+            </summary>
+            <param name="id">Customer GUID.</param>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Data.InMemoryCustomerStore">
+            <summary>
+            Thread-safe in-memory store for customer data.
+            Replaces a real database to keep this sample focused on Keycloak identity.
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions">
+            <summary>
+            Registers sample-specific services, Keycloak identity, and health checks.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyKeycloak(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers Keycloak authentication, authorization, and Admin API services.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers in-memory store and other application-level services.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyHealthChecks(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers health checks including the Keycloak OIDC discovery probe.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>

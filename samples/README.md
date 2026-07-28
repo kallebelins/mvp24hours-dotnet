@@ -41,7 +41,7 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 - **Migrated** — [CRUD with Redis](src/simple-crud-redis-customer-api/CustomerAPI.WebAPI/): key-value persistence and cache-aside guidance.
 - **Migrated** — [RabbitMQ](src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/): asynchronous customer operations with retry and delivery-semantics guidance.
 - **Migrated** — [Pipeline](src/simple-pipeline-customer-api/CustomerAPI.WebAPI/): layered, resilient, cancelable pipeline operations.
-- **Planned** — `simple-webstatus`: health monitoring catalog; the old external-only link remains removed until the sample is recreated.
+- **Migrated** — [WebStatus / Health Checks](src/simple-webstatus/WebStatus/): multi-dependency health catalog with HealthChecks UI.
 
 ## Complex
 
@@ -66,13 +66,13 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 
 ## Capability samples
 
-- **Planned** — `simple-webstatus`: health checks and monitoring.
-- **Planned** — `complex-keycloak-customer-api`: Keycloak identity and admin operations.
-- **Planned** — `simple-cronjob-worker`: scheduled hosted jobs.
-- **Planned** — `simple-observability-customer-api`: OpenTelemetry logs, traces, and metrics.
-- **Planned** — `simple-hybridcache-rate-limit-api`: HybridCache and rate limiting.
-- **Planned** — `complex-saga-rabbitmq-customer-api`: saga coordination and compensation.
-- **Planned** — `complex-event-sourcing-customer-api`: event sourcing reference, conditional on stable library APIs.
+- **Migrated** — [WebStatus / Health Checks](src/simple-webstatus/WebStatus/): SQL Server, PostgreSQL, MySQL, Redis, MongoDB, and RabbitMQ health catalog.
+- **Migrated** — [Keycloak identity](src/complex-keycloak-customer-api/CustomerAPI.WebAPI/): JWT bearer validation and Admin API flows (no Duende/IdentityModel).
+- **Migrated** — [CronJob worker](src/simple-cronjob-worker/CronJobWorker/): scheduled jobs with resilience and health hooks.
+- **Migrated** — [Observability](src/simple-observability-customer-api/CustomerAPI.WebAPI/): OpenTelemetry logs, traces, and metrics with OTLP exporters.
+- **Migrated** — [HybridCache + Rate Limiting](src/simple-hybridcache-rate-limit-api/ProductAPI.WebAPI/): stampede-safe caching and abusive-client protection.
+- **Migrated** — [Saga + compensation](src/complex-saga-rabbitmq-customer-api/): orchestrated multi-step process with compensating actions.
+- **Migrated (preview)** — [Event Sourcing](src/complex-event-sourcing-customer-api/): aggregate, in-memory event store, projection, and snapshots (no durable store yet).
 
 ## Community
 

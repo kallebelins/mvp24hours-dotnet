@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerAPI.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerAPI.WebAPI.Controllers.CustomersController">
+            <summary>
+            Manages customers via an event-sourced aggregate.
+            All writes append events; reads are served from the in-memory projection.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.#ctor(CustomerAPI.Application.Services.CustomerEventStoreService)">
+            <summary>
+            Manages customers via an event-sourced aggregate.
+            All writes append events; reads are served from the in-memory projection.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.Create(CustomerAPI.WebAPI.Controllers.CreateCustomerRequest,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new customer and appends a CustomerCreated event.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.Rename(System.Guid,CustomerAPI.WebAPI.Controllers.RenameCustomerRequest,System.Threading.CancellationToken)">
+            <summary>
+            Renames a customer and appends a CustomerRenamed event.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.Deactivate(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Deactivates a customer and appends a CustomerDeactivated event.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.GetById(System.Guid)">
+            <summary>
+            Returns a customer from the in-memory projection (fast read, no event replay).
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.GetAll">
+            <summary>
+            Returns all customers from the projection.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.Rehydrate(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Rehydrates the aggregate from the event store and returns its current state.
+            Demonstrates full event replay without using the projection.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>

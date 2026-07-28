@@ -6,12 +6,17 @@
   <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" />
 
   <ItemGroup>
-    <!-- Health checks — MongoDb 9.x required for MongoDB.Driver 3.x (aligned with src/). Other HC packages remain on 8.x until Phase 6.1. -->
+    <!-- Health checks — MongoDb 9.x required for MongoDB.Driver 3.x (aligned with src/). -->
     <PackageVersion Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.0" />
+
+    <!-- ADO.NET providers for multi-database health catalog (Phase 6.1). -->
+    <PackageVersion Include="MySqlConnector" Version="2.4.0" />
 
     <!-- Logging demos (samples only; library prefers ILogger + OpenTelemetry). -->
     <PackageVersion Include="NLog" Version="5.2.8" />
@@ -21,6 +26,14 @@
     <!-- Dapper hybrid samples. -->
     <PackageVersion Include="Dapper" Version="2.1.28" />
     <PackageVersion Include="Dapper.SqlBuilder" Version="2.0.78" />
+
+    <!-- OpenTelemetry SDK packages for observability sample (align with OpenTelemetry 1.16.0 in src/). -->
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.16.0" />
 
     <!-- Sample tooling not centralized under src/. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9" />
@@ -36,10 +49,13 @@
   <ItemGroup Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'">
     <PackageVersion Include="Mvp24Hours.Application" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Core" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Caching" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Caching.Redis" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.CronJob" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Cqrs" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Data.MongoDb" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Identity.Keycloak" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="$(Mvp24HoursPackageVersion)" />
     <PackageVersion Include="Mvp24Hours.WebAPI" Version="$(Mvp24HoursPackageVersion)" />

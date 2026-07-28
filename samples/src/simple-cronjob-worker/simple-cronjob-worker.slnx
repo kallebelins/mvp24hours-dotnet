@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../../../src/Mvp24Hours.Core/Mvp24Hours.Core.csproj" />
+  <Project Path="../../../src/Mvp24Hours.Infrastructure.CronJob/Mvp24Hours.Infrastructure.CronJob.csproj" />
+  <Project Path="../../../src/Mvp24Hours.Infrastructure/Mvp24Hours.Infrastructure.csproj" />
+  <Project Path="CronJobWorker/CronJobWorker.csproj" />
+</Solution>
