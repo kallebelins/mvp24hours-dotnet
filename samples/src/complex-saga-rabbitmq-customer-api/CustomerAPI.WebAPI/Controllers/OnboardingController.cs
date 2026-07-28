@@ -1,7 +1,10 @@
 using CustomerAPI.Application.Sagas;
 using CustomerAPI.Domain.Repositories;
 using CustomerAPI.Domain.Sagas;
+using CustomerAPI.WebAPI.Validations;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Saga;
 
 namespace CustomerAPI.WebAPI.Controllers;
@@ -11,7 +14,10 @@ namespace CustomerAPI.WebAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/onboarding")]
-public class OnboardingController(ISagaOrchestrator orchestrator, ICustomerRepository customerRepository) : ControllerBase
+public class OnboardingController(
+    ISagaOrchestrator orchestrator,
+    ICustomerRepository customerRepository,
+    IValidator<OnboardCustomerRequest> onboardValidator) : ControllerBase
 {
     /// <summary>
     /// Starts the customer onboarding saga.
@@ -28,6 +34,10 @@ public class OnboardingController(ISagaOrchestrator orchestrator, ICustomerRepos
         [FromBody] OnboardCustomerRequest request,
         CancellationToken cancellationToken)
     {
+        var validationErrors = request.TryValidate(onboardValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         var data = new OnboardCustomerData
         {
             Name = request.Name,

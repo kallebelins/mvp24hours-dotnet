@@ -21,6 +21,7 @@ This .NET 10 sample is the canonical Complex N-layers Customer API. It isolates 
 - Tier: `Complex`
 - Shape: flat four-project N-layers (`Core`, `Application`, `Infrastructure`, `WebAPI`) as a teaching simplification of the modular Complex layout in `structure-complex-nlayers.md`
 - Why this shape fits: Complex rules, validation, mapping, and application boundaries without premature multi-module ceremony
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 Prefer this sample for public or externally versioned APIs. The modular `Modules/` layout in the Complex structure guide is the scale-up path when multiple bounded contexts appear.
 
@@ -38,7 +39,7 @@ Prefer this sample for public or externally versioned APIs. The modular `Modules
 
 ## Configuration
 
-Override credentials with environment variables, user secrets, or a secret store. Never commit real passwords.
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
@@ -49,11 +50,20 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/complex-crud-ef-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
 On startup the host applies pending EF migrations and seeds an empty database. For production, prefer running migrations out-of-band.
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
 
 ### Database providers
 

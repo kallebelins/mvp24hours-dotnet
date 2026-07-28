@@ -22,6 +22,7 @@ This .NET 10 sample demonstrates Complex-tier Customer CRUD with DTOs, FluentVal
 - Tier: `Complex`
 - Shape: N-layers with Core, Infrastructure, Application, and WebAPI projects
 - Why this shape fits: public APIs keep DTO contracts while Mongo modeling stays focused on access patterns
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 ## Layers
 
@@ -37,6 +38,8 @@ This .NET 10 sample demonstrates Complex-tier Customer CRUD with DTOs, FluentVal
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:MongoDbContext` | Yes | MongoDB server used by the `complexcustomers` database | `mongodb://localhost:27017` |
@@ -48,9 +51,19 @@ Use environment variables or a secret store when credentials are required.
 From `samples/src/complex-crud-mongodb-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+MongoDB listens on localhost port **27017**.
+
 
 ## Explore the API
 

@@ -23,6 +23,7 @@ A **Domain-Driven Design** blueprint showing how to build a rich-domain Customer
 - Tier: `Blueprint`
 - Shape: DDD Aggregate + CQRS (command/query separation) + N-layers
 - Why this shape fits: Teaches how a single bounded context is modeled with rich aggregates; all writes go through the aggregate root ensuring invariant consistency, while reads use efficient direct queries
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 ## Layers
 
@@ -98,6 +99,7 @@ Edit `CustomerAPI.WebAPI/appsettings.Development.json`:
 From the solution directory:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
@@ -107,12 +109,13 @@ The application will:
 2. Seed three sample customers (using aggregate factory methods)
 3. Serve the API at `https://localhost:5001`
 
-### Docker — SQL Server
+### Docker Compose
 
 ```bash
-docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=CHANGE_ME" \
-  -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2022-latest
+docker compose up -d
 ```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
 
 ## Explore the API
 

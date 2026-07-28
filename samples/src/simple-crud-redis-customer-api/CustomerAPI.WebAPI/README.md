@@ -33,6 +33,8 @@ This .NET 10 sample demonstrates Mvp24Hours Redis cache repositories as a small 
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:RedisDbContext` | Yes | Redis endpoint used by the cache repository | `127.0.0.1:6379` |
@@ -41,18 +43,22 @@ Use environment variables or a secret store when the endpoint includes credentia
 
 ## Run
 
-Start a local Redis instance if needed:
+From `samples/src/simple-crud-redis-customer-api`:
 
 ```bash
-docker run --rm --name mvp-redis -p 6379:6379 redis:latest
-```
-
-Then, from `samples/src/simple-crud-redis-customer-api`:
-
-```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+Redis listens on localhost port **6379**.
+
 
 ## Explore the API
 

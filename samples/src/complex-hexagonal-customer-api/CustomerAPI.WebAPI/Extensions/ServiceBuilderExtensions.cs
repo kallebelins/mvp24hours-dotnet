@@ -1,11 +1,16 @@
+using CustomerAPI.Application.DTOs.Contacts;
+using CustomerAPI.Application.DTOs.Customers;
 using CustomerAPI.Application.Ports;
 using CustomerAPI.Application.UseCases;
+using CustomerAPI.Application.Validations.Contacts;
+using CustomerAPI.Application.Validations.Customers;
 using CustomerAPI.Core.Ports;
 using CustomerAPI.Infrastructure.Adapters.Http;
 using CustomerAPI.Infrastructure.Adapters.Persistence;
 using CustomerAPI.Infrastructure.Configuration;
 using CustomerAPI.Infrastructure.Data;
 using CustomerAPI.WebAPI.Configuration;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +59,11 @@ public static class ServiceBuilderExtensions
         // Inbound port implementations (application use cases)
         services.AddScoped<ICustomerUseCase, CustomerUseCase>();
         services.AddScoped<IExternalProfileUseCase, ExternalProfileUseCase>();
+
+        services.AddSingleton<IValidator<CustomerCreate>, CustomerCreateValidator>();
+        services.AddSingleton<IValidator<CustomerUpdate>, CustomerUpdateValidator>();
+        services.AddSingleton<IValidator<ContactCreate>, ContactCreateValidator>();
+        services.AddSingleton<IValidator<ContactUpdate>, ContactUpdateValidator>();
 
         return services;
     }

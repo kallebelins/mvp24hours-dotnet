@@ -20,6 +20,9 @@ This .NET 10 sample is the transitional Hexagonal teaching sample for pipeline-c
 - Tier: `Complex`
 - Shape: Hexagonal-leaning ports and adapters focused on pipeline composition
 - Why this shape fits: Core stays free of HTTP SDK details while the Typicode project owns the outbound adapter
+- Dependency rule: **WebAPI → Application → Core**; outbound adapter projects depend on Core ports only. Application must not reference WebAPI
+
+FluentValidation and specifications are intentionally omitted: the sample focuses on pipeline composition over an external HTTP API with no local write model.
 
 ## Layers
 

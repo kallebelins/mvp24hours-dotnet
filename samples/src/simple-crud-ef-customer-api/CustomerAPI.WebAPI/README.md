@@ -36,7 +36,7 @@ Entities are API contracts in this teaching sample. For public or externally ver
 
 ## Configuration
 
-Override credentials with environment variables, user secrets, or a secret store.
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
@@ -47,11 +47,20 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/simple-crud-ef-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
 
-The host creates and seeds an empty development database. To use PostgreSQL or MySQL, add the provider through Central Package Management and replace `UseSqlServer` with `UseNpgsql` or `UseMySql`.
+The host creates and seeds an empty development database.
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`. To use PostgreSQL or MySQL, add the provider through Central Package Management and replace `UseSqlServer` with `UseNpgsql` or `UseMySql`.
 
 ## Explore the API
 

@@ -1,6 +1,9 @@
 using CustomerAPI.Application.Projections;
 using CustomerAPI.Application.Services;
 using CustomerAPI.Domain.Aggregates;
+using CustomerAPI.WebAPI.Controllers;
+using CustomerAPI.WebAPI.Validations;
+using FluentValidation;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 
 namespace CustomerAPI.WebAPI.Extensions;
@@ -29,6 +32,10 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMyServices(this IServiceCollection services)
     {
         services.AddScoped<CustomerEventStoreService>();
+
+        services.AddSingleton<IValidator<CreateCustomerRequest>, CreateCustomerRequestValidator>();
+        services.AddSingleton<IValidator<RenameCustomerRequest>, RenameCustomerRequestValidator>();
+
         return services;
     }
 }

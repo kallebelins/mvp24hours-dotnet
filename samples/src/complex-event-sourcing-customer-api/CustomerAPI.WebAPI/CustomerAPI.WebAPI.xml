@@ -10,7 +10,7 @@
             All writes append events; reads are served from the in-memory projection.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.#ctor(CustomerAPI.Application.Services.CustomerEventStoreService)">
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomersController.#ctor(CustomerAPI.Application.Services.CustomerEventStoreService,FluentValidation.IValidator{CustomerAPI.WebAPI.Controllers.CreateCustomerRequest},FluentValidation.IValidator{CustomerAPI.WebAPI.Controllers.RenameCustomerRequest})">
             <summary>
             Manages customers via an event-sourced aggregate.
             All writes append events; reads are served from the in-memory projection.

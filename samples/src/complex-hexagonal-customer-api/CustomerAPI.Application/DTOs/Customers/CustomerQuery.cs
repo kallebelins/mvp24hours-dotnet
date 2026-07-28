@@ -4,5 +4,6 @@ namespace CustomerAPI.Application.DTOs.Customers
     {
         public string? Name { get; set; }
         public bool? Active { get; set; }
+        public bool HasEmailContact { get; set; }
     }
 }

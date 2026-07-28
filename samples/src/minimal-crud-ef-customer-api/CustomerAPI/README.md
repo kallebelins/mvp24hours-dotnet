@@ -37,6 +37,8 @@ This focused .NET 10 sample implements paged Customer CRUD with Minimal APIs, EF
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 Keep credentials outside committed files by using environment variables, user secrets, or a secret store.
 
 | Key | Required | Description | Safe example |
@@ -50,9 +52,19 @@ The default provider is SQL Server. To use PostgreSQL or MySQL, add the provider
 From `samples/src/minimal-crud-ef-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI/CustomerAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 In Development, the application creates the database when needed and adds sample records.
 

@@ -3,7 +3,7 @@ using CustomerAPI.Core.Contract.Logic;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Customers;
-using CustomerAPI.Infrastructure.Extensions;
+using CustomerAPI.Application.Extensions;
 using Dapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;

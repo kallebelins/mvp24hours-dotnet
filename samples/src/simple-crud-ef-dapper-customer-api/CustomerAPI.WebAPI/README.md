@@ -36,6 +36,8 @@ Entities cross the HTTP boundary to keep the sample small. Prefer a Complex DTO-
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:EFDBContext` | Yes | Shared EF Core and Dapper SQL Server database | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
@@ -47,9 +49,19 @@ Supply credentials through environment variables, user secrets, or a secret stor
 From `samples/src/simple-crud-ef-dapper-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 Dapper receives the connection owned by the scoped EF Core Unit of Work. The query helpers do not create or retain independent connections, and Dapper opens and closes a previously closed connection around each command.
 

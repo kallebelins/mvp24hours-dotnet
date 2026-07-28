@@ -21,6 +21,9 @@ This .NET 10 sample demonstrates an integration-style pipeline that fetches remo
 - Tier: `Complex`
 - Shape: Core + Application pipeline + Infrastructure EF + WebAPI
 - Why this shape fits: remote fetch and local persistence share one correlated pipeline while write commits stay behind a single UoW boundary
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
+
+FluentValidation is intentionally omitted: public endpoints are read-only or trigger integration seeding via the pipeline; there is no local write model accepting customer DTOs on the HTTP boundary.
 
 ## Layers
 
@@ -48,6 +51,8 @@ This .NET 10 sample demonstrates an integration-style pipeline that fetches remo
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 Configure secrets with environment variables, user secrets, or a secret store. Never commit credentials.
 
 | Key | Required | Description | Example |
@@ -60,9 +65,19 @@ Configure secrets with environment variables, user secrets, or a secret store. N
 From `samples/src/complex-pipeline-ef-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 ### Database providers
 

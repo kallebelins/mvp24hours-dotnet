@@ -27,9 +27,9 @@ resets passwords, and assigns realm roles — all without Duende or IdentityMode
 ## Architecture
 
 - Tier: `Complex`
-- Shape: N-layers (Core + WebAPI)
-- Why this shape fits: The focus is Keycloak integration. A full four-layer stack would
-  obscure the identity plumbing with unrelated CRUD code.
+- Shape: intentionally thin host (**WebAPI + Core** only — no Application layer) to keep focus on Keycloak identity integration
+- **WebAPI → Core**; Mvp24Hours Keycloak packages composed at WebAPI
+- A full four-layer stack would obscure the identity plumbing with unrelated CRUD code
 
 ## Layers
 
@@ -46,14 +46,22 @@ resets passwords, and assigns realm roles — all without Duende or IdentityMode
 
 ## Running Keycloak
 
-Start a local Keycloak instance with Docker:
+Start a local Keycloak instance with Docker Compose (from `samples/src/complex-keycloak-customer-api`):
+
+```bash
+docker compose up -d
+```
+
+Keycloak listens on **8080**. Set `KEYCLOAK_ADMIN_PASSWORD` in `docker-compose.yml` and use the same value when signing in to the admin console.
+
+Alternatively, run a standalone container:
 
 ```bash
 docker run -d \
   --name keycloak \
   -p 8080:8080 \
   -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=CHANGE_ME \
   quay.io/keycloak/keycloak:latest \
   start-dev
 ```
@@ -64,23 +72,7 @@ Then open `http://localhost:8080` and:
 2. Create client `customer-api` (OpenID Connect, Standard Flow, Bearer-only). Copy Client ID to `Keycloak:ClientId` and `Keycloak:Audience`.
 3. Create client `customer-admin` (OpenID Connect, Service Accounts Enabled). Assign `realm-admin` role to its service account. Copy Client ID and secret to `Keycloak:Admin:ClientId` and `Keycloak:Admin:ClientSecret`.
 
-Or use a **Docker Compose** file:
-
-```yaml
-services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    command: start-dev
-    ports:
-      - "8080:8080"
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-```
-
-```bash
-docker compose up -d
-```
+The sample root includes `docker-compose.yml` with a Keycloak service. Use `docker compose up -d` instead of the standalone `docker run` command above when you prefer Compose.
 
 ## Configuration
 

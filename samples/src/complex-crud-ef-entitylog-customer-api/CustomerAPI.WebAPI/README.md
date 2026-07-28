@@ -21,6 +21,7 @@ This .NET 10 sample demonstrates Mvp24Hours entity audit fields and soft delete 
 - Tier: `Complex`
 - Shape: N-layers with Core, Infrastructure, Application, and WebAPI projects
 - Why this shape fits: public APIs keep DTO contracts while persistence demonstrates audit and soft-delete rules
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 ## Layers
 
@@ -36,6 +37,8 @@ This .NET 10 sample demonstrates Mvp24Hours entity audit fields and soft delete 
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:EFDBContext` | Yes | SQL Server database containing audit columns | `Server=localhost,1433;Database=MyTestLogDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
@@ -47,9 +50,19 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/complex-crud-ef-entitylog-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 Startup calls `EnsureCreatedAsync` then seeds sample rows when the database is empty. `EFDBContext.CanApplyEntityLog` enables entity-log rules and the soft-delete filter. `AuditSaveChangesInterceptor` receives the `IClock` bridge registered by `AddTimeProvider`, so created and modified timestamps use the native time abstraction. Regular repository queries do not return soft-deleted rows.
 

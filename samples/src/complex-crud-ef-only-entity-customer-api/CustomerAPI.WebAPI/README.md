@@ -22,6 +22,7 @@ This .NET 10 Complex sample keeps entities as HTTP request and response contract
 - Tier: `Complex`
 - Shape: flat four-project N-layers (`Core`, `Application`, `Infrastructure`, `WebAPI`)
 - Why this shape fits: it demonstrates Complex layering without DTO/mapping ceremony so readers can compare coupling costs
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 ### Trade-offs vs DTO Complex sample
 
@@ -48,6 +49,8 @@ Prefer the DTO Complex sample for public or externally versioned APIs. See the [
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 Override credentials with environment variables, user secrets, or a secret store. Never commit real passwords.
 
 | Key | Required | Description | Development example |
@@ -59,9 +62,19 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/complex-crud-ef-only-entity-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 On startup the host applies pending EF migrations and seeds an empty database.
 

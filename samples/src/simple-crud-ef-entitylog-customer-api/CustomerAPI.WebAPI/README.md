@@ -37,6 +37,8 @@ Entity leakage is deliberate for teaching. Public or externally versioned APIs s
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:CustomerDbContext` | Yes | SQL Server database containing audit columns | `Server=localhost,1433;Database=MyTestLogDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
@@ -48,9 +50,19 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/simple-crud-ef-entitylog-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 `EFDBContext.CanApplyEntityLog` enables the legacy entity-log rules and the `Removed == null` global filter. `AuditSaveChangesInterceptor` receives the `IClock` bridge registered by `AddTimeProvider`, so created and modified timestamps use the native time abstraction. Regular repository queries do not return soft-deleted rows.
 

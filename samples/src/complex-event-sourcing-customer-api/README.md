@@ -8,6 +8,15 @@ Target: **net10.0** | Language: English | Status: **migrated (preview capability
 
 ---
 
+## Architecture
+
+- **WebAPI → Application → Domain**
+- No separate Infrastructure project — in-memory event store and projection are registered at WebAPI
+- **Application must not reference Infrastructure or WebAPI**
+- **Domain** references `Mvp24Hours.Infrastructure.Cqrs` for `AggregateRoot` (library location for event-sourcing primitives; not an EF provider)
+
+---
+
 ## What This Sample Demonstrates
 
 - **Event Sourcing fundamentals**: every state change is persisted as an immutable domain event

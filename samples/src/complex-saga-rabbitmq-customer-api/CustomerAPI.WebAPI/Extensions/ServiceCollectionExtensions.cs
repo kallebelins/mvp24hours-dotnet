@@ -1,6 +1,9 @@
 using CustomerAPI.Application.Repositories;
 using CustomerAPI.Application.Sagas;
 using CustomerAPI.Domain.Repositories;
+using CustomerAPI.WebAPI.Controllers;
+using CustomerAPI.WebAPI.Validations;
+using FluentValidation;
 using Mvp24Hours.Infrastructure.Cqrs.Saga;
 
 namespace CustomerAPI.WebAPI.Extensions;
@@ -11,6 +14,9 @@ public static class ServiceCollectionExtensions
     {
         // In-memory customer store (replace with EF Core / another provider for production)
         services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
+
+        services.AddSingleton<IValidator<OnboardCustomerRequest>, OnboardCustomerRequestValidator>();
+
         return services;
     }
 

@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CustomerAPI.Infrastructure.Extensions
+namespace CustomerAPI.Application.Extensions
 {
     /// <summary>
     /// Cancelable Dapper paging helpers for SQL Server reads.

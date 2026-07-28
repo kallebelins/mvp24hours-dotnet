@@ -1,11 +1,14 @@
 using AutoMapper;
 using CustomerAPI.Application.DTOs.Customers;
 using CustomerAPI.Domain.Entities;
+using CustomerAPI.Domain.Specifications.Customers;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
+using System;
+using System.Linq.Expressions;
 
 namespace CustomerAPI.Application.Customers.Queries.GetCustomers;
 
@@ -18,10 +21,19 @@ public sealed class GetCustomersQueryHandler(
     {
         var repository = unitOfWork.GetRepository<Customer>();
 
-        var customers = await repository.GetByAsync(
-            x => (request.Name == null || x.Name.Contains(request.Name))
-                 && (request.Active == null || x.Active == request.Active.Value),
-            cancellationToken: cancellationToken);
+        Expression<Func<Customer, bool>> clause =
+            x => request.Name == null || x.Name.Contains(request.Name);
+
+        if (request.Active == true)
+        {
+            clause = clause.And<Customer, CustomerIsActiveSpec>();
+        }
+        else if (request.Active == false)
+        {
+            clause = clause.And(x => !x.Active);
+        }
+
+        var customers = await repository.GetByAsync(clause, cancellationToken: cancellationToken);
 
         if (customers == null || !customers.Any())
         {

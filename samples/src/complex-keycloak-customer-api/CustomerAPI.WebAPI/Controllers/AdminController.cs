@@ -1,4 +1,5 @@
 using CustomerAPI.Core.DTOs.Admin;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Extensions;
@@ -17,6 +18,9 @@ namespace CustomerAPI.WebAPI.Controllers;
 [Authorize(Roles = "realm-admin")]
 public sealed class AdminController(
     IKeycloakUserService userService,
+    IValidator<CreateKeycloakUserDto> createUserValidator,
+    IValidator<ResetPasswordDto> resetPasswordValidator,
+    IValidator<AssignRoleDto> assignRoleValidator,
     ILogger<AdminController> logger) : ControllerBase
 {
     /// <summary>
@@ -31,6 +35,10 @@ public sealed class AdminController(
         [FromBody] CreateKeycloakUserDto dto,
         CancellationToken cancellationToken)
     {
+        var validationErrors = dto.TryValidate(createUserValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         var request = new CreateUserRequest
         {
             Username = dto.Username,
@@ -99,6 +107,10 @@ public sealed class AdminController(
         [FromBody] ResetPasswordDto dto,
         CancellationToken cancellationToken)
     {
+        var validationErrors = dto.TryValidate(resetPasswordValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         var request = new ResetPasswordRequest
         {
             UserId = dto.UserId,
@@ -134,6 +146,10 @@ public sealed class AdminController(
         [FromBody] AssignRoleDto dto,
         CancellationToken cancellationToken)
     {
+        var validationErrors = dto.TryValidate(assignRoleValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         var request = new AssignRolesRequest
         {
             UserId = dto.UserId,

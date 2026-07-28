@@ -56,6 +56,8 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<IValidator<CreateCustomerCommand>, CreateCustomerCommandValidator>();
         services.AddSingleton<IValidator<UpdateCustomerCommand>, UpdateCustomerCommandValidator>();
         services.AddSingleton<IValidator<AddContactCommand>, AddContactCommandValidator>();
+        services.AddSingleton<IValidator<DeactivateCustomerCommand>, DeactivateCustomerCommandValidator>();
+        services.AddSingleton<IValidator<RemoveContactCommand>, RemoveContactCommandValidator>();
     }
 
     /// <summary>

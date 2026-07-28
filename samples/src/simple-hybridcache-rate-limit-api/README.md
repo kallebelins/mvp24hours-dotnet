@@ -34,7 +34,7 @@ Demonstrates `.NET`'s native **HybridCache** for read-heavy endpoints (stampede-
 
 ## Configuration
 
-No secrets are required for the default (in-memory) configuration.
+No secrets are required for the default (in-memory) configuration. When using Redis L2, configure the connection string via environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
 
 | Key | Required | Description | Example |
 | --- | --- | --- | --- |
@@ -55,11 +55,13 @@ dotnet run --project ProductAPI.WebAPI/ProductAPI.WebAPI.csproj
 
 ### With Redis L2 (optional)
 
+From `samples/src/simple-hybridcache-rate-limit-api`:
+
 ```bash
-docker run --rm -d --name redis -p 6379:6379 redis:alpine
+docker compose up -d
 ```
 
-Then set the connection string:
+Redis listens on localhost port **6379**. Then set the connection string:
 
 ```bash
 # PowerShell

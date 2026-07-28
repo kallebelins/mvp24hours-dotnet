@@ -10,7 +10,7 @@
             Requires the <c>realm-admin</c> role — restrict to internal networks in production.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.#ctor(Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic.IKeycloakUserService,Microsoft.Extensions.Logging.ILogger{CustomerAPI.WebAPI.Controllers.AdminController})">
+        <member name="M:CustomerAPI.WebAPI.Controllers.AdminController.#ctor(Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic.IKeycloakUserService,FluentValidation.IValidator{CustomerAPI.Core.DTOs.Admin.CreateKeycloakUserDto},FluentValidation.IValidator{CustomerAPI.Core.DTOs.Admin.ResetPasswordDto},FluentValidation.IValidator{CustomerAPI.Core.DTOs.Admin.AssignRoleDto},Microsoft.Extensions.Logging.ILogger{CustomerAPI.WebAPI.Controllers.AdminController})">
             <summary>
             Internal Keycloak Admin API flows: create user, reset password, assign realm role.
             Requires the <c>realm-admin</c> role — restrict to internal networks in production.

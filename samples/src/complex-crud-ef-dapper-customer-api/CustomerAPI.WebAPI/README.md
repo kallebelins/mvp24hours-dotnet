@@ -21,14 +21,17 @@ This .NET 10 Complex sample uses EF Core for transactional writes and Dapper for
 - Tier: `Complex`
 - Shape: flat four-project N-layers (`Core`, `Application`, `Infrastructure`, `WebAPI`)
 - Why this shape fits: Dapper optimizes read SQL while EF Core keeps change tracking and transaction boundaries behind Complex application services
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 Reads use hand-written SQL (not `ISpecification` composition). Writes stay on EF + UoW. This is a CQRS-lite teaching split, not a separately deployed read store.
 
+`CustomerAPI.Core/Specifications/Customers/` documents the same filter rules that Dapper SQL applies in `CustomerService.GetBy` (for example `HasCellContact`, `HasEmailContact`). EF expression composition via `ISpecificationQuery` is not used on Dapper read paths.
+
 ## Layers
 
-- `CustomerAPI.Core` — entities, DTOs/value objects, validators, contracts, and messages
-- `CustomerAPI.Application` — application services and Facade (Dapper reads, EF writes)
-- `CustomerAPI.Infrastructure` — EF Core persistence, migrations, seed, and Dapper paging extensions
+- `CustomerAPI.Core` — entities, DTOs/value objects, validators, specifications, contracts, and messages
+- `CustomerAPI.Application` — application services, Facade, and Dapper paging extensions (`Extensions/DapperExtensions.cs`)
+- `CustomerAPI.Infrastructure` — EF Core persistence, migrations, and seed
 - `CustomerAPI.WebAPI` — controllers, configuration, and HTTP composition
 
 ## Prerequisites
@@ -37,6 +40,8 @@ Reads use hand-written SQL (not `ISpecification` composition). Writes stay on EF
 - SQL Server reachable by the configured connection string
 
 ## Configuration
+
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
@@ -49,9 +54,19 @@ Supply credentials through environment variables, user secrets, or a secret stor
 From `samples/src/complex-crud-ef-dapper-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 On startup the host applies pending EF migrations and seeds an empty database. Dapper receives the connection owned by the scoped EF Core Unit of Work.
 

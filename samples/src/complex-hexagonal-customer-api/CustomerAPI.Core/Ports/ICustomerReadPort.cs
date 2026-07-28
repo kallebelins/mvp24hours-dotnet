@@ -11,7 +11,7 @@ namespace CustomerAPI.Core.Ports
     /// </summary>
     public interface ICustomerReadPort
     {
-        Task<IList<Customer>> GetAllAsync(string? name, bool? active, CancellationToken cancellationToken = default);
+        Task<IList<Customer>> GetAllAsync(string? name, bool? active, bool hasEmailContact = false, CancellationToken cancellationToken = default);
         Task<Customer?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
     }

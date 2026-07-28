@@ -36,6 +36,8 @@ Entities intentionally cross the HTTP boundary. Prefer a Complex DTO-based sampl
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
 | `ConnectionStrings:MongoDbContext` | Yes | MongoDB server used by the `simplecustomers` database | `mongodb://localhost:27017` |
@@ -47,9 +49,19 @@ Use environment variables or a secret store when credentials are required.
 From `samples/src/simple-crud-mongodb-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+MongoDB listens on localhost port **27017**.
+
 
 ## Explore the API
 

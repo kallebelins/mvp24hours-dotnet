@@ -45,18 +45,25 @@ Never commit production credentials. Override them through environment variables
 
 ## Run
 
-Start RabbitMQ locally if needed:
+From `samples/src/simple-rabbitmq-customer-api`:
 
 ```bash
-docker run --rm --name mvp-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
-```
-
-Then, from `samples/src/simple-rabbitmq-customer-api`:
-
-```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+- SQL Server: localhost **1433**
+- RabbitMQ AMQP: **5672**; Management UI: **15672** (default `guest` / `guest`)
+
+Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 ## Explore the API
 

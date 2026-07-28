@@ -4,6 +4,7 @@ using CustomerAPI.Application.Ports;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Ports;
 using CustomerAPI.Core.Resources;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
@@ -24,14 +25,18 @@ namespace CustomerAPI.Application.UseCases
         ICustomerWritePort customerWritePort,
         IContactReadPort contactReadPort,
         IContactWritePort contactWritePort,
+        IValidator<CustomerCreate> customerCreateValidator,
+        IValidator<CustomerUpdate> customerUpdateValidator,
+        IValidator<ContactCreate> contactCreateValidator,
+        IValidator<ContactUpdate> contactUpdateValidator,
         TimeProvider timeProvider,
         ILogger<CustomerUseCase> logger) : ICustomerUseCase
     {
         public async Task<IBusinessResult<IList<CustomerResult>>> GetCustomersAsync(CustomerQuery query, CancellationToken cancellationToken = default)
         {
-            logger.LogDebug("GetCustomersAsync called with Name={Name} Active={Active}", query.Name, query.Active);
+            logger.LogDebug("GetCustomersAsync called with Name={Name} Active={Active} HasEmailContact={HasEmailContact}", query.Name, query.Active, query.HasEmailContact);
 
-            var customers = await customerReadPort.GetAllAsync(query.Name, query.Active, cancellationToken);
+            var customers = await customerReadPort.GetAllAsync(query.Name, query.Active, query.HasEmailContact, cancellationToken);
 
             if (!customers.AnySafe())
                 return Messages.RECORD_NOT_FOUND
@@ -82,6 +87,10 @@ namespace CustomerAPI.Application.UseCases
         {
             logger.LogDebug("CreateCustomerAsync called for Name={Name}", dto.Name);
 
+            var errors = dto.TryValidate(customerCreateValidator);
+            if (errors.AnySafe())
+                return errors.ToBusiness<int>();
+
             var entity = new Customer
             {
                 Name = dto.Name,
@@ -98,6 +107,10 @@ namespace CustomerAPI.Application.UseCases
         public async Task<IBusinessResult<bool>> UpdateCustomerAsync(int id, CustomerUpdate dto, CancellationToken cancellationToken = default)
         {
             logger.LogDebug("UpdateCustomerAsync called for id={Id}", id);
+
+            var errors = dto.TryValidate(customerUpdateValidator);
+            if (errors.AnySafe())
+                return errors.ToBusiness<bool>();
 
             var customer = await customerReadPort.GetByIdAsync(id, cancellationToken);
 
@@ -162,6 +175,10 @@ namespace CustomerAPI.Application.UseCases
         {
             logger.LogDebug("CreateContactAsync called for customerId={CustomerId}", customerId);
 
+            var errors = dto.TryValidate(contactCreateValidator);
+            if (errors.AnySafe())
+                return errors.ToBusiness<int>();
+
             if (!await customerReadPort.ExistsAsync(customerId, cancellationToken))
                 return Messages.RECORD_NOT_FOUND_FOR_ID
                     .ToMessageResult(nameof(Messages.RECORD_NOT_FOUND_FOR_ID), MessageType.Error)
@@ -184,6 +201,10 @@ namespace CustomerAPI.Application.UseCases
         public async Task<IBusinessResult<bool>> UpdateContactAsync(int customerId, int contactId, ContactUpdate dto, CancellationToken cancellationToken = default)
         {
             logger.LogDebug("UpdateContactAsync called for customerId={CustomerId} contactId={ContactId}", customerId, contactId);
+
+            var errors = dto.TryValidate(contactUpdateValidator);
+            if (errors.AnySafe())
+                return errors.ToBusiness<bool>();
 
             var contact = await contactReadPort.GetByIdAsync(contactId, cancellationToken);
 

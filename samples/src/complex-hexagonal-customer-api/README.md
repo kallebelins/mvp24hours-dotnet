@@ -81,17 +81,34 @@ services.AddHttpClientWithStandardResilience(TypicodeProfileAdapter.HttpClientNa
 });
 ```
 
+## Configuration
+
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
+| Key | Description |
+|-----|-------------|
+| `ConnectionStrings:EFDBContext` | SQL Server connection for EF Core adapters |
+
 ## Getting Started
 
 ```bash
-# Requires SQL Server accessible at localhost,1433 with the credentials in appsettings.Development.json.
-# Update the connection string before running.
-
-dotnet run --project samples/src/complex-hexagonal-customer-api/CustomerAPI.WebAPI
+# From samples/src/complex-hexagonal-customer-api
+docker compose up -d
+dotnet run --project CustomerAPI.WebAPI
 
 # Open Swagger UI
 open http://localhost:5150/swagger
 ```
+
+Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**.
 
 ### Database
 

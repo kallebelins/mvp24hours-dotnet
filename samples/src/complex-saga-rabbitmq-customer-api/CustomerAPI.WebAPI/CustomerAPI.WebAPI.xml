@@ -9,7 +9,7 @@
             Orchestrates the customer onboarding saga.
             </summary>
         </member>
-        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.#ctor(Mvp24Hours.Infrastructure.Cqrs.Saga.ISagaOrchestrator,CustomerAPI.Domain.Repositories.ICustomerRepository)">
+        <member name="M:CustomerAPI.WebAPI.Controllers.OnboardingController.#ctor(Mvp24Hours.Infrastructure.Cqrs.Saga.ISagaOrchestrator,CustomerAPI.Domain.Repositories.ICustomerRepository,FluentValidation.IValidator{CustomerAPI.WebAPI.Controllers.OnboardCustomerRequest})">
             <summary>
             Orchestrates the customer onboarding saga.
             </summary>

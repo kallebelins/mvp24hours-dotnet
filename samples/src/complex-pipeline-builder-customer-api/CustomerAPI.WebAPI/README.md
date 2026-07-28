@@ -21,6 +21,9 @@ This .NET 10 sample shows the recommended Complex-tier pipeline style: each Cust
 - Tier: `Complex`
 - Shape: Core contracts, Application builders/operations, controller-based WebAPI
 - Why this shape fits: builders keep use-case composition explicit and reusable while the host stays thin
+- Dependency rule: **WebAPI → Application → Core**; Application must not reference WebAPI (no Infrastructure project in this sample)
+
+FluentValidation and specifications are intentionally omitted: the sample focuses on builder-based pipeline composition over an external HTTP API with no local write model.
 
 ## Layers
 

@@ -22,6 +22,7 @@ This .NET 10 architecture blueprint demonstrates Command Query Responsibility Se
 - Tier: `Blueprint`
 - Shape: CQRS + Mediator on Complex-quality boundaries (DTO traffic, validation, UoW)
 - Why this shape fits: write and read models, validation, and cross-cutting behaviors differ enough to justify mediator pipelines without splitting databases yet
+- Dependency rule: **WebAPI → Application → Core**; **Infrastructure → Core**; composed at WebAPI. Application must not reference Infrastructure or WebAPI
 
 ## Layers
 
@@ -37,6 +38,8 @@ This .NET 10 architecture blueprint demonstrates Command Query Responsibility Se
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 Override credentials with environment variables, user secrets, or a secret store. Never commit real passwords.
 
 | Key | Required | Description | Development example |
@@ -48,9 +51,19 @@ Override credentials with environment variables, user secrets, or a secret store
 From `samples/src/complex-cqrs-ef-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
+
 
 On startup the host applies pending EF migrations and seeds an empty database. For production, prefer running migrations out-of-band.
 

@@ -1,4 +1,7 @@
+using CustomerAPI.Core.DTOs.Admin;
+using CustomerAPI.Core.Validations.Admin;
 using CustomerAPI.WebAPI.Data;
+using FluentValidation;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.HealthChecks;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;
 
@@ -26,6 +29,11 @@ public static class ServiceBuilderExtensions
     public static IServiceCollection AddMyServices(this IServiceCollection services)
     {
         services.AddSingleton<InMemoryCustomerStore>();
+
+        services.AddSingleton<IValidator<CreateKeycloakUserDto>, CreateKeycloakUserDtoValidator>();
+        services.AddSingleton<IValidator<ResetPasswordDto>, ResetPasswordDtoValidator>();
+        services.AddSingleton<IValidator<AssignRoleDto>, AssignRoleDtoValidator>();
+
         return services;
     }
 

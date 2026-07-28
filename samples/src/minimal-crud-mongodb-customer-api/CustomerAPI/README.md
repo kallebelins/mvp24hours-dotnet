@@ -37,6 +37,8 @@ This focused .NET 10 sample implements paged Customer CRUD with Minimal APIs, Mo
 
 ## Configuration
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 Keep credentials outside committed files by using environment variables, user secrets, or a secret store.
 
 | Key | Required | Description | Safe example |
@@ -50,9 +52,19 @@ The sample stores Customer documents in the `simplecustomers` database. Contacts
 From `samples/src/minimal-crud-mongodb-customer-api`:
 
 ```bash
+docker compose up -d
 dotnet restore
 dotnet run --project CustomerAPI/CustomerAPI.csproj
 ```
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+MongoDB listens on localhost port **27017**.
+
 
 In Development, the application seeds sample documents when needed.
 

@@ -10,6 +10,14 @@ Target: **net10.0** | Language: English
 
 ---
 
+## Architecture
+
+- **WebAPI → Application → Domain**
+- **Infrastructure → Domain** (and **Infrastructure → Application** for AutoMapper profiles and RabbitMQ consumers); composed at WebAPI
+- **Application must not reference Infrastructure or WebAPI**
+
+---
+
 ## Flow
 
 ```
@@ -92,6 +100,8 @@ CustomerAPI.WebAPI/
 
 ## Quick Start
 
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
 ### 1. Prerequisites
 
 | Dependency | Default port | Notes |
@@ -99,31 +109,18 @@ CustomerAPI.WebAPI/
 | SQL Server | 1433 | Replace `CHANGE_ME` password in appsettings.Development.json |
 | RabbitMQ | 5672 (AMQP) / 15672 (Management UI) | `guest:guest` by default |
 
-### 2. Docker Compose (optional)
+### 2. Docker Compose
 
-```yaml
-# docker-compose.yml — place at solution root
-version: '3.9'
-services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Dev@Password123!
-    ports:
-      - "1433:1433"
+From `samples/src/complex-event-driven-rabbitmq-customer-api`:
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+```bash
+docker compose up -d
 ```
 
-Update `appsettings.Development.json`:
+- SQL Server: localhost **1433**
+- RabbitMQ AMQP: **5672**; Management UI: **15672** (default `guest` / `guest`)
+
+Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`:
 
 ```json
 {
@@ -137,8 +134,9 @@ Update `appsettings.Development.json`:
 ### 3. Run
 
 ```bash
-cd samples/src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.WebAPI
-dotnet run
+cd samples/src/complex-event-driven-rabbitmq-customer-api
+docker compose up -d
+dotnet run --project CustomerAPI.WebAPI
 ```
 
 ### 4. Test the flow

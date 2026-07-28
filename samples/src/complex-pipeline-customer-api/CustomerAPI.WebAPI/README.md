@@ -22,6 +22,9 @@ This .NET 10 sample uses Mvp24Hours Pipes and Filters in a Complex N-layer appli
 - Tier: `Complex`
 - Shape: Core contracts, Application pipeline operations and services, WebAPI controllers
 - Why this shape fits: pipeline composition stays reusable behind a Facade while HTTP remains a thin adapter
+- Dependency rule: **WebAPI → Application → Core**; Application must not reference WebAPI (no Infrastructure project in this sample)
+
+FluentValidation and `ISpecificationQuery` types are intentionally omitted: the sample focuses on pipeline composition over an external HTTP API with no local write model.
 
 ## Layers
 

@@ -10,6 +10,14 @@ A teaching sample that implements a full Customer + Contact CRUD API following t
 
 ---
 
+## Architecture
+
+- **WebAPI → Application → Domain** — use cases and DTOs depend inward on the domain
+- **Infrastructure → Domain** (and **Infrastructure → Application** for EF mapping profiles and messaging adapters); composed at WebAPI
+- **Application must not reference Infrastructure or WebAPI** — persistence ports come from `Mvp24Hours.Core.Contract.Data` and are wired in the host
+
+---
+
 ## Dependency Diagram
 
 ### Mermaid
@@ -30,7 +38,7 @@ graph TD
     WebAPI -. "Mvp24Hours.WebAPI" .-> WebAPI
     Application -. "Mvp24Hours.Application\nMvp24Hours.Infrastructure.Cqrs" .-> Application
     Infrastructure -. "Mvp24Hours.Infrastructure.Data.EFCore" .-> Infrastructure
-    Domain -. "Mvp24Hours.Core\nFluentValidation" .-> Domain
+    Domain -. "Mvp24Hours.Core" .-> Domain
 ```
 
 ### ASCII
@@ -55,11 +63,9 @@ graph TD
                                                  ▼
                               ┌──────────────────────────────────┐
                               │       CustomerAPI.Domain          │
-                              │  (entities, enums, specs,         │
-                              │   domain validators, resources)   │
+                              │  (entities, enums, specs, resources)   │
                               │                                   │
                               │  Refs: Mvp24Hours.Core            │
-                              │      + FluentValidation           │
                               └──────────────────────────────────┘
 ```
 
@@ -88,9 +94,6 @@ complex-clean-architecture-customer-api/
 │   │   ├── CustomerHasEmailContactSpec.cs
 │   │   ├── CustomerHasNoContactSpec.cs
 │   │   └── CustomerIsPropectSpec.cs
-│   ├── Validations/Customers/
-│   │   ├── CustomerValidator.cs
-│   │   └── ContactValidator.cs
 │   └── Resources/
 │       ├── Messages.resx
 │       └── Messages.Designer.cs
@@ -152,23 +155,39 @@ complex-clean-architecture-customer-api/
 | **Use-case dispatch** | `AddMvpMediator` with command/query handlers in `Application` |
 | **EF mapping** | `IEntityTypeConfiguration<T>` fluent configs in `Infrastructure` |
 | **DI wiring** | Fully in `WebAPI` via `ServiceBuilderExtensions` |
-| **Validation** | Domain validators (`FluentValidation`) in `Domain`; command validators in `Application` |
+| **Validation** | Command validators (`FluentValidation`) in `Application`; entity validation is not duplicated in `Domain` |
+
+---
+
+## Configuration
+
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
+
+Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
 
 ---
 
 ## Running Locally
 
-1. Start a SQL Server instance (e.g., Docker):
+1. Start dependencies with Docker Compose:
    ```bash
-   docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=CHANGE_ME" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+   docker compose up -d
    ```
-2. Update `appsettings.Development.json` with your connection string.
+2. Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`.
 3. Run the WebAPI project — EF migrations are applied automatically on startup:
    ```bash
    dotnet run --project CustomerAPI.WebAPI
    ```
 4. Navigate to `http://localhost:5000/openapi` for the OpenAPI UI.
 5. Health check: `http://localhost:5000/hc`
+
+### Docker Compose
+
+```bash
+docker compose up -d
+```
+
+SQL Server listens on localhost port **1433**.
 
 ---
 

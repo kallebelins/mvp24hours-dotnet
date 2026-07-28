@@ -1,5 +1,8 @@
 using CustomerAPI.Application.Services;
+using CustomerAPI.WebAPI.Validations;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Mvp24Hours.Extensions;
 
 namespace CustomerAPI.WebAPI.Controllers;
 
@@ -9,7 +12,10 @@ namespace CustomerAPI.WebAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/customers")]
-public class CustomersController(CustomerEventStoreService customerService) : ControllerBase
+public class CustomersController(
+    CustomerEventStoreService customerService,
+    IValidator<CreateCustomerRequest> createValidator,
+    IValidator<RenameCustomerRequest> renameValidator) : ControllerBase
 {
     /// <summary>
     /// Creates a new customer and appends a CustomerCreated event.
@@ -21,6 +27,10 @@ public class CustomersController(CustomerEventStoreService customerService) : Co
         [FromBody] CreateCustomerRequest request,
         CancellationToken cancellationToken)
     {
+        var validationErrors = request.TryValidate(createValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         Guid id = await customerService.CreateAsync(request.Name, request.Email, cancellationToken);
         var model = customerService.GetById(id);
         return CreatedAtAction(nameof(GetById), new { id }, model);
@@ -37,6 +47,10 @@ public class CustomersController(CustomerEventStoreService customerService) : Co
         [FromBody] RenameCustomerRequest request,
         CancellationToken cancellationToken)
     {
+        var validationErrors = request.TryValidate(renameValidator);
+        if (validationErrors.AnySafe())
+            return BadRequest(validationErrors);
+
         await customerService.RenameAsync(id, request.NewName, cancellationToken);
         return Ok(customerService.GetById(id));
     }

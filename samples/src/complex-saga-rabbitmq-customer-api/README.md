@@ -6,6 +6,14 @@ Target: **net10.0** | Language: English | Status: **migrated**
 
 ---
 
+## Architecture
+
+- **WebAPI → Application → Domain**
+- No Infrastructure project — persistence adapters live in Application (in-memory store); composed at WebAPI
+- **Application must not reference WebAPI**
+
+---
+
 ## Pattern Choice: Orchestration (not Choreography)
 
 This sample uses **orchestration**: a single `OnboardCustomerSaga` class (the orchestrator) owns the saga definition and drives every step. All control flow is in one place, which makes it easy to understand, debug, and extend.

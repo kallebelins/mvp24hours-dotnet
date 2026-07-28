@@ -51,7 +51,6 @@ namespace CustomerAPI.WebAPI.Extensions
             services.AddScoped<ICustomerService, CustomerService>();
 
             services.AddSingleton<IValidator<Customer>, CustomerValidator>();
-            services.AddSingleton<IValidator<Contact>, ContactValidator>();
             return services;
         }
 
