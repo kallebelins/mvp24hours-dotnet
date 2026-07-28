@@ -40,12 +40,15 @@ try
 
     var app = builder.Build();
 
-    await using (var scope = app.Services.CreateAsyncScope())
+    if (!app.Environment.IsEnvironment("Testing"))
     {
-        var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
-        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-        await db.Database.MigrateAsync();
-        await EFDBContextSeed.SeedAsync(db, timeProvider);
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
+            var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            await db.Database.MigrateAsync();
+            await EFDBContextSeed.SeedAsync(db, timeProvider);
+        }
     }
 
     app.UseNativeProblemDetailsHandling();
@@ -76,3 +79,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }
