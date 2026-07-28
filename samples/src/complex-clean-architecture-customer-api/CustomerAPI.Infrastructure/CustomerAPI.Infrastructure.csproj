@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<InvariantGlobalization>false</InvariantGlobalization>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+		<PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.EFCore\Mvp24Hours.Infrastructure.Data.EFCore.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CustomerAPI.Domain\CustomerAPI.Domain.csproj" />
+		<ProjectReference Include="..\CustomerAPI.Application\CustomerAPI.Application.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,32 @@
+using CustomerAPI.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace CustomerAPI.Infrastructure.Configurations
+{
+    public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+    {
+        public void Configure(EntityTypeBuilder<Customer> builder)
+        {
+            builder.ToTable("Customer", "dbo");
+
+            builder.HasKey(p => p.Id);
+            builder.Property(p => p.Created).IsRequired();
+            builder.Property(p => p.Name).HasMaxLength(50).IsRequired();
+            builder.Property(p => p.Note).HasMaxLength(2000);
+            builder.Property(p => p.Active).IsRequired();
+
+            // Map the private backing field _contacts for the aggregate collection.
+            builder
+                .HasMany(c => c.Contacts)
+                .WithOne()
+                .HasForeignKey("CustomerId")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .Navigation(c => c.Contacts)
+                .HasField("_contacts")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+        }
+    }
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<InvariantGlobalization>false</InvariantGlobalization>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentValidation" />
+		<PackageReference Include="Mvp24Hours.Application" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Application\Mvp24Hours.Application.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CustomerAPI.Core\CustomerAPI.Core.csproj" />
+	</ItemGroup>
+
+</Project>

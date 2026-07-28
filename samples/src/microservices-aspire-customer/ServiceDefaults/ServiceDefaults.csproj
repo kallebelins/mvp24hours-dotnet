@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <!--
+    Shared health-check helpers and resilience defaults for all services in this sample.
+    Services compile and run standalone (no AppHost required).
+  -->
+  <ItemGroup>
+    <!-- Exposes WebApplication, HealthCheckOptions, and other ASP.NET Core types. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- HTTP resilience handler for Aspire-compatible service-to-service calls. -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+</Project>

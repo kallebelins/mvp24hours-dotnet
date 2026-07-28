@@ -57,12 +57,12 @@ Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but st
 
 ## Architecture blueprints
 
-- **Planned** — `complex-cqrs-ef-customer-api`: CQRS with the Mvp24Hours Mediator.
-- **Planned** — `complex-ddd-ef-customer-api`: Domain-Driven Design with aggregates and domain events.
-- **Planned** — `complex-clean-architecture-customer-api`: Clean Architecture dependency boundaries.
-- **Planned** — `complex-hexagonal-customer-api`: first-class ports and adapters.
-- **Planned** — `complex-event-driven-rabbitmq-customer-api`: event-driven processing with inbox and outbox.
-- **Planned** — `microservices-aspire-customer`: multiple services composed with .NET Aspire.
+- **Migrated** — [CQRS with EF Core](src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/): commands, queries, and notifications with the Mvp24Hours Mediator.
+- **Migrated** — [Domain-Driven Design](src/complex-ddd-ef-customer-api/): aggregates, value objects, domain events, and specifications.
+- **Migrated** — [Clean Architecture](src/complex-clean-architecture-customer-api/): inward dependency rule across Domain, Application, Infrastructure, and WebAPI.
+- **Migrated** — [Hexagonal / ports and adapters](src/complex-hexagonal-customer-api/): inbound HTTP and outbound EF + resilient HTTP adapters (sibling of the pipeline ports-adapters sample).
+- **Migrated** — [Event-driven with RabbitMQ](src/complex-event-driven-rabbitmq-customer-api/): durable outbox, publish, consumer inbox/idempotency, and correlation IDs.
+- **Migrated** — [Microservices with .NET Aspire](src/microservices-aspire-customer/): Customer API + Notification worker composed by an Aspire AppHost.
 
 ## Capability samples
 

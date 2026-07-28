@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <!--
+    CustomerAPI — HTTP API service.
+    Compiles and runs standalone (connection strings via appsettings / env vars).
+    When orchestrated via AppHost, Aspire injects SQL Server and RabbitMQ connection strings.
+  -->
+  <ItemGroup>
+    <!-- Mvp24Hours web essentials (OpenAPI, JSON, Gzip, ProblemDetails). -->
+    <PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+
+    <!-- EF Core: SQL Server (Aspire-injected) or in-memory fallback. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+
+    <!-- RabbitMQ publishing. -->
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.RabbitMQ\Mvp24Hours.Infrastructure.RabbitMQ.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+
+    <!-- Health checks. -->
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+
+    <!-- FluentValidation for request validation. -->
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

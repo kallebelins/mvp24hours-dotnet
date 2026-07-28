@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerAPI.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerAPI.WebAPI.Controllers.ContactController">
+            <summary>
+            Inbound HTTP adapter — Contact sub-resource nested under Customer.
+            Routes HTTP requests to the <see cref="T:CustomerAPI.Application.Ports.ICustomerUseCase"/> inbound port.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ContactController.#ctor(CustomerAPI.Application.Ports.ICustomerUseCase)">
+            <summary>
+            Inbound HTTP adapter — Contact sub-resource nested under Customer.
+            Routes HTTP requests to the <see cref="T:CustomerAPI.Application.Ports.ICustomerUseCase"/> inbound port.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ContactController.GetAll(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get all contacts for a customer.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ContactController.Create(System.Int32,CustomerAPI.Application.DTOs.Contacts.ContactCreate,System.Threading.CancellationToken)">
+            <summary>
+            Add a contact to a customer.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ContactController.Update(System.Int32,System.Int32,CustomerAPI.Application.DTOs.Contacts.ContactUpdate,System.Threading.CancellationToken)">
+            <summary>
+            Update a contact.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ContactController.Delete(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Delete a contact.
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Controllers.CustomerController">
+            <summary>
+            Inbound HTTP adapter — Customer resource.
+            Routes HTTP requests to the <see cref="T:CustomerAPI.Application.Ports.ICustomerUseCase"/> inbound port.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.#ctor(CustomerAPI.Application.Ports.ICustomerUseCase)">
+            <summary>
+            Inbound HTTP adapter — Customer resource.
+            Routes HTTP requests to the <see cref="T:CustomerAPI.Application.Ports.ICustomerUseCase"/> inbound port.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetAll(CustomerAPI.Application.DTOs.Customers.CustomerQuery,System.Threading.CancellationToken)">
+            <summary>
+            Get a list of customers (optionally filtered).
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetById(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get a single customer with contacts.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.Create(CustomerAPI.Application.DTOs.Customers.CustomerCreate,System.Threading.CancellationToken)">
+            <summary>
+            Create a new customer.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.Update(System.Int32,CustomerAPI.Application.DTOs.Customers.CustomerUpdate,System.Threading.CancellationToken)">
+            <summary>
+            Update an existing customer.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Delete a customer.
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Controllers.ExternalProfileController">
+            <summary>
+            Inbound HTTP adapter — exposes external profile enrichment data.
+            Demonstrates the outbound HTTP adapter (Typicode JSONPlaceholder) through ports.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ExternalProfileController.#ctor(CustomerAPI.Application.Ports.IExternalProfileUseCase)">
+            <summary>
+            Inbound HTTP adapter — exposes external profile enrichment data.
+            Demonstrates the outbound HTTP adapter (Typicode JSONPlaceholder) through ports.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ExternalProfileController.GetAll(System.Threading.CancellationToken)">
+            <summary>
+            Get all external profiles from Typicode JSONPlaceholder (via outbound HTTP adapter).
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.ExternalProfileController.GetById(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get a single external profile by ID.
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions">
+            <summary>
+            Composition root — wires inbound ports to use cases, outbound ports to adapters,
+            and HTTP clients with resilience handlers.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers all inbound ports → use cases and outbound ports → adapters.
+            The Application layer is never wired to Infrastructure types directly.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyHttpClients(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the resilient named HTTP client consumed by <see cref="T:CustomerAPI.Infrastructure.Adapters.Http.TypicodeProfileAdapter"/>.
+            Uses Microsoft.Extensions.Http.Resilience <c>AddStandardResilienceHandler</c> (retry + circuit-breaker).
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>

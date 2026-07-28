@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mvp24Hours.Infrastructure.Data.EFCore" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Data.EFCore\Mvp24Hours.Infrastructure.Data.EFCore.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.Cqrs" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.Cqrs\Mvp24Hours.Infrastructure.Cqrs.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.RabbitMQ\Mvp24Hours.Infrastructure.RabbitMQ.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="AutoMapper" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerAPI.Domain\CustomerAPI.Domain.csproj" />
+    <ProjectReference Include="..\CustomerAPI.Application\CustomerAPI.Application.csproj" />
+  </ItemGroup>
+
+</Project>

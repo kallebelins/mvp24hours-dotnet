@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+    <!-- Worker can be deployed as a container without HTTPS -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <!--
+    NotificationWorker — background consumer service.
+    Subscribes to CustomerCreatedEvent from RabbitMQ, persists a notification log.
+    Exposes /health endpoints for Aspire and container orchestrators.
+    Compiles and runs standalone (no AppHost required).
+  -->
+  <ItemGroup>
+    <!-- RabbitMQ consuming. -->
+    <PackageReference Include="Mvp24Hours.Infrastructure.RabbitMQ" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Infrastructure.RabbitMQ\Mvp24Hours.Infrastructure.RabbitMQ.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+
+    <!-- EF Core in-memory for notification log (teaching scope). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+
+    <!-- Health checks. -->
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

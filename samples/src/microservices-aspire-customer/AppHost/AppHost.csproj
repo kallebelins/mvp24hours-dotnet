@@ -1,0 +1,29 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>aspire-microservices-customer-host</UserSecretsId>
+  </PropertyGroup>
+
+  <!--
+    This project requires the .NET Aspire workload.
+    Install with: dotnet workload install aspire
+
+    Aspire.AppHost.Sdk/13.4.6 automatically includes Aspire.Hosting.AppHost.
+    Add additional Aspire resource packages below.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerAPI\CustomerAPI.csproj" />
+    <ProjectReference Include="..\NotificationWorker\NotificationWorker.csproj" />
+  </ItemGroup>
+
+</Project>

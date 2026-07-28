@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerAPI.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerAPI.WebAPI.Controllers.CustomerController">
+            <summary>
+            Customer management endpoints.
+            POST /customers demonstrates the full Outbox → RabbitMQ → Inbox flow.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.#ctor(Mvp24Hours.Infrastructure.Cqrs.Abstractions.IMediator)">
+            <summary>
+            Customer management endpoints.
+            POST /customers demonstrates the full Outbox → RabbitMQ → Inbox flow.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.GetAll(System.String,System.Nullable{System.Boolean},System.Threading.CancellationToken)">
+            <summary>
+            List customers.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Controllers.CustomerController.Create(CustomerAPI.Application.DTOs.Customers.CustomerCreate,System.Threading.CancellationToken)">
+            <summary>
+            Create a customer.
+            Writes Customer + OutboxEntry in the same DB scope.
+            The OutboxProcessor background service publishes to RabbitMQ, and the consumer
+            writes a NotificationLog (with inbox idempotency protection).
+            </summary>
+        </member>
+        <member name="T:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions">
+            <summary>
+            Registers all application services, infrastructure, messaging, and health checks.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the Mvp24Hours Mediator with CQRS handlers and validators.
+            </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyInboxOutbox(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+             <summary>
+             Registers the Inbox/Outbox pattern with EF Core-backed durable stores.
+            
+             Design note: <see cref="T:CustomerAPI.Infrastructure.Data.Stores.EfCoreIntegrationEventOutbox"/> and <see cref="T:CustomerAPI.Infrastructure.Data.Stores.EfCoreInboxStore"/>
+             are registered as <b>Scoped</b> so they share the same <see cref="T:CustomerAPI.Infrastructure.Data.EFDBContext"/> instance
+             as the command handler's unit-of-work within a request scope. This allows outbox entries
+             to be staged in the same change tracker and committed atomically.
+            
+             The library's <c>AddMvpInboxOutbox()</c> registers stores as Singleton which conflicts
+             with Scoped EF DbContext, so we wire up the components manually here.
+             </summary>
+        </member>
+        <member name="M:CustomerAPI.WebAPI.Extensions.ServiceBuilderExtensions.AddMyRabbitMQ(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers RabbitMQ client, consumers, and the hosted consume loop.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>
