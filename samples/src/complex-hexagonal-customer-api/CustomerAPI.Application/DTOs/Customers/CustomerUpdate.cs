@@ -6,7 +6,7 @@ namespace CustomerAPI.Application.DTOs.Customers
     {
         [Required]
         [MaxLength(50)]
-        public string Name { get; set; } = string.Empty;
+        public required string Name { get; set; } = string.Empty;
 
         [MaxLength(2000)]
         public string? Note { get; set; }

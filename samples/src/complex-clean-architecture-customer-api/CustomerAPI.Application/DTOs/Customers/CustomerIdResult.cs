@@ -7,7 +7,7 @@ namespace CustomerAPI.Application.DTOs.Customers;
 
 public class CustomerIdResult : CustomerResult, IMapFrom
 {
-    public string Note { get; set; }
+    public string? Note { get; set; }
 
     public ICollection<ContactIdResult> Contacts { get; set; }
 

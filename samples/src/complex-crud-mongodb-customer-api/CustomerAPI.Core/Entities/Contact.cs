@@ -12,7 +12,7 @@ namespace CustomerAPI.Core.Entities
         public string CustomerId { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ContactType Type { get; set; }
-        public string Description { get; set; }
+        public required string Description { get; set; }
         public bool Active { get; set; }
     }
 }

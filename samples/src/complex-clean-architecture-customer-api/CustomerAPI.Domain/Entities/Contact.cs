@@ -11,7 +11,7 @@ public class Contact : EntityBase<int>
     public int CustomerId { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ContactType Type { get; set; }
-    public string Description { get; set; }
+    public required string Description { get; set; }
     public bool Active { get; set; }
 
     public Customer? Customer { get; set; }

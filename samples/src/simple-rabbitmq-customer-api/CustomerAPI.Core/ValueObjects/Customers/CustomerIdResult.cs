@@ -8,7 +8,7 @@ namespace CustomerAPI.Core.ValueObjects.Customers
     {
         public string CellPhone { get; set; }
         public string Email { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         public override void Mapping(Profile profile)
         {

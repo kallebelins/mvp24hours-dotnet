@@ -5,8 +5,8 @@ namespace CustomerAPI.Entities
     public class Customer : EntityBase<string>
     {
         public DateTime Created { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Note { get; set; } = string.Empty;
+        public required string Name { get; set; } = string.Empty;
+        public string? Note { get; set; } = string.Empty;
         public bool Active { get; set; }
     }
 }

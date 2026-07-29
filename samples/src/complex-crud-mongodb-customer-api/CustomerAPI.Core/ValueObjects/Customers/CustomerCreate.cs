@@ -9,8 +9,8 @@ namespace CustomerAPI.Core.ValueObjects.Customers
 {
     public class CustomerCreate : IMapFrom
     {
-        public string Name { get; set; }
-        public string Note { get; set; }
+        public required string Name { get; set; }
+        public string? Note { get; set; }
         public ICollection<ContactCreate> Contacts { get; set; }
 
         public virtual void Mapping(Profile profile)

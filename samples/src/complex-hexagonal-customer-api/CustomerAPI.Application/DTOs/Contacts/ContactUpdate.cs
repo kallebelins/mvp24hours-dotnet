@@ -10,7 +10,7 @@ namespace CustomerAPI.Application.DTOs.Contacts
 
         [Required]
         [MaxLength(255)]
-        public string Description { get; set; } = string.Empty;
+        public required string Description { get; set; } = string.Empty;
 
         public bool Active { get; set; }
     }

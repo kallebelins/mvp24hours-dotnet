@@ -7,10 +7,10 @@ namespace CustomerAPI.Core.Entities
     public class Customer : EntityBase<string>
     {
         public DateTime Created { get; set; }
-        public string Name { get; set; }
-        public string Note { get; set; }
+        public required string Name { get; set; }
+        public string? Note { get; set; }
         public bool Active { get; set; }
 
-        public ICollection<Contact> Contacts { get; set; }
+        public ICollection<Contact>? Contacts { get; set; }
     }
 }

@@ -9,6 +9,6 @@ namespace CustomerAPI.Core.ValueObjects.Contacts
     public class ContactCreate
     {
         public ContactType Type { get; set; }
-        public string Description { get; set; } = string.Empty;
+        public required string Description { get; set; } = string.Empty;
     }
 }

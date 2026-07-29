@@ -8,7 +8,7 @@ namespace CustomerAPI.Application.DTOs.Contacts;
 public class ContactUpdate : IMapFrom
 {
     public ContactType Type { get; set; }
-    public string Description { get; set; }
+    public required string Description { get; set; }
     public bool Active { get; set; }
 
     public virtual void Mapping(Profile profile)

@@ -10,7 +10,7 @@ namespace CustomerAPI.Core.ValueObjects.Contacts
     {
         public DateTime Created { get; set; }
         public ContactType Type { get; set; }
-        public string Description { get; set; } = string.Empty;
+        public required string Description { get; set; } = string.Empty;
         public bool Active { get; set; }
 
         public virtual void Mapping(Profile profile)

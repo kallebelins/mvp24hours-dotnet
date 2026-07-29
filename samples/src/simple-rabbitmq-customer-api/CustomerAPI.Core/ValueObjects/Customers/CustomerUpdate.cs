@@ -7,10 +7,10 @@ namespace CustomerAPI.Core.ValueObjects.Customers
     public class CustomerUpdate : IMapFrom
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public string CellPhone { get; set; }
         public string Email { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
         public bool Active { get; set; }
 
         public virtual void Mapping(Profile profile)

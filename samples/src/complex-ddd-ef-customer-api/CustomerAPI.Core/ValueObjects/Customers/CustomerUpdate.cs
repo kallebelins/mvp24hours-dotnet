@@ -6,7 +6,7 @@ namespace CustomerAPI.Core.ValueObjects.Customers
     /// </summary>
     public class CustomerUpdate
     {
-        public string Name { get; set; } = string.Empty;
+        public required string Name { get; set; } = string.Empty;
         public string? Note { get; set; }
     }
 }

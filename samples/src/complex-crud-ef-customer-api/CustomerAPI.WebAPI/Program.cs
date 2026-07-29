@@ -4,11 +4,10 @@ using CustomerAPI.WebAPI.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
-using NLog.Web;
 using NLog;
+using NLog.Web;
 
 
 
