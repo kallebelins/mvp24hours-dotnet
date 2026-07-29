@@ -1,18 +1,14 @@
-﻿using CustomerAPI.Application.Contacts.Commands.CreateContact;
+using System.Net;
+using CustomerAPI.Application.Contacts.Commands.CreateContact;
 using CustomerAPI.Application.Contacts.Commands.DeleteContact;
 using CustomerAPI.Application.Contacts.Commands.UpdateContact;
 using CustomerAPI.Application.Contacts.Queries.GetContactsByCustomer;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Contacts;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CustomerAPI.WebAPI.Controllers;
 
@@ -30,7 +26,7 @@ public class ContactController(IMediator mediator) : ControllerBase
     [Route("{customerId:int}/Contact", Name = "ContactGetBy")]
     public async Task<ActionResult<IBusinessResult<IList<ContactIdResult>>>> GetBy(int customerId, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new GetContactsByCustomerQuery { CustomerId = customerId }, cancellationToken);
+        IBusinessResult<IList<ContactIdResult>> result = await mediator.SendAsync(new GetContactsByCustomerQuery { CustomerId = customerId }, cancellationToken);
         if (result.HasData())
         {
             return Ok(result);
@@ -48,7 +44,7 @@ public class ContactController(IMediator mediator) : ControllerBase
         [FromBody] ContactCreate model,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new CreateContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new CreateContactCommand
         {
             CustomerId = customerId,
             Model = model
@@ -74,7 +70,7 @@ public class ContactController(IMediator mediator) : ControllerBase
         [FromBody] ContactUpdate model,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new UpdateContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new UpdateContactCommand
         {
             CustomerId = customerId,
             Id = id,
@@ -106,7 +102,7 @@ public class ContactController(IMediator mediator) : ControllerBase
     [Route("{customerId:int}/Contact/{id:int}", Name = "ContactDelete")]
     public async Task<ActionResult<IBusinessResult<int>>> Delete(int customerId, int id, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new DeleteContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new DeleteContactCommand
         {
             CustomerId = customerId,
             Id = id

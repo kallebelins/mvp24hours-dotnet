@@ -13,9 +13,9 @@ public class OpenApiSmokeTests : IClassFixture<CustomerApiFactory>
     [Fact]
     public async Task GetOpenApiDocument_WhenTestingHost_ReturnsNon5xx()
     {
-        var client = _factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
-        var response = await client.GetAsync("/openapi/v1.json");
+        HttpResponseMessage response = await client.GetAsync("/openapi/v1.json");
 
         ((int)response.StatusCode).Should().BeLessThan(500);
     }

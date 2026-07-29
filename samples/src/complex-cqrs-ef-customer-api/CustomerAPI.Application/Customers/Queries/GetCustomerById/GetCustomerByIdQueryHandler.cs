@@ -19,7 +19,7 @@ public sealed class GetCustomerByIdQueryHandler(
         var paging = new PagingCriteriaExpression<Customer>(3, 0);
         paging.NavigationExpr.Add(x => x.Contacts);
 
-        var repository = unitOfWork.GetRepository<Customer>();
+        IRepositoryAsync<Customer> repository = unitOfWork.GetRepository<Customer>();
         return await mapper.MapBusinessToAsync<Customer, CustomerIdResult>(
             repository.GetByIdAsync(request.Id, paging, cancellationToken).ToBusinessAsync());
     }

@@ -1,13 +1,12 @@
-﻿namespace CustomerAPI.Core.ValueObjects.Customers
-{
-    public class CustomerQuery
-    {
-        public string Name { get; set; }
-        public bool? Active { get; set; }
+namespace CustomerAPI.Core.ValueObjects.Customers;
 
-        public bool HasCellContact { get; set; }
-        public bool HasEmailContact { get; set; }
-        public bool HasNoContact { get; set; }
-        public bool IsProspect { get; set; }
-    }
+public class CustomerQuery
+{
+    public string? Name { get; set; }
+    public bool? Active { get; set; }
+
+    public bool HasCellContact { get; set; }
+    public bool HasEmailContact { get; set; }
+    public bool HasNoContact { get; set; }
+    public bool IsProspect { get; set; }
 }

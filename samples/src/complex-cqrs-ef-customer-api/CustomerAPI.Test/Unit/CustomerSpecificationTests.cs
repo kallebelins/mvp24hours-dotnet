@@ -12,6 +12,7 @@ public class CustomerSpecificationTests
     {
         var customer = new Customer
         {
+            Name = "Test",
             Active = true,
             Contacts =
             [
@@ -29,6 +30,7 @@ public class CustomerSpecificationTests
     {
         var customer = new Customer
         {
+            Name = "Test",
             Active = false,
             Contacts =
             [
@@ -46,6 +48,7 @@ public class CustomerSpecificationTests
     {
         var customer = new Customer
         {
+            Name = "Test",
             Active = true,
             Contacts = []
         };
@@ -60,6 +63,7 @@ public class CustomerSpecificationTests
     {
         var customer = new Customer
         {
+            Name = "Test",
             Active = true,
             Note = "VIP prospect lead",
             Contacts = []
@@ -75,6 +79,7 @@ public class CustomerSpecificationTests
     {
         var customer = new Customer
         {
+            Name = "Test",
             Active = true,
             Note = "regular customer",
             Contacts = []

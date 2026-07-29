@@ -7,7 +7,6 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Generic;
 
 namespace CustomerAPI.Application.Contacts.Queries.GetContactsByCustomer;
 
@@ -20,8 +19,8 @@ public sealed class GetContactsByCustomerQueryHandler(
         GetContactsByCustomerQuery request,
         CancellationToken cancellationToken)
     {
-        var repository = unitOfWork.GetRepository<Contact>();
-        var result = await repository
+        IRepositoryAsync<Contact> repository = unitOfWork.GetRepository<Contact>();
+        IBusinessResult<IList<Contact>> result = await repository
             .GetByAsync(x => x.CustomerId == request.CustomerId, cancellationToken: cancellationToken)
             .ToBusinessAsync();
 

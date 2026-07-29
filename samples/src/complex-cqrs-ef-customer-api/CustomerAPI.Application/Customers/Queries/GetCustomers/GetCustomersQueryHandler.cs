@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using CustomerAPI.Core.Entities;
 using CustomerAPI.Core.Resources;
@@ -8,9 +9,6 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace CustomerAPI.Application.Customers.Queries.GetCustomers;
 
@@ -21,7 +19,7 @@ public sealed class GetCustomersQueryHandler(
 {
     public async Task<IPagingResult<IList<CustomerResult>>> Handle(GetCustomersQuery request, CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        CustomerQuery filter = request.Filter;
 
         Expression<Func<Customer, bool>> clause =
             x => (string.IsNullOrEmpty(filter.Name) || x.Name.Contains(filter.Name))
@@ -47,8 +45,8 @@ public sealed class GetCustomersQueryHandler(
             clause = clause.And<Customer, CustomerIsPropectSpec>();
         }
 
-        var repository = unitOfWork.GetRepository<Customer>();
-        var result = await repository.ToBusinessPagingAsync(clause, request.Criteria);
+        IRepositoryAsync<Customer> repository = unitOfWork.GetRepository<Customer>();
+        IPagingResult<IList<Customer>> result = await repository.ToBusinessPagingAsync(clause, request.Criteria);
 
         if (!result.HasData())
         {

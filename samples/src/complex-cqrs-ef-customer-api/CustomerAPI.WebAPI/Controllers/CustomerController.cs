@@ -1,20 +1,16 @@
-﻿using CustomerAPI.Application.Customers.Commands.CreateCustomer;
+using System.Net;
+using CustomerAPI.Application.Customers.Commands.CreateCustomer;
 using CustomerAPI.Application.Customers.Commands.DeleteCustomer;
 using CustomerAPI.Application.Customers.Commands.UpdateCustomer;
 using CustomerAPI.Application.Customers.Queries.GetCustomerById;
 using CustomerAPI.Application.Customers.Queries.GetCustomers;
 using CustomerAPI.Core.Resources;
 using CustomerAPI.Core.ValueObjects.Customers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.DTOs.Models;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CustomerAPI.WebAPI.Controllers;
 
@@ -35,7 +31,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
         [FromQuery] PagingCriteriaRequest pagingCriteria,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new GetCustomersQuery
+        IPagingResult<IList<CustomerResult>> result = await mediator.SendAsync(new GetCustomersQuery
         {
             Filter = filter,
             Criteria = pagingCriteria.ToPagingCriteria()
@@ -55,7 +51,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [Route("{id:int}", Name = "CustomerGetById")]
     public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(int id, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new GetCustomerByIdQuery { Id = id }, cancellationToken);
+        IBusinessResult<CustomerIdResult> result = await mediator.SendAsync(new GetCustomerByIdQuery { Id = id }, cancellationToken);
         if (result.HasData())
         {
             return Ok(result);
@@ -70,7 +66,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [Route("", Name = "CustomerCreate")]
     public async Task<ActionResult<IBusinessResult<int>>> Create([FromBody] CustomerCreate model, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new CreateCustomerCommand { Model = model }, cancellationToken);
+        IBusinessResult<int> result = await mediator.SendAsync(new CreateCustomerCommand { Model = model }, cancellationToken);
         if (result.HasErrors)
         {
             return BadRequest(result);
@@ -86,7 +82,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [Route("{id:int}", Name = "CustomerUpdate")]
     public async Task<ActionResult<IBusinessResult<int>>> Update(int id, [FromBody] CustomerUpdate model, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new UpdateCustomerCommand { Id = id, Model = model }, cancellationToken);
+        IBusinessResult<int> result = await mediator.SendAsync(new UpdateCustomerCommand { Id = id, Model = model }, cancellationToken);
         if (result.HasErrors)
         {
             if (result.HasMessageKey(nameof(Messages.RECORD_NOT_FOUND_FOR_ID)))
@@ -112,7 +108,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [Route("{id:int}", Name = "CustomerDelete")]
     public async Task<ActionResult<IBusinessResult<int>>> Delete(int id, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new DeleteCustomerCommand { Id = id }, cancellationToken);
+        IBusinessResult<int> result = await mediator.SendAsync(new DeleteCustomerCommand { Id = id }, cancellationToken);
         if (result.HasErrors)
         {
             if (result.HasMessageKey(nameof(Messages.RECORD_NOT_FOUND_FOR_ID)))

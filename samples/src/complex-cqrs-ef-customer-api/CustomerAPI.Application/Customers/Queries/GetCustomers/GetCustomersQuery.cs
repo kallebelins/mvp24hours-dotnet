@@ -1,7 +1,6 @@
 using CustomerAPI.Core.ValueObjects.Customers;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Generic;
 
 namespace CustomerAPI.Application.Customers.Queries.GetCustomers;
 

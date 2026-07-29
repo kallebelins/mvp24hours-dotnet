@@ -21,7 +21,7 @@ public class CustomerApiFactory : WebApplicationFactory<Program>
                 (d.ServiceType.IsGenericType && d.ServiceType.GetGenericTypeDefinition() == typeof(DbContextOptions<>)) ||
                 d.ServiceType == typeof(IDbContextOptionsConfiguration<EFDBContext>)).ToList();
 
-            foreach (var d in descriptors)
+            foreach (ServiceDescriptor? d in descriptors)
             {
                 services.Remove(d);
             }

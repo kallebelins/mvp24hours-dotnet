@@ -1,5 +1,6 @@
 using CustomerAPI.Application.Customers.Commands.CreateCustomer;
 using CustomerAPI.Core.ValueObjects.Customers;
+using FluentValidation.Results;
 
 namespace CustomerAPI.Test.Unit;
 
@@ -16,7 +17,7 @@ public class CreateCustomerCommandValidatorTests
             Model = new CustomerCreate { Name = string.Empty, Note = null! }
         };
 
-        var result = await _validator.ValidateAsync(command);
+        ValidationResult result = await _validator.ValidateAsync(command);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.ErrorMessage == "Customer Name is required.");
@@ -30,7 +31,7 @@ public class CreateCustomerCommandValidatorTests
             Model = new CustomerCreate { Name = "Ada Lovelace", Note = "Pioneer" }
         };
 
-        var result = await _validator.ValidateAsync(command);
+        ValidationResult result = await _validator.ValidateAsync(command);
 
         result.IsValid.Should().BeTrue();
     }
