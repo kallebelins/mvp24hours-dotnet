@@ -103,7 +103,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Contact>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Contact>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
-        [Route("{customerId:int}/Contact/{id}", Name = "ContactUpdate")]
+        [Route("{customerId:int}/Contact/{id:int}", Name = "ContactUpdate")]
         public async Task<ActionResult<IBusinessResult<IList<Contact>>>> Update(int customerId, int id, [FromBody] Contact model, CancellationToken cancellationToken)
         {
             // apply data validation to the model/entity with FluentValidation or DataAnnotation
@@ -152,7 +152,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Contact>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Contact>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Contact>>), StatusCodes.Status400BadRequest)]
-        [Route("{customerId:int}/Contact/{id}", Name = "ContactDelete")]
+        [Route("{customerId:int}/Contact/{id:int}", Name = "ContactDelete")]
         public async Task<ActionResult<IBusinessResult<IList<Contact>>>> Delete(int customerId, int id, CancellationToken cancellationToken)
         {
             // try to retrieve entity by identifier

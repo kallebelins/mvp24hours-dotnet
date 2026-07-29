@@ -44,7 +44,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status404NotFound)]
-        [Route("{id}", Name = "CustomerGetById")]
+        [Route("{id:int}", Name = "CustomerGetById")]
         public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(int id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.GetById(id, cancellationToken: cancellationToken);

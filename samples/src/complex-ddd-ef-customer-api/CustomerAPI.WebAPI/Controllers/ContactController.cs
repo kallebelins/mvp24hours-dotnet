@@ -58,7 +58,7 @@ public class ContactController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
-    [Route("{customerId:int}/Contact/{id}", Name = "ContactRemove")]
+    [Route("{customerId:int}/Contact/{id:int}", Name = "ContactRemove")]
     public async Task<ActionResult<IBusinessResult<int>>> Remove(int customerId, int id, CancellationToken cancellationToken)
     {
         var result = await mediator.SendAsync(new RemoveContactCommand

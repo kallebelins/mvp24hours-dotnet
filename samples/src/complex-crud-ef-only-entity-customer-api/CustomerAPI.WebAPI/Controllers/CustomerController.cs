@@ -47,7 +47,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
-        [Route("{id}", Name = "CustomerGetById")]
+        [Route("{id:int}", Name = "CustomerGetById")]
         public async Task<ActionResult<IBusinessResult<Customer>>> GetById(int id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.GetById(id, cancellationToken: cancellationToken);
@@ -82,7 +82,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
-        [Route("{id}", Name = "CustomerUpdate")]
+        [Route("{id:int}", Name = "CustomerUpdate")]
         public async Task<ActionResult<IBusinessResult<int>>> Update(int id, [FromBody] Customer entityModel, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.Update(id, entityModel, cancellationToken: cancellationToken);
@@ -108,7 +108,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
-        [Route("{id}", Name = "CustomerDelete")]
+        [Route("{id:int}", Name = "CustomerDelete")]
         public async Task<ActionResult<IBusinessResult<int>>> Delete(int id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.Delete(id, cancellationToken: cancellationToken);

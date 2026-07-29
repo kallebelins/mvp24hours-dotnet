@@ -51,7 +51,7 @@ public class CustomerController(FacadeService facade) : ControllerBase
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status400BadRequest)]
-    [Route("{id}", Name = "CustomerGetById")]
+    [Route("{id:int}", Name = "CustomerGetById")]
     public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(
         int id,
         CancellationToken cancellationToken)

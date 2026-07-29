@@ -4,7 +4,6 @@
     Sample-only packages (HealthChecks, NLog, Dapper, tooling) are appended below.
   -->
   <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" />
-
   <ItemGroup>
     <!-- Health checks — MongoDb 9.x required for MongoDB.Driver 3.x (aligned with src/). -->
     <PackageVersion Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
@@ -14,19 +13,16 @@
     <PackageVersion Include="AspNetCore.HealthChecks.UI" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.0" />
-
     <!-- ADO.NET providers for multi-database health catalog (Phase 6.1). -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
-
     <!-- Logging demos (samples only; library prefers ILogger + OpenTelemetry). -->
     <PackageVersion Include="NLog" Version="5.2.8" />
     <PackageVersion Include="NLog.Config" Version="4.7.15" />
     <PackageVersion Include="NLog.Web.AspNetCore" Version="5.3.8" />
-
     <!-- Dapper hybrid samples. -->
     <PackageVersion Include="Dapper" Version="2.1.28" />
     <PackageVersion Include="Dapper.SqlBuilder" Version="2.0.78" />
-
     <!-- OpenTelemetry SDK packages for observability sample (align with OpenTelemetry 1.16.0 in src/). -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
@@ -34,17 +30,14 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.16.0" />
-
     <!-- Sample tooling not centralized under src/. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.9" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
-
     <!-- Aspire hosting resource packages (AppHost project only). Requires: dotnet workload install aspire -->
     <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.4.6" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
   </ItemGroup>
-
   <!-- Published-package fallback for standalone sample consumption. -->
   <ItemGroup Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'">
     <PackageVersion Include="Mvp24Hours.Application" Version="$(Mvp24HoursPackageVersion)" />

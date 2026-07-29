@@ -64,7 +64,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
-        [Route("{customerId:int}/Contact/{id}", Name = "ContactUpdate")]
+        [Route("{customerId:int}/Contact/{id:int}", Name = "ContactUpdate")]
         public async Task<ActionResult<IBusinessResult<int>>> Update(int customerId, int id, [FromBody] ContactUpdate model, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.Update(customerId, id, model, cancellationToken: cancellationToken);
@@ -90,7 +90,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
-        [Route("{customerId:int}/Contact/{id}", Name = "ContactDelete")]
+        [Route("{customerId:int}/Contact/{id:int}", Name = "ContactDelete")]
         public async Task<ActionResult<IBusinessResult<int>>> Delete(int customerId, int id, CancellationToken cancellationToken)
         {
             var result = await facade.ContactService.Delete(customerId, id, cancellationToken: cancellationToken);

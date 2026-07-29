@@ -1,11 +1,10 @@
-namespace CustomerAPI.Domain.Enums
+namespace CustomerAPI.Domain.Enums;
+
+public enum ContactType
 {
-    public enum ContactType
-    {
-        CellPhone,
-        HomePhone,
-        CommercialPhone,
-        Email,
-        Other
-    }
+    CellPhone,
+    HomePhone,
+    CommercialPhone,
+    Email,
+    Other
 }

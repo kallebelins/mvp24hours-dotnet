@@ -8,12 +8,9 @@ using CustomerAPI.Infrastructure.Data;
 using CustomerAPI.WebAPI.Configuration;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Extensions.Options;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Extensions;
-using System;
 
 namespace CustomerAPI.WebAPI.Extensions;
 
@@ -24,7 +21,7 @@ public static class ServiceBuilderExtensions
 {
     public static IServiceCollection AddMyDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+        ConnectionStringsOptions connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
             .Get<ConnectionStringsOptions>()
             ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
         services.AddDbContext<EFDBContext>(options =>
@@ -60,7 +57,7 @@ public static class ServiceBuilderExtensions
 
     public static IServiceCollection AddMyHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
+        ConnectionStringsOptions connectionStrings = configuration.GetSection(ConnectionStringsOptions.SectionName)
             .Get<ConnectionStringsOptions>()
             ?? throw new InvalidOperationException("ConnectionStrings configuration is required.");
         services.AddHealthChecks()

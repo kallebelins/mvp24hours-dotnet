@@ -57,7 +57,7 @@ Configure secrets with environment variables, user secrets, or a secret store. N
 
 | Key | Required | Description | Example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:EFDBContext` | Yes | EF Core connection string | `Data Source=.,1433;Initial Catalog=MyTestDbPipelineEf;...;Password=CHANGE_ME;...` |
+| `ConnectionStrings:EFDBContext` | Yes | EF Core connection string | `Data Source=.,1433;Initial Catalog=MyTestDbPipelineEf;...;Password=MyPass@word;...` |
 | `Settings:TypicodeCustomerUrl` | Yes | Source endpoint for external Customer records | `https://jsonplaceholder.typicode.com/users` |
 
 ## Run

@@ -83,7 +83,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<GetByIdCustomerResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<GetByIdCustomerResponse>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<GetByIdCustomerResponse>>), StatusCodes.Status400BadRequest)]
-        [Route("{id}", Name = "CustomerGetById")]
+        [Route("{id:int}", Name = "CustomerGetById")]
         public async Task<ActionResult<IBusinessResult<GetByIdCustomerResponse>>> GetById(
             int id,
             CancellationToken cancellationToken)

@@ -50,7 +50,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status404NotFound)]
-    [Route("{id}", Name = "CustomerGetById")]
+    [Route("{id:int}", Name = "CustomerGetById")]
     public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(int id, CancellationToken cancellationToken)
     {
         var result = await mediator.SendAsync(new GetCustomerByIdQuery { Id = id }, cancellationToken);
@@ -73,7 +73,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
-    [Route("{id}", Name = "CustomerUpdate")]
+    [Route("{id:int}", Name = "CustomerUpdate")]
     public async Task<ActionResult<IBusinessResult<int>>> Update(int id, [FromBody] CustomerUpdate model, CancellationToken cancellationToken)
     {
         var result = await mediator.SendAsync(new UpdateCustomerCommand { Id = id, Model = model }, cancellationToken);
@@ -94,7 +94,7 @@ public class CustomerController(IMediator mediator) : ControllerBase
     [HttpDelete]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
-    [Route("{id}", Name = "CustomerDeactivate")]
+    [Route("{id:int}", Name = "CustomerDeactivate")]
     public async Task<ActionResult<IBusinessResult<int>>> Deactivate(int id, CancellationToken cancellationToken)
     {
         var result = await mediator.SendAsync(new DeactivateCustomerCommand { Id = id }, cancellationToken);

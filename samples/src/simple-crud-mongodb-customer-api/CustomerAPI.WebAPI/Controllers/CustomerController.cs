@@ -83,7 +83,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
-        [Route("{id}", Name = "CustomerGetById")]
+        [Route("{id:int}", Name = "CustomerGetById")]
         public async Task<ActionResult<IBusinessResult<Customer>>> GetById(string id, CancellationToken cancellationToken)
         {
             // try to retrieve identifier with navigation property
@@ -136,7 +136,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status304NotModified)]
-        [Route("{id}", Name = "CustomerUpdate")]
+        [Route("{id:int}", Name = "CustomerUpdate")]
         public async Task<ActionResult<IBusinessResult<Customer>>> Update(string id, [FromBody] Customer model, CancellationToken cancellationToken)
         {
             // apply data validation to the model/entity with FluentValidation or DataAnnotation
@@ -184,7 +184,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<Customer>>), StatusCodes.Status400BadRequest)]
-        [Route("{id}", Name = "CustomerDelete")]
+        [Route("{id:int}", Name = "CustomerDelete")]
         public async Task<ActionResult<IBusinessResult<Customer>>> Delete(string id, CancellationToken cancellationToken)
         {
             // try to retrieve entity by identifier

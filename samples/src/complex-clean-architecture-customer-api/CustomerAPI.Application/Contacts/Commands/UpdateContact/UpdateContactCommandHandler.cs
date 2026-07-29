@@ -18,8 +18,8 @@ public sealed class UpdateContactCommandHandler(
 {
     public async Task<IBusinessResult<int>> Handle(UpdateContactCommand request, CancellationToken cancellationToken)
     {
-        var repository = unitOfWork.GetRepository<Contact>();
-        var entity = await repository
+        IRepositoryAsync<Contact> repository = unitOfWork.GetRepository<Contact>();
+        Contact? entity = await repository
             .GetByAsync(x => x.Id == request.Id && x.CustomerId == request.CustomerId, cancellationToken: cancellationToken)
             .FirstOrDefaultAsync();
 

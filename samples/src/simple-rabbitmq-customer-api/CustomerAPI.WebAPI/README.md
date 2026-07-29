@@ -38,7 +38,7 @@ This .NET 10 sample accepts Customer commands over HTTP, publishes them to Rabbi
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:EFDBContext` | Yes | SQL Server database updated by consumers | `Server=localhost,1433;Database=MyTestDbRabbitMQ;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database updated by consumers | `Server=localhost,1433;Database=MyTestDbRabbitMQ;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
 | `ConnectionStrings:RabbitMQContext` | Yes | AMQP broker connection | `amqp://guest:guest@localhost:5672` |
 
 Never commit production credentials. Override them through environment variables, user secrets, or a secret store.

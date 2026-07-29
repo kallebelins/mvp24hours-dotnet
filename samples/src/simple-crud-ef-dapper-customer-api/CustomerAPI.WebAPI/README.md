@@ -40,7 +40,7 @@ Configure secrets with environment variables, user secrets (`dotnet user-secrets
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:EFDBContext` | Yes | Shared EF Core and Dapper SQL Server database | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=CHANGE_ME;TrustServerCertificate=True` |
+| `ConnectionStrings:EFDBContext` | Yes | Shared EF Core and Dapper SQL Server database | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
 
 Supply credentials through environment variables, user secrets, or a secret store.
 

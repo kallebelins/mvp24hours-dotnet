@@ -48,7 +48,7 @@ namespace CustomerAPI.WebAPI.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ActionResult<IBusinessResult<CustomerIdResult>>), StatusCodes.Status404NotFound)]
-        [Route("{id}", Name = "CustomerGetById")]
+        [Route("{id:int}", Name = "CustomerGetById")]
         public async Task<ActionResult<IBusinessResult<CustomerIdResult>>> GetById(int id, CancellationToken cancellationToken)
         {
             var result = await facade.CustomerService.GetById(id, cancellationToken: cancellationToken);
@@ -76,7 +76,7 @@ namespace CustomerAPI.WebAPI.Controllers
         /// </summary>
         [HttpPut]
         [ProducesResponseType(typeof(ActionResult<string>), StatusCodes.Status201Created)]
-        [Route("{id}", Name = "CustomerUpdate")]
+        [Route("{id:int}", Name = "CustomerUpdate")]
         public ActionResult Update(int id, [FromBody] CustomerUpdate model)
         {
             model.Id = id;
@@ -89,7 +89,7 @@ namespace CustomerAPI.WebAPI.Controllers
         /// </summary>
         [HttpDelete]
         [ProducesResponseType(typeof(ActionResult<string>), StatusCodes.Status201Created)]
-        [Route("{id}", Name = "CustomerDelete")]
+        [Route("{id:int}", Name = "CustomerDelete")]
         public ActionResult Delete(int id)
         {
             var model = new CustomerDelete() { Id = id };

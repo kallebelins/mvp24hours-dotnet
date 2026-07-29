@@ -14,18 +14,12 @@ public sealed class CreateContactCommandValidator : AbstractValidator<CreateCont
             .NotEmpty()
             .WithMessage("Contact Description is required.");
 
-        When(x => x.Model.Type == ContactType.Email, () =>
-        {
-            RuleFor(x => x.Model.Description)
+        When(x => x.Model.Type == ContactType.Email, () => RuleFor(x => x.Model.Description)
                 .EmailAddress()
-                .WithMessage("Incorrect email.");
-        });
+                .WithMessage("Incorrect email."));
 
-        When(x => x.Model.Type is ContactType.CellPhone or ContactType.HomePhone or ContactType.CommercialPhone, () =>
-        {
-            RuleFor(x => x.Model.Description)
+        When(x => x.Model.Type is ContactType.CellPhone or ContactType.HomePhone or ContactType.CommercialPhone, () => RuleFor(x => x.Model.Description)
                 .Must(m => m.IsValidPhoneNumber())
-                .WithMessage("Incorrect phone number.");
-        });
+                .WithMessage("Incorrect phone number."));
     }
 }

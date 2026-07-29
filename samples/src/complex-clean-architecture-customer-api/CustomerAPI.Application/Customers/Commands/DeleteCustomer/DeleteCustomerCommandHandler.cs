@@ -16,8 +16,8 @@ public sealed class DeleteCustomerCommandHandler(
 {
     public async Task<IBusinessResult<int>> Handle(DeleteCustomerCommand request, CancellationToken cancellationToken)
     {
-        var repository = unitOfWork.GetRepository<Customer>();
-        var entity = await repository.GetByIdAsync(request.Id, cancellationToken: cancellationToken);
+        IRepositoryAsync<Customer> repository = unitOfWork.GetRepository<Customer>();
+        Customer? entity = await repository.GetByIdAsync(request.Id, cancellationToken: cancellationToken);
         if (entity == null)
         {
             return Messages.RECORD_NOT_FOUND_FOR_ID

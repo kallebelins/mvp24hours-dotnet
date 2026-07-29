@@ -1,18 +1,14 @@
+using System.Net;
 using CustomerAPI.Application.Contacts.Commands.CreateContact;
 using CustomerAPI.Application.Contacts.Commands.DeleteContact;
 using CustomerAPI.Application.Contacts.Commands.UpdateContact;
 using CustomerAPI.Application.Contacts.Queries.GetContactsByCustomer;
 using CustomerAPI.Application.DTOs.Contacts;
 using CustomerAPI.Domain.Resources;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CustomerAPI.WebAPI.Controllers;
 
@@ -30,7 +26,7 @@ public class ContactController(IMediator mediator) : ControllerBase
     [Route("{customerId:int}/Contact", Name = "ContactGetBy")]
     public async Task<ActionResult<IBusinessResult<IList<ContactIdResult>>>> GetBy(int customerId, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new GetContactsByCustomerQuery { CustomerId = customerId }, cancellationToken);
+        IBusinessResult<IList<ContactIdResult>> result = await mediator.SendAsync(new GetContactsByCustomerQuery { CustomerId = customerId }, cancellationToken);
         if (result.HasData())
         {
             return Ok(result);
@@ -48,7 +44,7 @@ public class ContactController(IMediator mediator) : ControllerBase
         [FromBody] ContactCreate model,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new CreateContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new CreateContactCommand
         {
             CustomerId = customerId,
             Model = model
@@ -67,14 +63,14 @@ public class ContactController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
-    [Route("{customerId:int}/Contact/{id}", Name = "ContactUpdate")]
+    [Route("{customerId:int}/Contact/{id:int}", Name = "ContactUpdate")]
     public async Task<ActionResult<IBusinessResult<int>>> Update(
         int customerId,
         int id,
         [FromBody] ContactUpdate model,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new UpdateContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new UpdateContactCommand
         {
             CustomerId = customerId,
             Id = id,
@@ -103,10 +99,10 @@ public class ContactController(IMediator mediator) : ControllerBase
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ActionResult<IBusinessResult<int>>), StatusCodes.Status400BadRequest)]
-    [Route("{customerId:int}/Contact/{id}", Name = "ContactDelete")]
+    [Route("{customerId:int}/Contact/{id:int}", Name = "ContactDelete")]
     public async Task<ActionResult<IBusinessResult<int>>> Delete(int customerId, int id, CancellationToken cancellationToken)
     {
-        var result = await mediator.SendAsync(new DeleteContactCommand
+        IBusinessResult<int> result = await mediator.SendAsync(new DeleteContactCommand
         {
             CustomerId = customerId,
             Id = id

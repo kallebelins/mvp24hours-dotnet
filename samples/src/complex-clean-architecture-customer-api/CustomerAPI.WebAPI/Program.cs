@@ -4,15 +4,14 @@ using CustomerAPI.WebAPI.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.WebAPI.Extensions;
-using NLog.Web;
 using NLog;
+using NLog.Web;
 
 
 
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+Logger logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 
 
 
@@ -22,7 +21,7 @@ try
 
 
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 
 
@@ -52,16 +51,16 @@ try
 
 
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
 
 
     if (!app.Environment.IsEnvironment("Testing"))
     {
-        await using (var scope = app.Services.CreateAsyncScope())
+        await using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
-            var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            EFDBContext db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
+            TimeProvider timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
             await db.Database.MigrateAsync();
             await EFDBContextSeed.SeedAsync(db, timeProvider);
         }

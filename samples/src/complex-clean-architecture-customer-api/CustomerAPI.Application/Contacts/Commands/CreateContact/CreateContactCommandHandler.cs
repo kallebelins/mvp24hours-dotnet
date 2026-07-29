@@ -19,12 +19,12 @@ public sealed class CreateContactCommandHandler(
 {
     public async Task<IBusinessResult<int>> Handle(CreateContactCommand request, CancellationToken cancellationToken)
     {
-        var entity = mapper.Map<Contact>(request.Model);
+        Contact entity = mapper.Map<Contact>(request.Model);
         entity.CustomerId = request.CustomerId;
         entity.Created = timeProvider.GetUtcNow().UtcDateTime;
         entity.Active = true;
 
-        var repository = unitOfWork.GetRepository<Contact>();
+        IRepositoryAsync<Contact> repository = unitOfWork.GetRepository<Contact>();
         await repository.AddAsync(entity, cancellationToken: cancellationToken);
 
         if (await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken) <= 0)

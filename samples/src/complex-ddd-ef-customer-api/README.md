@@ -89,7 +89,7 @@ Edit `CustomerAPI.WebAPI/appsettings.Development.json`:
 ```json
 {
   "ConnectionStrings": {
-    "EFDBContext": "Data Source=.,1433;Initial Catalog=MyDddTestDb;Persist Security Info=True;TrustServerCertificate=True;User ID=sa;Password=CHANGE_ME;Pooling=False;"
+    "EFDBContext": "Data Source=.,1433;Initial Catalog=MyDddTestDb;Persist Security Info=True;TrustServerCertificate=True;User ID=sa;Password=MyPass@word;Pooling=False;"
   }
 }
 ```
