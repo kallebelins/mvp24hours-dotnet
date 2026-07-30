@@ -57,13 +57,11 @@ try
 
     if (!app.Environment.IsEnvironment("Testing"))
     {
-        await using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
-        {
-            EFDBContext db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
-            TimeProvider timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-            await db.Database.MigrateAsync();
-            await EFDBContextSeed.SeedAsync(db, timeProvider);
-        }
+        await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
+        EFDBContext db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
+        TimeProvider timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        await db.Database.MigrateAsync();
+        await EFDBContextSeed.SeedAsync(db, timeProvider);
     }
     app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
