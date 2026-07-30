@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CustomerAPI.Core/CustomerAPI.Core.csproj" />
+  <Project Path="CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+</Solution>

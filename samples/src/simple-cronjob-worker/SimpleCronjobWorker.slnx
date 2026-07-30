@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CronJobWorker.Test/CronJobWorker.Test.csproj" />
+  <Project Path="CronJobWorker/CronJobWorker.csproj" />
+</Solution>

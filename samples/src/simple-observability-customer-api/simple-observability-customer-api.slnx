@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="../../../src/Mvp24Hours.Core/Mvp24Hours.Core.csproj" />
-  <Project Path="../../../src/Mvp24Hours.Infrastructure.Cqrs/Mvp24Hours.Infrastructure.Cqrs.csproj" />
-  <Project Path="../../../src/Mvp24Hours.Infrastructure/Mvp24Hours.Infrastructure.csproj" />
-  <Project Path="../../../src/Mvp24Hours.WebAPI/Mvp24Hours.WebAPI.csproj" />
-  <Project Path="CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
-</Solution>
