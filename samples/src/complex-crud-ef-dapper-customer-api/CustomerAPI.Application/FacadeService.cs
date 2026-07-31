@@ -1,26 +1,24 @@
-﻿using CustomerAPI.Core.Contract.Logic;
+using CustomerAPI.Core.Contract.Logic;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
-namespace CustomerAPI.Application
+namespace CustomerAPI.Application;
+
+/// <summary>
+/// Provides all services available for use in this project.
+/// </summary>
+public class FacadeService(IServiceProvider provider)
 {
+    #region [ Services ]
+
     /// <summary>
-    /// Provides all services available for use in this project.
+    /// <see cref="ICustomerService"/>
     /// </summary>
-    public class FacadeService(IServiceProvider provider)
-    {
-        #region [ Services ]
+    public ICustomerService CustomerService => provider.GetRequiredService<ICustomerService>();
 
-        /// <summary>
-        /// <see cref="ICustomerService"/>
-        /// </summary>
-        public ICustomerService CustomerService => provider.GetRequiredService<ICustomerService>();
+    /// <summary>
+    /// <see cref="IContactService"/>
+    /// </summary>
+    public IContactService ContactService => provider.GetRequiredService<IContactService>();
 
-        /// <summary>
-        /// <see cref="IContactService"/>
-        /// </summary>
-        public IContactService ContactService => provider.GetRequiredService<IContactService>();
-
-        #endregion
-    }
+    #endregion
 }
