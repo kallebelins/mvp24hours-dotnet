@@ -11,6 +11,10 @@ public sealed class DevKitIndexWarmupService : IHostedService
     private readonly SampleCatalogService _samples;
     private readonly SourceIndexService _sourceIndex;
     private readonly ComplianceService _compliance;
+    private readonly ScenariosManifestService _scenarios;
+    private readonly CapabilitiesManifestService _capabilities;
+    private readonly MigrationPlaybookService _migration;
+    private readonly SamplePatternIndexService _samplePatterns;
     private readonly ILogger<DevKitIndexWarmupService> _logger;
 
     public DevKitIndexWarmupService(
@@ -19,6 +23,10 @@ public sealed class DevKitIndexWarmupService : IHostedService
         SampleCatalogService samples,
         SourceIndexService sourceIndex,
         ComplianceService compliance,
+        ScenariosManifestService scenarios,
+        CapabilitiesManifestService capabilities,
+        MigrationPlaybookService migration,
+        SamplePatternIndexService samplePatterns,
         ILogger<DevKitIndexWarmupService> logger)
     {
         _manifest = manifest;
@@ -26,6 +34,10 @@ public sealed class DevKitIndexWarmupService : IHostedService
         _samples = samples;
         _sourceIndex = sourceIndex;
         _compliance = compliance;
+        _scenarios = scenarios;
+        _capabilities = capabilities;
+        _migration = migration;
+        _samplePatterns = samplePatterns;
         _logger = logger;
     }
 
@@ -37,6 +49,10 @@ public sealed class DevKitIndexWarmupService : IHostedService
         _ = _samples.GetAll();
         _sourceIndex.Warmup();
         _compliance.Warmup();
+        _scenarios.Warmup();
+        _capabilities.Warmup();
+        _migration.Warmup();
+        _samplePatterns.Warmup();
         _logger.LogDebug("Mvp24Hours DevKit indexes ready.");
         return Task.CompletedTask;
     }

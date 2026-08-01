@@ -39,4 +39,22 @@ public class PerformanceGuardrailTests : McpTestFixture
             $"CheckPaths took {sw.ElapsedMilliseconds}ms (limit {CheckPathsTimeoutMs}ms).");
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public void SearchSamplePatterns_completes_within_timeout()
+    {
+        var paths = CreatePaths();
+        var manifest = new ManifestService(paths);
+        var samples = new SampleCatalogService(paths, manifest);
+        var index = new SamplePatternIndexService(paths, samples);
+
+        index.Warmup();
+        var sw = Stopwatch.StartNew();
+        var hits = index.Search("AddMvpMediator", 5);
+        sw.Stop();
+
+        Assert.NotEmpty(hits);
+        Assert.True(sw.ElapsedMilliseconds < FindSymbolTimeoutMs,
+            $"SearchSamplePatterns took {sw.ElapsedMilliseconds}ms (limit {FindSymbolTimeoutMs}ms).");
+    }
 }

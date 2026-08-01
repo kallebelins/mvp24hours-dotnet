@@ -17,7 +17,7 @@ public sealed partial class ComplianceService
         _checklistRules = new Lazy<IReadOnlyList<string>>(LoadChecklistRules);
     }
 
-    public ComplianceCheckResult CheckPaths(IEnumerable<string> repoRelativePaths, string? templateId = null)
+    public ComplianceCheckResult CheckPaths(IEnumerable<string> repoRelativePaths, string? templateId = null, string? scenarioId = null)
     {
         var result = new ComplianceCheckResult { Passed = true };
         var rules = _checklistRules.Value.ToList();
@@ -33,12 +33,15 @@ public sealed partial class ComplianceService
 
         result.CheckedRules = rules.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
+        var csFiles = new List<string>();
+        var hasTestProject = false;
+
         foreach (var relative in repoRelativePaths)
         {
             var full = _paths.ResolveRepoRelative(relative);
             if (File.Exists(full))
             {
-                CheckFile(full, relative, rules, result);
+                CollectFiles(full, relative, csFiles, ref hasTestProject, result);
             }
             else if (Directory.Exists(full))
             {
@@ -47,16 +50,43 @@ public sealed partial class ComplianceService
                                          f.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)))
                 {
                     var rel = Path.GetRelativePath(_paths.RepoRoot, file).Replace('\\', '/');
-                    CheckFile(file, rel, rules, result);
+                    CollectFiles(file, rel, csFiles, ref hasTestProject, result);
                 }
             }
+        }
+
+        if (hasTestProject)
+        {
+            CheckPartialProgramForTests(csFiles, result);
         }
 
         result.Passed = result.Violations.Count == 0;
         return result;
     }
 
-    private void CheckFile(string fullPath, string relativePath, List<string> rules, ComplianceCheckResult result)
+    private void CollectFiles(
+        string fullPath,
+        string relativePath,
+        List<string> csFiles,
+        ref bool hasTestProject,
+        ComplianceCheckResult result)
+    {
+        if (fullPath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase) &&
+            (relativePath.Contains(".Test", StringComparison.OrdinalIgnoreCase) ||
+             relativePath.Contains(".Tests", StringComparison.OrdinalIgnoreCase)))
+        {
+            hasTestProject = true;
+        }
+
+        if (fullPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+        {
+            csFiles.Add(fullPath);
+        }
+
+        CheckFile(fullPath, relativePath, result);
+    }
+
+    private void CheckFile(string fullPath, string relativePath, ComplianceCheckResult result)
     {
         if (!fullPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
             !fullPath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
@@ -87,6 +117,27 @@ public sealed partial class ComplianceService
             AddViolation(result, "Do not instantiate HttpClient directly", relativePath);
         }
 
+        if (content.Contains("Swashbuckle", StringComparison.Ordinal) ||
+            content.Contains("AddSwaggerGen", StringComparison.Ordinal))
+        {
+            AddViolation(result, "Use Microsoft.AspNetCore.OpenAPI — not Swashbuckle", relativePath, "Swashbuckle reference found.");
+        }
+
+        if (content.Contains("System.Timers.Timer", StringComparison.Ordinal))
+        {
+            AddViolation(result, "Use TimeProvider + PeriodicTimer — not System.Timers.Timer", relativePath);
+        }
+
+        if (relativePath.Contains(".Infrastructure.", StringComparison.OrdinalIgnoreCase) ||
+            relativePath.Contains("/Infrastructure/", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ProjectReferencePattern().IsMatch(content) &&
+                content.Contains(".Application", StringComparison.Ordinal))
+            {
+                AddViolation(result, "Infrastructure must not reference Application", relativePath);
+            }
+        }
+
         if (fullPath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase) &&
             !content.Contains("<Nullable>enable</Nullable>", StringComparison.Ordinal) &&
             !content.Contains("<Nullable>enable</Nullable>", StringComparison.OrdinalIgnoreCase))
@@ -107,6 +158,28 @@ public sealed partial class ComplianceService
     }
 
     public void Warmup() => _ = _checklistRules.Value;
+
+    private void CheckPartialProgramForTests(IReadOnlyList<string> csFiles, ComplianceCheckResult result)
+    {
+        var programFiles = csFiles.Where(f => Path.GetFileName(f).Equals("Program.cs", StringComparison.OrdinalIgnoreCase)).ToList();
+        if (programFiles.Count == 0)
+        {
+            return;
+        }
+
+        var hasPartialProgram = programFiles.Any(f =>
+            File.ReadAllText(f).Contains("partial class Program", StringComparison.OrdinalIgnoreCase));
+
+        if (!hasPartialProgram)
+        {
+            var rel = Path.GetRelativePath(_paths.RepoRoot, programFiles[0]).Replace('\\', '/');
+            AddViolation(
+                result,
+                "WebAPI host should declare partial Program for WebApplicationFactory tests",
+                rel,
+                "Add: public partial class Program { }");
+        }
+    }
 
     private IReadOnlyList<string> LoadChecklistRules()
     {

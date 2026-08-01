@@ -42,10 +42,11 @@ public static class ValidationTools
     public static string RunComplianceCheck(
         ComplianceService compliance,
         [Description("Comma-separated repo-relative paths (files or directories)")] string paths,
-        [Description("Optional architecture template id for template-specific rules")] string? templateId = null)
+        [Description("Optional architecture template id for template-specific rules")] string? templateId = null,
+        [Description("Optional scenario id for scenario-specific context")] string? scenarioId = null)
     {
         var pathList = paths.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var result = compliance.CheckPaths(pathList, templateId);
+        var result = compliance.CheckPaths(pathList, templateId, scenarioId);
         return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
     }
 

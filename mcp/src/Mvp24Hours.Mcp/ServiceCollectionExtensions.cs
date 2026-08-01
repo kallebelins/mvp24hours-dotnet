@@ -15,6 +15,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SourceIndexService>();
         services.AddSingleton<ComplianceService>();
         services.AddSingleton<ArchitectureResolver>();
+        services.AddSingleton<ScenariosManifestService>();
+        services.AddSingleton<CapabilitiesManifestService>();
+        services.AddSingleton<MigrationPlaybookService>();
+        services.AddSingleton<SamplePatternIndexService>();
         return services;
     }
 }

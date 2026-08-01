@@ -42,6 +42,10 @@ dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --ur
 | `mvp24hours://templates/{id}` | Architecture template doc |
 | `mvp24hours://layers/{name}` | Layer template (`core`, `application`, …) |
 | `mvp24hours://samples/{id}/readme` | Sample README |
+| `mvp24hours://scenarios` | Development scenarios manifest |
+| `mvp24hours://capabilities` | Feature/capability index |
+| `mvp24hours://migration/{id}` | Migration playbook |
+| `mvp24hours://discovery` | Language-agnostic port/discovery playbook |
 
 ## MCP Tools
 
@@ -51,12 +55,18 @@ dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --ur
 | Architecture | `resolve_architecture`, `get_architecture_template`, `list_layers` |
 | Scaffolding | `suggest_project_structure`, `get_test_scaffold`, `get_readme_scaffold`, `get_di_registration_hints` |
 | Validation | `find_source_symbol`, `find_tests_for_module`, `run_compliance_check`, `verify_doc_claim` |
+| Scenarios | `list_scenarios`, `get_scenario_playbook`, `get_discovery_playbook`, `resolve_feature`, `plan_architecture_migration`, `get_migration_playbook`, `search_sample_patterns` |
 
 ## MCP Prompts
 
 - `new-mvp24hours-api` — full scaffold workflow
 - `add-smoke-tests` — CustomerApiFactory + OpenApiSmokeTests
 - `review-mvp24hours-solution` — compliance review
+- `migrate-architecture` — migrate between architecture templates
+- `port-to-mvp24hours` — port external code via discovery (any language)
+- `add-mvp24hours-feature` — add capability to existing solution
+- `migrate-legacy-mvp24hours` — legacy APIs to native .NET
+- `upgrade-net10-package` — SDK/package upgrade to .NET 10
 
 ## Build and test
 
@@ -76,5 +86,9 @@ If tools report missing manifest:
 ## Canonical sources
 
 - Architecture manifest: [`docs/en-us/ai-resources/templates-manifest.json`](../docs/en-us/ai-resources/templates-manifest.json)
+- Scenarios manifest: [`docs/en-us/ai-resources/scenarios-manifest.json`](../docs/en-us/ai-resources/scenarios-manifest.json)
+- Capabilities manifest: [`docs/en-us/ai-resources/capabilities-manifest.json`](../docs/en-us/ai-resources/capabilities-manifest.json)
+- Migration playbooks: [`docs/en-us/ai-resources/migration-playbooks.json`](../docs/en-us/ai-resources/migration-playbooks.json)
+- Discovery playbook: [`docs/en-us/ai-resources/discovery-playbook.md`](../docs/en-us/ai-resources/discovery-playbook.md)
 - Compliance checklist: [`docs/en-us/ai-resources/compliance-checklist.md`](../docs/en-us/ai-resources/compliance-checklist.md)
 - Sample test templates: [`samples/templates/`](../samples/templates/)

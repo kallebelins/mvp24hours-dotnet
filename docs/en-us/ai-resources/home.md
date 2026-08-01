@@ -48,15 +48,19 @@ dotnet run --project mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj -- --http --ur
 | Resource | Path |
 | --- | --- |
 | Architecture manifest | [`templates-manifest.json`](templates-manifest.json) |
+| Scenarios manifest | [`scenarios-manifest.json`](scenarios-manifest.json) |
+| Capabilities manifest | [`capabilities-manifest.json`](capabilities-manifest.json) |
+| Migration playbooks | [`migration-playbooks.json`](migration-playbooks.json) |
+| Discovery playbook | [`discovery-playbook.md`](discovery-playbook.md) |
 | Layer templates | [`layers/`](layers/) |
 | Compliance checklist | [`compliance-checklist.md`](compliance-checklist.md) |
 | MCP server docs | [`mcp/README.md`](../../mcp/README.md) |
 
 ### MCP capabilities
 
-- **Resources:** `mvp24hours://manifest`, `mvp24hours://docs/{path}`, `mvp24hours://templates/{id}`, `mvp24hours://layers/{name}`, `mvp24hours://samples/{id}/readme`
-- **Tools:** doc search, sample catalog, architecture resolution, scaffolding hints, compliance checks, source symbol lookup
-- **Prompts:** `new-mvp24hours-api`, `add-smoke-tests`, `review-mvp24hours-solution`
+- **Resources:** `mvp24hours://manifest`, `mvp24hours://docs/{path}`, `mvp24hours://templates/{id}`, `mvp24hours://layers/{name}`, `mvp24hours://samples/{id}/readme`, `mvp24hours://scenarios`, `mvp24hours://capabilities`, `mvp24hours://migration/{id}`, `mvp24hours://discovery`
+- **Tools:** doc search, sample catalog, architecture resolution, scaffolding hints, compliance checks, source symbol lookup, scenario playbooks, feature resolution, migration planning, sample pattern search
+- **Prompts:** `new-mvp24hours-api`, `add-smoke-tests`, `review-mvp24hours-solution`, `migrate-architecture`, `port-to-mvp24hours`, `add-mvp24hours-feature`, `migrate-legacy-mvp24hours`, `upgrade-net10-package`
 
 ## Current machine context (fallback)
 

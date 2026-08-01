@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "discoveryPlaybook": "docs/en-us/ai-resources/discovery-playbook.md",
+  "scenarios": [
+    {
+      "id": "greenfield-api",
+      "title": "New Mvp24Hours API from scratch",
+      "prompt": "new-mvp24hours-api",
+      "discoveryRequired": false,
+      "inputs": ["situation"],
+      "steps": [
+        { "order": 1, "title": "Pick architecture", "tool": "resolve_architecture", "args": { "situation": "{situation}" } },
+        { "order": 2, "title": "Read template", "tool": "get_architecture_template", "args": { "templateId": "{templateId}" } },
+        { "order": 3, "title": "Generate solution tree", "tool": "suggest_project_structure", "args": { "templateId": "{templateId}", "productName": "{productName}" } },
+        { "order": 4, "title": "Add smoke tests", "tool": "get_test_scaffold", "args": { "templateFile": "SAMPLE_TEST_CustomerApiFactory.cs.template" } },
+        { "order": 5, "title": "Generate README", "tool": "get_readme_scaffold", "args": {} },
+        { "order": 6, "title": "Validate compliance", "tool": "run_compliance_check", "args": { "scenarioId": "greenfield-api" } }
+      ]
+    },
+    {
+      "id": "architecture-migration",
+      "title": "Migrate between Mvp24Hours architecture templates",
+      "prompt": "migrate-architecture",
+      "discoveryRequired": false,
+      "inputs": ["sourceTemplateId", "targetTemplateId", "productName"],
+      "steps": [
+        { "order": 1, "title": "Plan migration", "tool": "plan_architecture_migration", "args": { "sourceTemplateId": "{sourceTemplateId}", "targetTemplateId": "{targetTemplateId}" } },
+        { "order": 2, "title": "Load migration playbook", "tool": "get_migration_playbook", "args": { "playbookId": "{playbookId}" } },
+        { "order": 3, "title": "Compare reference samples", "tool": "get_sample_tree", "args": {} },
+        { "order": 4, "title": "Validate result", "tool": "run_compliance_check", "args": { "scenarioId": "architecture-migration" } }
+      ]
+    },
+    {
+      "id": "port-to-mvp24hours",
+      "title": "Port external codebase to Mvp24Hours via discovery",
+      "prompt": "port-to-mvp24hours",
+      "discoveryRequired": true,
+      "inputs": ["situation", "sourcePaths"],
+      "steps": [
+        { "order": 1, "title": "Read discovery playbook", "tool": "get_discovery_playbook", "args": {} },
+        { "order": 2, "title": "Pick target architecture", "tool": "resolve_architecture", "args": { "situation": "{situation}" } },
+        { "order": 3, "title": "Map layers", "tool": "list_layers", "args": { "templateId": "{templateId}" } },
+        { "order": 4, "title": "Find reference patterns", "tool": "search_sample_patterns", "args": {} },
+        { "order": 5, "title": "Suggest structure", "tool": "suggest_project_structure", "args": { "templateId": "{templateId}", "productName": "{productName}" } },
+        { "order": 6, "title": "Verify APIs", "tool": "verify_doc_claim", "args": {} },
+        { "order": 7, "title": "Validate compliance", "tool": "run_compliance_check", "args": { "scenarioId": "port-to-mvp24hours" } }
+      ]
+    },
+    {
+      "id": "add-feature",
+      "title": "Add a capability to an existing Mvp24Hours solution",
+      "prompt": "add-mvp24hours-feature",
+      "discoveryRequired": false,
+      "inputs": ["featureKeyword", "currentTemplateId"],
+      "steps": [
+        { "order": 1, "title": "Resolve feature", "tool": "resolve_feature", "args": { "featureKeyword": "{featureKeyword}" } },
+        { "order": 2, "title": "Browse reference sample", "tool": "get_sample_tree", "args": {} },
+        { "order": 3, "title": "DI registration hints", "tool": "get_di_registration_hints", "args": {} },
+        { "order": 4, "title": "Validate compliance", "tool": "run_compliance_check", "args": { "scenarioId": "add-feature" } }
+      ]
+    },
+    {
+      "id": "legacy-migration",
+      "title": "Migrate legacy Mvp24Hours to native .NET APIs",
+      "prompt": "migrate-legacy-mvp24hours",
+      "discoveryRequired": false,
+      "inputs": ["paths", "focus"],
+      "steps": [
+        { "order": 1, "title": "Load playbook", "tool": "get_migration_playbook", "args": { "playbookId": "legacy-to-native-apis" } },
+        { "order": 2, "title": "Search docs", "tool": "search_docs", "args": { "query": "{focus}" } },
+        { "order": 3, "title": "Compliance check", "tool": "run_compliance_check", "args": { "scenarioId": "legacy-migration" } }
+      ]
+    },
+    {
+      "id": "upgrade-net10",
+      "title": "Upgrade packages and SDK to .NET 10",
+      "prompt": "upgrade-net10-package",
+      "discoveryRequired": false,
+      "inputs": ["paths"],
+      "steps": [
+        { "order": 1, "title": "Load playbook", "tool": "get_migration_playbook", "args": { "playbookId": "package-9-to-10" } },
+        { "order": 2, "title": "Read migration doc", "tool": "get_doc", "args": { "path": "migration.md" } },
+        { "order": 3, "title": "Compliance check", "tool": "run_compliance_check", "args": { "scenarioId": "upgrade-net10" } }
+      ]
+    },
+    {
+      "id": "review-solution",
+      "title": "Review solution against Mvp24Hours checklist",
+      "prompt": "review-mvp24hours-solution",
+      "discoveryRequired": false,
+      "inputs": ["paths"],
+      "steps": [
+        { "order": 1, "title": "Compliance check", "tool": "run_compliance_check", "args": {} },
+        { "order": 2, "title": "Verify doc claims", "tool": "verify_doc_claim", "args": {} },
+        { "order": 3, "title": "Find tests", "tool": "find_tests_for_module", "args": {} }
+      ]
+    }
+  ]
+}

@@ -31,7 +31,14 @@ public class McpServerTests : McpTestFixture
             "find_source_symbol",
             "find_tests_for_module",
             "run_compliance_check",
-            "verify_doc_claim"
+            "verify_doc_claim",
+            "list_scenarios",
+            "get_scenario_playbook",
+            "get_discovery_playbook",
+            "resolve_feature",
+            "plan_architecture_migration",
+            "get_migration_playbook",
+            "search_sample_patterns"
         };
 
         foreach (var name in expected)

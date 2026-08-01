@@ -26,6 +26,18 @@ public sealed class RepoRootResolver
 
     public string LayersPath => Path.Combine(RepoRoot, "docs", "en-us", "ai-resources", "layers");
 
+    public string ScenariosManifestPath =>
+        Path.Combine(RepoRoot, "docs", "en-us", "ai-resources", "scenarios-manifest.json");
+
+    public string CapabilitiesManifestPath =>
+        Path.Combine(RepoRoot, "docs", "en-us", "ai-resources", "capabilities-manifest.json");
+
+    public string MigrationPlaybooksPath =>
+        Path.Combine(RepoRoot, "docs", "en-us", "ai-resources", "migration-playbooks.json");
+
+    public string DiscoveryPlaybookPath =>
+        Path.Combine(RepoRoot, "docs", "en-us", "ai-resources", "discovery-playbook.md");
+
     public string ResolveRepoRelative(string relativePath) =>
         Path.GetFullPath(Path.Combine(RepoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
 

@@ -59,4 +59,27 @@ public static class DocResources
         var full = paths.ResolveRepoRelative(readmePath);
         return File.ReadAllText(full);
     }
+
+    [McpServerResource(UriTemplate = "mvp24hours://scenarios", Name = "Scenarios Manifest", MimeType = "application/json")]
+    public static string GetScenarios(ScenariosManifestService scenarios) =>
+        scenarios.RawJson;
+
+    [McpServerResource(UriTemplate = "mvp24hours://capabilities", Name = "Capabilities Manifest", MimeType = "application/json")]
+    public static string GetCapabilities(CapabilitiesManifestService capabilities) =>
+        capabilities.RawJson;
+
+    [McpServerResource(UriTemplate = "mvp24hours://migration/{id}", Name = "Migration Playbook", MimeType = "application/json")]
+    public static string GetMigrationPlaybookResource(MigrationPlaybookService migration, string id)
+    {
+        var playbook = migration.GetPlaybook(id);
+        return playbook is null
+            ? $"{{\"error\":\"Playbook '{id}' not found.\"}}"
+            : System.Text.Json.JsonSerializer.Serialize(playbook, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    }
+
+    [McpServerResource(UriTemplate = "mvp24hours://discovery", Name = "Discovery Playbook", MimeType = "text/markdown")]
+    public static string GetDiscovery(RepoRootResolver paths) =>
+        File.Exists(paths.DiscoveryPlaybookPath)
+            ? File.ReadAllText(paths.DiscoveryPlaybookPath)
+            : "Discovery playbook not found.";
 }

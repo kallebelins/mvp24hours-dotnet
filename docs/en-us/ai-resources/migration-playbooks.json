@@ -1,0 +1,111 @@
+{
+  "version": "1.0.0",
+  "playbooks": [
+    {
+      "id": "mediatr-to-mvp-mediator",
+      "title": "MediatR to Mvp24Hours Mediator",
+      "sourcePattern": "MediatR IRequest/IRequestHandler",
+      "targetPattern": "Mvp24Hours IMediatorCommand/Query + handlers",
+      "docPath": "docs/en-us/cqrs/migration-mediatr.md",
+      "referenceSample": "samples/src/complex-cqrs-ef-customer-api",
+      "templateId": "cqrs",
+      "steps": [
+        { "order": 1, "title": "Read migration guide", "tool": "get_doc", "docPath": "docs/en-us/cqrs/migration-mediatr.md" },
+        { "order": 2, "title": "Find AddMvpMediator registration", "tool": "search_sample_patterns", "pattern": "AddMvpMediator" },
+        { "order": 3, "title": "Verify mediator APIs", "tool": "verify_doc_claim", "apiName": "AddMvpMediator" },
+        { "order": 4, "title": "Compliance check", "tool": "run_compliance_check" }
+      ]
+    },
+    {
+      "id": "legacy-to-native-apis",
+      "title": "Legacy Mvp24Hours to native .NET 9/10 APIs",
+      "sourcePattern": "TelemetryHelper, Swashbuckle, MultiLevelCache, custom resilience",
+      "targetPattern": "OpenTelemetry, native OpenAPI, HybridCache, Microsoft.Extensions.Resilience",
+      "docPath": "docs/en-us/modernization/migration-guide.md",
+      "referenceSample": "samples/src/simple-observability-customer-api",
+      "templateId": null,
+      "steps": [
+        { "order": 1, "title": "Read modernization guide", "tool": "get_doc", "docPath": "docs/en-us/modernization/migration-guide.md" },
+        { "order": 2, "title": "Search for legacy patterns", "tool": "search_docs", "query": "TelemetryHelper deprecated" },
+        { "order": 3, "title": "Verify native APIs", "tool": "find_source_symbol", "symbol": "HybridCache" },
+        { "order": 4, "title": "Compliance check", "tool": "run_compliance_check" }
+      ]
+    },
+    {
+      "id": "package-9-to-10",
+      "title": "SDK and package upgrade 9.1.x to 10.0.0",
+      "sourcePattern": "net9.0, Mvp24Hours 9.x packages",
+      "targetPattern": "net10.0, nullable, Central Package Management",
+      "docPath": "docs/en-us/migration.md",
+      "referenceSample": "samples/src/complex-crud-ef-customer-api",
+      "templateId": null,
+      "steps": [
+        { "order": 1, "title": "Read version migration", "tool": "get_doc", "docPath": "docs/en-us/migration.md" },
+        { "order": 2, "title": "Check target framework", "tool": "run_compliance_check" },
+        { "order": 3, "title": "Verify package APIs", "tool": "verify_doc_claim", "apiName": "AddMvp24Hours" }
+      ]
+    },
+    {
+      "id": "simple-to-complex-nlayers",
+      "title": "Simple N-Layers to Complex N-Layers",
+      "sourcePattern": "simple-nlayers",
+      "targetPattern": "complex-nlayers",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-complex-nlayers.md",
+      "sourceSample": "samples/src/simple-crud-ef-customer-api",
+      "targetSample": "samples/src/complex-crud-ef-customer-api",
+      "sourceTemplateId": "simple-nlayers",
+      "targetTemplateId": "complex-nlayers",
+      "steps": [
+        { "order": 1, "title": "Plan layer migration", "tool": "plan_architecture_migration", "sourceTemplateId": "simple-nlayers", "targetTemplateId": "complex-nlayers" },
+        { "order": 2, "title": "Read target structure doc", "tool": "get_doc", "docPath": "docs/en-us/guides/architecture/structures/structure-complex-nlayers.md" },
+        { "order": 3, "title": "Compare source sample", "tool": "get_sample_tree", "sampleId": "simple-crud-ef-customer-api" },
+        { "order": 4, "title": "Compare target sample", "tool": "get_sample_tree", "sampleId": "complex-crud-ef-customer-api" },
+        { "order": 5, "title": "DI registration hints", "tool": "get_di_registration_hints", "sampleId": "complex-crud-ef-customer-api" },
+        { "order": 6, "title": "Compliance check", "tool": "run_compliance_check", "templateId": "complex-nlayers" }
+      ]
+    },
+    {
+      "id": "crud-to-cqrs",
+      "title": "CRUD application services to CQRS",
+      "sourcePattern": "complex-nlayers with Facade/ApplicationService",
+      "targetPattern": "cqrs with commands, queries, behaviors",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-cqrs.md",
+      "sourceSample": "samples/src/complex-crud-ef-customer-api",
+      "targetSample": "samples/src/complex-cqrs-ef-customer-api",
+      "sourceTemplateId": "complex-nlayers",
+      "targetTemplateId": "cqrs",
+      "steps": [
+        { "order": 1, "title": "Plan migration", "tool": "plan_architecture_migration", "sourceTemplateId": "complex-nlayers", "targetTemplateId": "cqrs" },
+        { "order": 2, "title": "Read CQRS blueprint", "tool": "get_architecture_template", "templateId": "cqrs" },
+        { "order": 3, "title": "Find mediator patterns", "tool": "search_sample_patterns", "pattern": "IMediatorCommand" },
+        { "order": 4, "title": "Compare CQRS sample", "tool": "get_sample_tree", "sampleId": "complex-cqrs-ef-customer-api" },
+        { "order": 5, "title": "Compliance check", "tool": "run_compliance_check", "templateId": "cqrs" }
+      ]
+    },
+    {
+      "id": "monolith-to-event-driven",
+      "title": "Synchronous monolith to event-driven integration",
+      "sourcePattern": "complex-nlayers synchronous HTTP",
+      "targetPattern": "event-driven with outbox/inbox and RabbitMQ",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-event-driven.md",
+      "sourceSample": "samples/src/complex-crud-ef-customer-api",
+      "targetSample": "samples/src/complex-event-driven-rabbitmq-customer-api",
+      "sourceTemplateId": "complex-nlayers",
+      "targetTemplateId": "event-driven",
+      "steps": [
+        { "order": 1, "title": "Plan migration", "tool": "plan_architecture_migration", "sourceTemplateId": "complex-nlayers", "targetTemplateId": "event-driven" },
+        { "order": 2, "title": "Read outbox/inbox docs", "tool": "get_doc", "docPath": "docs/en-us/cqrs/resilience/inbox-outbox.md" },
+        { "order": 3, "title": "Resolve event-driven feature", "tool": "resolve_feature", "featureKeyword": "event-driven" },
+        { "order": 4, "title": "Compare target sample", "tool": "get_sample_tree", "sampleId": "complex-event-driven-rabbitmq-customer-api" },
+        { "order": 5, "title": "Compliance check", "tool": "run_compliance_check", "templateId": "event-driven" }
+      ]
+    }
+  ],
+  "templatePairs": {
+    "simple-nlayers:complex-nlayers": "simple-to-complex-nlayers",
+    "complex-nlayers:cqrs": "crud-to-cqrs",
+    "complex-nlayers:event-driven": "monolith-to-event-driven",
+    "minimal-api:simple-nlayers": null,
+    "simple-nlayers:minimal-api": null
+  }
+}

@@ -52,6 +52,7 @@ internal static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddMvp24HoursDevKit(options);
+        builder.Services.AddHostedService<DevKitIndexWarmupService>();
         builder.Services
             .AddMcpServer(serverOptions =>
             {

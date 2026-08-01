@@ -1,0 +1,267 @@
+{
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "id": "cqrs",
+      "keywords": ["cqrs", "command", "query", "mediator", "handler", "behavior"],
+      "docPath": "docs/en-us/cqrs/getting-started.md",
+      "referenceSample": "samples/src/complex-cqrs-ef-customer-api",
+      "templateId": "cqrs",
+      "symbols": ["AddMvpMediator", "IMediatorCommand", "IMediatorQuery", "IMediatorHandler"],
+      "relatedDocs": [
+        "docs/en-us/cqrs/commands.md",
+        "docs/en-us/cqrs/queries.md",
+        "docs/en-us/cqrs/migration-mediatr.md"
+      ],
+      "complianceRules": [
+        "Use AddMvpMediator and IMediatorCommand/Query — not MediatR",
+        "Handlers live in Application; persistence in Infrastructure"
+      ]
+    },
+    {
+      "id": "rabbitmq",
+      "keywords": ["rabbitmq", "rabbit", "broker", "message", "queue", "publish", "consume"],
+      "docPath": "docs/en-us/broker.md",
+      "referenceSample": "samples/src/simple-rabbitmq-customer-api",
+      "templateId": "simple-nlayers",
+      "symbols": ["AddMvpRabbitMQ", "IMessageBroker"],
+      "relatedDocs": [
+        "docs/en-us/cqrs/integration-rabbitmq.md"
+      ],
+      "complianceRules": [
+        "Document at-least-once delivery semantics",
+        "Use cancellation tokens on consumer handlers"
+      ]
+    },
+    {
+      "id": "event-driven",
+      "keywords": ["event-driven", "outbox", "inbox", "integration event", "eventual consistency"],
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-event-driven.md",
+      "referenceSample": "samples/src/complex-event-driven-rabbitmq-customer-api",
+      "templateId": "event-driven",
+      "symbols": ["IOutboxStore", "IInboxStore"],
+      "relatedDocs": [
+        "docs/en-us/cqrs/resilience/inbox-outbox.md",
+        "docs/en-us/broker.md"
+      ],
+      "complianceRules": [
+        "Use outbox/inbox for guaranteed delivery",
+        "Design for idempotent consumers"
+      ]
+    },
+    {
+      "id": "keycloak",
+      "keywords": ["keycloak", "jwt", "bearer", "identity", "auth", "authentication", "authorization"],
+      "docPath": "docs/en-us/identity/keycloak.md",
+      "referenceSample": "samples/src/complex-keycloak-customer-api",
+      "templateId": "complex-nlayers",
+      "symbols": ["AddMvpKeycloak"],
+      "relatedDocs": [
+        "docs/en-us/webapi-advanced.md"
+      ],
+      "complianceRules": [
+        "Use JWT bearer validation without Duende/IdentityModel"
+      ]
+    },
+    {
+      "id": "observability",
+      "keywords": ["observability", "opentelemetry", "otel", "tracing", "metrics", "telemetry"],
+      "docPath": "docs/en-us/observability/home.md",
+      "referenceSample": "samples/src/simple-observability-customer-api",
+      "templateId": "simple-nlayers",
+      "symbols": ["AddOpenTelemetry", "ActivitySource"],
+      "relatedDocs": [
+        "docs/en-us/observability/migration.md",
+        "docs/en-us/modernization/migration-guide.md"
+      ],
+      "complianceRules": [
+        "Use ILogger + OpenTelemetry — not TelemetryHelper",
+        "Export logs, traces, and metrics via OTLP"
+      ]
+    },
+    {
+      "id": "pipeline",
+      "keywords": ["pipeline", "pipes", "filters", "pipe", "builder"],
+      "docPath": "docs/en-us/pipeline.md",
+      "referenceSample": "samples/src/complex-pipeline-builder-customer-api",
+      "templateId": "complex-nlayers",
+      "symbols": ["IPipeline", "PipelineBuilder"],
+      "relatedDocs": [
+        "docs/en-us/modernization/resilience-guide.md"
+      ],
+      "complianceRules": [
+        "Use cancelable pipeline operations",
+        "Prefer DI-friendly builder composition at Complex tier"
+      ]
+    },
+    {
+      "id": "saga",
+      "keywords": ["saga", "compensation", "orchestration", "distributed transaction"],
+      "docPath": "docs/en-us/cqrs/saga/home.md",
+      "referenceSample": "samples/src/complex-saga-rabbitmq-customer-api",
+      "templateId": "event-driven",
+      "symbols": ["ISagaOrchestrator"],
+      "relatedDocs": [
+        "docs/en-us/cqrs/saga/compensation.md"
+      ],
+      "complianceRules": [
+        "Implement compensating steps for each saga action",
+        "Test failure scenarios extensively"
+      ]
+    },
+    {
+      "id": "ddd",
+      "keywords": ["ddd", "aggregate", "value object", "bounded context", "domain event"],
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-ddd.md",
+      "referenceSample": "samples/src/complex-ddd-ef-customer-api",
+      "templateId": "ddd",
+      "symbols": ["AggregateRoot", "ValueObject"],
+      "relatedDocs": [
+        "docs/en-us/core/specification.md",
+        "docs/en-us/core/value-objects.md"
+      ],
+      "complianceRules": [
+        "Rich invariants belong in aggregates, not controllers",
+        "Domain has no infrastructure references"
+      ]
+    },
+    {
+      "id": "health-checks",
+      "keywords": ["health", "healthcheck", "health check", "webstatus", "readiness", "liveness"],
+      "docPath": "docs/en-us/infrastructure/health-checks.md",
+      "referenceSample": "samples/src/simple-webstatus",
+      "templateId": "simple-nlayers",
+      "symbols": ["AddHealthChecks", "MapHealthChecks"],
+      "relatedDocs": [],
+      "complianceRules": [
+        "Register health checks for each external dependency"
+      ]
+    },
+    {
+      "id": "cronjob",
+      "keywords": ["cronjob", "cron", "scheduled", "background job", "worker", "periodic"],
+      "docPath": "docs/en-us/cronjob.md",
+      "referenceSample": "samples/src/simple-cronjob-worker",
+      "templateId": "minimal-api",
+      "symbols": ["AddMvpCronJob"],
+      "relatedDocs": [
+        "docs/en-us/modernization/time-provider.md"
+      ],
+      "complianceRules": [
+        "Use TimeProvider + PeriodicTimer — not System.Timers.Timer"
+      ]
+    },
+    {
+      "id": "hybrid-cache",
+      "keywords": ["hybridcache", "hybrid cache", "cache", "stampede", "rate limit", "rate limiting"],
+      "docPath": "docs/en-us/modernization/hybrid-cache.md",
+      "referenceSample": "samples/src/simple-hybridcache-rate-limit-api",
+      "templateId": "minimal-api",
+      "symbols": ["HybridCache", "AddHybridCache"],
+      "relatedDocs": [
+        "docs/en-us/modernization/rate-limiting.md"
+      ],
+      "complianceRules": [
+        "Use HybridCache — not MultiLevelCache",
+        "Use System.Threading.RateLimiting for rate limits"
+      ]
+    },
+    {
+      "id": "dapper",
+      "keywords": ["dapper", "read model", "hybrid persistence", "sql query"],
+      "docPath": "docs/en-us/database/efcore-advanced.md",
+      "referenceSample": "samples/src/simple-crud-ef-dapper-customer-api",
+      "templateId": "dapper-hybrid",
+      "symbols": ["GetConnection"],
+      "relatedDocs": [
+        "docs/en-us/database/use-unitofwork.md"
+      ],
+      "complianceRules": [
+        "Share connection/transaction scope between EF and Dapper",
+        "Document read vs write path explicitly"
+      ]
+    },
+    {
+      "id": "mongodb",
+      "keywords": ["mongodb", "mongo", "nosql", "document database"],
+      "docPath": "docs/en-us/database/nosql.md",
+      "referenceSample": "samples/src/simple-crud-mongodb-customer-api",
+      "templateId": "simple-nlayers",
+      "symbols": ["AddMvpMongoDB"],
+      "relatedDocs": [
+        "docs/en-us/database/mongodb-advanced.md"
+      ],
+      "complianceRules": []
+    },
+    {
+      "id": "redis",
+      "keywords": ["redis", "cache-aside", "key-value"],
+      "docPath": "docs/en-us/caching-advanced.md",
+      "referenceSample": "samples/src/simple-crud-redis-customer-api",
+      "templateId": "simple-nlayers",
+      "symbols": ["AddMvpRedis"],
+      "relatedDocs": [],
+      "complianceRules": []
+    },
+    {
+      "id": "entity-audit",
+      "keywords": ["audit", "soft delete", "entity log", "auditing"],
+      "docPath": "docs/en-us/core/entity-interfaces.md",
+      "referenceSample": "samples/src/simple-crud-ef-entitylog-customer-api",
+      "templateId": "entity-audit",
+      "symbols": ["IAuditableEntity", "ISoftDeletable"],
+      "relatedDocs": [
+        "docs/en-us/database/use-entity.md"
+      ],
+      "complianceRules": [
+        "Use TimeProvider for audit timestamps",
+        "Apply soft-delete via global filters or specifications"
+      ]
+    },
+    {
+      "id": "microservices",
+      "keywords": ["microservice", "aspire", "orchestration", "multi-service"],
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-microservices.md",
+      "referenceSample": "samples/src/microservices-aspire-customer",
+      "templateId": "microservices",
+      "symbols": ["AddServiceDefaults"],
+      "relatedDocs": [
+        "docs/en-us/modernization/aspire.md"
+      ],
+      "complianceRules": [
+        "Each service owns its data store",
+        "Use integration events, not shared databases"
+      ]
+    },
+    {
+      "id": "openapi",
+      "keywords": ["openapi", "swagger", "api documentation", "typedresults"],
+      "docPath": "docs/en-us/modernization/native-openapi.md",
+      "referenceSample": "samples/src/complex-crud-ef-customer-api",
+      "templateId": "complex-nlayers",
+      "symbols": ["MapOpenApi", "AddOpenApi"],
+      "relatedDocs": [
+        "docs/en-us/webapi-advanced.md"
+      ],
+      "complianceRules": [
+        "Use Microsoft.AspNetCore.OpenAPI — not Swashbuckle",
+        "Expose /openapi/v1.json for smoke tests"
+      ]
+    },
+    {
+      "id": "testing",
+      "keywords": ["test", "smoke", "integration test", "webapplicationfactory", "testcontainers"],
+      "docPath": "docs/en-us/testing/home.md",
+      "referenceSample": "samples/src/complex-crud-ef-customer-api",
+      "templateId": "complex-nlayers",
+      "symbols": ["WebApplicationFactory"],
+      "relatedDocs": [
+        "samples/TESTING.md"
+      ],
+      "complianceRules": [
+        "Test naming: Method_Scenario_Expected",
+        "Add OpenAPI smoke test for WebAPI hosts"
+      ]
+    }
+  ]
+}
