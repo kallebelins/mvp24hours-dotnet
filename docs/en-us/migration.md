@@ -258,7 +258,7 @@ The [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/samp
 From the repository root or `samples/` directory:
 
 ```bash
-dotnet build samples/Mvp24Hours.Samples.sln \
+dotnet build samples/Mvp24Hours.Samples.slnx \
   -p:Mvp24HoursUseProjectReferences=false \
   -p:Mvp24HoursPackageVersion=10.0.0
 ```
@@ -268,7 +268,7 @@ Each sample `.csproj` already declares conditional `PackageReference` entries; t
 ### 2. Verify restore from nuget.org
 
 1. Clone the repository to a clean directory (or temporarily rename `src/Mvp24Hours.*` folders) so MSBuild cannot resolve local projects.
-2. Run `dotnet restore samples/Mvp24Hours.Samples.sln -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0`.
+2. Run `dotnet restore samples/Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0`.
 3. Confirm every `Mvp24Hours.*` package resolves from nuget.org (or your private feed) at the expected version — no 4.x, 8.x, or 9.x packages in the dependency graph.
 
 ### 3. Smoke-test one sample

@@ -86,7 +86,7 @@ container inside `CustomerAPI.WebAPI`.
 
 ```
 complex-clean-architecture-customer-api/
-├── Complex-Clean-Architecture-CustomerAPI.sln
+├── ComplexCleanArchitectureCustomerApi.slnx
 │
 ├── CustomerAPI.Domain/                    ← innermost ring (no framework deps)
 │   ├── Entities/

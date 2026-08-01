@@ -222,7 +222,7 @@ The [Infrastructure overview](infrastructure/home.md) maps the cross-cutting mod
 
 All **32** sample solutions live in [`samples/`](../../samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and ship English READMEs with run instructions and Docker Compose where applicable.
 
-Build every sample at once with [`samples/Mvp24Hours.Samples.sln`](../../samples/Mvp24Hours.Samples.sln). After Mvp24Hours **10.0.0** is published, switch to NuGet mode with `-p:Mvp24HoursUseProjectReferences=false` — see [Using samples with published NuGet packages](migration.md?id=using-samples-with-published-nuget-packages).
+Build every sample at once with [`samples/Mvp24Hours.Samples.slnx`](../../samples/Mvp24Hours.Samples.slnx). After Mvp24Hours **10.0.0** is published, switch to NuGet mode with `-p:Mvp24HoursUseProjectReferences=false` — see [Using samples with published NuGet packages](migration.md?id=using-samples-with-published-nuget-packages).
 
 Use the [sample catalog](../../samples/README.md#complete-catalog) for the full list, or the [“Which sample should I open first?”](../../samples/README.md#which-sample-should-i-open-first) table when you are choosing an architecture shape.
 

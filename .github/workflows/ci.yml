@@ -10,7 +10,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-  SOLUTION_PATH: src/Mvp24Hours.sln
+  SOLUTION_PATH: src/Mvp24Hours.slnx
 
 jobs:
   build-and-test:
@@ -87,7 +87,7 @@ jobs:
     # Full style gate (task 7.2 / v2): whitespace + imports + analyzer code-style fixes.
     # Exclusions: IDE0130 crashes MSBuildWorkspace (dotnet/format#2192); IDE1006 has no
     # Fix All (NamingStyleCodeFixProvider) and stays suggestion in .editorconfig.
-    # Solution lives under src/ — a bare `dotnet format` from repo root cannot find a .sln.
+    # Solution lives under src/ — a bare `dotnet format` from repo root cannot find a solution file.
     - name: 🎨 Check code formatting
       run: dotnet format ${{ env.SOLUTION_PATH }} --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes --verbosity diagnostic
 
@@ -148,7 +148,7 @@ jobs:
       run: |
         set -o pipefail
         # Solution lives under src/ — bare `dotnet list package` from repo root fails.
-        dotnet list src/Mvp24Hours.sln package --vulnerable --include-transitive 2>&1 | tee security-scan.log
+        dotnet list src/Mvp24Hours.slnx package --vulnerable --include-transitive 2>&1 | tee security-scan.log
         # Exit code of `dotnet list` stays 0 even when advisories exist; fail the job on hits.
         if grep -Eiq 'has the following vulnerable packages|tem os seguintes pacotes vulneráveis' security-scan.log; then
           echo "::error::Vulnerable NuGet packages were detected (see security-scan.log)."

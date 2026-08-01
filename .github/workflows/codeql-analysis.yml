@@ -39,8 +39,8 @@ jobs:
 
     - name: 🏗️ Build
       run: |
-        dotnet restore src/Mvp24Hours.sln
-        dotnet build src/Mvp24Hours.sln --configuration Release --no-restore
+        dotnet restore src/Mvp24Hours.slnx
+        dotnet build src/Mvp24Hours.slnx --configuration Release --no-restore
 
     - name: 🔍 Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

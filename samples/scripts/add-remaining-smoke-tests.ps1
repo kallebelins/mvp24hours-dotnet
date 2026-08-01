@@ -361,7 +361,7 @@ foreach ($d in $definitions) {
 
 foreach ($d in $definitions) {
     $proj = Join-Path 'src' ($d.Sample + '/CustomerAPI.Test/CustomerAPI.Test.csproj')
-    dotnet sln Mvp24Hours.Samples.sln add $proj 2>$null
+    dotnet sln Mvp24Hours.Samples.slnx add $proj 2>$null
 }
 
 Write-Output 'Done scaffolding.'

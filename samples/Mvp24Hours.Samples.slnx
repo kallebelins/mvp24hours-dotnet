@@ -1,0 +1,210 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/" />
+  <Folder Name="/src/complex-clean-architecture-customer-api/">
+    <Project Path="src/complex-clean-architecture-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-clean-architecture-customer-api/CustomerAPI.Domain/CustomerAPI.Domain.csproj" />
+    <Project Path="src/complex-clean-architecture-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-clean-architecture-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-clean-architecture-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-cqrs-ef-customer-api/">
+    <Project Path="src/complex-cqrs-ef-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-cqrs-ef-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-cqrs-ef-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-cqrs-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-crud-ef-customer-api/">
+    <Project Path="src/complex-crud-ef-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-crud-ef-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-crud-ef-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-crud-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-crud-ef-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-crud-ef-dapper-customer-api/">
+    <Project Path="src/complex-crud-ef-dapper-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-crud-ef-dapper-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-crud-ef-dapper-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-crud-ef-dapper-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-crud-ef-dapper-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-crud-ef-entitylog-customer-api/">
+    <Project Path="src/complex-crud-ef-entitylog-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-crud-ef-entitylog-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-crud-ef-entitylog-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-crud-ef-entitylog-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-crud-ef-only-entity-customer-api/">
+    <Project Path="src/complex-crud-ef-only-entity-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-crud-ef-only-entity-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-crud-ef-only-entity-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-crud-ef-only-entity-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-crud-ef-only-entity-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-crud-mongodb-customer-api/">
+    <Project Path="src/complex-crud-mongodb-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-crud-mongodb-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-crud-mongodb-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-crud-mongodb-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-crud-mongodb-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-ddd-ef-customer-api/">
+    <Project Path="src/complex-ddd-ef-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-ddd-ef-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-ddd-ef-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-ddd-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-ddd-ef-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-event-driven-rabbitmq-customer-api/">
+    <Project Path="src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.Domain/CustomerAPI.Domain.csproj" />
+    <Project Path="src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-event-sourcing-customer-api/">
+    <Project Path="src/complex-event-sourcing-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-event-sourcing-customer-api/CustomerAPI.Domain/CustomerAPI.Domain.csproj" />
+    <Project Path="src/complex-event-sourcing-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-event-sourcing-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-hexagonal-customer-api/">
+    <Project Path="src/complex-hexagonal-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-hexagonal-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-hexagonal-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-hexagonal-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-hexagonal-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-keycloak-customer-api/">
+    <Project Path="src/complex-keycloak-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-keycloak-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-keycloak-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-pipeline-builder-customer-api/">
+    <Project Path="src/complex-pipeline-builder-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-pipeline-builder-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-pipeline-builder-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-pipeline-builder-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-pipeline-customer-api/">
+    <Project Path="src/complex-pipeline-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-pipeline-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-pipeline-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-pipeline-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-pipeline-ef-customer-api/">
+    <Project Path="src/complex-pipeline-ef-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-pipeline-ef-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-pipeline-ef-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/complex-pipeline-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-pipeline-ef-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-pipeline-ports-adapters-customer-api/">
+    <Project Path="src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.Typicode.Application/CustomerAPI.Typicode.Application.csproj" />
+    <Project Path="src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/complex-saga-rabbitmq-customer-api/">
+    <Project Path="src/complex-saga-rabbitmq-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/complex-saga-rabbitmq-customer-api/CustomerAPI.Domain/CustomerAPI.Domain.csproj" />
+    <Project Path="src/complex-saga-rabbitmq-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/complex-saga-rabbitmq-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/microservices-aspire-customer/">
+    <Project Path="src/microservices-aspire-customer/AppHost/AppHost.csproj" />
+    <Project Path="src/microservices-aspire-customer/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/microservices-aspire-customer/CustomerAPI/CustomerAPI.csproj" />
+    <Project Path="src/microservices-aspire-customer/NotificationWorker/NotificationWorker.csproj" />
+    <Project Path="src/microservices-aspire-customer/ServiceDefaults/ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/minimal-crud-ef-customer-api/">
+    <Project Path="src/minimal-crud-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/minimal-crud-ef-customer-api/CustomerAPI/CustomerAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/minimal-crud-mongodb-customer-api/">
+    <Project Path="src/minimal-crud-mongodb-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/minimal-crud-mongodb-customer-api/CustomerAPI/CustomerAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/minimal-pipeline-customer-api/">
+    <Project Path="src/minimal-pipeline-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/minimal-pipeline-customer-api/CustomerAPI/CustomerAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-cronjob-worker/">
+    <Project Path="src/simple-cronjob-worker/CronJobWorker.Test/CronJobWorker.Test.csproj" />
+    <Project Path="src/simple-cronjob-worker/CronJobWorker/CronJobWorker.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-crud-ef-customer-api/">
+    <Project Path="src/simple-crud-ef-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-crud-ef-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/simple-crud-ef-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-crud-ef-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-crud-ef-dapper-customer-api/">
+    <Project Path="src/simple-crud-ef-dapper-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-crud-ef-dapper-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/simple-crud-ef-dapper-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-crud-ef-dapper-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-crud-ef-entitylog-customer-api/">
+    <Project Path="src/simple-crud-ef-entitylog-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-crud-ef-entitylog-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/simple-crud-ef-entitylog-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-crud-ef-entitylog-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-crud-mongodb-customer-api/">
+    <Project Path="src/simple-crud-mongodb-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-crud-mongodb-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/simple-crud-mongodb-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-crud-mongodb-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-crud-redis-customer-api/">
+    <Project Path="src/simple-crud-redis-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-crud-redis-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-crud-redis-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-hybridcache-rate-limit-api/">
+    <Project Path="src/simple-hybridcache-rate-limit-api/ProductAPI.Test/ProductAPI.Test.csproj" />
+    <Project Path="src/simple-hybridcache-rate-limit-api/ProductAPI.WebAPI/ProductAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-observability-customer-api/">
+    <Project Path="src/simple-observability-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-observability-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-pipeline-customer-api/">
+    <Project Path="src/simple-pipeline-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-pipeline-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-pipeline-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-rabbitmq-customer-api/">
+    <Project Path="src/simple-rabbitmq-customer-api/CustomerAPI.Application/CustomerAPI.Application.csproj" />
+    <Project Path="src/simple-rabbitmq-customer-api/CustomerAPI.Core/CustomerAPI.Core.csproj" />
+    <Project Path="src/simple-rabbitmq-customer-api/CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+    <Project Path="src/simple-rabbitmq-customer-api/CustomerAPI.Test/CustomerAPI.Test.csproj" />
+    <Project Path="src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/src/simple-webstatus/">
+    <Project Path="src/simple-webstatus/WebStatus.Test/WebStatus.Test.csproj" />
+    <Project Path="src/simple-webstatus/WebStatus/WebStatus.csproj" />
+  </Folder>
+  <Project Path="../src/Mvp24Hours.Application/Mvp24Hours.Application.csproj" />
+  <Project Path="../src/Mvp24Hours.Core/Mvp24Hours.Core.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Caching.Redis/Mvp24Hours.Infrastructure.Caching.Redis.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Caching/Mvp24Hours.Infrastructure.Caching.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Cqrs/Mvp24Hours.Infrastructure.Cqrs.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.CronJob/Mvp24Hours.Infrastructure.CronJob.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Data.EFCore/Mvp24Hours.Infrastructure.Data.EFCore.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Data.MongoDb/Mvp24Hours.Infrastructure.Data.MongoDb.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Identity.Keycloak/Mvp24Hours.Infrastructure.Identity.Keycloak.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.Pipe/Mvp24Hours.Infrastructure.Pipe.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure.RabbitMQ/Mvp24Hours.Infrastructure.RabbitMQ.csproj" />
+  <Project Path="../src/Mvp24Hours.Infrastructure/Mvp24Hours.Infrastructure.csproj" />
+  <Project Path="../src/Mvp24Hours.WebAPI/Mvp24Hours.WebAPI.csproj" />
+</Solution>

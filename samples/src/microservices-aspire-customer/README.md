@@ -180,7 +180,7 @@ Health: `GET http://localhost:5001/health`
 ## Full solution build
 
 ```bash
-dotnet build samples/src/microservices-aspire-customer/Microservices-Aspire-Customer.sln
+dotnet build samples/src/microservices-aspire-customer/MicroservicesAspireCustomer.slnx
 ```
 
 > **Note:** The `AppHost` project requires the Aspire workload (`dotnet workload install aspire`).

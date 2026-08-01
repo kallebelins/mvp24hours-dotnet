@@ -26,7 +26,7 @@ samples/src/{sample}/
     Support/                   # DockerAvailability, fixtures (when needed)
 ```
 
-Add the test project to the sample `.sln` / `.slnx`. Reference Application/Domain/Core for unit tests and the HTTP host for integration tests.
+Add the test project to the sample `.slnx`. Reference Application/Domain/Core for unit tests and the HTTP host for integration tests.
 
 ## Conventions
 

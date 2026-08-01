@@ -1,0 +1,41 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Mvp24Hours.Application.Integration.Test/Mvp24Hours.Application.Integration.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.MongoDb.Test/Mvp24Hours.Application.MongoDb.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.MySql.Test/Mvp24Hours.Application.MySql.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.Pipe.Test/Mvp24Hours.Application.Pipe.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.PostgreSql.Test/Mvp24Hours.Application.PostgreSql.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.RabbitMQ.Test/Mvp24Hours.Application.RabbitMQ.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.Redis.Test/Mvp24Hours.Application.Redis.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.SQLServer.Test/Mvp24Hours.Application.SQLServer.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Application.Test/Mvp24Hours.Application.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Core.Test/Mvp24Hours.Core.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Caching.Test/Mvp24Hours.Infrastructure.Caching.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Cqrs.Test/Mvp24Hours.Infrastructure.Cqrs.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.CronJob.Test/Mvp24Hours.Infrastructure.CronJob.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Data.EFCore.Test/Mvp24Hours.Infrastructure.Data.EFCore.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Data.MongoDb.Test/Mvp24Hours.Infrastructure.Data.MongoDb.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Identity.Keycloak.Test/Mvp24Hours.Infrastructure.Identity.Keycloak.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Infrastructure.Test/Mvp24Hours.Infrastructure.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.Patterns.Test/Mvp24Hours.Patterns.Test.csproj" />
+    <Project Path="Tests/Mvp24Hours.WebAPI.Test/Mvp24Hours.WebAPI.Test.csproj" />
+  </Folder>
+  <Project Path="Mvp24Hours.Application/Mvp24Hours.Application.csproj" />
+  <Project Path="Mvp24Hours.Core/Mvp24Hours.Core.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Caching.Redis/Mvp24Hours.Infrastructure.Caching.Redis.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Caching/Mvp24Hours.Infrastructure.Caching.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Cqrs/Mvp24Hours.Infrastructure.Cqrs.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.CronJob/Mvp24Hours.Infrastructure.CronJob.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Data.EFCore/Mvp24Hours.Infrastructure.Data.EFCore.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Data.MongoDb/Mvp24Hours.Infrastructure.Data.MongoDb.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Identity.Keycloak/Mvp24Hours.Infrastructure.Identity.Keycloak.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.Pipe/Mvp24Hours.Infrastructure.Pipe.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure.RabbitMQ/Mvp24Hours.Infrastructure.RabbitMQ.csproj" />
+  <Project Path="Mvp24Hours.Infrastructure/Mvp24Hours.Infrastructure.csproj" />
+  <Project Path="Mvp24Hours.WebAPI/Mvp24Hours.WebAPI.csproj" />
+</Solution>

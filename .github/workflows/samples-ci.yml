@@ -22,7 +22,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-  SAMPLES_SOLUTION: samples/Mvp24Hours.Samples.sln
+  SAMPLES_SOLUTION: samples/Mvp24Hours.Samples.slnx
 
 concurrency:
   group: samples-ci-${{ github.ref }}

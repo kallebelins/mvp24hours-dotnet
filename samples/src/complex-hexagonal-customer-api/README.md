@@ -140,7 +140,7 @@ Catalog: `MyHexTestDb`. EF migrations are applied automatically on startup in no
 ## Build
 
 ```bash
-dotnet build samples/src/complex-hexagonal-customer-api/Complex-Hexagonal-CustomerAPI.sln
+dotnet build samples/src/complex-hexagonal-customer-api/ComplexHexagonalCustomerApi.slnx
 ```
 
 ## Related documentation

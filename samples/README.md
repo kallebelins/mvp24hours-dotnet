@@ -37,7 +37,7 @@ Use the umbrella solution to compile every sample (and the referenced `src/` lib
 
 ```bash
 cd samples
-dotnet build Mvp24Hours.Samples.sln --configuration Release
+dotnet build Mvp24Hours.Samples.slnx --configuration Release
 ```
 
 Each sample also keeps its own `.slnx` under `samples/src/{sample}/` when you want to open a single teaching scenario in the IDE. CI validates the umbrella solution on .NET 10 via [`.github/workflows/samples-ci.yml`](../.github/workflows/samples-ci.yml).
@@ -45,7 +45,7 @@ Each sample also keeps its own `.slnx` under `samples/src/{sample}/` when you wa
 Run unit tests across Phase 5–6 test projects:
 
 ```bash
-dotnet test Mvp24Hours.Samples.sln --configuration Release --filter "Category=Unit"
+dotnet test Mvp24Hours.Samples.slnx --configuration Release --filter "Category=Unit"
 ```
 
 Integration tests that use Testcontainers require Docker and are tagged `Category=Integration`. See [Sample testing baseline](TESTING.md).
@@ -57,7 +57,7 @@ This repository uses the current projects under [`src/`](../src/) by default. [`
 For a standalone checkout after matching packages are published, switch to NuGet:
 
 ```bash
-dotnet build Mvp24Hours.Samples.sln -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
+dotnet build Mvp24Hours.Samples.slnx -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
 ```
 
 See [Using samples with published NuGet packages](../docs/en-us/migration.md?id=using-samples-with-published-nuget-packages) for the full consumer checklist once `10.0.0` is on nuget.org.
