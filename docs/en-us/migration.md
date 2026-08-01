@@ -249,9 +249,38 @@ public sealed class MyService(IMapper mapper)
 For applications predating 4.2.101, remove the generic type from
 `IBsonClassMap<T>` implementations and implement `IBsonClassMap`.
 
+## Using samples with published NuGet packages
+
+The [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/samples) folder defaults to **ProjectReference** mode so in-repo development tracks unreleased library changes. After Mvp24Hours **10.0.0** (or a matching release) is published, validate standalone consumption as follows.
+
+### 1. Flip the MSBuild switch
+
+From the repository root or `samples/` directory:
+
+```bash
+dotnet build samples/Mvp24Hours.Samples.sln \
+  -p:Mvp24HoursUseProjectReferences=false \
+  -p:Mvp24HoursPackageVersion=10.0.0
+```
+
+Each sample `.csproj` already declares conditional `PackageReference` entries; the properties above disable local project references and pin the NuGet version through Central Package Management.
+
+### 2. Verify restore from nuget.org
+
+1. Clone the repository to a clean directory (or temporarily rename `src/Mvp24Hours.*` folders) so MSBuild cannot resolve local projects.
+2. Run `dotnet restore samples/Mvp24Hours.Samples.sln -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0`.
+3. Confirm every `Mvp24Hours.*` package resolves from nuget.org (or your private feed) at the expected version — no 4.x, 8.x, or 9.x packages in the dependency graph.
+
+### 3. Smoke-test one sample
+
+Pick a representative host (for example `complex-crud-ef-customer-api` or `complex-cqrs-ef-customer-api`), build its per-sample `.slnx`, and run its health endpoint or unit tests. Document any feed URL or authentication requirements in your organization's internal runbook.
+
+> **Until publication:** keep `Mvp24HoursUseProjectReferences=true` (the default). Do not commit `false` as the repository default until package availability is confirmed in [Release notes](release.md).
+
 ## Related resources
 
 - [Release notes](release.md)
+- [Mvp24Hours samples catalog](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/samples)
 - [.NET 9+ native API modernization](modernization/migration-guide.md)
 - [Observability migration](observability/migration.md)
 - [CQRS Getting Started](cqrs/getting-started.md)

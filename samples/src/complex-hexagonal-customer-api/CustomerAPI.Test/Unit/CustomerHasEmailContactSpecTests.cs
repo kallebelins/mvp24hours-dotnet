@@ -12,6 +12,7 @@ public class CustomerHasEmailContactSpecTests
     {
         var customer = new Customer
         {
+            Name = "Test Customer",
             Active = true,
             Contacts =
             [
@@ -29,6 +30,7 @@ public class CustomerHasEmailContactSpecTests
     {
         var customer = new Customer
         {
+            Name = "Test Customer",
             Active = true,
             Contacts =
             [

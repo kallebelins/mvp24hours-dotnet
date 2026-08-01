@@ -31,6 +31,25 @@ Use constraints, not labels. The table below maps common starting situations to 
 
 For a side-by-side comparison of architecture shapes, see the [decision matrix](../docs/en-us/guides/architecture/decision-matrix.md).
 
+## Build all samples locally
+
+Use the umbrella solution to compile every sample (and the referenced `src/` library projects) in one command:
+
+```bash
+cd samples
+dotnet build Mvp24Hours.Samples.sln --configuration Release
+```
+
+Each sample also keeps its own `.slnx` under `samples/src/{sample}/` when you want to open a single teaching scenario in the IDE. CI validates the umbrella solution on .NET 10 via [`.github/workflows/samples-ci.yml`](../.github/workflows/samples-ci.yml).
+
+Run unit tests across Phase 5–6 test projects:
+
+```bash
+dotnet test Mvp24Hours.Samples.sln --configuration Release --filter "Category=Unit"
+```
+
+Integration tests that use Testcontainers require Docker and are tagged `Category=Integration`. See [Sample testing baseline](TESTING.md).
+
 ## Package consumption
 
 This repository uses the current projects under [`src/`](../src/) by default. [`Directory.Build.props`](Directory.Build.props) sets `Mvp24HoursUseProjectReferences=true`, and each sample maps its Mvp24Hours dependencies to those source projects.
@@ -38,8 +57,10 @@ This repository uses the current projects under [`src/`](../src/) by default. [`
 For a standalone checkout after matching packages are published, switch to NuGet:
 
 ```bash
-dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
+dotnet build Mvp24Hours.Samples.sln -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion=10.0.0
 ```
+
+See [Using samples with published NuGet packages](../docs/en-us/migration.md?id=using-samples-with-published-nuget-packages) for the full consumer checklist once `10.0.0` is on nuget.org.
 
 [`Directory.Packages.props`](Directory.Packages.props) imports shared versions from [`src/Directory.Packages.props`](../src/Directory.Packages.props) and adds sample-only packages. Never mix Mvp24Hours 4.x, 8.x, 9.x, and 10.x packages in one sample. The source and published-package modes are alternatives; do not enable both.
 
