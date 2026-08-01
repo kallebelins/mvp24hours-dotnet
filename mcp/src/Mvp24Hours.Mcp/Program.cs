@@ -34,6 +34,7 @@ internal static class Program
         });
 
         builder.Services.AddMvp24HoursDevKit(options);
+        builder.Services.AddHostedService<DevKitIndexWarmupService>();
         builder.Services
             .AddMcpServer(serverOptions =>
             {

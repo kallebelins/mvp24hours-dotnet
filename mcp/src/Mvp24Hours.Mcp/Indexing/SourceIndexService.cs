@@ -7,10 +7,12 @@ namespace Mvp24Hours.Mcp.Indexing;
 public sealed partial class SourceIndexService
 {
     private readonly RepoRootResolver _paths;
+    private readonly Lazy<SourceSymbolIndex> _index;
 
     public SourceIndexService(RepoRootResolver paths)
     {
         _paths = paths;
+        _index = new Lazy<SourceSymbolIndex>(BuildIndex);
     }
 
     public IReadOnlyList<SourceSymbolHit> FindSymbol(string symbol, int maxResults = 30)
@@ -21,24 +23,11 @@ public sealed partial class SourceIndexService
         }
 
         var hits = new List<SourceSymbolHit>();
-        var srcRoot = _paths.SourcePath;
-        if (!Directory.Exists(srcRoot))
+        foreach (var file in _index.Value.Files)
         {
-            return hits;
-        }
-
-        foreach (var file in Directory.EnumerateFiles(srcRoot, "*.cs", SearchOption.AllDirectories))
-        {
-            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") ||
-                file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            for (var i = 0; i < file.Lines.Length; i++)
             {
-                continue;
-            }
-
-            var lines = File.ReadAllLines(file);
-            for (var i = 0; i < lines.Length; i++)
-            {
-                if (!lines[i].Contains(symbol, StringComparison.Ordinal))
+                if (!file.Lines[i].Contains(symbol, StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -46,9 +35,9 @@ public sealed partial class SourceIndexService
                 hits.Add(new SourceSymbolHit
                 {
                     Symbol = symbol,
-                    FilePath = Path.GetRelativePath(_paths.RepoRoot, file).Replace('\\', '/'),
+                    FilePath = file.RelativePath,
                     LineNumber = i + 1,
-                    Line = lines[i].Trim()
+                    Line = file.Lines[i].Trim()
                 });
 
                 if (hits.Count >= maxResults)
@@ -104,18 +93,83 @@ public sealed partial class SourceIndexService
         return results.Distinct(StringComparer.OrdinalIgnoreCase).Take(maxResults).ToList();
     }
 
-    public bool SymbolExists(string symbol) => FindSymbol(symbol, 1).Count > 0;
-
-    public bool VerifyDocClaim(string apiName)
+    public bool SymbolExists(string symbol)
     {
-        if (string.IsNullOrWhiteSpace(apiName))
+        if (string.IsNullOrWhiteSpace(symbol))
         {
             return false;
         }
 
-        return SymbolExists(apiName) || FindSymbol(apiName, 1).Count > 0;
+        var index = _index.Value;
+        if (index.TypeHits.ContainsKey(symbol))
+        {
+            return true;
+        }
+
+        return FindSymbol(symbol, 1).Count > 0;
+    }
+
+    public bool VerifyDocClaim(string apiName) => SymbolExists(apiName);
+
+    public void Warmup() => _ = _index.Value;
+
+    private SourceSymbolIndex BuildIndex()
+    {
+        var files = new List<IndexedSourceFile>();
+        var typeHits = new Dictionary<string, List<SourceSymbolHit>>(StringComparer.Ordinal);
+
+        var srcRoot = _paths.SourcePath;
+        if (!Directory.Exists(srcRoot))
+        {
+            return new SourceSymbolIndex(files, typeHits);
+        }
+
+        foreach (var file in Directory.EnumerateFiles(srcRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") ||
+                file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            {
+                continue;
+            }
+
+            var relativePath = Path.GetRelativePath(_paths.RepoRoot, file).Replace('\\', '/');
+            var lines = File.ReadAllLines(file);
+            files.Add(new IndexedSourceFile(relativePath, lines));
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var typeMatch = TypeDeclaration().Match(lines[i]);
+                if (!typeMatch.Success)
+                {
+                    continue;
+                }
+
+                var typeName = typeMatch.Groups[2].Value;
+                if (!typeHits.TryGetValue(typeName, out var hits))
+                {
+                    hits = [];
+                    typeHits[typeName] = hits;
+                }
+
+                hits.Add(new SourceSymbolHit
+                {
+                    Symbol = typeName,
+                    FilePath = relativePath,
+                    LineNumber = i + 1,
+                    Line = lines[i].Trim()
+                });
+            }
+        }
+
+        return new SourceSymbolIndex(files, typeHits);
     }
 
     [GeneratedRegex(@"\b(class|interface|record|struct)\s+(\w+)", RegexOptions.Compiled)]
     private static partial Regex TypeDeclaration();
+
+    private sealed record IndexedSourceFile(string RelativePath, string[] Lines);
+
+    private sealed record SourceSymbolIndex(
+        IReadOnlyList<IndexedSourceFile> Files,
+        Dictionary<string, List<SourceSymbolHit>> TypeHits);
 }

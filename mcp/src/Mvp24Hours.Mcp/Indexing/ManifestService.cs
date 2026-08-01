@@ -12,15 +12,17 @@ public sealed class ManifestService
     };
 
     private readonly RepoRootResolver _paths;
-    private readonly Lazy<TemplatesManifest> _manifest;
+    private readonly Lazy<(TemplatesManifest Manifest, string RawJson)> _manifest;
 
     public ManifestService(RepoRootResolver paths)
     {
         _paths = paths;
-        _manifest = new Lazy<TemplatesManifest>(LoadManifest);
+        _manifest = new Lazy<(TemplatesManifest, string)>(LoadManifest);
     }
 
-    public TemplatesManifest Manifest => _manifest.Value;
+    public TemplatesManifest Manifest => _manifest.Value.Manifest;
+
+    public string RawJson => _manifest.Value.RawJson;
 
     public ArchitectureTemplate? GetTemplate(string id) =>
         Manifest.Templates.FirstOrDefault(t =>
@@ -28,7 +30,9 @@ public sealed class ManifestService
 
     public IReadOnlyList<ArchitectureTemplate> GetAllTemplates() => Manifest.Templates;
 
-    private TemplatesManifest LoadManifest()
+    public void Warmup() => _ = Manifest;
+
+    private (TemplatesManifest Manifest, string RawJson) LoadManifest()
     {
         var json = File.ReadAllText(_paths.ManifestPath);
         var manifest = JsonSerializer.Deserialize<TemplatesManifest>(json, JsonOptions)
@@ -49,6 +53,6 @@ public sealed class ManifestService
             }
         }
 
-        return manifest;
+        return (manifest, json);
     }
 }

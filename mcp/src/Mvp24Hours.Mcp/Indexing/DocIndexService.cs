@@ -52,6 +52,13 @@ public sealed partial class DocIndexService
     public string? GetDoc(string relativePath)
     {
         var normalized = NormalizeDocPath(relativePath);
+        var fromIndex = _index.Value.FirstOrDefault(d =>
+            string.Equals(d.RelativePath, normalized, StringComparison.OrdinalIgnoreCase));
+        if (fromIndex is not null)
+        {
+            return fromIndex.Content;
+        }
+
         var full = Path.Combine(_paths.DocsEnUsPath, normalized.Replace('/', Path.DirectorySeparatorChar));
         if (!File.Exists(full))
         {
@@ -64,15 +71,16 @@ public sealed partial class DocIndexService
 
     public string? GetDocByRepoPath(string repoRelativePath)
     {
-        var full = _paths.ResolveRepoRelative(repoRelativePath);
-        if (!File.Exists(full))
+        var normalized = repoRelativePath.Replace('\\', '/').TrimStart('/');
+        if (normalized.StartsWith("docs/en-us/", StringComparison.OrdinalIgnoreCase))
         {
-            return null;
+            normalized = normalized["docs/en-us/".Length..];
         }
 
-        EnsureWithinDocs(full);
-        return File.ReadAllText(full);
+        return GetDoc(normalized);
     }
+
+    public void Warmup() => _ = _index.Value;
 
     private IReadOnlyList<IndexedDoc> BuildIndex()
     {

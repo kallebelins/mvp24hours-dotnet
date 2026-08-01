@@ -8,17 +8,19 @@ public sealed partial class ComplianceService
 {
     private readonly RepoRootResolver _paths;
     private readonly ManifestService _manifest;
+    private readonly Lazy<IReadOnlyList<string>> _checklistRules;
 
     public ComplianceService(RepoRootResolver paths, ManifestService manifest)
     {
         _paths = paths;
         _manifest = manifest;
+        _checklistRules = new Lazy<IReadOnlyList<string>>(LoadChecklistRules);
     }
 
     public ComplianceCheckResult CheckPaths(IEnumerable<string> repoRelativePaths, string? templateId = null)
     {
         var result = new ComplianceCheckResult { Passed = true };
-        var rules = LoadChecklistRules();
+        var rules = _checklistRules.Value.ToList();
 
         if (!string.IsNullOrWhiteSpace(templateId))
         {
@@ -104,7 +106,9 @@ public sealed partial class ComplianceService
         }
     }
 
-    private List<string> LoadChecklistRules()
+    public void Warmup() => _ = _checklistRules.Value;
+
+    private IReadOnlyList<string> LoadChecklistRules()
     {
         var path = _paths.ComplianceChecklistPath;
         if (!File.Exists(path))

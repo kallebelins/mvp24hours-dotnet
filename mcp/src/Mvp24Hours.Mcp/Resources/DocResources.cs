@@ -9,8 +9,8 @@ namespace Mvp24Hours.Mcp.Resources;
 public static class DocResources
 {
     [McpServerResource(UriTemplate = "mvp24hours://manifest", Name = "Templates Manifest", MimeType = "application/json")]
-    public static string GetManifest(RepoRootResolver paths) =>
-        File.ReadAllText(paths.ManifestPath);
+    public static string GetManifest(ManifestService manifest) =>
+        manifest.RawJson;
 
     [McpServerResource(UriTemplate = "mvp24hours://docs/{*path}", Name = "Documentation Page", MimeType = "text/markdown")]
     public static string GetDocumentation(DocIndexService docIndex, string path)
