@@ -39,7 +39,7 @@ Add the test project to the sample `.sln` / `.slnx`. Reference Application/Domai
 
 ## What each sample should ship
 
-1. **Unit tests** for domain methods, validators, specifications, handlers, saga steps, or jobs that teach the sample’s main idea.
+1. **Unit tests** for domain methods, validators, specifications, handlers, saga steps, or jobs that teach the sample's main idea.
 2. **One HTTP smoke test** per HTTP host using `WebApplicationFactory<Program>` (add `public partial class Program { }` to the host `Program.cs`).
 3. Prefer **in-memory / mocked** dependencies for smoke tests so `Category=Unit` and basic smoke runs without Docker.
 4. **Testcontainers** (optional) for SQL Server, MongoDB, RabbitMQ, and Keycloak samples — see [Testcontainers](#testcontainers). Skip when Docker is unavailable.
@@ -59,27 +59,87 @@ public partial class Program { }
 
 ## Testcontainers
 
-Use Testcontainers when the sample’s teaching value depends on a real provider:
+Use Testcontainers when the sample's teaching value depends on a real provider. Library reference implementations live under `src/Tests/**` (for example `Mvp24Hours.Application.Integration.Test` for SQL Server, `Mvp24Hours.Application.RabbitMQ.Test` for RabbitMQ, `Mvp24Hours.Infrastructure.Data.MongoDb.Test` for MongoDB, and `Mvp24Hours.Infrastructure.Identity.Keycloak.Test` for Keycloak).
 
-| Sample area | Package | Skip helper |
-| --- | --- | --- |
-| SQL Server / EF | `Testcontainers.MsSql` | `DockerAvailability.IsAvailable` |
-| MongoDB | `Testcontainers.MongoDb` | same |
-| RabbitMQ | `Testcontainers.RabbitMq` | same |
-| Keycloak | `Testcontainers.Keycloak` | same |
+| Sample area | Package | Representative sample | Skip helper |
+| --- | --- | --- | --- |
+| SQL Server / EF | `Testcontainers.MsSql` | `complex-cqrs-ef-customer-api` | `DockerAvailability.IsAvailable` + `[DockerFact]` |
+| MongoDB | `Testcontainers.MongoDb` | `complex-crud-mongodb-customer-api` | same |
+| RabbitMQ (+ SQL when outbox/inbox) | `Testcontainers.RabbitMq` (+ `Testcontainers.MsSql`) | `complex-event-driven-rabbitmq-customer-api` | same |
+| Keycloak | `Testcontainers.Keycloak` | `complex-keycloak-customer-api` | same |
 
-Copy the skip pattern from `src/Tests/**/Support/DockerAvailability.cs`:
+Copy-paste starters: [`templates/SAMPLE_TEST_DockerAvailability.cs.template`](templates/SAMPLE_TEST_DockerAvailability.cs.template), [`SAMPLE_TEST_DockerFactAttribute.cs.template`](templates/SAMPLE_TEST_DockerFactAttribute.cs.template), and provider fixtures in the representative samples listed above.
+
+### Skip gracefully when Docker is unavailable
+
+1. Add `Support/DockerAvailability.cs` (runs `docker info` once per process).
+2. Add `Support/DockerFactAttribute.cs` — sets `FactAttribute.Skip` when Docker is down so `dotnet test` still passes on machines without Docker.
+3. In collection fixtures, set `IsAvailable = false` when startup fails; guard test bodies with `if (!fixture.IsAvailable) return;` for double safety.
+4. Mark fixtures and tests with `[Trait("Category", "Integration")]`.
 
 ```csharp
-if (!DockerAvailability.IsAvailable)
+[DockerFact]
+public async Task MyIntegrationTest()
 {
-    // Skip the test (Fact Attribute skip, or Assert.Skip / conditional Fact)
+    if (!fixture.IsAvailable) return;
+    // ...
 }
 ```
 
-Or use `[Fact(Skip = "...")]` only when Docker is known permanently unavailable in that environment; prefer runtime detection so CI with Docker still runs the suite.
+Prefer runtime detection over hard-coded `[Fact(Skip = "...")]` so CI with Docker still runs the suite.
 
-Mark Testcontainers fixtures with `[Trait("Category", "Integration")]`.
+### SQL Server (EF Core samples)
+
+**When to use:** CRUD/CQRS/DDD/pipeline samples that call `UseSqlServer` and teach persistence behavior.
+
+**Pattern:**
+
+1. `SqlServerContainerFixture : IAsyncLifetime` starts `MsSqlBuilder` (see library `SqlServerContainerFixture`).
+2. `SqlServerCustomerApiFactory : WebApplicationFactory<Program>` overrides `ConnectionStrings:EFDBContext` via `ConfigureAppConfiguration`.
+3. Call `EnsureCreatedAsync()` (or migrations) in the test before HTTP calls — the host skips migrate/seed in `Testing` environment.
+4. Assert create/read HTTP flows against real SQL.
+
+Reference: `samples/src/complex-cqrs-ef-customer-api/CustomerAPI.Test/`.
+
+### MongoDB samples
+
+**When to use:** `minimal-crud-mongodb`, `simple-crud-mongodb`, `complex-crud-mongodb` when document-store behavior matters.
+
+**Pattern:**
+
+1. `MongoDbContainerFixture` starts `MongoDbBuilder("mongo:6.0")`.
+2. Factory overrides `ConnectionStrings:MongoDbContext`.
+3. Use a unique database name per run if tests mutate shared data (library fixtures use `Guid`-suffixed names).
+
+Reference: `samples/src/complex-crud-mongodb-customer-api/CustomerAPI.Test/`.
+
+### RabbitMQ samples
+
+**When to use:** `simple-rabbitmq`, `complex-event-driven-rabbitmq`, `complex-saga-rabbitmq` when broker wiring must be verified.
+
+**Two levels:**
+
+| Level | Purpose |
+| --- | --- |
+| Smoke (no Docker) | `ReplaceRabbitMQWithInMemory()` in `WebApplicationFactory` — default for OpenAPI/health smoke tests. |
+| Testcontainers | Real broker — publish/consume or health checks with `RabbitMqBuilder("rabbitmq:3.13-management")`. |
+
+Event-driven samples that use inbox/outbox also need SQL Server; start both containers and override both connection strings. Disable `IHostedService` registrations in tests so background consumers do not race assertions.
+
+Reference: `samples/src/complex-event-driven-rabbitmq-customer-api/CustomerAPI.Test/`.
+
+### Keycloak samples
+
+**When to use:** `complex-keycloak-customer-api` JWT and Admin API flows.
+
+**Pattern:**
+
+1. Ship a realm JSON under `CustomerAPI.Test/Fixtures/` with `<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`.
+2. `KeycloakContainerFixture` uses `KeycloakBuilder(...).WithRealm(realmPath)`.
+3. Override all `Keycloak:*` configuration keys in `WebApplicationFactory` to point at the ephemeral realm.
+4. Obtain tokens via `IKeycloakTokenService` from a fixture-built `ServiceProvider`, then call protected endpoints.
+
+Reference: `samples/src/complex-keycloak-customer-api/CustomerAPI.Test/` (realm aligned with `src/Tests/Mvp24Hours.Infrastructure.Identity.Keycloak.Test`).
 
 ### Local run
 
@@ -102,3 +162,4 @@ dotnet test
 - [Testing helpers and cookbook](../docs/en-us/testing/home.md)
 - Library tests: `src/Tests/`
 - Sample README template: `templates/SAMPLE_README.template.md`
+- Sample test templates: `templates/SAMPLE_TEST*.template`

@@ -6,6 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MongoDB.Driver" />
 		<PackageReference Include="Mvp24Hours.Application" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
 		<ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Application\Mvp24Hours.Application.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
 	</ItemGroup>

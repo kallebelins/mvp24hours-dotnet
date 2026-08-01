@@ -2,5 +2,6 @@
   <Project Path="CustomerAPI.Application/CustomerAPI.Application.csproj" />
   <Project Path="CustomerAPI.Core/CustomerAPI.Core.csproj" />
   <Project Path="CustomerAPI.Infrastructure/CustomerAPI.Infrastructure.csproj" />
+  <Project Path="CustomerAPI.Test/CustomerAPI.Test.csproj" />
   <Project Path="CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
 </Solution>

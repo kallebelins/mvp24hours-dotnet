@@ -23,6 +23,7 @@ dotnet build -p:Mvp24HoursUseProjectReferences=false -p:Mvp24HoursPackageVersion
 - Prefer validated options (`ValidateOnStart` or `IValidateOptions<T>`), `TimeProvider`, `ILogger<T>`, cancellation tokens on public asynchronous APIs, and ProblemDetails-friendly errors.
 - Do not call `BuildServiceProvider()` from registration extensions, instantiate `HttpClient` directly, commit secrets, or introduce a separate sample style guide.
 - New and migrated hosts should base their documentation on the [sample README template](templates/SAMPLE_README.template.md). Sample code, comments, and documentation are English.
+- Phase 5–6 blueprint and capability samples ship with xUnit + FluentAssertions test projects. See [Sample testing baseline](TESTING.md) (including [Testcontainers guides](TESTING.md#testcontainers)) and copy from [`templates/SAMPLE_TEST*.template`](templates/).
 
 Status: **Migrated** is ready on the .NET 10 patterns; **Planned** exists but still needs its catalog migration phase (or has not been created); **Deprecated** is retained only as a historical reference.
 

@@ -57,11 +57,14 @@ try
 
 
 
-    await using (var scope = app.Services.CreateAsyncScope())
+    if (!app.Environment.IsEnvironment("Testing"))
     {
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-        await MongoDBContextSeed.SeedAsync(unitOfWork, timeProvider);
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+            var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            await MongoDBContextSeed.SeedAsync(unitOfWork, timeProvider);
+        }
     }
     app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
@@ -97,3 +100,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }

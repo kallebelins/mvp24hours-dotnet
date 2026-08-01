@@ -1,0 +1,36 @@
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace {Namespace}.Test.Integration;
+
+/// <summary>
+/// Swaps relational persistence for EF Core InMemory so smoke tests run without Docker.
+/// Extend this factory when the sample also needs in-memory messaging or stub health checks.
+/// </summary>
+public class CustomerApiFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.ConfigureTestServices(services =>
+        {
+            var descriptors = services.Where(d =>
+                d.ServiceType == typeof(DbContextOptions<{DbContext}>) ||
+                d.ServiceType == typeof({DbContext}) ||
+                (d.ServiceType.IsGenericType && d.ServiceType.GetGenericTypeDefinition() == typeof(DbContextOptions<>)) ||
+                d.ServiceType == typeof(IDbContextOptionsConfiguration<{DbContext}>)).ToList();
+
+            foreach (ServiceDescriptor? d in descriptors)
+            {
+                services.Remove(d);
+            }
+
+            services.AddDbContext<{DbContext}>(o =>
+                o.UseInMemoryDatabase("Smoke_" + Guid.NewGuid()));
+        });
+    }
+}

@@ -43,8 +43,9 @@ try
 
     var app = builder.Build();
 
-    await using (var scope = app.Services.CreateAsyncScope())
+    if (!app.Environment.IsEnvironment("Testing"))
     {
+        await using var scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
         await db.Database.EnsureCreatedAsync();
     }
@@ -77,3 +78,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }

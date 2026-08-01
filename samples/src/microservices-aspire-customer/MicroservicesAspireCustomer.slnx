@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="AppHost/AppHost.csproj" />
   <Project Path="CustomerAPI/CustomerAPI.csproj" />
+  <Project Path="CustomerAPI.Test/CustomerAPI.Test.csproj" />
   <Project Path="NotificationWorker/NotificationWorker.csproj" />
   <Project Path="ServiceDefaults/ServiceDefaults.csproj" />
 </Solution>

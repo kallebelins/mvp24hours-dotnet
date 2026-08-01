@@ -29,6 +29,9 @@ else
     });
 }
 
+builder.Services.AddSingleton<HybridCacheProvider>(sp =>
+    (HybridCacheProvider)sp.GetRequiredService<ICacheProvider>());
+
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 // Mvp24Hours sliding-window rate limiter — 20 requests/min per IP by default.
 builder.Services.AddMvp24HoursRateLimiting(options =>
@@ -182,3 +185,5 @@ internal sealed class ProductStore
 
     private void Add(ProductDto p) => _data[p.Id] = p;
 }
+
+public partial class Program { }

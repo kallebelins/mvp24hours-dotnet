@@ -286,3 +286,5 @@ internal sealed class CustomerStore
 
     public bool Delete(int id) => _data.TryRemove(id, out _);
 }
+
+public partial class Program { }
