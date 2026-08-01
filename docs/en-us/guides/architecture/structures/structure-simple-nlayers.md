@@ -1,3 +1,30 @@
+---
+templateId: simple-nlayers
+tier: Simple
+shape: structure
+layers: [Core, Application, Infrastructure, WebAPI, Tests]
+dependencyRule: Core <- Application <- Infrastructure; WebAPI is composition root
+samplePath: samples/src/simple-crud-ef-customer-api
+mvp24hoursModules: [core, application-services, database, webapi, observability]
+---
+
+---
+templateId: simple-nlayers
+tier: Simple
+shape: Simple N-Layers
+dependencyRule: WebAPI -> Core + Infrastructure; Core has no outward project references
+samplePath: samples/src/simple-crud-ef-customer-api
+mvp24hoursModules:
+  - webapi
+  - database
+  - application-services
+layers:
+  - Core
+  - Infrastructure
+  - WebAPI
+  - Tests
+---
+
 # Simple N-Layers Structure
 
 Use a small set of projects when business rules need separation from persistence and hosting, but a full enterprise decomposition would add noise.

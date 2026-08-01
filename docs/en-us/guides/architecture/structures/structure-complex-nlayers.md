@@ -1,3 +1,32 @@
+---
+templateId: complex-nlayers
+tier: Complex
+shape: structure
+layers: [Module.Domain, Module.Application, Module.Infrastructure, Module.Contracts, Host.WebAPI, Tests]
+dependencyRule: Module boundaries; Application must not reference Infrastructure
+samplePath: samples/src/complex-crud-ef-customer-api
+mvp24hoursModules: [core, application-services, database/efcore-advanced, cqrs, testing]
+---
+
+---
+templateId: complex-nlayers
+tier: Complex
+shape: Complex N-Layers modular monolith
+dependencyRule: WebAPI -> Application -> Core; Infrastructure -> Core; composed at host
+samplePath: samples/src/complex-crud-ef-customer-api
+mvp24hoursModules:
+  - webapi
+  - database
+  - application-services
+  - observability
+layers:
+  - Core
+  - Application
+  - Infrastructure
+  - WebAPI
+  - Tests
+---
+
 # Complex N-Layers Structure
 
 Use this shape for a modular monolith with substantial domain and application boundaries. Organize by business module inside each layer so the solution can evolve without becoming one global Core/Application bucket.

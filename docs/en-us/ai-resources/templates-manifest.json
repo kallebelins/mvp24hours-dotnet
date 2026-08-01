@@ -1,0 +1,268 @@
+{
+  "version": "1.0.0",
+  "testTemplates": [
+    "samples/templates/SAMPLE_README.template.md",
+    "samples/templates/SAMPLE_TEST.csproj.template",
+    "samples/templates/SAMPLE_TEST_GlobalUsings.cs.template",
+    "samples/templates/SAMPLE_TEST_CustomerApiFactory.cs.template",
+    "samples/templates/SAMPLE_TEST_OpenApiSmokeTests.cs.template",
+    "samples/templates/SAMPLE_TEST_DockerAvailability.cs.template",
+    "samples/templates/SAMPLE_TEST_DockerFactAttribute.cs.template"
+  ],
+  "layerDocs": {
+    "core": "docs/en-us/ai-resources/layers/layer-core.md",
+    "application": "docs/en-us/ai-resources/layers/layer-application.md",
+    "infrastructure": "docs/en-us/ai-resources/layers/layer-infrastructure.md",
+    "webapi": "docs/en-us/ai-resources/layers/layer-webapi.md",
+    "domain": "docs/en-us/ai-resources/layers/layer-domain.md",
+    "tests": "docs/en-us/ai-resources/layers/layer-tests.md"
+  },
+  "complianceChecklist": "docs/en-us/ai-resources/compliance-checklist.md",
+  "templates": [
+    {
+      "id": "minimal-api",
+      "tier": "Minimal",
+      "shape": "Minimal API single host",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-minimal-api.md",
+      "referenceSample": "samples/src/minimal-crud-ef-customer-api",
+      "layers": [
+        { "name": "Host", "pattern": "{Product}", "dependsOn": [], "responsibilities": ["Program.cs", "Endpoints", "DI composition", "appsettings"] },
+        { "name": "Folders", "pattern": "Features|Domain|Data|Infrastructure", "dependsOn": ["Host"], "responsibilities": ["Feature slices", "Entities", "DbContext", "ServiceCollection extensions"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/modernization/minimal-apis.md",
+        "docs/en-us/modernization/native-openapi.md",
+        "docs/en-us/database/use-context.md",
+        "docs/en-us/testing/home.md"
+      ],
+      "complianceRules": [
+        "Single host project until compile-time boundaries are justified",
+        "Use Program.cs composition; no legacy Startup.cs",
+        "Target net10.0 with nullable reference types"
+      ]
+    },
+    {
+      "id": "simple-nlayers",
+      "tier": "Simple",
+      "shape": "Simple N-Layers",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-simple-nlayers.md",
+      "referenceSample": "samples/src/simple-crud-ef-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Entities", "ValueObjects", "Specifications", "Contracts"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["EF Core", "Migrations", "External integrations"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Core", "Infrastructure"], "responsibilities": ["Controllers", "DI registration", "Middleware", "OpenAPI"] },
+        { "name": "Tests", "pattern": "{Product}.Test", "dependsOn": ["WebAPI"], "responsibilities": ["Unit", "Integration smoke tests"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/application-services.md",
+        "docs/en-us/database/use-context.md",
+        "docs/en-us/webapi.md",
+        "docs/en-us/testing/home.md"
+      ],
+      "complianceRules": [
+        "Core must not reference Infrastructure or WebAPI",
+        "WebAPI is the composition root",
+        "No Application project required at Simple tier"
+      ]
+    },
+    {
+      "id": "complex-nlayers",
+      "tier": "Complex",
+      "shape": "Complex N-Layers modular monolith",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-complex-nlayers.md",
+      "referenceSample": "samples/src/complex-crud-ef-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Entities", "DTOs", "Validators", "Specifications", "Contracts"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Core"], "responsibilities": ["Application services", "Facade", "Use cases"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["DbContext", "Repositories", "Migrations", "Adapters"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["HTTP host", "DI composition", "OpenAPI"] },
+        { "name": "Tests", "pattern": "{Product}.Test", "dependsOn": ["WebAPI"], "responsibilities": ["Unit", "Integration", "Support fixtures"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/application-services.md",
+        "docs/en-us/database/use-repository.md",
+        "docs/en-us/database/use-unitofwork.md",
+        "docs/en-us/testing/home.md"
+      ],
+      "complianceRules": [
+        "WebAPI -> Application -> Core dependency flow",
+        "Infrastructure -> Core only; composed at WebAPI",
+        "Application must not reference Infrastructure or WebAPI"
+      ]
+    },
+    {
+      "id": "cqrs",
+      "tier": "Blueprint",
+      "shape": "CQRS with Mvp24Hours Mediator",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-cqrs.md",
+      "referenceSample": "samples/src/complex-cqrs-ef-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Domain model", "Contracts"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Core"], "responsibilities": ["Commands", "Queries", "Handlers", "Behaviors", "Notifications"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["Persistence", "Messaging adapters"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["HTTP endpoints", "Mediator dispatch"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/cqrs/getting-started.md",
+        "docs/en-us/cqrs/commands.md",
+        "docs/en-us/cqrs/queries.md",
+        "docs/en-us/testing/home.md"
+      ],
+      "complianceRules": [
+        "Use AddMvpMediator and IMediatorCommand/Query — not MediatR",
+        "Application must not reference Infrastructure",
+        "Handlers live in Application; persistence in Infrastructure"
+      ]
+    },
+    {
+      "id": "ddd",
+      "tier": "Blueprint",
+      "shape": "Domain-Driven Design",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-ddd.md",
+      "referenceSample": "samples/src/complex-ddd-ef-customer-api",
+      "layers": [
+        { "name": "Domain", "pattern": "{Product}.Domain", "dependsOn": [], "responsibilities": ["Aggregates", "Value objects", "Domain events", "Specifications"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Domain"], "responsibilities": ["Use cases", "Application services"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Domain"], "responsibilities": ["EF mappings", "Repositories"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["HTTP delivery"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/core/home.md",
+        "docs/en-us/core/specification.md",
+        "docs/en-us/application-services.md"
+      ],
+      "complianceRules": [
+        "Domain has no infrastructure references",
+        "Rich invariants belong in aggregates, not controllers"
+      ]
+    },
+    {
+      "id": "clean-architecture",
+      "tier": "Blueprint",
+      "shape": "Clean Architecture",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-clean-architecture.md",
+      "referenceSample": "samples/src/complex-clean-architecture-customer-api",
+      "layers": [
+        { "name": "Domain", "pattern": "{Product}.Domain", "dependsOn": [], "responsibilities": ["Entities", "Value objects", "Domain events"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Domain"], "responsibilities": ["Use cases", "Ports"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Domain", "Application"], "responsibilities": ["Port implementations"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["Composition root"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/guides/architecture/project-structure.md",
+        "docs/en-us/cqrs/getting-started.md",
+        "docs/en-us/testing/home.md"
+      ],
+      "complianceRules": [
+        "Inward dependency rule: Domain <- Application <- Infrastructure/WebAPI",
+        "Application must not reference Infrastructure"
+      ]
+    },
+    {
+      "id": "hexagonal",
+      "tier": "Blueprint",
+      "shape": "Hexagonal (Ports and Adapters)",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-hexagonal.md",
+      "referenceSample": "samples/src/complex-hexagonal-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Entities", "Outbound port interfaces"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Core"], "responsibilities": ["Use cases depending on ports only"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["EF and HTTP adapters"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["Inbound HTTP adapters"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/modernization/resilience-guide.md",
+        "docs/en-us/webapi-advanced.md"
+      ],
+      "complianceRules": [
+        "Ports defined in Core; adapters in Infrastructure/WebAPI",
+        "Application depends only on Core port abstractions"
+      ]
+    },
+    {
+      "id": "event-driven",
+      "tier": "Blueprint",
+      "shape": "Event-Driven Integration",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-event-driven.md",
+      "referenceSample": "samples/src/complex-event-driven-rabbitmq-customer-api",
+      "layers": [
+        { "name": "Domain", "pattern": "{Product}.Domain", "dependsOn": [], "responsibilities": ["Domain events", "Aggregates"] },
+        { "name": "Application", "pattern": "{Product}.Application", "dependsOn": ["Domain"], "responsibilities": ["Integration handlers", "Outbox/inbox orchestration"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Domain"], "responsibilities": ["RabbitMQ", "Outbox store"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Application", "Infrastructure"], "responsibilities": ["HTTP + publish pipeline"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/broker.md",
+        "docs/en-us/cqrs/integration-rabbitmq.md",
+        "docs/en-us/cqrs/resilience/inbox-outbox.md"
+      ],
+      "complianceRules": [
+        "Use outbox/inbox for guaranteed delivery",
+        "Design for idempotent consumers and eventual consistency"
+      ]
+    },
+    {
+      "id": "microservices",
+      "tier": "Blueprint",
+      "shape": "Microservices with Aspire",
+      "docPath": "docs/en-us/guides/architecture/blueprints/template-microservices.md",
+      "referenceSample": "samples/src/microservices-aspire-customer",
+      "layers": [
+        { "name": "AppHost", "pattern": "AppHost", "dependsOn": [], "responsibilities": ["Local orchestration", "Service discovery"] },
+        { "name": "ServiceDefaults", "pattern": "ServiceDefaults", "dependsOn": [], "responsibilities": ["Shared health", "HTTP resilience defaults"] },
+        { "name": "Service", "pattern": "{ServiceName}", "dependsOn": ["ServiceDefaults"], "responsibilities": ["Independent deployable API or worker"] },
+        { "name": "Tests", "pattern": "{ServiceName}.Test", "dependsOn": ["Service"], "responsibilities": ["Per-service smoke and integration tests"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/modernization/aspire.md",
+        "docs/en-us/guides/deployment/containerization.md",
+        "docs/en-us/observability/home.md"
+      ],
+      "complianceRules": [
+        "Each service owns its data store",
+        "Use integration events, not shared databases",
+        "Prefer Aspire for local multi-service development"
+      ]
+    },
+    {
+      "id": "dapper-hybrid",
+      "tier": "Simple",
+      "shape": "Simple N-Layers with Dapper reads",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-simple-nlayers.md",
+      "referenceSample": "samples/src/simple-crud-ef-dapper-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Entities", "Contracts"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["EF writes", "Dapper read queries"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Core", "Infrastructure"], "responsibilities": ["HTTP host"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/database/efcore-advanced.md",
+        "docs/en-us/database/use-repository.md"
+      ],
+      "complianceRules": [
+        "Share connection/transaction scope between EF and Dapper",
+        "Document read vs write path explicitly"
+      ]
+    },
+    {
+      "id": "entity-audit",
+      "tier": "Simple",
+      "shape": "Simple N-Layers with entity audit trail",
+      "docPath": "docs/en-us/guides/architecture/structures/structure-simple-nlayers.md",
+      "referenceSample": "samples/src/simple-crud-ef-entitylog-customer-api",
+      "layers": [
+        { "name": "Core", "pattern": "{Product}.Core", "dependsOn": [], "responsibilities": ["Audited entities", "Soft-delete filters"] },
+        { "name": "Infrastructure", "pattern": "{Product}.Infrastructure", "dependsOn": ["Core"], "responsibilities": ["EF interceptors", "TimeProvider audit columns"] },
+        { "name": "WebAPI", "pattern": "{Product}.WebAPI", "dependsOn": ["Core", "Infrastructure"], "responsibilities": ["HTTP host"] }
+      ],
+      "relatedDocs": [
+        "docs/en-us/core/entity-interfaces.md",
+        "docs/en-us/database/use-entity.md"
+      ],
+      "complianceRules": [
+        "Use TimeProvider for audit timestamps",
+        "Apply soft-delete via global filters or specifications"
+      ]
+    }
+  ]
+}

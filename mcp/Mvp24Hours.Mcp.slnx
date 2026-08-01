@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj" />
+  <Project Path="tests/Mvp24Hours.Mcp.Tests/Mvp24Hours.Mcp.Tests.csproj" />
+</Solution>

@@ -1,3 +1,13 @@
+---
+templateId: hexagonal
+tier: Blueprint
+shape: blueprint
+layers: [Core, Application, Infrastructure, WebAPI]
+dependencyRule: Inbound/outbound ports; adapters at Infrastructure and WebAPI boundaries
+samplePath: samples/src/complex-hexagonal-customer-api
+mvp24hoursModules: [core/infrastructure-abstractions, application-services, database, infrastructure]
+---
+
 # Hexagonal Architecture Blueprint
 
 Hexagonal architecture isolates business behavior behind inbound and outbound ports. Use it when external systems change independently or when the same use cases need multiple delivery mechanisms.

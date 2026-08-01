@@ -4,10 +4,11 @@ Use this context when implementing or reviewing .NET solutions with Mvp24Hours.
 
 ## Retrieval order
 
-1. Use the external Mvp24Hours MCP when its public endpoint is available.
+1. Use the **local Mvp24Hours MCP DevKit** when configured (`mcp/README.md`, `.cursor/mcp.json`).
 2. Read canonical documentation under `docs/en-us/`.
 3. Use `docs/en-us/guides/architecture/` for architecture choices only.
-4. Verify exact APIs against `src/` and behavior against `src/Tests/`.
+4. Use `docs/llms_compact_en.txt` or `docs/llms_complete_en.txt` only as an offline fallback.
+5. Verify exact APIs against `src/` and behavior against `src/Tests/`.
 
 ## Canonical routes
 

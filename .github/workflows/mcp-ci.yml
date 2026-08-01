@@ -1,0 +1,46 @@
+name: MCP DevKit CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'mcp/**'
+      - 'docs/en-us/ai-resources/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'mcp/**'
+      - 'docs/en-us/ai-resources/**'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  MVP24HOURS_REPO_ROOT: ${{ github.workspace }}
+
+jobs:
+  mcp-build-test:
+    name: MCP Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore
+      run: dotnet restore mcp/Mvp24Hours.Mcp.slnx
+
+    - name: Build
+      run: dotnet build mcp/Mvp24Hours.Mcp.slnx --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test mcp/Mvp24Hours.Mcp.slnx --configuration Release --no-build --verbosity normal

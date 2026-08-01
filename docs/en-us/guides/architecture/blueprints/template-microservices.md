@@ -1,3 +1,13 @@
+---
+templateId: microservices
+tier: Blueprint
+shape: blueprint
+layers: [Domain, Application, Infrastructure, API, Worker, AppHost]
+dependencyRule: One team owns service data; no shared database tables
+samplePath: samples/src/microservices-aspire-customer
+mvp24hoursModules: [modernization/aspire, broker, infrastructure/http-resilience, observability]
+---
+
 # Microservices Blueprint
 
 Use microservices only when independent deployment, scaling, ownership, or regulatory isolation outweighs distributed-system cost. For code organization alone, prefer a modular monolith.

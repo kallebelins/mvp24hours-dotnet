@@ -1,3 +1,13 @@
+---
+templateId: cqrs
+tier: Blueprint
+shape: blueprint
+layers: [Core, Application, Infrastructure, WebAPI]
+dependencyRule: Core <- Application <- Infrastructure; use AddMvpMediator not MediatR
+samplePath: samples/src/complex-cqrs-ef-customer-api
+mvp24hoursModules: [cqrs, application-services, database, webapi, testing]
+---
+
 # CQRS Blueprint
 
 CQRS separates state-changing commands from read-only queries. Use it when the models, scaling needs, authorization, validation, or cross-cutting behavior genuinely differ.

@@ -10,16 +10,24 @@ Use this context when implementing or reviewing .NET solutions with Mvp24Hours.
 
 ## Retrieval order
 
-1. Use the external Mvp24Hours MCP when its public endpoint is available.
+1. Use the **local Mvp24Hours MCP DevKit** when configured in `.cursor/mcp.json` (stdio) or via HTTP (`dotnet run --project mcp/src/Mvp24Hours.Mcp -- --http`).
 2. Read canonical documentation under `docs/en-us/`.
 3. Use `docs/en-us/guides/architecture/` for architecture choices only.
 4. Verify exact APIs against `src/` and behavior against `src/Tests/`.
+
+## Local MCP quick reference
+
+- Server: `mcp/src/Mvp24Hours.Mcp/`
+- Env: `MVP24HOURS_REPO_ROOT` = repository root
+- Manifest: `docs/en-us/ai-resources/templates-manifest.json`
+- Setup: `mcp/README.md`, `docs/en-us/ai-resources/home.md`
 
 ## Canonical routes
 
 - Architecture: `docs/en-us/guides/architecture/home.md`
 - Architecture decisions: `docs/en-us/guides/architecture/decision-matrix.md`
 - Project structure: `docs/en-us/guides/architecture/project-structure.md`
+- AI resources & MCP: `docs/en-us/ai-resources/home.md`
 - Configuration and Options: `docs/en-us/configuration-reference.md`
 - Core and domain: `docs/en-us/core/home.md`
 - EF Core and repositories: `docs/en-us/database/`

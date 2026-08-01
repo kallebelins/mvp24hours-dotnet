@@ -1,3 +1,13 @@
+---
+templateId: clean-architecture
+tier: Blueprint
+shape: blueprint
+layers: [Domain, Application, Infrastructure, WebAPI]
+dependencyRule: Domain <- Application <- Infrastructure; inward dependency rule
+samplePath: samples/src/complex-clean-architecture-customer-api
+mvp24hoursModules: [core, cqrs, application-services, testing]
+---
+
 # Clean Architecture Blueprint
 
 Clean Architecture applies an inward dependency rule: domain policy does not depend on infrastructure or delivery frameworks.

@@ -1,3 +1,13 @@
+---
+templateId: event-driven
+tier: Blueprint
+shape: blueprint
+layers: [Core, Application, Infrastructure, WebAPI]
+dependencyRule: Durable outbox before publish; idempotent consumers with inbox
+samplePath: samples/src/complex-event-driven-rabbitmq-customer-api
+mvp24hoursModules: [cqrs/domain-events, cqrs/integration-events, broker, cqrs/resilience/inbox-outbox]
+---
+
 # Event-Driven Blueprint
 
 Use events to notify interested components about facts that have already happened. Distinguish domain events inside one consistency boundary from integration events crossing process or service boundaries.

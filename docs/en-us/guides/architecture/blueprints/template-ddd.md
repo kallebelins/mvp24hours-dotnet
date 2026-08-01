@@ -1,3 +1,13 @@
+---
+templateId: ddd
+tier: Blueprint
+shape: blueprint
+layers: [Domain, Application, Infrastructure, WebAPI]
+dependencyRule: Domain <- Application <- Infrastructure; one bounded context per model
+samplePath: samples/src/complex-ddd-ef-customer-api
+mvp24hoursModules: [core, core/value-objects, core/entity-interfaces, specification, cqrs/domain-events]
+---
+
 # Domain-Driven Design Blueprint
 
 Use DDD when domain complexity—not technical complexity—is the primary risk. Build a shared language with domain experts and organize the model around bounded contexts.
