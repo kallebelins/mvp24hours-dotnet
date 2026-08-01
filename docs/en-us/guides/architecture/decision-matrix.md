@@ -28,3 +28,7 @@ Choose from constraints, not labels. Start small and introduce additional bounda
 ## Avoid premature escalation
 
 Do not choose microservices only for code organization, CQRS only to wrap CRUD, or event-driven integration where a transactionally consistent call is required. A modular monolith can preserve boundaries while avoiding distributed transactions, message delivery, and multi-service operations.
+
+## Runnable samples
+
+Each row in the [decision matrix](decision-matrix.md) maps to a runnable sample under [`samples/`](../../../../samples/README.md). Start with the [“Which sample should I open first?”](../../../../samples/README.md#which-sample-should-i-open-first) table when you want a concrete project to clone rather than a blueprint alone.

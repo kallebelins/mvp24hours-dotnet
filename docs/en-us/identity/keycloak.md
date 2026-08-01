@@ -207,3 +207,5 @@ Use unique names for test users, roles, and groups, and clean up resources that 
 - Prefer authorization code with PKCE for interactive clients; do not use the password grant.
 
 See the [Keycloak server documentation](https://www.keycloak.org/documentation) and [Admin REST API](https://www.keycloak.org/docs-api/latest/rest-api/index.html) for server-side configuration details.
+
+> **Sample:** [`complex-keycloak-customer-api`](../../../samples/src/complex-keycloak-customer-api/CustomerAPI.WebAPI/README.md) — JWT bearer validation and Admin create-user / reset-password / assign-role flows without Duende or IdentityModel packages.

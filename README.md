@@ -27,12 +27,8 @@ dotnet add package Mvp24Hours.WebAPI
 
 - 🌐 **Website**: [kallebelins.github.io/mvp24hours-dotnet](https://kallebelins.github.io/mvp24hours-dotnet/#/)
 - 📖 **Documentation**: [English Documentation](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/home)
-- 🧪 **Samples**: [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples) (external; currently .NET 8 — see [Getting Started sample map](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/getting-started?id=🧪-runnable-samples))
+- 🧪 **Samples**: [`samples/`](samples/README.md) — 32 runnable .NET 10 solutions (Minimal, Simple, Complex, Blueprints, Capabilities); see the [catalog](samples/README.md#complete-catalog) and [decision matrix](samples/README.md#which-sample-should-i-open-first)
 
-> Samples currently target **.NET 8 (v8.2.101)** and may still use NLog. Treat
-> them as structural references until the samples repository is upgraded to
-> `net10.0`.
->
 > **Release status:** the repository targets `net10.0`, but its package project metadata
 > remains at `9.1.21` and the public `Mvp24Hours.Core` feed does not include 10.0.0.
 > Treat 10.0.0 as the source release until metadata is finalized and publication is confirmed.

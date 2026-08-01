@@ -59,14 +59,11 @@ Start here:
 
 ## 📚 Examples
 
-Runnable sample solutions live in
-[mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples).
-See the [Getting Started sample map](getting-started.md#🧪-runnable-samples)
-for project-to-documentation links.
+All **32** runnable sample solutions live in [`samples/`](../../samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and include English READMEs with run instructions.
 
-> The samples repository currently targets **.NET 8 (v8.2.101)** and may still
-> use NLog in some projects. Upgrade samples to **net10.0** and OpenTelemetry
-> in a follow-up outside this repository.
+- [Sample catalog](../../samples/README.md#complete-catalog) — every sample with tier, purpose, and documentation links
+- [Which sample should I open first?](../../samples/README.md#which-sample-should-i-open-first) — decision-matrix guidance
+- [Sample testing baseline](../../samples/TESTING.md) — xUnit, FluentAssertions, and Testcontainers patterns
 
 ## 🔮 Next Steps
 * Implement integration with Kafka (message broker)

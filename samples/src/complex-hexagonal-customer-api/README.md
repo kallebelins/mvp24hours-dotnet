@@ -1,6 +1,18 @@
 # Complex Hexagonal Customer API
 
-First-class **Hexagonal / Ports & Adapters** blueprint for a Customer API built with [Mvp24Hours](https://mvp24hours.dev) and **.NET 10**.
+First-class **Hexagonal / Ports & Adapters** blueprint for a Customer API built with Mvp24Hours and **.NET 10**. Explicit inbound HTTP adapters and outbound EF Core + resilient HTTP adapters map at the boundaries without leaking infrastructure types into Application.
+
+## Status
+
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
+## Features
+
+- Outbound ports in Core; use cases in Application with no Infrastructure references
+- EF Core and Typicode HTTP outbound adapters with `IHttpClientFactory` + standard HTTP resilience
+- Native OpenAPI, ProblemDetails, health checks, and Docker Compose for SQL Server
 
 ## Architecture
 
@@ -125,3 +137,16 @@ Catalog: `MyHexTestDb`. EF migrations are applied automatically on startup in no
 ```bash
 dotnet build samples/src/complex-hexagonal-customer-api/Complex-Hexagonal-CustomerAPI.sln
 ```
+
+## Related documentation
+
+- [Hexagonal blueprint](../../../docs/en-us/guides/architecture/blueprints/template-hexagonal.md)
+- [Core abstractions](../../../docs/en-us/core/infrastructure-abstractions.md)
+- [HTTP resilience](../../../docs/en-us/infrastructure/http-resilience.md)
+- [Getting started](../../../docs/en-us/getting-started.md)
+
+## What this sample intentionally does not cover
+
+- Message-driven inbound adapters (HTTP only in this host)
+- Multiple bounded contexts or shared databases across services
+- Production-grade adapter substitution beyond the teaching EF and Typicode HTTP examples

@@ -2,7 +2,20 @@
 
 Demonstrates the **Saga Orchestration** pattern with automatic **compensation** using `Mvp24Hours.Infrastructure.Cqrs`.
 
-Target: **net10.0** | Language: English | Status: **migrated**
+## Status
+
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
+## Features
+
+- `SagaBase<TData>` with ordered steps and compensating actions on failure
+- `ISagaOrchestrator` with in-memory state store (teaching scope)
+- `simulateGiftFailure` flag to exercise full compensation in one POST
+- Native OpenAPI and orchestration-vs-choreography guidance in README
+
+Target: **net10.0** | Language: English
 
 ---
 
@@ -178,6 +191,12 @@ To add RabbitMQ event publishing on saga completion:
 
 ## References
 
-- Local: `docs/en-us/cqrs/saga/home.md`, `implementation.md`, `compensation.md`
+- [Saga home](../../../docs/en-us/cqrs/saga/home.md), [implementation](../../../docs/en-us/cqrs/saga/implementation.md), [compensation](../../../docs/en-us/cqrs/saga/compensation.md)
 - Pattern: [microservices.io/patterns/data/saga.html](https://microservices.io/patterns/data/saga.html)
-- Phase 5.5 sample (outbox/inbox): [`complex-event-driven-rabbitmq-customer-api`](../complex-event-driven-rabbitmq-customer-api/README.md)
+- Outbox/inbox sibling: [`complex-event-driven-rabbitmq-customer-api`](../complex-event-driven-rabbitmq-customer-api/README.md)
+
+## What this sample intentionally does not cover
+
+- Durable saga state persistence (in-memory store only)
+- RabbitMQ choreography across independent services (orchestration in one host)
+- Production dead-letter handling beyond the documented optional next steps

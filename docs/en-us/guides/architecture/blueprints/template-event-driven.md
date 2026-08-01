@@ -23,3 +23,5 @@ Domain action
 Use Mvp24Hours domain events for in-process decoupling, the mediator notification APIs for local dispatch, and RabbitMQ plus inbox/outbox for durable integration.
 
 See [Domain Events](../../../cqrs/domain-events.md), [Integration Events](../../../cqrs/integration-events.md), [RabbitMQ Integration](../../../cqrs/integration-rabbitmq.md), [RabbitMQ Advanced](../../../broker-advanced.md), and [Inbox/Outbox](../../../cqrs/resilience/inbox-outbox.md).
+
+> **Sample:** [`complex-event-driven-rabbitmq-customer-api`](../../../../../samples/src/complex-event-driven-rabbitmq-customer-api/README.md) — durable outbox, RabbitMQ publish, consumer inbox/idempotency, and correlation IDs. Simpler messaging baseline: [`simple-rabbitmq-customer-api`](../../../../../samples/src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/README.md).

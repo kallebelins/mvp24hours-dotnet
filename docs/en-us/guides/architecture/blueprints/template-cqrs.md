@@ -45,3 +45,5 @@ Application/
 Keep transaction boundaries in command handling. Queries must not introduce side effects. Add caching, validation, retries, idempotency, and inbox/outbox through documented mediator integrations instead of copying custom behaviors.
 
 See [CQRS Getting Started](../../../cqrs/getting-started.md), [Behaviors](../../../cqrs/behaviors.md), [Queries](../../../cqrs/queries.md), and [Inbox/Outbox](../../../cqrs/resilience/inbox-outbox.md).
+
+> **Sample:** [`complex-cqrs-ef-customer-api`](../../../../../samples/src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/README.md) — runnable CQRS reference with feature folders, validation behaviors, and notifications on .NET 10.

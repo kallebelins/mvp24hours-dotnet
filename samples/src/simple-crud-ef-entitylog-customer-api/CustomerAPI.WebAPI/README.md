@@ -41,7 +41,7 @@ Configure secrets with environment variables, user secrets (`dotnet user-secrets
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:CustomerDbContext` | Yes | SQL Server database containing audit columns | `Server=localhost,1433;Database=MyTestLogDb;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
+| `ConnectionStrings:CustomerDbContext` | Yes | SQL Server database containing audit columns | `Server=localhost,1433;Database=MyTestLogDb;User Id=sa;Password=<secret>;TrustServerCertificate=True` |
 
 Override credentials with environment variables, user secrets, or a secret store.
 

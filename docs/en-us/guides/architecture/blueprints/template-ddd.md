@@ -17,3 +17,5 @@ Do not share one entity model across contexts. A bounded context may use a simpl
 Mvp24Hours provides entity interfaces, value-object helpers, smart enums, specifications, repositories, unit of work, and domain-event integration. Use the canonical pages for exact APIs.
 
 See [Core & Domain](../../../core/home.md), [Value Objects](../../../core/value-objects.md), [Entity Interfaces](../../../core/entity-interfaces.md), [Specification](../../../specification.md), and [Domain Events](../../../cqrs/domain-events.md).
+
+> **Sample:** [`complex-ddd-ef-customer-api`](../../../../../samples/src/complex-ddd-ef-customer-api/README.md) — Customer aggregate with value objects, domain events, and specifications in one bounded context.

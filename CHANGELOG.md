@@ -51,6 +51,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Metadados NuGet completos com README, ícone, licença MIT, tags de descoberta e documentação XML.
 - Pipeline dedicado para build, testes unitários, testes de integração com Keycloak em Docker e
   geração/validação do pacote NuGet.
+- **`samples/` — migração .NET 10 e catálogo completo**: 32 soluções executáveis em `net10.0`
+  (19 migradas + 6 blueprints de arquitetura + 7 capability samples), referências locais a `src/`
+  via `Mvp24HoursUseProjectReferences`, hosting minimal unificado, OpenAPI nativo, ProblemDetails,
+  `docker-compose.yml` para dependências, baseline de testes (`samples/TESTING.md`) e catálogo
+  documentado em [`samples/README.md`](samples/README.md) com guidance da decision matrix.
 
 ### Substituído (APIs obsoletas modernizadas)
 

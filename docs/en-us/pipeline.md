@@ -318,3 +318,5 @@ builder.Services.AddOpenTelemetry()
 - [CQRS behaviors](cqrs/behaviors.md)
 - [Caching advanced](caching-advanced.md)
 - [Observability](observability/home.md)
+
+> **Samples:** [`minimal-pipeline-customer-api`](../../samples/src/minimal-pipeline-customer-api/CustomerAPI/README.md) (Minimal) · [`simple-pipeline-customer-api`](../../samples/src/simple-pipeline-customer-api/CustomerAPI.WebAPI/README.md) (Simple) · [`complex-pipeline-builder-customer-api`](../../samples/src/complex-pipeline-builder-customer-api/CustomerAPI.WebAPI/README.md) (Complex builder) · [`complex-pipeline-ports-adapters-customer-api`](../../samples/src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/README.md) (ports and adapters)

@@ -1,10 +1,19 @@
 # Complex Event-Driven RabbitMQ Customer API
 
-Demonstrates a **production-grade Outbox → Broker → Inbox** pattern using:
+Demonstrates a **production-grade Outbox → Broker → Inbox** pattern using Mvp24Hours CQRS and RabbitMQ integrations with EF Core durable stores.
 
-- `Mvp24Hours.Infrastructure.Cqrs` — Mediator, `IIntegrationEventOutbox`, `IInboxStore`, `IInboxProcessor`, `OutboxProcessor`, `InboxCleanupService`
-- `Mvp24Hours.Infrastructure.RabbitMQ` — `IMvpRabbitMQClient`, `IMvpRabbitMQConsumerAsync`, DLX support
-- EF Core (SQL Server) — durable outbox + inbox tables, domain tables
+## Status
+
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
+## Features
+
+- `IIntegrationEventOutbox` and `IInboxStore` with scoped EF Core adapters (singleton library registration avoided)
+- Correlation and causation ID propagation from HTTP through outbox to consumer inbox
+- RabbitMQ publish with dead-letter exchange notes and outbox retry/backoff
+- Native OpenAPI, health checks (SQL + RabbitMQ), and Docker Compose for local dependencies
 
 Target: **net10.0** | Language: English
 
@@ -260,3 +269,16 @@ The `OutboxProcessor` also implements exponential-backoff retry (`RetryBaseDelay
 | `GET` | `/swagger` | OpenAPI UI (non-production only) |
 
 Set `X-Correlation-Id` header on POST to propagate your trace ID end-to-end.
+
+## Related documentation
+
+- [Event-driven blueprint](../../../docs/en-us/guides/architecture/blueprints/template-event-driven.md)
+- [Inbox/Outbox](../../../docs/en-us/cqrs/resilience/inbox-outbox.md)
+- [RabbitMQ broker](../../../docs/en-us/broker.md)
+- [Integration events](../../../docs/en-us/cqrs/integration-events.md)
+
+## What this sample intentionally does not cover
+
+- Exactly-once delivery to RabbitMQ (at-least-once with inbox deduplication only)
+- Library singleton outbox/inbox registration with scoped EF (manual scoped wiring documented)
+- Cross-service choreography without a central outbox processor

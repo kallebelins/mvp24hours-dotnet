@@ -220,47 +220,46 @@ The [Infrastructure overview](infrastructure/home.md) maps the cross-cutting mod
 
 ## 🧪 Runnable Samples
 
-Runnable applications are maintained separately in
-[mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples).
-Each sample includes a project-level `Readme.md` under its `...WebAPI` folder.
+All **32** sample solutions live in [`samples/`](../../samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and ship English READMEs with run instructions and Docker Compose where applicable.
 
-> **Version note:** the samples repository currently targets **.NET 8
-> (v8.2.101)** and several projects still use **NLog**. This documentation
-> targets the **net10.0** source tree and canonical **OpenTelemetry** guidance.
-> Treat samples as structural references; upgrade the TFM, package versions,
-> and logging stack when copying code.
+Use the [sample catalog](../../samples/README.md#complete-catalog) for the full list, or the [“Which sample should I open first?”](../../samples/README.md#which-sample-should-i-open-first) table when you are choosing an architecture shape.
 
-| Sample project | Architecture | Primary documentation |
-|----------------|--------------|------------------------|
-| `minimal-crud-ef-customer-api` | Minimal API | [Minimal API structure](guides/architecture/structures/structure-minimal-api.md), [Relational database](database/relational.md) |
-| `minimal-crud-mongodb-customer-api` | Minimal API | [Minimal API structure](guides/architecture/structures/structure-minimal-api.md), [MongoDB](database/nosql.md) |
-| `minimal-pipeline-customer-api` | Minimal API | [Minimal API structure](guides/architecture/structures/structure-minimal-api.md), [Pipeline](pipeline.md) |
-| `simple-webstatus` | Simple | [Health Checks catalog](infrastructure/health-checks.md) |
+| Sample project | Tier | Primary documentation |
+| --- | --- | --- |
+| `minimal-crud-ef-customer-api` | Minimal | [Minimal API structure](guides/architecture/structures/structure-minimal-api.md), [Relational database](database/relational.md) |
+| `minimal-crud-mongodb-customer-api` | Minimal | [Minimal API structure](guides/architecture/structures/structure-minimal-api.md), [MongoDB](database/nosql.md) |
+| `minimal-pipeline-customer-api` | Minimal | [Pipeline](pipeline.md) |
 | `simple-crud-ef-customer-api` | Simple | [Simple N-Layers](guides/architecture/structures/structure-simple-nlayers.md), [Repository](database/use-repository.md) |
 | `simple-crud-ef-dapper-customer-api` | Simple | [Simple N-Layers](guides/architecture/structures/structure-simple-nlayers.md), [EF Core Advanced](database/efcore-advanced.md) |
-| `simple-crud-ef-entitylog-customer-api` | Simple | [Simple N-Layers](guides/architecture/structures/structure-simple-nlayers.md), [Entity](database/use-entity.md) |
-| `simple-crud-mongodb-customer-api` | Simple | [Simple N-Layers](guides/architecture/structures/structure-simple-nlayers.md), [MongoDB](database/nosql.md) |
-| `simple-crud-redis-customer-api` | Simple | [Redis](database/nosql.md) |
+| `simple-crud-ef-entitylog-customer-api` | Simple | [Entity interfaces](core/entity-interfaces.md), [Use entity](database/use-entity.md) |
+| `simple-crud-mongodb-customer-api` | Simple | [MongoDB](database/nosql.md) |
+| `simple-crud-redis-customer-api` | Simple | [Caching advanced](caching-advanced.md) |
 | `simple-rabbitmq-customer-api` | Simple | [RabbitMQ](broker.md), [CQRS/RabbitMQ integration](cqrs/integration-rabbitmq.md) |
 | `simple-pipeline-customer-api` | Simple | [Pipeline](pipeline.md) |
+| `simple-webstatus` | Simple | [Health Checks catalog](infrastructure/health-checks.md) |
 | `complex-crud-ef-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [Relational database](database/relational.md) |
-| `complex-crud-ef-dapper-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [EF Core Advanced](database/efcore-advanced.md) |
-| `complex-crud-ef-only-entity-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [Entity](database/use-entity.md) |
-| `complex-crud-ef-entitylog-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [Entity](database/use-entity.md) |
-| `complex-crud-mongodb-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [MongoDB Advanced](database/mongodb-advanced.md) |
+| `complex-crud-ef-dapper-customer-api` | Complex | [Complex N-Layers](guides/architecture/structures/structure-complex-nlayers.md), [Unit of Work](database/use-unitofwork.md) |
+| `complex-crud-ef-only-entity-customer-api` | Complex (deprecated) | [Decision matrix](guides/architecture/decision-matrix.md) |
+| `complex-crud-ef-entitylog-customer-api` | Complex | [Entity interfaces](core/entity-interfaces.md) |
+| `complex-crud-mongodb-customer-api` | Complex | [MongoDB Advanced](database/mongodb-advanced.md) |
 | `complex-pipeline-customer-api` | Complex | [Pipeline](pipeline.md) |
 | `complex-pipeline-builder-customer-api` | Complex | [Pipeline](pipeline.md) |
 | `complex-pipeline-ports-adapters-customer-api` | Complex | [Hexagonal blueprint](guides/architecture/blueprints/template-hexagonal.md), [Pipeline](pipeline.md) |
 | `complex-pipeline-ef-customer-api` | Complex | [Pipeline](pipeline.md), [Relational database](database/relational.md) |
+| `complex-cqrs-ef-customer-api` | Blueprint | [CQRS blueprint](guides/architecture/blueprints/template-cqrs.md), [CQRS getting started](cqrs/getting-started.md) |
+| `complex-ddd-ef-customer-api` | Blueprint | [DDD blueprint](guides/architecture/blueprints/template-ddd.md) |
+| `complex-clean-architecture-customer-api` | Blueprint | [Clean Architecture blueprint](guides/architecture/blueprints/template-clean-architecture.md) |
+| `complex-hexagonal-customer-api` | Blueprint | [Hexagonal blueprint](guides/architecture/blueprints/template-hexagonal.md) |
+| `complex-event-driven-rabbitmq-customer-api` | Blueprint | [Event-driven blueprint](guides/architecture/blueprints/template-event-driven.md), [Inbox/Outbox](cqrs/resilience/inbox-outbox.md) |
+| `microservices-aspire-customer` | Blueprint | [Microservices blueprint](guides/architecture/blueprints/template-microservices.md), [Aspire](modernization/aspire.md) |
+| `complex-keycloak-customer-api` | Capability | [Keycloak identity](identity/keycloak.md) |
+| `simple-cronjob-worker` | Capability | [CronJob](cronjob.md) |
+| `simple-observability-customer-api` | Capability | [Observability](observability/home.md) |
+| `simple-hybridcache-rate-limit-api` | Capability | [HybridCache](modernization/hybrid-cache.md), [Rate limiting](modernization/rate-limiting.md) |
+| `complex-saga-rabbitmq-customer-api` | Capability | [Saga](cqrs/saga/home.md) |
+| `complex-event-sourcing-customer-api` | Capability (preview) | [Event sourcing](cqrs/event-sourcing/home.md) |
 
-Samples for CQRS/Mediator, CronJob, Email, SMS, File Storage, Secrets,
-Distributed Locking, Background Jobs, and Event Sourcing are not listed in the
-samples repository README. Use `src/Tests/**` and the
-[Testing Cookbook](testing/home.md) for those areas until samples are added.
-
-**Follow-up outside this repository:** upgrade `mvp24hours-dotnet-samples` to
-`net10.0`, align package versions with this repo, and replace NLog-first
-examples with OpenTelemetry where applicable.
+Blueprint and capability samples include xUnit test projects. See the [sample testing baseline](../../samples/TESTING.md) before adding integration tests.
 
 ## 📚 Next Steps
 
@@ -269,4 +268,4 @@ examples with OpenTelemetry where applicable.
 3. **Add observability** for production monitoring
 4. **Choose an architecture** from the [Architecture Guides](guides/architecture/home.md)
 5. **Validate the application** with the [Testing cookbook](testing/home.md)
-6. **Explore runnable samples** in [mvp24hours-dotnet-samples](https://github.com/kallebelins/mvp24hours-dotnet-samples) using the mapping table above
+6. **Explore runnable samples** in [`samples/`](../../samples/README.md) using the catalog and decision-matrix tables

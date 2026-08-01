@@ -3,7 +3,12 @@
 A teaching sample that implements a full Customer + Contact CRUD API following the
 **Clean Architecture** dependency rule: every arrow points inward toward the domain.
 
-- Target: `net10.0`
+## Status
+
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
 - Mediator: `AddMvpMediator` (Mvp24Hours CQRS mediator)
 - Persistence: Entity Framework Core + SQL Server
 - Web: Native OpenAPI, ProblemDetails, Health Checks, NLog
@@ -193,6 +198,12 @@ SQL Server listens on localhost port **1433**.
 
 ## References
 
-- [Clean Architecture Template](../../docs/template-clean-architecture.md)
-- [Project Structure Guide](../../docs/project-structure.md)
-- [Mvp24Hours Documentation](https://mvp24hours.dev)
+- [Clean Architecture blueprint](../../../docs/en-us/guides/architecture/blueprints/template-clean-architecture.md)
+- [Project structure guide](../../../docs/en-us/guides/architecture/project-structure.md)
+- [Mvp24Hours documentation](https://kallebelins.github.io/mvp24hours-dotnet/)
+
+## What this sample intentionally does not cover
+
+- Multi-bounded-context integration or anti-corruption layers between services
+- Durable messaging, outbox/inbox, or microservice decomposition (see event-driven and Aspire samples)
+- Production secret management beyond user-secrets and environment-variable guidance

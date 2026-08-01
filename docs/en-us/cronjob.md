@@ -93,3 +93,5 @@ The constructors accept `TimeProvider`, so tests can use `FakeTimeProvider`. The
 - [Observability](cronjob-observability.md)
 - [TimeProvider](modernization/time-provider.md)
 - [PeriodicTimer](modernization/periodic-timer.md)
+
+> **Sample:** [`simple-cronjob-worker`](../../samples/src/simple-cronjob-worker/README.md) — basic and resilient CronJob hosted services with health endpoints and `TimeProvider` injection.

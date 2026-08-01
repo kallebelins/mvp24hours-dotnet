@@ -2,9 +2,20 @@
 
 > **Preview** — The in-memory event store (`InMemoryEventStore`) and snapshot store (`InMemorySnapshotStore`) are fully functional for teaching and development. A durable SQL/EventStoreDB persistence layer is **not yet included** in the library; see the [What is Missing](#what-is-missing) section.
 
-[![Preview](https://img.shields.io/badge/status-preview-orange)](.)
+## Status
 
-Target: **net10.0** | Language: English | Status: **migrated (preview capability)**
+- Migration status: `migrated (preview capability)`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
+## Features
+
+- `CustomerAggregate : AggregateRoot` with immutable domain events and replay-based rehydration
+- In-memory event store, inline projection, and `/rehydrate` endpoint
+- Snapshot strategy wired via `EventCountSnapshotStrategy` (teaching depth)
+- Native OpenAPI and explicit preview badge for missing durable library store
+
+Target: **net10.0** | Language: English
 
 ---
 
@@ -169,5 +180,11 @@ public class CustomerAggregate : SnapshotAggregateRoot<CustomerSnapshot>
 
 ## References
 
-- Local: `docs/en-us/cqrs/event-sourcing/home.md`, `aggregate.md`, `event-store.md`, `projections.md`, `snapshots.md`
+- [Event sourcing home](../../../docs/en-us/cqrs/event-sourcing/home.md), [aggregate](../../../docs/en-us/cqrs/event-sourcing/aggregate.md), [event store](../../../docs/en-us/cqrs/event-sourcing/event-store.md), [projections](../../../docs/en-us/cqrs/event-sourcing/projections.md), [snapshots](../../../docs/en-us/cqrs/event-sourcing/snapshots.md)
 - Pattern: [Event Sourcing — Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing)
+
+## What this sample intentionally does not cover
+
+- Durable SQL or EventStoreDB event store (library APIs not production-ready)
+- Event schema versioning, upcasting, or async projection subscriptions at scale
+- Production snapshot persistence beyond in-memory teaching wiring

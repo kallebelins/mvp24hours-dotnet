@@ -312,3 +312,5 @@ It does not add HTTP checks because each requires a typed client. It also does n
 - [Background Jobs](background-jobs.md)
 - [Keycloak](../identity/keycloak.md)
 - [CronJob observability](../cronjob-observability.md)
+
+> **Sample:** [`simple-webstatus`](../../../samples/src/simple-webstatus/WebStatus/README.md) — health catalog for SQL Server, PostgreSQL, MySQL, Redis, MongoDB, and RabbitMQ with HealthChecks UI and Docker Compose.

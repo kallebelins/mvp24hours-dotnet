@@ -14,3 +14,5 @@ Use the Mvp24Hours Mediator for request dispatch when CQRS is useful. The curren
 Prefer `TimeProvider`, `ILogger<T>`, OpenTelemetry, native OpenAPI, and current `Program.cs` composition. Add abstractions only at real boundaries; do not hide EF Core or every framework API behind interfaces without a testing or substitution need.
 
 See [Project Structure](../project-structure.md), [CQRS](template-cqrs.md), [Core & Domain](../../../core/home.md), and [Testing](../../../testing/home.md).
+
+> **Sample:** [`complex-clean-architecture-customer-api`](../../../../../samples/src/complex-clean-architecture-customer-api/README.md) — inward dependency rule with Domain, Application, Infrastructure, and WebAPI projects plus a dependency diagram.

@@ -1,6 +1,19 @@
-# Microservices + .NET Aspire — Customer Sample (Phase 5.6)
+# Microservices + .NET Aspire — Customer Sample
 
 This sample demonstrates a minimal **microservices architecture** orchestrated locally with **.NET Aspire 13.x**, built on **Mvp24Hours** and targeting **net10.0**.
+
+## Status
+
+- Migration status: `migrated`
+- Target framework: `net10.0`
+- Mvp24Hours consumption: local project references by default; matching published packages are optional
+
+## Features
+
+- Customer API and Notification worker with separate data stores and RabbitMQ integration
+- Aspire AppHost for local SQL Server + RabbitMQ orchestration and dashboard
+- Shared ServiceDefaults for health checks and HTTP resilience
+- Standalone run mode for each service without AppHost
 
 ---
 
@@ -232,3 +245,9 @@ GET /api/customers/{id}
 3. Explore Aspire integration → [Aspire Guide](../../docs/en-us/modernization/aspire.md)
 4. Study simpler messaging → [simple-rabbitmq-customer-api](../simple-rabbitmq-customer-api/)
 5. Study advanced patterns → [complex-clean-architecture-customer-api](../complex-clean-architecture-customer-api/)
+
+## What this sample intentionally does not cover
+
+- Kubernetes or production service mesh deployment
+- Shared databases, two-phase commit, or synchronous cross-service transactions
+- Full observability stack beyond Aspire dashboard defaults and health endpoints

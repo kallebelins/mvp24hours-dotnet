@@ -36,9 +36,9 @@ Configure secrets with environment variables, user secrets, or a secret store. N
 
 | Key | Required | Description | Example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:SqlServer` | Yes | SQL Server connection | `Server=localhost,1433;Database=master;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
-| `ConnectionStrings:PostgreSql` | Yes | PostgreSQL connection | `Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=MyPass@word` |
-| `ConnectionStrings:MySql` | Yes | MySQL connection | `Server=localhost;Port=3306;Database=mysql;User Id=root;Password=MyPass@word` |
+| `ConnectionStrings:SqlServer` | Yes | SQL Server connection | `Server=localhost,1433;Database=master;User Id=sa;Password=<secret>;TrustServerCertificate=True` |
+| `ConnectionStrings:PostgreSql` | Yes | PostgreSQL connection | `Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=<secret>` |
+| `ConnectionStrings:MySql` | Yes | MySQL connection | `Server=localhost;Port=3306;Database=mysql;User Id=root;Password=<secret>` |
 | `ConnectionStrings:Redis` | Yes | Redis connection | `localhost:6379,abortConnect=false` |
 | `ConnectionStrings:MongoDb` | Yes | MongoDB connection | `mongodb://localhost:27017` |
 | `ConnectionStrings:RabbitMQ` | Yes | AMQP connection | `amqp://guest:guest@localhost:5672` |

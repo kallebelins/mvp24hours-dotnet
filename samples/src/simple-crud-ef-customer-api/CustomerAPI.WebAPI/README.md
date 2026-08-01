@@ -40,7 +40,7 @@ Configure secrets with environment variables, user secrets (`dotnet user-secrets
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyTestDb;User Id=sa;Password=<secret>;TrustServerCertificate=True` |
 
 ## Run
 

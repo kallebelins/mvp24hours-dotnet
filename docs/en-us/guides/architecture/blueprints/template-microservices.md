@@ -23,3 +23,5 @@ Service/
 Use the Mvp24Hours Mediator inside a service and RabbitMQ for durable asynchronous integration. Do not copy MediatR examples. Prefer .NET Aspire for local composition/service defaults where it fits, and use .NET 10 container images.
 
 See [Event-Driven](template-event-driven.md), [RabbitMQ](../../../broker.md), [HTTP Resilience](../../../infrastructure/http-resilience.md), [Observability](../../../observability/home.md), [.NET Aspire](../../../modernization/aspire.md), and [Containerization](../../deployment/containerization.md).
+
+> **Sample:** [`microservices-aspire-customer`](../../../../../samples/src/microservices-aspire-customer/README.md) — Customer API + Notification worker with separate data stores, RabbitMQ, and an Aspire AppHost for local orchestration.

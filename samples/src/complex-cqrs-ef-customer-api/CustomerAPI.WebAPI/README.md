@@ -44,7 +44,7 @@ Override credentials with environment variables, user secrets, or a secret store
 
 | Key | Required | Description | Development example |
 | --- | --- | --- | --- |
-| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyCqrsTestDb;User Id=sa;Password=MyPass@word;TrustServerCertificate=True` |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server database used by EF Core | `Server=localhost,1433;Database=MyCqrsTestDb;User Id=sa;Password=<secret>;TrustServerCertificate=True` |
 
 ## Run
 
