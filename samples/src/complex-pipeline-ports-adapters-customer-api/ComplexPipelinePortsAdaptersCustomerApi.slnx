@@ -3,4 +3,5 @@
   <Project Path="CustomerAPI.Core/CustomerAPI.Core.csproj" />
   <Project Path="CustomerAPI.Typicode.Application/CustomerAPI.Typicode.Application.csproj" />
   <Project Path="CustomerAPI.WebAPI/CustomerAPI.WebAPI.csproj" />
+  <Project Path="CustomerAPI.Test/CustomerAPI.Test.csproj" />
 </Solution>

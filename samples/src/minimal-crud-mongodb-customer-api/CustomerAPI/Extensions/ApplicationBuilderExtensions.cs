@@ -25,6 +25,11 @@ public static class ApplicationBuilderExtensions
 
     public static async Task SeedDatabaseAsync(this WebApplication app)
     {
+        if (app.Environment.IsEnvironment("Testing"))
+        {
+            return;
+        }
+
         await using var scope = app.Services.CreateAsyncScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
         var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();

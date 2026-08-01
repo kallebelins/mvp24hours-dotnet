@@ -15,6 +15,14 @@ This sample demonstrates a minimal **microservices architecture** orchestrated l
 - Shared ServiceDefaults for health checks and HTTP resilience
 - Standalone run mode for each service without AppHost
 
+## Architecture
+
+- Tier: `Blueprint`
+- Shape: two services (Customer API + Notification worker) composed locally with .NET Aspire AppHost
+- Why this shape fits: demonstrates service boundaries, separate data stores, and async messaging without production orchestration complexity
+
+See [Solution overview](#solution-overview) below for project layout and communication flow.
+
 ---
 
 ## ⚠️ When NOT to choose microservices
@@ -83,6 +91,21 @@ Each service has its **own data store** — the core microservices principle. Th
 
 ---
 
+## Configuration
+
+When you run through **AppHost**, Aspire injects SQL Server and RabbitMQ connection strings automatically — no manual `appsettings` edits are required.
+
+For **standalone** runs, each service accepts standard configuration:
+
+| Key | Required | Description |
+| --- | --- | --- |
+| `ConnectionStrings:CustomerDb` | No | SQL Server for CustomerAPI; omitted → in-memory EF |
+| `ConnectionStrings:RabbitMQ` | No | Broker for publish/consume; omitted → messaging skipped with warning logs |
+
+Configure secrets with environment variables, user secrets, or a secret store. Never commit credentials.
+
+---
+
 ## Prerequisites
 
 | Requirement | Version |
@@ -105,7 +128,9 @@ dotnet workload list
 
 ---
 
-## Running with Aspire (recommended)
+## Run
+
+### With Aspire (recommended)
 
 ```bash
 dotnet run --project samples/src/microservices-aspire-customer/AppHost/AppHost.csproj
@@ -121,13 +146,11 @@ Aspire starts:
 
 Connection strings are injected automatically by Aspire — no manual configuration needed.
 
----
-
-## Running services standalone (no AppHost required)
+### Standalone (no AppHost)
 
 Each service compiles and runs without the AppHost. Use this for CI or focused development.
 
-### CustomerAPI
+#### CustomerAPI
 
 ```bash
 dotnet build samples/src/microservices-aspire-customer/CustomerAPI/CustomerAPI.csproj
@@ -141,7 +164,7 @@ Health: `GET http://localhost:5000/health`
 
 Swagger UI (Development): `http://localhost:5000/swagger`
 
-### NotificationWorker
+#### NotificationWorker
 
 ```bash
 dotnet build samples/src/microservices-aspire-customer/NotificationWorker/NotificationWorker.csproj
@@ -237,6 +260,15 @@ GET /api/customers/{id}
 | `MyAspireNotificationDb` | NotificationWorker | EF Core In-Memory | Teaching scope — resets on restart |
 
 ---
+
+## Related documentation
+
+- [Microservices blueprint](../../../docs/en-us/guides/architecture/blueprints/template-microservices.md)
+- [Architecture decision matrix](../../../docs/en-us/guides/architecture/decision-matrix.md)
+- [.NET Aspire integration](../../../docs/en-us/modernization/aspire.md)
+- [Containerization guide](../../../docs/en-us/modernization/containerization.md)
+- [Observability home](../../../docs/en-us/observability/home.md)
+- [Getting started](../../../docs/en-us/getting-started.md)
 
 ## Learning path
 

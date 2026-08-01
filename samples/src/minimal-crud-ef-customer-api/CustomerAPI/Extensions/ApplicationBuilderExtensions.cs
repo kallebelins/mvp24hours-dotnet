@@ -31,6 +31,11 @@ namespace CustomerAPI.Extensions
         /// </summary>
         public static async Task MigrateDatabaseAsync(this WebApplication app)
         {
+        if (app.Environment.IsEnvironment("Testing"))
+        {
+            return;
+        }
+
             await using var scope = app.Services.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
             var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();

@@ -107,27 +107,17 @@ CustomerAPI.WebAPI/
 
 ---
 
-## Quick Start
-
-Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
-
-### 1. Prerequisites
+## Prerequisites
 
 | Dependency | Default port | Notes |
 |-----------|-------------|-------|
 | SQL Server | 1433 | Replace `CHANGE_ME` password in appsettings.Development.json |
 | RabbitMQ | 5672 (AMQP) / 15672 (Management UI) | `guest:guest` by default |
+| [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) | — | Required to build and run |
 
-### 2. Docker Compose
+## Configuration
 
-From `samples/src/complex-event-driven-rabbitmq-customer-api`:
-
-```bash
-docker compose up -d
-```
-
-- SQL Server: localhost **1433**
-- RabbitMQ AMQP: **5672**; Management UI: **15672** (default `guest` / `guest`)
+Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
 
 Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `ConnectionStrings:EFDBContext` in `appsettings.Development.json`:
 
@@ -140,15 +130,24 @@ Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `Connect
 }
 ```
 
-### 3. Run
+| Key | Required | Description |
+| --- | --- | --- |
+| `ConnectionStrings:EFDBContext` | Yes | SQL Server used by EF Core and outbox/inbox tables |
+| `ConnectionStrings:RabbitMQContext` | Yes | RabbitMQ broker for integration event publish |
+
+## Run
+
+From `samples/src/complex-event-driven-rabbitmq-customer-api`:
 
 ```bash
-cd samples/src/complex-event-driven-rabbitmq-customer-api
 docker compose up -d
 dotnet run --project CustomerAPI.WebAPI
 ```
 
-### 4. Test the flow
+- SQL Server: localhost **1433**
+- RabbitMQ AMQP: **5672**; Management UI: **15672** (default `guest` / `guest`)
+
+## Explore the API
 
 ```bash
 # Create a customer (triggers the full Outbox → RabbitMQ → Inbox flow)
@@ -164,7 +163,7 @@ curl https://localhost:5001/api/customers
 curl https://localhost:5001/hc
 ```
 
-### 5. Verify end-to-end
+### Verify end-to-end
 
 After a successful POST you should observe (within ~5 seconds):
 

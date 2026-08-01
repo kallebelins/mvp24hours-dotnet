@@ -93,6 +93,11 @@ services.AddHttpClientWithStandardResilience(TypicodeProfileAdapter.HttpClientNa
 });
 ```
 
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string (Docker Compose provided)
+
 ## Configuration
 
 Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
@@ -101,7 +106,7 @@ Configure secrets with environment variables, user secrets (`dotnet user-secrets
 |-----|-------------|
 | `ConnectionStrings:EFDBContext` | SQL Server connection for EF Core adapters |
 
-## Getting Started
+## Run
 
 ```bash
 # From samples/src/complex-hexagonal-customer-api

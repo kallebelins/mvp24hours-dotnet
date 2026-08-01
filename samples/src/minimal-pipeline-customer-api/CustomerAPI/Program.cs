@@ -159,3 +159,5 @@ app.MapGet("/customer/{id}", async Task<IResult> (
 
 
 app.Run();
+
+public partial class Program { }

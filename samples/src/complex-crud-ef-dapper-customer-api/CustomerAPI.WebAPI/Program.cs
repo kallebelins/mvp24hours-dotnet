@@ -52,6 +52,8 @@ try
 
 
     WebApplication app = builder.Build();
+if (!app.Environment.IsEnvironment("Testing"))
+    {
 
 
 
@@ -62,7 +64,8 @@ try
         await db.Database.MigrateAsync();
         await EFDBContextSeed.SeedAsync(db, timeProvider);
     }
-    app.UseNativeProblemDetailsHandling();
+        }
+app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
     app.UseRouting();
     app.UseAuthorization();
@@ -96,3 +99,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }

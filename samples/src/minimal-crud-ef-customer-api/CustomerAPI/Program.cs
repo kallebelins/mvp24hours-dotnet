@@ -245,3 +245,5 @@ app.MapDelete("/customer/{id}", async Task<IResult> (int id, [FromServices] IUni
 
 
 app.Run();
+
+public partial class Program { }

@@ -104,7 +104,16 @@ CustomerAPI.WebAPI/
 
 ---
 
-## Running the Sample
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- No external dependencies — event store and projection are in-memory
+
+## Configuration
+
+No connection strings are required. All state resets when the host stops.
+
+## Run
 
 ```bash
 cd samples/src/complex-event-sourcing-customer-api/CustomerAPI.WebAPI
@@ -178,7 +187,7 @@ public class CustomerAggregate : SnapshotAggregateRoot<CustomerSnapshot>
 
 ---
 
-## References
+## Related documentation
 
 - [Event sourcing home](../../../docs/en-us/cqrs/event-sourcing/home.md), [aggregate](../../../docs/en-us/cqrs/event-sourcing/aggregate.md), [event store](../../../docs/en-us/cqrs/event-sourcing/event-store.md), [projections](../../../docs/en-us/cqrs/event-sourcing/projections.md), [snapshots](../../../docs/en-us/cqrs/event-sourcing/snapshots.md)
 - Pattern: [Event Sourcing — Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing)

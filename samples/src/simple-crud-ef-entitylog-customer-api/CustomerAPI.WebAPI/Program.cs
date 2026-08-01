@@ -52,6 +52,8 @@ try
 
 
     var app = builder.Build();
+if (!app.Environment.IsEnvironment("Testing"))
+    {
 
 
 
@@ -60,7 +62,8 @@ try
         var db = scope.ServiceProvider.GetRequiredService<EFDBContext>();
         await db.Database.EnsureCreatedAsync();
     }
-    app.UseNativeProblemDetailsHandling();
+        }
+app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
     app.UseRouting();
     app.UseAuthorization();
@@ -94,3 +97,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }

@@ -54,6 +54,8 @@ try
 
 
     var app = builder.Build();
+if (!app.Environment.IsEnvironment("Testing"))
+    {
 
 
 
@@ -63,7 +65,8 @@ try
         await db.Database.EnsureCreatedAsync();
         await EFDBContextSeed.SeedAsync(db);
     }
-    app.UseNativeProblemDetailsHandling();
+        }
+app.UseNativeProblemDetailsHandling();
     app.UseStaticFiles();
     app.UseRouting();
     app.UseAuthorization();
@@ -97,3 +100,5 @@ finally
 {
     LogManager.Shutdown();
 }
+
+public partial class Program { }

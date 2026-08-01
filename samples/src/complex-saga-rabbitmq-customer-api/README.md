@@ -122,7 +122,16 @@ CustomerAPI.WebAPI/
 
 ---
 
-## Running the Sample
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- No external dependencies — saga state is in-memory
+
+## Configuration
+
+No connection strings are required. Optional request fields (for example `simulateGiftFailure`) are documented in the run examples below.
+
+## Run
 
 ```bash
 cd samples/src/complex-saga-rabbitmq-customer-api/CustomerAPI.WebAPI
@@ -189,7 +198,7 @@ To add RabbitMQ event publishing on saga completion:
 
 ---
 
-## References
+## Related documentation
 
 - [Saga home](../../../docs/en-us/cqrs/saga/home.md), [implementation](../../../docs/en-us/cqrs/saga/implementation.md), [compensation](../../../docs/en-us/cqrs/saga/compensation.md)
 - Pattern: [microservices.io/patterns/data/saga.html](https://microservices.io/patterns/data/saga.html)

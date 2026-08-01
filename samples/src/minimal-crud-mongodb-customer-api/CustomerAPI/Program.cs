@@ -245,3 +245,5 @@ app.MapDelete("/customer/{id}", async Task<IResult> (string id, [FromServices] I
 
 
 app.Run();
+
+public partial class Program { }

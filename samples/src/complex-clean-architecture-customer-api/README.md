@@ -9,11 +9,11 @@ A teaching sample that implements a full Customer + Contact CRUD API following t
 - Target framework: `net10.0`
 - Mvp24Hours consumption: local project references by default; matching published packages are optional
 
+## Features
+
 - Mediator: `AddMvpMediator` (Mvp24Hours CQRS mediator)
 - Persistence: Entity Framework Core + SQL Server
 - Web: Native OpenAPI, ProblemDetails, Health Checks, NLog
-
----
 
 ## Architecture
 
@@ -164,6 +164,11 @@ complex-clean-architecture-customer-api/
 
 ---
 
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server reachable by the configured connection string (Docker Compose provided)
+
 ## Configuration
 
 Configure secrets with environment variables, user secrets (`dotnet user-secrets`), or a secret store. Never commit real credentials.
@@ -172,7 +177,7 @@ Set the same password in `docker-compose.yml` (`MSSQL_SA_PASSWORD`) and `Connect
 
 ---
 
-## Running Locally
+## Run
 
 1. Start dependencies with Docker Compose:
    ```bash
@@ -196,7 +201,7 @@ SQL Server listens on localhost port **1433**.
 
 ---
 
-## References
+## Related documentation
 
 - [Clean Architecture blueprint](../../../docs/en-us/guides/architecture/blueprints/template-clean-architecture.md)
 - [Project structure guide](../../../docs/en-us/guides/architecture/project-structure.md)
