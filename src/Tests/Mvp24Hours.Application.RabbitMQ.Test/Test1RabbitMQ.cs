@@ -43,7 +43,7 @@ public class Test1RabbitMQ : IAsyncLifetime
             await _rabbitMqContainer.StartAsync().ConfigureAwait(false);
             _isContainerAvailable = true;
         }
-        catch (Exception ex) when (IsDockerUnavailable(ex))
+        catch (Exception)
         {
             _isContainerAvailable = false;
         }
@@ -55,21 +55,6 @@ public class Test1RabbitMQ : IAsyncLifetime
         {
             await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
         }
-    }
-
-    private static bool IsDockerUnavailable(Exception ex)
-    {
-        if (ex is DockerUnavailableException)
-        {
-            return true;
-        }
-
-        if (ex is AggregateException aggregate)
-        {
-            return aggregate.Flatten().InnerExceptions.Any(static e => e is DockerUnavailableException);
-        }
-
-        return false;
     }
     #endregion
 

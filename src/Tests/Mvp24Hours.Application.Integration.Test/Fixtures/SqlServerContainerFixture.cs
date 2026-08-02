@@ -65,7 +65,7 @@ public class SqlServerContainerFixture : IAsyncLifetime
             await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
             IsAvailable = true;
         }
-        catch (Exception ex) when (IsDockerUnavailable(ex))
+        catch (Exception)
         {
             IsAvailable = false;
             ConnectionString = string.Empty;
@@ -111,21 +111,6 @@ public class SqlServerContainerFixture : IAsyncLifetime
         dbContext.Products.RemoveRange(dbContext.Products);
         dbContext.Categories.RemoveRange(dbContext.Categories);
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
-    }
-
-    private static bool IsDockerUnavailable(Exception ex)
-    {
-        if (ex is DockerUnavailableException)
-        {
-            return true;
-        }
-
-        if (ex is AggregateException aggregate)
-        {
-            return aggregate.Flatten().InnerExceptions.Any(static e => e is DockerUnavailableException);
-        }
-
-        return false;
     }
 }
 
