@@ -11,6 +11,8 @@ Local [Model Context Protocol](https://modelcontextprotocol.io/) server for AI a
 
 Project-level configuration is in [`.cursor/mcp.json`](../.cursor/mcp.json). Restart Cursor after changes.
 
+**Agent entry point:** copy [`.cursor/skills/mvp24hours-router/`](../.cursor/skills/mvp24hours-router/) to any consuming project's `.cursor/skills/`. The skill triages user prompts via MCP only (`list_scenarios`, `get_scenario_playbook`, etc.) and presents the recommended path before executing workflows.
+
 Environment variable:
 
 | Variable | Purpose |
