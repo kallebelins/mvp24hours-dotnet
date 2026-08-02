@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "mvp24hours": {
+      "type": "http",
+      "url": "http://localhost:5199"
+    }
+  }
+}

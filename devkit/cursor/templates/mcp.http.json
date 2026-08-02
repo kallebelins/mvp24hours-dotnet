@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "mvp24hours": {
+      "url": "http://localhost:5199"
+    }
+  }
+}

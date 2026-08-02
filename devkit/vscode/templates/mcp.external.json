@@ -1,0 +1,23 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "mvp24hours-repo-root",
+      "description": "Absolute path to your mvp24hours-dotnet clone"
+    }
+  ],
+  "servers": {
+    "mvp24hours": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${input:mvp24hours-repo-root}/mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"
+      ],
+      "env": {
+        "MVP24HOURS_REPO_ROOT": "${input:mvp24hours-repo-root}"
+      }
+    }
+  }
+}

@@ -11,13 +11,34 @@ Local [Model Context Protocol](https://modelcontextprotocol.io/) server for AI a
 
 Project-level configuration is in [`.cursor/mcp.json`](../.cursor/mcp.json). Restart Cursor after changes.
 
-**Agent entry point:** copy [`.cursor/skills/mvp24hours-router/`](../.cursor/skills/mvp24hours-router/) to any consuming project's `.cursor/skills/`. The skill triages user prompts via MCP only (`list_scenarios`, `get_scenario_playbook`, etc.) and presents the recommended path before executing workflows.
+**Agent entry point:** copy [`.cursor/skills/mvp24hours-router/`](../.cursor/skills/mvp24hours-router/) to any consuming project's `.cursor/skills/`, or copy the portable kit from [`cursor-devkit/`](../cursor-devkit/) (see its README for external-project scenarios). The skill triages user prompts via MCP only (`list_scenarios`, `get_scenario_playbook`, etc.) and presents the recommended path before executing workflows.
+
+## VS Code setup
+
+Project-level MCP configuration is in [`.vscode/mcp.json`](../.vscode/mcp.json). Use **Agent mode** in Copilot Chat for MCP tools.
+
+**Agent entry point:** copy [`.github/skills/mvp24hours-router/`](../.github/skills/mvp24hours-router/) to any consuming project's `.github/skills/`, or copy the portable kit from [`vscode-devkit/`](../vscode-devkit/) (see its README for external-project scenarios).
+
+```json
+{
+  "servers": {
+    "mvp24hours": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+      "env": { "MVP24HOURS_REPO_ROOT": "${workspaceFolder}" }
+    }
+  }
+}
+```
+
+Restart or run **MCP: List Servers** after changing MCP configuration.
 
 Environment variable:
 
 | Variable | Purpose |
 | --- | --- |
-| `MVP24HOURS_REPO_ROOT` | Absolute path to repo root (set automatically in Cursor) |
+| `MVP24HOURS_REPO_ROOT` | Absolute path to repo root (set automatically in Cursor/VS Code) |
 
 ## Run locally
 

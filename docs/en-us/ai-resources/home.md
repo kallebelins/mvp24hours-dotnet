@@ -14,6 +14,10 @@ The [`mcp/`](../../mcp/) project ships a [Model Context Protocol](https://modelc
 
 Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
 
+Agent skill: [`.cursor/skills/mvp24hours-router/`](../../.cursor/skills/mvp24hours-router/)
+
+Portable kit (copy to other projects): [`cursor-devkit/`](../../cursor-devkit/)
+
 ```json
 {
   "mcpServers": {
@@ -27,6 +31,29 @@ Project configuration: [`.cursor/mcp.json`](../../.cursor/mcp.json)
 ```
 
 Restart Cursor after changing MCP configuration.
+
+### VS Code setup
+
+Project configuration: [`.vscode/mcp.json`](../../.vscode/mcp.json)
+
+Agent skill: [`.github/skills/mvp24hours-router/`](../../.github/skills/mvp24hours-router/)
+
+Portable kit (copy to other projects): [`vscode-devkit/`](../../vscode-devkit/)
+
+```json
+{
+  "servers": {
+    "mvp24hours": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "mcp/src/Mvp24Hours.Mcp/Mvp24Hours.Mcp.csproj"],
+      "env": { "MVP24HOURS_REPO_ROOT": "${workspaceFolder}" }
+    }
+  }
+}
+```
+
+Use **Agent mode** in Copilot Chat for MCP tools. Run **MCP: List Servers** after changing configuration.
 
 ### Run manually
 

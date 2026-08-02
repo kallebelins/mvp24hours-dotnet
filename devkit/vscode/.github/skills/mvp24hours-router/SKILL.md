@@ -13,13 +13,14 @@ description: >-
 
 Skill de **triagem route-only** e **portável**: funciona em qualquer projeto que tenha o **Mvp24Hours MCP** configurado. Não depende de paths, manifests ou docs locais — toda rota canônica vem das tools e resources do MCP.
 
-Equivalente Cursor: [`cursor-devkit/`](../../../cursor-devkit/) · VS Code: [`.github/skills/mvp24hours-router/`](../../../.github/skills/mvp24hours-router/)
+Equivalente Cursor: [`cursor-devkit/`](../../../cursor-devkit/)
 
 ## Prerequisite
 
-O servidor **Mvp24Hours MCP** deve estar disponível (stdio ou HTTP). Se não estiver configurado, informe o usuário e pare — não invente cenários nem caminhos.
+- **GitHub Copilot** com **Agent mode** ativo no Copilot Chat (MCP tools só rodam em Agent mode).
+- O servidor **Mvp24Hours MCP** deve estar disponível (stdio ou HTTP). Se não estiver configurado, informe o usuário e pare — não invente cenários nem caminhos.
 
-Descubra o servidor pelo nome configurado em `.cursor/mcp.json` (comum: `mvp24hours`). Use `GetMcpTools` se necessário.
+Descubra o servidor pelo nome configurado em `.vscode/mcp.json` (comum: `mvp24hours`). Verifique com **MCP: List Servers** (Command Palette) ou invoque as tools MCP diretamente no Agent mode.
 
 ## When to apply
 
