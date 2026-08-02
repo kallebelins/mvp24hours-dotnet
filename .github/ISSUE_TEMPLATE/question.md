@@ -1,45 +1,44 @@
 ---
 name: ❓ Question
-about: Faça uma pergunta sobre o Mvp24Hours
+about: Ask a question about Mvp24Hours
 title: '[QUESTION] '
 labels: question
 assignees: ''
 ---
 
-## ❓ Sua Pergunta
+## ❓ Your Question
 
-<!-- Faça sua pergunta aqui de forma clara e detalhada -->
+<!-- Ask your question here clearly and in detail -->
 
-## 📚 O Que Você Já Tentou?
+## 📚 What Have You Already Tried?
 
-<!-- Descreva o que você já tentou ou pesquisou -->
+<!-- Describe what you have already tried or researched -->
 
-- [ ] Li a [documentação](https://kallebelins.github.io/mvp24hours-dotnet)
-- [ ] Pesquisei em issues existentes
-- [ ] Tentei pesquisar no Google/Stack Overflow
-- [ ] Revisei os [exemplos](https://github.com/kallebelins/mvp24hours-dotnet-samples)
+- [ ] I read the [documentation](https://kallebelins.github.io/mvp24hours-dotnet)
+- [ ] I searched existing issues
+- [ ] I tried searching on Google/Stack Overflow
+- [ ] I reviewed the [examples](https://github.com/kallebelins/mvp24hours-dotnet-samples)
 
-## 💻 Código Relacionado (se aplicável)
+## 💻 Related Code (if applicable)
 
 ```csharp
-// Cole aqui o código relacionado à sua pergunta
+// Paste code related to your question here
 ```
 
-## 🌍 Contexto
+## 🌍 Context
 
-- **Mvp24Hours Version:** [ex: 9.1.x]
-- **.NET Version:** [ex: 9]
-- **Cenário:** [ex: API REST, Background Job, etc]
+- **Mvp24Hours Version:** [e.g. 9.1.x]
+- **.NET Version:** [e.g. 9]
+- **Scenario:** [e.g. REST API, Background Job, etc.]
 
-## 🎯 Objetivo
+## 🎯 Goal
 
-<!-- O que você está tentando alcançar? -->
+<!-- What are you trying to achieve? -->
 
-## 💬 Informações Adicionais
+## 💬 Additional Information
 
-<!-- Qualquer outra informação que possa ajudar a responder sua pergunta -->
+<!-- Any other information that may help answer your question -->
 
 ---
 
-**Nota:** Para perguntas mais gerais ou discussões, considere usar [GitHub Discussions](https://github.com/kallebelins/mvp24hours-dotnet/discussions) ao invés de abrir uma issue.
-
+**Note:** For more general questions or discussions, consider using [GitHub Discussions](https://github.com/kallebelins/mvp24hours-dotnet/discussions) instead of opening an issue.

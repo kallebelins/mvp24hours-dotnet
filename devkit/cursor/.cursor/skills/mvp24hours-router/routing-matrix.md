@@ -27,7 +27,7 @@ After guessing, call `get_scenario_playbook` to load title, inputs, and steps fr
 
 | Signals PT/EN | MCP prompt | When |
 | --- | --- | --- |
-| smoke test, WebApplicationFactory, OpenAPI test, testes de integração | `add-smoke-tests` | User wants tests only, not full greenfield or review |
+| smoke test, WebApplicationFactory, OpenAPI test, integration tests | `add-smoke-tests` | User wants tests only, not full greenfield or review |
 
 For broader test strategy, route to `add-feature` and call `resolve_feature` with keyword `testing`.
 
@@ -35,8 +35,8 @@ For broader test strategy, route to `add-feature` and call `resolve_feature` wit
 
 | Intent | MCP tools |
 | --- | --- |
-| which architecture / which sample / qual template | `resolve_architecture`, `list_samples`, `get_architecture_template` |
-| how does X work / documentação / API reference | `search_docs`, `get_doc`, `verify_doc_claim`, `find_source_symbol` |
+| which architecture / which sample / which template | `resolve_architecture`, `list_samples`, `get_architecture_template` |
+| how does X work / documentation / API reference | `search_docs`, `get_doc`, `verify_doc_claim`, `find_source_symbol` |
 
 Use `search_docs` with query `decision matrix` or `architecture` when user asks which template to pick.
 
@@ -64,6 +64,8 @@ Do not maintain a static capability table — MCP owns the index.
 | Two plausible scenarios | Present both with one-line difference from `get_scenario_playbook`; ask **one** question |
 
 ## Example prompts → MCP flow
+
+Portuguese user prompts below are intentional routing examples.
 
 | User prompt | Guess | Triage MCP calls |
 | --- | --- | --- |

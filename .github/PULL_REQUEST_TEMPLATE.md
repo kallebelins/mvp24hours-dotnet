@@ -1,152 +1,151 @@
-## 📝 Descrição
+## 📝 Description
 
-<!-- Descreva suas mudanças em detalhes -->
+<!-- Describe your changes in detail -->
 
-## 🎯 Tipo de Mudança
+## 🎯 Type of Change
 
-<!-- Marque o tipo de mudança que este PR representa -->
+<!-- Mark the type of change this PR represents -->
 
-- [ ] 🐛 Bug fix (non-breaking change que corrige uma issue)
-- [ ] ✨ Nova funcionalidade (non-breaking change que adiciona funcionalidade)
-- [ ] 💥 Breaking change (fix ou feature que causa mudanças incompatíveis na API)
-- [ ] 📝 Documentação (mudanças apenas na documentação)
-- [ ] 🎨 Refatoração (mudanças que não corrigem bugs nem adicionam features)
-- [ ] ⚡ Performance (mudanças que melhoram a performance)
-- [ ] ✅ Testes (adição ou correção de testes)
-- [ ] 🔧 Chore (mudanças em ferramentas, configuração, etc)
+- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
+- [ ] ✨ New feature (non-breaking change that adds functionality)
+- [ ] 💥 Breaking change (fix or feature that causes incompatible API changes)
+- [ ] 📝 Documentation (documentation-only changes)
+- [ ] 🎨 Refactoring (changes that neither fix bugs nor add features)
+- [ ] ⚡ Performance (changes that improve performance)
+- [ ] ✅ Tests (test additions or fixes)
+- [ ] 🔧 Chore (tooling, configuration, etc.)
 
-## 🔗 Issues Relacionadas
+## 🔗 Related Issues
 
-<!-- Liste as issues que este PR resolve ou está relacionado -->
+<!-- List issues this PR resolves or relates to -->
 
 Closes #(issue)
 Relates to #(issue)
 
-## 💡 Motivação e Contexto
+## 💡 Motivation and Context
 
-<!-- Por que esta mudança é necessária? Qual problema ela resolve? -->
+<!-- Why is this change necessary? What problem does it solve? -->
 
-## 📸 Screenshots (se aplicável)
+## 📸 Screenshots (if applicable)
 
-<!-- Adicione screenshots se houver mudanças visuais ou de comportamento observável -->
+<!-- Add screenshots if there are visual or observable behavior changes -->
 
-| Antes | Depois |
-|-------|--------|
-| ![Antes](url) | ![Depois](url) |
+| Before | After |
+|--------|-------|
+| ![Before](url) | ![After](url) |
 
-## 🧪 Como Foi Testado?
+## 🧪 How Was This Tested?
 
-<!-- Descreva os testes que você executou -->
+<!-- Describe the tests you ran -->
 
-- [ ] Testes unitários
-- [ ] Testes de integração
-- [ ] Testes manuais
-- [ ] Testes de performance
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Manual tests
+- [ ] Performance tests
 
-**Ambiente de Teste:**
+**Test Environment:**
 - .NET Version:
-- SO:
-- Database (se aplicável):
+- OS:
+- Database (if applicable):
 
-**Cenários de Teste:**
-1. Teste 1: Descrição
-2. Teste 2: Descrição
-3. Teste 3: Descrição
+**Test Scenarios:**
+1. Test 1: Description
+2. Test 2: Description
+3. Test 3: Description
 
 ## 📋 Checklist
 
-### Código
+### Code
 
-- [ ] Meu código segue os [padrões do projeto](CONTRIBUTING.md#padrões-de-código)
-- [ ] Realizei self-review do meu código
-- [ ] Comentei o código em áreas complexas
-- [ ] Removi console.logs, comentários desnecessários e código morto
-- [ ] Não há warnings do compilador
-- [ ] Meu código não quebra funcionalidades existentes
+- [ ] My code follows [project standards](CONTRIBUTING.md#code-standards)
+- [ ] I performed a self-review of my code
+- [ ] I commented complex areas of the code
+- [ ] I removed console.logs, unnecessary comments, and dead code
+- [ ] There are no compiler warnings
+- [ ] My code does not break existing functionality
 
-### Documentação
+### Documentation
 
-- [ ] Adicionei/atualizei XML documentation comments
-- [ ] Atualizei a documentação em `docs/` (se necessário)
-- [ ] Adicionei exemplos de uso (se aplicável)
-- [ ] Atualizei o README (se necessário)
-- [ ] Atualizei o [CHANGELOG.md](CHANGELOG.md)
+- [ ] I added/updated XML documentation comments
+- [ ] I updated documentation in `docs/` (if necessary)
+- [ ] I added usage examples (if applicable)
+- [ ] I updated the README (if necessary)
+- [ ] I updated [CHANGELOG.md](CHANGELOG.md)
 
-### Testes
+### Tests
 
-- [ ] Adicionei testes que provam que minha correção/feature funciona
-- [ ] Testes unitários novos e existentes passam localmente
-- [ ] Testes de integração passam (se aplicável)
-- [ ] Cobertura de código mantida ou melhorada
+- [ ] I added tests that prove my fix/feature works
+- [ ] New and existing unit tests pass locally
+- [ ] Integration tests pass (if applicable)
+- [ ] Code coverage is maintained or improved
 
 ### Breaking Changes
 
-- [ ] Esta mudança NÃO introduz breaking changes
-- [ ] OU: Documentei os breaking changes abaixo
+- [ ] This change does NOT introduce breaking changes
+- [ ] OR: I documented the breaking changes below
 
-<!-- Se há breaking changes, descreva-os aqui -->
+<!-- If there are breaking changes, describe them here -->
 **Breaking Changes:**
 ```
-Descreva as mudanças incompatíveis e como migrar
+Describe incompatible changes and how to migrate
 ```
 
 ### Performance
 
-- [ ] Verifiquei o impacto de performance desta mudança
-- [ ] Não há regressões de performance
-- [ ] OU: Melhorias de performance documentadas abaixo
+- [ ] I verified the performance impact of this change
+- [ ] There are no performance regressions
+- [ ] OR: Performance improvements documented below
 
-**Métricas de Performance:**
+**Performance Metrics:**
 ```
-Antes: X ms
-Depois: Y ms
-Melhoria: Z%
+Before: X ms
+After: Y ms
+Improvement: Z%
 ```
 
-## 🔍 Revisão de Código
+## 🔍 Code Review
 
-### Para Revisores
+### For Reviewers
 
-**Áreas que precisam de atenção especial:**
-<!-- Liste áreas específicas onde você gostaria de feedback -->
+**Areas that need special attention:**
+<!-- List specific areas where you would like feedback -->
 
 1. 
 2. 
 3. 
 
-**Perguntas para revisores:**
-<!-- Alguma dúvida específica que você tem? -->
+**Questions for reviewers:**
+<!-- Any specific questions you have? -->
 
 1. 
 2. 
 
-## 📚 Documentação Adicional
+## 📚 Additional Documentation
 
-<!-- Links para documentação, RFCs, discussões, etc -->
+<!-- Links to documentation, RFCs, discussions, etc. -->
 
-- [Link para documentação]
-- [Link para discussão]
-- [Link para design doc]
+- [Documentation link]
+- [Discussion link]
+- [Design doc link]
 
-## ✅ Validação Final
+## ✅ Final Validation
 
-Antes de submeter este PR, confirme que:
+Before submitting this PR, confirm that:
 
-- [ ] Li e segui o [guia de contribuição](CONTRIBUTING.md)
-- [ ] Minha branch está atualizada com `main`
-- [ ] Resolvi todos os conflitos de merge
-- [ ] Todos os testes passam localmente
-- [ ] O código compila sem erros ou warnings
-- [ ] Segui as [convenções de commit](CONTRIBUTING.md#commits-e-pull-requests)
-- [ ] Revisei meu próprio código antes de solicitar revisão
+- [ ] I read and followed the [contribution guide](CONTRIBUTING.md)
+- [ ] My branch is up to date with `main`
+- [ ] I resolved all merge conflicts
+- [ ] All tests pass locally
+- [ ] The code builds without errors or warnings
+- [ ] I followed [commit conventions](CONTRIBUTING.md#commits-and-pull-requests)
+- [ ] I reviewed my own code before requesting review
 
-## 💬 Notas para o Revisor
+## 💬 Notes for the Reviewer
 
-<!-- Qualquer informação adicional que possa ajudar o revisor -->
+<!-- Any additional information that may help the reviewer -->
 
 ---
 
-**Obrigado por contribuir com o Mvp24Hours! 🎉**
+**Thank you for contributing to Mvp24Hours! 🎉**
 
-Sua contribuição ajuda a tornar a biblioteca melhor para toda a comunidade .NET.
-
+Your contribution helps make the library better for the entire .NET community.

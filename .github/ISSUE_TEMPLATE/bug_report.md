@@ -1,71 +1,70 @@
 ---
 name: 🐛 Bug Report
-about: Reporte um bug para nos ajudar a melhorar
+about: Report a bug to help us improve
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-## 🐛 Descrição do Bug
+## 🐛 Bug Description
 
-<!-- Descreva claramente e concisamente o bug -->
+<!-- Clearly and concisely describe the bug -->
 
-## 📋 Para Reproduzir
+## 📋 Steps to Reproduce
 
-Passos para reproduzir o comportamento:
+Steps to reproduce the behavior:
 
 1. Configure '...'
-2. Execute '...'
-3. Chame o método '...'
-4. Veja o erro
+2. Run '...'
+3. Call method '...'
+4. See the error
 
-## ✅ Comportamento Esperado
+## ✅ Expected Behavior
 
-<!-- Descreva claramente o que você esperava que acontecesse -->
+<!-- Clearly describe what you expected to happen -->
 
-## ❌ Comportamento Atual
+## ❌ Actual Behavior
 
-<!-- Descreva claramente o que está acontecendo atualmente -->
+<!-- Clearly describe what is currently happening -->
 
-## 💻 Código para Reproduzir
+## 💻 Code to Reproduce
 
 ```csharp
-// Cole aqui o código que reproduz o problema
+// Paste code that reproduces the problem here
 var repository = new Repository<Customer>();
-var customer = repository.GetById(1); // Retorna null quando não deveria
+var customer = repository.GetById(1); // Returns null when it should not
 ```
 
 ## 📸 Screenshots
 
-<!-- Se aplicável, adicione screenshots para ajudar a explicar o problema -->
+<!-- If applicable, add screenshots to help explain the problem -->
 
-## 🌍 Ambiente
+## 🌍 Environment
 
-- **Mvp24Hours Version:** [ex: 9.1.x]
-- **.NET Version:** [ex: 9]
-- **OS:** [ex: Windows 11, Ubuntu 22.04, macOS 13]
-- **IDE:** [ex: Visual Studio 2022, VS Code, Rider]
-- **Database:** [ex: SQL Server 2022, PostgreSQL 15]
+- **Mvp24Hours Version:** [e.g. 9.1.x]
+- **.NET Version:** [e.g. 9]
+- **OS:** [e.g. Windows 11, Ubuntu 22.04, macOS 13]
+- **IDE:** [e.g. Visual Studio 2022, VS Code, Rider]
+- **Database:** [e.g. SQL Server 2022, PostgreSQL 15]
 
-## 📝 Logs e Stack Trace
+## 📝 Logs and Stack Trace
 
 ```
-Cole aqui os logs relevantes e stack traces
+Paste relevant logs and stack traces here
 ```
 
-## 🔍 Contexto Adicional
+## 🔍 Additional Context
 
-<!-- Adicione qualquer outro contexto sobre o problema aqui -->
+<!-- Add any other context about the problem here -->
 
 ## ✅ Checklist
 
-- [ ] Verifiquei se já não existe uma issue sobre este bug
-- [ ] Testei com a versão mais recente do Mvp24Hours
-- [ ] Li a [documentação](https://kallebelins.github.io/mvp24hours-dotnet)
-- [ ] Consegui reproduzir o bug consistentemente
+- [ ] I checked that an issue about this bug does not already exist
+- [ ] I tested with the latest Mvp24Hours version
+- [ ] I read the [documentation](https://kallebelins.github.io/mvp24hours-dotnet)
+- [ ] I can reproduce the bug consistently
 
-## 🔗 Issues Relacionadas
+## 🔗 Related Issues
 
-<!-- Liste issues relacionadas se houver -->
-<!-- Exemplo: Relacionado a #123 -->
-
+<!-- List related issues if any -->
+<!-- Example: Related to #123 -->

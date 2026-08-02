@@ -1,155 +1,154 @@
-# Código de Conduta do Pacto de Contribuidor
+# Contributor Covenant Code of Conduct
 
-## Nosso Compromisso
+## Our Pledge
 
-No interesse de promover um ambiente aberto e acolhedor, nós, como contribuidores e mantenedores, nos comprometemos a fazer da participação em nosso projeto e em nossa comunidade uma experiência livre de assédio para todos, independentemente de idade, tamanho corporal, deficiência, etnia, características sexuais, identidade e expressão de gênero, nível de experiência, educação, status socioeconômico, nacionalidade, aparência pessoal, raça, religião ou identidade e orientação sexual.
+We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-## Nossos Padrões
+## Our Standards
 
-Exemplos de comportamento que contribuem para criar um ambiente positivo incluem:
+Examples of behavior that contributes to a positive environment include:
 
-* ✅ Usar linguagem acolhedora e inclusiva
-* ✅ Respeitar pontos de vista e experiências diferentes
-* ✅ Aceitar críticas construtivas graciosamente
-* ✅ Focar no que é melhor para a comunidade
-* ✅ Mostrar empatia com outros membros da comunidade
-* ✅ Ser paciente e compreensivo com novos contribuidores
-* ✅ Oferecer ajuda construtiva e orientação
-* ✅ Reconhecer e valorizar as contribuições de todos
+* ✅ Using welcoming and inclusive language
+* ✅ Being respectful of differing viewpoints and experiences
+* ✅ Gracefully accepting constructive criticism
+* ✅ Focusing on what is best for the community
+* ✅ Showing empathy toward other community members
+* ✅ Being patient and understanding with new contributors
+* ✅ Offering constructive help and guidance
+* ✅ Recognizing and valuing everyone's contributions
 
-Exemplos de comportamento inaceitável por parte dos participantes incluem:
+Examples of unacceptable behavior by participants include:
 
-* ❌ Uso de linguagem ou imagens sexualizadas e atenção ou avanços sexuais indesejados
-* ❌ Trolling, comentários insultuosos/depreciativos e ataques pessoais ou políticos
-* ❌ Assédio público ou privado
-* ❌ Publicar informações privadas de outros, como endereço físico ou eletrônico, sem permissão explícita
-* ❌ Outras condutas que possam ser razoavelmente consideradas inapropriadas em um ambiente profissional
-* ❌ Intimidação deliberada, perseguição ou seguimento
-* ❌ Interrupção sustentada de palestras ou outros eventos
-* ❌ Contato físico inapropriado
+* ❌ The use of sexualized language or imagery, and sexual attention or advances of any kind
+* ❌ Trolling, insulting or derogatory comments, and personal or political attacks
+* ❌ Public or private harassment
+* ❌ Publishing others' private information, such as a physical or email address, without explicit permission
+* ❌ Other conduct which could reasonably be considered inappropriate in a professional setting
+* ❌ Deliberate intimidation, stalking, or following
+* ❌ Sustained disruption of talks or other events
+* ❌ Inappropriate physical contact
 
-## Nossas Responsabilidades
+## Our Responsibilities
 
-Os mantenedores do projeto são responsáveis por esclarecer os padrões de comportamento aceitável e espera-se que tomem ações corretivas apropriadas e justas em resposta a quaisquer instâncias de comportamento inaceitável.
+Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
 
-Os mantenedores do projeto têm o direito e a responsabilidade de remover, editar ou rejeitar comentários, commits, código, edições wiki, issues e outras contribuições que não estejam alinhadas a este Código de Conduta, ou banir temporária ou permanentemente qualquer contribuidor por outros comportamentos que considerem inapropriados, ameaçadores, ofensivos ou prejudiciais.
+Project maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, or to ban temporarily or permanently any contributor for other behaviors that they deem inappropriate, threatening, offensive, or harmful.
 
-## Escopo
+## Scope
 
-Este Código de Conduta se aplica tanto nos espaços do projeto quanto em espaços públicos quando um indivíduo está representando o projeto ou sua comunidade. Exemplos de representação de um projeto ou comunidade incluem o uso de um endereço de e-mail oficial do projeto, postagem por meio de uma conta oficial de mídia social ou atuação como representante designado em um evento online ou offline. A representação de um projeto pode ser mais definida e esclarecida pelos mantenedores do projeto.
+This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces. Examples of representing our community include using an official project e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
 
-### Onde Este Código Se Aplica
+### Where This Code Applies
 
-* 💬 Issues e Pull Requests no GitHub
-* 🗨️ Discussions no GitHub
-* 📧 Listas de e-mail e comunicações do projeto
-* 🐦 Redes sociais quando representando o projeto
-* 🎤 Eventos e conferências relacionados ao projeto
-* 💻 Espaços de colaboração online (chat, fóruns, etc)
+* 💬 GitHub Issues and Pull Requests
+* 🗨️ GitHub Discussions
+* 📧 Project mailing lists and communications
+* 🐦 Social media when representing the project
+* 🎤 Project-related events and conferences
+* 💻 Online collaboration spaces (chat, forums, etc.)
 
-## Aplicação
+## Enforcement
 
-Instâncias de comportamento abusivo, de assédio ou de outra forma inaceitável podem ser relatadas entrando em contato com a equipe do projeto em:
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at:
 
 **📧 Email:** [kallebe.santos@outlook.com]  
 **💼 LinkedIn:** [Kallebe Lins](https://www.linkedin.com/in/kallebelins/)
 
-Todas as reclamações serão revisadas e investigadas e resultarão em uma resposta considerada necessária e apropriada às circunstâncias. A equipe do projeto é obrigada a manter a confidencialidade em relação ao relator de um incidente. Mais detalhes de políticas de aplicação específicas podem ser postados separadamente.
+All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Further details of specific enforcement policies may be posted separately.
 
-Mantenedores do projeto que não seguem ou aplicam o Código de Conduta em boa fé podem enfrentar repercussões temporárias ou permanentes conforme determinado por outros membros da liderança do projeto.
+Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
 
-## Processo de Resolução
+## Resolution Process
 
-Se você testemunhar ou for vítima de comportamento inaceitável:
+If you witness or experience unacceptable behavior:
 
-1. **📝 Documente:** Mantenha registros do comportamento (screenshots, links, datas)
-2. **🗣️ Reporte:** Entre em contato com os mantenedores (informações acima)
-3. **⏱️ Aguarde:** Responderemos em até 48 horas
-4. **🔍 Investigação:** Investigaremos completamente a reclamação
-5. **⚖️ Ação:** Tomaremos as medidas apropriadas
+1. **📝 Document:** Keep records of the behavior (screenshots, links, dates)
+2. **🗣️ Report:** Contact the maintainers (contact information above)
+3. **⏱️ Wait:** We will respond within 48 hours
+4. **🔍 Investigation:** We will fully investigate the report
+5. **⚖️ Action:** We will take appropriate measures
 
-### Possíveis Ações
+### Possible Actions
 
-Dependendo da gravidade e natureza da violação, as ações podem incluir:
+Depending on the severity and nature of the violation, actions may include:
 
-* ⚠️ **Advertência Privada:** Aviso formal sobre comportamento inadequado
-* ⚠️ **Advertência Pública:** Aviso público sobre violação do código
-* 🚫 **Suspensão Temporária:** Ban temporário de participação no projeto
-* 🔒 **Suspensão Permanente:** Ban permanente do projeto
-* 🚨 **Ação Legal:** Em casos extremos, envolvimento das autoridades
+* ⚠️ **Private Warning:** Formal notice about inappropriate behavior
+* ⚠️ **Public Warning:** Public notice about a code violation
+* 🚫 **Temporary Suspension:** Temporary ban from project participation
+* 🔒 **Permanent Suspension:** Permanent ban from the project
+* 🚨 **Legal Action:** In extreme cases, involvement of authorities
 
-## Diretrizes da Comunidade
+## Community Guidelines
 
-Para manter um ambiente saudável e produtivo:
+To maintain a healthy and productive environment:
 
-### Ao Interagir
+### When Interacting
 
-* 🤝 **Seja respeitoso:** Trate todos com respeito e dignidade
-* 💬 **Comunique-se claramente:** Seja claro, conciso e construtivo
-* 🎯 **Mantenha o foco:** Discussões devem ser relevantes ao projeto
-* 🙏 **Seja paciente:** Nem todos têm o mesmo nível de experiência
-* 🎓 **Ajude outros:** Compartilhe conhecimento e ajude iniciantes
-* 🌍 **Seja inclusivo:** Dê as boas-vindas a pessoas de todos os backgrounds
+* 🤝 **Be respectful:** Treat everyone with respect and dignity
+* 💬 **Communicate clearly:** Be clear, concise, and constructive
+* 🎯 **Stay focused:** Discussions should be relevant to the project
+* 🙏 **Be patient:** Not everyone has the same level of experience
+* 🎓 **Help others:** Share knowledge and help beginners
+* 🌍 **Be inclusive:** Welcome people from all backgrounds
 
-### Ao Contribuir
+### When Contributing
 
-* 📖 **Leia a documentação:** Familiarize-se com o projeto
-* 🔍 **Pesquise primeiro:** Verifique se sua questão já foi abordada
-* 📝 **Seja descritivo:** Forneça contexto e detalhes
-* ✅ **Siga as diretrizes:** Respeite os padrões do projeto
-* 💡 **Seja construtivo:** Ofereça soluções, não apenas problemas
-* 🙌 **Reconheça outros:** Dê crédito onde é devido
+* 📖 **Read the documentation:** Familiarize yourself with the project
+* 🔍 **Search first:** Check whether your question has already been addressed
+* 📝 **Be descriptive:** Provide context and details
+* ✅ **Follow the guidelines:** Respect project standards
+* 💡 **Be constructive:** Offer solutions, not just problems
+* 🙌 **Acknowledge others:** Give credit where it is due
 
-### Ao Revisar
+### When Reviewing
 
-* 👀 **Seja minucioso:** Revise cuidadosamente o código
-* 💬 **Seja construtivo:** Ofereça feedback útil e específico
-* 🎓 **Eduque:** Explique o "porquê" de suas sugestões
-* 🤝 **Seja colaborativo:** Trabalhe com o contribuidor
-* ⚡ **Seja pontual:** Responda em tempo razoável
-* 🎉 **Celebre:** Reconheça boas contribuições
+* 👀 **Be thorough:** Review code carefully
+* 💬 **Be constructive:** Offer useful and specific feedback
+* 🎓 **Educate:** Explain the "why" behind your suggestions
+* 🤝 **Be collaborative:** Work with the contributor
+* ⚡ **Be timely:** Respond within a reasonable time
+* 🎉 **Celebrate:** Recognize good contributions
 
-## Atribuição
+## Attribution
 
-Este Código de Conduta é adaptado do [Contributor Covenant](https://www.contributor-covenant.org), versão 2.1, disponível em [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
 
-As Diretrizes de Impacto na Comunidade foram inspiradas pela [escada de aplicação do código de conduta da Mozilla](https://github.com/mozilla/diversity).
+Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/diversity).
 
-Para respostas a perguntas comuns sobre este código de conduta, veja as FAQs em [https://www.contributor-covenant.org/faq](https://www.contributor-covenant.org/faq). Traduções estão disponíveis em [https://www.contributor-covenant.org/translations](https://www.contributor-covenant.org/translations).
+For answers to common questions about this code of conduct, see the FAQ at [https://www.contributor-covenant.org/faq](https://www.contributor-covenant.org/faq). Translations are available at [https://www.contributor-covenant.org/translations](https://www.contributor-covenant.org/translations).
 
-## Perguntas Frequentes
+## Frequently Asked Questions
 
-### Por que temos um Código de Conduta?
+### Why do we have a Code of Conduct?
 
-Um código de conduta estabelece expectativas de comportamento para os participantes do projeto, garantindo que todos se sintam seguros e bem-vindos.
+A code of conduct sets behavior expectations for project participants, ensuring that everyone feels safe and welcome.
 
-### O que acontece quando alguém viola o código?
+### What happens when someone violates the code?
 
-Violações são levadas a sério. Investigamos todas as reclamações e tomamos ações apropriadas, que podem variar de advertências a banimentos permanentes.
+Violations are taken seriously. We investigate all reports and take appropriate action, which may range from warnings to permanent bans.
 
-### Como reporto uma violação?
+### How do I report a violation?
 
-Entre em contato com os mantenedores por email ou LinkedIn (informações acima). Todas as reclamações são tratadas com confidencialidade.
+Contact the maintainers by email or LinkedIn (contact information above). All reports are handled confidentially.
 
-### Quem monitora e aplica este código?
+### Who monitors and enforces this code?
 
-Os mantenedores do projeto são responsáveis por monitorar e aplicar este código de conduta.
+Project maintainers are responsible for monitoring and enforcing this code of conduct.
 
-### Este código se aplica fora do projeto?
+### Does this code apply outside the project?
 
-Sim, quando você está representando o projeto ou sua comunidade em espaços públicos.
+Yes, when you are representing the project or its community in public spaces.
 
-## Agradecimentos
+## Acknowledgments
 
-Agradecemos antecipadamente a todos que ajudarão a manter o Mvp24Hours uma comunidade acolhedora, inclusiva e respeitosa. 
+We thank in advance everyone who helps keep Mvp24Hours a welcoming, inclusive, and respectful community.
 
-**Seja parte desta comunidade!** Seu comportamento positivo fará toda a diferença! 🌟
+**Be part of this community!** Your positive behavior makes all the difference! 🌟
 
 ---
 
-**Versão:** 2.1  
-**Última Atualização:** Outubro 2025  
-**Contato:** [kallebe.santos@outlook.com]
+**Version:** 2.1  
+**Last Updated:** October 2025  
+**Contact:** [kallebe.santos@outlook.com]
 
-Para mais informações sobre como contribuir, veja [CONTRIBUTING.md](CONTRIBUTING.md).
-
+For more information on how to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).

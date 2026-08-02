@@ -1,93 +1,93 @@
-# Política de Segurança
+# Security Policy
 
-## 🛡️ Versões Suportadas
+## 🛡️ Supported Versions
 
-Nós fornecemos atualizações de segurança para as seguintes versões do Mvp24Hours:
+We provide security updates for the following Mvp24Hours versions:
 
-| Versão | Suportada          | Suporte até       |
-| ------ | ------------------ | ----------------- |
-| 9.1.x  | ✅ Sim             | Atual             |
-| 9.0.x  | ✅ Sim             | Jun 2027          |
-| 8.3.x  | ⚠️ Limitado        | Dez 2026          |
-| 8.2.x  | ❌ Não             | EOL               |
-| < 8.2  | ❌ Não             | EOL               |
+| Version | Supported          | Support until     |
+| ------- | ------------------ | ----------------- |
+| 9.1.x   | ✅ Yes             | Current           |
+| 9.0.x   | ✅ Yes             | Jun 2027          |
+| 8.3.x   | ⚠️ Limited         | Dec 2026          |
+| 8.2.x   | ❌ No              | EOL               |
+| < 8.2   | ❌ No              | EOL               |
 
-**Recomendação:** Sempre use a versão mais recente para garantir que você tenha as correções de segurança mais atualizadas.
+**Recommendation:** Always use the latest version to ensure you have the most up-to-date security fixes.
 
-## 🔒 Reportando uma Vulnerabilidade
+## 🔒 Reporting a Vulnerability
 
-A segurança do Mvp24Hours é uma prioridade. Se você descobrir uma vulnerabilidade de segurança, por favor **NÃO** abra uma issue pública.
+Mvp24Hours security is a priority. If you discover a security vulnerability, please **DO NOT** open a public issue.
 
-### Processo de Reporte
+### Reporting Process
 
-1. **📧 Envie um email para:** [kallebe.santos@outlook.com]
+1. **📧 Send an email to:** [kallebe.santos@outlook.com]
    
-   Inclua as seguintes informações:
-   - Descrição detalhada da vulnerabilidade
-   - Passos para reproduzir o problema
-   - Versões afetadas
-   - Potencial impacto
-   - Sugestões de correção (se houver)
+   Include the following information:
+   - Detailed description of the vulnerability
+   - Steps to reproduce the issue
+   - Affected versions
+   - Potential impact
+   - Suggested fix (if any)
 
-2. **⏱️ Tempo de Resposta:**
-   - Confirmaremos o recebimento em até 48 horas
-   - Avaliaremos a vulnerabilidade em até 7 dias
-   - Manteremos você informado sobre o progresso
+2. **⏱️ Response Time:**
+   - We will confirm receipt within 48 hours
+   - We will assess the vulnerability within 7 days
+   - We will keep you informed about progress
 
-3. **🔍 Avaliação:**
-   - Verificaremos e validaremos o relatório
-   - Determinaremos a severidade (Critical, High, Medium, Low)
-   - Desenvolveremos uma correção
+3. **🔍 Assessment:**
+   - We will verify and validate the report
+   - We will determine severity (Critical, High, Medium, Low)
+   - We will develop a fix
 
-4. **🚀 Divulgação:**
-   - Lançaremos uma correção
-   - Publicaremos um aviso de segurança
-   - Creditaremos você (se desejar) na descoberta
+4. **🚀 Disclosure:**
+   - We will release a fix
+   - We will publish a security advisory
+   - We will credit you (if desired) for the discovery
 
-### Severidade das Vulnerabilidades
+### Vulnerability Severity
 
-Classificamos vulnerabilidades usando o [CVSS v3.1](https://www.first.org/cvss/):
+We classify vulnerabilities using [CVSS v3.1](https://www.first.org/cvss/):
 
-- **🔴 Critical (9.0-10.0):** Exploração remota sem autenticação
-- **🟠 High (7.0-8.9):** Comprometimento significativo de dados/sistema
-- **🟡 Medium (4.0-6.9):** Acesso limitado a informações sensíveis
-- **🟢 Low (0.1-3.9):** Impacto mínimo de segurança
+- **🔴 Critical (9.0-10.0):** Remote exploitation without authentication
+- **🟠 High (7.0-8.9):** Significant data or system compromise
+- **🟡 Medium (4.0-6.9):** Limited access to sensitive information
+- **🟢 Low (0.1-3.9):** Minimal security impact
 
-## 🎯 Escopo de Segurança
+## 🎯 Security Scope
 
-### O Que Está No Escopo
+### In Scope
 
-Vulnerabilidades relacionadas a:
+Vulnerabilities related to:
 
-- ✅ Injeção (SQL, NoSQL, Command, etc)
-- ✅ Quebra de autenticação e autorização
-- ✅ Exposição de dados sensíveis
+- ✅ Injection (SQL, NoSQL, Command, etc.)
+- ✅ Broken authentication and authorization
+- ✅ Sensitive data exposure
 - ✅ XXE (XML External Entities)
-- ✅ Controle de acesso quebrado
-- ✅ Configuração de segurança incorreta
+- ✅ Broken access control
+- ✅ Security misconfiguration
 - ✅ XSS (Cross-Site Scripting)
-- ✅ Deserialização insegura
-- ✅ Componentes com vulnerabilidades conhecidas
-- ✅ Logging e monitoramento insuficientes
+- ✅ Insecure deserialization
+- ✅ Components with known vulnerabilities
+- ✅ Insufficient logging and monitoring
 - ✅ CSRF (Cross-Site Request Forgery)
 - ✅ Path traversal
 - ✅ Denial of Service (DoS)
 
-### O Que NÃO Está No Escopo
+### Out of Scope
 
-- ❌ Problemas de usabilidade
-- ❌ Bugs que não têm impacto de segurança
-- ❌ Vulnerabilidades em dependências de terceiros (reporte diretamente aos mantenedores)
-- ❌ Ataques de engenharia social
-- ❌ Ataques físicos
+- ❌ Usability issues
+- ❌ Bugs with no security impact
+- ❌ Vulnerabilities in third-party dependencies (report directly to maintainers)
+- ❌ Social engineering attacks
+- ❌ Physical attacks
 
-## 🔐 Melhores Práticas de Segurança
+## 🔐 Security Best Practices
 
-### Para Usuários da Biblioteca
+### For Library Users
 
-#### 1. Validação de Entrada
+#### 1. Input Validation
 ```csharp
-// ✅ BOM: Use validação adequada
+// ✅ GOOD: Use proper validation
 public class CustomerValidator : AbstractValidator<Customer>
 {
     public CustomerValidator()
@@ -100,21 +100,21 @@ public class CustomerValidator : AbstractValidator<Customer>
 }
 ```
 
-#### 2. Parameterização de Queries
+#### 2. Query Parameterization
 ```csharp
-// ✅ BOM: Use Repository pattern (automático no Mvp24Hours)
+// ✅ GOOD: Use Repository pattern (automatic in Mvp24Hours)
 var customers = repository.GetBy(c => c.Name == userName);
 
-// ❌ MAL: Concatenação de strings (evite!)
+// ❌ BAD: String concatenation (avoid!)
 // var sql = $"SELECT * FROM Customers WHERE Name = '{userName}'";
 ```
 
-#### 3. Tratamento de Exceções
+#### 3. Exception Handling
 ```csharp
-// ✅ BOM: Não exponha detalhes internos
+// ✅ GOOD: Do not expose internal details
 try
 {
-    // operação
+    // operation
 }
 catch (Exception ex)
 {
@@ -123,129 +123,128 @@ catch (Exception ex)
         .ToBusiness<Customer>();
 }
 
-// ❌ MAL: Expor stack trace ao cliente
+// ❌ BAD: Expose stack trace to the client
 // throw new Exception(ex.ToString());
 ```
 
-#### 4. Configuração Segura
+#### 4. Secure Configuration
 ```csharp
-// ✅ BOM: Use User Secrets em desenvolvimento
+// ✅ GOOD: Use User Secrets in development
 // dotnet user-secrets set "ConnectionStrings:Default" "..."
 
-// ✅ BOM: Use variáveis de ambiente em produção
+// ✅ GOOD: Use environment variables in production
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-// ❌ MAL: Hard-coded secrets
+// ❌ BAD: Hard-coded secrets
 // var connectionString = "Server=...;Password=secret123";
 ```
 
-#### 5. HTTPS e Criptografia
+#### 5. HTTPS and Encryption
 ```csharp
-// ✅ BOM: Force HTTPS em produção
+// ✅ GOOD: Force HTTPS in production
 app.UseHttpsRedirection();
 app.UseHsts();
 
-// ✅ BOM: Criptografe dados sensíveis
-// Use Data Protection API do ASP.NET Core
+// ✅ GOOD: Encrypt sensitive data
+// Use ASP.NET Core Data Protection API
 ```
 
-#### 6. Auditoria e Logging
+#### 6. Auditing and Logging
 ```csharp
-// ✅ BOM: Use recursos de auditoria do Mvp24Hours
+// ✅ GOOD: Use Mvp24Hours auditing features
 public class Customer : EntityBaseLog<int, string>
 {
     // Automatic Created, Modified, Removed tracking
 }
 
-// ✅ BOM: Log operações sensíveis
+// ✅ GOOD: Log sensitive operations
 _logger.LogInformation(
     "User {UserId} accessed customer {CustomerId}",
     userId, customerId
 );
 ```
 
-### Para Contribuidores
+### For Contributors
 
-1. **Nunca comite secrets:** Use .gitignore para excluir arquivos sensíveis
-2. **Revise dependências:** Verifique vulnerabilidades conhecidas
-3. **Valide entrada:** Sempre valide e sanitize entrada do usuário
-4. **Use async seguramente:** Evite race conditions
-5. **Teste segurança:** Inclua testes de segurança em PRs
+1. **Never commit secrets:** Use .gitignore to exclude sensitive files
+2. **Review dependencies:** Check for known vulnerabilities
+3. **Validate input:** Always validate and sanitize user input
+4. **Use async safely:** Avoid race conditions
+5. **Test security:** Include security tests in PRs
 
-## 📋 Checklist de Segurança
+## 📋 Security Checklist
 
-Antes de fazer deploy em produção:
+Before deploying to production:
 
-- [ ] Todas as dependências estão atualizadas
-- [ ] Secrets não estão no código ou configuração
-- [ ] HTTPS está habilitado
-- [ ] Validação de entrada está implementada
-- [ ] Logs não contêm informações sensíveis
-- [ ] Tratamento de erros não expõe detalhes internos
-- [ ] Autenticação e autorização estão configuradas
-- [ ] Auditoria está habilitada
-- [ ] Backups estão configurados
-- [ ] Monitoramento está ativo
+- [ ] All dependencies are up to date
+- [ ] Secrets are not in code or configuration
+- [ ] HTTPS is enabled
+- [ ] Input validation is implemented
+- [ ] Logs do not contain sensitive information
+- [ ] Error handling does not expose internal details
+- [ ] Authentication and authorization are configured
+- [ ] Auditing is enabled
+- [ ] Backups are configured
+- [ ] Monitoring is active
 
-## 🔄 Atualizações de Segurança
+## 🔄 Security Updates
 
-### Como Nos Mantemos Seguros
+### How We Stay Secure
 
-1. **Monitoramento:** Monitoramos continuamente vulnerabilidades
-2. **Scans Automáticos:** GitHub Dependabot e CodeQL
-3. **Revisão de Código:** Todos os PRs passam por revisão
-4. **Testes:** Suite de testes automáticos
-5. **Atualizações:** Patch releases regulares
+1. **Monitoring:** We continuously monitor for vulnerabilities
+2. **Automated Scans:** GitHub Dependabot and CodeQL
+3. **Code Review:** All PRs go through review
+4. **Testing:** Automated test suite
+5. **Updates:** Regular patch releases
 
-### Como Manter-se Atualizado
+### How to Stay Up to Date
 
-- ⭐ **Watch** o repositório no GitHub
-- 📧 Ative notificações de releases
-- 📖 Leia o [CHANGELOG.md](CHANGELOG.md)
-- 🔔 Siga [@kallebelins](https://linkedin.com/in/kallebelins) no LinkedIn
+- ⭐ **Watch** the repository on GitHub
+- 📧 Enable release notifications
+- 📖 Read [CHANGELOG.md](CHANGELOG.md)
+- 🔔 Follow [@kallebelins](https://linkedin.com/in/kallebelins) on LinkedIn
 
-## 🏆 Hall da Fama de Segurança
+## 🏆 Security Hall of Fame
 
-Agradeceremos aos pesquisadores que reportarem vulnerabilidades responsavelmente.
+We thank researchers who responsibly report vulnerabilities.
 
 <!-- 
-Contribuidores de segurança serão listados aqui após a divulgação:
+Security contributors will be listed here after disclosure:
 
 ### 2025
-- [Nome] - [Descrição da vulnerabilidade]
+- [Name] - [Vulnerability description]
 -->
 
-**Nenhuma vulnerabilidade reportada ainda.** 
+**No vulnerabilities reported yet.**
 
-O projeto está mantido com práticas de segurança desde o início. Se você encontrar alguma vulnerabilidade, será o primeiro a ser reconhecido! 🎯
+The project has followed security practices from the start. If you find a vulnerability, you will be the first to be recognized! 🎯
 
-## 📚 Recursos Adicionais
+## 📚 Additional Resources
 
-### Segurança em .NET
-- [Guia de Segurança ASP.NET Core](https://docs.microsoft.com/aspnet/core/security/)
+### .NET Security
+- [ASP.NET Core Security Guide](https://docs.microsoft.com/aspnet/core/security/)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [.NET Security Guidelines](https://docs.microsoft.com/dotnet/standard/security/)
 
-### Segurança em Bancos de Dados
+### Database Security
 - [SQL Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
 - [MongoDB Security Checklist](https://docs.mongodb.com/manual/administration/security-checklist/)
 
-### Ferramentas
+### Tools
 - [Snyk](https://snyk.io/) - Vulnerability scanning
 - [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)
 - [WhiteSource](https://www.whitesourcesoftware.com/)
 
-## 📞 Contato
+## 📞 Contact
 
-Para questões relacionadas a segurança:
+For security-related questions:
 
 - **Email:** [kallebe.santos@outlook.com]
 - **LinkedIn:** [Kallebe Lins](https://linkedin.com/in/kallebelins)
-- **PGP Key:** [Adicione sua chave PGP aqui se houver]
+- **PGP Key:** [Add your PGP key here if available]
 
 ---
 
-**Obrigado por ajudar a manter o Mvp24Hours seguro! 🛡️**
+**Thank you for helping keep Mvp24Hours secure! 🛡️**
 
-*Última atualização: Janeiro 2026*
-
+*Last updated: January 2026*

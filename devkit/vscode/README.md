@@ -92,13 +92,13 @@ It triages ambiguous Mvp24Hours prompts via MCP (`list_scenarios`, `get_scenario
 
 **Invoke manually:** type `/mvp24hours-router` in Copilot Chat (Agent mode).
 
-**Auto-load:** Copilot loads the skill when your prompt matches its description (e.g. "por onde começo", "criar API", "migrar").
+**Auto-load:** Copilot loads the skill when your prompt matches its description (e.g. "where do I start", "create API", "migrate"; Portuguese prompts such as "por onde começo" and "criar API" also match).
 
 ## Verify setup
 
 1. Command Palette → **MCP: List Servers** → start `mvp24hours`
 2. Confirm no manifest errors in the server output
-3. Copilot Chat → **Agent** mode → `/mvp24hours-router` or ask "por onde começo com Mvp24Hours?"
+3. Copilot Chat → **Agent** mode → `/mvp24hours-router` or ask "where do I start with Mvp24Hours?"
 4. Agent should call `list_scenarios` and present a route
 
 ## Sync with canonical source

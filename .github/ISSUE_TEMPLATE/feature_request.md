@@ -1,96 +1,95 @@
 ---
 name: ✨ Feature Request
-about: Sugira uma nova funcionalidade para o projeto
+about: Suggest a new feature for the project
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
 ---
 
-## 💡 Resumo da Feature
+## 💡 Feature Summary
 
-<!-- Descreva a feature de forma clara e concisa -->
+<!-- Describe the feature clearly and concisely -->
 
-## 🎯 Problema que a Feature Resolve
+## 🎯 Problem the Feature Solves
 
-<!-- Sua feature está relacionada a um problema? Por favor, descreva. -->
-<!-- Exemplo: "É frustrante quando eu preciso..." -->
+<!-- Is your feature related to a problem? Please describe. -->
+<!-- Example: "It is frustrating when I need to..." -->
 
-## ✨ Solução Proposta
+## ✨ Proposed Solution
 
-<!-- Descreva claramente a solução que você gostaria de ver implementada -->
+<!-- Clearly describe the solution you would like to see implemented -->
 
-## 📝 Exemplo de Uso
+## 📝 Usage Example
 
 ```csharp
-// Como você imagina usando esta feature?
-// Exemplo:
+// How do you imagine using this feature?
+// Example:
 repository.BulkInsert(customers);
 unitOfWork.SaveChanges();
 ```
 
-## 🔄 Alternativas Consideradas
+## 🔄 Alternatives Considered
 
-<!-- Descreva alternativas que você considerou -->
+<!-- Describe alternatives you considered -->
 
-## 📊 Benefícios
+## 📊 Benefits
 
-<!-- Liste os benefícios desta feature -->
+<!-- List the benefits of this feature -->
 
-- Melhoria de performance em X%
-- Simplifica o código em cenários Y
-- Facilita Z
-- Alinhamento com padrões da indústria
+- Performance improvement of X%
+- Simplifies code in Y scenarios
+- Makes Z easier
+- Alignment with industry patterns
 
 ## 💥 Breaking Changes
 
-<!-- Esta feature introduz breaking changes? -->
+<!-- Does this feature introduce breaking changes? -->
 
-- [ ] Não, totalmente compatível com versões anteriores
-- [ ] Sim, requer mudanças no código existente (descreva abaixo)
+- [ ] No, fully backward compatible
+- [ ] Yes, requires changes to existing code (describe below)
 
-<!-- Se sim, descreva as mudanças necessárias -->
+<!-- If yes, describe the required changes -->
 
-## 📚 Documentação
+## 📚 Documentation
 
-<!-- Que documentação seria necessária para esta feature? -->
+<!-- What documentation would be needed for this feature? -->
 
-- [ ] XML documentation nos métodos
-- [ ] Guia de uso em docs/
-- [ ] Exemplos práticos
-- [ ] Atualização do CHANGELOG
+- [ ] XML documentation on methods
+- [ ] Usage guide in docs/
+- [ ] Practical examples
+- [ ] CHANGELOG update
 
-## 🧪 Testes
+## 🧪 Tests
 
-<!-- Como esta feature deveria ser testada? -->
+<!-- How should this feature be tested? -->
 
-- [ ] Testes unitários
-- [ ] Testes de integração
-- [ ] Testes de performance
-- [ ] Exemplos práticos
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Performance tests
+- [ ] Practical examples
 
-## 🌍 Impacto
+## 🌍 Impact
 
-<!-- Qual o impacto desta feature? -->
+<!-- What is the impact of this feature? -->
 
-- **Usuários Beneficiados:** [ex: Todos, desenvolvedores usando EF Core, etc]
-- **Prioridade Sugerida:** [ex: Alta, Média, Baixa]
-- **Esforço Estimado:** [ex: Pequeno, Médio, Grande]
+- **Users Benefited:** [e.g. Everyone, developers using EF Core, etc.]
+- **Suggested Priority:** [e.g. High, Medium, Low]
+- **Estimated Effort:** [e.g. Small, Medium, Large]
 
-## 🔗 Referências
+## 🔗 References
 
-<!-- Links úteis, exemplos em outras bibliotecas, artigos, etc -->
+<!-- Useful links, examples in other libraries, articles, etc. -->
 
 - [Link 1]
 - [Link 2]
 
 ## ✅ Checklist
 
-- [ ] Verifiquei se já não existe uma issue para esta feature
-- [ ] A feature se alinha com os objetivos do projeto
-- [ ] Considerei o impacto em usuários existentes
-- [ ] Pensei em como testar esta feature
+- [ ] I checked that an issue for this feature does not already exist
+- [ ] The feature aligns with project goals
+- [ ] I considered the impact on existing users
+- [ ] I thought about how to test this feature
 
-## 💬 Contexto Adicional
+## 💬 Additional Context
 
-<!-- Adicione qualquer outro contexto, screenshots, mockups, etc -->
-
+<!-- Add any other context, screenshots, mockups, etc. -->

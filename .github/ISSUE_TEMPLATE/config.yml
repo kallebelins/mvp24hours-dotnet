@@ -1,15 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 📖 Documentação
+  - name: 📖 Documentation
     url: https://kallebelins.github.io/mvp24hours-dotnet
-    about: Consulte a documentação oficial do Mvp24Hours
+    about: Read the official Mvp24Hours documentation
   - name: 💬 GitHub Discussions
     url: https://github.com/kallebelins/mvp24hours-dotnet/discussions
-    about: Para perguntas gerais e discussões com a comunidade
-  - name: 📚 Exemplos
+    about: For general questions and community discussions
+  - name: 📚 Examples
     url: https://github.com/kallebelins/mvp24hours-dotnet-samples
-    about: Veja mais de 20 exemplos práticos de uso da biblioteca
+    about: See more than 20 practical usage examples
   - name: 💼 LinkedIn
     url: https://www.linkedin.com/in/kallebelins/
-    about: Entre em contato com o mantenedor
-
+    about: Contact the maintainer

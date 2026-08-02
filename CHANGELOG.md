@@ -1,142 +1,142 @@
 # Changelog
 
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+All notable changes to this project will be documented in this file.
 
-O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
-e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [10.0.0] - 2026-07 🚀 Major Release
 
-> **Migração para .NET 10** — Esta versão alinha toda a solução ao .NET 10 / C# 14, habilita
-> Nullable Reference Types em todos os projetos e remove/substitui APIs obsoletas. O gate de
-> qualidade (`TreatWarningsAsErrors`) está estrito (0 avisos em Release; só `NU1510` residual
-> intencional). Consumidores dos pacotes NuGet devem revisar as mudanças de **assinatura de
-> nulidade** e os membros que passaram a exigir `required` antes de atualizar.
+> **Migration to .NET 10** — This release aligns the entire solution with .NET 10 / C# 14, enables
+> Nullable Reference Types across all projects, and removes/replaces obsolete APIs. The quality gate
+> (`TreatWarningsAsErrors`) is strict (0 warnings in Release; only intentional residual
+> `NU1510`). NuGet package consumers should review **nullability signature**
+> changes and members that now require `required` before upgrading.
 
-### Mudado
+### Changed
 
-- **TargetFramework**: todos os projetos (produção e testes) migrados para `net10.0`. Não há mais
-  multi-targeting nem projetos remanescentes em `net9.0`.
-- **LangVersion**: padronizado em `latest` (C# 14) para toda a solução.
-- **Nullable Reference Types habilitado em todos os projetos**: várias APIs públicas tiveram a
-  anotação de nulidade ajustada para refletir o comportamento real (parâmetros/retornos passaram a
-  ser `T?` onde o valor pode ser nulo). Código consumidor que já compilava com `<Nullable>enable</Nullable>`
-  pode passar a receber novos avisos de nulidade — recomendado revisar chamadas afetadas.
-- **Membros que passaram a exigir `required`** (breaking em cenários de inicialização por objeto):
+- **TargetFramework**: all projects (production and tests) migrated to `net10.0`. There is no more
+  multi-targeting or remaining projects on `net9.0`.
+- **LangVersion**: standardized to `latest` (C# 14) for the entire solution.
+- **Nullable Reference Types enabled in all projects**: several public APIs had nullability
+  annotations adjusted to reflect actual behavior (parameters/returns became
+  `T?` where the value can be null). Consumer code that already compiled with `<Nullable>enable</Nullable>`
+  may receive new nullability warnings — reviewing affected call sites is recommended.
+- **Members that now require `required`** (breaking in object initialization scenarios):
   - `SetPropertyCall.Property`
   - `EncryptionOptions.Key`
-- **Assinaturas de nulidade ajustadas** em overrides e implementações de interface:
+- **Nullability signatures adjusted** in overrides and interface implementations:
   `EntityIdNewtonsoftConverters.ReadJson` (`TId? existingValue`), `Enumeration.Equals`/`CompareTo`/`object.Equals`,
-  `IValueProvider.SetValue(..., object?)`, `AnonymousTypeContractResolver` e converters de value object.
-- **Gerenciamento centralizado de pacotes (CPM)**: versões de pacotes agora vivem em
-  `src/Directory.Packages.props`; propriedades comuns de build (`TargetFramework`, `LangVersion`,
-  `Nullable`, `ImplicitUsings`) foram centralizadas em `src/Directory.Build.props`.
+  `IValueProvider.SetValue(..., object?)`, `AnonymousTypeContractResolver` and value object converters.
+- **Centralized package management (CPM)**: package versions now live in
+  `src/Directory.Packages.props`; common build properties (`TargetFramework`, `LangVersion`,
+  `Nullable`, `ImplicitUsings`) were centralized in `src/Directory.Build.props`.
 
-### Segurança
+### Security
 
-- **NU1903 — `System.Security.Cryptography.Xml`**: fixado em `10.0.10` para mitigar as advisories
-  [GHSA-37gx-xxp4-5rgx](https://github.com/advisories/GHSA-37gx-xxp4-5rgx) e
-  [GHSA-w3x6-4m5h-cxqf](https://github.com/advisories/GHSA-w3x6-4m5h-cxqf) (trazido transitivamente
-  via `System.ServiceModel.*`). `dotnet list package --vulnerable --include-transitive` → 0 projetos
-  vulneráveis.
-- Workflow `security-scan` corrigido para apontar à solução (`.sln`) e falhar em advisories.
+- **NU1903 — `System.Security.Cryptography.Xml`**: pinned to `10.0.10` to mitigate advisories
+  [GHSA-37gx-xxp4-5rgx](https://github.com/advisories/GHSA-37gx-xxp4-5rgx) and
+  [GHSA-w3x6-4m5h-cxqf](https://github.com/advisories/GHSA-w3x6-4m5h-cxqf) (brought in transitively
+  via `System.ServiceModel.*`). `dotnet list package --vulnerable --include-transitive` → 0 vulnerable
+  projects.
+- `security-scan` workflow fixed to point to the solution (`.sln`) and fail on advisories.
 
-### Adicionado
+### Added
 
-- **`Mvp24Hours.Infrastructure.Identity.Keycloak`**: novo pacote first-party para integração com
-  Keycloak em ASP.NET Core, incluindo autenticação JWT/OIDC, transformação de roles, autorização
-  UMA (decision e RPT), Admin REST API, sincronização de usuários locais e health checks.
-- O pacote não depende de Duende IdentityServer, IdentityModel ou Keycloak.AuthServices; discovery
-  OIDC e operações OAuth são implementadas diretamente sobre a stack nativa do ASP.NET Core.
-- Metadados NuGet completos com README, ícone, licença MIT, tags de descoberta e documentação XML.
-- Pipeline dedicado para build, testes unitários, testes de integração com Keycloak em Docker e
-  geração/validação do pacote NuGet.
-- **`samples/` — migração .NET 10 e catálogo completo**: 32 soluções executáveis em `net10.0`
-  (19 migradas + 6 blueprints de arquitetura + 7 capability samples), referências locais a `src/`
-  via `Mvp24HoursUseProjectReferences`, hosting minimal unificado, OpenAPI nativo, ProblemDetails,
-  `docker-compose.yml` para dependências, baseline de testes (`samples/TESTING.md`), solução guarda-chuva
-  [`samples/Mvp24Hours.Samples.sln`](samples/Mvp24Hours.Samples.sln), CI dedicado
-  [`.github/workflows/samples-ci.yml`](.github/workflows/samples-ci.yml) e catálogo documentado em
-  [`samples/README.md`](samples/README.md) com guidance da decision matrix.
+- **`Mvp24Hours.Infrastructure.Identity.Keycloak`**: new first-party package for Keycloak integration
+  in ASP.NET Core, including JWT/OIDC authentication, role transformation, UMA authorization
+  (decision and RPT), Admin REST API, local user synchronization, and health checks.
+- The package does not depend on Duende IdentityServer, IdentityModel, or Keycloak.AuthServices; OIDC
+  discovery and OAuth operations are implemented directly on the native ASP.NET Core stack.
+- Complete NuGet metadata with README, icon, MIT license, discovery tags, and XML documentation.
+- Dedicated pipeline for build, unit tests, integration tests with Keycloak in Docker, and
+  NuGet package generation/validation.
+- **`samples/` — .NET 10 migration and full catalog**: 32 executable solutions on `net10.0`
+  (19 migrated + 6 architecture blueprints + 7 capability samples), local references to `src/`
+  via `Mvp24HoursUseProjectReferences`, unified minimal hosting, native OpenAPI, ProblemDetails,
+  `docker-compose.yml` for dependencies, test baseline (`samples/TESTING.md`), umbrella solution
+  [`samples/Mvp24Hours.Samples.sln`](samples/Mvp24Hours.Samples.sln), dedicated CI
+  [`.github/workflows/samples-ci.yml`](.github/workflows/samples-ci.yml), and catalog documented in
+  [`samples/README.md`](samples/README.md) with decision matrix guidance.
 
-### Substituído (APIs obsoletas modernizadas)
+### Replaced (modernized obsolete APIs)
 
-- **`CircuitBreaker<T>` (interno, `[Obsolete]`)** → `NativeResiliencePipeline` (Polly v8 via
-  `Microsoft.Extensions.Resilience`) em `ResilientCacheProvider`.
+- **`CircuitBreaker<T>` (internal, `[Obsolete]`)** → `NativeResiliencePipeline` (Polly v8 via
+  `Microsoft.Extensions.Resilience`) in `ResilientCacheProvider`.
 - **`SqlServerDistributedLockProvider`**: `System.Data.SqlClient` → `Microsoft.Data.SqlClient`.
-- **`CertificateHelper`**: construtores obsoletos de `X509Certificate2` → `X509CertificateLoader`
+- **`CertificateHelper`**: obsolete `X509Certificate2` constructors → `X509CertificateLoader`
   (`LoadCertificateFromFile`/`LoadPkcs12FromFile`/`LoadCertificate`/`LoadPkcs12`) — SYSLIB0057.
-- **`SmtpEmailProvider`**: removido `ServicePointManager.ServerCertificateValidationCallback`
-  (SYSLIB0014). **Mudança de comportamento**: o `ServerCertificateValidationCallback` configurado em
-  `SmtpEmailOptions` não é mais aplicado por conexão (o `SmtpClient` não expõe esse hook e o callback
-  global era obsoleto e afetava também o HTTP) — passa a valer a validação de certificado padrão do SO,
-  com log de warning quando o callback estiver configurado.
+- **`SmtpEmailProvider`**: removed `ServicePointManager.ServerCertificateValidationCallback`
+  (SYSLIB0014). **Behavior change**: the `ServerCertificateValidationCallback` configured in
+  `SmtpEmailOptions` is no longer applied per connection (the `SmtpClient` does not expose that hook and the global
+  callback was obsolete and also affected HTTP) — default OS certificate validation now applies,
+  with a warning log when the callback is configured.
 - **`FieldEncryption`/`EncryptionKeyHelper`**: `new Rfc2898DeriveBytes(...)` → `Rfc2898DeriveBytes.Pbkdf2(...)`
-  (SYSLIB0060), com equivalência byte-a-byte validada.
+  (SYSLIB0060), with byte-for-byte equivalence validated.
 - **`AwsSecretsManagerProvider`**: `FallbackCredentialsFactory` → `DefaultAWSCredentialsIdentityResolver`
   (AWSSDK.Core v4).
 
-### Corrigido
+### Fixed
 
-- **`LockHandleBase.Dispose` / `DisposeAsync`**: liberação do lock agora ocorre antes de marcar
-  `_disposed` (antes `ReleaseAsync` retornava cedo e o recurso ficava preso até expirar).
-- **Avisos de build zerados em Release:** **~4235 → 0** (−100%). A primeira passada da
-  modernização reduziu a ~969 e aceitou o residual (~948) para uma rodada de higiene; essa dívida
-  foi eliminada (nullable CS86xx em produção e testes, LOGGEN002, CS0618/`MvpExecutionStrategy`,
-  CS0108, xUnit1031 e demais códigos do gate). Baseline: `tasks/warnings-baseline-v2.json`
+- **`LockHandleBase.Dispose` / `DisposeAsync`**: lock release now occurs before marking
+  `_disposed` (previously `ReleaseAsync` returned early and the resource remained held until expiration).
+- **Build warnings zeroed in Release:** **~4235 → 0** (−100%). The first modernization pass
+  reduced to ~969 and accepted the residual (~948) for a hygiene round; that debt
+  was eliminated (nullable CS86xx in production and tests, LOGGEN002, CS0618/`MvpExecutionStrategy`,
+  CS0108, xUnit1031, and other gate codes). Baseline: `tasks/warnings-baseline-v2.json`
   (`total = 0`).
-- Diversos avisos de qualidade eliminados: CS0168 (variável de exceção não usada), CS0219
-  (variável nunca usada), CS1718 (comparação consigo mesma), CS0108 (ocultação de membro herdado),
-  CA2022 (leitura incompleta de `Stream`), xUnit1031 (bloqueio síncrono em teste assíncrono).
-- Removidos `PackageReference` redundantes (NU1510) já providos via `FrameworkReference` (o pin
-  intencional de `System.Security.Cryptography.Xml` em Infrastructure mantém `NoWarn=NU1510` no
-  `PackageReference` para consumidores sem AspNetCore.App).
-- Regras de estilo do `.editorconfig` elevadas de `suggestion` → `warning` (`EnforceCodeStyleInBuild`);
-  `dotnet format` completo aplicado na solução (file-scoped namespaces, primary constructors,
+- Various quality warnings eliminated: CS0168 (unused exception variable), CS0219
+  (variable never used), CS1718 (comparison with itself), CS0108 (inherited member hiding),
+  CA2022 (incomplete `Stream` read), xUnit1031 (synchronous blocking in async test).
+- Removed redundant `PackageReference` entries (NU1510) already provided via `FrameworkReference` (the intentional
+  pin of `System.Security.Cryptography.Xml` in Infrastructure keeps `NoWarn=NU1510` on the
+  `PackageReference` for consumers without AspNetCore.App).
+- `.editorconfig` style rules elevated from `suggestion` → `warning` (`EnforceCodeStyleInBuild`);
+  full `dotnet format` applied across the solution (file-scoped namespaces, primary constructors,
   collection expressions, usings, etc.).
 
-### Testes
+### Tests
 
-- Suíte completa revalidada em .NET 10 (Release + Docker): **2294 aprovados · 0 falhas · 4 ignorados**
-  (unitários + integração via Testcontainers para MongoDB, SQL Server, Redis e RabbitMQ).
-  Evidência: `tasks/test-final-report-net10-warnings.md`.
-- **Expansão de cobertura (Fases 2–13):** **4.492 aprovados · 0 falhas · 6 ignorados** em 18 projetos de teste
-  (+~2.198 testes vs baseline). Cobertura consolidada Coverlet: **37,7%** linha (**+9,4 pp** vs baseline 28,3%);
-  **12/12** assemblies de produção instrumentados (baseline: 3/12). Meta **>95%** documentada como pendente —
-  evidência: `tasks/coverage-final-tests.json`, `tasks/coverage-delta-tests.md`, `tasks/coverage-final-report.html`.
-- Gate anti-regressão de cobertura no CI (`scripts/check-coverage-gate.ps1`): piso **37%** linha (ubuntu-latest);
-  alvo de produto permanece **95%**.
-- Instrumentação Coverlet corrigida para .NET 10 SDK (`src/Tests/Directory.Build.props`, `coverlet.runsettings`).
-- Testes categorizados com `[Trait("Category", "Unit")]` / `[Trait("Category", "Integration")]`
-  para execução seletiva no CI e localmente sem Docker.
-- `InMemory` disponível em qualquer configuração nos testes EF (MySql/PostgreSql/SQLServer), alinhando
-  Release/CI ao comportamento local em Debug.
-- **`Mvp24Hours.Infrastructure.Test` — DistributedLocking**: +97 testes (InMemory, Redis/Moq,
+- Full suite revalidated on .NET 10 (Release + Docker): **2294 passed · 0 failed · 4 skipped**
+  (unit + integration via Testcontainers for MongoDB, SQL Server, Redis, and RabbitMQ).
+  Evidence: `tasks/test-final-report-net10-warnings.md`.
+- **Coverage expansion (Phases 2–13):** **4,492 passed · 0 failed · 6 skipped** across 18 test projects
+  (+~2,198 tests vs baseline). Consolidated Coverlet coverage: **37.7%** line (**+9.4 pp** vs baseline 28.3%);
+  **12/12** production assemblies instrumented (baseline: 3/12). **>95%** target documented as pending —
+  evidence: `tasks/coverage-final-tests.json`, `tasks/coverage-delta-tests.md`, `tasks/coverage-final-report.html`.
+- Coverage anti-regression gate in CI (`scripts/check-coverage-gate.ps1`): **37%** line floor (ubuntu-latest);
+  product target remains **95%**.
+- Coverlet instrumentation fixed for .NET 10 SDK (`src/Tests/Directory.Build.props`, `coverlet.runsettings`).
+- Tests categorized with `[Trait("Category", "Unit")]` / `[Trait("Category", "Integration")]`
+  for selective execution in CI and locally without Docker.
+- `InMemory` available in any configuration in EF tests (MySql/PostgreSql/SQLServer), aligning
+  Release/CI with local Debug behavior.
+- **`Mvp24Hours.Infrastructure.Test` — DistributedLocking**: +97 tests (InMemory, Redis/Moq,
   SqlServer/PostgreSql guards, factory, options, metrics, DI extensions).
-- **`Mvp24Hours.Infrastructure.Data.EFCore.Test` (novo)**: projeto dedicado de testes EF Core —
-  **175 aprovados · 2 ignorados** (CRUD repos, read-only, bulk, streaming, UoW+events,
+- **`Mvp24Hours.Infrastructure.Data.EFCore.Test` (new)**: dedicated EF Core test project —
+  **175 passed · 2 skipped** (CRUD repos, read-only, bulk, streaming, UoW+events,
   interceptors, specifications, resilience, testing fakes, migrations, converters, CQRS,
-  read/write splitting, schema validation). Soft-delete async alinhado ao sync em
+  read/write splitting, schema validation). Async soft-delete aligned with sync in
   `RepositoryAsync.RemoveAsync` (`IEntityDateLog`).
 
 ### CI/CD
 
-- Workflows `ci.yml` e `codeql-analysis.yml` atualizados para o SDK **.NET 10** (`10.0.x`).
-- Gate `TreatWarningsAsErrors=true` **estrito** no job `code-quality`: `MvpResidualWarnings` contém
-  apenas `NU1510` (pin de segurança). `dotnet build … /p:TreatWarningsAsErrors=true` →
-  **0 erro(s) / 0 aviso(s)**.
-- Step de formatação: `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006
-  --verify-no-changes` (escopo completo, sem `--severity error`).
-- Gate de cobertura (Fase 13): `dotnet test` com `coverlet.runsettings`; `reportgenerator` + `check-coverage-gate.ps1`
-  no job `build-and-test` (ubuntu). Piso **37%** linha; alvo **95%** registrado em `tasks/coverage-delta-tests.md`.
+- `ci.yml` and `codeql-analysis.yml` workflows updated for **.NET 10** SDK (`10.0.x`).
+- Strict `TreatWarningsAsErrors=true` gate in the `code-quality` job: `MvpResidualWarnings` contains
+  only `NU1510` (security pin). `dotnet build … /p:TreatWarningsAsErrors=true` →
+  **0 error(s) / 0 warning(s)**.
+- Formatting step: `dotnet format src/Mvp24Hours.sln --exclude-diagnostics IDE0130 IDE1006
+  --verify-no-changes` (full scope, no `--severity error`).
+- Coverage gate (Phase 13): `dotnet test` with `coverlet.runsettings`; `reportgenerator` + `check-coverage-gate.ps1`
+  in the `build-and-test` job (ubuntu). **37%** line floor; **95%** target recorded in `tasks/coverage-delta-tests.md`.
 
 ---
 
 ## [9.1.210] - 2026-01
 
-### Corrigido
+### Fixed
 
-- **Pacotes NuGet**: Correção de versões de pacotes em todos os projetos
+- **NuGet Packages**: Package version fixes across all projects
   - `Mvp24Hours.Core.csproj`
   - `Mvp24Hours.Application.csproj`
   - `Mvp24Hours.Infrastructure.csproj`
@@ -150,9 +150,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `Mvp24Hours.Infrastructure.RabbitMQ.csproj`
   - `Mvp24Hours.WebAPI.csproj`
 
-### Removido
+### Removed
 
-- **Arquivos Obsoletos**: Remoção de arquivos de DelegatingHandlers e TypedHttpClient
+- **Obsolete Files**: Removal of DelegatingHandlers and TypedHttpClient files
   - `PropagationAuthorizationDelegatingHandler.cs`
   - `PropagationCorrelationIdDelegatingHandler.cs`
   - `PropagationHeaderDelegatingHandler.cs`
@@ -162,87 +162,87 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [9.1.200] - 2026-01 🚀 Major Release
 
-> **Migração para .NET 9** - Esta versão introduz mudanças significativas para adotar as APIs nativas do .NET 9.
-> Consulte o guia de migração em `docs/pt-br/modernization/migration-guide.md` ou `docs/en-us/modernization/migration-guide.md`.
+> **Migration to .NET 9** - This release introduces significant changes to adopt .NET 9 native APIs.
+> See the migration guide at `docs/en-us/modernization/migration-guide.md`.
 
-### Adicionado
+### Added
 
-#### Biblioteca CQRS Completa (Mvp24Hours.Infrastructure.Cqrs)
-- `IMediator`, `ISender`, `IPublisher` - interfaces principais do Mediator
-- `IMediatorCommand<TResponse>`, `IMediatorCommand` - commands CQRS
-- `IMediatorQuery<TResponse>` - queries CQRS
-- `IMediatorNotification` - sistema de notificações in-process
-- `IMediatorRequestHandler<TRequest, TResponse>` - handlers genéricos
+#### Complete CQRS Library (Mvp24Hours.Infrastructure.Cqrs)
+- `IMediator`, `ISender`, `IPublisher` - core Mediator interfaces
+- `IMediatorCommand<TResponse>`, `IMediatorCommand` - CQRS commands
+- `IMediatorQuery<TResponse>` - CQRS queries
+- `IMediatorNotification` - in-process notification system
+- `IMediatorRequestHandler<TRequest, TResponse>` - generic handlers
 - Pipeline Behaviors:
-  - `LoggingBehavior` - log de início, fim e tempo
-  - `PerformanceBehavior` - alerta de requisições lentas
-  - `UnhandledExceptionBehavior` - captura e log de exceções
-  - `ValidationBehavior` - integração com FluentValidation
-  - `CachingBehavior` - cache com IDistributedCache
-  - `TransactionBehavior` - integração com IUnitOfWork
-  - `AuthorizationBehavior` - autorização via policies
-  - `RetryBehavior` - retry com backoff exponencial
-  - `TimeoutBehavior` - timeout configurável por request
-  - `CircuitBreakerBehavior` - circuit breaker para commands
-  - `IdempotencyBehavior` - prevenção de duplicatas
+  - `LoggingBehavior` - start, end, and duration logging
+  - `PerformanceBehavior` - slow request alerts
+  - `UnhandledExceptionBehavior` - exception capture and logging
+  - `ValidationBehavior` - FluentValidation integration
+  - `CachingBehavior` - cache with IDistributedCache
+  - `TransactionBehavior` - IUnitOfWork integration
+  - `AuthorizationBehavior` - authorization via policies
+  - `RetryBehavior` - retry with exponential backoff
+  - `TimeoutBehavior` - configurable timeout per request
+  - `CircuitBreakerBehavior` - circuit breaker for commands
+  - `IdempotencyBehavior` - duplicate prevention
 - Domain Events:
-  - `IDomainEvent` e `DomainEventBase`
-  - `IDomainEventHandler<TEvent>` e `DomainEventDispatcher`
-  - `IHasDomainEvents` para entidades/agregados
-  - `SaveChangesWithEventsAsync` para EFCore e MongoDB
+  - `IDomainEvent` and `DomainEventBase`
+  - `IDomainEventHandler<TEvent>` and `DomainEventDispatcher`
+  - `IHasDomainEvents` for entities/aggregates
+  - `SaveChangesWithEventsAsync` for EFCore and MongoDB
 - Integration Events:
-  - `IIntegrationEvent` e `IntegrationEventBase`
+  - `IIntegrationEvent` and `IntegrationEventBase`
   - `IIntegrationEventHandler<TEvent>`
-  - `IIntegrationEventOutbox` e `InMemoryIntegrationEventOutbox`
+  - `IIntegrationEventOutbox` and `InMemoryIntegrationEventOutbox`
   - `RabbitMqIntegrationEventPublisher`
 - Event Sourcing:
-  - `IEventStore` e `EventStream`
-  - `AggregateRoot<TId>` com Apply/Raise
-  - `Snapshot` e `SnapshotStore`
+  - `IEventStore` and `EventStream`
+  - `AggregateRoot<TId>` with Apply/Raise
+  - `Snapshot` and `SnapshotStore`
   - `EventStoreRepository<T>`
   - `IProjection`, `IProjectionHandler<TEvent>`, `ProjectionManager`
 - Saga/Process Manager:
   - `ISaga<TData>`, `SagaBase<TData>`
-  - `ISagaOrchestrator` e `ISagaStateStore`
-  - `CompensatingCommand` para rollback
-  - Timeout e expiração de sagas
-- Observabilidade CQRS:
-  - `IRequestContext` com CorrelationId/CausationId
-  - `RequestContextBehavior` para propagação de contexto
-  - `AuditBehavior` e `IAuditStore`
+  - `ISagaOrchestrator` and `ISagaStateStore`
+  - `CompensatingCommand` for rollback
+  - Saga timeout and expiration
+- CQRS Observability:
+  - `IRequestContext` with CorrelationId/CausationId
+  - `RequestContextBehavior` for context propagation
+  - `AuditBehavior` and `IAuditStore`
 - Multi-tenancy:
   - `ITenantContext`, `TenantBehavior`
   - `ICurrentUser`, `CurrentUserBehavior`
-  - Filtros automáticos por tenant em queries
+  - Automatic tenant filters in queries
 - Inbox/Outbox:
   - `InboxMessage`, `IInboxStore`, `InboxProcessor`
-  - `OutboxProcessor` com retry e DLQ
+  - `OutboxProcessor` with retry and DLQ
 - Scheduled Commands:
   - `IScheduledCommand`, `ICommandScheduler`
   - `ScheduledCommandHostedService`
-- Decorators e Extensibilidade:
+- Decorators and Extensibility:
   - `IPreProcessor<TRequest>`, `IPostProcessor<TRequest, TResponse>`
   - `IExceptionHandler<TRequest, TException>`
-- Streaming: `IStreamRequest<T>`, `IStreamRequestHandler<T>` com IAsyncEnumerable
+- Streaming: `IStreamRequest<T>`, `IStreamRequestHandler<T>` with IAsyncEnumerable
 
-#### Modernização .NET 9
+#### .NET 9 Modernization
 - **HybridCache** (Microsoft.Extensions.Caching.Hybrid):
-  - `AddMvpHybridCache()` para configuração
-  - `HybridCacheProvider` como `ICacheProvider`
-  - Tags para invalidação em grupo
-  - `InMemoryHybridCacheTagManager` e `RedisHybridCacheTagManager`
+  - `AddMvpHybridCache()` for configuration
+  - `HybridCacheProvider` as `ICacheProvider`
+  - Tags for group invalidation
+  - `InMemoryHybridCacheTagManager` and `RedisHybridCacheTagManager`
 - **TimeProvider**:
-  - `TimeProviderAdapter` (ponte TimeProvider → IClock)
-  - `ClockAdapter` (ponte IClock → TimeProvider)
+  - `TimeProviderAdapter` (TimeProvider → IClock bridge)
+  - `ClockAdapter` (IClock → TimeProvider bridge)
   - `AddTimeProvider()`, `AddClock()`, `ReplaceTimeProvider()`
-  - `FakeTimeProviderHelper` para testes
+  - `FakeTimeProviderHelper` for tests
 - **PeriodicTimer**:
-  - `PeriodicTimerHelper` com padrões comuns
-  - Migração de todos os background services
+  - `PeriodicTimerHelper` with common patterns
+  - Migration of all background services
 - **System.Threading.RateLimiting**:
   - `IRateLimiterProvider`, `NativeRateLimiterProvider`
-  - `RateLimitingPipelineMiddleware` para Pipeline
-  - `RateLimitingConsumeFilter`, `RateLimitingPublishFilter` para RabbitMQ
+  - `RateLimitingPipelineMiddleware` for Pipeline
+  - `RateLimitingConsumeFilter`, `RateLimitingPublishFilter` for RabbitMQ
 - **System.Threading.Channels**:
   - `IChannel<T>`, `MvpChannel<T>`
   - `ChannelFactory`, `ProducerConsumer<T>`
@@ -250,35 +250,35 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `ChannelBatchProcessor<T>`
 - **Microsoft.Extensions.Http.Resilience**:
   - `AddHttpClientWithStandardResilience()`
-  - `NativeResilienceOptions` com presets
-  - `NativeResilienceBuilder` para configuração customizada
+  - `NativeResilienceOptions` with presets
+  - `NativeResilienceBuilder` for custom configuration
 - **Microsoft.Extensions.Resilience**:
   - `INativeResiliencePipeline`, `NativeResiliencePipeline`
-  - `NativeDbResilienceExtensions` para EFCore
-  - `NativeMongoDbResilienceExtensions` para MongoDB
-  - `NativePipelineResilienceMiddleware` para Pipe
-  - `NativeResilienceBehavior` para CQRS
+  - `NativeDbResilienceExtensions` for EFCore
+  - `NativeMongoDbResilienceExtensions` for MongoDB
+  - `NativePipelineResilienceMiddleware` for Pipe
+  - `NativeResilienceBehavior` for CQRS
 - **ProblemDetails (RFC 7807)**:
   - `AddNativeProblemDetails()`, `AddNativeProblemDetailsAll()`
   - `UseNativeProblemDetailsHandling()`
   - Helpers: `NotFoundProblem()`, `ValidationProblem()`, `ConflictProblem()`, etc.
 - **TypedResults (.NET 9)**:
-  - `ToNativeTypedResult()` para `IBusinessResult<T>`
-  - `MapNativeCommand<T>()`, `MapNativeQuery<T>()` para CQRS
-  - Filtros: NativeValidation, ExceptionHandling, Logging, CorrelationId, Idempotency, Timeout
+  - `ToNativeTypedResult()` for `IBusinessResult<T>`
+  - `MapNativeCommand<T>()`, `MapNativeQuery<T>()` for CQRS
+  - Filters: NativeValidation, ExceptionHandling, Logging, CorrelationId, Idempotency, Timeout
 - **Source Generators**:
-  - `Mvp24HoursJsonSerializerContext` para serialização AOT
-  - `[LoggerMessage]` em todos os módulos (CoreLoggerMessages, PipelineLoggerMessages, etc.)
-- **OpenAPI Nativo**:
+  - `Mvp24HoursJsonSerializerContext` for AOT serialization
+  - `[LoggerMessage]` across all modules (CoreLoggerMessages, PipelineLoggerMessages, etc.)
+- **Native OpenAPI**:
   - `AddMvp24HoursNativeOpenApi()`, `MapMvp24HoursNativeOpenApi()`
   - `SecuritySchemeTransformer`, `OpenApiDocumentTransformers`
 - **Keyed Services**:
-  - `ServiceKeys.cs` com constantes
+  - `ServiceKeys.cs` with constants
   - `KeyedServiceExtensions.cs`
 - **Output Caching**:
   - `AddMvp24HoursOutputCache()`, `AddMvp24HoursOutputCacheWithRedis()`
   - `IOutputCacheInvalidator`
-  - Políticas: Short, Medium, Long, VeryLong, NoCache, Authenticated, Api
+  - Policies: Short, Medium, Long, VeryLong, NoCache, Authenticated, Api
 - **.NET Aspire 9**:
   - `AddMvp24HoursAspireDefaults()`
   - `AddMvp24HoursRedisFromAspire()`, `AddMvp24HoursRabbitMQFromAspire()`
@@ -288,37 +288,37 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `AddOptionsWithValidation<T>()`, `AddOptionsWithValidation<T, TValidator>()`
   - `AddOptionsValidatorsFromAssembly()`
 
-#### Observabilidade (ILogger + OpenTelemetry)
+#### Observability (ILogger + OpenTelemetry)
 - OpenTelemetry Tracing:
-  - `ActivitySources` para todos os módulos (Core, Pipeline, Repository, Mediator, RabbitMQ, CronJob, HttpClient)
-  - `ActivityHelper` com convenções semânticas
-  - `IActivityEnricher` para enriquecimento customizável
-  - `TracePropagation` com W3C Trace Context
+  - `ActivitySources` for all modules (Core, Pipeline, Repository, Mediator, RabbitMQ, CronJob, HttpClient)
+  - `ActivityHelper` with semantic conventions
+  - `IActivityEnricher` for customizable enrichment
+  - `TracePropagation` with W3C Trace Context
 - OpenTelemetry Metrics:
-  - `MetricSources` com Meters por módulo
+  - `MetricSources` with Meters per module
   - `PipelineMetrics`, `RepositoryMetrics`, `MessagingMetrics`, `CqrsMetrics`, `CacheMetrics`, `HttpMetrics`, `CronJobMetrics`
-  - `MetricNames.cs` com convenções semânticas
+  - `MetricNames.cs` with semantic conventions
 - OpenTelemetry Logs:
-  - Integração `ILogger` ↔ OpenTelemetry Logs
-  - Correlação automática logs ↔ traces (TraceId, SpanId)
-  - Log sampling para ambientes de alta carga
-- Contexto e Correlação:
+  - `ILogger` ↔ OpenTelemetry Logs integration
+  - Automatic logs ↔ traces correlation (TraceId, SpanId)
+  - Log sampling for high-load environments
+- Context and Correlation:
   - `ICorrelationIdAccessor`, `CorrelationIdAccessor`
   - `CorrelationIdMiddleware`, `RequestContextMiddleware`
-  - `BaggagePropagation` para TenantId, UserId
+  - `BaggagePropagation` for TenantId, UserId
   - `ILogEnricher` (UserContextLogEnricher, TenantContextLogEnricher)
-- Configuração:
+- Configuration:
   - `AddMvp24HoursLogging()`, `AddMvp24HoursTracing()`, `AddMvp24HoursMetrics()`
   - `AddMvp24HoursObservability()` - all-in-one
-  - `AddMvp24HoursOpenTelemetry()` com OTLP, Console, Prometheus exporters
-  - `ObservabilityOptions` centralizado
-- Testabilidade:
+  - `AddMvp24HoursOpenTelemetry()` with OTLP, Console, Prometheus exporters
+  - Centralized `ObservabilityOptions`
+- Testability:
   - `FakeLogger<T>`, `InMemoryLoggerProvider`
   - `FakeActivityListener`, `FakeMeterListener`
   - `LogAssertions`, `ActivityAssertions`, `MetricAssertions`
   - `ObservabilityTestFixture`
 
-#### EFCore Avançado
+#### Advanced EFCore
 - Interceptors:
   - `AuditSaveChangesInterceptor`
   - `SoftDeleteInterceptor`
@@ -328,15 +328,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `TenantSaveChangesInterceptor`
   - `StructuredLoggingInterceptor`
 - Multi-tenancy:
-  - `ITenantProvider`, query filters automáticos
+  - `ITenantProvider`, automatic query filters
   - `TenantModelBuilderExtensions`
   - `RowLevelSecurityHelper`
 - Performance:
-  - `AsNoTracking()` configurável, `AsNoTrackingWithIdentityResolution()`
+  - Configurable `AsNoTracking()`, `AsNoTrackingWithIdentityResolution()`
   - Compiled queries, Split queries
   - `IAsyncEnumerable<T>` streaming
   - Query tags (`TagWith()`)
-  - `ProjectTo<TDto>` com AutoMapper
+  - `ProjectTo<TDto>` with AutoMapper
 - Bulk Operations:
   - `BulkInsertAsync()`, `BulkUpdateAsync()`, `BulkDeleteAsync()`
   - Progress callback
@@ -345,37 +345,37 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `GetBySpecificationAsync()`, `CountBySpecificationAsync()`, `AnyBySpecificationAsync()`
   - `IReadOnlyRepository<T>`, `IReadOnlyRepositoryAsync<T>`
   - Cursor-based pagination (keyset)
-- Resiliência:
-  - `EnableRetryOnFailure()`, retry policies por exceção
-  - Timeout por query
+- Resilience:
+  - `EnableRetryOnFailure()`, retry policies per exception
+  - Timeout per query
   - DbContext pooling
 - Health Checks:
   - `SqlServerHealthCheck`, `PostgreSqlHealthCheck`, `MySqlHealthCheck`
 - Read/Write Splitting:
   - `ConnectionResolver`, `ReplicaSelector`
-  - DbContext separado para leitura
-- Testabilidade:
+  - Separate DbContext for reads
+- Testability:
   - `UseInMemoryDatabase` helpers
   - `IDataSeeder<T>`, `DbContextFactory`
   - `IRepositoryFake<T>`
 
-#### MongoDB Avançado
+#### Advanced MongoDB
 - Interceptors: `AuditInterceptor`, `SoftDeleteInterceptor`, `AuditTrailInterceptor`
 - Multi-tenancy: Query filters, `ITenantProvider`, Row-level security
 - Field-level encryption (CSFLE)
 - Bulk operations: `BulkInsertAsync()`, `BulkUpdateAsync()`, `BulkDeleteAsync()`
-- Change Streams para eventos real-time
-- GridFS para arquivos grandes
+- Change Streams for real-time events
+- GridFS for large files
 - Time Series Collections
 - Geospatial queries
 - Text search indexes
-- Resiliência: Connection resiliency, Circuit breaker, Retry policies
-- Health checks: Conectividade, Replica set status, Índices
-- Read preference configurável
-- Testabilidade: In-memory provider, `IRepositoryFake<T>`, Testcontainers helpers
+- Resilience: Connection resiliency, Circuit breaker, Retry policies
+- Health checks: Connectivity, Replica set status, Indexes
+- Configurable read preference
+- Testability: In-memory provider, `IRepositoryFake<T>`, Testcontainers helpers
 
-#### RabbitMQ Enterprise
-- Consumers tipados:
+#### Enterprise RabbitMQ
+- Typed consumers:
   - `IMessageConsumer<TMessage>`, `ConsumeContext<TMessage>`
   - `IMessage<TPayload>`, `IMessageSerializer`
   - `ConsumerDefinition<TConsumer>`
@@ -387,13 +387,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `RequestTimeoutException`
 - Message Scheduling:
   - `IMessageScheduler`
-  - `ScheduleMessage<T>()` por DateTime ou TimeSpan
+  - `ScheduleMessage<T>()` by DateTime or TimeSpan
   - `CancelScheduledMessage()`
   - Recurring messages
 - Pipeline/Middleware:
   - `IConsumeFilter<TMessage>`, `IPublishFilter<TMessage>`, `ISendFilter`
-  - Filtros: Logging, ExceptionHandling, Correlation, Telemetry, Validation
-- Topologia:
+  - Filters: Logging, ExceptionHandling, Correlation, Telemetry, Validation
+- Topology:
   - `IEndpointNameFormatter`, `IMessageTopology<TMessage>`
   - Topic Exchange, Fanout Exchange
   - Auto-binding, Exchange-to-exchange bindings
@@ -402,66 +402,66 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Batch size, timeout, parallel processing
 - Transactional Messaging:
   - `ITransactionalBus`
-  - Integração com `IUnitOfWork`
+  - Integration with `IUnitOfWork`
   - `InMemoryOutbox`
 - Sagas:
   - `ISagaConsumer<TData, TMessage>`
   - `SagaStateMachine<TInstance>`
   - Saga persistence (Redis, SQL, MongoDB)
 - Multi-tenancy:
-  - Virtual hosts por tenant
+  - Virtual hosts per tenant
   - `ITenantConsumeFilter`
-  - Connection pool por tenant
-- API Fluente: `AddMvpRabbitMQ(cfg => { cfg.Host(); cfg.AddConsumer<T>(); })`
-- Observabilidade: ActivitySource, Métricas Prometheus
+  - Connection pool per tenant
+- Fluent API: `AddMvpRabbitMQ(cfg => { cfg.Host(); cfg.AddConsumer<T>(); })`
+- Observability: ActivitySource, Prometheus Metrics
 - Testing: `InMemoryBus`, `TestHarness`, `TestConsumeContext<T>`
 
-#### Pipeline Avançado
-- Tipagem:
+#### Advanced Pipeline
+- Typing:
   - `IPipeline<TInput, TOutput>`, `ITypedOperation<TInput, TOutput>`
-  - API fluente `.Pipe<TIn, TOut>().Then<TNext>().Finally()`
+  - Fluent API `.Pipe<TIn, TOut>().Then<TNext>().Finally()`
   - `IOperationResult<T>`, `OperationChain<T>`
-- Contexto:
+- Context:
   - `IPipelineContext` (CorrelationId, CausationId, Metadata, User)
   - State Snapshots
   - Activity spans
-- Fluxo Avançado:
+- Advanced Flow:
   - Fork/Join pattern
   - Dependency Graph
   - OperationPriority
-  - Saga Pattern com compensação
+  - Saga Pattern with compensation
   - Checkpoint/Resume
-- Observabilidade:
-  - Métricas por operação (duration, memory, success rate)
-  - Logging estruturado
-  - Pipeline Visualization (diagrama de fluxo)
-  - Health Check agregado
-  - Eventos: OnOperationStart, OnOperationEnd, OnPipelineComplete
-- Integração: FluentValidation, IAsyncEnumerable, IDistributedCache, OpenTelemetry
+- Observability:
+  - Metrics per operation (duration, memory, success rate)
+  - Structured logging
+  - Pipeline Visualization (flow diagram)
+  - Aggregated Health Check
+  - Events: OnOperationStart, OnOperationEnd, OnPipelineComplete
+- Integration: FluentValidation, IAsyncEnumerable, IDistributedCache, OpenTelemetry
 
 #### WebAPI
 - Exception Handling:
   - ProblemDetails (RFC 7807)
   - `ExceptionToProblemDetailsMapper`
-  - Mapeamento de exceções de domínio para HTTP status codes
+  - Domain exception mapping to HTTP status codes
 - Rate Limiting:
-  - Políticas por IP, User, API Key
+  - Policies by IP, User, API Key
   - Fixed/Sliding Window, Token Bucket
-  - Headers X-RateLimit-*
-  - Redis para distribuído
-- Idempotência:
+  - X-RateLimit-* headers
+  - Redis for distributed
+- Idempotency:
   - `IdempotencyKeyMiddleware`
-  - Integração com `IIdempotentCommand`
+  - Integration with `IIdempotentCommand`
   - Retry-after headers
-- Segurança:
+- Security:
   - Security headers (HSTS, CSP, X-Frame-Options)
   - API Key authentication
   - IP filtering
   - Input sanitization
-- Observabilidade:
-  - Request/Response logging com masking
+- Observability:
+  - Request/Response logging with masking
   - OpenTelemetry tracing
-  - Métricas de endpoints
+  - Endpoint metrics
   - Correlation ID propagation
 - API Versioning: URL, Header, Query String
 - Health Checks: `/health`, `/health/ready`, `/health/live`
@@ -476,17 +476,17 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `IApplicationService<TEntity, TDto, TCreateDto, TUpdateDto>`
   - `QueryService`, `CommandService` (CQRS light)
   - `IReadOnlyApplicationService<T>`
-- AutoMapper integrado
-- Validation pipeline com `IValidationService<T>`
-- Transaction scope com `[Transactional]`
+- Integrated AutoMapper
+- Validation pipeline with `IValidationService<T>`
+- Transaction scope with `[Transactional]`
 - Specification Pattern: `GetBySpecificationAsync<TSpec>()`
 - Exception handling: `ExceptionToResultMapper`, Result status codes
-- Observabilidade: Logging, Audit trail, OpenTelemetry, Correlation ID
-- Cache: `[Cacheable]`, invalidação automática
+- Observability: Logging, Audit trail, OpenTelemetry, Correlation ID
+- Cache: `[Cacheable]`, automatic invalidation
 - Pagination: `PagedResult<T>`, cursor-based
-- Soft delete automático
+- Automatic soft delete
 
-#### Infrastructure Base
+#### Base Infrastructure
 - HTTP Client:
   - `ITypedHttpClient<TApi>`, `HttpClientBuilder`
   - Delegating handlers: Logging, Auth, Correlation, Telemetry, Retry, CircuitBreaker, Timeout, Compression
@@ -512,95 +512,91 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Secret Providers:
   - `ISecretProvider`
   - Azure KeyVault, AWS Secrets Manager, Environment Variables
-- Health Checks para todos os subsistemas
+- Health Checks for all subsystems
 
-#### Caching Avançado
+#### Advanced Caching
 - `ICacheProvider`: Memory, Distributed, HybridCache
 - Patterns: Cache-Aside, Read-Through, Write-Through, Write-Behind, Refresh-Ahead
 - Multi-level cache (L1 + L2)
-- Invalidação: Tags, Pub/sub, Dependency tracking
-- Resiliência: Circuit breaker, Fallback, Graceful degradation
+- Invalidation: Tags, Pub/sub, Dependency tracking
+- Resilience: Circuit breaker, Fallback, Graceful degradation
 - Performance: Compression, Batch operations, Prefetching, Warming
-- Observabilidade: Metrics, Tracing, Health checks
+- Observability: Metrics, Tracing, Health checks
 
-#### CronJob Melhorado
-- Correções: Memory leak, IAsyncDisposable, PeriodicTimer
-- Resiliência: Retry policy, Circuit breaker, Overlapping control, Graceful shutdown
-- Observabilidade: Health checks, Métricas, OpenTelemetry spans, Logging estruturado
-- Funcionalidades:
+#### Improved CronJob
+- Fixes: Memory leak, IAsyncDisposable, PeriodicTimer
+- Resilience: Retry policy, Circuit breaker, Overlapping control, Graceful shutdown
+- Observability: Health checks, Metrics, OpenTelemetry spans, Structured logging
+- Features:
   - `ICronJobContext` (JobId, StartTime, Attempt)
-  - CRON de 6 campos (segundos)
+  - 6-field CRON (seconds)
   - Job dependencies
   - Distributed locking
   - `ICronJobStateStore`
-  - Pausar/resumir em runtime
+  - Pause/resume at runtime
   - Hooks: OnJobStarting, OnJobCompleted, OnJobFailed
-- Configuração: `CronJobOptions<T>`, `CronJobGlobalOptions`, appsettings.json, validação no startup
+- Configuration: `CronJobOptions<T>`, `CronJobGlobalOptions`, appsettings.json, startup validation
 
 #### Core Fundamentals
 - Guard clauses: `Guard.Against.Null`, `NullOrEmpty`, `OutOfRange`, `NegativeOrZero`, `InvalidEmail`, `InvalidCpf`, `InvalidCnpj`, `Default`, `InvalidFormat`
-- ValueObjects: Email, Cpf, Cnpj, Money, Address, DateRange, Percentage, PhoneNumber (com TryParse e implicit operators)
-- Strongly-typed IDs: `EntityId<T>` com conversores EF Core e JSON
-- Functional patterns: `Maybe<T>`, `Either<TLeft, TRight>` com Map, Bind, Match
-- Smart Enums: `Enumeration<T>` com FromValue, FromName, GetAll
+- ValueObjects: Email, Cpf, Cnpj, Money, Address, DateRange, Percentage, PhoneNumber (with TryParse and implicit operators)
+- Strongly-typed IDs: `EntityId<T>` with EF Core and JSON converters
+- Functional patterns: `Maybe<T>`, `Either<TLeft, TRight>` with Map, Bind, Match
+- Smart Enums: `Enumeration<T>` with FromValue, FromName, GetAll
 - Entity interfaces: `IEntity<TId>`, `IAuditableEntity`, `ISoftDeletable`, `ITenantEntity`, `IVersionedEntity`
 - `IClock`, `SystemClock`, `TestClock`
 - `IGuidGenerator`, `SequentialGuidGenerator`
 - Nullable reference types
 
-#### Exceções
+#### Exceptions
 - `NotFoundException`, `ConflictException`, `UnauthorizedException`, `ForbiddenException`, `DomainException`
-- ErrorCode padronizado
+- Standardized ErrorCode
 
-#### BusinessResult Melhorado
+#### Improved BusinessResult
 - `BusinessResult.Success<T>()`, `BusinessResult.Failure<T>()`, `BusinessResult.From<T>()`
 - `Match<TResult>()`, `Bind<TNew>()`
 - Implicit operators
 - `BusinessResultFunctionalExtensions`: Map, Tap, Ensure
-- `IStructuredMessageResult` com código de erro estruturado
+- `IStructuredMessageResult` with structured error code
 
-### Descontinuado (Deprecated)
+### Deprecated
 
-> **⚠️ APIs marcadas para remoção na próxima major version**
+> **⚠️ APIs marked for removal in the next major version**
 
-- **Telemetria Legada**:
+- **Legacy Telemetry**:
   - `TelemetryHelper` → Use `ILogger<T>`
   - `TelemetryLevels` → Use `LogLevel`
   - `ITelemetryService` → Use `ILogger<T>`
   - `AddMvp24HoursTelemetry()` → Use `AddMvp24HoursObservability()`
-  - **Guia de Migração**: `docs/*/observability/migration.md`
+  - **Migration Guide**: `docs/en-us/observability/migration.md`
 
-- **Resiliência HTTP Legada**:
+- **Legacy HTTP Resilience**:
   - `HttpClientExtensions` → Use `AddStandardResilienceHandler()`
   - `HttpPolicyHelper` → Use `Microsoft.Extensions.Http.Resilience`
-  - `HttpClientResilienceExtensions` → Use APIs nativas
-  - **Guia de Migração**: `docs/*/modernization/http-resilience.md`
+  - `HttpClientResilienceExtensions` → Use native APIs
+  - **Migration Guide**: `docs/en-us/modernization/http-resilience.md`
 
-- **Resiliência Genérica Legada**:
+- **Legacy Generic Resilience**:
   - `MvpExecutionStrategy` → Use `ResiliencePipeline`
   - `MongoDbResiliencyPolicy` → Use `ResiliencePipeline`
   - `RetryPipelineMiddleware` → Use `NativePipelineResilienceMiddleware`
   - `CircuitBreakerPipelineMiddleware` → Use `NativePipelineResilienceMiddleware`
   - `RetryPolicy<T>`, `CircuitBreaker<T>` → Use `ResiliencePipeline`
-  - **Guia de Migração**: `docs/*/modernization/generic-resilience.md`
+  - **Migration Guide**: `docs/en-us/modernization/generic-resilience.md`
 
-- **Cache Legado**:
+- **Legacy Cache**:
   - `MultiLevelCache` → Use `HybridCache`
-  - **Guia de Migração**: `docs/*/modernization/hybrid-cache.md`
+  - **Migration Guide**: `docs/en-us/modernization/hybrid-cache.md`
 
-### Documentação
+### Documentation
 
-#### Nova Estrutura
-- `docs/pt-br/cqrs/` - Documentação CQRS completa (20+ documentos)
-- `docs/en-us/cqrs/` - CQRS documentation (20+ documents)
-- `docs/pt-br/core/` - Documentação Core (10 documentos)
+#### New Structure
+- `docs/en-us/cqrs/` - Complete CQRS documentation (20+ documents)
 - `docs/en-us/core/` - Core documentation (10 documents)
-- `docs/pt-br/observability/` - Observabilidade (6 documentos)
 - `docs/en-us/observability/` - Observability (6 documents)
-- `docs/pt-br/modernization/` - Modernização .NET 9 (15+ documentos)
 - `docs/en-us/modernization/` - .NET 9 Modernization (15+ documents)
 
-#### Documentos CQRS
+#### CQRS Documents
 - home.md, getting-started.md, mediator.md, commands.md, queries.md
 - notifications.md, behaviors.md, validation-behavior.md
 - domain-events.md, integration-events.md
@@ -609,14 +605,14 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - event-sourcing/*, saga/*, resilience/*, observability/*
 - multi-tenancy.md, scheduled-commands.md, specifications.md
 
-#### Documentos Core
+#### Core Documents
 - home.md, guard-clauses.md, value-objects.md, strongly-typed-ids.md
 - functional-patterns.md, smart-enums.md, infrastructure-abstractions.md, entity-interfaces.md
 
-#### Documentos Observability
+#### Observability Documents
 - home.md, logging.md, tracing.md, metrics.md, migration.md, exporters.md
 
-#### Documentos Modernization
+#### Modernization Documents
 - dotnet9-features.md, migration-guide.md
 - http-resilience.md, generic-resilience.md, rate-limiting.md
 - time-provider.md, periodic-timer.md, options-configuration.md, channels.md
@@ -624,326 +620,326 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - problem-details.md, minimal-apis.md, source-generators.md
 - native-openapi.md, aspire.md
 
-### Testes
+### Tests
 
-- 1099+ tarefas concluídas (86.6% do plano)
-- 1000+ testes unitários
-- Testes de integração com Testcontainers (SQL Server, MongoDB)
-- Benchmarks de performance vs MediatR
-- Helpers de teste para observabilidade
+- 1099+ tasks completed (86.6% of the plan)
+- 1000+ unit tests
+- Integration tests with Testcontainers (SQL Server, MongoDB)
+- Performance benchmarks vs MediatR
+- Observability test helpers
 
-### Melhorado
+### Improved
 
-- Performance geral com .NET 9 e source generators
-- Tipagem com nullable reference types
-- Documentação XML em todas as APIs públicas
-- IntelliSense com exemplos práticos
+- Overall performance with .NET 9 and source generators
+- Typing with nullable reference types
+- XML documentation on all public APIs
+- IntelliSense with practical examples
 
-### Corrigido
+### Fixed
 
-- Memory leak em CronJob `ResetServiceProvider`
-- Diversos warnings de nullability
+- Memory leak in CronJob `ResetServiceProvider`
+- Various nullability warnings
 
 ---
 
 ## [8.3.261] - 2024
 
-### Adicionado
-- **CronJob**: Implementação de suporte a tarefas agendadas
-  - Configuração fluente de schedules
-  - Suporte a expressões cron
-  - Injeção de dependência para jobs
-  - Hosted service integrado
+### Added
+- **CronJob**: Scheduled task support implementation
+  - Fluent schedule configuration
+  - Cron expression support
+  - Dependency injection for jobs
+  - Integrated hosted service
 
-### Detalhes
-Esta versão introduz o módulo `Mvp24Hours.Infrastructure.CronJob` permitindo agendar tarefas recorrentes de forma simples e integrada ao ASP.NET Core.
+### Details
+This release introduces the `Mvp24Hours.Infrastructure.CronJob` module, enabling simple recurring task scheduling integrated with ASP.NET Core.
 
-**Exemplo de uso:**
+**Usage example:**
 ```csharp
 services.AddMvp24HoursCronJob(config =>
 {
-    config.AddJob<MyScheduledJob>("0 */5 * * * *"); // A cada 5 minutos
+    config.AddJob<MyScheduledJob>("0 */5 * * * *"); // Every 5 minutes
 });
 ```
 
 ## [8.2.102] - 2024
 
-### Adicionado
-- **Minimal API**: Manipuladores de rotas para conversão e vinculação de parâmetros
-  - Binders customizados para tipos complexos
-  - Conversores para tipos primitivos
-  - Suporte a validação automática
-  - Integração com BusinessResult pattern
+### Added
+- **Minimal API**: Route handlers for parameter conversion and binding
+  - Custom binders for complex types
+  - Converters for primitive types
+  - Automatic validation support
+  - Integration with BusinessResult pattern
 
-### Melhorado
-- Suporte aprimorado para Minimal APIs do .NET 6+
-- Binding automático de DTOs em rotas mínimas
-- Validação integrada em endpoints Minimal API
+### Improved
+- Enhanced support for .NET 6+ Minimal APIs
+- Automatic DTO binding in minimal routes
+- Integrated validation in Minimal API endpoints
 
-### Detalhes
-Facilita o uso do padrão Minimal API mantendo a robustez dos binders e validações da biblioteca.
+### Details
+Makes it easier to use the Minimal API pattern while keeping the library's binders and validations robust.
 
 ## [8.2.101] - 2024
 
-### Mudado
-- **Migração para .NET 8**: Refatoração completa para .NET 8
-  - Atualização de todas as dependências para .NET 8
-  - Uso de recursos modernos do C# 12
-  - Otimizações de performance do .NET 8
-  - Primary constructors onde apropriado
+### Changed
+- **Migration to .NET 8**: Complete refactoring for .NET 8
+  - All dependencies updated for .NET 8
+  - Use of modern C# 12 features
+  - .NET 8 performance optimizations
+  - Primary constructors where appropriate
   - Collection expressions
 
-### Removido
-- Suporte a versões anteriores ao .NET 8
-- Pacotes obsoletos e substituídos
+### Removed
+- Support for versions prior to .NET 8
+- Obsolete packages and replacements
 
-### Detalhes
-Grande marco de migração para .NET 8, trazendo melhorias de performance e recursos modernos da linguagem.
+### Details
+Major milestone migration to .NET 8, bringing performance improvements and modern language features.
 
 ---
 
-# Histórico .NET Core / .NET 6
+# .NET Core / .NET 6 History
 
 ## [4.1.191] - 2023
 
-### Mudado
-- **Mapeamento Assíncrono**: Refatoração para mapeamento de resultados assíncronos
-  - Novos métodos de extensão para `Task<T>`
-  - Suporte a `ValueTask<T>`
-  - Mapeamento automático de `IBusinessResult<T>` assíncrono
+### Changed
+- **Async Mapping**: Refactoring for asynchronous result mapping
+  - New extension methods for `Task<T>`
+  - Support for `ValueTask<T>`
+  - Automatic mapping of async `IBusinessResult<T>`
 
-### Melhorado
-- Performance em operações assíncronas
-- Redução de alocações de memória
+### Improved
+- Performance in async operations
+- Memory allocation reduction
 
 ## [4.1.181] - 2023
 
-### Removido
-- **Anti-patterns**: Remoção de padrões problemáticos identificados
-  - Eliminação de acoplamentos desnecessários
-  - Remoção de dependências circulares
-  - Simplificação de abstrações excessivas
+### Removed
+- **Anti-patterns**: Removal of identified problematic patterns
+  - Elimination of unnecessary coupling
+  - Removal of circular dependencies
+  - Simplification of excessive abstractions
 
-### Mudado
-- **Entidades de Log**: Separação de contextos de entidade de log
-  - Uso apenas de contratos para melhor abstração
-  - Interfaces `IEntityLog<T>` e `IEntityDateLog` separadas
-  - Implementações base opcionaliz`EntityBase` separadas de `EntityBaseLog`
+### Changed
+- **Log Entities**: Separation of log entity contexts
+  - Contract-only usage for better abstraction
+  - Separate `IEntityLog<T>` and `IEntityDateLog` interfaces
+  - Optional base implementations: `EntityBase` separated from `EntityBaseLog`
 
-### Adicionado
-- Documentação arquitetural detalhada
-- Testes para contexto de banco de dados com log
+### Added
+- Detailed architectural documentation
+- Tests for database context with logging
 
-### Corrigido
-- Injeção de dependência no client do RabbitMQ
-- Injeção de dependência no Pipeline
-- Consumers isolados para client do RabbitMQ
+### Fixed
+- Dependency injection in RabbitMQ client
+- Dependency injection in Pipeline
+- Isolated consumers for RabbitMQ client
 
-### Documentação
-- Atualização e detalhamento de recursos arquiteturais
-- Exemplos de uso de entidades com auditoria
+### Documentation
+- Updated and detailed architectural resources
+- Usage examples for entities with auditing
 
 ## [3.12.262] - 2022
 
-### Mudado
-- Refatoração completa de extensões
-  - Organização por namespace
-  - Remoção de duplicações
-  - Padronização de nomenclatura
+### Changed
+- Complete extension refactoring
+  - Organization by namespace
+  - Removal of duplications
+  - Naming standardization
 
 ## [3.12.261] - 2022
 
-### Adicionado
-- Testes para middlewares customizados
-- Cobertura de testes para WebAPI
+### Added
+- Tests for custom middlewares
+- WebAPI test coverage
 
 ## [3.12.221] - 2022
 
-### Adicionado
-- **Resiliência**: Implementação de Polly para tolerância a falhas
-  - Retry policies configuráveis
+### Added
+- **Resilience**: Polly implementation for fault tolerance
+  - Configurable retry policies
   - Circuit breaker pattern
   - Timeout policies
   - Fallback strategies
 
-- **Delegation Handlers**: Propagação de chaves no Header
-  - Correlation ID automático
-  - Propagação de Authorization header
-  - Headers customizados configuráveis
-  - Logging de requisições HTTP
+- **Delegation Handlers**: Header key propagation
+  - Automatic Correlation ID
+  - Authorization header propagation
+  - Configurable custom headers
+  - HTTP request logging
 
-### Corrigido
-- Carregamento automático de classes de mapeamento com `IMapFrom`
-- Bug de reflexão em assemblies dinâmicos
+### Fixed
+- Automatic loading of mapping classes with `IMapFrom`
+- Reflection bug in dynamic assemblies
 
-### Detalhes
-Esta versão trouxe grande melhoria em resiliência e observabilidade de aplicações distribuídas.
+### Details
+This release brought major improvements in resilience and observability for distributed applications.
 
 ## [3.12.151] - 2022
 
-### Mudado
-- **IMapFrom**: Remoção de tipagem genérica redundante
-  - Simplificação da interface
-  - Detecção automática de tipos
-  - Configuração mais limpa
+### Changed
+- **IMapFrom**: Removal of redundant generic typing
+  - Interface simplification
+  - Automatic type detection
+  - Cleaner configuration
 
-### Adicionado
-- **Testcontainers**: Suporte para testes com containers Docker
+### Added
+- **Testcontainers**: Support for Docker container tests
   - RabbitMQ testcontainer
   - Redis testcontainer
   - MongoDB testcontainer
-  - Configuração automática de testes de integração
+  - Automatic integration test configuration
 
-### Detalhes
-Testcontainers revolucionaram os testes de integração, permitindo testes reais contra serviços em containers Docker.
+### Details
+Testcontainers revolutionized integration testing, enabling real tests against services in Docker containers.
 
 ## [3.2.241] - 2021
 
-### Mudado
-- **Configuração Fluente**: Migração de configurações JSON para extensões fluentes
-  - API fluente para DbContext
-  - Configuração fluente para RabbitMQ
-  - Configuração fluente para Redis
-  - Configuração fluente para Pipeline
+### Changed
+- **Fluent Configuration**: Migration from JSON configurations to fluent extensions
+  - Fluent API for DbContext
+  - Fluent configuration for RabbitMQ
+  - Fluent configuration for Redis
+  - Fluent configuration for Pipeline
 
-- **Padrão de Notificação**: Substituição do sistema de notificações
-  - Novo `BusinessResult<T>` com mensagens integradas
-  - Remoção de notification context separado
-  - Mensagens tipadas (Info, Error, Warning, Success)
+- **Notification Pattern**: Notification system replacement
+  - New `BusinessResult<T>` with integrated messages
+  - Removal of separate notification context
+  - Typed messages (Info, Error, Warning, Success)
 
-### Adicionado
-- **HealthCheck**: Suporte completo a health checks
-  - Health checks para SQL Server, PostgreSQL, MySQL
-  - Health checks para MongoDB
-  - Health checks para Redis
-  - Health checks para RabbitMQ
-  - WebStatus project com HealthCheckUI
+### Added
+- **HealthCheck**: Full health check support
+  - Health checks for SQL Server, PostgreSQL, MySQL
+  - Health checks for MongoDB
+  - Health checks for Redis
+  - Health checks for RabbitMQ
+  - WebStatus project with HealthCheckUI
 
-- **Telemetria**: Sistema de telemetria customizável
-  - Trace/Verbose em todas as bibliotecas
-  - Níveis de log configuráveis
-  - Filtros por operação
-  - Integração com providers de logging
+- **Telemetry**: Customizable telemetry system
+  - Trace/Verbose across all libraries
+  - Configurable log levels
+  - Filters by operation
+  - Integration with logging providers
 
-- **RabbitMQ Avançado**: Recursos avançados de mensageria
-  - Dead Letter Queue configurável
-  - Conexão persistente com Polly
-  - Consumer assíncrono
-  - Retry automático
+- **Advanced RabbitMQ**: Advanced messaging features
+  - Configurable Dead Letter Queue
+  - Persistent connection with Polly
+  - Async consumer
+  - Automatic retry
 
-### Melhorado
-- **Transaction Isolation**: Configuração de nível de isolamento para EF
-  - Transaction scope configurável
-  - Read committed por padrão
-  - Otimização para leituras
+### Improved
+- **Transaction Isolation**: Isolation level configuration for EF
+  - Configurable transaction scope
+  - Read committed by default
+  - Read optimization
 
-- **Pipeline**: Melhorias no sistema de pipeline
-  - Adição de mensagens ao pacote durante execução
-  - Suporte a operações de rollback
-  - Context compartilhado entre operações
+- **Pipeline**: Pipeline system improvements
+  - Adding messages to the package during execution
+  - Rollback operation support
+  - Shared context between operations
 
-- **Validação**: Sistema de validação aprimorado
-  - FluentValidation com mensagens estruturadas
-  - DataAnnotations com mensagens estruturadas
-  - Retorno consistente de erros
+- **Validation**: Enhanced validation system
+  - FluentValidation with structured messages
+  - DataAnnotations with structured messages
+  - Consistent error returns
 
-### Documentação
-- Documentação completa de WebAPI
-- Guias de configuração atualizados
-- Exemplos de uso de todos os recursos
+### Documentation
+- Complete WebAPI documentation
+- Updated configuration guides
+- Usage examples for all features
 
-### Detalhes
-Versão marco com grandes refatorações e novos recursos fundamentais. Introdução do padrão BusinessResult e telemetria.
+### Details
+Landmark release with major refactorings and fundamental new features. Introduction of the BusinessResult pattern and telemetry.
 
-## [3.1.x e anteriores] - 2020-2021
+## [3.1.x and earlier] - 2020-2021
 
-### Funcionalidades Base Implementadas
-- ✅ **Banco de Dados Relacional**
-  - SQL Server com Entity Framework Core
-  - PostgreSQL com Npgsql
-  - MySQL com Pomelo
+### Base Features Implemented
+- ✅ **Relational Database**
+  - SQL Server with Entity Framework Core
+  - PostgreSQL with Npgsql
+  - MySQL with Pomelo
   - Repository pattern
   - Unit of Work pattern
-  - Soft delete automático
-  - Auditoria automática
+  - Automatic soft delete
+  - Automatic auditing
 
-- ✅ **Banco de Dados NoSQL**
-  - MongoDB com driver oficial
-  - Redis com StackExchange.Redis
-  - Repository pattern para NoSQL
-  - Cache distribuído
+- ✅ **NoSQL Database**
+  - MongoDB with official driver
+  - Redis with StackExchange.Redis
+  - Repository pattern for NoSQL
+  - Distributed cache
 
 - ✅ **Message Broker**
-  - RabbitMQ com cliente oficial
+  - RabbitMQ with official client
   - Publisher/Subscriber pattern
   - Work Queue pattern
   - Request/Reply pattern
 
 - ✅ **Pipeline**
   - Pipe and Filters pattern
-  - Operações sequenciais
-  - Rollback automático
-  - Injeção de dependência
+  - Sequential operations
+  - Automatic rollback
+  - Dependency injection
 
-- ✅ **Documentação**
+- ✅ **Documentation**
   - Swagger/OpenAPI integration
   - XML comments support
-  - Customização de UI
+  - UI customization
 
-- ✅ **Mapeamento**
+- ✅ **Mapping**
   - AutoMapper integration
-  - Profiles automáticos
+  - Automatic profiles
   - IMapFrom interface
 
 - ✅ **Logging**
-  - Integração com ILogger
+  - ILogger integration
   - Structured logging
-  - Múltiplos providers
+  - Multiple providers
 
-- ✅ **Validação**
+- ✅ **Validation**
   - FluentValidation support
   - Data Annotations support
-  - Validações customizadas
+  - Custom validations
 
 - ✅ **Specification Pattern**
-  - Expressões LINQ reutilizáveis
-  - Composição de specifications
+  - Reusable LINQ expressions
+  - Specification composition
   - AND, OR, NOT operators
 
 ---
 
-## Tipos de Mudanças
+## Types of Changes
 
-- `Adicionado` para novos recursos
-- `Mudado` para mudanças em recursos existentes
-- `Descontinuado` para recursos que serão removidos
-- `Removido` para recursos removidos
-- `Corrigido` para correções de bugs
-- `Segurança` para vulnerabilidades
+- `Added` for new features
+- `Changed` for changes in existing features
+- `Deprecated` for features that will be removed
+- `Removed` for removed features
+- `Fixed` for bug fixes
+- `Security` for vulnerabilities
 
-## Convenções de Versionamento
+## Versioning Conventions
 
-Este projeto segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/):
-- **MAJOR**: Mudanças incompatíveis na API
-- **MINOR**: Funcionalidades adicionadas de forma retrocompatível
-- **PATCH**: Correções de bugs retrocompatíveis
+This project follows [Semantic Versioning](https://semver.org/):
+- **MAJOR**: Incompatible API changes
+- **MINOR**: Backward-compatible feature additions
+- **PATCH**: Backward-compatible bug fixes
 
-Formato: `MAJOR.MINOR.PATCH` (ex: 8.3.261)
+Format: `MAJOR.MINOR.PATCH` (e.g.: 8.3.261)
 
 ## Links
 
-- [Documentação](https://kallebelins.github.io/mvp24hours-dotnet)
-- [Repositório](https://github.com/kallebelins/mvp24hours-dotnet)
-- [Exemplos](https://github.com/kallebelins/mvp24hours-dotnet-samples)
+- [Documentation](https://kallebelins.github.io/mvp24hours-dotnet)
+- [Repository](https://github.com/kallebelins/mvp24hours-dotnet)
+- [Examples](https://github.com/kallebelins/mvp24hours-dotnet-samples)
 - [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues)
 - [Releases](https://github.com/kallebelins/mvp24hours-dotnet/releases)
 
-## Contribuindo
+## Contributing
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes sobre como contribuir com o projeto.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to the project.
 
-## Agradecimentos
+## Acknowledgments
 
-Desenvolvido com ❤️ por [Kallebe Lins](https://github.com/kallebelins).
+Built with ❤️ by [Kallebe Lins](https://github.com/kallebelins).
 
-**Quer contribuir?** Veja [CONTRIBUTING.md](CONTRIBUTING.md) para começar!
+**Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md) to get started!

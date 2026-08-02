@@ -1,25 +1,25 @@
 ---
 name: mvp24hours-router
 description: >-
-  Identifica a intenção do usuário em prompts sobre Mvp24Hours (.NET, CQRS,
-  samples) e recomenda o cenário, prompt MCP e próximos passos corretos via
-  Mvp24Hours MCP DevKit. Use quando o pedido for ambíguo, ao iniciar trabalho
-  com Mvp24Hours, ou quando o usuário perguntar "por onde começo", "qual caminho",
-  "criar API", "migrar", "portar código", "adicionar feature", "revisar solução",
-  "upgrade .NET 10", ou mencionar MCP/scenarios/playbooks.
+  Detects user intent in Mvp24Hours prompts (.NET, CQRS, samples) and recommends
+  the correct scenario, MCP prompt, and next steps via the Mvp24Hours MCP DevKit.
+  Use when the request is ambiguous, when starting Mvp24Hours work, or when the
+  user asks "where do I start", "which path", "por onde começo", "qual caminho",
+  "criar API", "migrar", "port code", "add feature", "review solution",
+  "upgrade .NET 10", or mentions MCP/scenarios/playbooks.
 ---
 
 # Mvp24Hours Router
 
-Skill de **triagem route-only** e **portável**: funciona em qualquer projeto que tenha o **Mvp24Hours MCP** configurado. Não depende de paths, manifests ou docs locais — toda rota canônica vem das tools e resources do MCP.
+**Route-only triage** skill that is **portable**: works in any project with **Mvp24Hours MCP** configured. It does not depend on local paths, manifests, or docs — every canonical route comes from MCP tools and resources.
 
-Equivalente Cursor: [`cursor-devkit/`](../../../cursor-devkit/) · VS Code: [`.github/skills/mvp24hours-router/`](../../../.github/skills/mvp24hours-router/)
+Cursor equivalent: [`devkit/cursor/`](../../../devkit/cursor/) · VS Code: [`.github/skills/mvp24hours-router/`](../../../.github/skills/mvp24hours-router/)
 
 ## Prerequisite
 
-O servidor **Mvp24Hours MCP** deve estar disponível (stdio ou HTTP). Se não estiver configurado, informe o usuário e pare — não invente cenários nem caminhos.
+The **Mvp24Hours MCP** server must be available (stdio or HTTP). If it is not configured, tell the user and stop — do not invent scenarios or paths.
 
-Descubra o servidor pelo nome configurado em `.cursor/mcp.json` (comum: `mvp24hours`). Use `GetMcpTools` se necessário.
+Discover the server by the name configured in `.cursor/mcp.json` (common: `mvp24hours`). Use `GetMcpTools` if needed.
 
 ## When to apply
 
@@ -34,20 +34,20 @@ Do **not** apply when the user already named a scenario and asked to execute it.
 
 ```mermaid
 flowchart TD
-    start[Receber prompt] --> mcpList["MCP list_scenarios"]
-    mcpList --> classify[Classificar intenção por sinais]
+    start[Receive prompt] --> mcpList["MCP list_scenarios"]
+    mcpList --> classify[Classify intent by signals]
     classify --> playbook["MCP get_scenario_playbook"]
-    playbook --> enrich{Precisa enriquecer?}
+    playbook --> enrich{Needs enrichment?}
     enrich -->|Feature| resolveFeat["MCP resolve_feature"]
-    enrich -->|Arquitetura| resolveArch["MCP resolve_architecture"]
+    enrich -->|Architecture| resolveArch["MCP resolve_architecture"]
     enrich -->|Docs| searchDocs["MCP search_docs"]
-    enrich -->|Não| present[Apresentar rota]
+    enrich -->|No| present[Present route]
     resolveFeat --> present
     resolveArch --> present
     searchDocs --> present
-    present --> wait[Aguardar confirmação]
-    wait -->|Confirmado| execute[Executar playbook MCP]
-    wait -->|Ajuste| classify
+    present --> wait[Wait for confirmation]
+    wait -->|Confirmed| execute[Execute MCP playbook]
+    wait -->|Adjust| classify
 ```
 
 ### Step 1 — Bootstrap from MCP (always first)
@@ -87,20 +87,20 @@ Disambiguation rules: [routing-matrix.md](routing-matrix.md)
 Use playbook data returned by MCP — do not copy steps from memory:
 
 ```markdown
-## Rota recomendada
+## Recommended route
 
-**Intenção detectada:** [one-sentence summary]
-**Cenário:** [scenarioId] — [Title from get_scenario_playbook]
-**Prompt MCP:** [Prompt from get_scenario_playbook, or prompt name for standalone routes]
+**Detected intent:** [one-sentence summary]
+**Scenario:** [scenarioId] — [Title from get_scenario_playbook]
+**MCP prompt:** [Prompt from get_scenario_playbook, or prompt name for standalone routes]
 
-### Próximos passos (após sua confirmação)
+### Next steps (after your confirmation)
 1. [step.title from playbook — tool: step.tool]
 2. ...
 
-### Inputs que preciso de você
+### Inputs I need from you
 - [inputs from playbook]
 
-Confirma que devo seguir este caminho? (ou diga o que ajustar)
+Should I follow this path? (or tell me what to adjust)
 ```
 
 For consultation-only routes, omit the scenario line and list MCP tools to call.

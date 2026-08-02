@@ -1,239 +1,239 @@
-# Contribuindo para Mvp24Hours
+# Contributing to Mvp24Hours
 
-Primeiramente, obrigado por considerar contribuir com o Mvp24Hours! 🎉
+First of all, thank you for considering contributing to Mvp24Hours! 🎉
 
-É graças a pessoas como você que o Mvp24Hours continua sendo uma biblioteca útil e de qualidade para a comunidade .NET.
+It is thanks to people like you that Mvp24Hours continues to be a useful, high-quality library for the .NET community.
 
-## 📋 Índice
+## 📋 Table of Contents
 
-- [Código de Conduta](#código-de-conduta)
-- [Como Posso Contribuir?](#como-posso-contribuir)
-- [Primeiros Passos](#primeiros-passos)
-- [Processo de Desenvolvimento](#processo-de-desenvolvimento)
-- [Padrões de Código](#padrões-de-código)
-- [Commits e Pull Requests](#commits-e-pull-requests)
-- [Reportando Bugs](#reportando-bugs)
-- [Sugerindo Melhorias](#sugerindo-melhorias)
-- [Documentação](#documentação)
-- [Testes](#testes)
-- [Comunidade](#comunidade)
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+- [Getting Started](#getting-started)
+- [Development Process](#development-process)
+- [Code Standards](#code-standards)
+- [Commits and Pull Requests](#commits-and-pull-requests)
+- [Reporting Bugs](#reporting-bugs)
+- [Suggesting Improvements](#suggesting-improvements)
+- [Documentation](#documentation)
+- [Tests](#tests)
+- [Community](#community)
 
-## 📜 Código de Conduta
+## 📜 Code of Conduct
 
-Este projeto e todos os participantes são regidos por um código de conduta. Ao participar, você concorda em manter este código. Por favor, reporte comportamentos inaceitáveis para [kallebe.santos@outlook.com].
+This project and all participants are governed by a code of conduct. By participating, you agree to uphold this code. Please report unacceptable behavior to [kallebe.santos@outlook.com].
 
-### Nossos Padrões
+### Our Standards
 
-**Comportamentos que contribuem para criar um ambiente positivo incluem:**
+**Behaviors that contribute to a positive environment include:**
 
-- ✅ Usar linguagem acolhedora e inclusiva
-- ✅ Respeitar pontos de vista e experiências diferentes
-- ✅ Aceitar críticas construtivas graciosamente
-- ✅ Focar no que é melhor para a comunidade
-- ✅ Mostrar empatia com outros membros da comunidade
+- ✅ Using welcoming and inclusive language
+- ✅ Being respectful of differing viewpoints and experiences
+- ✅ Gracefully accepting constructive criticism
+- ✅ Focusing on what is best for the community
+- ✅ Showing empathy toward other community members
 
-**Comportamentos inaceitáveis incluem:**
+**Unacceptable behaviors include:**
 
-- ❌ Uso de linguagem ou imagens sexualizadas
-- ❌ Trolling, comentários insultuosos/depreciativos e ataques pessoais ou políticos
-- ❌ Assédio público ou privado
-- ❌ Publicar informações privadas de outros sem permissão explícita
-- ❌ Outras condutas que possam ser razoavelmente consideradas inapropriadas
+- ❌ Use of sexualized language or imagery
+- ❌ Trolling, insulting or derogatory comments, and personal or political attacks
+- ❌ Public or private harassment
+- ❌ Publishing others' private information without explicit permission
+- ❌ Other conduct that could reasonably be considered inappropriate
 
-## 🤝 Como Posso Contribuir?
+## 🤝 How Can I Contribute?
 
-Existem várias maneiras de contribuir com o Mvp24Hours:
+There are several ways to contribute to Mvp24Hours:
 
-### 1. Reportar Bugs 🐛
-Encontrou um bug? [Abra uma issue](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=bug_report.md)
+### 1. Report Bugs 🐛
+Found a bug? [Open an issue](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=bug_report.md)
 
-### 2. Sugerir Melhorias 💡
-Tem uma ideia? [Sugira uma melhoria](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=feature_request.md)
+### 2. Suggest Improvements 💡
+Have an idea? [Suggest an improvement](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=feature_request.md)
 
-### 3. Melhorar Documentação 📖
-A documentação nunca é perfeita. Correções e melhorias são sempre bem-vindas!
+### 3. Improve Documentation 📖
+Documentation is never perfect. Corrections and improvements are always welcome!
 
-### 4. Escrever Código 💻
-- Implementar novas funcionalidades
-- Corrigir bugs existentes
-- Melhorar performance
-- Adicionar testes
+### 4. Write Code 💻
+- Implement new features
+- Fix existing bugs
+- Improve performance
+- Add tests
 
-### 5. Revisar Pull Requests 👀
-Ajude revisando PRs de outros contribuidores
+### 5. Review Pull Requests 👀
+Help by reviewing PRs from other contributors
 
-### 6. Compartilhar 📢
-Compartilhe o projeto nas redes sociais, blogs, eventos, etc.
+### 6. Share 📢
+Share the project on social media, blogs, events, etc.
 
-## 🚀 Primeiros Passos
+## 🚀 Getting Started
 
-### Pré-requisitos
+### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) ou superior
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Git](https://git-scm.com/)
-- IDE recomendada: [Visual Studio 2022](https://visualstudio.microsoft.com/) ou [Visual Studio Code](https://code.visualstudio.com/)
-- [Docker](https://www.docker.com/) (opcional, para testes de integração)
+- Recommended IDE: [Visual Studio 2022](https://visualstudio.microsoft.com/) or [Visual Studio Code](https://code.visualstudio.com/)
+- [Docker](https://www.docker.com/) (optional, for integration tests)
 
-### Configurando o Ambiente
+### Setting Up the Environment
 
-1. **Fork o repositório**
+1. **Fork the repository**
    
-   Clique no botão "Fork" no canto superior direito da página do GitHub.
+   Click the "Fork" button in the upper-right corner of the GitHub page.
 
-2. **Clone seu fork**
+2. **Clone your fork**
    ```bash
-   git clone https://github.com/seu-usuario/mvp24hours-dotnet.git
+   git clone https://github.com/your-username/mvp24hours-dotnet.git
    cd mvp24hours-dotnet
    ```
 
-3. **Adicione o repositório original como upstream**
+3. **Add the upstream repository**
    ```bash
    git remote add upstream https://github.com/kallebelins/mvp24hours-dotnet.git
    ```
 
-4. **Restaure as dependências**
+4. **Restore dependencies**
    ```bash
    dotnet restore
    ```
 
-5. **Compile o projeto**
+5. **Build the project**
    ```bash
    dotnet build
    ```
 
-6. **Execute os testes**
+6. **Run the tests**
    ```bash
    dotnet test
    ```
 
-### Estrutura do Projeto
+### Project Structure
 
 ```
 mvp24hours-dotnet/
 ├── src/
-│   ├── Mvp24Hours.Core/                    # Contratos e interfaces base
-│   ├── Mvp24Hours.Application/             # Services e lógica de aplicação
-│   ├── Mvp24Hours.Infrastructure/          # Utilitários e helpers
+│   ├── Mvp24Hours.Core/                    # Base contracts and interfaces
+│   ├── Mvp24Hours.Application/             # Services and application logic
+│   ├── Mvp24Hours.Infrastructure/          # Utilities and helpers
 │   ├── Mvp24Hours.Infrastructure.Data.EFCore/     # Entity Framework Core
 │   ├── Mvp24Hours.Infrastructure.Data.MongoDb/    # MongoDB
-│   ├── Mvp24Hours.Infrastructure.Caching/         # Cache base
+│   ├── Mvp24Hours.Infrastructure.Caching/         # Base cache
 │   ├── Mvp24Hours.Infrastructure.Caching.Redis/   # Redis
 │   ├── Mvp24Hours.Infrastructure.RabbitMQ/        # RabbitMQ
 │   ├── Mvp24Hours.Infrastructure.Pipe/            # Pipeline
 │   ├── Mvp24Hours.Infrastructure.CronJob/         # CronJob
-│   ├── Mvp24Hours.WebAPI/                         # Extensões Web API
-│   └── Tests/                              # Testes unitários e integração
-├── docs/                                   # Documentação
-├── CHANGELOG.md                            # Histórico de mudanças
-├── CONTRIBUTING.md                         # Este arquivo
-└── README.md                               # Readme principal
+│   ├── Mvp24Hours.WebAPI/                         # Web API extensions
+│   └── Tests/                              # Unit and integration tests
+├── docs/                                   # Documentation
+├── CHANGELOG.md                            # Change history
+├── CONTRIBUTING.md                         # This file
+└── README.md                               # Main readme
 ```
 
-## 🔨 Processo de Desenvolvimento
+## 🔨 Development Process
 
-### 1. Escolha uma Issue
+### 1. Choose an Issue
 
-Navegue pelas [issues abertas](https://github.com/kallebelins/mvp24hours-dotnet/issues) e escolha uma que interesse você.
+Browse [open issues](https://github.com/kallebelins/mvp24hours-dotnet/issues) and pick one that interests you.
 
-Issues marcadas com `good first issue` são ideais para iniciantes.
+Issues labeled `good first issue` are ideal for beginners.
 
-### 2. Crie uma Branch
+### 2. Create a Branch
 
 ```bash
-# Atualize seu fork
+# Update your fork
 git checkout main
 git pull upstream main
 
-# Crie uma nova branch
-git checkout -b feature/minha-nova-funcionalidade
-# ou
-git checkout -b fix/correcao-do-bug
+# Create a new branch
+git checkout -b feature/my-new-feature
+# or
+git checkout -b fix/bug-fix
 ```
 
-**Convenção de nomenclatura de branches:**
-- `feature/` - Para novas funcionalidades
-- `fix/` - Para correções de bugs
-- `docs/` - Para mudanças na documentação
-- `refactor/` - Para refatorações
-- `test/` - Para adição/correção de testes
-- `perf/` - Para melhorias de performance
+**Branch naming convention:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation changes
+- `refactor/` - Refactoring
+- `test/` - Test additions or fixes
+- `perf/` - Performance improvements
 
-### 3. Faça suas Alterações
+### 3. Make Your Changes
 
-- Escreva código limpo e bem documentado
-- Siga os [padrões de código](#padrões-de-código)
-- Adicione testes para novas funcionalidades
-- Atualize a documentação se necessário
+- Write clean, well-documented code
+- Follow [code standards](#code-standards)
+- Add tests for new features
+- Update documentation if necessary
 
-### 4. Teste suas Alterações
+### 4. Test Your Changes
 
 ```bash
-# Execute todos os testes
+# Run all tests
 dotnet test
 
-# Execute testes de um projeto específico
+# Run tests for a specific project
 dotnet test src/Tests/Mvp24Hours.Core.Test/
 
-# Execute com cobertura de código
+# Run with code coverage
 dotnet test /p:CollectCoverage=true
 ```
 
-### 5. Commit suas Alterações
+### 5. Commit Your Changes
 
-Veja [Commits e Pull Requests](#commits-e-pull-requests) para convenções.
+See [Commits and Pull Requests](#commits-and-pull-requests) for conventions.
 
-### 6. Push para seu Fork
+### 6. Push to Your Fork
 
 ```bash
-git push origin feature/minha-nova-funcionalidade
+git push origin feature/my-new-feature
 ```
 
-### 7. Abra um Pull Request
+### 7. Open a Pull Request
 
-- Vá para o repositório original no GitHub
-- Clique em "Pull Request"
-- Selecione sua branch
-- Preencha o template de PR com detalhes
-- Aguarde a revisão
+- Go to the upstream repository on GitHub
+- Click "Pull Request"
+- Select your branch
+- Fill in the PR template with details
+- Wait for review
 
-## 📝 Padrões de Código
+## 📝 Code Standards
 
 ### C# Style Guide
 
-Seguimos as [convenções de código do C#](https://docs.microsoft.com/pt-br/dotnet/csharp/fundamentals/coding-style/coding-conventions) da Microsoft.
+We follow Microsoft's [C# coding conventions](https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions).
 
-#### Principais Regras:
+#### Main Rules:
 
-1. **Nomenclatura**
+1. **Naming**
    ```csharp
-   // Classes, métodos e propriedades: PascalCase
+   // Classes, methods, and properties: PascalCase
    public class CustomerService { }
    public string FirstName { get; set; }
    public void GetCustomer() { }
    
-   // Variáveis locais e parâmetros: camelCase
+   // Local variables and parameters: camelCase
    var customerId = 1;
    public void Add(Customer customer) { }
    
-   // Interfaces: começam com 'I'
+   // Interfaces: start with 'I'
    public interface IRepository<T> { }
    
-   // Constantes: PascalCase
+   // Constants: PascalCase
    public const int MaxRetries = 3;
    
-   // Campos privados: começam com '_'
+   // Private fields: start with '_'
    private readonly ILogger _logger;
    ```
 
-2. **Indentação e Formatação**
+2. **Indentation and Formatting**
    ```csharp
-   // Use 4 espaços para indentação (não tabs)
-   // Chaves em nova linha (Allman style)
+   // Use 4 spaces for indentation (not tabs)
+   // Braces on a new line (Allman style)
    public void MyMethod()
    {
        if (condition)
        {
-           // código
+           // code
        }
    }
    ```
@@ -248,25 +248,25 @@ Seguimos as [convenções de código do C#](https://docs.microsoft.com/pt-br/dot
    /// <exception cref="ArgumentException">Thrown when id is invalid.</exception>
    public Customer GetById(int id)
    {
-       // implementação
+       // implementation
    }
    ```
 
 4. **Async/Await**
    ```csharp
-   // Sempre use 'Async' no nome de métodos assíncronos
+   // Always use 'Async' in async method names
    public async Task<Customer> GetCustomerAsync(int id)
    {
        return await repository.GetByIdAsync(id);
    }
    
-   // Use ConfigureAwait(false) em bibliotecas
+   // Use ConfigureAwait(false) in libraries
    var result = await operation.ExecuteAsync().ConfigureAwait(false);
    ```
 
-5. **Tratamento de Erros**
+5. **Error Handling**
    ```csharp
-   // Use exceções customizadas da hierarquia Mvp24Hours
+   // Use custom exceptions from the Mvp24Hours hierarchy
    if (customer == null)
    {
        throw new DataException(
@@ -284,52 +284,52 @@ Seguimos as [convenções de código do C#](https://docs.microsoft.com/pt-br/dot
    - **I**nterface Segregation Principle
    - **D**ependency Inversion Principle
 
-### Análise Estática
+### Static Analysis
 
-Execute análise estática antes de commitar:
+Run static analysis before committing:
 
 ```bash
-# Verificar problemas de código
+# Check for code issues
 dotnet format --verify-no-changes
 
-# Formatar automaticamente
+# Format automatically
 dotnet format
 ```
 
-## 💬 Commits e Pull Requests
+## 💬 Commits and Pull Requests
 
-### Mensagens de Commit
+### Commit Messages
 
-Seguimos o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/).
+We follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
-**Formato:**
+**Format:**
 ```
-<tipo>[escopo opcional]: <descrição>
+<type>[optional scope]: <description>
 
-[corpo opcional]
+[optional body]
 
-[rodapé opcional]
+[optional footer]
 ```
 
-**Tipos:**
-- `feat`: Nova funcionalidade
-- `fix`: Correção de bug
-- `docs`: Mudanças na documentação
-- `style`: Formatação, ponto e vírgula, etc (sem mudança de código)
-- `refactor`: Refatoração de código
-- `perf`: Melhoria de performance
-- `test`: Adição ou correção de testes
-- `chore`: Mudanças no processo de build, ferramentas, etc
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Formatting, semicolons, etc. (no code change)
+- `refactor`: Code refactoring
+- `perf`: Performance improvement
+- `test`: Test additions or fixes
+- `chore`: Build process or tooling changes
 
-**Exemplos:**
+**Examples:**
 ```bash
-# Feature simples
+# Simple feature
 git commit -m "feat: add pagination support to repository"
 
-# Fix com escopo
+# Fix with scope
 git commit -m "fix(efcore): resolve null reference in GetById method"
 
-# Com corpo detalhado
+# With detailed body
 git commit -m "feat(rabbitmq): implement dead letter queue
 
 - Add configuration for DLQ
@@ -344,191 +344,192 @@ git commit -m "feat!: change IRepository signature
 BREAKING CHANGE: GetById now returns Task<T> instead of T"
 ```
 
-### Template de Pull Request
+### Pull Request Template
 
-Ao abrir um PR, preencha o template com:
+When opening a PR, fill in the template with:
 
 ```markdown
-## Descrição
-[Descreva suas mudanças aqui]
+## Description
+[Describe your changes here]
 
-## Tipo de Mudança
+## Type of Change
 - [ ] 🐛 Bug fix (non-breaking change)
-- [ ] ✨ Nova funcionalidade (non-breaking change)
-- [ ] 💥 Breaking change (fix ou feature que causa mudanças incompatíveis)
-- [ ] 📝 Documentação
-- [ ] 🎨 Refatoração
+- [ ] ✨ New feature (non-breaking change)
+- [ ] 💥 Breaking change (fix or feature that causes incompatible changes)
+- [ ] 📝 Documentation
+- [ ] 🎨 Refactoring
 
 ## Checklist
-- [ ] Meu código segue os padrões do projeto
-- [ ] Realizei self-review do código
-- [ ] Comentei áreas complexas do código
-- [ ] Atualizei a documentação
-- [ ] Não adicionei warnings
-- [ ] Adicionei testes que provam que minha correção/funcionalidade funciona
-- [ ] Testes unitários novos e existentes passam localmente
-- [ ] Atualizei o CHANGELOG.md
+- [ ] My code follows project standards
+- [ ] I performed a self-review of the code
+- [ ] I commented complex areas of the code
+- [ ] I updated the documentation
+- [ ] I did not add warnings
+- [ ] I added tests that prove my fix/feature works
+- [ ] New and existing unit tests pass locally
+- [ ] I updated CHANGELOG.md
 
-## Como Testar?
-[Descreva os passos para testar suas mudanças]
+## How to Test?
+[Describe the steps to test your changes]
 
-## Screenshots (se aplicável)
-[Adicione screenshots se houver mudanças visuais]
+## Screenshots (if applicable)
+[Add screenshots if there are visual changes]
 
-## Issues Relacionadas
-Closes #[número da issue]
+## Related Issues
+Closes #[issue number]
 ```
 
-## 🐛 Reportando Bugs
+## 🐛 Reporting Bugs
 
-Antes de reportar um bug, verifique se já não existe uma issue aberta sobre o problema.
+Before reporting a bug, check whether an issue about the problem is already open.
 
-### Como Reportar um Bug
+### How to Report a Bug
 
-1. Vá para [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=bug_report.md)
-2. Use o template de bug report
-3. Preencha todas as seções
+1. Go to [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=bug_report.md)
+2. Use the bug report template
+3. Fill in all sections
 
-**Informações Essenciais:**
+**Essential Information:**
 
-- **Título claro e descritivo**
-- **Descrição detalhada** do problema
-- **Passos para reproduzir** o comportamento
-- **Comportamento esperado** vs **comportamento atual**
-- **Screenshots** (se aplicável)
-- **Ambiente:**
-  - Versão do Mvp24Hours
-  - Versão do .NET
-  - SO (Windows, Linux, macOS)
-  - IDE e versão
-- **Logs e stack traces** relevantes
-- **Código de exemplo** que reproduz o problema
+- **Clear, descriptive title**
+- **Detailed description** of the problem
+- **Steps to reproduce** the behavior
+- **Expected behavior** vs **actual behavior**
+- **Screenshots** (if applicable)
+- **Environment:**
+  - Mvp24Hours version
+  - .NET version
+  - OS (Windows, Linux, macOS)
+  - IDE and version
+- **Relevant logs and stack traces**
+- **Sample code** that reproduces the problem
 
-### Exemplo de Bug Report
+### Bug Report Example
 
 ```markdown
-**Descrição do Bug**
-GetById retorna null mesmo quando o registro existe no banco.
+**Bug Description**
+GetById returns null even when the record exists in the database.
 
-**Para Reproduzir**
-1. Configure DbContext com SQL Server
-2. Adicione um Customer
-3. Chame `repository.GetById(1)`
-4. Retorna null
+**To Reproduce**
+1. Configure DbContext with SQL Server
+2. Add a Customer
+3. Call `repository.GetById(1)`
+4. Returns null
 
-**Comportamento Esperado**
-Deveria retornar o customer com ID 1.
+**Expected Behavior**
+Should return the customer with ID 1.
 
-**Ambiente**
+**Environment**
 - Mvp24Hours: 9.1.x
 - .NET: 9
-- SO: Windows 11
+- OS: Windows 11
 - SQL Server: 2022
 
-**Código para Reproduzir**
+**Code to Reproduce**
 \```csharp
 var customer = new Customer { Name = "Test" };
 repository.Add(customer);
 unitOfWork.SaveChanges();
 
-var retrieved = repository.GetById(1); // Retorna null
+var retrieved = repository.GetById(1); // Returns null
 \```
 ```
 
-## 💡 Sugerindo Melhorias
+## 💡 Suggesting Improvements
 
-Sugestões de melhorias são sempre bem-vindas!
+Improvement suggestions are always welcome!
 
-### Como Sugerir uma Melhoria
+### How to Suggest an Improvement
 
-1. Vá para [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=feature_request.md)
-2. Use o template de feature request
-3. Descreva sua sugestão detalhadamente
+1. Go to [Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues/new?template=feature_request.md)
+2. Use the feature request template
+3. Describe your suggestion in detail
 
-**Informações Importantes:**
+**Important Information:**
 
-- **Problema que a feature resolve**
-- **Solução proposta** detalhada
-- **Alternativas consideradas**
-- **Exemplos de uso**
-- **Impacto em breaking changes**
-- **Benefícios para a comunidade**
+- **Problem the feature solves**
+- **Proposed solution** in detail
+- **Alternatives considered**
+- **Usage examples**
+- **Breaking change impact**
+- **Benefits for the community**
 
-### Exemplo de Feature Request
+### Feature Request Example
 
 ```markdown
-**Sua feature está relacionada a um problema?**
-Sim, atualmente não há suporte para bulk operations eficientes.
+**Is your feature related to a problem?**
+Yes, there is currently no support for efficient bulk operations.
 
-**Descreva a solução que você gostaria**
-Adicionar métodos BulkInsert, BulkUpdate e BulkDelete ao IRepository.
+**Describe the solution you'd like**
+Add BulkInsert, BulkUpdate, and BulkDelete methods to IRepository.
 
-**Exemplo de Uso**
+**Usage Example**
 \```csharp
 var customers = GetLargeCustomerList();
-repository.BulkInsert(customers); // Insere milhares de registros eficientemente
+repository.BulkInsert(customers); // Inserts thousands of records efficiently
 unitOfWork.SaveChanges();
 \```
 
-**Alternativas Consideradas**
-- Usar loop com Add() - muito lento para grandes volumes
-- Usar SQL direto - perde abstração do Repository
+**Alternatives Considered**
+- Use a loop with Add() - too slow for large volumes
+- Use raw SQL - loses Repository abstraction
 
-**Benefícios**
-- Melhora significativa de performance em cenários com muitos registros
-- Mantém a abstração do Repository Pattern
-- Facilita operações em batch
+**Benefits**
+- Significant performance improvement for high-volume scenarios
+- Maintains Repository Pattern abstraction
+- Simplifies batch operations
 ```
 
-## 📚 Documentação
+## 📚 Documentation
 
-A documentação é tão importante quanto o código!
+Documentation is as important as code!
 
-### Tipos de Documentação
+### Documentation Types
 
-1. **XML Comments** - Para IntelliSense
+1. **XML Comments** - For IntelliSense
    ```csharp
    /// <summary>
    /// Retrieves entities with pagination.
    /// </summary>
    ```
 
-2. **README** - Para visão geral de módulos
+2. **README** - Module overview
 
-3. **Docs** - Guias detalhados em `docs/`
-   - Tutoriais
-   - Exemplos práticos
-   - Arquitetura
-   - Melhores práticas
+3. **Docs** - Detailed guides in `docs/en-us/`
+   - Tutorials
+   - Practical examples
+   - Architecture
+   - Best practices
 
-4. **CHANGELOG** - Histórico de mudanças
+4. **CHANGELOG** - Change history
 
-### Como Contribuir com Documentação
+### How to Contribute to Documentation
 
-1. Melhore documentação existente
-2. Adicione exemplos práticos
-3. Corrija erros de ortografia/gramática
-4. Traduza documentação
-5. Crie tutoriais em vídeo/blog
+1. Improve existing documentation
+2. Add practical examples
+3. Fix spelling or grammar errors
+4. Create video or blog tutorials
 
-**Dica:** Documentação pode ser um ótimo primeiro PR!
+Follow the [Documentation Authoring Guide](docs/en-us/documentation-authoring-guide.md) for English documentation under `docs/en-us/**`.
 
-## 🧪 Testes
+**Tip:** Documentation can be a great first PR!
 
-Testes são obrigatórios para novas funcionalidades e correções de bugs.
+## 🧪 Tests
 
-### Estrutura de Testes
+Tests are required for new features and bug fixes.
+
+### Test Structure
 
 ```
 Tests/
-├── Mvp24Hours.Core.Test/              # Testes do Core
-├── Mvp24Hours.Application.Test/       # Testes da Application
-├── Mvp24Hours.Application.SQLServer.Test/  # Testes de integração SQL
-├── Mvp24Hours.Application.MongoDb.Test/    # Testes de integração Mongo
+├── Mvp24Hours.Core.Test/              # Core tests
+├── Mvp24Hours.Application.Test/       # Application tests
+├── Mvp24Hours.Application.SQLServer.Test/  # SQL integration tests
+├── Mvp24Hours.Application.MongoDb.Test/    # Mongo integration tests
 └── ...
 ```
 
-### Escrevendo Testes
+### Writing Tests
 
 ```csharp
 using Xunit;
@@ -571,96 +572,95 @@ namespace Mvp24Hours.Core.Test
 }
 ```
 
-### Rodando Testes
+### Running Tests
 
 ```bash
-# Todos os testes
+# All tests
 dotnet test
 
-# Apenas um projeto
+# Single project only
 dotnet test src/Tests/Mvp24Hours.Core.Test/
 
-# Com cobertura
+# With coverage
 dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 
-# Apenas uma categoria
+# Single category only
 dotnet test --filter Category=Integration
 ```
 
-### Cobertura de Código
+### Code Coverage
 
-Buscamos manter **cobertura mínima de 80%** em novos códigos.
+We aim to maintain **minimum 80% coverage** on new code.
 
 ```bash
-# Gerar relatório de cobertura
+# Generate coverage report
 dotnet test /p:CollectCoverage=true /p:CoverletOutput=./coverage/
 ```
 
-## 🌍 Comunidade
+## 🌍 Community
 
-### Onde Obter Ajuda
+### Where to Get Help
 
-- 📖 [Documentação](https://kallebelins.github.io/mvp24hours-dotnet)
+- 📖 [Documentation](https://kallebelins.github.io/mvp24hours-dotnet)
 - 💬 [GitHub Discussions](https://github.com/kallebelins/mvp24hours-dotnet/discussions)
 - 🐛 [GitHub Issues](https://github.com/kallebelins/mvp24hours-dotnet/issues)
 - 💼 [LinkedIn - Kallebe Lins](https://www.linkedin.com/in/kallebelins/)
 
-### Canais de Comunicação
+### Communication Channels
 
-- **GitHub Issues** - Para bugs e feature requests
-- **GitHub Discussions** - Para perguntas e discussões gerais
-- **Pull Requests** - Para contribuições de código
+- **GitHub Issues** - Bugs and feature requests
+- **GitHub Discussions** - Questions and general discussion
+- **Pull Requests** - Code contributions
 
-### Reconhecimento
+### Recognition
 
-Todos os contribuidores são reconhecidos:
+All contributors are recognized:
 
-- Lista de contribuidores no README
-- Menção nos release notes
-- Badge de contribuidor no GitHub
+- Contributor list in the README
+- Mention in release notes
+- GitHub contributor badge
 
-## 📜 Licença
+## 📜 License
 
-Ao contribuir com o Mvp24Hours, você concorda que suas contribuições serão licenciadas sob a [Licença MIT](LICENSE).
+By contributing to Mvp24Hours, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
 ## 🎯 Roadmap
 
-Veja o [roadmap de tarefas](docs/tasks.md) para saber o que está planejado:
+See the [task roadmap](docs/tasks.md) to learn what is planned:
 
-- 156 tarefas organizadas
-- Categorizadas por prioridade
-- Abrange código, testes e documentação
+- 156 organized tasks
+- Categorized by priority
+- Covers code, tests, and documentation
 
-### Tarefas Prioritárias
+### Priority Tasks
 
-Consulte [docs/tasks.md](docs/tasks.md) para a lista completa, mas algumas prioridades atuais:
+See [docs/tasks.md](docs/tasks.md) for the full list. Some current priorities:
 
-1. ⚡ Implementar guard clauses consistentes
-2. ⚡ Adicionar testes unitários para Extension Methods
-3. ⚡ Configurar code coverage reporting
-4. ⚡ Revisar e otimizar implementações async
+1. ⚡ Implement consistent guard clauses
+2. ⚡ Add unit tests for Extension Methods
+3. ⚡ Configure code coverage reporting
+4. ⚡ Review and optimize async implementations
 
-## 🙏 Agradecimentos
+## 🙏 Acknowledgments
 
-Obrigado por tornar o Mvp24Hours melhor! Cada contribuição, por menor que seja, faz diferença.
+Thank you for making Mvp24Hours better! Every contribution, no matter how small, makes a difference.
 
-Algumas formas de ajudar além de código:
+Ways to help beyond code:
 
-- ⭐ Dê uma estrela no repositório
-- 📢 Compartilhe o projeto
-- 📝 Escreva sobre o projeto
-- 🐛 Reporte bugs
-- 💡 Sugira melhorias
-- 👥 Ajude outros usuários
-- 📖 Melhore a documentação
+- ⭐ Star the repository
+- 📢 Share the project
+- 📝 Write about the project
+- 🐛 Report bugs
+- 💡 Suggest improvements
+- 👥 Help other users
+- 📖 Improve documentation
 
 ---
 
-**Dúvidas?** Abra uma [Discussion](https://github.com/kallebelins/mvp24hours-dotnet/discussions) ou entre em contato via [LinkedIn](https://www.linkedin.com/in/kallebelins/).
+**Questions?** Open a [Discussion](https://github.com/kallebelins/mvp24hours-dotnet/discussions) or contact via [LinkedIn](https://www.linkedin.com/in/kallebelins/).
 
-**Pronto para contribuir?** Comece escolhendo uma [issue com label "good first issue"](https://github.com/kallebelins/mvp24hours-dotnet/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)!
+**Ready to contribute?** Start by choosing an [issue labeled "good first issue"](https://github.com/kallebelins/mvp24hours-dotnet/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)!
 
-Desenvolvido com ❤️ por [Kallebe Lins](https://github.com/kallebelins).
+Built with ❤️ by [Kallebe Lins](https://github.com/kallebelins).
 
-**Seja o primeiro contribuidor!** 🎉
-
+**Be the first contributor!** 🎉

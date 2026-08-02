@@ -117,13 +117,13 @@ After copying, the skill lives at `.cursor/skills/mvp24hours-router/`.
 
 It triages ambiguous Mvp24Hours prompts via MCP (`list_scenarios`, `get_scenario_playbook`, etc.) and presents the recommended path **before** executing workflows.
 
-**Auto-load:** Cursor loads the skill when your prompt matches its description (e.g. "por onde começo", "criar API", "migrar").
+**Auto-load:** Cursor loads the skill when your prompt matches its description (e.g. "where do I start", "create API", "migrate"; Portuguese prompts such as "por onde começo" and "criar API" also match).
 
 ## Verify setup
 
 1. **Settings → Tools & MCP** → confirm `mvp24hours` is listed and enabled
 2. Open MCP server output — no manifest errors
-3. Ask in Agent chat: "por onde começo com Mvp24Hours?"
+3. Ask in Agent chat: "where do I start with Mvp24Hours?"
 4. Agent should call `list_scenarios` and present a route
 
 ## Sync with canonical source

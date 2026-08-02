@@ -2,7 +2,7 @@ name: "Close Stale Issues and PRs"
 
 on:
   schedule:
-    - cron: "0 0 * * *" # Diariamente à meia-noite
+    - cron: "0 0 * * *" # Daily at midnight
 
 permissions:
   issues: write
@@ -19,17 +19,17 @@ jobs:
           
           # Issues
           stale-issue-message: |
-            Esta issue foi automaticamente marcada como stale porque não teve atividade recente.
-            Ela será fechada em 7 dias se nenhuma atividade adicional ocorrer.
+            This issue was automatically marked as stale because it has had no recent activity.
+            It will be closed in 7 days if no additional activity occurs.
             
-            Se você acredita que esta issue ainda é relevante, por favor adicione um comentário.
-            Obrigado por suas contribuições! 🙏
+            If you believe this issue is still relevant, please add a comment.
+            Thank you for your contributions! 🙏
           
           close-issue-message: |
-            Esta issue foi automaticamente fechada devido à inatividade.
+            This issue was automatically closed due to inactivity.
             
-            Se você acredita que esta issue ainda é relevante, sinta-se à vontade para reabri-la.
-            Obrigado! 🙏
+            If you believe this issue is still relevant, feel free to reopen it.
+            Thank you! 🙏
           
           days-before-issue-stale: 60
           days-before-issue-close: 7
@@ -38,20 +38,19 @@ jobs:
           
           # Pull Requests
           stale-pr-message: |
-            Este Pull Request foi automaticamente marcado como stale porque não teve atividade recente.
-            Ele será fechado em 14 dias se nenhuma atividade adicional ocorrer.
+            This Pull Request was automatically marked as stale because it has had no recent activity.
+            It will be closed in 14 days if no additional activity occurs.
             
-            Se você ainda está trabalhando nisto, por favor adicione um comentário.
-            Obrigado por sua contribuição! 🎉
+            If you are still working on this, please add a comment.
+            Thank you for your contribution! 🎉
           
           close-pr-message: |
-            Este Pull Request foi automaticamente fechado devido à inatividade.
+            This Pull Request was automatically closed due to inactivity.
             
-            Se você ainda deseja contribuir com estas mudanças, sinta-se à vontade para reabrir o PR.
-            Obrigado! 🙏
+            If you still want to contribute these changes, feel free to reopen the PR.
+            Thank you! 🙏
           
           days-before-pr-stale: 30
           days-before-pr-close: 14
           stale-pr-label: 'stale'
           exempt-pr-labels: 'pinned,security,work-in-progress'
-
