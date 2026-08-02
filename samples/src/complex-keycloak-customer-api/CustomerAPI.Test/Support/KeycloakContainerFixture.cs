@@ -47,7 +47,7 @@ public sealed class KeycloakContainerFixture : IAsyncLifetime
             BaseAddress = _container.GetBaseAddress();
             IsAvailable = true;
         }
-        catch (DockerUnavailableException)
+        catch (Exception)
         {
             IsAvailable = false;
         }

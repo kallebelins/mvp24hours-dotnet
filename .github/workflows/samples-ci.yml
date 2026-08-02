@@ -42,9 +42,6 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install Aspire workload
-        run: dotnet workload install aspire --skip-manifest-update
-
       - name: Restore
         run: dotnet restore ${{ env.SAMPLES_SOLUTION }}
 
@@ -64,9 +61,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install Aspire workload
-        run: dotnet workload install aspire --skip-manifest-update
 
       - name: Restore
         run: dotnet restore ${{ env.SAMPLES_SOLUTION }}
@@ -105,9 +99,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install Aspire workload
-        run: dotnet workload install aspire --skip-manifest-update
 
       - name: Restore
         run: dotnet restore ${{ env.SAMPLES_SOLUTION }}
