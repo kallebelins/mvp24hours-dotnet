@@ -8,8 +8,8 @@ using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TextSearch;
-using MongoDbTimeSeries = Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;
 using Xunit;
+using MongoDbTimeSeries = Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;
 
 namespace Mvp24Hours.Application.MongoDb.Test.Advanced;
 
@@ -207,7 +207,7 @@ public class AdvancedOptionsTest
     [Fact]
     public void CollationPresets_EnglishCaseInsensitive_HasCorrectValues()
     {
-        var preset = CollationPresets.EnglishCaseInsensitive;
+        MongoDbCollationOptions preset = CollationPresets.EnglishCaseInsensitive;
 
         Assert.Equal("en", preset.Locale);
         Assert.Equal(CollationStrength.Secondary, preset.Strength);
@@ -216,36 +216,36 @@ public class AdvancedOptionsTest
     [Fact]
     public void CollationPresets_PortugueseCaseInsensitive_HasCorrectLocale()
     {
-        var preset = CollationPresets.PortugueseCaseInsensitive;
+        MongoDbCollationOptions preset = CollationPresets.PortugueseCaseInsensitive;
         Assert.Equal("pt", preset.Locale);
     }
 
     [Fact]
     public void CollationPresets_SpanishCaseInsensitive_HasCorrectLocale()
     {
-        var preset = CollationPresets.SpanishCaseInsensitive;
+        MongoDbCollationOptions preset = CollationPresets.SpanishCaseInsensitive;
         Assert.Equal("es", preset.Locale);
     }
 
     [Fact]
     public void CollationPresets_NumericOrdered_HasNumericOrdering()
     {
-        var preset = CollationPresets.NumericOrdered;
+        MongoDbCollationOptions preset = CollationPresets.NumericOrdered;
         Assert.True(preset.NumericOrdering);
     }
 
     [Fact]
     public void CollationPresets_SimpleBinary_HasSimpleLocale()
     {
-        var preset = CollationPresets.SimpleBinary;
+        MongoDbCollationOptions preset = CollationPresets.SimpleBinary;
         Assert.Equal("simple", preset.Locale);
     }
 
     [Fact]
     public void CollationPresets_AreNewInstancesEachTime()
     {
-        var p1 = CollationPresets.EnglishCaseInsensitive;
-        var p2 = CollationPresets.EnglishCaseInsensitive;
+        MongoDbCollationOptions p1 = CollationPresets.EnglishCaseInsensitive;
+        MongoDbCollationOptions p2 = CollationPresets.EnglishCaseInsensitive;
         Assert.NotSame(p1, p2);
     }
 

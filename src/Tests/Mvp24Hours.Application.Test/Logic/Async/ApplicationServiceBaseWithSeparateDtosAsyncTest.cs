@@ -15,18 +15,20 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
         IValidator<AppTestEntity>? entityValidator = null,
         IValidator<AppTestCreateDto>? createValidator = null,
         IValidator<AppTestUpdateDto>? updateValidator = null)
-        => new(
-            uow.Object,
-            ApplicationTestHelpers.CreateAppEntityMapper(),
-            entityValidator,
-            createValidator,
-            updateValidator);
+    {
+        return new(
+                uow.Object,
+                ApplicationTestHelpers.CreateAppEntityMapper(),
+                entityValidator,
+                createValidator,
+                updateValidator);
+    }
 
     [Fact]
     public async Task AddAsync_ValidCreateDto_ShouldReturnMappedDto()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
         var createDto = new AppTestCreateDto { Name = "Created" };
 
         IBusinessResult<AppTestEntityDto> result = await service.AddAsync(createDto);
@@ -41,7 +43,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     public async Task AddAsync_InvalidCreateDto_ShouldReturnValidationErrors()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
 
         IBusinessResult<AppTestEntityDto> result = await service.AddAsync(new AppTestCreateDto { Name = "" });
 
@@ -53,7 +55,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     public async Task AddAsync_EmptyList_ShouldReturnZeroWithoutSave()
     {
         (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.AddAsync([]);
 
@@ -66,7 +68,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 404, null);
-        var service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
 
         IBusinessResult<AppTestEntityDto> result = await service.ModifyAsync(404, new AppTestUpdateDto { Id = 404, Name = "Missing" });
 
@@ -81,7 +83,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
         var existing = new AppTestEntity { Id = 1, Name = "Original", Active = true };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 1, existing);
-        var service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
 
         IBusinessResult<AppTestEntityDto> result = await service.ModifyAsync(1, new AppTestUpdateDto { Id = 1, Name = "Updated" });
 
@@ -96,7 +98,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
         var existing = new AppTestEntity { Id = 2, Name = "Original", Active = true };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 2, existing);
-        var service = CreateService(uow, new AppTestEntityValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator());
 
         IBusinessResult<AppTestEntityDto> result = await service.PatchAsync(2, new AppTestUpdateDto { Id = 2, Name = "Patched" });
 
@@ -110,7 +112,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 404, null);
-        var service = CreateService(uow, new AppTestEntityValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator());
 
         IBusinessResult<AppTestEntityDto> result = await service.PatchAsync(404, new AppTestUpdateDto { Id = 404, Name = "Missing" });
 
@@ -122,7 +124,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     public async Task RemoveByIdAsync_ShouldRemoveByIdAndSave()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.RemoveByIdAsync(7);
 
@@ -135,7 +137,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     public async Task RemoveByIdAsync_EmptyIds_ShouldReturnZero()
     {
         (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.RemoveByIdAsync([]);
 
@@ -148,7 +150,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
         var items = new List<AppTestEntity> { new() { Id = 1, Name = "Read", Active = true } };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupList(repo, items);
-        var service = CreateService(uow);
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow);
 
         IBusinessResult<IList<AppTestEntityDto>> result = await service.ListAsync();
 
@@ -161,7 +163,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
     {
         using var cts = new CancellationTokenSource();
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestCreateDtoValidator());
 
         await service.AddAsync(new AppTestCreateDto { Name = "Token" }, cts.Token);
 
@@ -176,7 +178,7 @@ public class ApplicationServiceBaseWithSeparateDtosAsyncTest
         var existing = new AppTestEntity { Id = 5, Name = "Original", Active = true };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 5, existing);
-        var service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
+        TestApplicationServiceWithSeparateDtosAsync service = CreateService(uow, new AppTestEntityValidator(), null, new AppTestUpdateDtoValidator());
 
         await service.ModifyAsync(5, new AppTestUpdateDto { Id = 5, Name = "Updated" }, cts.Token);
 

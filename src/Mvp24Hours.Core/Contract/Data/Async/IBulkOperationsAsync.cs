@@ -121,7 +121,7 @@ public sealed class BulkOperationOptions
 /// This interface provides efficient bulk operations that bypass EF Core's
 /// change tracking for better performance with large datasets:
 /// <list type="bullet">
-/// <item><see cref="BulkInsertAsync"/> - Insert thousands of entities efficiently</item>
+/// <item><see cref="BulkInsertAsync(IList{TEntity}, CancellationToken)"/> - Insert thousands of entities efficiently</item>
 /// <item><see cref="BulkUpdateAsync(IList{TEntity}, BulkOperationOptions, CancellationToken)"/> - Update entities by primary key</item>
 /// <item><see cref="BulkDeleteAsync(IList{TEntity}, BulkOperationOptions, CancellationToken)"/> - Delete entities by primary key</item>
 /// <item><see cref="ExecuteUpdateAsync"/> - Update entities matching a condition (.NET 7+)</item>

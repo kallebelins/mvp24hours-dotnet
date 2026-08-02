@@ -53,7 +53,7 @@ public class SmsServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenSendTestSmsDisabled_ShouldReturnHealthyWithoutSending()
     {
         Mock<ISmsService> mock = HealthChecksTestHelpers.CreateSmsServiceMock();
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions { SendTestSms = false });
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions { SendTestSms = false });
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -76,7 +76,7 @@ public class SmsServiceHealthCheckTest
             DegradedThresholdMs = 10_000,
             FailureThresholdMs = 30_000
         };
-        var check = CreateCheck(mock.Object, options);
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, options);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -96,7 +96,7 @@ public class SmsServiceHealthCheckTest
     {
         Mock<ISmsService> mock = HealthChecksTestHelpers.CreateSmsServiceMock(
             SmsSendResult.Failed("invalid number"));
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
         {
             SendTestSms = true,
             DegradedThresholdMs = 10_000,
@@ -114,7 +114,7 @@ public class SmsServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsFailureThreshold_ShouldReturnUnhealthy()
     {
         Mock<ISmsService> mock = HealthChecksTestHelpers.CreateSmsServiceMock();
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
         {
             SendTestSms = true,
             DegradedThresholdMs = 0,
@@ -131,7 +131,7 @@ public class SmsServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsDegradedThreshold_ShouldReturnDegraded()
     {
         Mock<ISmsService> mock = HealthChecksTestHelpers.CreateSmsServiceMock();
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
         {
             SendTestSms = true,
             DegradedThresholdMs = 0,
@@ -150,7 +150,7 @@ public class SmsServiceHealthCheckTest
         var mock = new Mock<ISmsService>();
         mock.Setup(s => s.SendAsync(It.IsAny<SmsMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("twilio error"));
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions { SendTestSms = true });
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions { SendTestSms = true });
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -165,7 +165,7 @@ public class SmsServiceHealthCheckTest
         var mock = new Mock<ISmsService>();
         mock.Setup(s => s.SendAsync(It.IsAny<SmsMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaskCanceledException());
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
         {
             SendTestSms = true,
             TimeoutSeconds = 1
@@ -181,7 +181,7 @@ public class SmsServiceHealthCheckTest
     public async Task CheckHealthAsync_WithDefaultRecipient_ShouldUsePlaceholderNumber()
     {
         Mock<ISmsService> mock = HealthChecksTestHelpers.CreateSmsServiceMock();
-        var check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
+        SmsServiceHealthCheck check = CreateCheck(mock.Object, new SmsServiceHealthCheckOptions
         {
             SendTestSms = true,
             TestSmsRecipient = null,

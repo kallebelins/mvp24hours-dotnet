@@ -10,7 +10,7 @@ public class MvpExecutionStrategyTest
     [Fact]
     public void MvpExecutionStrategy_Type_IsMarkedObsolete()
     {
-        var obsoleteAttribute = typeof(MvpExecutionStrategy)
+        ObsoleteAttribute? obsoleteAttribute = typeof(MvpExecutionStrategy)
             .GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false)
             .Cast<ObsoleteAttribute>()
             .SingleOrDefault();
@@ -22,7 +22,7 @@ public class MvpExecutionStrategyTest
     [Fact]
     public void EFCoreResilienceOptions_NoResilience_DisablesLegacyStrategyFeatures()
     {
-        EFCoreResilienceOptions options = EFCoreResilienceOptions.NoResilience();
+        var options = EFCoreResilienceOptions.NoResilience();
 
         options.EnableRetryOnFailure.Should().BeFalse();
         options.EnableCircuitBreaker.Should().BeFalse();

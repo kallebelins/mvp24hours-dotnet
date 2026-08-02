@@ -206,7 +206,7 @@ public class CacheStampedeLockingTest
         var stampede = new CacheStampedePrevention();
         int factoryCalls = 0;
 
-        Task<TestEntity>[] tasks = Enumerable.Range(0, 8).Select(_ => CacheInvalidationExtensions.GetOrSetAsync(
+        Task<TestEntity>[] tasks = [.. Enumerable.Range(0, 8).Select(_ => CacheInvalidationExtensions.GetOrSetAsync(
             cache,
             "stampede-gs",
             async ct =>
@@ -215,7 +215,7 @@ public class CacheStampedeLockingTest
                 await Task.Delay(30, ct);
                 return new TestEntity { Id = 1, Name = "Shared" };
             },
-            stampedePrevention: stampede)).ToArray();
+            stampedePrevention: stampede))];
 
         TestEntity[] results = await Task.WhenAll(tasks);
 

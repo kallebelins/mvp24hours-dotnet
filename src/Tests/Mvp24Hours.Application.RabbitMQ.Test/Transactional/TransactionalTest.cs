@@ -11,7 +11,7 @@ public class TransactionalTest
     public async Task InMemoryTransactionalOutbox_AddAndGetPending_ShouldReturnMessage()
     {
         var outbox = new InMemoryTransactionalOutbox();
-        var message = CreateOutboxMessage("order-created");
+        TransactionalOutboxMessage message = CreateOutboxMessage("order-created");
 
         await outbox.AddAsync(message);
 
@@ -162,8 +162,8 @@ public class TransactionalTest
     public async Task InMemoryTransactionalOutbox_GetPendingCount_ShouldCountOnlyPending()
     {
         var outbox = new InMemoryTransactionalOutbox();
-        var msg1 = CreateOutboxMessage("route1");
-        var msg2 = CreateOutboxMessage("route2");
+        TransactionalOutboxMessage msg1 = CreateOutboxMessage("route1");
+        TransactionalOutboxMessage msg2 = CreateOutboxMessage("route2");
         await outbox.AddAsync(msg1);
         await outbox.AddAsync(msg2);
         await outbox.MarkAsPublishedAsync(msg1.Id);
@@ -185,7 +185,7 @@ public class TransactionalTest
     public async Task InMemoryTransactionalOutbox_CleanupAsync_ShouldRemovePublished()
     {
         var outbox = new InMemoryTransactionalOutbox();
-        var msg = CreateOutboxMessage("cleanup-route");
+        TransactionalOutboxMessage msg = CreateOutboxMessage("cleanup-route");
         await outbox.AddAsync(msg);
         await outbox.MarkAsPublishedAsync(msg.Id);
 
@@ -197,7 +197,7 @@ public class TransactionalTest
     [Fact]
     public void TransactionalOutboxMessage_ShouldHaveCorrectStatus()
     {
-        var msg = CreateOutboxMessage("test-route");
+        TransactionalOutboxMessage msg = CreateOutboxMessage("test-route");
 
         msg.Status.Should().Be(TransactionalOutboxStatus.Pending);
         msg.RetryCount.Should().Be(0);

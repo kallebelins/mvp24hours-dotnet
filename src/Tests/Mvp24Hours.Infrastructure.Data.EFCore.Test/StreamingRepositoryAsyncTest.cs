@@ -17,13 +17,16 @@ public class StreamingRepositoryAsyncTest : IDisposable
         SeedData();
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public async Task StreamAllAsync_ShouldYieldAllEntities()
     {
         using IServiceScope scope = _provider.CreateScope();
-        StreamingRepositoryAsync<TestEntity> repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
+        var repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
             .GetRequiredService<IStreamingRepositoryAsync<TestEntity>>();
 
         var streamed = new List<TestEntity>();
@@ -39,7 +42,7 @@ public class StreamingRepositoryAsyncTest : IDisposable
     public async Task StreamByAsync_ShouldYieldFilteredEntities()
     {
         using IServiceScope scope = _provider.CreateScope();
-        StreamingRepositoryAsync<TestEntity> repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
+        var repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
             .GetRequiredService<IStreamingRepositoryAsync<TestEntity>>();
 
         var streamed = new List<TestEntity>();
@@ -56,7 +59,7 @@ public class StreamingRepositoryAsyncTest : IDisposable
     public async Task StreamBatchesAsync_ShouldReturnConfiguredBatchSizes()
     {
         using IServiceScope scope = _provider.CreateScope();
-        StreamingRepositoryAsync<TestEntity> repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
+        var repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
             .GetRequiredService<IStreamingRepositoryAsync<TestEntity>>();
 
         var batches = new List<IList<TestEntity>>();
@@ -75,7 +78,7 @@ public class StreamingRepositoryAsyncTest : IDisposable
     public async Task StreamProjectedAsync_ShouldReturnProjectedResults()
     {
         using IServiceScope scope = _provider.CreateScope();
-        StreamingRepositoryAsync<TestEntity> repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
+        var repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
             .GetRequiredService<IStreamingRepositoryAsync<TestEntity>>();
 
         var names = new List<string>();
@@ -92,7 +95,7 @@ public class StreamingRepositoryAsyncTest : IDisposable
     public async Task StreamAndProcessAsync_ShouldProcessAllEntities()
     {
         using IServiceScope scope = _provider.CreateScope();
-        StreamingRepositoryAsync<TestEntity> repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
+        var repository = (StreamingRepositoryAsync<TestEntity>)scope.ServiceProvider
             .GetRequiredService<IStreamingRepositoryAsync<TestEntity>>();
 
         var processedIds = new List<int>();

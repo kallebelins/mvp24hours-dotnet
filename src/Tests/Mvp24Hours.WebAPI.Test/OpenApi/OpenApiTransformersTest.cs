@@ -26,24 +26,24 @@ public class OpenApiTransformersTest
     [Fact]
     public async Task CustomHeadersTransformer_Should_AddHeadersToOperations()
     {
-        var document = CreateDocumentWithSingleOperation();
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
         var sut = new CustomHeadersTransformer(("X-Correlation-ID", "Correlation", false));
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
-        var operation = GetOrdersOperation(document);
+        OpenApiOperation operation = GetOrdersOperation(document);
         operation.Parameters.Should().Contain(x => x.Name == "X-Correlation-ID");
     }
 
     [Fact]
     public async Task CommonResponsesTransformer_Should_AddConfiguredResponses()
     {
-        var document = CreateDocumentWithSingleOperation();
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
         var sut = new CommonResponsesTransformer(add401: true, add403: true, add500: true);
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
 
-        var responses = GetOrdersOperation(document).Responses;
+        OpenApiResponses? responses = GetOrdersOperation(document).Responses;
         responses.Should().ContainKey("401");
         responses.Should().ContainKey("403");
         responses.Should().ContainKey("500");
@@ -52,7 +52,7 @@ public class OpenApiTransformersTest
     [Fact]
     public async Task ProblemDetailsTransformer_Should_AddSchemasAndResponseContent()
     {
-        var document = CreateDocumentWithSingleOperation();
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
         GetOrdersOperation(document).Responses!["400"] = new OpenApiResponse { Description = "Bad Request" };
         var sut = new ProblemDetailsTransformer();
 
@@ -66,7 +66,7 @@ public class OpenApiTransformersTest
     [Fact]
     public async Task RateLimitHeadersTransformer_Should_AddRateLimitHeadersAnd429()
     {
-        var document = CreateDocumentWithSingleOperation();
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
         var sut = new RateLimitHeadersTransformer();
 
         await sut.TransformAsync(document, null!, CancellationToken.None);
@@ -77,11 +77,11 @@ public class OpenApiTransformersTest
     [Fact]
     public async Task TagFilterTransformer_Should_RemoveOperationsOutsideIncludedTags()
     {
-        var document = CreateDocumentWithSingleOperation();
-        var operation = GetOrdersOperation(document);
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
+        OpenApiOperation operation = GetOrdersOperation(document);
         operation.Tags = new HashSet<OpenApiTagReference>
         {
-            new OpenApiTagReference("Orders", document)
+            new("Orders", document)
         };
         var sut = new TagFilterTransformer(includeTags: ["Billing"]);
 
@@ -90,8 +90,10 @@ public class OpenApiTransformersTest
         document.Paths.Should().BeEmpty();
     }
 
-    private static OpenApiOperation GetOrdersOperation(OpenApiDocument document) =>
-        document.Paths!["/api/orders"]!.Operations!.Values.Single();
+    private static OpenApiOperation GetOrdersOperation(OpenApiDocument document)
+    {
+        return document.Paths!["/api/orders"]!.Operations!.Values.Single();
+    }
 
     private static OpenApiDocument CreateDocumentWithSingleOperation()
     {

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Moq;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Observability;
 
@@ -114,7 +114,7 @@ public class ObservabilityTest
     [Fact]
     public void MongoDbSlowQueryLogger_ShouldRespectRateLimit()
     {
-        var options = Options.Create(new MongoDbObservabilityOptions
+        IOptions<MongoDbObservabilityOptions> options = Options.Create(new MongoDbObservabilityOptions
         {
             EnableSlowQueryLogging = true,
             SlowQueryThreshold = TimeSpan.Zero,

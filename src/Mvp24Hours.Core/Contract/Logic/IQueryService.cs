@@ -54,6 +54,7 @@ public interface IQueryService<TEntity>
     /// Gets the filter-based representations of the entity typed with criteria.
     /// </summary>
     /// <param name="clause">Filter</param>
+    /// <param name="criteria"></param>
     /// <returns>Number of representations</returns>
     IBusinessResult<IList<TEntity>> GetBy(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria);
     /// <summary>
@@ -66,6 +67,7 @@ public interface IQueryService<TEntity>
     /// Gets a representation of the entity typed with criteria.
     /// </summary>
     /// <param name="id">Identifier of entity</param>
+    /// <param name="criteria"></param>
     /// <returns>A representation of the entity</returns>
     IBusinessResult<TEntity?> GetById(object id, IPagingCriteria? criteria);
 }

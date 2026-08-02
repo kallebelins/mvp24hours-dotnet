@@ -71,8 +71,8 @@ public class CachePrefetcherTest
     {
         MemoryCacheProvider cache = CacheTestHelpers.CreateMemoryProvider();
         var prefetcher = new CachePrefetcher(cache);
-        var requests = new[]
-        {
+        PrefetchRequest<TestEntity>[] requests =
+        [
             new PrefetchRequest<TestEntity>
             {
                 Key = "p1",
@@ -83,7 +83,7 @@ public class CachePrefetcherTest
                 Key = "p2",
                 ValueFactory = _ => Task.FromResult(new TestEntity { Id = 2, Name = "Two" })
             }
-        };
+        ];
 
         await prefetcher.PrefetchManyAsync(requests);
 

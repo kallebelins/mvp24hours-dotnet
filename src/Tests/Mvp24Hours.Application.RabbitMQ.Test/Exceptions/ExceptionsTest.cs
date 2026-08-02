@@ -83,7 +83,7 @@ public class ExceptionsTest
     [Fact]
     public void RequestTimeoutException_CanBeCaught_AsTimeoutException()
     {
-        Exception? caught = null;
+        Exception? caught;
         try
         {
             throw new RequestTimeoutException("test timeout");

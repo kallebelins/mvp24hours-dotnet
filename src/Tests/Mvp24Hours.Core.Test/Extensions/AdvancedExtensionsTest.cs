@@ -66,7 +66,7 @@ public class AdvancedExtensionsTest
     [InlineData(typeof(TimeoutException), HttpStatusCode.RequestTimeout)]
     public void ToHttpStatusCode_MapsKnownExceptions(Type exceptionType, HttpStatusCode expected)
     {
-        Exception ex = (Exception)Activator.CreateInstance(exceptionType, "msg")!;
+        var ex = (Exception)Activator.CreateInstance(exceptionType, "msg")!;
 
         ex.ToHttpStatusCode().Should().Be(expected);
         ex.ToHttpStatusCodeInt().Should().Be((int)expected);

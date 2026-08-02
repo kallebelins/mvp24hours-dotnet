@@ -32,8 +32,8 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        RetryDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -43,11 +43,11 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenDisabled_ShouldNotRetry()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateSequenceHandler(
+        TestHttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateSequenceHandler(
             HttpStatusCode.InternalServerError,
             HttpStatusCode.OK);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(enabled: false, maxRetries: 5));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(enabled: false, maxRetries: 5));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -58,9 +58,9 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnSuccess_ShouldNotRetry()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        RetryDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -71,9 +71,9 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnTransientStatus_ShouldRetryUntilSuccess()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(2);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 3));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(2);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 3));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -84,9 +84,9 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnHttpRequestException_ShouldRetryUntilSuccess()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateThrowThenSucceedHandler(2);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 3));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateThrowThenSucceedHandler(2);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 3));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -97,9 +97,9 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenRetriesExhausted_ShouldReturnLastResponse()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.ServiceUnavailable);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 2));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.ServiceUnavailable);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 2));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -110,13 +110,13 @@ public class RetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnConfiguredStatusCode_ShouldRetry()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(
+        TestHttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(
             1,
             failureStatus: HttpStatusCode.Conflict);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(
             maxRetries: 2,
             retryStatusCodes: [409]));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -143,8 +143,8 @@ public class RetryDelegatingHandlerTest
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         });
 
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 2));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(maxRetries: 2));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -159,12 +159,12 @@ public class RetryDelegatingHandlerTest
     [InlineData(BackoffType.DecorrelatedJitter)]
     public async Task SendAsync_WithBackoffTypes_ShouldRetry(BackoffType backoffType)
     {
-        var inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(1);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(
+        TestHttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateFailThenSucceedHandler(1);
+        RetryDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateRetryOptions(
             maxRetries: 2,
             backoffType: backoffType,
             jitterFactor: 0.1));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 

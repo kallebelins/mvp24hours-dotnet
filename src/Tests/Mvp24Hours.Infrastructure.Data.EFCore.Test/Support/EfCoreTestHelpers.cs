@@ -70,7 +70,7 @@ public static class EfCoreTestHelpers
 
     public static TestDbContext CreateContext(string? databaseName = null, Action<DbContextOptionsBuilder>? configure = null)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptionsBuilder<TestDbContext> optionsBuilder = new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(databaseName ?? $"Ctx_{Guid.NewGuid():N}")
             .EnableSensitiveDataLogging();
 
@@ -98,7 +98,7 @@ public static class EfCoreTestHelpers
 
     public static Mock<IClock> CreateClock(DateTime? utcNow = null)
     {
-        var now = utcNow ?? new DateTime(2026, 7, 18, 12, 0, 0, DateTimeKind.Utc);
+        DateTime now = utcNow ?? new DateTime(2026, 7, 18, 12, 0, 0, DateTimeKind.Utc);
         var mock = new Mock<IClock>();
         mock.Setup(x => x.UtcNow).Returns(now);
         mock.Setup(x => x.Now).Returns(now.ToLocalTime());
@@ -108,13 +108,12 @@ public static class EfCoreTestHelpers
 
     public static List<TestEntity> CreateEntities(int count, string prefix = "Entity")
     {
-        return Enumerable.Range(1, count)
+        return [.. Enumerable.Range(1, count)
             .Select(i => new TestEntity
             {
                 Name = $"{prefix}-{i}",
                 Active = i % 2 == 0,
                 Score = i * 10
-            })
-            .ToList();
+            })];
     }
 }

@@ -7,8 +7,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.HealthChecks;
 [Trait("Category", "Unit")]
 public class SqlServerHealthCheckTest
 {
-    private static HealthCheckContext CreateContext() =>
-        new()
+    private static HealthCheckContext CreateContext()
+    {
+        return new()
         {
             Registration = new HealthCheckRegistration(
                 "sqlserver",
@@ -16,6 +17,7 @@ public class SqlServerHealthCheckTest
                 HealthStatus.Unhealthy,
                 null)
         };
+    }
 
     [Fact]
     public void Options_Defaults_ShouldMatchExpected()
@@ -64,7 +66,7 @@ public class SqlServerHealthCheckTest
     [Fact]
     public void Constructor_WithNullConnectionString_Throws()
     {
-        var act = () => new SqlServerHealthCheck(
+        Func<SqlServerHealthCheck> act = () => new SqlServerHealthCheck(
             null!,
             new SqlServerHealthCheckOptions(),
             NullLogger<SqlServerHealthCheck>.Instance);
@@ -75,7 +77,7 @@ public class SqlServerHealthCheckTest
     [Fact]
     public void Constructor_WithNullLogger_Throws()
     {
-        var act = () => new SqlServerHealthCheck(
+        Func<SqlServerHealthCheck> act = () => new SqlServerHealthCheck(
             "Server=.;Database=x;",
             new SqlServerHealthCheckOptions(),
             null!);

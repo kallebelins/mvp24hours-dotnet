@@ -23,7 +23,7 @@ public class ForkJoinOperationTest
             join: results => OperationResult<int>.Success(results.Sum(r => r.Value))
         );
 
-        IOperationResult<int> result = forkJoin.Execute(new[] { 1, 2, 3 });
+        IOperationResult<int> result = forkJoin.Execute([1, 2, 3]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(12); // (1+2+3)*2
@@ -42,7 +42,7 @@ public class ForkJoinOperationTest
             join: results => OperationResult<int>.Success(results.Sum(r => r.Value))
         );
 
-        IOperationResult<int> result = await forkJoin.ExecuteAsync(new[] { 1, 2, 3 });
+        IOperationResult<int> result = await forkJoin.ExecuteAsync([1, 2, 3]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(18); // (1+2+3)*3
@@ -95,7 +95,7 @@ public class ForkJoinOperationTest
             join: results => OperationResult<int>.Success(results.Count(r => r.IsSuccess))
         );
 
-        IOperationResult<int> result = forkJoin.Execute(new[] { 1, 2, 3 });
+        IOperationResult<int> result = forkJoin.Execute([1, 2, 3]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(2); // 2 successes out of 3
@@ -112,7 +112,7 @@ public class ForkJoinOperationTest
             options: options
         );
 
-        IOperationResult<List<int>> result = forkJoin.Execute(new[] { 1, 2, 3 });
+        IOperationResult<List<int>> result = forkJoin.Execute([1, 2, 3]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Equal(10, 20, 30);
@@ -129,7 +129,7 @@ public class ForkJoinOperationTest
             options: options
         );
 
-        IOperationResult<int> result = forkJoin.Execute(new[] { 1, 2, 3 });
+        IOperationResult<int> result = forkJoin.Execute([1, 2, 3]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(6);
@@ -177,7 +177,7 @@ public class ForkJoinOperationTest
             join: results => OperationResult<int>.Success(results.Count)
         );
 
-        IOperationResult<int> result = forkJoin.Execute(Array.Empty<int>());
+        IOperationResult<int> result = forkJoin.Execute([]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(0);
@@ -201,7 +201,7 @@ public class ForkJoinOperationTest
             options: options
         );
 
-        IOperationResult<int> result = await forkJoin.ExecuteAsync(new[] { 1, 2 });
+        IOperationResult<int> result = await forkJoin.ExecuteAsync([1, 2]);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeGreaterThanOrEqualTo(1); // at least one branch should fail (timeout)

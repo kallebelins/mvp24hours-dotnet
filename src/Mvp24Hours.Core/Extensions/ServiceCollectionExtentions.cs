@@ -54,7 +54,7 @@ public static class ServiceCollectionExtentions
 
     /// <summary>
     /// Search and add all instances defined by the type entered
-    /// <code>services.AddAllTypes<IGenerator>(new[] { typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly }</code>
+    /// <![CDATA[services.AddAllTypes<IGenerator>(new[] { typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly }]]>
     /// </summary>
     public static void AddAllTypes<T>(this IServiceCollection services
         , Assembly[] assemblies
@@ -76,7 +76,7 @@ public static class ServiceCollectionExtentions
 
     /// <summary>
     /// Search and add all instances defined by the type entered
-    /// <code>services.AddAllGenericTypes(typeof(IRequest<>), new[] {typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly})</code>
+    /// <![CDATA[services.AddAllGenericTypes(typeof(IRequest<>), new[] {typeof(GenerateInvoiceHandler).GetTypeInfo().Assembly})]]>
     /// </summary>
     public static void AddAllGenericTypes(this IServiceCollection services
         , Type t

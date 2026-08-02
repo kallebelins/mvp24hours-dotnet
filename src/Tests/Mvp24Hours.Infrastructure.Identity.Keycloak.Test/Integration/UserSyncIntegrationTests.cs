@@ -26,7 +26,7 @@ public sealed class UserSyncIntegrationTests(KeycloakFixture fixture)
         InMemoryUserSyncService sync = new(
             services.GetRequiredService<IKeycloakUserService>(),
             NullLogger<UserKeycloakSyncService>.Instance);
-        Guid userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
         IBusinessResult<object> result =
             await sync.SyncLocalUserFromKeycloakAsync(userId);

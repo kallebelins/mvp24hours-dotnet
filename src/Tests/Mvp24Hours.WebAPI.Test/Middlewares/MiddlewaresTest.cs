@@ -20,8 +20,8 @@ public class MiddlewaresTest
     [Fact]
     public async Task ExceptionMiddleware_Should_SetInternalServerError_WhenExceptionThrown()
     {
-        var context = WebApiTestHelpers.CreateHttpContext();
-        var options = Options.Create(new ExceptionOptions());
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        IOptions<ExceptionOptions> options = Options.Create(new ExceptionOptions());
         var sut = new ExceptionMiddleware(_ => throw new InvalidOperationException("boom"), options, NullLogger<ExceptionMiddleware>.Instance);
 
         await sut.InvokeAsync(context);
@@ -32,9 +32,9 @@ public class MiddlewaresTest
     [Fact]
     public async Task CorrelationIdMiddleware_Should_UseIncomingHeader()
     {
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Headers["X-Correlation-ID"] = "abc-123";
-        var options = Options.Create(new CorrelationIdOptions { IncludeInResponse = true });
+        IOptions<CorrelationIdOptions> options = Options.Create(new CorrelationIdOptions { IncludeInResponse = true });
         var sut = new CorrelationIdMiddleware(async c => await c.Response.WriteAsync("ok"), options);
 
         await sut.Invoke(context);
@@ -45,7 +45,7 @@ public class MiddlewaresTest
     [Fact]
     public async Task RateLimitingMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new RateLimitingOptions { Enabled = false };
         var keyGen = new DefaultRateLimitKeyGenerator(Options.Create(options));
         var resolver = new RateLimitPartitionResolver(Options.Create(options), keyGen);
@@ -71,7 +71,7 @@ public class MiddlewaresTest
         options.AddFixedWindowPolicy("default", 1, TimeSpan.FromMinutes(5));
         var resolver = new RateLimitPartitionResolver(Options.Create(options), new DefaultRateLimitKeyGenerator(Options.Create(options)));
         var sut = new RateLimitingMiddleware(_ => Task.CompletedTask, Options.Create(options), resolver, NullLogger<RateLimitingMiddleware>.Instance);
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/test");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/test");
         context.Connection.RemoteIpAddress = IPAddress.Parse("10.1.1.1");
 
         await sut.InvokeAsync(context);
@@ -84,7 +84,7 @@ public class MiddlewaresTest
     public async Task RequestLoggingMiddleware_Should_CallLoggerMethods()
     {
         var loggerMock = new Mock<IRequestLogger>();
-        var options = Options.Create(new RequestLoggingOptions());
+        IOptions<RequestLoggingOptions> options = Options.Create(new RequestLoggingOptions());
         var sut = new RequestLoggingMiddleware(_ => Task.CompletedTask, loggerMock.Object, options);
 
         await sut.InvokeAsync(WebApiTestHelpers.CreateHttpContext());
@@ -96,10 +96,10 @@ public class MiddlewaresTest
     [Fact]
     public async Task SecurityHeadersMiddleware_Should_AddSecurityHeaders()
     {
-        var options = Options.Create(new SecurityHeadersOptions());
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/orders");
+        IOptions<SecurityHeadersOptions> options = Options.Create(new SecurityHeadersOptions());
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/orders");
         context.Request.Scheme = "https";
-        var called = false;
+        bool called = false;
         var sut = new SecurityHeadersMiddleware(c =>
         {
             called = true;
@@ -114,8 +114,8 @@ public class MiddlewaresTest
     [Fact]
     public async Task ETagMiddleware_Should_SetEtag_OnSuccess()
     {
-        var options = Options.Create(new ETagOptions { Enabled = true });
-        var context = WebApiTestHelpers.CreateHttpContext();
+        IOptions<ETagOptions> options = Options.Create(new ETagOptions { Enabled = true });
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new ETagMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -130,8 +130,8 @@ public class MiddlewaresTest
     [Fact]
     public async Task ETagMiddleware_Should_SetEtag_WhenIfNoneMatchIsProvided()
     {
-        var options = Options.Create(new ETagOptions { Enabled = true });
-        var context1 = WebApiTestHelpers.CreateHttpContext();
+        IOptions<ETagOptions> options = Options.Create(new ETagOptions { Enabled = true });
+        DefaultHttpContext context1 = WebApiTestHelpers.CreateHttpContext();
         var sut = new ETagMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -141,7 +141,7 @@ public class MiddlewaresTest
         await sut.InvokeAsync(context1);
         string etag = context1.Response.Headers.ETag.ToString();
 
-        var context2 = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context2 = WebApiTestHelpers.CreateHttpContext();
         context2.Request.Headers.IfNoneMatch = etag;
         await sut.InvokeAsync(context2);
 
@@ -161,7 +161,7 @@ public class MiddlewaresTest
             mapper.Object,
             Options.Create(new MvpProblemDetailsOptions()),
             NullLogger<ProblemDetailsMiddleware>.Instance);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
 
         await sut.InvokeAsync(context);
         string body = await WebApiTestHelpers.ReadResponseBodyAsync(context);
@@ -178,7 +178,7 @@ public class MiddlewaresTest
             IdGenerator = () => "gen-id",
             IncludeInResponse = true
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Headers["X-Causation-ID"] = "cause-1";
         context.Request.Headers["X-Tenant-ID"] = "tenant-9";
         context.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user-1")], "test"));
@@ -201,7 +201,7 @@ public class MiddlewaresTest
             AlwaysAllowLocalhost = false
         };
         options.WhitelistedIps.Clear();
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/private");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/private");
         context.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.55");
         var sut = new IpFilteringMiddleware(_ => Task.CompletedTask, Options.Create(options), NullLogger<IpFilteringMiddleware>.Instance);
 
@@ -215,7 +215,7 @@ public class MiddlewaresTest
     {
         var options = new RequestSizeLimitOptions { DefaultMaxBodySize = 3 };
         options.ContentTypeLimits.Clear();
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", body: "12345");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", body: "12345");
         var sut = new RequestSizeLimitMiddleware(_ => Task.CompletedTask, Options.Create(options), NullLogger<RequestSizeLimitMiddleware>.Instance);
 
         await sut.InvokeAsync(context);
@@ -227,7 +227,7 @@ public class MiddlewaresTest
     public async Task RequestTelemetryMiddleware_Should_AppendCorrelationHeader()
     {
         var options = new RequestTelemetryOptions { EnableTracing = true, EnableMetrics = false };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.TraceIdentifier = "trace-123";
         var sut = new RequestTelemetryMiddleware(async c => await c.Response.WriteAsync("ok"), Options.Create(options));
 
@@ -240,7 +240,7 @@ public class MiddlewaresTest
     public async Task AntiForgeryMiddleware_Should_ReturnTokenEndpointPayload()
     {
         var options = new AntiForgeryOptions { RegisterTokenEndpoint = true };
-        var context = WebApiTestHelpers.CreateHttpContext(method: "GET", path: options.TokenEndpoint);
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "GET", path: options.TokenEndpoint);
         var sut = new AntiForgeryMiddleware(_ => Task.CompletedTask, Options.Create(options), NullLogger<AntiForgeryMiddleware>.Instance);
 
         await sut.InvokeAsync(context);
@@ -254,7 +254,7 @@ public class MiddlewaresTest
     public async Task AntiForgeryMiddleware_Should_FailProtectedPostWithoutTokens()
     {
         var options = new AntiForgeryOptions();
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders");
         var sut = new AntiForgeryMiddleware(_ => Task.CompletedTask, Options.Create(options), NullLogger<AntiForgeryMiddleware>.Instance);
 
         await sut.InvokeAsync(context);

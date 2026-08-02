@@ -22,8 +22,8 @@ public class EncryptedValueConvertersTest
         var mock = new Mock<IExtendedEncryptionProvider>();
         mock.Setup(x => x.Encrypt(It.IsAny<string>())).Returns<string>(plain => $"enc:{plain}");
         mock.Setup(x => x.Decrypt(It.IsAny<string>())).Returns<string>(cipher => cipher["enc:".Length..]);
-        mock.Setup(x => x.Encrypt(It.IsAny<byte[]>())).Returns<byte[]>(data => data.Select(b => (byte)(b + 1)).ToArray());
-        mock.Setup(x => x.Decrypt(It.IsAny<byte[]>())).Returns<byte[]>(data => data.Select(b => (byte)(b - 1)).ToArray());
+        mock.Setup(x => x.Encrypt(It.IsAny<byte[]>())).Returns<byte[]>(data => [.. data.Select(b => (byte)(b + 1))]);
+        mock.Setup(x => x.Decrypt(It.IsAny<byte[]>())).Returns<byte[]>(data => [.. data.Select(b => (byte)(b - 1))]);
         return mock;
     }
 
@@ -47,7 +47,7 @@ public class EncryptedValueConvertersTest
     {
         Mock<IEncryptionProvider> encryption = CreateEncryptionMock();
 
-        EncryptedStringConverter converter = EncryptedStringConverter.Create(encryption.Object);
+        var converter = EncryptedStringConverter.Create(encryption.Object);
 
         ((string)converter.ConvertFromProvider(converter.ConvertToProvider("x")!)!).Should().Be("x");
     }
@@ -92,7 +92,7 @@ public class EncryptedValueConvertersTest
         var payload = new SamplePayload { Name = "Test", Count = 3 };
 
         string? cipher = (string?)converter.ConvertToProvider(payload);
-        SamplePayload? roundTrip = (SamplePayload?)converter.ConvertFromProvider(cipher);
+        var roundTrip = (SamplePayload?)converter.ConvertFromProvider(cipher);
 
         roundTrip!.Name.Should().Be("Test");
         roundTrip.Count.Should().Be(3);

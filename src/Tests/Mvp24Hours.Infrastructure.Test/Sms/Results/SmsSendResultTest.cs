@@ -13,7 +13,7 @@ public class SmsSendResultTest
     [Fact]
     public void Successful_WithDefaults_ShouldSetQueuedStatusAndTimestamp()
     {
-        SmsSendResult result = SmsSendResult.Successful();
+        var result = SmsSendResult.Successful();
 
         result.Success.Should().BeTrue();
         result.IsFailure.Should().BeFalse();
@@ -30,7 +30,7 @@ public class SmsSendResultTest
     {
         DateTimeOffset sentAt = DateTimeOffset.UtcNow.AddMinutes(-5);
 
-        SmsSendResult result = SmsSendResult.Successful("msg-123", SmsDeliveryStatus.Delivered, sentAt);
+        var result = SmsSendResult.Successful("msg-123", SmsDeliveryStatus.Delivered, sentAt);
 
         result.Success.Should().BeTrue();
         result.MessageId.Should().Be("msg-123");
@@ -54,7 +54,7 @@ public class SmsSendResultTest
     {
         var exception = new InvalidOperationException("provider down");
 
-        SmsSendResult result = SmsSendResult.Failed("send failed", exception);
+        var result = SmsSendResult.Failed("send failed", exception);
 
         result.Success.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -83,7 +83,7 @@ public class SmsSendResultTest
     [Fact]
     public void Failed_WithMultipleErrors_ShouldPreserveAllErrors()
     {
-        SmsSendResult result = SmsSendResult.Failed(["error-a", "error-b"]);
+        var result = SmsSendResult.Failed(["error-a", "error-b"]);
 
         result.Errors.Should().BeEquivalentTo(["error-a", "error-b"]);
         result.FirstError.Should().Be("error-a");
@@ -103,7 +103,7 @@ public class SmsSendResultTest
     {
         var exception = new TimeoutException("timed out");
 
-        SmsSendResult result = SmsSendResult.Failed(exception);
+        var result = SmsSendResult.Failed(exception);
 
         result.Errors.Should().ContainSingle().Which.Should().Be("timed out");
         result.Exception.Should().BeSameAs(exception);

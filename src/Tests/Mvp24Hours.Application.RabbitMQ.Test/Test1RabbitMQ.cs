@@ -3,7 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
 using Mvp24Hours.Extensions;
@@ -20,21 +22,54 @@ namespace Mvp24Hours.Application.RabbitMQ.Test;
 public class Test1RabbitMQ : IAsyncLifetime
 {
     #region [ Container ]
-    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-management")
-        .WithExposedPort(5672)
-        .WithUsername("guest")
-        .WithPassword("guest")
-        .WithCleanUp(true)
-        .Build();
+    private RabbitMqContainer? _rabbitMqContainer;
+    private bool _isContainerAvailable;
 
     public async Task InitializeAsync()
     {
-        await _rabbitMqContainer.StartAsync().ConfigureAwait(false);
+        if (!DockerAvailability.IsAvailable)
+        {
+            return;
+        }
+
+        try
+        {
+            _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3.13-management")
+                .WithExposedPort(5672)
+                .WithUsername("guest")
+                .WithPassword("guest")
+                .WithCleanUp(true)
+                .Build();
+            await _rabbitMqContainer.StartAsync().ConfigureAwait(false);
+            _isContainerAvailable = true;
+        }
+        catch (Exception ex) when (IsDockerUnavailable(ex))
+        {
+            _isContainerAvailable = false;
+        }
     }
 
     public async Task DisposeAsync()
     {
-        await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
+        if (_rabbitMqContainer is not null)
+        {
+            await _rabbitMqContainer.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private static bool IsDockerUnavailable(Exception ex)
+    {
+        if (ex is DockerUnavailableException)
+        {
+            return true;
+        }
+
+        if (ex is AggregateException aggregate)
+        {
+            return aggregate.Flatten().InnerExceptions.Any(static e => e is DockerUnavailableException);
+        }
+
+        return false;
     }
     #endregion
 
@@ -53,7 +88,7 @@ public class Test1RabbitMQ : IAsyncLifetime
             typeof(CustomerConsumer).Assembly,
             connectionOptions =>
             {
-                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.ConnectionString = _rabbitMqContainer!.GetConnectionString();
                 connectionOptions.DispatchConsumersAsync = true;
                 connectionOptions.RetryCount = 3;
             },
@@ -69,7 +104,7 @@ public class Test1RabbitMQ : IAsyncLifetime
             [typeof(CustomerConsumer)],
             connectionOptions =>
             {
-                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.ConnectionString = _rabbitMqContainer!.GetConnectionString();
                 connectionOptions.DispatchConsumersAsync = true;
                 connectionOptions.RetryCount = 3;
             },
@@ -88,7 +123,7 @@ public class Test1RabbitMQ : IAsyncLifetime
             [typeof(CustomerWithCtorConsumer)],
             connectionOptions =>
             {
-                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.ConnectionString = _rabbitMqContainer!.GetConnectionString();
                 connectionOptions.DispatchConsumersAsync = true;
                 connectionOptions.RetryCount = 3;
             },
@@ -112,7 +147,7 @@ public class Test1RabbitMQ : IAsyncLifetime
             consumers,
             connectionOptions =>
             {
-                connectionOptions.ConnectionString = _rabbitMqContainer.GetConnectionString();
+                connectionOptions.ConnectionString = _rabbitMqContainer!.GetConnectionString();
                 connectionOptions.DispatchConsumersAsync = true;
                 connectionOptions.RetryCount = 3;
             },
@@ -121,9 +156,14 @@ public class Test1RabbitMQ : IAsyncLifetime
     }
     #endregion
 
-    [Fact]
+    [DockerFact]
     public void CreateProducerAssembly()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeAssembly();
         // arrange
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
@@ -140,9 +180,14 @@ public class Test1RabbitMQ : IAsyncLifetime
         Assert.True(result.HasValue());
     }
 
-    [Fact]
+    [DockerFact]
     public void CreateConsumerAssembly()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeAssembly();
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
@@ -162,9 +207,14 @@ public class Test1RabbitMQ : IAsyncLifetime
         Assert.True(true);
     }
 
-    [Fact]
+    [DockerFact]
     public void CreateConsumerWithoutInjection()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeAssemblyWithoutInjection();
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
@@ -184,9 +234,14 @@ public class Test1RabbitMQ : IAsyncLifetime
         Assert.True(true);
     }
 
-    [Fact]
+    [DockerFact]
     public void CreateProducerDefined()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeDefined();
         // arrange
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
@@ -203,9 +258,14 @@ public class Test1RabbitMQ : IAsyncLifetime
         Assert.True(result.HasValue());
     }
 
-    [Fact]
+    [DockerFact]
     public void CreateConsumerDefined()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeDefined();
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 
@@ -225,9 +285,14 @@ public class Test1RabbitMQ : IAsyncLifetime
         Assert.True(true);
     }
 
-    [Fact]
+    [DockerFact]
     public void CreateConsumerDefinedList()
     {
+        if (!_isContainerAvailable)
+        {
+            return;
+        }
+
         IServiceProvider serviceProvider = SetupTypeDefinedList();
         MvpRabbitMQClient? client = serviceProvider.GetRequiredService<MvpRabbitMQClient>();
 

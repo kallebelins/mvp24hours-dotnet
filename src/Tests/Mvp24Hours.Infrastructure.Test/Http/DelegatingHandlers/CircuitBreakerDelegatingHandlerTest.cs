@@ -35,8 +35,8 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        CircuitBreakerDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -46,9 +46,9 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenDisabled_ShouldPassThrough()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(enabled: false));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError);
+        CircuitBreakerDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(enabled: false));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         for (int i = 0; i < 5; i++)
         {
@@ -63,9 +63,9 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnSuccess_ShouldKeepCircuitClosed()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CircuitBreakerDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -77,15 +77,15 @@ public class CircuitBreakerDelegatingHandlerTest
     public async Task SendAsync_AfterFailures_ShouldOpenCircuitAndBlockRequests()
     {
         CircuitBreakerStateChangeInfo? breakInfo = null;
-        var options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
+        CircuitBreakerPolicyOptions options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
             failureRatio: 1.0,
             minimumThroughput: 2,
             breakDuration: TimeSpan.FromSeconds(5));
         options.SetCallbacks(onBreak: info => breakInfo = info);
 
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError);
-        var handler = CreateHandler(options, "OrdersApi");
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError);
+        CircuitBreakerDelegatingHandler handler = CreateHandler(options, "OrdersApi");
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
         await client.GetAsync("/resource");
@@ -103,12 +103,12 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnHttpRequestException_ShouldCountAsFailure()
     {
-        var options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
+        CircuitBreakerPolicyOptions options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
             failureRatio: 1.0,
             minimumThroughput: 2);
-        var inner = new TestHttpMessageHandler().SimulateNetworkFailure();
-        var handler = CreateHandler(options);
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().SimulateNetworkFailure();
+        CircuitBreakerDelegatingHandler handler = CreateHandler(options);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.Invoking(c => c.GetAsync("/resource")).Should().ThrowAsync<HttpRequestException>();
         await client.Invoking(c => c.GetAsync("/resource")).Should().ThrowAsync<HttpRequestException>();
@@ -119,7 +119,7 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public void Isolate_ShouldOpenCircuitImmediately()
     {
-        var handler = CreateHandler();
+        CircuitBreakerDelegatingHandler handler = CreateHandler();
         handler.Isolate();
         handler.CircuitState.Should().Be(CircuitState.Isolated);
     }
@@ -127,7 +127,7 @@ public class CircuitBreakerDelegatingHandlerTest
     [Fact]
     public void Reset_ShouldCloseCircuit()
     {
-        var handler = CreateHandler();
+        CircuitBreakerDelegatingHandler handler = CreateHandler();
         handler.Isolate();
         handler.Reset();
         handler.CircuitState.Should().Be(CircuitState.Closed);
@@ -138,7 +138,7 @@ public class CircuitBreakerDelegatingHandlerTest
     {
         CircuitBreakerStateChangeInfo? halfOpenInfo = null;
         CircuitBreakerStateChangeInfo? resetInfo = null;
-        var options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
+        CircuitBreakerPolicyOptions options = DelegatingHandlerTestHelpers.CreateCircuitBreakerOptions(
             failureRatio: 1.0,
             minimumThroughput: 2,
             breakDuration: TimeSpan.FromMilliseconds(100));
@@ -157,8 +157,8 @@ public class CircuitBreakerDelegatingHandlerTest
             return Task.FromResult(new HttpResponseMessage(status));
         });
 
-        var handler = CreateHandler(options, "CatalogApi");
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        CircuitBreakerDelegatingHandler handler = CreateHandler(options, "CatalogApi");
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
         await client.GetAsync("/resource");

@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.ContentNegotiation;
 using Mvp24Hours.WebAPI.Test.Support;
@@ -15,7 +15,7 @@ public class ContentNegotiationTest
         var options = new ContentNegotiationOptions();
         var registry = new ContentFormatterRegistry(options);
         var sut = new AcceptHeaderNegotiator(options, registry);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Headers["Accept"] = "application/json";
 
         ContentNegotiationResult result = sut.Negotiate(context);
@@ -30,7 +30,7 @@ public class ContentNegotiationTest
         var options = new ContentNegotiationOptions();
         var registry = new ContentFormatterRegistry(options);
         var sut = new AcceptHeaderNegotiator(options, registry);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.QueryString = new QueryString("?format=xml");
 
         ContentNegotiationResult result = sut.Negotiate(context);

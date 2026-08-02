@@ -13,7 +13,9 @@ namespace Mvp24Hours.Infrastructure.Test.Support;
 internal static class DistributedLockingTestHelpers
 {
     public static string UniqueResource(string prefix = "resource")
-        => $"{prefix}-{Guid.NewGuid():N}";
+    {
+        return $"{prefix}-{Guid.NewGuid():N}";
+    }
 
     public static DistributedLockOptions FastFailOptions(
         TimeSpan? acquisitionTimeout = null,
@@ -35,13 +37,19 @@ internal static class DistributedLockingTestHelpers
     }
 
     public static InMemoryDistributedLockProvider CreateInMemory()
-        => new();
+    {
+        return new();
+    }
 
     public static string UnreachableSqlServerConnectionString()
-        => "Server=127.0.0.1,1;Database=Mvp24HoursLockTest;User Id=sa;Password=invalid;Connect Timeout=1;TrustServerCertificate=True;";
+    {
+        return "Server=127.0.0.1,1;Database=Mvp24HoursLockTest;User Id=sa;Password=invalid;Connect Timeout=1;TrustServerCertificate=True;";
+    }
 
     public static string UnreachablePostgreSqlConnectionString()
-        => "Host=127.0.0.1;Port=1;Database=Mvp24HoursLockTest;Username=postgres;Password=invalid;Timeout=1;";
+    {
+        return "Host=127.0.0.1;Port=1;Database=Mvp24HoursLockTest;Username=postgres;Password=invalid;Timeout=1;";
+    }
 
     public static MockRedis CreateMockRedis(bool stringSetSucceeds = true)
     {

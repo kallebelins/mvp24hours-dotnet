@@ -50,9 +50,9 @@ public class HostedTest
     [Fact]
     public void MvpRabbitMQHostedService_ShouldMapOptions()
     {
-        object state = new object();
-        TimeSpan due = TimeSpan.FromSeconds(2);
-        TimeSpan period = TimeSpan.FromSeconds(10);
+        object state = new();
+        var due = TimeSpan.FromSeconds(2);
+        var period = TimeSpan.FromSeconds(10);
         var options = new RabbitMQHostedOptions
         {
             Callback = _ => { },

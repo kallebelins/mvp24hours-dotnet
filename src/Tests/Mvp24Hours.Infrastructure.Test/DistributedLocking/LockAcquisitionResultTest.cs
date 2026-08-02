@@ -27,7 +27,7 @@ public class LockAcquisitionResultTest
         DateTimeOffset attempted = DateTimeOffset.UtcNow.AddSeconds(-1);
         DateTimeOffset completed = DateTimeOffset.UtcNow;
 
-        LockAcquisitionResult result = LockAcquisitionResult.Acquired(handle.Object, 42, attempted, completed);
+        var result = LockAcquisitionResult.Acquired(handle.Object, 42, attempted, completed);
 
         result.IsAcquired.Should().BeTrue();
         result.IsTimeout.Should().BeFalse();
@@ -44,7 +44,7 @@ public class LockAcquisitionResultTest
     [Fact]
     public void Timeout_ShouldSetTimeoutStatusAndDefaultMessage()
     {
-        LockAcquisitionResult result = LockAcquisitionResult.Timeout();
+        var result = LockAcquisitionResult.Timeout();
 
         result.IsTimeout.Should().BeTrue();
         result.IsAcquired.Should().BeFalse();
@@ -55,7 +55,7 @@ public class LockAcquisitionResultTest
     [Fact]
     public void Timeout_WithCustomMessage_ShouldUseMessage()
     {
-        LockAcquisitionResult result = LockAcquisitionResult.Timeout("custom timeout");
+        var result = LockAcquisitionResult.Timeout("custom timeout");
 
         result.ErrorMessage.Should().Be("custom timeout");
     }
@@ -73,7 +73,7 @@ public class LockAcquisitionResultTest
     {
         var ex = new InvalidOperationException("boom");
 
-        LockAcquisitionResult result = LockAcquisitionResult.Failed("failed", ex);
+        var result = LockAcquisitionResult.Failed("failed", ex);
 
         result.IsFailed.Should().BeTrue();
         result.Status.Should().Be(LockAcquisitionStatus.Failed);

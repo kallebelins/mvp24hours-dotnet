@@ -15,10 +15,7 @@ public class RequestResponseTest
     [Fact]
     public async Task TestHarness_RequestAsync_WithRequestClient_ShouldReturnSuccessResponse()
     {
-        TestHarness harness = TestHarness.Create(services =>
-        {
-            services.AddSingleton<IRequestClient<TestOrderCommand, TestOrderResponse>, FakeRequestClient>();
-        });
+        var harness = TestHarness.Create(services => services.AddSingleton<IRequestClient<TestOrderCommand, TestOrderResponse>, FakeRequestClient>());
 
         Response<TestOrderResponse> response = await harness.RequestAsync<TestOrderCommand, TestOrderResponse>(
             new TestOrderCommand { Action = "create" });
@@ -30,7 +27,7 @@ public class RequestResponseTest
     [Fact]
     public void RequestClient_Options_ShouldExposeTimeout()
     {
-        var connection = RabbitMQTestHelpers.CreateMockConnection();
+        Mock<IMvpRabbitMQConnection> connection = RabbitMQTestHelpers.CreateMockConnection();
         var serializer = new JsonMessageSerializer();
         var client = new RequestClient<TestOrderCommand, TestOrderResponse>(
             connection.Object,

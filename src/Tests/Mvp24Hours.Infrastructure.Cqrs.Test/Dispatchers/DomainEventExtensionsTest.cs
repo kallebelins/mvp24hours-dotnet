@@ -49,7 +49,7 @@ public class DomainEventExtensionsTest
         b.Register("b@test.com");
 
         // Act
-        await uow.SaveChangesWithEventsAsync(dispatcher, new CoreHasDomainEvents[] { a, b });
+        await uow.SaveChangesWithEventsAsync(dispatcher, [a, b]);
 
         // Assert
         Assert.Equal(2, publisher.Published.Count);
@@ -128,7 +128,7 @@ public class DomainEventExtensionsTest
         entity.Register("sync-multi@test.com");
 
         // Act
-        uow.SaveChangesWithEvents(dispatcher, new CoreHasDomainEvents[] { entity });
+        uow.SaveChangesWithEvents(dispatcher, [entity]);
 
         // Assert
         Assert.Single(publisher.Published);
@@ -155,7 +155,7 @@ public class DomainEventExtensionsTest
         object[] mixed = [withEvents, without, "not-an-entity"];
 
         // Act
-        List<CoreHasDomainEvents> result = mixed.WithDomainEvents().ToList();
+        var result = mixed.WithDomainEvents().ToList();
 
         // Assert
         Assert.Single(result);
@@ -169,7 +169,7 @@ public class DomainEventExtensionsTest
         object[] entities = [new TestAggregate { Id = 1 }, new TestAggregate { Id = 2 }];
 
         // Act
-        List<CoreHasDomainEvents> result = entities.WithDomainEvents().ToList();
+        var result = entities.WithDomainEvents().ToList();
 
         // Assert
         Assert.Empty(result);

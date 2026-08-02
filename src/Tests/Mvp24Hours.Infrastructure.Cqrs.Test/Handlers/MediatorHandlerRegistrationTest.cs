@@ -46,7 +46,7 @@ public class MediatorHandlerRegistrationTest
         // Act
         IMediatorRequestHandler<TestCommand, string> asRequest =
             sp.GetRequiredService<IMediatorRequestHandler<TestCommand, string>>();
-        IMediatorCommandHandler<TestCommand, string>? asCommand =
+        var asCommand =
             asRequest as IMediatorCommandHandler<TestCommand, string>;
 
         // Assert
@@ -175,10 +175,7 @@ public class MediatorHandlerRegistrationTest
         var log = new List<string>();
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly);
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssembly(typeof(TestCommand).Assembly));
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => new OrderedBehavior("A", log));
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => new OrderedBehavior("B", log));
         services.AddTransient<IPipelineBehavior<TestCommand, string>>(_ => new OrderedBehavior("C", log));
@@ -193,8 +190,10 @@ public class MediatorHandlerRegistrationTest
 
     private sealed class ThrowingNotificationHandler : IMediatorNotificationHandler<FailingDispatchEvent>
     {
-        public Task Handle(FailingDispatchEvent notification, CancellationToken cancellationToken) =>
+        public Task Handle(FailingDispatchEvent notification, CancellationToken cancellationToken)
+        {
             throw new InvalidOperationException("Handler boom");
+        }
     }
 
     private sealed class RecordingNotificationHandler : IMediatorNotificationHandler<FailingDispatchEvent>

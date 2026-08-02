@@ -12,8 +12,7 @@ namespace Mvp24Hours.Core.Serialization.Json;
 /// <summary>
 /// <see href="https://github.com/ssukhpinder/SerializationContractResolverExample/blob/master/SerializationContractResolverExample/ContractResolver/LowerCaseResolver.cs"/>
 /// </summary>
-/// <remarks>
-/// <code>
+/// <remarks><![CDATA[
 /// CustomerInfo customerInfo = new CustomerInfo()
 /// {
 /// 	FirstName = "Sukhpinder",
@@ -27,8 +26,7 @@ namespace Mvp24Hours.Core.Serialization.Json;
 /// {
 /// 	ContractResolver = new LowerCaseResolver<CustomerInfo>()
 /// });
-/// </code>
-/// </remarks>
+/// ]]></remarks>
 public class LowerCaseResolver<T> : DefaultContractResolver
 {
     protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)

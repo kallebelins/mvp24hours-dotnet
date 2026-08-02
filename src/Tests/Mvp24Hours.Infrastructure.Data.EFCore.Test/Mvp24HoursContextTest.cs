@@ -75,7 +75,7 @@ public class Mvp24HoursContextTest
     [Fact]
     public void SaveChanges_WhenCanApplyEntityLogIsFalse_ShouldNotStampDates()
     {
-        var options = new DbContextOptionsBuilder<TestDbContextNoLog>()
+        DbContextOptions<TestDbContextNoLog> options = new DbContextOptionsBuilder<TestDbContextNoLog>()
             .UseInMemoryDatabase($"NoLog_{Guid.NewGuid():N}")
             .Options;
         using var context = new TestDbContextNoLog(options);
@@ -117,7 +117,7 @@ public class Mvp24HoursContextTest
     [Fact]
     public void SaveChanges_WithEntityLogBy_ShouldStampCreatedByAndModifiedBy()
     {
-        var options = new DbContextOptionsBuilder<TestDbContextWithUser>()
+        DbContextOptions<TestDbContextWithUser> options = new DbContextOptionsBuilder<TestDbContextWithUser>()
             .UseInMemoryDatabase($"WithUser_{Guid.NewGuid():N}")
             .Options;
         using var context = new TestDbContextWithUser(options, entityLogBy: "user-42");

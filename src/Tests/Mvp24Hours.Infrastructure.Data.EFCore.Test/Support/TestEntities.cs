@@ -79,23 +79,22 @@ public class TestDomainEventEntity : EntityBase<int>, IHasDomainEvents
 
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
-
-    public void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
-}
-
-public sealed class TestDomainEvent : IDomainEvent
-{
-    public TestDomainEvent(string message)
+    public void ClearDomainEvents()
     {
-        Message = message;
-        OccurredAt = DateTime.UtcNow;
-        EventId = Guid.NewGuid();
+        _domainEvents.Clear();
     }
 
-    public Guid EventId { get; }
-    public DateTime OccurredAt { get; }
-    public string Message { get; }
+    public void Raise(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+}
+
+public sealed class TestDomainEvent(string message) : IDomainEvent
+{
+    public Guid EventId { get; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public string Message { get; } = message;
 }
 
 public class TestEntityLog : EntityBaseLog<int, string>
@@ -103,30 +102,19 @@ public class TestEntityLog : EntityBaseLog<int, string>
     public string Name { get; set; } = string.Empty;
 }
 
-public class TestDbContextNoLog : Mvp24HoursContext
+public class TestDbContextNoLog(DbContextOptions options) : Mvp24HoursContext(options)
 {
-    public TestDbContextNoLog(DbContextOptions options)
-        : base(options)
-    {
-    }
-
     public override bool CanApplyEntityLog => false;
 
     public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
     public DbSet<TestEntity> Entities => Set<TestEntity>();
 }
 
-public class TestDbContextWithUser : Mvp24HoursContext
+public class TestDbContextWithUser(DbContextOptions options, object? entityLogBy = null) : Mvp24HoursContext(options)
 {
-    public TestDbContextWithUser(DbContextOptions options, object? entityLogBy = null)
-        : base(options)
-    {
-        EntityLogBy = entityLogBy;
-    }
-
     public override bool CanApplyEntityLog => true;
 
-    public override object? EntityLogBy { get; }
+    public override object? EntityLogBy { get; } = entityLogBy;
 
     public DbSet<TestEntityLog> EntityLogs => Set<TestEntityLog>();
     public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();

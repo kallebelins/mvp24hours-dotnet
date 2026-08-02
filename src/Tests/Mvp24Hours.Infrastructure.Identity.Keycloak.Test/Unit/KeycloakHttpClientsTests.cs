@@ -16,7 +16,7 @@ public sealed class KeycloakHttpClientsTests
     [Fact]
     public async Task DiscoveryService_ShouldReadAndCacheDocument()
     {
-        using WireMockServer server = WireMockServer.Start();
+        using var server = WireMockServer.Start();
         server.Given(Request.Create()
                 .WithPath("/realms/test/.well-known/openid-configuration")
                 .UsingGet())
@@ -64,7 +64,7 @@ public sealed class KeycloakHttpClientsTests
     [Fact]
     public async Task TokenClient_ShouldPostFormToDiscoveredEndpoint()
     {
-        using WireMockServer server = WireMockServer.Start();
+        using var server = WireMockServer.Start();
         server.Given(Request.Create()
                 .WithPath("/token")
                 .UsingPost()

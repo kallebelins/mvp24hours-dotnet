@@ -65,7 +65,7 @@ public class MultiTenancyTest
     [Fact]
     public async Task TenantConsumeFilter_WithoutTenantAndRejectEnabled_ShouldSendToDeadLetter()
     {
-        var options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = true });
+        IOptions<TenantRabbitMQOptions> options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = true });
         var filter = new TenantConsumeFilter(options);
         ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
         bool nextCalled = false;
@@ -83,7 +83,7 @@ public class MultiTenancyTest
     [Fact]
     public async Task TenantConsumeFilter_WithTenantHeader_ShouldSetCurrentContext()
     {
-        var options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = false });
+        IOptions<TenantRabbitMQOptions> options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = false });
         var filter = new TenantConsumeFilter(options);
         ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(
             new TestOrderEvent(),
@@ -101,7 +101,7 @@ public class MultiTenancyTest
     {
         var services = new ServiceCollection();
         IServiceProvider provider = services.BuildServiceProvider();
-        var options = Options.Create(new TenantRabbitMQOptions { AutoPropagateTenantHeaders = false });
+        IOptions<TenantRabbitMQOptions> options = Options.Create(new TenantRabbitMQOptions { AutoPropagateTenantHeaders = false });
         var filter = new TenantPublishFilter(options, provider);
         PublishFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreatePublishFilterContext(new TestOrderEvent(), serviceProvider: provider);
 
@@ -175,7 +175,7 @@ public class MultiTenancyTest
     [Fact]
     public async Task TenantConsumeFilter_WithoutRejectEnabled_ShouldCallNext()
     {
-        var options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = false });
+        IOptions<TenantRabbitMQOptions> options = Options.Create(new TenantRabbitMQOptions { RejectMessagesWithoutTenant = false });
         var filter = new TenantConsumeFilter(options);
         ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
         bool nextCalled = false;

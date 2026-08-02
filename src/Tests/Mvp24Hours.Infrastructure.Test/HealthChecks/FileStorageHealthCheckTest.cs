@@ -3,13 +3,14 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Text;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Moq;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
+using Mvp24Hours.Infrastructure.FileStorage.Providers;
 using Mvp24Hours.Infrastructure.FileStorage.Results;
 using Mvp24Hours.Infrastructure.HealthChecks;
 using Mvp24Hours.Infrastructure.Test.Support;
-using System.Text;
 
 namespace Mvp24Hours.Infrastructure.Test.HealthChecks;
 
@@ -52,7 +53,7 @@ public class FileStorageHealthCheckTest
     [Fact]
     public async Task CheckHealthAsync_WithInMemoryStorage_ShouldReturnHealthy()
     {
-        var storage = HealthChecksTestHelpers.CreateInMemoryStorage();
+        InMemoryFileStorageProvider storage = HealthChecksTestHelpers.CreateInMemoryStorage();
         var options = new FileStorageHealthCheckOptions
         {
             TestFilePath = "health-check/ok.txt",
@@ -80,7 +81,7 @@ public class FileStorageHealthCheckTest
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(
             upload: FileUploadResult.Failed("disk full"));
-        var check = CreateCheck(mock.Object);
+        FileStorageHealthCheck check = CreateCheck(mock.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -93,7 +94,7 @@ public class FileStorageHealthCheckTest
     public async Task CheckHealthAsync_WhenFileDoesNotExistAfterUpload_ShouldReturnUnhealthy()
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(exists: false);
-        var check = CreateCheck(mock.Object);
+        FileStorageHealthCheck check = CreateCheck(mock.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -107,7 +108,7 @@ public class FileStorageHealthCheckTest
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(
             download: FileDownloadResult.Failed("read error"));
-        var check = CreateCheck(mock.Object);
+        FileStorageHealthCheck check = CreateCheck(mock.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -120,7 +121,7 @@ public class FileStorageHealthCheckTest
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(
             download: FileDownloadResult.Successful(Encoding.UTF8.GetBytes("x")));
-        var check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
+        FileStorageHealthCheck check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
         {
             TestContent = "Health check test content",
             DegradedThresholdMs = 10_000,
@@ -139,7 +140,7 @@ public class FileStorageHealthCheckTest
         byte[] wrong = Encoding.UTF8.GetBytes("Health check test contenX");
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(
             download: FileDownloadResult.Successful(wrong));
-        var check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
+        FileStorageHealthCheck check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
         {
             TestContent = "Health check test content",
             SkipContentVerification = false,
@@ -159,7 +160,7 @@ public class FileStorageHealthCheckTest
         byte[] wrong = Encoding.UTF8.GetBytes("Health check test contenX");
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock(
             download: FileDownloadResult.Successful(wrong));
-        var check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
+        FileStorageHealthCheck check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
         {
             TestContent = "Health check test content",
             SkipContentVerification = true,
@@ -176,7 +177,7 @@ public class FileStorageHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsFailureThreshold_ShouldReturnUnhealthy()
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock();
-        var check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
+        FileStorageHealthCheck check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 0
@@ -192,7 +193,7 @@ public class FileStorageHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsDegradedThreshold_ShouldReturnDegraded()
     {
         Mock<IFileStorage> mock = HealthChecksTestHelpers.CreateFileStorageMock();
-        var check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
+        FileStorageHealthCheck check = CreateCheck(mock.Object, new FileStorageHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 30_000
@@ -218,7 +219,7 @@ public class FileStorageHealthCheckTest
         mock.Setup(s => s.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var check = CreateCheck(mock.Object);
+        FileStorageHealthCheck check = CreateCheck(mock.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -241,7 +242,7 @@ public class FileStorageHealthCheckTest
         mock.Setup(s => s.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var check = CreateCheck(mock.Object);
+        FileStorageHealthCheck check = CreateCheck(mock.Object);
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
@@ -256,8 +257,8 @@ public class FileStorageHealthCheckTest
     [Fact]
     public async Task CheckHealthAsync_WithNullTestFilePath_ShouldGenerateUniquePath()
     {
-        var storage = HealthChecksTestHelpers.CreateInMemoryStorage();
-        var check = CreateCheck(storage, new FileStorageHealthCheckOptions
+        InMemoryFileStorageProvider storage = HealthChecksTestHelpers.CreateInMemoryStorage();
+        FileStorageHealthCheck check = CreateCheck(storage, new FileStorageHealthCheckOptions
         {
             TestFilePath = null,
             DegradedThresholdMs = 10_000,

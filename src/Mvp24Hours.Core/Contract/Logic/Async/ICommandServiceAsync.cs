@@ -17,40 +17,48 @@ public interface ICommandServiceAsync<T>
     /// Add an entities.
     /// </summary>
     /// <param name="entity"></param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> AddAsync(T entity, CancellationToken cancellationToken = default);
     /// <summary>
     /// Adds list of entities.
     /// </summary>
     /// <param name="entities">List of entities</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> AddAsync(IList<T> entities, CancellationToken cancellationToken = default);
     /// <summary>
     /// Updates an entity.
     /// </summary>
     /// <param name="entity">Entity instance</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> ModifyAsync(T entity, CancellationToken cancellationToken = default);
     /// <summary>
     /// Updates list of entities.
     /// </summary>
     /// <param name="entities">List of entities</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> ModifyAsync(IList<T> entities, CancellationToken cancellationToken = default);
     /// <summary>
     /// Removes an entity (logical exclusion).
     /// </summary>
     /// <param name="entity">Entity instance</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> RemoveAsync(T entity, CancellationToken cancellationToken = default);
     /// <summary>
     /// Removes list of entities (logical exclusion).
     /// </summary>
     /// <param name="entities">List of entities</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> RemoveAsync(IList<T> entities, CancellationToken cancellationToken = default);
     /// <summary>
     /// Removes an entity by the code identifier (logical exclusion).
     /// </summary>
     /// <param name="id">Identifier of entity</param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> RemoveByIdAsync(object id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Removes an entity by the code identifier (logical exclusion).
     /// </summary>
-    /// <param name="id">List of identifiers</param>
+    /// <param name="ids"></param>
+    /// <param name="cancellationToken"></param>
     Task<IBusinessResult<int>> RemoveByIdAsync(IList<object> ids, CancellationToken cancellationToken = default);
 }

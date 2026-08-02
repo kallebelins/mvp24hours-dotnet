@@ -52,7 +52,7 @@ public class HttpClientHealthCheckTest
     public async Task CheckHealthAsync_WithSuccessfulGet_ShouldReturnHealthy()
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>();
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             HealthEndpoint = "/health",
             DegradedThresholdMs = 10_000,
@@ -71,7 +71,7 @@ public class HttpClientHealthCheckTest
     public async Task CheckHealthAsync_WithHeadRequest_ShouldUseSendAsync()
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>();
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             UseHeadRequest = true,
             HealthEndpoint = "/health",
@@ -92,7 +92,7 @@ public class HttpClientHealthCheckTest
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>(
             new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             ExpectedStatusCode = HttpStatusCode.OK,
             DegradedThresholdMs = 10_000,
@@ -110,7 +110,7 @@ public class HttpClientHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsFailureThreshold_ShouldReturnUnhealthy()
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>();
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 0
@@ -126,7 +126,7 @@ public class HttpClientHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsDegradedThreshold_ShouldReturnDegraded()
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>();
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 30_000
@@ -146,7 +146,7 @@ public class HttpClientHealthCheckTest
             {
                 Content = new StringContent("not-matching")
             });
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             ValidateResponseContent = true,
             ExpectedResponseContent = "Healthy",
@@ -168,7 +168,7 @@ public class HttpClientHealthCheckTest
             {
                 Content = new StringContent("Service is Healthy")
             });
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             ValidateResponseContent = true,
             ExpectedResponseContent = "healthy",
@@ -186,7 +186,7 @@ public class HttpClientHealthCheckTest
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>(
             sendException: new HttpRequestException("connection refused"));
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             UseHeadRequest = true,
             DegradedThresholdMs = 10_000,
@@ -204,7 +204,7 @@ public class HttpClientHealthCheckTest
     public async Task CheckHealthAsync_WithAbsoluteHealthEndpoint_ShouldUseAsIs()
     {
         Mock<ITypedHttpClient<HealthCheckTestApi>> mock = HealthChecksTestHelpers.CreateTypedHttpClientMock<HealthCheckTestApi>();
-        var check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
+        HttpClientHealthCheck<HealthCheckTestApi> check = CreateCheck(mock.Object, new HttpClientHealthCheckOptions
         {
             HealthEndpoint = "https://status.example.com/ready",
             DegradedThresholdMs = 10_000,

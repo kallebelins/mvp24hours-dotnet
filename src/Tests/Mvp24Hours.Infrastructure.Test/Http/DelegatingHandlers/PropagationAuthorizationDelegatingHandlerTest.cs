@@ -37,8 +37,8 @@ public class PropagationAuthorizationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        PropagationAuthorizationDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -50,9 +50,9 @@ public class PropagationAuthorizationDelegatingHandlerTest
     {
         IServiceProvider sp = DelegatingHandlerTestHelpers.CreateServiceProviderWithHeaders(
             ("Authorization", "Bearer token-abc"));
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(sp);
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        PropagationAuthorizationDelegatingHandler handler = CreateHandler(sp);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -63,9 +63,9 @@ public class PropagationAuthorizationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithoutHttpContext_ShouldStillSendRequest()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        PropagationAuthorizationDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -76,9 +76,9 @@ public class PropagationAuthorizationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenPropagationThrows_ShouldContinueRequest()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.NoContent);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateThrowingServiceProvider());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.NoContent);
+        PropagationAuthorizationDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateThrowingServiceProvider());
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 

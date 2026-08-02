@@ -20,7 +20,7 @@ public class FileDownloadResultTest
         DateTimeOffset downloadedAt = new(2024, 5, 10, 12, 0, 0, TimeSpan.Zero);
         IFileMetadata metadata = CreateMetadata();
 
-        FileDownloadResult result = FileDownloadResult.Successful(content, metadata, downloadedAt);
+        var result = FileDownloadResult.Successful(content, metadata, downloadedAt);
 
         result.Success.Should().BeTrue();
         result.IsFailure.Should().BeFalse();
@@ -46,7 +46,7 @@ public class FileDownloadResultTest
         IOException exception = new("read error");
         DateTimeOffset downloadedAt = new(2024, 5, 10, 12, 0, 0, TimeSpan.Zero);
 
-        FileDownloadResult result = FileDownloadResult.Failed("download failed", exception, downloadedAt);
+        var result = FileDownloadResult.Failed("download failed", exception, downloadedAt);
 
         result.Success.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -73,7 +73,7 @@ public class FileDownloadResultTest
     {
         IOException exception = new("network error");
 
-        FileDownloadResult result = FileDownloadResult.Failed(exception);
+        var result = FileDownloadResult.Failed(exception);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("network error");
@@ -93,7 +93,7 @@ public class FileDownloadResultTest
     {
         DateTimeOffset downloadedAt = new(2024, 5, 10, 12, 0, 0, TimeSpan.Zero);
 
-        FileDownloadResult result = FileDownloadResult.NotFound("missing.txt", downloadedAt);
+        var result = FileDownloadResult.NotFound("missing.txt", downloadedAt);
 
         result.Success.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -108,7 +108,7 @@ public class FileDownloadResultTest
     [InlineData("Resource NOT FOUND")]
     public void IsNotFound_WhenErrorMessageIndicatesMissingFile_ShouldBeTrue(string errorMessage)
     {
-        FileDownloadResult result = FileDownloadResult.Failed(errorMessage);
+        var result = FileDownloadResult.Failed(errorMessage);
 
         result.IsNotFound.Should().BeTrue();
     }

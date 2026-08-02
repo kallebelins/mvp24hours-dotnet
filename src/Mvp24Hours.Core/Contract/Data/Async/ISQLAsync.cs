@@ -24,6 +24,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// List with items projected in the query
     /// </returns>
@@ -39,6 +41,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// First item projected in the query
     /// </returns>
@@ -54,6 +58,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// First item projected in the query
     /// </returns>
@@ -69,6 +75,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// Single item projected in the query
     /// </returns>
@@ -84,6 +92,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// Single item projected in the query
     /// </returns>
@@ -99,6 +109,8 @@ public interface ISQLAsync
     /// </example>
     /// </param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>
     /// Item projected in the query
     /// </returns>
@@ -113,6 +125,8 @@ public interface ISQLAsync
     /// </example>
     ///</param>
     /// <param name="param">Parameter vector</param>
+    /// <param name="commandTimeout"></param>
+    /// <param name="commandType"></param>
     /// <returns>Number of records affected</returns>
     Task<int> ExecuteAsync(string sqlCommand, object? param = null, int? commandTimeout = null, CommandType? commandType = null);
 }

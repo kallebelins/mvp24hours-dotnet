@@ -8,10 +8,10 @@ public class MigrationResultTest
     [Fact]
     public void Succeeded_ShouldPopulateSuccessProperties()
     {
-        var startedAt = DateTime.UtcNow.AddSeconds(-1);
+        DateTime startedAt = DateTime.UtcNow.AddSeconds(-1);
         var duration = TimeSpan.FromMilliseconds(250);
 
-        MigrationResult result = MigrationResult.Succeeded(["Migration_A"], duration, startedAt);
+        var result = MigrationResult.Succeeded(["Migration_A"], duration, startedAt);
 
         result.Success.Should().BeTrue();
         result.AppliedMigrations.Should().ContainSingle("Migration_A");
@@ -24,10 +24,10 @@ public class MigrationResultTest
     [Fact]
     public void RollbackSucceeded_ShouldPopulateRollbackProperties()
     {
-        var startedAt = DateTime.UtcNow;
+        DateTime startedAt = DateTime.UtcNow;
         var duration = TimeSpan.FromSeconds(1);
 
-        MigrationResult result = MigrationResult.RollbackSucceeded(["Migration_B"], duration, startedAt);
+        var result = MigrationResult.RollbackSucceeded(["Migration_B"], duration, startedAt);
 
         result.Success.Should().BeTrue();
         result.RolledBackMigrations.Should().ContainSingle("Migration_B");
@@ -37,9 +37,9 @@ public class MigrationResultTest
     public void Failed_ShouldPopulateFailureProperties()
     {
         var ex = new InvalidOperationException("boom");
-        var startedAt = DateTime.UtcNow;
+        DateTime startedAt = DateTime.UtcNow;
 
-        MigrationResult result = MigrationResult.Failed("boom", ex, TimeSpan.Zero, startedAt);
+        var result = MigrationResult.Failed("boom", ex, TimeSpan.Zero, startedAt);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("boom");
@@ -49,7 +49,7 @@ public class MigrationResultTest
     [Fact]
     public void NoMigrationsNeeded_ShouldReturnSuccessfulEmptyResult()
     {
-        MigrationResult result = MigrationResult.NoMigrationsNeeded();
+        var result = MigrationResult.NoMigrationsNeeded();
 
         result.Success.Should().BeTrue();
         result.AppliedMigrations.Should().BeEmpty();

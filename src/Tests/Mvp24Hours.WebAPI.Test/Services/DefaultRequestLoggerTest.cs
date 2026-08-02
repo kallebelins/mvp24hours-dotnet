@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -14,13 +15,13 @@ public class DefaultRequestLoggerTest
     public async Task DefaultRequestLogger_Should_LogRequest()
     {
         var loggerMock = new Mock<ILogger<DefaultRequestLogger>>();
-        var options = Options.Create(new RequestLoggingOptions
+        IOptions<RequestLoggingOptions> options = Options.Create(new RequestLoggingOptions
         {
             LoggingLevel = RequestLoggingLevel.Standard,
             LogRequestHeaders = true
         });
         var sut = new DefaultRequestLogger(loggerMock.Object, options);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Headers["Authorization"] = "secret";
 
         await sut.LogRequestAsync(context);
@@ -33,7 +34,7 @@ public class DefaultRequestLoggerTest
     {
         var loggerMock = new Mock<ILogger<DefaultRequestLogger>>();
         var sut = new DefaultRequestLogger(loggerMock.Object, Options.Create(new RequestLoggingOptions()));
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Response.StatusCode = 200;
 
         await sut.LogResponseAsync(context, 12);
@@ -46,7 +47,7 @@ public class DefaultRequestLoggerTest
     {
         var loggerMock = new Mock<ILogger<DefaultRequestLogger>>();
         var sut = new DefaultRequestLogger(loggerMock.Object, Options.Create(new RequestLoggingOptions()));
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
 
         await sut.LogExceptionAsync(context, new InvalidOperationException("boom"), 20);
 

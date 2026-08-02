@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Moq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.Entities;
@@ -14,10 +16,10 @@ public class TenantModelBuilderExtensionsTest
     [Fact]
     public void ApplyTenantQueryFilters_ReturnsOnlyMatchingTenantId()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
-        var databaseName = $"TenantFilter_{Guid.NewGuid():N}";
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
+        string databaseName = $"TenantFilter_{Guid.NewGuid():N}";
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             context.TenantEntities.AddRange(
                 new TestTenantEntity { Name = "A1", TenantId = "tenant-a" },
@@ -26,7 +28,7 @@ public class TenantModelBuilderExtensionsTest
             context.SaveChanges();
         }
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             var results = context.TenantEntities.ToList();
 
@@ -39,13 +41,13 @@ public class TenantModelBuilderExtensionsTest
     [Fact]
     public void ApplyTenantQueryFilters_NullTenantId_BypassesFilter()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
         tenantProvider.Setup(x => x.TenantId).Returns((string)null!);
         tenantProvider.Setup(x => x.HasTenant).Returns(false);
 
-        var databaseName = $"TenantNull_{Guid.NewGuid():N}";
+        string databaseName = $"TenantNull_{Guid.NewGuid():N}";
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             context.TenantEntities.AddRange(
                 new TestTenantEntity { Name = "A1", TenantId = "tenant-a" },
@@ -53,7 +55,7 @@ public class TenantModelBuilderExtensionsTest
             context.SaveChanges();
         }
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             context.TenantEntities.Count().Should().Be(2);
         }
@@ -62,12 +64,12 @@ public class TenantModelBuilderExtensionsTest
     [Fact]
     public void ApplyTenantQueryFilters_EmptyTenantId_DoesNotMatchOtherTenants()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider(string.Empty);
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider(string.Empty);
         tenantProvider.Setup(x => x.HasTenant).Returns(false);
 
-        var databaseName = $"TenantEmpty_{Guid.NewGuid():N}";
+        string databaseName = $"TenantEmpty_{Guid.NewGuid():N}";
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             context.TenantEntities.AddRange(
                 new TestTenantEntity { Name = "Empty", TenantId = string.Empty },
@@ -75,7 +77,7 @@ public class TenantModelBuilderExtensionsTest
             context.SaveChanges();
         }
 
-        using (var context = CreateTenantContext(databaseName, tenantProvider.Object))
+        using (TenantFilterDbContext context = CreateTenantContext(databaseName, tenantProvider.Object))
         {
             var results = context.TenantEntities.ToList();
 
@@ -98,10 +100,10 @@ public class TenantModelBuilderExtensionsTest
     [Fact]
     public void ApplyTenantAndSoftDeleteFilters_FiltersByTenantAndExcludesDeleted()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
-        var databaseName = $"TenantSoft_{Guid.NewGuid():N}";
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-a");
+        string databaseName = $"TenantSoft_{Guid.NewGuid():N}";
 
-        using (var context = CreateCombinedFilterContext(databaseName, tenantProvider.Object))
+        using (CombinedFilterDbContext context = CreateCombinedFilterContext(databaseName, tenantProvider.Object))
         {
             context.CombinedEntities.AddRange(
                 new TenantSoftDeleteEntity { Name = "Keep", TenantId = "tenant-a", IsDeleted = false },
@@ -112,7 +114,7 @@ public class TenantModelBuilderExtensionsTest
             context.SaveChanges();
         }
 
-        using (var context = CreateCombinedFilterContext(databaseName, tenantProvider.Object))
+        using (CombinedFilterDbContext context = CreateCombinedFilterContext(databaseName, tenantProvider.Object))
         {
             context.CombinedEntities.ToList().Should().ContainSingle(e => e.Name == "Keep");
             context.SoftDeleteEntities.Count().Should().Be(0);
@@ -123,17 +125,17 @@ public class TenantModelBuilderExtensionsTest
     [Fact]
     public void ConfigureTenantProperties_SetsMaxLengthRequiredAndIndex()
     {
-        var options = new DbContextOptionsBuilder<TenantConfigDbContext>()
+        DbContextOptions<TenantConfigDbContext> options = new DbContextOptionsBuilder<TenantConfigDbContext>()
             .UseInMemoryDatabase($"TenantConfig_{Guid.NewGuid():N}")
             .Options;
 
         using var context = new TenantConfigDbContext(options);
         context.Database.EnsureCreated();
 
-        var entityType = context.Model.FindEntityType(typeof(TestTenantEntity));
+        IEntityType? entityType = context.Model.FindEntityType(typeof(TestTenantEntity));
         entityType.Should().NotBeNull();
 
-        var tenantIdProperty = entityType!.FindProperty(nameof(ITenantEntity.TenantId));
+        IProperty? tenantIdProperty = entityType!.FindProperty(nameof(ITenantEntity.TenantId));
         tenantIdProperty.Should().NotBeNull();
         tenantIdProperty!.GetMaxLength().Should().Be(100);
         tenantIdProperty.IsNullable.Should().BeFalse();
@@ -145,7 +147,7 @@ public class TenantModelBuilderExtensionsTest
 
     private static TenantFilterDbContext CreateTenantContext(string databaseName, ITenantProvider tenantProvider)
     {
-        var options = new DbContextOptionsBuilder<TenantFilterDbContext>()
+        DbContextOptions<TenantFilterDbContext> options = new DbContextOptionsBuilder<TenantFilterDbContext>()
             .UseInMemoryDatabase(databaseName)
             .ReplaceService<IModelCacheKeyFactory, TenantAwareModelCacheKeyFactory>()
             .Options;
@@ -157,7 +159,7 @@ public class TenantModelBuilderExtensionsTest
 
     private static CombinedFilterDbContext CreateCombinedFilterContext(string databaseName, ITenantProvider tenantProvider)
     {
-        var options = new DbContextOptionsBuilder<CombinedFilterDbContext>()
+        DbContextOptions<CombinedFilterDbContext> options = new DbContextOptionsBuilder<CombinedFilterDbContext>()
             .UseInMemoryDatabase(databaseName)
             .ReplaceService<IModelCacheKeyFactory, TenantAwareModelCacheKeyFactory>()
             .Options;
@@ -180,15 +182,9 @@ public class TenantModelBuilderExtensionsTest
         }
     }
 
-    private sealed class TenantFilterDbContext : TestDbContext
+    private sealed class TenantFilterDbContext(DbContextOptions options, ITenantProvider tenantProvider) : TestDbContext(options)
     {
-        private readonly ITenantProvider _tenantProvider;
-
-        public TenantFilterDbContext(DbContextOptions options, ITenantProvider tenantProvider)
-            : base(options)
-        {
-            _tenantProvider = tenantProvider;
-        }
+        private readonly ITenantProvider _tenantProvider = tenantProvider;
 
         public string? CacheKey => _tenantProvider.TenantId ?? "__null__";
 
@@ -199,15 +195,9 @@ public class TenantModelBuilderExtensionsTest
         }
     }
 
-    private sealed class CombinedFilterDbContext : TestDbContext
+    private sealed class CombinedFilterDbContext(DbContextOptions options, ITenantProvider tenantProvider) : TestDbContext(options)
     {
-        private readonly ITenantProvider _tenantProvider;
-
-        public CombinedFilterDbContext(DbContextOptions options, ITenantProvider tenantProvider)
-            : base(options)
-        {
-            _tenantProvider = tenantProvider;
-        }
+        private readonly ITenantProvider _tenantProvider = tenantProvider;
 
         public string? CacheKey => _tenantProvider.TenantId ?? "__null__";
 
@@ -220,13 +210,8 @@ public class TenantModelBuilderExtensionsTest
         }
     }
 
-    private sealed class TenantConfigDbContext : TestDbContext
+    private sealed class TenantConfigDbContext(DbContextOptions options) : TestDbContext(options)
     {
-        public TenantConfigDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

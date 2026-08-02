@@ -17,11 +17,10 @@ public class ErrorCodesAndResultStatusCodeTest
     [InlineData(typeof(ErrorCodes.System))]
     public void ErrorCodes_ConstantsWithinCategory_ShouldBeNonEmptyAndUnique(Type nestedType)
     {
-        string[] codes = nestedType
+        string[] codes = [.. nestedType
             .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
-            .Select(f => (string)f.GetRawConstantValue()!)
-            .ToArray();
+            .Select(f => (string)f.GetRawConstantValue()!)];
 
         codes.Should().NotBeEmpty();
         codes.Should().OnlyContain(code => !string.IsNullOrWhiteSpace(code));

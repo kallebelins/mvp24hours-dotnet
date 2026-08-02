@@ -4,8 +4,8 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test;
 
@@ -31,7 +31,10 @@ public class UnitOfWorkWithEventsTest : IDisposable
         _provider = services.BuildServiceProvider();
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public void GetEntitiesWithEvents_ShouldReturnEntitiesWithPendingEvents()
@@ -40,7 +43,7 @@ public class UnitOfWorkWithEventsTest : IDisposable
         IUnitOfWorkWithEvents unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEvents>();
         IRepository<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("PendingSync");
+        TestDomainEventEntity entity = CreateEntityWithEvent("PendingSync");
         repository.Add(entity);
 
         IEnumerable<IHasDomainEvents> entitiesWithEvents = unitOfWork.GetEntitiesWithEvents();
@@ -56,7 +59,7 @@ public class UnitOfWorkWithEventsTest : IDisposable
         IUnitOfWorkWithEvents unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEvents>();
         IRepository<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("DispatchedSync");
+        TestDomainEventEntity entity = CreateEntityWithEvent("DispatchedSync");
         repository.Add(entity);
 
         int rowsAffected = unitOfWork.SaveChangesWithEvents();
@@ -77,7 +80,7 @@ public class UnitOfWorkWithEventsTest : IDisposable
         IUnitOfWorkWithEvents unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEvents>();
         IRepository<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("NotDispatchedSync");
+        TestDomainEventEntity entity = CreateEntityWithEvent("NotDispatchedSync");
         repository.Add(entity);
         unitOfWork.SaveChanges();
 

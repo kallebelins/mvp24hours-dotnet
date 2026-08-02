@@ -15,11 +15,11 @@ public class SlowQueryInterceptorTest
             logger: NullLogger.Instance,
             createActivities: false);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         context.Entities.Add(new TestEntity { Name = "SlowQuery" });
-        var act = () => context.SaveChanges();
+        Func<int> act = () => context.SaveChanges();
 
         act.Should().NotThrow();
     }

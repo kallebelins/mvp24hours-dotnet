@@ -10,8 +10,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.HealthChecks;
 [Trait("Category", "Unit")]
 public class DbContextHealthCheckTest
 {
-    private static HealthCheckContext CreateHealthCheckContext(string name = "db") =>
-        new()
+    private static HealthCheckContext CreateHealthCheckContext(string name = "db")
+    {
+        return new()
         {
             Registration = new HealthCheckRegistration(
                 name,
@@ -19,10 +20,11 @@ public class DbContextHealthCheckTest
                 failureStatus: HealthStatus.Unhealthy,
                 tags: null)
         };
+    }
 
     private static TestDbContext CreateSqliteContext()
     {
-        var options = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
             .UseSqlite($"Data Source=file:health_{Guid.NewGuid():N}?mode=memory&cache=shared")
             .Options;
         var context = new TestDbContext(options);
@@ -33,11 +35,13 @@ public class DbContextHealthCheckTest
 
     private static DbContextHealthCheck<TestDbContext> CreateCheck(
         TestDbContext context,
-        DbContextHealthCheckOptions? options = null) =>
-        new(
+        DbContextHealthCheckOptions? options = null)
+    {
+        return new(
             context,
             Options.Create(options ?? DbContextHealthCheckOptions.Liveness()),
             NullLogger<DbContextHealthCheck<TestDbContext>>.Instance);
+    }
 
     [Fact]
     public async Task CheckHealthAsync_WithSqliteLiveness_ReturnsHealthy()
@@ -59,7 +63,7 @@ public class DbContextHealthCheckTest
         await using TestDbContext context = EfCoreTestHelpers.CreateContext();
         DbContextHealthCheck<TestDbContext> check = CreateCheck(context, DbContextHealthCheckOptions.Liveness());
 
-        var act = async () => await check.CheckHealthAsync(CreateHealthCheckContext());
+        Func<Task<HealthCheckResult>> act = async () => await check.CheckHealthAsync(CreateHealthCheckContext());
 
         // GetDbConnection runs before the try/catch in CheckHealthAsync.
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -82,7 +86,7 @@ public class DbContextHealthCheckTest
     [Fact]
     public void Constructor_WithNullDbContext_Throws()
     {
-        var act = () => new DbContextHealthCheck<TestDbContext>(
+        Func<DbContextHealthCheck<TestDbContext>> act = () => new DbContextHealthCheck<TestDbContext>(
             null!,
             Options.Create(new DbContextHealthCheckOptions()),
             NullLogger<DbContextHealthCheck<TestDbContext>>.Instance);
@@ -95,7 +99,7 @@ public class DbContextHealthCheckTest
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
 
-        var act = () => new DbContextHealthCheck<TestDbContext>(
+        Func<DbContextHealthCheck<TestDbContext>> act = () => new DbContextHealthCheck<TestDbContext>(
             context,
             Options.Create(new DbContextHealthCheckOptions()),
             null!);

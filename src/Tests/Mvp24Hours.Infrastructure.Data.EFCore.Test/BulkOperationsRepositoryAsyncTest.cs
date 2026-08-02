@@ -15,7 +15,10 @@ public class BulkOperationsRepositoryAsyncTest : IDisposable
         _provider = EfCoreTestHelpers.CreateBulkServices(_databaseName);
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public async Task BulkInsertAsync_ShouldInsertAllEntities()

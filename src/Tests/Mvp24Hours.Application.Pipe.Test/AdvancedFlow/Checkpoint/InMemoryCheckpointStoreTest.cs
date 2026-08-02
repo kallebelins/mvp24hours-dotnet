@@ -28,7 +28,7 @@ public class InMemoryCheckpointStoreTest
     public async Task SaveCheckpointAsync_Should_StoreCheckpoint()
     {
         var store = new InMemoryCheckpointStore();
-        var checkpoint = CreateCheckpoint("cp-1", "exec-1");
+        PipelineCheckpoint checkpoint = CreateCheckpoint("cp-1", "exec-1");
 
         await store.SaveCheckpointAsync(checkpoint);
         PipelineCheckpoint? loaded = await store.GetCheckpointAsync("cp-1");

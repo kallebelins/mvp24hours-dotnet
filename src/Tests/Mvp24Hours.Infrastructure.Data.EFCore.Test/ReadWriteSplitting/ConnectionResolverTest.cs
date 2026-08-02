@@ -22,7 +22,7 @@ public class ConnectionResolverTest
     [Fact]
     public async Task GetReadConnectionStringAsync_WithNoReplicas_ShouldReturnPrimary()
     {
-        var selector = CreateReplicaSelectorMock(replicas: []);
+        Mock<IReplicaSelector> selector = CreateReplicaSelectorMock(replicas: []);
         ConnectionResolver resolver = CreateResolver(selector, replicas: []);
 
         string readConnection = await resolver.GetReadConnectionStringAsync();
@@ -33,7 +33,7 @@ public class ConnectionResolverTest
     [Fact]
     public async Task GetReadConnectionStringAsync_WithReplica_ShouldReturnReplica()
     {
-        var selector = CreateReplicaSelectorMock();
+        Mock<IReplicaSelector> selector = CreateReplicaSelectorMock();
         selector.Setup(x => x.SelectReplicaAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Replica);
 
@@ -47,7 +47,7 @@ public class ConnectionResolverTest
     [Fact]
     public async Task NotifyWritePerformed_WithReadAfterWriteEnabled_ShouldStickReadToPrimary()
     {
-        var selector = CreateReplicaSelectorMock();
+        Mock<IReplicaSelector> selector = CreateReplicaSelectorMock();
         selector.Setup(x => x.SelectReplicaAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Replica);
 
@@ -67,7 +67,7 @@ public class ConnectionResolverTest
     [Fact]
     public async Task ForceReadFromPrimary_ShouldReturnPrimaryUntilReset()
     {
-        var selector = CreateReplicaSelectorMock();
+        Mock<IReplicaSelector> selector = CreateReplicaSelectorMock();
         selector.Setup(x => x.SelectReplicaAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Replica);
 
@@ -101,7 +101,7 @@ public class ConnectionResolverTest
         };
         configure?.Invoke(options);
 
-        var logger = new LoggerFactory().CreateLogger<ConnectionResolver>();
+        ILogger<ConnectionResolver> logger = new LoggerFactory().CreateLogger<ConnectionResolver>();
         return new ConnectionResolver(selector.Object, Options.Create(options), logger);
     }
 }

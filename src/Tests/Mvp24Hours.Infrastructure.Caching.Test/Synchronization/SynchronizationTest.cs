@@ -45,7 +45,7 @@ public class InMemoryCacheSynchronizerTest
     public async Task PublishInvalidationAsync_EmptyKey_ShouldNoOp()
     {
         var synchronizer = new InMemoryCacheSynchronizer();
-        var called = false;
+        bool called = false;
         await synchronizer.SubscribeAsync((_, _) =>
         {
             called = true;
@@ -70,7 +70,7 @@ public class InMemoryCacheSynchronizerTest
     public async Task UnsubscribeAsync_ShouldClearAllSubscribers()
     {
         var synchronizer = new InMemoryCacheSynchronizer();
-        var called = false;
+        bool called = false;
         await synchronizer.SubscribeAsync((_, _) =>
         {
             called = true;
@@ -87,7 +87,7 @@ public class InMemoryCacheSynchronizerTest
     public async Task PublishInvalidationAsync_SubscriberThrows_ShouldNotBreakOtherSubscribers()
     {
         var synchronizer = new InMemoryCacheSynchronizer();
-        var secondCalled = false;
+        bool secondCalled = false;
         await synchronizer.SubscribeAsync((_, _) => throw new InvalidOperationException("subscriber failed"));
         await synchronizer.SubscribeAsync((_, _) =>
         {

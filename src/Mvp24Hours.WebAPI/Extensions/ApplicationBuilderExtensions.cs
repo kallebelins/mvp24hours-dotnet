@@ -299,6 +299,8 @@ public static class ApplicationBuilderExtensions
         return builder.UseMiddleware<ProblemDetailsMiddleware>();
     }
 
+    #region CORS
+
     /// <summary>
     /// Adds the CORS middleware.
     /// </summary>
@@ -307,16 +309,14 @@ public static class ApplicationBuilderExtensions
     /// Requires prior configuration via <see cref="ServiceCollectionExtentions.AddMvp24HoursWebCors"/>.
     /// </para>
     /// </remarks>
-    #endregion
-
-    #region CORS
-
     /// <param name="builder">The application builder.</param>
     /// <returns>The application builder for chaining.</returns>
     public static IApplicationBuilder UseMvp24HoursCors(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<CorsMiddleware>();
     }
+
+    #endregion
 
     #endregion
 

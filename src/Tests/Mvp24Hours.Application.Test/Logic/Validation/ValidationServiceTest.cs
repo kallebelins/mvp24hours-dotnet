@@ -93,6 +93,9 @@ public class ValidationServiceTest
 
     private sealed class TestDtoValidator : AbstractValidator<TestDto>
     {
-        public TestDtoValidator() => RuleFor(x => x.Name).NotEmpty();
+        public TestDtoValidator()
+        {
+            RuleFor(x => x.Name).NotEmpty();
+        }
     }
 }

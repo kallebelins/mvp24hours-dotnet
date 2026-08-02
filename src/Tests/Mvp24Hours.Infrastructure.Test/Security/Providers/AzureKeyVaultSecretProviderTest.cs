@@ -144,5 +144,7 @@ public class AzureKeyVaultSecretProviderTest
     }
 
     private static AzureKeyVaultSecretProvider CreateProvider()
-        => new(SecurityTestHelpers.CreateAzureOptions(useManagedIdentity: true));
+    {
+        return new(SecurityTestHelpers.CreateAzureOptions(useManagedIdentity: true));
+    }
 }

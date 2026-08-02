@@ -62,7 +62,7 @@ internal static class ObservabilityTestHelpers
         else
         {
             mock.Setup(p => p.GetRecentErrorsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(errors ?? Array.Empty<ErrorInfo>());
+                .ReturnsAsync(errors ?? []);
         }
 
         return mock;

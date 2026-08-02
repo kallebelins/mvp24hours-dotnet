@@ -49,10 +49,7 @@ internal static class CronJobTestHelpers
         services.AddSingleton(CreateHostLifetimeMock().Object);
         services.AddSingleton<ICronJobExecutionLock, InMemoryCronJobExecutionLock>();
         services.AddSingleton<CronJobCircuitBreaker>();
-        services.AddCronJobAdvancedInfrastructure(options =>
-        {
-            options.UseDistributedLocking = useDistributedLocking;
-        });
+        services.AddCronJobAdvancedInfrastructure(options => options.UseDistributedLocking = useDistributedLocking);
 
         if (useDistributedLocking)
         {

@@ -1,8 +1,8 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.CappedCollections;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.ChangeStreams;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Geospatial;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.GridFS;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation;
@@ -88,7 +88,7 @@ public class AdvancedServicesIntegrationTest(MongoDbIntegrationFixture fixture)
         long withinCount = await service.CountWithinRadiusAsync("Location", saoPaulo, 5000);
         withinCount.Should().BeGreaterThan(0);
 
-        GeoPolygon box = GeoPolygon.FromPoints(
+        var box = GeoPolygon.FromPoints(
             new GeoPoint(-46.65, -23.56),
             new GeoPoint(-46.63, -23.56),
             new GeoPoint(-46.63, -23.54),
@@ -247,7 +247,7 @@ public class AdvancedServicesUnitTest
 
         tooFew.Should().Throw<ArgumentException>();
 
-        GeoPolygon circle = GeoPolygon.CreateCircle(new GeoPoint(0, 0), 1000, 8);
+        var circle = GeoPolygon.CreateCircle(new GeoPoint(0, 0), 1000, 8);
         circle.Coordinates.Should().NotBeEmpty();
         circle.ToBsonDocument()["type"].AsString.Should().Be("Polygon");
     }
@@ -276,7 +276,7 @@ public class AdvancedServicesUnitTest
         Func<Task> act = () => service.SearchAsync("  ");
         act.Should().ThrowAsync<ArgumentException>();
 
-        Func<Task> createIndex = () => service.CreateTextIndexAsync(Array.Empty<string>());
+        Func<Task> createIndex = () => service.CreateTextIndexAsync([]);
         createIndex.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -302,7 +302,7 @@ public class AdvancedServicesUnitTest
         Func<Task> emptyName = () => service.UploadAsync(" ", new MemoryStream([1]));
         emptyName.Should().ThrowAsync<ArgumentException>();
 
-        Func<Task> emptyBytes = () => service.UploadAsync("file.bin", Array.Empty<byte>());
+        Func<Task> emptyBytes = () => service.UploadAsync("file.bin", []);
         emptyBytes.Should().ThrowAsync<ArgumentException>();
 
         Func<Task> missingFile = () => service.UploadFromFileAsync("x.txt", "missing-file-path.bin");

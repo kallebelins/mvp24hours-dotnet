@@ -22,8 +22,8 @@ public class CachingServiceExtensionsTest
     {
         var services = new ServiceCollection();
         DateTimeOffset absolute = DateTimeOffset.UtcNow.AddHours(1);
-        TimeSpan relative = TimeSpan.FromMinutes(10);
-        TimeSpan sliding = TimeSpan.FromMinutes(2);
+        var relative = TimeSpan.FromMinutes(10);
+        var sliding = TimeSpan.FromMinutes(2);
 
         IServiceCollection result = CachingServiceExtensions.AddMvp24HoursCaching(
             services,
@@ -272,8 +272,10 @@ public class CacheInvalidationServiceExtensionsTest
 [Trait("Category", "Unit")]
 public class DistributedCacheStringExtensionsTest
 {
-    private static IDistributedCache CreateCache() =>
-        new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+    private static IDistributedCache CreateCache()
+    {
+        return new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+    }
 
     [Fact]
     public void SetString_WithMinutes_ShouldStoreValue()

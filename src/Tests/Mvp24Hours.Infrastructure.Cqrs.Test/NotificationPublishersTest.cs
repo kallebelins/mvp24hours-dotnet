@@ -229,7 +229,10 @@ public class NotificationPublishersTest
     {
         public static List<string> Events { get; } = [];
 
-        public static void Reset() => Events.Clear();
+        public static void Reset()
+        {
+            Events.Clear();
+        }
 
         public override Task OnPipelineStartAsync(object request, Type requestType, CancellationToken cancellationToken)
         {
@@ -265,7 +268,10 @@ public class NotificationPublishersTest
     {
         public static List<string> Events { get; } = [];
 
-        public static void Reset() => Events.Clear();
+        public static void Reset()
+        {
+            Events.Clear();
+        }
 
         public override Task OnPipelineStartAsync(TestCommand request, CancellationToken cancellationToken)
         {

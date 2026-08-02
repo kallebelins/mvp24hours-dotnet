@@ -24,6 +24,11 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     public Task InitializeAsync()
     {
+        if (!_fixture.IsAvailable)
+        {
+            return Task.CompletedTask;
+        }
+
         return _fixture.ClearDatabaseAsync();
     }
 
@@ -34,7 +39,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ Add Operations ]
 
-    [Fact]
+    [DockerFact]
     public async Task AddAsync_SingleEntity_ShouldPersistInDatabase()
     {
         // Arrange
@@ -57,7 +62,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         category.Id.Should().BeGreaterThan(0);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task AddAsync_MultipleEntities_ShouldPersistAllInDatabase()
     {
         // Arrange
@@ -80,7 +85,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         categories.Should().AllSatisfy(c => c.Id.Should().BeGreaterThan(0));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task AddAsync_EntityWithRelationship_ShouldPersistWithChildren()
     {
         // Arrange
@@ -122,7 +127,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ Get Operations ]
 
-    [Fact]
+    [DockerFact]
     public async Task GetByIdAsync_ExistingEntity_ShouldReturnEntity()
     {
         // Arrange
@@ -148,7 +153,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         result.GetDataValue()!.Name.Should().Be("Furniture");
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByIdAsync_NonExistingEntity_ShouldReturnNullData()
     {
         // Arrange
@@ -163,7 +168,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         result.HasData().Should().BeFalse();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_WithData_ShouldReturnAllEntities()
     {
         // Arrange
@@ -188,7 +193,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         result.GetDataValue()!.Count.Should().BeGreaterThanOrEqualTo(3);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByAsync_WithExpression_ShouldReturnFilteredEntities()
     {
         // Arrange
@@ -217,7 +222,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ Modify Operations ]
 
-    [Fact]
+    [DockerFact]
     public async Task ModifyAsync_ExistingEntity_ShouldUpdateInDatabase()
     {
         // Arrange
@@ -247,7 +252,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         updatedResult.GetDataValue()!.Description.Should().Be("Updated Description");
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ModifyAsync_MultipleEntities_ShouldUpdateAllInDatabase()
     {
         // Arrange
@@ -281,7 +286,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ Remove Operations ]
 
-    [Fact]
+    [DockerFact]
     public async Task RemoveByIdAsync_ExistingEntity_ShouldDeleteFromDatabase()
     {
         // Arrange
@@ -308,7 +313,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         getResult.HasData().Should().BeFalse();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task RemoveAsync_EntityInstance_ShouldDeleteFromDatabase()
     {
         // Arrange
@@ -338,7 +343,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ ListAny and ListCount Operations ]
 
-    [Fact]
+    [DockerFact]
     public async Task ListAnyAsync_WithData_ShouldReturnTrue()
     {
         // Arrange
@@ -357,7 +362,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         result.GetDataValue().Should().BeTrue();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByAnyAsync_WithExpression_ShouldReturnCorrectResult()
     {
         // Arrange
@@ -376,7 +381,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         notExistsResult.GetDataValue().Should().BeFalse();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListCountAsync_ShouldReturnCorrectCount()
     {
         // Arrange
@@ -403,7 +408,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
         result.GetDataValue().Should().Be(initialCount + 3);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByCountAsync_WithExpression_ShouldReturnFilteredCount()
     {
         // Arrange
@@ -431,7 +436,7 @@ public class RepositoryServiceIntegrationTest(SqlServerContainerFixture fixture)
 
     #region [ Paging with ListAsync ]
 
-    [Fact]
+    [DockerFact]
     public async Task ListAsync_WithPaging_ShouldRespectLimit()
     {
         // Arrange

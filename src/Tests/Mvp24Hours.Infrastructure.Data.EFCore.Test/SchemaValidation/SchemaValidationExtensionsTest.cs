@@ -22,7 +22,7 @@ public class SchemaValidationExtensionsTest
         using ServiceProvider provider = services.BuildServiceProvider();
         using IServiceScope scope = provider.CreateScope();
 
-        var validator = scope.ServiceProvider.GetRequiredService<ISchemaValidator>();
+        ISchemaValidator validator = scope.ServiceProvider.GetRequiredService<ISchemaValidator>();
         validator.Should().BeOfType<SchemaValidator<TestDbContext>>();
     }
 

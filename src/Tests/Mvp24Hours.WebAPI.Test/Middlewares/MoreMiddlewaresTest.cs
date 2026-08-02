@@ -18,7 +18,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task CacheControlMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new CacheControlOptions { Enabled = false };
         var sut = new CacheControlMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<CacheControlMiddleware>.Instance);
@@ -36,7 +36,7 @@ public class MoreMiddlewaresTest
             Enabled = true,
             DefaultPolicy = new CacheControlPolicy { Public = true, MaxAge = TimeSpan.FromSeconds(60) }
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         var sut = new CacheControlMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -58,7 +58,7 @@ public class MoreMiddlewaresTest
             Enabled = true,
             DefaultPolicy = new CacheControlPolicy { NoStore = true }
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CacheControlMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -79,7 +79,7 @@ public class MoreMiddlewaresTest
             DefaultPolicy = new CacheControlPolicy { Public = true, MaxAge = TimeSpan.FromSeconds(60) },
             ExcludedPaths = ["/health"]
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/health");
         var sut = new CacheControlMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -102,7 +102,7 @@ public class MoreMiddlewaresTest
                 ["/api/static"] = new CacheControlPolicy { Immutable = true, Public = true }
             }
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/static/logo.png");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/static/logo.png");
         var sut = new CacheControlMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -122,7 +122,7 @@ public class MoreMiddlewaresTest
             Enabled = true,
             DefaultPolicy = new CacheControlPolicy { Private = true, MaxAge = TimeSpan.FromSeconds(300) }
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CacheControlMiddleware(async c =>
         {
             c.Response.StatusCode = 200;
@@ -142,7 +142,7 @@ public class MoreMiddlewaresTest
     public async Task CorsMiddleware_Should_SetWildcardHeaders_WhenAllowAll()
     {
         var options = new CorsOptions { AllowAll = true };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CorsMiddleware(_ => Task.CompletedTask, Options.Create(options));
 
         await sut.Invoke(context);
@@ -162,7 +162,7 @@ public class MoreMiddlewaresTest
             Methods = "GET,POST",
             Headers = "Content-Type"
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CorsMiddleware(_ => Task.CompletedTask, Options.Create(options));
 
         await sut.Invoke(context);
@@ -175,7 +175,7 @@ public class MoreMiddlewaresTest
     public async Task CorsMiddleware_Should_Return200_ForOptionsRequest()
     {
         var options = new CorsOptions { AllowAll = true, AllowRequestOptions = true };
-        var context = WebApiTestHelpers.CreateHttpContext(method: "OPTIONS");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "OPTIONS");
         var sut = new CorsMiddleware(_ => Task.CompletedTask, Options.Create(options));
 
         await sut.Invoke(context);
@@ -187,7 +187,7 @@ public class MoreMiddlewaresTest
     public async Task CorsMiddleware_Should_SetCredentials_WhenProvided()
     {
         var options = new CorsOptions { AllowAll = true, Credentials = "true" };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CorsMiddleware(_ => Task.CompletedTask, Options.Create(options));
 
         await sut.Invoke(context);
@@ -202,7 +202,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task InputSanitizationMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new InputSanitizationOptions { Enabled = false };
         var sut = new InputSanitizationMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<InputSanitizationMiddleware>.Instance);
@@ -222,7 +222,7 @@ public class MoreMiddlewaresTest
             SanitizeQueryStrings = true,
             EnableXssSanitization = true
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
         context.Request.QueryString = new QueryString("?q=<script>alert(1)</script>");
         var sut = new InputSanitizationMiddleware(_ => Task.CompletedTask,
             Options.Create(options), NullLogger<InputSanitizationMiddleware>.Instance);
@@ -235,14 +235,14 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task InputSanitizationMiddleware_Should_Allow_CleanInput()
     {
-        var called = false;
+        bool called = false;
         var options = new InputSanitizationOptions
         {
             Enabled = true,
             SanitizeQueryStrings = true,
             EnableXssSanitization = true
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
         context.Request.QueryString = new QueryString("?q=hello+world");
         var sut = new InputSanitizationMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<InputSanitizationMiddleware>.Instance);
@@ -255,7 +255,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task InputSanitizationMiddleware_Should_LogOnly_WhenModeIsLogOnly()
     {
-        var called = false;
+        bool called = false;
         var options = new InputSanitizationOptions
         {
             Enabled = true,
@@ -263,7 +263,7 @@ public class MoreMiddlewaresTest
             SanitizeQueryStrings = true,
             EnableXssSanitization = true
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/search");
         context.Request.QueryString = new QueryString("?q=<script>xss</script>");
         var sut = new InputSanitizationMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<InputSanitizationMiddleware>.Instance);
@@ -276,7 +276,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task InputSanitizationMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new InputSanitizationOptions
         {
             Enabled = true,
@@ -285,7 +285,7 @@ public class MoreMiddlewaresTest
             EnableXssSanitization = true,
             ExcludedPaths = ["/swagger/**"]
         };
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/swagger/index.html");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/swagger/index.html");
         context.Request.QueryString = new QueryString("?q=<script>xss</script>");
         var sut = new InputSanitizationMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<InputSanitizationMiddleware>.Instance);
@@ -302,7 +302,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestDecompressionMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestDecompressionOptions { Enabled = false };
         var sut = new RequestDecompressionMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestDecompressionMiddleware>.Instance);
@@ -315,12 +315,12 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestDecompressionMiddleware_Should_PassThrough_WhenNoContentEncoding()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestDecompressionOptions { Enabled = true };
         var sut = new RequestDecompressionMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestDecompressionMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", body: "{\"key\":\"value\"}");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", body: "{\"key\":\"value\"}");
 
         await sut.InvokeAsync(context);
 
@@ -330,7 +330,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestDecompressionMiddleware_Should_PassThrough_WhenUnsupportedEncoding()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestDecompressionOptions
         {
             Enabled = true,
@@ -339,7 +339,7 @@ public class MoreMiddlewaresTest
         var sut = new RequestDecompressionMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestDecompressionMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         context.Request.Headers.ContentEncoding = "zstd";
 
         await sut.InvokeAsync(context);
@@ -358,7 +358,7 @@ public class MoreMiddlewaresTest
         string originalContent = "{\"name\":\"test\"}";
         byte[] compressed = CompressGzip(originalContent);
 
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Request.Method = "POST";
         context.Request.Body = new MemoryStream(compressed);
         context.Request.ContentLength = compressed.Length;
@@ -379,7 +379,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestDecompressionMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestDecompressionOptions
         {
             Enabled = true,
@@ -388,7 +388,7 @@ public class MoreMiddlewaresTest
         var sut = new RequestDecompressionMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestDecompressionMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/health");
         context.Request.Headers.ContentEncoding = "gzip";
 
         await sut.InvokeAsync(context);
@@ -403,7 +403,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task CachingMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new ResponseCachingOptions { Enabled = false };
         var sut = new CachingMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<CachingMiddleware>.Instance);
@@ -416,7 +416,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task CachingMiddleware_Should_CallNext_WhenEnabled()
     {
-        var called = false;
+        bool called = false;
         var options = new ResponseCachingOptions { Enabled = true };
         var sut = new CachingMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<CachingMiddleware>.Instance);
@@ -438,7 +438,7 @@ public class MoreMiddlewaresTest
                 ["default"] = new CacheProfile { Duration = 60, Location = ResponseCacheLocation.Any }
             }
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new CachingMiddleware(_ => Task.CompletedTask,
             Options.Create(options), NullLogger<CachingMiddleware>.Instance);
 
@@ -450,7 +450,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task CachingMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new ResponseCachingOptions
         {
             Enabled = true,
@@ -459,7 +459,7 @@ public class MoreMiddlewaresTest
         var sut = new CachingMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<CachingMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/health");
         await sut.InvokeAsync(context);
 
         called.Should().BeTrue();
@@ -472,7 +472,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestTimeoutMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestTimeoutOptions { Enabled = false };
         var sut = new RequestTimeoutMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestTimeoutMiddleware>.Instance);
@@ -485,7 +485,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestTimeoutMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestTimeoutOptions
         {
             Enabled = true,
@@ -495,7 +495,7 @@ public class MoreMiddlewaresTest
         var sut = new RequestTimeoutMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestTimeoutMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/health");
         await sut.InvokeAsync(context);
 
         called.Should().BeTrue();
@@ -504,7 +504,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestTimeoutMiddleware_Should_CompleteNormally_WhenRequestIsFast()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestTimeoutOptions
         {
             Enabled = true,
@@ -526,11 +526,8 @@ public class MoreMiddlewaresTest
             Enabled = true,
             DefaultTimeout = TimeSpan.FromMilliseconds(1)
         };
-        var context = WebApiTestHelpers.CreateHttpContext();
-        var sut = new RequestTimeoutMiddleware(async c =>
-        {
-            await Task.Delay(200, c.RequestAborted);
-        }, Options.Create(options), NullLogger<RequestTimeoutMiddleware>.Instance);
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
+        var sut = new RequestTimeoutMiddleware(async c => await Task.Delay(200, c.RequestAborted), Options.Create(options), NullLogger<RequestTimeoutMiddleware>.Instance);
 
         await sut.InvokeAsync(context);
 
@@ -540,7 +537,7 @@ public class MoreMiddlewaresTest
     [Fact]
     public async Task RequestTimeoutMiddleware_Should_UseEndpointTimeout_WhenPathMatches()
     {
-        var called = false;
+        bool called = false;
         var options = new RequestTimeoutOptions
         {
             Enabled = true,
@@ -553,7 +550,7 @@ public class MoreMiddlewaresTest
         var sut = new RequestTimeoutMiddleware(_ => { called = true; return Task.CompletedTask; },
             Options.Create(options), NullLogger<RequestTimeoutMiddleware>.Instance);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/slow/operation");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/slow/operation");
         await sut.InvokeAsync(context);
 
         called.Should().BeTrue();

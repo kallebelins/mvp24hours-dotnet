@@ -188,12 +188,15 @@ public class EventSourcingAdvancedTest
             });
         }
 
-        public override SnapshotTestOrderSnapshot CreateSnapshot() => new()
+        public override SnapshotTestOrderSnapshot CreateSnapshot()
         {
-            Id = Id,
-            CustomerEmail = CustomerEmail,
-            TotalAmount = TotalAmount
-        };
+            return new()
+            {
+                Id = Id,
+                CustomerEmail = CustomerEmail,
+                TotalAmount = TotalAmount
+            };
+        }
 
         public override void RestoreFromSnapshot(SnapshotTestOrderSnapshot snapshot, long version)
         {

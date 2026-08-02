@@ -18,8 +18,8 @@ public class EntityIdValueConvertersTest
         var converter = new GuidEntityIdValueConverter<CustomerId>();
         var id = CustomerId.New();
 
-        Guid providerValue = (Guid)converter.ConvertToProvider(id)!;
-        CustomerId roundTrip = (CustomerId)converter.ConvertFromProvider(providerValue)!;
+        var providerValue = (Guid)converter.ConvertToProvider(id)!;
+        var roundTrip = (CustomerId)converter.ConvertFromProvider(providerValue)!;
 
         providerValue.Should().Be(id.Value);
         roundTrip.Should().Be(id);
@@ -32,7 +32,7 @@ public class EntityIdValueConvertersTest
         var id = new SampleIntId(42);
 
         int providerValue = (int)converter.ConvertToProvider(id)!;
-        SampleIntId roundTrip = (SampleIntId)converter.ConvertFromProvider(providerValue)!;
+        var roundTrip = (SampleIntId)converter.ConvertFromProvider(providerValue)!;
 
         providerValue.Should().Be(42);
         roundTrip.Should().Be(id);
@@ -45,7 +45,7 @@ public class EntityIdValueConvertersTest
         var id = new SampleLongId(9_000_000_000L);
 
         long providerValue = (long)converter.ConvertToProvider(id)!;
-        SampleLongId roundTrip = (SampleLongId)converter.ConvertFromProvider(providerValue)!;
+        var roundTrip = (SampleLongId)converter.ConvertFromProvider(providerValue)!;
 
         providerValue.Should().Be(9_000_000_000L);
         roundTrip.Should().Be(id);
@@ -58,7 +58,7 @@ public class EntityIdValueConvertersTest
         var id = new SampleStringId("doc-123");
 
         string providerValue = (string)converter.ConvertToProvider(id)!;
-        SampleStringId roundTrip = (SampleStringId)converter.ConvertFromProvider(providerValue)!;
+        var roundTrip = (SampleStringId)converter.ConvertFromProvider(providerValue)!;
 
         providerValue.Should().Be("doc-123");
         roundTrip.Should().Be(id);
@@ -70,8 +70,8 @@ public class EntityIdValueConvertersTest
         var converter = new EntityIdValueConverter<OrderId, Guid>();
         var id = OrderId.New();
 
-        Guid providerValue = (Guid)converter.ConvertToProvider(id)!;
-        OrderId roundTrip = (OrderId)converter.ConvertFromProvider(providerValue)!;
+        var providerValue = (Guid)converter.ConvertToProvider(id)!;
+        var roundTrip = (OrderId)converter.ConvertFromProvider(providerValue)!;
 
         providerValue.Should().Be(id.Value);
         roundTrip.Should().Be(id);

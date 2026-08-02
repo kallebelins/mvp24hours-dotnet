@@ -72,7 +72,7 @@ public class SchemaValidatorTest
     {
         var options = new SchemaValidationOptions();
         configure?.Invoke(options);
-        var logger = new LoggerFactory().CreateLogger<SchemaValidator<TestDbContext>>();
+        ILogger<SchemaValidator<TestDbContext>> logger = new LoggerFactory().CreateLogger<SchemaValidator<TestDbContext>>();
         return new SchemaValidator<TestDbContext>(context, Options.Create(options), logger);
     }
 }

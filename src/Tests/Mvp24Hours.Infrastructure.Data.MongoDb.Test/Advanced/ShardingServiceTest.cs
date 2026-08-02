@@ -42,14 +42,14 @@ public class ShardingServiceTest
     [Fact]
     public void ShardKeyField_ShouldCreateAscendingDescendingAndHashed()
     {
-        ShardKeyField ascending = ShardKeyField.Ascending("tenantId");
+        var ascending = ShardKeyField.Ascending("tenantId");
         ascending.FieldName.Should().Be("tenantId");
         ascending.Order.AsInt32.Should().Be(1);
 
-        ShardKeyField descending = ShardKeyField.Descending("createdAt");
+        var descending = ShardKeyField.Descending("createdAt");
         descending.Order.AsInt32.Should().Be(-1);
 
-        ShardKeyField hashed = ShardKeyField.Hashed("_id");
+        var hashed = ShardKeyField.Hashed("_id");
         hashed.Order.AsString.Should().Be("hashed");
     }
 

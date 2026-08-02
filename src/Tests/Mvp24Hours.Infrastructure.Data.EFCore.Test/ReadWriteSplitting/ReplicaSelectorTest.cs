@@ -116,7 +116,7 @@ public class ReplicaSelectorTest
 
     private static ReplicaSelector CreateSelector(ReadWriteOptions options)
     {
-        var logger = new LoggerFactory().CreateLogger<ReplicaSelector>();
+        ILogger<ReplicaSelector> logger = new LoggerFactory().CreateLogger<ReplicaSelector>();
         return new ReplicaSelector(Options.Create(options), logger);
     }
 }

@@ -20,12 +20,12 @@ public class IdempotencyMiddlewareTest
     [Fact]
     public async Task IdempotencyMiddleware_Should_Bypass_WhenDisabled()
     {
-        var called = false;
-        var sut = CreateMiddleware(
+        bool called = false;
+        IdempotencyMiddleware sut = CreateMiddleware(
             new IdempotencyOptions { Enabled = false },
             _ => { called = true; return Task.CompletedTask; });
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         await sut.InvokeAsync(WebApiTestHelpers.CreateHttpContext(), store.Object, keyGen.Object);
 
         called.Should().BeTrue();
@@ -35,13 +35,13 @@ public class IdempotencyMiddlewareTest
     [Fact]
     public async Task IdempotencyMiddleware_Should_Bypass_ForGetMethod()
     {
-        var called = false;
-        var sut = CreateMiddleware(
+        bool called = false;
+        IdempotencyMiddleware sut = CreateMiddleware(
             new IdempotencyOptions { IdempotentMethods = ["POST", "PUT", "PATCH"] },
             _ => { called = true; return Task.CompletedTask; });
 
-        var (store, keyGen) = CreateMocks();
-        var context = WebApiTestHelpers.CreateHttpContext(method: "GET");
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "GET");
 
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
@@ -52,18 +52,18 @@ public class IdempotencyMiddlewareTest
     [Fact]
     public async Task IdempotencyMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new IdempotencyOptions
         {
             ExcludedPaths = ["/health"]
         };
-        var sut = CreateMiddleware(options, _ => { called = true; return Task.CompletedTask; });
+        IdempotencyMiddleware sut = CreateMiddleware(options, _ => { called = true; return Task.CompletedTask; });
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.NoKey());
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/health");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         called.Should().BeTrue();
@@ -76,15 +76,15 @@ public class IdempotencyMiddlewareTest
     [Fact]
     public async Task IdempotencyMiddleware_Should_CallNext_WhenKeyMissingAndNotRequired()
     {
-        var called = false;
+        bool called = false;
         var options = new IdempotencyOptions { RequireIdempotencyKey = false };
-        var sut = CreateMiddleware(options, _ => { called = true; return Task.CompletedTask; });
+        IdempotencyMiddleware sut = CreateMiddleware(options, _ => { called = true; return Task.CompletedTask; });
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.NoKey());
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         called.Should().BeTrue();
@@ -98,13 +98,13 @@ public class IdempotencyMiddlewareTest
             RequireIdempotencyKey = true,
             UseProblemDetails = false
         };
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        IdempotencyMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.NoKey());
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         context.Response.StatusCode.Should().Be(400);
@@ -117,21 +117,21 @@ public class IdempotencyMiddlewareTest
     [Fact]
     public async Task IdempotencyMiddleware_Should_ExecuteAndCache_WhenLockAcquired()
     {
-        var called = false;
+        bool called = false;
         var options = new IdempotencyOptions
         {
             RequireIdempotencyKey = false,
             IncludeKeyInResponse = true,
             NonCacheableStatusCodes = [500]
         };
-        var sut = CreateMiddleware(options, async c =>
+        IdempotencyMiddleware sut = CreateMiddleware(options, async c =>
         {
             called = true;
             c.Response.StatusCode = 201;
             await c.Response.WriteAsync("created");
         });
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.FromHeader("key-1"));
 
@@ -146,7 +146,7 @@ public class IdempotencyMiddlewareTest
             It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         called.Should().BeTrue();
@@ -161,7 +161,7 @@ public class IdempotencyMiddlewareTest
     public async Task IdempotencyMiddleware_Should_ReplayResponse_WhenAlreadyCompleted()
     {
         var options = new IdempotencyOptions { IncludeKeyInResponse = false };
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        IdempotencyMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
         var existingRecord = new IdempotencyRecord
         {
@@ -172,7 +172,7 @@ public class IdempotencyMiddlewareTest
             Status = IdempotencyRecordStatus.Completed
         };
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.FromHeader("key-2"));
 
@@ -186,7 +186,7 @@ public class IdempotencyMiddlewareTest
                 ExistingRecord = existingRecord
             });
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         context.Response.StatusCode.Should().Be(200);
@@ -204,9 +204,9 @@ public class IdempotencyMiddlewareTest
             InFlightStatusCode = 409,
             UseProblemDetails = false
         };
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        IdempotencyMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.FromHeader("key-3"));
 
@@ -220,7 +220,7 @@ public class IdempotencyMiddlewareTest
                 ExistingRecord = new IdempotencyRecord { Status = IdempotencyRecordStatus.Processing }
             });
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         context.Response.StatusCode.Should().Be(409);
@@ -237,13 +237,13 @@ public class IdempotencyMiddlewareTest
         {
             NonCacheableStatusCodes = [500, 503]
         };
-        var sut = CreateMiddleware(options, c =>
+        IdempotencyMiddleware sut = CreateMiddleware(options, c =>
         {
             c.Response.StatusCode = 500;
             return Task.CompletedTask;
         });
 
-        var (store, keyGen) = CreateMocks();
+        (Mock<IIdempotencyStore>? store, Mock<IIdempotencyKeyGenerator>? keyGen) = CreateMocks();
         keyGen.Setup(g => g.GenerateKeyAsync(It.IsAny<Microsoft.AspNetCore.Http.HttpContext>()))
             .ReturnsAsync(IdempotencyKeyResult.FromHeader("key-4"));
 
@@ -256,7 +256,7 @@ public class IdempotencyMiddlewareTest
         store.Setup(s => s.FailAsync("key-4", true, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST");
         await sut.InvokeAsync(context, store.Object, keyGen.Object);
 
         store.Verify(s => s.FailAsync("key-4", true, It.IsAny<CancellationToken>()), Times.Once);

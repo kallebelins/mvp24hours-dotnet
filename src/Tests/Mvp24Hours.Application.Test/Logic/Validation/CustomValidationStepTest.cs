@@ -9,7 +9,7 @@ public class CustomValidationStepTest
     [Fact]
     public void RuleBasedValidationStep_InvalidRule_ShouldReturnFailure()
     {
-        var step = new RuleBasedValidationStep<RuleModel>("BusinessRules")
+        RuleBasedValidationStep<RuleModel> step = new RuleBasedValidationStep<RuleModel>("BusinessRules")
             .AddRule("Amount", m => m.Amount > 0, "Amount must be positive");
 
         ValidationServiceResult result = step.Execute(new RuleModel { Amount = -1 }, new ValidationStepContext(ValidationOptions.Default, null));
@@ -21,7 +21,7 @@ public class CustomValidationStepTest
     [Fact]
     public async Task RuleBasedValidationStep_AsyncRule_ShouldValidateAsynchronously()
     {
-        var step = new RuleBasedValidationStep<RuleModel>("AsyncRules")
+        RuleBasedValidationStep<RuleModel> step = new RuleBasedValidationStep<RuleModel>("AsyncRules")
             .AddRuleAsync("Amount", async (_, ct) =>
             {
                 await Task.Delay(1, ct);

@@ -66,7 +66,7 @@ public class ChannelBatchProcessorTest
     public void ChannelBatchProcessor_Constructor_WithNullOptions_ShouldThrow()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
 
@@ -82,7 +82,7 @@ public class ChannelBatchProcessorTest
     [Fact]
     public void ChannelBatchProcessor_Constructor_WithNullServiceProvider_ShouldThrow()
     {
-        var options = BatchConsumerOptions.Default;
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
         var serializer = new JsonMessageSerializer();
         ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
 
@@ -98,9 +98,9 @@ public class ChannelBatchProcessorTest
     [Fact]
     public void ChannelBatchProcessor_Constructor_WithNullSerializer_ShouldThrow()
     {
-        var options = BatchConsumerOptions.Default;
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
 
         Action act = () => new ChannelBatchProcessor<TestOrderEvent>(
@@ -115,9 +115,9 @@ public class ChannelBatchProcessorTest
     [Fact]
     public void ChannelBatchProcessor_Constructor_WithNullLogger_ShouldThrow()
     {
-        var options = BatchConsumerOptions.Default;
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
 
         Action act = () => new ChannelBatchProcessor<TestOrderEvent>(
@@ -132,9 +132,9 @@ public class ChannelBatchProcessorTest
     [Fact]
     public async Task ChannelBatchProcessor_StartAndDispose_ShouldNotThrow()
     {
-        var options = BatchConsumerOptions.Default;
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
 
@@ -157,9 +157,9 @@ public class ChannelBatchProcessorTest
     [Fact]
     public async Task ChannelBatchProcessor_DoubleStart_ShouldNotThrow()
     {
-        var options = BatchConsumerOptions.Default;
+        BatchConsumerOptions options = BatchConsumerOptions.Default;
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var serializer = new JsonMessageSerializer();
         ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
 

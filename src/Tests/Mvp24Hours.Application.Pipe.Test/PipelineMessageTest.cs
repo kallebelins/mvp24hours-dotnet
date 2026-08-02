@@ -194,7 +194,7 @@ public class PipelineMessageTest
     {
         var message = new PipelineMessage();
 
-        var result = message.GetContent<List<string>>();
+        List<string> result = message.GetContent<List<string>>();
 
         result.Should().BeNull();
     }

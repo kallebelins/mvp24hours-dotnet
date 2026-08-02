@@ -19,9 +19,9 @@ public class ContractTypesTest
     [Fact]
     public void CacheEntryOptions_FactoryMethods_SetExpirations()
     {
-        CacheEntryOptions duration = CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
-        CacheEntryOptions sliding = CacheEntryOptions.WithSlidingExpiration(TimeSpan.FromMinutes(2));
-        CacheEntryOptions both = CacheEntryOptions.WithBothExpirations(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(1));
+        var duration = CacheEntryOptions.FromDuration(TimeSpan.FromMinutes(5));
+        var sliding = CacheEntryOptions.WithSlidingExpiration(TimeSpan.FromMinutes(2));
+        var both = CacheEntryOptions.WithBothExpirations(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(1));
 
         duration.AbsoluteExpirationRelativeToNow.Should().Be(TimeSpan.FromMinutes(5));
         sliding.SlidingExpiration.Should().Be(TimeSpan.FromMinutes(2));
@@ -32,9 +32,9 @@ public class ContractTypesTest
     [Fact]
     public void MvpChannelOptions_Factories_SetExpectedDefaults()
     {
-        MvpChannelOptions unbounded = MvpChannelOptions.Unbounded();
-        MvpChannelOptions bounded = MvpChannelOptions.Bounded(50);
-        MvpChannelOptions dropWrite = MvpChannelOptions.DropWrite(25);
+        var unbounded = MvpChannelOptions.Unbounded();
+        var bounded = MvpChannelOptions.Bounded(50);
+        var dropWrite = MvpChannelOptions.DropWrite(25);
 
         unbounded.IsBounded.Should().BeFalse();
         bounded.Capacity.Should().Be(50);
@@ -98,8 +98,8 @@ public class ContractTypesTest
     [Fact]
     public void PipelineValidationResult_ThrowIfInvalid_ThrowsOnFailure()
     {
-        PipelineValidationResult success = PipelineValidationResult.Success();
-        PipelineValidationResult failure = PipelineValidationResult.Failure(
+        var success = PipelineValidationResult.Success();
+        var failure = PipelineValidationResult.Failure(
             new PipelineValidationError("CODE", "Invalid pipeline", "Step1", 0));
 
         success.IsValid.Should().BeTrue();

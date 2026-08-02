@@ -21,9 +21,11 @@
     Infrastructure (NoWarn=NU1510 on the PackageReference) so consumers without
     AspNetCore.App resolve the patched version (NU1903 / task 7.1 v1). Do NOT add
     new codes here without documenting the reason.
+    CS1572–CS1574 / CS0419 — legacy XML doc cref and param-tag mismatches in
+    Infrastructure; excluded until normalized (malformed CS1570 blocks were fixed).
   -->
   <PropertyGroup>
-    <MvpResidualWarnings>NU1510</MvpResidualWarnings>
+    <MvpResidualWarnings>NU1510;CS1572;CS1573;CS1574;CS0419</MvpResidualWarnings>
     <WarningsNotAsErrors>$(WarningsNotAsErrors);$(MvpResidualWarnings)</WarningsNotAsErrors>
   </PropertyGroup>
 </Project>

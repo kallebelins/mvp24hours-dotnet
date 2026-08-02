@@ -10,7 +10,7 @@ public class DefaultPipelineExceptionMapperTest
     [Fact]
     public void Map_Should_UseSpecificRuleForMatchingException()
     {
-        var mapper = new DefaultPipelineExceptionMapper()
+        DefaultPipelineExceptionMapper mapper = new DefaultPipelineExceptionMapper()
             .AddRule<ArgumentException>(
                 ex => [new MessageResult($"Invalid arg: {ex.ParamName}", MessageType.Error)],
                 shouldFail: true,
@@ -27,7 +27,7 @@ public class DefaultPipelineExceptionMapperTest
     [Fact]
     public void Map_Should_UseDefaultMapperForUnknownExceptions()
     {
-        var mapper = new DefaultPipelineExceptionMapper()
+        DefaultPipelineExceptionMapper mapper = new DefaultPipelineExceptionMapper()
             .SetDefaultMapper(ex => [new MessageResult($"default: {ex.Message}", MessageType.Warning)]);
 
         IEnumerable<Core.Contract.ValueObjects.Logic.IMessageResult> messages =
@@ -39,7 +39,7 @@ public class DefaultPipelineExceptionMapperTest
     [Fact]
     public void ShouldFailAndPropagate_Should_UseMostSpecificRule()
     {
-        var mapper = new DefaultPipelineExceptionMapper()
+        DefaultPipelineExceptionMapper mapper = new DefaultPipelineExceptionMapper()
             .AddRule<Exception>((_) => [], shouldFail: false, shouldPropagate: false)
             .AddRule<InvalidOperationException>((_) => [], shouldFail: true, shouldPropagate: true);
 
@@ -51,7 +51,7 @@ public class DefaultPipelineExceptionMapperTest
     [Fact]
     public void SetDefaultShouldFail_Should_OverrideDefaultBehavior()
     {
-        var mapper = new DefaultPipelineExceptionMapper()
+        DefaultPipelineExceptionMapper mapper = new DefaultPipelineExceptionMapper()
             .SetDefaultShouldFail(_ => false);
 
         mapper.ShouldFail(new Exception()).Should().BeFalse();

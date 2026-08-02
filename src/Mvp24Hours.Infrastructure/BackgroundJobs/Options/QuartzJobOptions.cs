@@ -70,7 +70,7 @@ public class QuartzJobOptions
     /// <remarks>
     /// When enabled, multiple scheduler instances can run in a cluster for high availability
     /// and load distribution. Requires database storage.
-    /// </summary>
+    /// </remarks>
     public bool EnableClustering { get; set; } = false;
 
     /// <summary>

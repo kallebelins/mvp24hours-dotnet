@@ -22,7 +22,7 @@ public class DefaultPipelineValidatorTest
     [Fact]
     public void Validate_Should_FailWhenNoOperationsRequired()
     {
-        var validator = new DefaultPipelineValidator().RequireAtLeastOneOperation();
+        DefaultPipelineValidator validator = new DefaultPipelineValidator().RequireAtLeastOneOperation();
 
         PipelineValidationResult result = validator.Validate([]);
 
@@ -33,7 +33,7 @@ public class DefaultPipelineValidatorTest
     [Fact]
     public void Validate_Should_FailWhenTooManyOperations()
     {
-        var validator = new DefaultPipelineValidator().WithMaxOperations(1);
+        DefaultPipelineValidator validator = new DefaultPipelineValidator().WithMaxOperations(1);
         object[] operations = [new OperationTest(), new TrackingOperation("extra")];
 
         PipelineValidationResult result = validator.Validate(operations);
@@ -55,7 +55,7 @@ public class DefaultPipelineValidatorTest
     [Fact]
     public void Validate_Should_EnforceRequiredOperationType()
     {
-        var validator = new DefaultPipelineValidator().RequireOperation<OperationTest>();
+        DefaultPipelineValidator validator = new DefaultPipelineValidator().RequireOperation<OperationTest>();
 
         PipelineValidationResult missing = validator.Validate([new TrackingOperation("only-tracking")]);
         PipelineValidationResult valid = validator.Validate([new OperationTest()]);
@@ -67,7 +67,7 @@ public class DefaultPipelineValidatorTest
     [Fact]
     public void Validate_Should_RunCustomRules()
     {
-        var validator = new DefaultPipelineValidator()
+        DefaultPipelineValidator validator = new DefaultPipelineValidator()
             .AddRule(_ => [new PipelineValidationError("CUSTOM", "custom validation failed")]);
 
         PipelineValidationResult result = validator.Validate([new OperationTest()]);

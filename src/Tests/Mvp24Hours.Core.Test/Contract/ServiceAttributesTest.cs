@@ -63,7 +63,7 @@ public class ServiceAttributesTest
     public void ServiceKeyAttribute_HasCorrectAttributeUsage()
     {
         // Arrange
-        var usageAttr = typeof(ServiceKeyAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(ServiceKeyAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -79,8 +79,8 @@ public class ServiceAttributesTest
     public void ServiceKeyAttribute_CanBeAppliedToClass()
     {
         // Arrange
-        var type = typeof(ServiceWithKey);
-        var attr = type.GetCustomAttributes(typeof(ServiceKeyAttribute), false)
+        Type type = typeof(ServiceWithKey);
+        ServiceKeyAttribute? attr = type.GetCustomAttributes(typeof(ServiceKeyAttribute), false)
             .Cast<ServiceKeyAttribute>()
             .FirstOrDefault();
 
@@ -137,7 +137,7 @@ public class ServiceAttributesTest
     public void ServiceOrderAttribute_HasCorrectAttributeUsage()
     {
         // Arrange
-        var usageAttr = typeof(ServiceOrderAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(ServiceOrderAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -167,7 +167,7 @@ public class ServiceAttributesTest
     public void ServiceReplaceAttribute_HasCorrectAttributeUsage()
     {
         // Arrange
-        var usageAttr = typeof(ServiceReplaceAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(ServiceReplaceAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -182,8 +182,8 @@ public class ServiceAttributesTest
     public void ServiceReplaceAttribute_CanBeAppliedToClass()
     {
         // Arrange
-        var type = typeof(ServiceWithReplace);
-        var attr = type.GetCustomAttributes(typeof(ServiceReplaceAttribute), false)
+        Type type = typeof(ServiceWithReplace);
+        ServiceReplaceAttribute? attr = type.GetCustomAttributes(typeof(ServiceReplaceAttribute), false)
             .Cast<ServiceReplaceAttribute>()
             .FirstOrDefault();
 
@@ -210,7 +210,7 @@ public class ServiceAttributesTest
     public void ServiceTryAddAttribute_HasCorrectAttributeUsage()
     {
         // Arrange
-        var usageAttr = typeof(ServiceTryAddAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(ServiceTryAddAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -224,8 +224,8 @@ public class ServiceAttributesTest
     public void ServiceTryAddAttribute_CanBeAppliedToClass()
     {
         // Arrange
-        var type = typeof(ServiceWithTryAdd);
-        var attr = type.GetCustomAttributes(typeof(ServiceTryAddAttribute), false)
+        Type type = typeof(ServiceWithTryAdd);
+        ServiceTryAddAttribute? attr = type.GetCustomAttributes(typeof(ServiceTryAddAttribute), false)
             .Cast<ServiceTryAddAttribute>()
             .FirstOrDefault();
 
@@ -252,7 +252,7 @@ public class ServiceAttributesTest
     public void ServiceIgnoreAttribute_HasCorrectAttributeUsage()
     {
         // Arrange
-        var usageAttr = typeof(ServiceIgnoreAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(ServiceIgnoreAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -266,8 +266,8 @@ public class ServiceAttributesTest
     public void ServiceIgnoreAttribute_CanBeAppliedToClass()
     {
         // Arrange
-        var type = typeof(ServiceWithIgnore);
-        var attr = type.GetCustomAttributes(typeof(ServiceIgnoreAttribute), false)
+        Type type = typeof(ServiceWithIgnore);
+        ServiceIgnoreAttribute? attr = type.GetCustomAttributes(typeof(ServiceIgnoreAttribute), false)
             .Cast<ServiceIgnoreAttribute>()
             .FirstOrDefault();
 
@@ -283,13 +283,13 @@ public class ServiceAttributesTest
     public void ServiceKeyAndOrder_CanBeCombined()
     {
         // Arrange
-        var type = typeof(ServiceWithKeyAndOrder);
+        Type type = typeof(ServiceWithKeyAndOrder);
 
         // Act
-        var keyAttr = type.GetCustomAttributes(typeof(ServiceKeyAttribute), false)
+        ServiceKeyAttribute? keyAttr = type.GetCustomAttributes(typeof(ServiceKeyAttribute), false)
             .Cast<ServiceKeyAttribute>()
             .FirstOrDefault();
-        var orderAttr = type.GetCustomAttributes(typeof(ServiceOrderAttribute), false)
+        ServiceOrderAttribute? orderAttr = type.GetCustomAttributes(typeof(ServiceOrderAttribute), false)
             .Cast<ServiceOrderAttribute>()
             .FirstOrDefault();
 

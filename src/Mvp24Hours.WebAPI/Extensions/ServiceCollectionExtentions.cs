@@ -2114,6 +2114,7 @@ public static class ServiceCollectionExtentions
             timeout));
     }
 
+    /*
     /// <summary>
     /// Adds RabbitMQ health check.
     /// </summary>
@@ -2139,7 +2140,6 @@ public static class ServiceCollectionExtentions
     /// This method requires a reference to Mvp24Hours.Infrastructure.RabbitMQ project.
     /// If the RabbitMQ project is not referenced, this method will not be available.
     /// </remarks>
-    /*
     public static IHealthChecksBuilder AddMvp24HoursRabbitMQCheck(
         this IHealthChecksBuilder builder,
         string name = "rabbitmq",

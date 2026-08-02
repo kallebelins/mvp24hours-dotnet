@@ -37,8 +37,8 @@ public class PropagationCorrelationIdDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        PropagationCorrelationIdDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -50,9 +50,9 @@ public class PropagationCorrelationIdDelegatingHandlerTest
     {
         IServiceProvider sp = DelegatingHandlerTestHelpers.CreateServiceProviderWithHeaders(
             ("X-Correlation-Id", "corr-123"));
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(sp);
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        PropagationCorrelationIdDelegatingHandler handler = CreateHandler(sp);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -64,9 +64,9 @@ public class PropagationCorrelationIdDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithoutHttpContext_ShouldStillSendRequest()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateEmptyServiceProvider());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        PropagationCorrelationIdDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateEmptyServiceProvider());
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -78,9 +78,9 @@ public class PropagationCorrelationIdDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenPropagationThrows_ShouldContinueRequest()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.Accepted);
-        var handler = CreateHandler(DelegatingHandlerTestHelpers.CreateThrowingServiceProvider());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.Accepted);
+        PropagationCorrelationIdDelegatingHandler handler = CreateHandler(DelegatingHandlerTestHelpers.CreateThrowingServiceProvider());
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 

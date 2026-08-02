@@ -88,11 +88,12 @@ public class CacheEntryOptionsTest
     public void CacheEntryOptions_AbsoluteExpiration_CanBeSet()
     {
         // Arrange
-        var absoluteExpiration = DateTimeOffset.UtcNow.AddHours(1);
-        var options = new CacheEntryOptions();
-
-        // Act
-        options.AbsoluteExpiration = absoluteExpiration;
+        DateTimeOffset absoluteExpiration = DateTimeOffset.UtcNow.AddHours(1);
+        var options = new CacheEntryOptions
+        {
+            // Act
+            AbsoluteExpiration = absoluteExpiration
+        };
 
         // Assert
         options.AbsoluteExpiration.Should().Be(absoluteExpiration);
@@ -102,10 +103,11 @@ public class CacheEntryOptionsTest
     public void CacheEntryOptions_Priority_CanBeChanged()
     {
         // Arrange
-        var options = new CacheEntryOptions();
-
-        // Act
-        options.Priority = CacheEntryPriority.High;
+        var options = new CacheEntryOptions
+        {
+            // Act
+            Priority = CacheEntryPriority.High
+        };
 
         // Assert
         options.Priority.Should().Be(CacheEntryPriority.High);
@@ -161,10 +163,11 @@ public class CacheEntryOptionsTest
     public void CacheEntryOptions_AllPriorities_CanBeAssigned(CacheEntryPriority priority)
     {
         // Arrange
-        var options = new CacheEntryOptions();
-
-        // Act
-        options.Priority = priority;
+        var options = new CacheEntryOptions
+        {
+            // Act
+            Priority = priority
+        };
 
         // Assert
         options.Priority.Should().Be(priority);
@@ -183,8 +186,8 @@ public class CacheEntryOptionsTest
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
             SlidingExpiration = TimeSpan.FromMinutes(15),
             Priority = CacheEntryPriority.High,
-            Tags = new List<string> { "users", "active" },
-            Dependencies = new List<string> { "config:global" }
+            Tags = ["users", "active"],
+            Dependencies = ["config:global"]
         };
 
         // Assert

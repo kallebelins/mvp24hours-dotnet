@@ -6,13 +6,15 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Resilience;
 [Trait("Category", "Unit")]
 public class DbContextCircuitBreakerTest
 {
-    private static EFCoreResilienceOptions CreateOptions(int failureThreshold = 3) =>
-        new()
+    private static EFCoreResilienceOptions CreateOptions(int failureThreshold = 3)
+    {
+        return new()
         {
             EnableCircuitBreaker = true,
             CircuitBreakerFailureThreshold = failureThreshold,
             CircuitBreakerDurationSeconds = 30
         };
+    }
 
     [Fact]
     public void RecordFailure_AfterThreshold_OpensCircuit()
@@ -36,7 +38,7 @@ public class DbContextCircuitBreakerTest
 
         breaker.State.Should().Be(CircuitState.Open);
 
-        var act = () => breaker.EnsureCircuitClosed();
+        Action act = () => breaker.EnsureCircuitClosed();
 
         act.Should().Throw<CircuitBreakerOpenException>()
             .Which.RetryAfter.Should().BeGreaterThan(TimeSpan.Zero);

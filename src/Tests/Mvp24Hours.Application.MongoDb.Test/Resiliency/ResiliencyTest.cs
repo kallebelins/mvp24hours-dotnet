@@ -258,7 +258,7 @@ public class ResiliencyTest
     public void MongoDbCircuitBreakerOpenException_WithAllParams_SetsAll()
     {
         var remaining = TimeSpan.FromSeconds(10);
-        var openedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        DateTimeOffset openedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         var ex = new MongoDbCircuitBreakerOpenException("Circuit open", remaining, openedAt);
 
         Assert.Equal("Circuit open", ex.Message);

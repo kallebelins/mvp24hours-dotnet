@@ -205,7 +205,7 @@ public class PipelineContextTest
         };
         parent.SetMetadata("key", "value");
 
-        var child = parent.CreateChildContext();
+        IPipelineContext child = parent.CreateChildContext();
 
         child.CorrelationId.Should().NotBe("parent-corr");
         child.CausationId.Should().Be("parent-corr");
@@ -225,7 +225,7 @@ public class PipelineContextTest
         };
         original.SetMetadata("x", 10);
 
-        var cloned = original.CloneWithCorrelationId("new-corr");
+        IPipelineContext cloned = original.CloneWithCorrelationId("new-corr");
 
         cloned.CorrelationId.Should().Be("new-corr");
         cloned.UserId.Should().Be("user-2");

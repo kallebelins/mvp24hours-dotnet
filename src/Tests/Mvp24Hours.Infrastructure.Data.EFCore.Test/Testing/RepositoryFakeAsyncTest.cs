@@ -43,7 +43,7 @@ public class RepositoryFakeAsyncTest
     {
         var repository = new RepositoryFakeAsync<TestEntity>(EfCoreTestHelpers.CreateEntities(3));
 
-        var active = await repository.GetByAsync(e => e.Active);
+        IList<TestEntity> active = await repository.GetByAsync(e => e.Active);
         active.Should().HaveCount(1);
 
         (await repository.ListCountAsync()).Should().Be(3);

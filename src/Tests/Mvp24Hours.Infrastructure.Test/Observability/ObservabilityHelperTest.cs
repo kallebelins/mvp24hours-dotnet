@@ -109,7 +109,7 @@ public class ObservabilityHelperTest
     public async Task ExecuteWithObservabilityAsync_VoidOverload_ShouldComplete()
     {
         using var listener = new FakeActivityListener("Test.ObservabilityHelper");
-        var executed = false;
+        bool executed = false;
 
         await ObservabilityHelper.ExecuteWithObservabilityAsync(
             _logger,

@@ -232,13 +232,13 @@ public class PipeOptionsContractTest
     [Fact]
     public void PipelineValidationResult_SuccessAndFailure_BehaveAsExpected()
     {
-        PipelineValidationResult success = PipelineValidationResult.Success();
+        var success = PipelineValidationResult.Success();
         success.IsValid.Should().BeTrue();
         success.Errors.Should().BeEmpty();
         success.Invoking(r => r.ThrowIfInvalid()).Should().NotThrow();
 
         var error = new PipelineValidationError("E1", "bad", "OpA", 2);
-        PipelineValidationResult failure = PipelineValidationResult.Failure(error);
+        var failure = PipelineValidationResult.Failure(error);
 
         failure.IsValid.Should().BeFalse();
         failure.Errors.Should().ContainSingle()

@@ -25,7 +25,7 @@ public class TypedPipelineTest
     public void TypedPipeline_Should_AddTypedOperationAndRollbackOnFailure()
     {
         IncrementOperation.RollbackLog.Clear();
-        var pipeline = new TypedPipeline<int, int> { ForceRollbackOnFailure = true, IsBreakOnFail = true }
+        ITypedPipeline<int, int> pipeline = new TypedPipeline<int, int> { ForceRollbackOnFailure = true, IsBreakOnFail = true }
             .Add(new IncrementOperation())
             .Add(new FailingIncrementOperation());
 
@@ -38,7 +38,7 @@ public class TypedPipelineTest
     [Fact]
     public void TypedPipeline_Should_PropagateExceptionWhenConfigured()
     {
-        var pipeline = new TypedPipeline<int, int> { AllowPropagateException = true, IsBreakOnFail = true }
+        ITypedPipeline<int, int> pipeline = new TypedPipeline<int, int> { AllowPropagateException = true, IsBreakOnFail = true }
             .Add(new ThrowingTypedOperation());
 
         Action act = () => pipeline.Execute(1);
@@ -49,7 +49,7 @@ public class TypedPipelineTest
     [Fact]
     public void TypedPipeline_Should_AddActionOperation()
     {
-        var pipeline = new TypedPipeline<List<int>, List<int>>()
+        TypedPipeline<List<int>, List<int>> pipeline = new TypedPipeline<List<int>, List<int>>()
             .Add(list => list.Add(42));
 
         IOperationResult<List<int>> result = pipeline.Execute([]);
@@ -73,7 +73,7 @@ public class TypedPipelineTest
     [Fact]
     public async Task TypedPipelineAsync_Should_ChainOperations()
     {
-        var pipeline = new TypedPipelineAsync<int, int>()
+        ITypedPipelineAsync<int, int> pipeline = new TypedPipelineAsync<int, int>()
             .Add(async (input, ct) =>
             {
                 await Task.Delay(1, ct);
@@ -90,7 +90,7 @@ public class TypedPipelineTest
     public async Task TypedPipelineAsync_Should_RollbackOnFailure()
     {
         AsyncIncrementOperation.RollbackLog.Clear();
-        var pipeline = new TypedPipelineAsync<int, int> { ForceRollbackOnFailure = true, IsBreakOnFail = true }
+        ITypedPipelineAsync<int, int> pipeline = new TypedPipelineAsync<int, int> { ForceRollbackOnFailure = true, IsBreakOnFail = true }
             .Add(new AsyncIncrementOperation())
             .Add(new AsyncFailingIncrementOperation());
 
@@ -126,26 +126,41 @@ public class TypedPipelineTest
     {
         public static List<int> RollbackLog { get; } = [];
 
-        public override IOperationResult<int> Execute(int input) => Success(input + 1);
+        public override IOperationResult<int> Execute(int input)
+        {
+            return Success(input + 1);
+        }
 
-        public override void Rollback(int input) => RollbackLog.Add(input);
+        public override void Rollback(int input)
+        {
+            RollbackLog.Add(input);
+        }
     }
 
     private sealed class FailingIncrementOperation : TypedOperationBase<int, int>
     {
-        public override IOperationResult<int> Execute(int input) => Failure("failed step");
+        public override IOperationResult<int> Execute(int input)
+        {
+            return Failure("failed step");
+        }
     }
 
     private sealed class ThrowingTypedOperation : TypedOperationBase<int, int>
     {
-        public override IOperationResult<int> Execute(int input) => throw new InvalidOperationException("typed failure");
+        public override IOperationResult<int> Execute(int input)
+        {
+            throw new InvalidOperationException("typed failure");
+        }
     }
 
     private sealed class SideEffectOperation : TypedOperationBase<int>
     {
         public static List<int> Effects { get; } = [];
 
-        protected override void ExecuteCore(int input) => Effects.Add(input);
+        protected override void ExecuteCore(int input)
+        {
+            Effects.Add(input);
+        }
     }
 
     private sealed class AsyncIncrementOperation : TypedOperationBaseAsync<int, int>
@@ -153,7 +168,9 @@ public class TypedPipelineTest
         public static List<int> RollbackLog { get; } = [];
 
         public override Task<IOperationResult<int>> ExecuteAsync(int input, CancellationToken cancellationToken = default)
-            => SuccessAsync(input + 1);
+        {
+            return SuccessAsync(input + 1);
+        }
 
         public override Task RollbackAsync(int input, CancellationToken cancellationToken = default)
         {
@@ -165,7 +182,9 @@ public class TypedPipelineTest
     private sealed class AsyncFailingIncrementOperation : TypedOperationBaseAsync<int, int>
     {
         public override Task<IOperationResult<int>> ExecuteAsync(int input, CancellationToken cancellationToken = default)
-            => FailureAsync("async failed");
+        {
+            return FailureAsync("async failed");
+        }
     }
 
     private sealed class AsyncSideEffectOperation : TypedOperationBaseAsync<int>

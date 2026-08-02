@@ -23,7 +23,7 @@ public class PagedBusinessResultTest
     {
         IPagedResult<string> paged = PagedResult<string>.Create(["A", "B"], 1, 10, 2);
 
-        PagedBusinessResult<string> result = PagedBusinessResult<string>.Success(paged, "token-1");
+        var result = PagedBusinessResult<string>.Success(paged, "token-1");
 
         result.HasErrors.Should().BeFalse();
         result.Data.Should().BeSameAs(paged);
@@ -40,7 +40,7 @@ public class PagedBusinessResultTest
             new MessageResult("Page", "Invalid page", Core.Enums.MessageType.Error)
         };
 
-        PagedBusinessResult<string> result = PagedBusinessResult<string>.Failure(messages, "token-2");
+        var result = PagedBusinessResult<string>.Failure(messages, "token-2");
 
         result.HasErrors.Should().BeTrue();
         result.Data.Should().BeNull();
@@ -52,7 +52,7 @@ public class PagedBusinessResultTest
     [Fact]
     public void HasErrors_WithEmptyMessages_ShouldBeFalse()
     {
-        PagedBusinessResult<string> result = PagedBusinessResult<string>.Failure([]);
+        var result = PagedBusinessResult<string>.Failure([]);
 
         result.HasErrors.Should().BeFalse();
     }

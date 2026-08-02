@@ -126,7 +126,7 @@ public class OperationCustomTest
         bool subsequentRan = false;
         var pipeline = new Pipeline();
         pipeline.Add(new PositiveNumberValidator());
-        pipeline.Add(_ => { subsequentRan = true; });
+        pipeline.Add(_ => subsequentRan = true);
         pipeline.Execute(input);
 
         subsequentRan.Should().BeFalse();
@@ -210,31 +210,54 @@ public class OperationCustomTest
 
     private class SingleTypeMapper : OperationMapper<MappedDto>
     {
-        public override MappedDto Mapper(IPipelineMessage input) => new("mapped");
+        public override MappedDto Mapper(IPipelineMessage input)
+        {
+            return new("mapped");
+        }
     }
 
     private class SingleTypeMapperWithKey : OperationMapper<MappedDto>
     {
         public override string? ContentKey => "custom-key";
-        public override MappedDto Mapper(IPipelineMessage input) => new("keyed");
+        public override MappedDto Mapper(IPipelineMessage input)
+        {
+            return new("keyed");
+        }
     }
 
     private class DualTypeMapper : OperationMapper<string, int>
     {
-        public override int Mapper(string content) => content.Length;
+        public override int Mapper(string content)
+        {
+            return content.Length;
+        }
     }
 
     private class DualTypeMapperWithSourceKey : OperationMapper<string, int>
     {
         public override string? SourceKey => "src-key";
-        public override int Mapper(string content) => content.Length;
+        public override int Mapper(string content)
+        {
+            return content.Length;
+        }
     }
 
     private class ConditionalChecker : OperationConditional
     {
-        public override bool Condition(IPipelineMessage input) => input.HasContent("active");
-        public override void TrueResult(IPipelineMessage input) => input.AddContent("branch", "true");
-        public override void FalseResult(IPipelineMessage input) => input.AddContent("branch", "false");
+        public override bool Condition(IPipelineMessage input)
+        {
+            return input.HasContent("active");
+        }
+
+        public override void TrueResult(IPipelineMessage input)
+        {
+            input.AddContent("branch", "true");
+        }
+
+        public override void FalseResult(IPipelineMessage input)
+        {
+            input.AddContent("branch", "false");
+        }
     }
 
     private class PositiveNumberValidator : OperationValidator
@@ -248,24 +271,42 @@ public class OperationCustomTest
 
     private class StringLengthMediator : OperationMediator<string, ResponseDto>
     {
-        public override string MapperRequest(IPipelineMessage input) => input.GetContent<string>("input-text");
+        public override string MapperRequest(IPipelineMessage input)
+        {
+            return input.GetContent<string>("input-text");
+        }
+
         public override void Mediator(IPipelineMessage input) { }
-        public override ResponseDto MapperResponse(IPipelineMessage input) => new(ModelRequest!.Length);
+        public override ResponseDto MapperResponse(IPipelineMessage input)
+        {
+            return new(ModelRequest!.Length);
+        }
     }
 
     private class KeyedMediator : OperationMediator<string, ResponseDto>
     {
         public override string? ResponseContentKey => "response-key";
-        public override string MapperRequest(IPipelineMessage input) => input.GetContent<string>("input-text");
+        public override string MapperRequest(IPipelineMessage input)
+        {
+            return input.GetContent<string>("input-text");
+        }
+
         public override void Mediator(IPipelineMessage input) { }
-        public override ResponseDto MapperResponse(IPipelineMessage input) => new(ModelRequest!.Length);
+        public override ResponseDto MapperResponse(IPipelineMessage input)
+        {
+            return new(ModelRequest!.Length);
+        }
     }
 
     // Async versions
 
     private class ConditionalCheckerAsync : Mvp24Hours.Infrastructure.Pipe.Operations.Custom.OperationConditionalAsync
     {
-        public override Task<bool> ConditionAsync(IPipelineMessage input) => Task.FromResult(input.HasContent("active"));
+        public override Task<bool> ConditionAsync(IPipelineMessage input)
+        {
+            return Task.FromResult(input.HasContent("active"));
+        }
+
         public override Task TrueResultAsync(IPipelineMessage input)
         {
             input.AddContent("branch", "true-async");
@@ -275,11 +316,17 @@ public class OperationCustomTest
 
     private class AsyncPositiveValidator : Mvp24Hours.Infrastructure.Pipe.Operations.Custom.OperationValidatorAsync
     {
-        public override Task<bool> IsValid(IPipelineMessage input) => Task.FromResult(input.GetContent<int>("value") > 0);
+        public override Task<bool> IsValid(IPipelineMessage input)
+        {
+            return Task.FromResult(input.GetContent<int>("value") > 0);
+        }
     }
 
     private class AsyncMapper : Mvp24Hours.Infrastructure.Pipe.Operations.Custom.OperationMapperAsync<string, int>
     {
-        public override Task<int> MapperAsync(string content) => Task.FromResult(content.Length);
+        public override Task<int> MapperAsync(string content)
+        {
+            return Task.FromResult(content.Length);
+        }
     }
 }

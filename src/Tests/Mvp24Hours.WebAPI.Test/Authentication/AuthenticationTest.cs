@@ -63,17 +63,17 @@ public class AuthenticationTest
     [Fact]
     public async Task ApiKeyAuthenticationMiddleware_Should_CallNext_WhenValidKeyProvided()
     {
-        var called = false;
+        bool called = false;
         var options = new ApiKeyAuthenticationOptions();
         options.ApiKeys.Add("secret-key");
 
-        var sut = CreateMiddleware(options, _ =>
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ =>
         {
             called = true;
             return Task.CompletedTask;
         });
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.Headers["X-Api-Key"] = "secret-key";
 
         await sut.InvokeAsync(context);
@@ -86,9 +86,9 @@ public class AuthenticationTest
     {
         var options = new ApiKeyAuthenticationOptions();
         options.ApiKeys.Add("secret-key");
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.Headers["X-Api-Key"] = "secret-key";
 
         await sut.InvokeAsync(context);
@@ -105,9 +105,9 @@ public class AuthenticationTest
     {
         var options = new ApiKeyAuthenticationOptions();
         options.ApiKeys.Add("secret-key");
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
 
         await sut.InvokeAsync(context);
 
@@ -123,9 +123,9 @@ public class AuthenticationTest
     {
         var options = new ApiKeyAuthenticationOptions();
         options.ApiKeys.Add("valid-key");
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.Headers["X-Api-Key"] = "wrong-key";
 
         await sut.InvokeAsync(context);
@@ -140,17 +140,17 @@ public class AuthenticationTest
     [Fact]
     public async Task ApiKeyAuthenticationMiddleware_Should_Bypass_ForExcludedPath()
     {
-        var called = false;
+        bool called = false;
         var options = new ApiKeyAuthenticationOptions();
         options.ApiKeys.Add("secret-key");
 
-        var sut = CreateMiddleware(options, _ =>
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ =>
         {
             called = true;
             return Task.CompletedTask;
         });
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/health");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/health");
 
         await sut.InvokeAsync(context);
 
@@ -161,19 +161,19 @@ public class AuthenticationTest
     [Fact]
     public async Task ApiKeyAuthenticationMiddleware_Should_Bypass_WhenRequireAuthFalseAndNotProtected()
     {
-        var called = false;
+        bool called = false;
         var options = new ApiKeyAuthenticationOptions
         {
             RequireAuthenticationByDefault = false
         };
 
-        var sut = CreateMiddleware(options, _ =>
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ =>
         {
             called = true;
             return Task.CompletedTask;
         });
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/public");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/public");
 
         await sut.InvokeAsync(context);
 
@@ -187,7 +187,7 @@ public class AuthenticationTest
     [Fact]
     public async Task ApiKeyAuthenticationMiddleware_Should_AcceptKeyFromQueryString()
     {
-        var called = false;
+        bool called = false;
         var options = new ApiKeyAuthenticationOptions
         {
             EnableQueryStringKey = true,
@@ -195,13 +195,13 @@ public class AuthenticationTest
         };
         options.ApiKeys.Add("qs-key");
 
-        var sut = CreateMiddleware(options, _ =>
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ =>
         {
             called = true;
             return Task.CompletedTask;
         });
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.QueryString = new Microsoft.AspNetCore.Http.QueryString("?api_key=qs-key");
 
         await sut.InvokeAsync(context);
@@ -216,20 +216,20 @@ public class AuthenticationTest
     [Fact]
     public async Task ApiKeyAuthenticationMiddleware_Should_UseCustomValidator()
     {
-        var called = false;
+        bool called = false;
         var options = new ApiKeyAuthenticationOptions
         {
             CustomValidator = key => Task.FromResult(
                 key == "custom-valid" ? ApiKeyValidationResult.Success("id") : ApiKeyValidationResult.Failure("nope"))
         };
 
-        var sut = CreateMiddleware(options, _ =>
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ =>
         {
             called = true;
             return Task.CompletedTask;
         });
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.Headers["X-Api-Key"] = "custom-valid";
 
         await sut.InvokeAsync(context);
@@ -248,9 +248,9 @@ public class AuthenticationTest
         options.ApiKeys.Add("scoped-key");
         options.ApiKeyScopes["scoped-key"] = ["read", "write"];
 
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
         context.Request.Headers["X-Api-Key"] = "scoped-key";
 
         await sut.InvokeAsync(context);
@@ -267,9 +267,9 @@ public class AuthenticationTest
     public async Task ApiKeyAuthenticationMiddleware_Should_SetWwwAuthenticateHeader_OnUnauthorized()
     {
         var options = new ApiKeyAuthenticationOptions();
-        var sut = CreateMiddleware(options, _ => Task.CompletedTask);
+        ApiKeyAuthenticationMiddleware sut = CreateMiddleware(options, _ => Task.CompletedTask);
 
-        var context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(path: "/api/data");
 
         await sut.InvokeAsync(context);
 

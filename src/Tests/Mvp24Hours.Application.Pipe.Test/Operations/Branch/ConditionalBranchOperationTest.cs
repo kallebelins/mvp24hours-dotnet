@@ -21,7 +21,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "A");
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new SetContentOperation("branch-result", "A-branch"))
             .AddCase("caseB", msg => msg.GetContent<string>("type") == "B",
@@ -40,7 +40,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "X");
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new SetContentOperation("result", "A"))
             .SetDefault(new SetContentOperation("result", "default"));
@@ -58,7 +58,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "X");
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new SetContentOperation("result", "A"));
 
@@ -75,7 +75,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "B");
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new SetContentOperation("r", "A"))
             .AddCase("caseB", msg => msg.GetContent<string>("type") == "B",
@@ -123,7 +123,7 @@ public class ConditionalBranchOperationTest
         input.AddContent("type", "A");
         var rollbackOp = new RollbackTrackingOperation("A");
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A", rollbackOp);
 
         var pipeline = new Pipeline() { ForceRollbackOnFalure = true };
@@ -137,7 +137,7 @@ public class ConditionalBranchOperationTest
     [Fact, Priority(9)]
     public void ConditionalBranch_Branches_ShouldReturnAllAdded()
     {
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("case1", _ => true, new SetContentOperation("r", "v1"))
             .AddCase("case2", _ => false, new SetContentOperation("r", "v2"));
 
@@ -150,7 +150,7 @@ public class ConditionalBranchOperationTest
     public void ConditionalBranch_DefaultBranch_ShouldBeAccessible()
     {
         var defOp = new SetContentOperation("r", "def");
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .SetDefault(defOp);
 
         branch.DefaultBranch.Should().NotBeNull();
@@ -166,7 +166,7 @@ public class ConditionalBranchOperationTest
         bool innerOpRan = false;
         var innerOp = new ActionOperation(_ => innerOpRan = true);
 
-        var branch = new ConditionalBranchOperation()
+        ConditionalBranchOperation branch = new ConditionalBranchOperation()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A", innerOp);
 
         input.SetLock();
@@ -183,7 +183,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "B");
 
-        var branch = new ConditionalBranchOperationAsync()
+        ConditionalBranchOperationAsync branch = new ConditionalBranchOperationAsync()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new AsyncSetContentOperation("result", "A-async"))
             .AddCase("caseB", msg => msg.GetContent<string>("type") == "B",
@@ -202,7 +202,7 @@ public class ConditionalBranchOperationTest
         IPipelineMessage input = new PipelineMessage();
         input.AddContent("type", "Z");
 
-        var branch = new ConditionalBranchOperationAsync()
+        ConditionalBranchOperationAsync branch = new ConditionalBranchOperationAsync()
             .AddCase("caseA", msg => msg.GetContent<string>("type") == "A",
                 new AsyncSetContentOperation("result", "A"))
             .SetDefault(new AsyncSetContentOperation("result", "default-async"));
@@ -218,25 +218,45 @@ public class ConditionalBranchOperationTest
 
     private class SetContentOperation(string key, string value) : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => input.AddContent(key, value);
-        public override void Rollback(IPipelineMessage input) => input.AddContent($"{key}-rollback", true);
+        public override void Execute(IPipelineMessage input)
+        {
+            input.AddContent(key, value);
+        }
+
+        public override void Rollback(IPipelineMessage input)
+        {
+            input.AddContent($"{key}-rollback", true);
+        }
     }
 
     private class RollbackTrackingOperation(string tag) : OperationBase
     {
         public bool RollbackCalled { get; private set; }
-        public override void Execute(IPipelineMessage input) => input.AddContent($"track-{tag}", true);
-        public override void Rollback(IPipelineMessage input) => RollbackCalled = true;
+        public override void Execute(IPipelineMessage input)
+        {
+            input.AddContent($"track-{tag}", true);
+        }
+
+        public override void Rollback(IPipelineMessage input)
+        {
+            RollbackCalled = true;
+        }
     }
 
     private class FailOperation : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => input.SetFailure();
+        public override void Execute(IPipelineMessage input)
+        {
+            input.SetFailure();
+        }
     }
 
     private class ActionOperation(Action<IPipelineMessage> action) : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => action(input);
+        public override void Execute(IPipelineMessage input)
+        {
+            action(input);
+        }
     }
 
     private class AsyncSetContentOperation(string key, string value) : OperationBaseAsync

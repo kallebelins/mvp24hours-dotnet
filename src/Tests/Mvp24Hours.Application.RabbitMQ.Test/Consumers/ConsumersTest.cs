@@ -11,7 +11,7 @@ public class ConsumersTest
     [Fact]
     public void BatchMessageResult_Ack_ShouldMarkSuccess()
     {
-        BatchMessageResult result = BatchMessageResult.Ack(42);
+        var result = BatchMessageResult.Ack(42);
 
         result.DeliveryTag.Should().Be(42ul);
         result.Success.Should().BeTrue();
@@ -22,7 +22,7 @@ public class ConsumersTest
     [Fact]
     public void BatchMessageResult_Nack_ShouldMarkFailure()
     {
-        BatchMessageResult result = BatchMessageResult.Nack(7, requeue: false, errorMessage: "failed");
+        var result = BatchMessageResult.Nack(7, requeue: false, errorMessage: "failed");
 
         result.Success.Should().BeFalse();
         result.Requeue.Should().BeFalse();

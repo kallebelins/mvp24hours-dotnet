@@ -57,7 +57,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new GuidEntityIdJsonConverter<TestGuidId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestGuidId>(json, options);
+        TestGuidId? id = JsonSerializer.Deserialize<TestGuidId>(json, options);
 
         // Assert
         id.Should().NotBeNull();
@@ -87,7 +87,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new GuidEntityIdJsonConverter<TestGuidId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestGuidId>(json, options);
+        TestGuidId? id = JsonSerializer.Deserialize<TestGuidId>(json, options);
 
         // Assert
         id.Should().BeNull();
@@ -104,7 +104,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestGuidId>(json, options);
+        TestGuidId? deserialized = JsonSerializer.Deserialize<TestGuidId>(json, options);
 
         // Assert
         deserialized.Should().NotBeNull();
@@ -139,7 +139,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new IntEntityIdJsonConverter<TestIntId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestIntId>(json, options);
+        TestIntId? id = JsonSerializer.Deserialize<TestIntId>(json, options);
 
         // Assert
         id.Should().NotBeNull();
@@ -155,7 +155,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new IntEntityIdJsonConverter<TestIntId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestIntId>(json, options);
+        TestIntId? id = JsonSerializer.Deserialize<TestIntId>(json, options);
 
         // Assert
         id.Should().NotBeNull();
@@ -172,7 +172,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestIntId>(json, options);
+        TestIntId? deserialized = JsonSerializer.Deserialize<TestIntId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be(999);
@@ -206,7 +206,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new LongEntityIdJsonConverter<TestLongId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestLongId>(json, options);
+        TestLongId? id = JsonSerializer.Deserialize<TestLongId>(json, options);
 
         // Assert
         id!.Value.Should().Be(9999999999L);
@@ -221,7 +221,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new LongEntityIdJsonConverter<TestLongId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestLongId>(json, options);
+        TestLongId? id = JsonSerializer.Deserialize<TestLongId>(json, options);
 
         // Assert
         id!.Value.Should().Be(9999999999L);
@@ -237,7 +237,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestLongId>(json, options);
+        TestLongId? deserialized = JsonSerializer.Deserialize<TestLongId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be(123456789012345L);
@@ -271,7 +271,7 @@ public class EntityIdJsonConvertersTest
         options.Converters.Add(new StringEntityIdJsonConverter<TestStringId>());
 
         // Act
-        var id = JsonSerializer.Deserialize<TestStringId>(json, options);
+        TestStringId? id = JsonSerializer.Deserialize<TestStringId>(json, options);
 
         // Assert
         id!.Value.Should().Be("ABC-123");
@@ -287,7 +287,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestStringId>(json, options);
+        TestStringId? deserialized = JsonSerializer.Deserialize<TestStringId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be("my-string-id-value");
@@ -390,7 +390,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestGuidId>(json, options);
+        TestGuidId? deserialized = JsonSerializer.Deserialize<TestGuidId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be(guid);
@@ -406,7 +406,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestIntId>(json, options);
+        TestIntId? deserialized = JsonSerializer.Deserialize<TestIntId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be(42);
@@ -422,7 +422,7 @@ public class EntityIdJsonConvertersTest
 
         // Act
         string json = JsonSerializer.Serialize(id, options);
-        var deserialized = JsonSerializer.Deserialize<TestStringId>(json, options);
+        TestStringId? deserialized = JsonSerializer.Deserialize<TestStringId>(json, options);
 
         // Assert
         deserialized!.Value.Should().Be("test-value");

@@ -62,11 +62,11 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task AddAsync_CustomerIsAdded()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
 
-        var oid = await SeedCustomerAsync(service);
-        var result = await service.GetByIdAsync(oid);
+        ObjectId oid = await SeedCustomerAsync(service);
+        IBusinessResult<Customer?> result = await service.GetByIdAsync(oid);
 
         Assert.True(result.HasData());
     }
@@ -74,8 +74,8 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListAnyAsync_ReturnsTrueWhenDataExists()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
         await SeedCustomerAsync(service);
 
         IBusinessResult<bool> result = await service.ListAnyAsync();
@@ -86,8 +86,8 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListCountAsync_ReturnsCountGreaterThanZero()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
         await SeedCustomerAsync(service);
         await SeedCustomerAsync(service);
 
@@ -99,8 +99,8 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListAsync_ReturnsAllCustomers()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
         await SeedCustomerAsync(service);
         await SeedCustomerAsync(service);
         await SeedCustomerAsync(service);
@@ -113,9 +113,12 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListAsync_WithPaging_ReturnsLimitedResults()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
-        for (int i = 0; i < 5; i++) await SeedCustomerAsync(service);
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
+        for (int i = 0; i < 5; i++)
+        {
+            await SeedCustomerAsync(service);
+        }
 
         var paging = new PagingCriteria(3, 0);
         IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
@@ -126,38 +129,38 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ModifyAsync_UpdatesCustomerName()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
 
-        var oid = await SeedCustomerAsync(service);
-        var customer = (await service.GetByIdAsync(oid)).GetDataValue();
+        ObjectId oid = await SeedCustomerAsync(service);
+        Customer? customer = (await service.GetByIdAsync(oid)).GetDataValue();
         Assert.NotNull(customer);
 
         customer.Name = "Updated Name";
         await service.ModifyAsync(customer);
 
-        var updated = await service.GetByIdAsync(oid);
+        IBusinessResult<Customer?> updated = await service.GetByIdAsync(oid);
         Assert.Equal("Updated Name", updated.Data?.Name);
     }
 
     [DockerFact]
     public async Task RemoveByIdAsync_DeletesCustomer()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
 
-        var oid = await SeedCustomerAsync(service);
+        ObjectId oid = await SeedCustomerAsync(service);
         await service.RemoveByIdAsync(oid);
 
-        var result = await service.GetByIdAsync(oid);
+        IBusinessResult<Customer?> result = await service.GetByIdAsync(oid);
         Assert.False(result.HasData());
     }
 
     [DockerFact]
     public async Task GetByAsync_FiltersByName()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
         var oid = ObjectId.GenerateNewId();
 
         await service.AddAsync(new Customer
@@ -177,15 +180,15 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListAsync_WithOrderBy_ReturnsOrderedResults()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
 
         await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Zebra", Active = true });
         await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Alpha", Active = true });
         await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Mango", Active = true });
 
         var paging = new PagingCriteria(10, 0, ["Name asc"]);
-        var result = await service.ListAsync(paging);
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
 
         Assert.True(result.HasData());
     }
@@ -193,15 +196,15 @@ public class CommandServiceAsyncTest(MongoDbIntegrationFixture fixture)
     [DockerFact]
     public async Task ListAsync_WithExpressionOrder_ReturnsOrderedResults()
     {
-        var sp = Setup();
-        var service = sp.GetRequiredService<CustomerServiceAsync>();
+        IServiceProvider sp = Setup();
+        CustomerServiceAsync service = sp.GetRequiredService<CustomerServiceAsync>();
 
         await service.AddAsync(new Customer { Created = DateTime.Now, Name = "Z-Customer", Active = true });
         await service.AddAsync(new Customer { Created = DateTime.Now, Name = "A-Customer", Active = true });
 
         var paging = new PagingCriteriaExpression<Customer>(10, 0);
         paging.OrderByAscendingExpr.Add(x => x.Name);
-        var result = await service.ListAsync(paging);
+        IBusinessResult<IList<Customer>> result = await service.ListAsync(paging);
 
         Assert.True(result.HasData());
     }

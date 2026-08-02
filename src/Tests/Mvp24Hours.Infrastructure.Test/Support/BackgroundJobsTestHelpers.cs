@@ -157,13 +157,17 @@ internal static class BackgroundJobsTestHelpers
     public sealed class DummyJob : IBackgroundJob
     {
         public Task ExecuteAsync(IJobContext context, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            return Task.CompletedTask;
+        }
     }
 
     public sealed class DummyJobWithArgs : IBackgroundJob<DummyJobArgs>
     {
         public Task ExecuteAsync(DummyJobArgs args, IJobContext context, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            return Task.CompletedTask;
+        }
     }
 
     public sealed class TrackingJob : IBackgroundJob
@@ -197,12 +201,17 @@ internal static class BackgroundJobsTestHelpers
             return Task.CompletedTask;
         }
 
-        public static void Reset() => LastValue = null;
+        public static void Reset()
+        {
+            LastValue = null;
+        }
     }
 
     public sealed class FailingJob : IBackgroundJob
     {
         public Task ExecuteAsync(IJobContext context, CancellationToken cancellationToken)
-            => throw new InvalidOperationException("Job failed intentionally");
+        {
+            throw new InvalidOperationException("Job failed intentionally");
+        }
     }
 }

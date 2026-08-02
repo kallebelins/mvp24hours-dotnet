@@ -150,8 +150,8 @@ public static class HttpPolicyHelper
     /// <summary>
     /// Defines an alternative value to be returned (or action to be executed) on failure.
     /// </summary>
-    /// <param name="action"></param>
-    /// <example>
+    /// <param name="fallbackAction">Fallback delegate invoked when the circuit is open.</param>
+    /// <example><![CDATA[
     ///     private Task<HttpResponseMessage> FallbackAction(DelegateResult<HttpResponseMessage> responseToFailedRequest, Context context, CancellationToken cancellationToken)
     ///     {
     ///         Console.WriteLine("Fallback action is executing");
@@ -162,7 +162,7 @@ public static class HttpPolicyHelper
     ///         };
     ///         return Task.FromResult(httpResponseMessage);
     ///     }
-    /// </example>
+    /// ]]></example>
     /// <returns></returns>
     public static IAsyncPolicy<HttpResponseMessage> GetFallbackBrokenCircuitPolicy(Func<CancellationToken, Task<HttpResponseMessage>> fallbackAction)
     {
@@ -174,8 +174,9 @@ public static class HttpPolicyHelper
     /// <summary>
     /// Defines an alternative value to be returned (or action to be executed) on failure.
     /// </summary>
-    /// <param name="action"></param>
-    /// <example>
+    /// <param name="fallbackAction">Fallback delegate invoked when the circuit is open.</param>
+    /// <param name="onFallbackAsync"></param>
+    /// <example><![CDATA[
     ///     private Task OnFallbackAsync(DelegateResult<HttpResponseMessage> response, Context context)
     ///     {
     ///         Console.WriteLine("About to call the fallback action. This is a good place to do some logging");
@@ -191,7 +192,7 @@ public static class HttpPolicyHelper
     ///         };
     ///         return Task.FromResult(httpResponseMessage);
     ///     }
-    /// </example>
+    /// ]]></example>
     /// <returns></returns>
     public static IAsyncPolicy<HttpResponseMessage> GetFallbackBrokenCircuitPolicy(Func<CancellationToken, Task<HttpResponseMessage>> fallbackAction, Func<DelegateResult<HttpResponseMessage>, Task> onFallbackAsync)
     {
@@ -203,8 +204,9 @@ public static class HttpPolicyHelper
     /// <summary>
     /// Defines an alternative value to be returned (or action to be executed) on failure.
     /// </summary>
-    /// <param name="action"></param>
-    /// <example>
+    /// <param name="statusCode"></param>
+    /// <param name="fallbackAction">Fallback delegate invoked when the circuit is open.</param>
+    /// <example><![CDATA[
     ///     private Task<HttpResponseMessage> FallbackAction(DelegateResult<HttpResponseMessage> responseToFailedRequest, Context context, CancellationToken cancellationToken)
     ///     {
     ///         Console.WriteLine("Fallback action is executing");
@@ -215,7 +217,7 @@ public static class HttpPolicyHelper
     ///         };
     ///         return Task.FromResult(httpResponseMessage);
     ///     }
-    /// </example>
+    /// ]]></example>
     /// <returns></returns>
     public static IAsyncPolicy<HttpResponseMessage> GetFallbackPolicy(HttpStatusCode statusCode, Func<CancellationToken, Task<HttpResponseMessage>> fallbackAction)
     {
@@ -228,8 +230,10 @@ public static class HttpPolicyHelper
     /// <summary>
     /// Defines an alternative value to be returned (or action to be executed) on failure.
     /// </summary>
-    /// <param name="action"></param>
-    /// <example>
+    /// <param name="statusCode"></param>
+    /// <param name="fallbackAction">Fallback delegate invoked when the circuit is open.</param>
+    /// <param name="onFallbackAsync"></param>
+    /// <example><![CDATA[
     ///     private Task OnFallbackAsync(DelegateResult<HttpResponseMessage> response, Context context)
     ///     {
     ///         Console.WriteLine("About to call the fallback action. This is a good place to do some logging");
@@ -245,7 +249,7 @@ public static class HttpPolicyHelper
     ///         };
     ///         return Task.FromResult(httpResponseMessage);
     ///     }
-    /// </example>
+    /// ]]></example>
     /// <returns></returns>
     public static IAsyncPolicy<HttpResponseMessage> GetFallbackPolicy(HttpStatusCode statusCode, Func<CancellationToken, Task<HttpResponseMessage>> fallbackAction, Func<DelegateResult<HttpResponseMessage>, Task> onFallbackAsync)
     {

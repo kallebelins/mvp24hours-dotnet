@@ -10,7 +10,7 @@ public class PipelineSagaOrchestratorTest
     public async Task ExecuteAsync_Should_CompleteAllStepsSuccessfully()
     {
         var context = new TestSagaContext();
-        var saga = new PipelineSagaOrchestrator<TestSagaContext>()
+        PipelineSagaOrchestrator<TestSagaContext> saga = new PipelineSagaOrchestrator<TestSagaContext>()
             .AddStep("step1", (ctx, _) =>
             {
                 ctx.Value = 1;
@@ -35,7 +35,7 @@ public class PipelineSagaOrchestratorTest
     {
         var context = new TestSagaContext();
         var compensated = new List<string>();
-        var saga = new PipelineSagaOrchestrator<TestSagaContext>(new PipelineSagaOptions { AutoCompensateOnFailure = true })
+        PipelineSagaOrchestrator<TestSagaContext> saga = new PipelineSagaOrchestrator<TestSagaContext>(new PipelineSagaOptions { AutoCompensateOnFailure = true })
             .AddStep("reserve", (ctx, _) =>
             {
                 ctx.Log.Add("reserve");
@@ -69,7 +69,7 @@ public class PipelineSagaOrchestratorTest
     public async Task ExecuteAsync_Should_RetryStepBeforeFailing()
     {
         int attempts = 0;
-        var saga = new PipelineSagaOrchestrator<string>()
+        PipelineSagaOrchestrator<string> saga = new PipelineSagaOrchestrator<string>()
             .AddStep(new RetryingSagaStep(() => Interlocked.Increment(ref attempts)));
 
         PipelineSagaResult<string> result = await saga.ExecuteAsync("ctx");
@@ -81,7 +81,7 @@ public class PipelineSagaOrchestratorTest
     [Fact]
     public void WithSagaId_Should_SetCustomId()
     {
-        var saga = new PipelineSagaOrchestrator<string>().WithSagaId("custom-id");
+        PipelineSagaOrchestrator<string> saga = new PipelineSagaOrchestrator<string>().WithSagaId("custom-id");
 
         saga.SagaId.Should().Be("custom-id");
     }

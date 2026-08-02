@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
@@ -10,29 +12,29 @@ public class SoftDeleteInterceptorTest
     [Fact]
     public void SaveChanges_OnRemove_ConvertsToSoftDelete()
     {
-        var userProvider = EfCoreTestHelpers.CreateUserProvider("delete-user");
-        var clock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 14, 0, 0, DateTimeKind.Utc));
+        Mock<ICurrentUserProvider> userProvider = EfCoreTestHelpers.CreateUserProvider("delete-user");
+        Mock<IClock> clock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 14, 0, 0, DateTimeKind.Utc));
         var interceptor = new SoftDeleteInterceptor(userProvider.Object, clock.Object);
-        var databaseName = $"SoftDelete_{Guid.NewGuid():N}";
+        string databaseName = $"SoftDelete_{Guid.NewGuid():N}";
 
-        using (var context = CreateSoftDeleteContext(databaseName, interceptor))
+        using (SoftDeleteTestDbContext context = CreateSoftDeleteContext(databaseName, interceptor))
         {
             context.SoftDeleteEntities.Add(new TestSoftDeleteEntity { Name = "ToDelete" });
             context.SaveChanges();
         }
 
-        using (var context = CreateSoftDeleteContext(databaseName, interceptor))
+        using (SoftDeleteTestDbContext context = CreateSoftDeleteContext(databaseName, interceptor))
         {
-            var entity = context.SoftDeleteEntities.Single();
+            TestSoftDeleteEntity entity = context.SoftDeleteEntities.Single();
             context.SoftDeleteEntities.Remove(entity);
             context.SaveChanges();
         }
 
-        using (var context = CreateSoftDeleteContext(databaseName, interceptor))
+        using (SoftDeleteTestDbContext context = CreateSoftDeleteContext(databaseName, interceptor))
         {
             context.SoftDeleteEntities.Count().Should().Be(0);
 
-            var deleted = context.SoftDeleteEntities
+            TestSoftDeleteEntity deleted = context.SoftDeleteEntities
                 .IgnoreQueryFilters()
                 .Single();
 
@@ -45,7 +47,7 @@ public class SoftDeleteInterceptorTest
 
     private static SoftDeleteTestDbContext CreateSoftDeleteContext(string databaseName, SoftDeleteInterceptor interceptor)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<SoftDeleteTestDbContext>()
+        DbContextOptionsBuilder<SoftDeleteTestDbContext> optionsBuilder = new DbContextOptionsBuilder<SoftDeleteTestDbContext>()
             .UseInMemoryDatabase(databaseName)
             .AddInterceptors(interceptor);
 
@@ -54,13 +56,8 @@ public class SoftDeleteInterceptorTest
         return context;
     }
 
-    private sealed class SoftDeleteTestDbContext : TestDbContext
+    private sealed class SoftDeleteTestDbContext(DbContextOptions options) : TestDbContext(options)
     {
-        public SoftDeleteTestDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

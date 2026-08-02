@@ -136,7 +136,7 @@ public class TagBasedInvalidationExtensionsTest
     {
         MemoryCacheProvider cache = CacheTestHelpers.CreateMemoryProvider();
         var tagManager = new CacheTagManager(cache);
-        var options = new CacheEntryOptions { Tags = new List<string> { "products" } };
+        var options = new CacheEntryOptions { Tags = ["products"] };
 
         await cache.SetWithInvalidationAsync(
             "product:1",
@@ -172,7 +172,7 @@ public class TagBasedInvalidationExtensionsTest
         MemoryCacheProvider cache = CacheTestHelpers.CreateMemoryProvider();
         var tagManager = new CacheTagManager(cache);
         var stampede = new CacheStampedePrevention();
-        var options = new CacheEntryOptions { Tags = new List<string> { "computed" } };
+        var options = new CacheEntryOptions { Tags = ["computed"] };
         int factoryCalls = 0;
 
         TestEntity result = await CacheInvalidationExtensions.GetOrSetAsync(

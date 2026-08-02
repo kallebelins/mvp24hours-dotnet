@@ -3,8 +3,8 @@ using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test;
 
@@ -29,7 +29,10 @@ public class UnitOfWorkWithEventsAsyncTest : IDisposable
         _provider = services.BuildServiceProvider();
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public async Task GetEntitiesWithEvents_ShouldReturnEntitiesWithPendingEvents()
@@ -38,7 +41,7 @@ public class UnitOfWorkWithEventsAsyncTest : IDisposable
         IUnitOfWorkWithEventsAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEventsAsync>();
         IRepositoryAsync<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("Pending");
+        TestDomainEventEntity entity = CreateEntityWithEvent("Pending");
         await repository.AddAsync(entity);
 
         IEnumerable<IHasDomainEvents> entitiesWithEvents = unitOfWork.GetEntitiesWithEvents();
@@ -54,7 +57,7 @@ public class UnitOfWorkWithEventsAsyncTest : IDisposable
         IUnitOfWorkWithEventsAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEventsAsync>();
         IRepositoryAsync<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("Dispatched");
+        TestDomainEventEntity entity = CreateEntityWithEvent("Dispatched");
         await repository.AddAsync(entity);
 
         int rowsAffected = await unitOfWork.SaveChangesWithEventsAsync();
@@ -75,7 +78,7 @@ public class UnitOfWorkWithEventsAsyncTest : IDisposable
         IUnitOfWorkWithEventsAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkWithEventsAsync>();
         IRepositoryAsync<TestDomainEventEntity> repository = unitOfWork.GetRepository<TestDomainEventEntity>();
 
-        var entity = CreateEntityWithEvent("NotDispatched");
+        TestDomainEventEntity entity = CreateEntityWithEvent("NotDispatched");
         await repository.AddAsync(entity);
         await unitOfWork.SaveChangesAsync();
 

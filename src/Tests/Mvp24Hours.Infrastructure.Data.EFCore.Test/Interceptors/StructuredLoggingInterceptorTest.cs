@@ -12,11 +12,11 @@ public class StructuredLoggingInterceptorTest
     {
         var interceptor = new StructuredLoggingInterceptor();
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         context.Entities.Add(new TestEntity { Name = "Structured" });
-        var act = () => context.SaveChanges();
+        Func<int> act = () => context.SaveChanges();
 
         act.Should().NotThrow();
     }
@@ -29,11 +29,11 @@ public class StructuredLoggingInterceptorTest
             logParameters: false,
             outputAsJson: true);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         context.Entities.Add(new TestEntity { Name = "Structured" });
-        var act = () => context.SaveChanges();
+        Func<int> act = () => context.SaveChanges();
 
         act.Should().NotThrow();
     }

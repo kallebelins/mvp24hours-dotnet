@@ -32,7 +32,7 @@ public class MigrationOptionsTest
     [Fact]
     public void Development_ShouldEnableAutoMigrateAndSeeding()
     {
-        MigrationOptions options = MigrationOptions.Development();
+        var options = MigrationOptions.Development();
 
         options.AutoMigrateOnStartup.Should().BeTrue();
         options.EnableDataSeeding.Should().BeTrue();
@@ -43,7 +43,7 @@ public class MigrationOptionsTest
     [Fact]
     public void Production_ShouldDisableAutoMigrateAndEnableThrowOnPending()
     {
-        MigrationOptions options = MigrationOptions.Production();
+        var options = MigrationOptions.Production();
 
         options.AutoMigrateOnStartup.Should().BeFalse();
         options.ThrowOnPendingMigrations.Should().BeTrue();

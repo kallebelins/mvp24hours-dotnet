@@ -75,6 +75,7 @@ public interface IRabbitMQDiagnostics
     /// Gets queue statistics if available.
     /// </summary>
     /// <param name="queueName">The queue name.</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>Queue statistics or null if not available.</returns>
     Task<QueueStats?> GetQueueStatsAsync(string queueName, CancellationToken cancellationToken = default);
 

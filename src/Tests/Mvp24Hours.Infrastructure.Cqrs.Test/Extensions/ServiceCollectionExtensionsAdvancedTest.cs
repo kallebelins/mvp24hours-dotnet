@@ -291,25 +291,37 @@ public class ServiceCollectionExtensionsAdvancedTest
     {
         public IMediator InnerMediator => inner;
 
-        public Task<TResponse> SendAsync<TResponse>(IMediatorRequest<TResponse> request, CancellationToken cancellationToken = default) =>
-            inner.SendAsync(request, cancellationToken);
+        public Task<TResponse> SendAsync<TResponse>(IMediatorRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            return inner.SendAsync(request, cancellationToken);
+        }
 
         public Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
-            where TNotification : IMediatorNotification =>
-            inner.PublishAsync(notification, cancellationToken);
+            where TNotification : IMediatorNotification
+        {
+            return inner.PublishAsync(notification, cancellationToken);
+        }
 
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default) =>
-            inner.CreateStream(request, cancellationToken);
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            return inner.CreateStream(request, cancellationToken);
+        }
     }
 
     private sealed class Phase24PreProcessor : IPreProcessor<TestCommand>
     {
-        public Task ProcessAsync(TestCommand request, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task ProcessAsync(TestCommand request, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class Phase24PostProcessor : IPostProcessor<TestCommand, string>
     {
-        public Task ProcessAsync(TestCommand request, string response, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task ProcessAsync(TestCommand request, string response, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class Phase24PipelineHook : PipelineHookBase;
@@ -321,7 +333,9 @@ public class ServiceCollectionExtensionsAdvancedTest
         public Task<ExceptionHandlingResult<object?>> HandleAsync(
             object request,
             InvalidOperationException exception,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(ExceptionHandlingResult<object?>.NotHandled);
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(ExceptionHandlingResult<object?>.NotHandled);
+        }
     }
 }

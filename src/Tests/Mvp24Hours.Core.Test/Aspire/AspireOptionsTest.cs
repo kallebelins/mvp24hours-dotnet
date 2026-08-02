@@ -82,10 +82,11 @@ public class AspireOptionsTest
     public void AspireOptions_CanSetServiceName()
     {
         // Arrange
-        var options = new AspireOptions();
-
-        // Act
-        options.ServiceName = "MyService";
+        var options = new AspireOptions
+        {
+            // Act
+            ServiceName = "MyService"
+        };
 
         // Assert
         options.ServiceName.Should().Be("MyService");
@@ -95,10 +96,11 @@ public class AspireOptionsTest
     public void AspireOptions_CanSetServiceVersion()
     {
         // Arrange
-        var options = new AspireOptions();
-
-        // Act
-        options.ServiceVersion = "2.0.0";
+        var options = new AspireOptions
+        {
+            // Act
+            ServiceVersion = "2.0.0"
+        };
 
         // Assert
         options.ServiceVersion.Should().Be("2.0.0");
@@ -108,10 +110,11 @@ public class AspireOptionsTest
     public void AspireOptions_CanSetOtlpEndpoint()
     {
         // Arrange
-        var options = new AspireOptions();
-
-        // Act
-        options.OtlpEndpoint = "http://localhost:4317";
+        var options = new AspireOptions
+        {
+            // Act
+            OtlpEndpoint = "http://localhost:4317"
+        };
 
         // Assert
         options.OtlpEndpoint.Should().Be("http://localhost:4317");
@@ -178,10 +181,11 @@ public class AspireOptionsTest
     public void AspireTelemetryOptions_CanSetSamplingRatio()
     {
         // Arrange
-        var options = new AspireTelemetryOptions();
-
-        // Act
-        options.TraceSamplingRatio = 0.5;
+        var options = new AspireTelemetryOptions
+        {
+            // Act
+            TraceSamplingRatio = 0.5
+        };
 
         // Assert
         options.TraceSamplingRatio.Should().Be(0.5);

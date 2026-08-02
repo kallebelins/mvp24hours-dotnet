@@ -12,7 +12,7 @@ public class ResilienceDbContextExtensionsTest
 {
     private static TestDbContext CreateSqliteContext()
     {
-        var options = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
             .UseSqlite($"Data Source=file:resilience_{Guid.NewGuid():N}?mode=memory&cache=shared")
             .Options;
         var context = new TestDbContext(options);
@@ -54,7 +54,7 @@ public class ResilienceDbContextExtensionsTest
         using TestDbContext context = CreateSqliteContext();
         IDisposable scope = context.CreateTimeoutScope(30);
 
-        var act = () =>
+        Action act = () =>
         {
             scope.Dispose();
             scope.Dispose();
@@ -68,7 +68,7 @@ public class ResilienceDbContextExtensionsTest
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
 
-        var act = () => context.WithTimeout(60);
+        Func<DbContext> act = () => context.WithTimeout(60);
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*relational*");
     }

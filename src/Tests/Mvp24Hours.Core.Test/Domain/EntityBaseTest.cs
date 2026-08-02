@@ -14,14 +14,12 @@ public class EntityBaseTest
 
     private sealed class TestIntEntity : IntEntityBase;
 
-    private sealed class TestAuditableEntity : AuditableGuidEntity
+    private sealed class TestAuditableEntity(Guid id) : AuditableGuidEntity(id)
     {
-        public TestAuditableEntity(Guid id) : base(id) { }
     }
 
-    private sealed class TestSoftDeletableEntity : SoftDeletableGuidEntity
+    private sealed class TestSoftDeletableEntity(Guid id) : SoftDeletableGuidEntity(id)
     {
-        public TestSoftDeletableEntity(Guid id) : base(id) { }
     }
 
     [Fact]
@@ -69,7 +67,7 @@ public class EntityBaseTest
     [Fact]
     public void AuditableEntity_StoresAuditFields()
     {
-        var createdAt = DateTime.UtcNow;
+        DateTime createdAt = DateTime.UtcNow;
         var entity = new TestAuditableEntity(Guid.NewGuid())
         {
             CreatedAt = createdAt,

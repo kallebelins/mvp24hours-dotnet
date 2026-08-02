@@ -21,11 +21,14 @@ public class BulkCommandServiceWithDtoBaseAsyncTest : IDisposable
             new AppTestEntityDtoValidator());
     }
 
-    public void Dispose() => _context.Dispose();
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
 
     private static BulkTestDbContext CreateBulkContext()
     {
-        var options = new DbContextOptionsBuilder<BulkTestDbContext>()
+        DbContextOptions<BulkTestDbContext> options = new DbContextOptionsBuilder<BulkTestDbContext>()
             .UseInMemoryDatabase($"BulkDto_{Guid.NewGuid():N}")
             .Options;
         var context = new BulkTestDbContext(options);

@@ -20,6 +20,7 @@ namespace Mvp24Hours.Application.Logic;
 /// Base service for using repository with paginated results and unit of work
 /// </summary>
 /// <typeparam name="TEntity">Represents an entity</typeparam>
+/// <typeparam name="TUoW">Represents the unit of work</typeparam>
 public class RepositoryPagingService<TEntity, TUoW> : RepositoryService<TEntity, TUoW>, IQueryPagingService<TEntity>
     where TEntity : class, IEntityBase
     where TUoW : class, IUnitOfWork

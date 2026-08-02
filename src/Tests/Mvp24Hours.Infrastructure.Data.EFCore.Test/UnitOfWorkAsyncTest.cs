@@ -17,7 +17,10 @@ public class UnitOfWorkAsyncTest : IDisposable
         _provider = EfCoreTestHelpers.CreateAsyncServices(_databaseName);
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public void DictionaryCtor_GetRepository_ShouldReturnSameInstance()
@@ -125,7 +128,7 @@ public class UnitOfWorkAsyncTest : IDisposable
     [Fact]
     public void GetConnection_ShouldReturnNonNull()
     {
-        var options = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
             .UseSqlServer("Server=localhost;Database=Mvp24HoursGetConnectionAsyncTest;Trusted_Connection=True;TrustServerCertificate=True")
             .Options;
         using var context = new TestDbContext(options);
@@ -140,7 +143,7 @@ public class UnitOfWorkAsyncTest : IDisposable
     public void Dispose_ShouldBeSafeToCallMultipleTimes()
     {
         TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var unitOfWork = new UnitOfWorkAsync(context, new Dictionary<Type, object>());
+        var unitOfWork = new UnitOfWorkAsync(context, []);
 
         unitOfWork.Dispose();
         Action act = () => unitOfWork.Dispose();

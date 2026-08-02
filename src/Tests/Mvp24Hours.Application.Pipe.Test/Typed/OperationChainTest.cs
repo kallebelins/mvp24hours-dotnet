@@ -37,7 +37,10 @@ public class OperationChainTest
     [Fact, Priority(3)]
     public void OperationChain_Then_WithResult_ShouldPropagateFailure()
     {
-        Func<int, IOperationResult<string>> failStep = _ => OperationResult<string>.Failure("step failed");
+        static IOperationResult<string> failStep(int _)
+        {
+            return OperationResult<string>.Failure("step failed");
+        }
 
         IOperationResult<string> result = OperationChain.Start<int>()
             .Then(failStep)
@@ -50,7 +53,10 @@ public class OperationChainTest
     [Fact, Priority(4)]
     public void OperationChain_Then_WhenTransformThrows_ShouldReturnFailure()
     {
-        Func<int, string> throwingTransform = _ => throw new Exception("transform error");
+        static string throwingTransform(int _)
+        {
+            throw new Exception("transform error");
+        }
 
         IOperationResult<string> result = OperationChain.Start<int>()
             .Then(throwingTransform)
@@ -88,7 +94,10 @@ public class OperationChainTest
     [Fact, Priority(7)]
     public void OperationChain_Tap_WhenActionThrows_ShouldReturnFailure()
     {
-        Action<int> throwingAction = _ => throw new Exception("tap error");
+        static void throwingAction(int _)
+        {
+            throw new Exception("tap error");
+        }
 
         IOperationResult<int> result = OperationChain.Start<int>()
             .Tap(throwingAction)
@@ -148,7 +157,7 @@ public class OperationChainTest
     [Fact, Priority(11)]
     public void OperationChain_Finally_WithAsyncOperations_ShouldThrow()
     {
-        var chain = OperationChain.Start<int>()
+        OperationChain<int, int> chain = OperationChain.Start<int>()
             .ThenAsync<int>(async (x, _) => { await Task.Yield(); return x; });
 
         Action act = () => chain.Finally(1);
@@ -201,7 +210,11 @@ public class OperationChainTest
     private sealed class MultiplyOperation(int factor) : ITypedOperation<int, int>
     {
         public bool IsRequired => false;
-        public IOperationResult<int> Execute(int input) => OperationResult<int>.Success(input * factor);
+        public IOperationResult<int> Execute(int input)
+        {
+            return OperationResult<int>.Success(input * factor);
+        }
+
         public void Rollback(int input) { }
     }
 
@@ -213,6 +226,9 @@ public class OperationChainTest
             await Task.CompletedTask;
             return OperationResult<int>.Success(input * factor);
         }
-        public Task RollbackAsync(int input, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RollbackAsync(int input, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

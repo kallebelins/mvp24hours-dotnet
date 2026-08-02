@@ -70,10 +70,7 @@ public class BackgroundJobsServiceExtensionsTest
     public void AddHangfireBackgroundJobs_ShouldRegisterHangfireProvider()
     {
         var services = new ServiceCollection();
-        services.AddHangfireBackgroundJobs(options =>
-        {
-            options.ConnectionString = "Server=localhost;Database=Hangfire;Trusted_Connection=True;";
-        });
+        services.AddHangfireBackgroundJobs(options => options.ConnectionString = "Server=localhost;Database=Hangfire;Trusted_Connection=True;");
 
         ServiceProvider sp = services.BuildServiceProvider();
 
@@ -85,10 +82,7 @@ public class BackgroundJobsServiceExtensionsTest
     public void AddQuartzBackgroundJobs_ShouldRegisterQuartzProvider()
     {
         var services = new ServiceCollection();
-        services.AddQuartzBackgroundJobs(options =>
-        {
-            options.ConnectionString = "Server=localhost;Database=Quartz;Trusted_Connection=True;";
-        });
+        services.AddQuartzBackgroundJobs(options => options.ConnectionString = "Server=localhost;Database=Quartz;Trusted_Connection=True;");
 
         ServiceProvider sp = services.BuildServiceProvider();
 

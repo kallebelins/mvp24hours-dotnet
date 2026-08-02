@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic;
+using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authentication;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Test.Fixtures;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;
 
@@ -28,18 +30,18 @@ public sealed class AuthenticationIntegrationTests(KeycloakFixture fixture)
         IKeycloakJwtTokenParser parser =
             services.GetRequiredService<IKeycloakJwtTokenParser>();
 
-        var tokenResult = await tokenService.GetClientCredentialsTokenAsync();
+        IBusinessResult<AccessTokenResponse> tokenResult = await tokenService.GetClientCredentialsTokenAsync();
         tokenResult.HasErrors.Should().BeFalse();
         tokenResult.Data!.AccessToken.Should().NotBeNullOrWhiteSpace();
         parser.ParseClaims(tokenResult.Data.AccessToken).Should().ContainKey("iss");
         parser.IsExpired(tokenResult.Data.AccessToken).Should().BeFalse();
 
-        var introspection = await tokenService.IntrospectTokenAsync(
+        IBusinessResult<TokenIntrospectionResponse> introspection = await tokenService.IntrospectTokenAsync(
             tokenResult.Data.AccessToken!);
         introspection.HasErrors.Should().BeFalse();
         introspection.Data!.Active.Should().BeTrue();
 
-        var revocation = await tokenService.RevokeTokenAsync(
+        IBusinessResult<bool> revocation = await tokenService.RevokeTokenAsync(
             tokenResult.Data.AccessToken!);
         revocation.HasErrors.Should().BeFalse();
         revocation.Data.Should().BeTrue();
@@ -56,7 +58,7 @@ public sealed class AuthenticationIntegrationTests(KeycloakFixture fixture)
         await using ServiceProvider services = fixture.CreateServiceProvider();
         IKeycloakTokenService tokenService =
             services.GetRequiredService<IKeycloakTokenService>();
-        var tokenResult = await tokenService.GetPasswordTokenAsync(
+        IBusinessResult<AccessTokenResponse> tokenResult = await tokenService.GetPasswordTokenAsync(
             KeycloakTestConstants.Username,
             KeycloakTestConstants.Password,
             "openid");

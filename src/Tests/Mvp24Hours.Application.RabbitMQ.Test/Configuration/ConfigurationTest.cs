@@ -123,8 +123,8 @@ public class ConfigurationTest
     [Fact]
     public void BatchConsumerOptions_Default_ShouldReturnNewInstance()
     {
-        var a = BatchConsumerOptions.Default;
-        var b = BatchConsumerOptions.Default;
+        BatchConsumerOptions a = BatchConsumerOptions.Default;
+        BatchConsumerOptions b = BatchConsumerOptions.Default;
 
         a.Should().NotBeSameAs(b);
     }

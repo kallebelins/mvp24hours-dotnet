@@ -32,7 +32,7 @@ public class QueryCacheKeyGeneratorTest
         MethodInfo method = typeof(QueryCacheKeyGeneratorTest).GetMethod(
             nameof(SampleMethod),
             BindingFlags.NonPublic | BindingFlags.Static)!;
-        var parameters = new object?[] { 10, "abc" };
+        object?[] parameters = [10, "abc"];
 
         string key = _generator.GenerateKey(method, parameters, typeof(AppTestEntity));
 

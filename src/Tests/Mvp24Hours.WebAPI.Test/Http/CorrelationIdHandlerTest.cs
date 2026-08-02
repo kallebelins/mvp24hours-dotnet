@@ -14,12 +14,12 @@ public class CorrelationIdHandlerTest
     [Fact]
     public async Task CorrelationIdHandler_Should_PropagateHeaders()
     {
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.Items[RequestContextKeys.CorrelationId] = "corr-1";
         context.Items[RequestContextKeys.RequestId] = "req-1";
         context.Items[RequestContextKeys.TenantId] = "tenant-1";
         var accessor = new HttpContextAccessor { HttpContext = context };
-        var options = Options.Create(new RequestContextOptions());
+        IOptions<RequestContextOptions> options = Options.Create(new RequestContextOptions());
         var handler = new CorrelationIdHandler(accessor, options)
         {
             InnerHandler = new StubDelegatingHandler(request =>
@@ -42,7 +42,7 @@ public class CorrelationIdHandlerTest
     {
         var provider = new AsyncLocalCorrelationContextProvider();
         provider.SetCurrentContext(CorrelationContext.Create(correlationId: "corr-2", tenantId: "tenant-2"));
-        var options = Options.Create(new RequestContextOptions());
+        IOptions<RequestContextOptions> options = Options.Create(new RequestContextOptions());
         var handler = new CorrelationIdPropagatingHandler(provider, options)
         {
             InnerHandler = new StubDelegatingHandler(request =>

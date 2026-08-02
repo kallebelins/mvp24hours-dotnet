@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test;
 
@@ -25,7 +25,10 @@ public class ReadOnlyRepositoryTest : IDisposable
         SeedData();
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public void Sync_List_GetBy_GetById_Any_Count_ShouldReturnSeededData()

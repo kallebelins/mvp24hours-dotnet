@@ -15,7 +15,7 @@ public class DomainEventSaveChangesInterceptorTest
         var dispatcher = new CapturingDomainEventDispatcher();
         var interceptor = new DomainEventSaveChangesInterceptor(dispatcher);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         var entity = new TestDomainEventEntity { Name = "WithEvents" };

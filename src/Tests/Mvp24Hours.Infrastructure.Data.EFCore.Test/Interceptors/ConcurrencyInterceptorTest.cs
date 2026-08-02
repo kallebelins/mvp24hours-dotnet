@@ -12,7 +12,7 @@ public class ConcurrencyInterceptorTest
     {
         var interceptor = new ConcurrencyInterceptor();
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         var entity = new TestVersionedEntity { Name = "New" };
@@ -26,19 +26,19 @@ public class ConcurrencyInterceptorTest
     public void SaveChanges_OnModify_IncrementsVersion()
     {
         var interceptor = new ConcurrencyInterceptor();
-        var databaseName = $"Version_{Guid.NewGuid():N}";
+        string databaseName = $"Version_{Guid.NewGuid():N}";
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName, options =>
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName, options =>
                    options.AddInterceptors(interceptor)))
         {
             context.VersionedEntities.Add(new TestVersionedEntity { Name = "Original" });
             context.SaveChanges();
         }
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName, options =>
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName, options =>
                    options.AddInterceptors(interceptor)))
         {
-            var entity = context.VersionedEntities.Single();
+            TestVersionedEntity entity = context.VersionedEntities.Single();
             entity.Version.Should().Be(1);
 
             entity.Name = "Updated";

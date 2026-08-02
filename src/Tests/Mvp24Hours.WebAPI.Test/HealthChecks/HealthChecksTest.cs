@@ -83,7 +83,9 @@ internal sealed class FakeHealthCheck : BaseHealthCheck
     }
 
     protected override Task<HealthCheckResult> CheckHealthAsyncCore(HealthCheckContext context, CancellationToken cancellationToken)
-        => Task.FromResult(HealthCheckResult.Healthy("ok", GetData()));
+    {
+        return Task.FromResult(HealthCheckResult.Healthy("ok", GetData()));
+    }
 }
 
 internal sealed class ThrowingHealthCheck : BaseHealthCheck
@@ -93,5 +95,7 @@ internal sealed class ThrowingHealthCheck : BaseHealthCheck
     }
 
     protected override Task<HealthCheckResult> CheckHealthAsyncCore(HealthCheckContext context, CancellationToken cancellationToken)
-        => throw new InvalidOperationException("boom");
+    {
+        throw new InvalidOperationException("boom");
+    }
 }

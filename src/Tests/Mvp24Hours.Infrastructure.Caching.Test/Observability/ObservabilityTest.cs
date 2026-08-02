@@ -178,7 +178,7 @@ public class ObservableCacheProviderTest
     [Fact]
     public async Task GetAsync_Miss_ShouldRecordMiss()
     {
-        var inner = CacheTestHelpers.CreateMemoryProvider();
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
         var metrics = new Mock<ICacheMetrics>();
         var provider = new ObservableCacheProvider(inner, metrics.Object);
 
@@ -190,7 +190,7 @@ public class ObservableCacheProviderTest
     [Fact]
     public async Task SetAsync_ShouldRecordSetMetrics()
     {
-        var inner = CacheTestHelpers.CreateMemoryProvider();
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
         var metrics = new Mock<ICacheMetrics>();
         var provider = new ObservableCacheProvider(inner, metrics.Object);
 
@@ -202,7 +202,7 @@ public class ObservableCacheProviderTest
     [Fact]
     public async Task RemoveAsync_ShouldRecordRemoveMetrics()
     {
-        var inner = CacheTestHelpers.CreateMemoryProvider();
+        MemoryCacheProvider inner = CacheTestHelpers.CreateMemoryProvider();
         await inner.SetStringAsync("remove-key", "value");
         var metrics = new Mock<ICacheMetrics>();
         var provider = new ObservableCacheProvider(inner, metrics.Object);

@@ -12,11 +12,11 @@ public class SpecificationEvaluatorTest
     public void GetQuery_WithActiveSpecification_FiltersEntities()
     {
         var evaluator = new SpecificationEvaluator<TestEntity>();
-        var entities = EfCoreTestHelpers.CreateEntities(4);
+        List<TestEntity> entities = EfCoreTestHelpers.CreateEntities(4);
         entities[0].Active = false;
         entities[2].Active = false;
 
-        using var context = EfCoreTestHelpers.CreateContext();
+        using TestDbContext context = EfCoreTestHelpers.CreateContext();
         context.Entities.AddRange(entities);
         context.SaveChanges();
 
@@ -40,7 +40,7 @@ public class SpecificationEvaluatorTest
             new() { Name = "E", Active = true, Score = 20 }
         };
 
-        using var context = EfCoreTestHelpers.CreateContext();
+        using TestDbContext context = EfCoreTestHelpers.CreateContext();
         context.Entities.AddRange(entities);
         context.SaveChanges();
 
@@ -57,28 +57,22 @@ public class SpecificationEvaluatorTest
             entity => entity.Active;
     }
 
-    private sealed class TopActiveByScoreSpecification : ISpecificationQueryEnhanced<TestEntity>
+    private sealed class TopActiveByScoreSpecification(int skip, int take) : ISpecificationQueryEnhanced<TestEntity>
     {
-        public TopActiveByScoreSpecification(int skip, int take)
-        {
-            Skip = skip;
-            Take = take;
-        }
-
         public Expression<Func<TestEntity, bool>> IsSatisfiedByExpression =>
             entity => entity.Active;
 
         public IReadOnlyList<Expression<Func<TestEntity, object>>> Includes { get; } =
-            Array.Empty<Expression<Func<TestEntity, object>>>();
+            [];
 
-        public IReadOnlyList<string> IncludeStrings { get; } = Array.Empty<string>();
+        public IReadOnlyList<string> IncludeStrings { get; } = [];
 
         public IReadOnlyList<(Expression<Func<TestEntity, object>> KeySelector, bool Descending)> OrderBy { get; } =
             [(entity => entity.Score, true)];
 
-        public int? Take { get; }
+        public int? Take { get; } = take;
 
-        public int? Skip { get; }
+        public int? Skip { get; } = skip;
 
         public bool IsPagingEnabled => Skip.HasValue || Take.HasValue;
     }

@@ -3,9 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Moq;
 using Mvp24Hours.Infrastructure.FileStorage.Contract;
 using Mvp24Hours.Infrastructure.FileStorage.Options;
-using Moq;
 
 namespace Mvp24Hours.Infrastructure.Test.Support;
 

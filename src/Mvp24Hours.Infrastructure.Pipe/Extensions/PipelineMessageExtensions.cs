@@ -158,6 +158,7 @@ public static class PipelineMessageExtensions
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="pipelineMessage"></param>
     /// <param name="errorMessage"></param>
     public static void AddError(this IPipelineMessage pipelineMessage, string errorMessage)
     {

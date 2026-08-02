@@ -3,6 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Collections.ObjectModel;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
@@ -125,7 +127,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Create_WithMessages_StoresMessages()
     {
         // Arrange
-        var messages = new List<Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult>
+        ReadOnlyCollection<IMessageResult> messages = new List<Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult>
         {
             new MessageResult("Error occurred", MessageType.Error)
         }.AsReadOnly();
@@ -217,7 +219,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_ImplicitConversion_ToBool_ReturnsFalseForError()
     {
         // Arrange
-        var messages = new List<Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult>
+        ReadOnlyCollection<IMessageResult> messages = new List<Mvp24Hours.Core.Contract.ValueObjects.Logic.IMessageResult>
         {
             new MessageResult("Error", MessageType.Error)
         }.AsReadOnly();
@@ -251,7 +253,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Success_WithData_CreatesSuccessResult()
     {
         // Act
-        var result = BusinessResult.Success("test data");
+        IBusinessResult<string> result = BusinessResult.Success("test data");
 
         // Assert
         result.Data.Should().Be("test data");
@@ -262,7 +264,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Success_WithDataAndMessage_CreatesResultWithInfoMessage()
     {
         // Act - using named parameter to force the overload with message
-        var result = BusinessResult.Success(data: 42, message: "Operation completed");
+        IBusinessResult<int> result = BusinessResult.Success(data: 42, message: "Operation completed");
 
         // Assert
         result.Data.Should().Be(42);
@@ -275,7 +277,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Success_WithToken_IncludesToken()
     {
         // Act
-        var result = BusinessResult.Success("data", token: "my-token");
+        IBusinessResult<string> result = BusinessResult.Success("data", token: "my-token");
 
         // Assert
         result.Token.Should().Be("my-token");
@@ -285,7 +287,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Failure_WithErrorMessage_CreatesFailureResult()
     {
         // Act
-        var result = BusinessResult.Failure<string>("Something went wrong");
+        IBusinessResult<string> result = BusinessResult.Failure<string>("Something went wrong");
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -299,7 +301,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_Failure_WithErrorKey_IncludesKey()
     {
         // Act
-        var result = BusinessResult.Failure<string>("Error message", "ERROR_CODE");
+        IBusinessResult<string> result = BusinessResult.Failure<string>("Error message", "ERROR_CODE");
 
         // Assert
         result.Messages!.First().Key.Should().Be("ERROR_CODE");
@@ -312,7 +314,7 @@ public class LogicValueObjectsTest
         var exception = new InvalidOperationException("Test exception message");
 
         // Act
-        var result = BusinessResult.Failure<string>(exception);
+        IBusinessResult<string> result = BusinessResult.Failure<string>(exception);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -331,7 +333,7 @@ public class LogicValueObjectsTest
         };
 
         // Act
-        var result = BusinessResult.Failure<string>(errors);
+        IBusinessResult<string> result = BusinessResult.Failure<string>(errors);
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -359,7 +361,7 @@ public class LogicValueObjectsTest
         string? nullData = null;
 
         // Act
-        var result = BusinessResult.From(nullData, "Resource not found");
+        IBusinessResult<string> result = BusinessResult.From(nullData, "Resource not found");
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -370,7 +372,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_FromCondition_WhenTrue_CreatesSuccessResult()
     {
         // Act
-        var result = BusinessResult.FromCondition(true, "success-data");
+        IBusinessResult<string> result = BusinessResult.FromCondition(true, "success-data");
 
         // Assert
         result.HasErrors.Should().BeFalse();
@@ -381,7 +383,7 @@ public class LogicValueObjectsTest
     public void BusinessResult_FromCondition_WhenFalse_CreatesFailureResult()
     {
         // Act
-        var result = BusinessResult.FromCondition(false, "success-data", "Condition failed");
+        IBusinessResult<string> result = BusinessResult.FromCondition(false, "success-data", "Condition failed");
 
         // Assert
         result.HasErrors.Should().BeTrue();
@@ -392,11 +394,11 @@ public class LogicValueObjectsTest
     public void BusinessResult_Combine_AllSuccess_ReturnsTrueResult()
     {
         // Arrange
-        var result1 = BusinessResult.Success("data1");
-        var result2 = BusinessResult.Success(42);
+        IBusinessResult<string> result1 = BusinessResult.Success("data1");
+        IBusinessResult<int> result2 = BusinessResult.Success(42);
 
         // Act
-        var combined = BusinessResult.Combine(result1, result2);
+        IBusinessResult<bool> combined = BusinessResult.Combine(result1, result2);
 
         // Assert
         combined.Data.Should().BeTrue();
@@ -407,11 +409,11 @@ public class LogicValueObjectsTest
     public void BusinessResult_Combine_WithFailure_ReturnsErrorResult()
     {
         // Arrange
-        var success = BusinessResult.Success("data");
-        var failure = BusinessResult.Failure<string>("Error occurred");
+        IBusinessResult<string> success = BusinessResult.Success("data");
+        IBusinessResult<string> failure = BusinessResult.Failure<string>("Error occurred");
 
         // Act
-        var combined = BusinessResult.Combine(success, failure);
+        IBusinessResult<bool> combined = BusinessResult.Combine(success, failure);
 
         // Assert
         combined.HasErrors.Should().BeTrue();

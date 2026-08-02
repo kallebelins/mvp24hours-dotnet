@@ -28,7 +28,7 @@ public class ReadWriteOptionsTest
     [Fact]
     public void SimpleSetup_ShouldConfigurePrimaryAndReplica()
     {
-        ReadWriteOptions options = ReadWriteOptions.SimpleSetup("primary", "replica");
+        var options = ReadWriteOptions.SimpleSetup("primary", "replica");
 
         options.PrimaryConnectionString.Should().Be("primary");
         options.ReplicaConnectionStrings.Should().ContainSingle("replica");

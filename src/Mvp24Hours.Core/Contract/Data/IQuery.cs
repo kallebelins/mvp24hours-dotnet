@@ -138,7 +138,7 @@ public interface IQuery<TEntity>
     /// </remarks>
     /// <example>
     /// <code>
-    /// bool hasActiveCustomers = repository.GetByAny(c => c.IsActive && c.CreatedDate > DateTime.Now.AddDays(-30));
+    /// bool hasActiveCustomers = repository.GetByAny(c =&gt; c.IsActive &amp;&amp; c.CreatedDate &gt; DateTime.Now.AddDays(-30));
     /// </code>
     /// </example>
     bool GetByAny(Expression<Func<TEntity, bool>> clause);
@@ -172,7 +172,7 @@ public interface IQuery<TEntity>
     /// </remarks>
     /// <example>
     /// <code>
-    /// var activeCustomers = repository.GetBy(c => c.IsActive && c.Country == "USA");
+    /// var activeCustomers = repository.GetBy(c =&gt; c.IsActive &amp;&amp; c.Country == "USA");
     /// </code>
     /// </example>
     IList<TEntity> GetBy(Expression<Func<TEntity, bool>> clause);

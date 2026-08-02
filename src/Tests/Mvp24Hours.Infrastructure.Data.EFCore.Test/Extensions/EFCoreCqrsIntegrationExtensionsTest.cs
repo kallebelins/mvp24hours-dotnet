@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Extensions;
 
@@ -61,7 +61,7 @@ public class EFCoreCqrsIntegrationExtensionsTest
     [Fact]
     public void AddDomainEventInterceptor_ShouldAddInterceptorToOptions()
     {
-        var optionsBuilder = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptionsBuilder<TestDbContext> optionsBuilder = new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase($"Interceptor_{Guid.NewGuid():N}");
 
         optionsBuilder.AddDomainEventInterceptor(new NoOpDomainEventDispatcher());

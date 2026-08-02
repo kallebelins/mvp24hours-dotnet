@@ -3,11 +3,11 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using System.Collections.Concurrent;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using Mvp24Hours.Infrastructure.Pipe.Operations.Parallel;
-using System.Collections.Concurrent;
 using Xunit.Priority;
 
 namespace Mvp24Hours.Application.Pipe.Test.Operations.Parallel;
@@ -41,7 +41,7 @@ public class ParallelOperationGroupTest
     public void ParallelOperationGroup_RequireAllSuccess_WhenOneFails_ShouldThrowAggregate()
     {
         var group = new ParallelOperationGroup([
-            new TrackOp("op1", new()),
+            new TrackOp("op1", []),
             new ThrowOp("fail!")
         ], requireAllSuccess: true);
 
@@ -55,7 +55,7 @@ public class ParallelOperationGroupTest
     public void ParallelOperationGroup_NotRequireAllSuccess_WhenOneFails_ShouldStoreExceptions()
     {
         var group = new ParallelOperationGroup([
-            new TrackOp("op1", new()),
+            new TrackOp("op1", []),
             new ThrowOp("partial fail")
         ], requireAllSuccess: false);
 
@@ -63,7 +63,7 @@ public class ParallelOperationGroupTest
         pipeline.Add(group);
         pipeline.Execute();
 
-        var exceptions = pipeline.GetMessage().GetContent<List<Exception>>("ParallelOperationExceptions");
+        List<Exception> exceptions = pipeline.GetMessage().GetContent<List<Exception>>("ParallelOperationExceptions");
         exceptions.Should().NotBeNull();
         exceptions.Should().HaveCount(1);
     }
@@ -79,7 +79,7 @@ public class ParallelOperationGroupTest
     [Fact, Priority(5)]
     public void ParallelOperationGroup_MaxDegreeOfParallelism_ShouldBeSet()
     {
-        var group = new ParallelOperationGroup([new TrackOp("op1", new())], maxDegreeOfParallelism: 2);
+        var group = new ParallelOperationGroup([new TrackOp("op1", [])], maxDegreeOfParallelism: 2);
 
         group.MaxDegreeOfParallelism.Should().Be(2);
     }
@@ -87,7 +87,7 @@ public class ParallelOperationGroupTest
     [Fact, Priority(6)]
     public void ParallelOperationGroup_Operations_ShouldBeAccessible()
     {
-        var ops = new IOperation[] { new TrackOp("a", new()), new TrackOp("b", new()) };
+        var ops = new IOperation[] { new TrackOp("a", []), new TrackOp("b", []) };
         var group = new ParallelOperationGroup(ops);
 
         group.Operations.Should().HaveCount(2);
@@ -134,7 +134,7 @@ public class ParallelOperationGroupTest
     public async Task ParallelOperationGroupAsync_RequireAllSuccess_WhenOneFails_ShouldThrow()
     {
         var group = new ParallelOperationGroupAsync([
-            new AsyncTrackOp("ok", new()),
+            new AsyncTrackOp("ok", []),
             new AsyncThrowOp("async fail")
         ], requireAllSuccess: true);
 
@@ -149,7 +149,7 @@ public class ParallelOperationGroupTest
     public async Task ParallelOperationGroupAsync_NotRequireAllSuccess_ShouldStoreExceptions()
     {
         var group = new ParallelOperationGroupAsync([
-            new AsyncTrackOp("ok", new()),
+            new AsyncTrackOp("ok", []),
             new AsyncThrowOp("soft fail")
         ], requireAllSuccess: false);
 
@@ -157,7 +157,7 @@ public class ParallelOperationGroupTest
         pipeline.Add(group);
         await pipeline.ExecuteAsync();
 
-        var exceptions = pipeline.GetMessage().GetContent<List<Exception>>("ParallelOperationExceptions");
+        List<Exception> exceptions = pipeline.GetMessage().GetContent<List<Exception>>("ParallelOperationExceptions");
         exceptions.Should().NotBeNull();
         exceptions.Should().HaveCount(1);
     }
@@ -180,18 +180,27 @@ public class ParallelOperationGroupTest
 
     private class TrackOp(string name, ConcurrentBag<string> log) : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => log.Add(name);
+        public override void Execute(IPipelineMessage input)
+        {
+            log.Add(name);
+        }
     }
 
     private class ThrowOp(string msg) : OperationBase
     {
-        public override void Execute(IPipelineMessage input) => throw new InvalidOperationException(msg);
+        public override void Execute(IPipelineMessage input)
+        {
+            throw new InvalidOperationException(msg);
+        }
     }
 
     private class RollbackTrackOp(string name, ConcurrentBag<string> log) : OperationBase
     {
         public override void Execute(IPipelineMessage input) { }
-        public override void Rollback(IPipelineMessage input) => log.Add(name);
+        public override void Rollback(IPipelineMessage input)
+        {
+            log.Add(name);
+        }
     }
 
     private class AsyncTrackOp(string name, ConcurrentBag<string> log) : OperationBaseAsync
@@ -205,6 +214,9 @@ public class ParallelOperationGroupTest
 
     private class AsyncThrowOp(string msg) : OperationBaseAsync
     {
-        public override Task ExecuteAsync(IPipelineMessage input) => throw new InvalidOperationException(msg);
+        public override Task ExecuteAsync(IPipelineMessage input)
+        {
+            throw new InvalidOperationException(msg);
+        }
     }
 }

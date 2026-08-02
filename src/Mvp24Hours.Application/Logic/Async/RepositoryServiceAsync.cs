@@ -19,6 +19,7 @@ namespace Mvp24Hours.Application.Logic;
 /// Asynchronous service for using repository and unit of work
 /// </summary>
 /// <typeparam name="TEntity">Represents an entity</typeparam>
+/// <typeparam name="TUoW">Represents the unit of work</typeparam>
 /// <remarks>
 /// 
 /// </remarks>

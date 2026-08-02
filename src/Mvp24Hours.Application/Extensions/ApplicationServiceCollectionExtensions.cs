@@ -40,7 +40,6 @@ public static class ApplicationServiceCollectionExtensions
     /// Adds AutoMapper with profile scanning from assemblies containing the specified types.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="profileAssemblyMarkerTypes">Types used to identify assemblies to scan for profiles.</param>
     /// <returns>The service collection for chaining.</returns>
     /// <example>
     /// <code>
@@ -179,7 +178,6 @@ public static class ApplicationServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="assemblies">The assemblies to scan for application services.</param>
-    /// <param name="lifetime">The service lifetime (default: Scoped).</param>
     /// <returns>The service collection for chaining.</returns>
     /// <remarks>
     /// <para>
@@ -395,7 +393,6 @@ public static class ApplicationServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="assemblies">The assemblies to scan for validators.</param>
-    /// <param name="lifetime">The service lifetime (default: Scoped).</param>
     /// <returns>The service collection for chaining.</returns>
     /// <example>
     /// <code>

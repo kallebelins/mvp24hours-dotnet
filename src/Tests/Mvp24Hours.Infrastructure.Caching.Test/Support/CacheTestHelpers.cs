@@ -86,21 +86,34 @@ internal sealed class TestDbCommand : DbCommand
     {
     }
 
-    public override int ExecuteNonQuery() => 0;
+    public override int ExecuteNonQuery()
+    {
+        return 0;
+    }
 
-    public override object? ExecuteScalar() => null;
+    public override object? ExecuteScalar()
+    {
+        return null;
+    }
 
     public override void Prepare()
     {
     }
 
-    protected override DbParameter CreateDbParameter() => new TestDbParameter();
+    protected override DbParameter CreateDbParameter()
+    {
+        return new TestDbParameter();
+    }
 
-    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) =>
+    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+    {
         throw new NotSupportedException();
+    }
 
-    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken) =>
-        Task.FromResult(ExecuteNonQuery());
+    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+    {
+        return Task.FromResult(ExecuteNonQuery());
+    }
 }
 
 internal sealed class TestDbParameter : DbParameter
@@ -161,27 +174,55 @@ internal sealed class TestDbParameterCollection : DbParameterCollection
         }
     }
 
-    public override void Clear() => _parameters.Clear();
+    public override void Clear()
+    {
+        _parameters.Clear();
+    }
 
-    public override bool Contains(object value) => _parameters.Contains((DbParameter)value);
+    public override bool Contains(object value)
+    {
+        return _parameters.Contains((DbParameter)value);
+    }
 
-    public override bool Contains(string value) =>
-        _parameters.Any(p => p.ParameterName == value);
+    public override bool Contains(string value)
+    {
+        return _parameters.Any(p => p.ParameterName == value);
+    }
 
-    public override void CopyTo(Array array, int index) => _parameters.CopyTo((DbParameter[])array, index);
+    public override void CopyTo(Array array, int index)
+    {
+        _parameters.CopyTo((DbParameter[])array, index);
+    }
 
-    public override System.Collections.IEnumerator GetEnumerator() => _parameters.GetEnumerator();
+    public override System.Collections.IEnumerator GetEnumerator()
+    {
+        return _parameters.GetEnumerator();
+    }
 
-    public override int IndexOf(object value) => _parameters.IndexOf((DbParameter)value);
+    public override int IndexOf(object value)
+    {
+        return _parameters.IndexOf((DbParameter)value);
+    }
 
-    public override int IndexOf(string parameterName) =>
-        _parameters.FindIndex(p => p.ParameterName == parameterName);
+    public override int IndexOf(string parameterName)
+    {
+        return _parameters.FindIndex(p => p.ParameterName == parameterName);
+    }
 
-    public override void Insert(int index, object value) => _parameters.Insert(index, (DbParameter)value);
+    public override void Insert(int index, object value)
+    {
+        _parameters.Insert(index, (DbParameter)value);
+    }
 
-    public override void Remove(object value) => _parameters.Remove((DbParameter)value);
+    public override void Remove(object value)
+    {
+        _parameters.Remove((DbParameter)value);
+    }
 
-    public override void RemoveAt(int index) => _parameters.RemoveAt(index);
+    public override void RemoveAt(int index)
+    {
+        _parameters.RemoveAt(index);
+    }
 
     public override void RemoveAt(string parameterName)
     {
@@ -192,12 +233,20 @@ internal sealed class TestDbParameterCollection : DbParameterCollection
         }
     }
 
-    protected override DbParameter GetParameter(int index) => _parameters[index];
+    protected override DbParameter GetParameter(int index)
+    {
+        return _parameters[index];
+    }
 
-    protected override DbParameter GetParameter(string parameterName) =>
-        _parameters.First(p => p.ParameterName == parameterName);
+    protected override DbParameter GetParameter(string parameterName)
+    {
+        return _parameters.First(p => p.ParameterName == parameterName);
+    }
 
-    protected override void SetParameter(int index, DbParameter value) => _parameters[index] = value;
+    protected override void SetParameter(int index, DbParameter value)
+    {
+        _parameters[index] = value;
+    }
 
     protected override void SetParameter(string parameterName, DbParameter value)
     {
@@ -226,7 +275,13 @@ internal sealed class FakeRedisConnection
 
     private readonly FakeRedisDatabase _database = new();
 
-    public FakeRedisDatabase GetDatabase(int db = -1) => _database;
+    public FakeRedisDatabase GetDatabase(int db = -1)
+    {
+        return _database;
+    }
 
-    public FakeRedisDatabase GetDatabase() => _database;
+    public FakeRedisDatabase GetDatabase()
+    {
+        return _database;
+    }
 }

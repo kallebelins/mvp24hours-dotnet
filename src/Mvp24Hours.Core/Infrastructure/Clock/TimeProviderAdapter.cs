@@ -14,8 +14,7 @@ namespace Mvp24Hours.Core.Infrastructure.Clock;
 /// <remarks>
 /// <para>
 /// This adapter enables using the native .NET 8+ TimeProvider with existing code that depends on IClock.
-/// Use <see cref="TimeProvider.System"/> for production or <see cref="Microsoft.Extensions.Time.Testing.FakeTimeProvider"/>
-/// for testing.
+/// Use <see cref="TimeProvider.System"/> for production or FakeTimeProvider for testing.
 /// </para>
 /// <para>
 /// Benefits of using TimeProvider over custom implementations:

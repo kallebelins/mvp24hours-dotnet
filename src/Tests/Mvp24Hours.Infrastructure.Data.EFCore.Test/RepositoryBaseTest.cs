@@ -41,7 +41,7 @@ public class RepositoryBaseTest
             context,
             EfCoreTestHelpers.CreateRepositoryOptions(o => o.MaxQtyByQueryPage = 2));
 
-        List<TestEntity> results = repository.GetQuery(null).ToList();
+        var results = repository.GetQuery(null).ToList();
 
         results.Should().HaveCount(2);
     }
@@ -58,7 +58,7 @@ public class RepositoryBaseTest
             offset: 1,
             orderBy: ["Name"]);
 
-        List<TestEntity> results = repository.GetQuery(criteria).ToList();
+        var results = repository.GetQuery(criteria).ToList();
 
         results.Should().HaveCount(2);
         results.Select(e => e.Name).Should().BeInAscendingOrder();
@@ -74,7 +74,7 @@ public class RepositoryBaseTest
             context,
             EfCoreTestHelpers.CreateRepositoryOptions(o => o.MaxQtyByQueryPage = 2));
 
-        List<TestEntity> results = repository.GetQuery(null, onlyNavigation: true).ToList();
+        var results = repository.GetQuery(null, onlyNavigation: true).ToList();
 
         results.Should().HaveCount(5);
     }
@@ -153,26 +153,30 @@ public class RepositoryBaseTest
         return context;
     }
 
-    private sealed class TestableRepositoryBase : RepositoryBase<TestEntity>
+    private sealed class TestableRepositoryBase(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options) : RepositoryBase<TestEntity>(dbContext, options)
     {
-        public TestableRepositoryBase(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options)
-            : base(dbContext, options)
-        {
-        }
-
         protected override object? EntityLogBy => null;
 
         public EFCoreRepositoryOptions ExposedOptions => Options;
 
         public new IQueryable<TestEntity> GetQuery(IPagingCriteria? criteria, bool onlyNavigation = false)
-            => base.GetQuery(criteria, onlyNavigation);
+        {
+            return base.GetQuery(criteria, onlyNavigation);
+        }
 
-        public new PropertyInfo GetKeyInfo() => base.GetKeyInfo();
+        public new PropertyInfo GetKeyInfo()
+        {
+            return base.GetKeyInfo();
+        }
 
         public IQueryable<TestEntity> GetDynamicFilterPublic(IQueryable<TestEntity> query, PropertyInfo key, int value)
-            => GetDynamicFilter(query, key, value);
+        {
+            return GetDynamicFilter(query, key, value);
+        }
 
         public new TransactionScope? CreateTransactionScope(bool isAggregate = false)
-            => base.CreateTransactionScope(isAggregate);
+        {
+            return base.CreateTransactionScope(isAggregate);
+        }
     }
 }

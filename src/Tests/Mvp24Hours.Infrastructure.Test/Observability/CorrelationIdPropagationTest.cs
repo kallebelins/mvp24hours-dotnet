@@ -44,7 +44,7 @@ public class CorrelationIdPropagationTest
     public void GetCorrelationId_WithActivityIdAndNoBaggage_ShouldReturnActivityId()
     {
         using var source = new ActivitySource("Test.Correlation");
-        using var listener = CreateAllDataListener(source.Name);
+        using ActivityListener listener = CreateAllDataListener(source.Name);
         using Activity? activity = source.StartActivity("test");
 
         activity.Should().NotBeNull();

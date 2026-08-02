@@ -50,8 +50,8 @@ public class PropagationHeaderDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler(["X-Tenant-Id"]);
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        PropagationHeaderDelegatingHandler handler = CreateHandler(["X-Tenant-Id"]);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -84,11 +84,11 @@ public class PropagationHeaderDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenPropagationThrows_ShouldContinueRequest()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        PropagationHeaderDelegatingHandler handler = CreateHandler(
             ["X-Tenant-Id"],
             DelegatingHandlerTestHelpers.CreateThrowingServiceProvider());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 

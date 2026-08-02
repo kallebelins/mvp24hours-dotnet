@@ -19,7 +19,7 @@ public class TelemetryDelegatingHandlerTest
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
         var handler = new TelemetryDelegatingHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -29,9 +29,9 @@ public class TelemetryDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithoutListener_ShouldPassThrough()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
         var handler = new TelemetryDelegatingHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -43,7 +43,7 @@ public class TelemetryDelegatingHandlerTest
     public async Task SendAsync_WithListener_ShouldRecordActivityWithRequestTags()
     {
         using var listener = new FakeActivityListener("Mvp24Hours.Infrastructure.Http");
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, "ok");
         var handler = new TelemetryDelegatingHandler(
             DelegatingHandlerTestHelpers.Logger<TelemetryDelegatingHandler>(),
             new TelemetryHandlerOptions
@@ -54,7 +54,7 @@ public class TelemetryDelegatingHandlerTest
                 CustomTags = new Dictionary<string, object> { ["custom.tag"] = "value" }
             });
 
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.example.com:8443/items?q=1");
         request.Headers.UserAgent.ParseAdd("Mvp24HoursTests/1.0");
         request.Content = new StringContent("payload");
@@ -85,7 +85,7 @@ public class TelemetryDelegatingHandlerTest
             null,
             new TelemetryHandlerOptions { RecordFullUrl = false, RecordEvents = false });
 
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
         await client.GetAsync("https://api.example.com/items?secret=1");
 
         RecordedActivity activity = listener.GetActivities("HTTP GET").Single();
@@ -98,9 +98,9 @@ public class TelemetryDelegatingHandlerTest
     public async Task SendAsync_OnErrorStatus_ShouldSetErrorStatus()
     {
         using var listener = new FakeActivityListener("Mvp24Hours.Infrastructure.Http");
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.BadGateway);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.BadGateway);
         var handler = new TelemetryDelegatingHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -114,10 +114,10 @@ public class TelemetryDelegatingHandlerTest
     public async Task SendAsync_OnException_ShouldRecordErrorAndRethrow()
     {
         using var listener = new FakeActivityListener("Mvp24Hours.Infrastructure.Http");
-        var inner = new TestHttpMessageHandler().SimulateNetworkFailure();
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().SimulateNetworkFailure();
         var handler = new TelemetryDelegatingHandler(
             DelegatingHandlerTestHelpers.Logger<TelemetryDelegatingHandler>());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         Func<Task> act = () => client.GetAsync("/resource");
 

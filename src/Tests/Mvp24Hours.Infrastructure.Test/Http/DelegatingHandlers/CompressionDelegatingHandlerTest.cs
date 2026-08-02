@@ -35,8 +35,8 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        CompressionDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -46,10 +46,10 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenDisabled_ShouldNotCompress()
     {
-        string payload = new string('a', 2048);
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new CompressionHandlerOptions { Enabled = false, MinimumSizeBytes = 100 });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        string payload = new('a', 2048);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CompressionDelegatingHandler handler = CreateHandler(new CompressionHandlerOptions { Enabled = false, MinimumSizeBytes = 100 });
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -65,9 +65,9 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithSmallPayload_ShouldSkipCompression()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new CompressionHandlerOptions { MinimumSizeBytes = 1024 });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CompressionDelegatingHandler handler = CreateHandler(new CompressionHandlerOptions { MinimumSizeBytes = 1024 });
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -83,15 +83,15 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithLargePayload_ShouldCompressWithGzip()
     {
-        string payload = new string('x', 4096);
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new CompressionHandlerOptions
+        string payload = new('x', 4096);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CompressionDelegatingHandler handler = CreateHandler(new CompressionHandlerOptions
         {
             Algorithm = CompressionAlgorithm.Gzip,
             MinimumSizeBytes = 100,
             CompressionLevel = CompressionLevel.Optimal
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -113,14 +113,14 @@ public class CompressionDelegatingHandlerTest
         CompressionAlgorithm algorithm,
         string encoding)
     {
-        string payload = new string('y', 4096);
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new CompressionHandlerOptions
+        string payload = new('y', 4096);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CompressionDelegatingHandler handler = CreateHandler(new CompressionHandlerOptions
         {
             Algorithm = algorithm,
             MinimumSizeBytes = 100
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -135,9 +135,9 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenAlreadyEncoded_ShouldSkipCompression()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new CompressionHandlerOptions { MinimumSizeBytes = 10 });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        CompressionDelegatingHandler handler = CreateHandler(new CompressionHandlerOptions { MinimumSizeBytes = 10 });
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -155,9 +155,9 @@ public class CompressionDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithoutContent_ShouldPassThrough()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.NoContent);
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.NoContent);
+        CompressionDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 

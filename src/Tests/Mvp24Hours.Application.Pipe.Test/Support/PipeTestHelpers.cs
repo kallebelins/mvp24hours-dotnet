@@ -39,17 +39,26 @@ internal sealed class TrackingOperation(string name) : OperationBase
 
 internal sealed class FaultyOperation : OperationBase
 {
-    public override void Execute(IPipelineMessage input) => input.SetFailure();
+    public override void Execute(IPipelineMessage input)
+    {
+        input.SetFailure();
+    }
 }
 
 internal sealed class ThrowingOperation(string message = "boom") : OperationBase
 {
-    public override void Execute(IPipelineMessage input) => throw new InvalidOperationException(message);
+    public override void Execute(IPipelineMessage input)
+    {
+        throw new InvalidOperationException(message);
+    }
 }
 
 internal sealed class SlowOperation(TimeSpan delay) : OperationBase
 {
-    public override void Execute(IPipelineMessage input) => Thread.Sleep(delay);
+    public override void Execute(IPipelineMessage input)
+    {
+        Thread.Sleep(delay);
+    }
 }
 
 internal sealed class TestBulkheadOperation(string key, int maxConcurrency, int queueLimit = 0) : OperationBase, IBulkheadOperation
@@ -59,7 +68,10 @@ internal sealed class TestBulkheadOperation(string key, int maxConcurrency, int 
     public int QueueLimit { get; } = queueLimit;
     public TimeSpan? QueueTimeout { get; } = TimeSpan.FromMilliseconds(50);
 
-    public override void Execute(IPipelineMessage input) => Thread.Sleep(100);
+    public override void Execute(IPipelineMessage input)
+    {
+        Thread.Sleep(100);
+    }
 }
 
 internal sealed class TestRateLimitedOperation : IRateLimitedOperation

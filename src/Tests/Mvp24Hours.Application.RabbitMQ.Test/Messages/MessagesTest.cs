@@ -93,9 +93,9 @@ public class MessagesTest
     [Fact]
     public void Message_Timestamp_ShouldBeUtcNow()
     {
-        var before = DateTimeOffset.UtcNow.AddSeconds(-1);
+        DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         var message = new Message<TestOrderEvent>();
-        var after = DateTimeOffset.UtcNow.AddSeconds(1);
+        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
         message.Timestamp.Should().BeAfter(before);
         message.Timestamp.Should().BeBefore(after);

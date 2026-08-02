@@ -118,8 +118,8 @@ public class ConfigurationTest
     [Fact]
     public void MongoDbBulkOperationOptions_Default_ReturnsNewInstance()
     {
-        var opts1 = MongoDbBulkOperationOptions.Default;
-        var opts2 = MongoDbBulkOperationOptions.Default;
+        MongoDbBulkOperationOptions opts1 = MongoDbBulkOperationOptions.Default;
+        MongoDbBulkOperationOptions opts2 = MongoDbBulkOperationOptions.Default;
 
         Assert.NotNull(opts1);
         Assert.NotSame(opts1, opts2);
@@ -129,7 +129,7 @@ public class ConfigurationTest
     [Fact]
     public void MongoDbBulkOperationOptions_HighThroughput_HasCorrectValues()
     {
-        var opts = MongoDbBulkOperationOptions.HighThroughput;
+        MongoDbBulkOperationOptions opts = MongoDbBulkOperationOptions.HighThroughput;
 
         Assert.False(opts.IsOrdered);
         Assert.True(opts.BypassDocumentValidation);
@@ -140,7 +140,7 @@ public class ConfigurationTest
     [Fact]
     public void MongoDbBulkOperationOptions_HighIntegrity_HasCorrectValues()
     {
-        var opts = MongoDbBulkOperationOptions.HighIntegrity;
+        MongoDbBulkOperationOptions opts = MongoDbBulkOperationOptions.HighIntegrity;
 
         Assert.True(opts.IsOrdered);
         Assert.False(opts.BypassDocumentValidation);
@@ -177,8 +177,8 @@ public class ConfigurationTest
     [Fact]
     public void MongoDbBulkOperationOptions_HighThroughput_IsNewInstanceEachTime()
     {
-        var opts1 = MongoDbBulkOperationOptions.HighThroughput;
-        var opts2 = MongoDbBulkOperationOptions.HighThroughput;
+        MongoDbBulkOperationOptions opts1 = MongoDbBulkOperationOptions.HighThroughput;
+        MongoDbBulkOperationOptions opts2 = MongoDbBulkOperationOptions.HighThroughput;
 
         Assert.NotSame(opts1, opts2);
     }
@@ -270,7 +270,7 @@ public class ConfigurationTest
     public void MongoDbConnectionPoolOptions_ApplyTo_NullSettings_DoesNotThrow()
     {
         var opts = new MongoDbConnectionPoolOptions();
-        var ex = Record.Exception(() => opts.ApplyTo(null!));
+        Exception ex = Record.Exception(() => opts.ApplyTo(null!));
         Assert.Null(ex);
     }
 
@@ -322,7 +322,7 @@ public class ConfigurationTest
     {
         var opts = new MongoDbConnectionPoolOptions { SocketTimeoutSeconds = 0 };
         var settings = new MongoClientSettings();
-        var before = settings.SocketTimeout;
+        TimeSpan before = settings.SocketTimeout;
         opts.ApplyTo(settings);
         Assert.Equal(before, settings.SocketTimeout);
     }

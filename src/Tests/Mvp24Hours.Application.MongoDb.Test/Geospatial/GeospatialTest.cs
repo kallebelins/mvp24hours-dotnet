@@ -54,8 +54,8 @@ public class GeospatialTest
     [Fact]
     public void GeoPoint_Constructor_BoundaryValues_DoNotThrow()
     {
-        var ex1 = Record.Exception(() => new GeoPoint(-180, -90));
-        var ex2 = Record.Exception(() => new GeoPoint(180, 90));
+        Exception ex1 = Record.Exception(() => new GeoPoint(-180, -90));
+        Exception ex2 = Record.Exception(() => new GeoPoint(180, 90));
 
         Assert.Null(ex1);
         Assert.Null(ex2);
@@ -68,8 +68,10 @@ public class GeospatialTest
     [Fact]
     public void GeoPoint_SetLongitude_UpdatesCoordinates()
     {
-        var point = new GeoPoint();
-        point.Longitude = 10.5;
+        var point = new GeoPoint
+        {
+            Longitude = 10.5
+        };
 
         Assert.Equal(10.5, point.Coordinates[0]);
         Assert.Equal(10.5, point.Longitude);
@@ -78,8 +80,10 @@ public class GeospatialTest
     [Fact]
     public void GeoPoint_SetLatitude_UpdatesCoordinates()
     {
-        var point = new GeoPoint();
-        point.Latitude = 45.3;
+        var point = new GeoPoint
+        {
+            Latitude = 45.3
+        };
 
         Assert.Equal(45.3, point.Coordinates[1]);
         Assert.Equal(45.3, point.Latitude);
@@ -116,7 +120,7 @@ public class GeospatialTest
         var doc = point.ToBsonDocument();
 
         Assert.Equal("Point", doc["type"].AsString);
-        var coords = doc["coordinates"].AsBsonArray;
+        BsonArray coords = doc["coordinates"].AsBsonArray;
         Assert.Equal(-43.1729, coords[0].ToDouble());
         Assert.Equal(-22.9068, coords[1].ToDouble());
     }

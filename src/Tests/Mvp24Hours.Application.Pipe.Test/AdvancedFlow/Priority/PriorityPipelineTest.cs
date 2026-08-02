@@ -12,7 +12,7 @@ public class PriorityPipelineTest
     public void Execute_Should_RunOperationsInPriorityOrder()
     {
         TrackingOperation.ExecutionOrder.Clear();
-        var pipeline = new PriorityPipeline()
+        PriorityPipeline pipeline = new PriorityPipeline()
             .Add(new TrackingOperation("low"), PriorityLevel.Low)
             .Add(new TrackingOperation("critical"), PriorityLevel.Critical)
             .Add(new TrackingOperation("normal"), PriorityLevel.Normal);
@@ -25,7 +25,7 @@ public class PriorityPipelineTest
     [Fact]
     public void GetOperationsInOrder_Should_ReturnSortedOperations()
     {
-        var pipeline = new PriorityPipeline()
+        PriorityPipeline pipeline = new PriorityPipeline()
             .Add(new TrackingOperation("a"), 10)
             .Add(new TrackingOperation("b"), 100);
 
@@ -55,7 +55,7 @@ public class PriorityPipelineTest
     public void Execute_Should_BreakOnFailWhenConfigured()
     {
         TrackingOperation.ExecutionOrder.Clear();
-        var pipeline = new PriorityPipeline { IsBreakOnFail = true }
+        PriorityPipeline pipeline = new PriorityPipeline { IsBreakOnFail = true }
             .Add(new FaultyOperation(), PriorityLevel.Critical)
             .Add(new TrackingOperation("skipped"), PriorityLevel.Normal);
 
@@ -68,7 +68,7 @@ public class PriorityPipelineTest
     public async Task ExecuteAsync_Should_MixSyncAndAsyncByPriority()
     {
         TrackingOperation.ExecutionOrder.Clear();
-        var pipeline = new PriorityPipeline()
+        PriorityPipeline pipeline = new PriorityPipeline()
             .Add(new TrackingOperation("sync-low"), PriorityLevel.Low)
             .AddAsync(new AsyncTrackingOperation("async-high"), PriorityLevel.High);
 

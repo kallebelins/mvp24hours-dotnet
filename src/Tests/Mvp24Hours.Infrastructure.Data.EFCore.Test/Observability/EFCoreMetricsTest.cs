@@ -98,7 +98,7 @@ public class EFCoreMetricsTest
     public void Dispose_ShouldNotThrow()
     {
         var metrics = new EFCoreMetrics();
-        var act = () => metrics.Dispose();
+        Action act = () => metrics.Dispose();
         act.Should().NotThrow();
     }
 }

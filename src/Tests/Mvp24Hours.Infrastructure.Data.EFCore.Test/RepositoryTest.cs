@@ -1,5 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
@@ -17,7 +17,10 @@ public class RepositoryTest : IDisposable
         _provider = EfCoreTestHelpers.CreateSyncServices(_databaseName);
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public void Add_SingleEntity_ShouldPersistAndBeRetrievableById()

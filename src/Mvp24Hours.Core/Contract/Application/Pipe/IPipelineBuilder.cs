@@ -10,8 +10,7 @@ namespace Mvp24Hours.Core.Contract.Application.Pipe;
 /// <summary>
 /// Strategic for aggregating operations in the pipeline
 /// </summary>
-/// <example>
-/// <code>
+/// <example><![CDATA[
 /// // interface
 /// public interface IProductCategoryListBuilder : IPipelineBuilder { }
 /// 
@@ -29,8 +28,7 @@ namespace Mvp24Hours.Core.Contract.Application.Pipe;
 /// // use
 /// var builder = ServiceProviderHelper.GetService{IProductGetByBuilder}();
 /// builder.Builder(pipeline);
-/// </code>
-/// </example>
+/// ]]></example>
 public interface IPipelineBuilder
 {
     /// <summary>

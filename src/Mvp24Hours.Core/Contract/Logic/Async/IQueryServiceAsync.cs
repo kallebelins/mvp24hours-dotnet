@@ -48,24 +48,30 @@ public interface IQueryServiceAsync<TEntity>
     /// Gets the representations based on the filter of the typed entity.
     /// </summary>
     /// <param name="clause">Filter</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>Number of representations async</returns>
     Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, CancellationToken cancellationToken = default);
     /// <summary>
     /// Gets the filter-based representations of the entity typed with criteria.
     /// </summary>
     /// <param name="clause">Filter</param>
+    /// <param name="criteria"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>Number of representations async</returns>
     Task<IBusinessResult<IList<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> clause, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
     /// <summary>
     /// Gets a representation of the typed entity.
     /// </summary>
     /// <param name="id">Identifier of entity</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>A representation of the entity async</returns>
     Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Gets a representation of the entity typed with criteria.
     /// </summary>
     /// <param name="id">Identifier of entity</param>
+    /// <param name="criteria"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>A representation of the entity async</returns>
     Task<IBusinessResult<TEntity?>> GetByIdAsync(object id, IPagingCriteria? criteria, CancellationToken cancellationToken = default);
 }

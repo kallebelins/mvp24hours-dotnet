@@ -124,10 +124,7 @@ public class CronJobConfigurationExtensionsTest
         var services = new ServiceCollection();
         services.AddLogging();
 
-        services.AddAdvancedCronJobWithOptions<TestAdvancedCronJob>(options =>
-        {
-            options.CronExpression = "0 * * * *";
-        });
+        services.AddAdvancedCronJobWithOptions<TestAdvancedCronJob>(options => options.CronExpression = "0 * * * *");
 
         ServiceProvider provider = services.BuildServiceProvider();
 

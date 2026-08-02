@@ -10,8 +10,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.HealthChecks;
 [Trait("Category", "Unit")]
 public class MySqlHealthCheckTest
 {
-    private static HealthCheckContext CreateContext() =>
-        new()
+    private static HealthCheckContext CreateContext()
+    {
+        return new()
         {
             Registration = new HealthCheckRegistration(
                 "mysql",
@@ -19,6 +20,7 @@ public class MySqlHealthCheckTest
                 HealthStatus.Unhealthy,
                 null)
         };
+    }
 
     [Fact]
     public void Options_Defaults_ShouldMatchExpected()
@@ -58,7 +60,7 @@ public class MySqlHealthCheckTest
     [Fact]
     public void Constructor_WithNullConnectionString_Throws()
     {
-        var act = () => new MySqlHealthCheck(
+        Func<MySqlHealthCheck> act = () => new MySqlHealthCheck(
             null!,
             new MySqlHealthCheckOptions(),
             NullLogger<MySqlHealthCheck>.Instance,
@@ -78,12 +80,24 @@ public class MySqlHealthCheckTest
 
         public override void ChangeDatabase(string databaseName) { }
         public override void Close() { }
-        public override void Open() => throw new InvalidOperationException("Simulated connection failure");
-        public override Task OpenAsync(CancellationToken cancellationToken) =>
-            Task.FromException(new InvalidOperationException("Simulated connection failure"));
+        public override void Open()
+        {
+            throw new InvalidOperationException("Simulated connection failure");
+        }
 
-        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) =>
+        public override Task OpenAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromException(new InvalidOperationException("Simulated connection failure"));
+        }
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+        {
             throw new NotSupportedException();
-        protected override DbCommand CreateDbCommand() => throw new NotSupportedException();
+        }
+
+        protected override DbCommand CreateDbCommand()
+        {
+            throw new NotSupportedException();
+        }
     }
 }

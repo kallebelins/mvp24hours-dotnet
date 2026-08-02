@@ -9,7 +9,7 @@ namespace Mvp24Hours.Core.Contract.Domain.Specifications;
 
 /// <summary>
 /// Specification for queries
-///  <see cref="Mvp24Hours.Core.Contract.Domain.Specifications.ISpecification{T}"/>
+///  <see cref="ISpecification"/>
 /// </summary>
 /// <typeparam name="T">Represents an entity</typeparam>
 public interface ISpecificationQuery<T> : ISpecification

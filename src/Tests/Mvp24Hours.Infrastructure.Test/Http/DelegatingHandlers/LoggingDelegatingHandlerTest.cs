@@ -34,8 +34,8 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        LoggingDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -45,8 +45,8 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnSuccess_ShouldReturnResponse()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, """{"ok":true}""");
-        var handler = CreateHandler(new HttpLoggingOptions
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK, """{"ok":true}""");
+        LoggingDelegatingHandler handler = CreateHandler(new HttpLoggingOptions
         {
             LogRequestHeaders = true,
             LogRequestBody = true,
@@ -54,7 +54,7 @@ public class LoggingDelegatingHandlerTest
             LogResponseBody = true,
             MaxBodyLogSize = 10
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/resource")
         {
@@ -72,9 +72,9 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnServerError_ShouldStillReturnResponse()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError, "boom");
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.InternalServerError, "boom");
+        LoggingDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -84,9 +84,9 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnConnectionRefused_ShouldReturnBadGateway()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateConnectionRefusedHandler();
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateConnectionRefusedHandler();
+        LoggingDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("https://localhost:59999/api");
 
@@ -97,9 +97,9 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnGenericException_ShouldRethrow()
     {
-        var inner = new TestHttpMessageHandler().ThrowException(new InvalidOperationException("boom"));
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().ThrowException(new InvalidOperationException("boom"));
+        LoggingDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         Func<Task> act = () => client.GetAsync("/resource");
 
@@ -109,9 +109,9 @@ public class LoggingDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_OnTimeoutCancellation_ShouldRethrow()
     {
-        var inner = new TestHttpMessageHandler().SimulateTimeout(TimeSpan.FromMilliseconds(5));
-        var handler = CreateHandler();
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().SimulateTimeout(TimeSpan.FromMilliseconds(5));
+        LoggingDelegatingHandler handler = CreateHandler();
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         Func<Task> act = () => client.GetAsync("/resource");
 

@@ -120,7 +120,7 @@ public class PipelineFiltersTest
     public async Task LoggingConsumeFilter_ShouldCallNext_WhenSuccessful()
     {
         var filter = new LoggingConsumeFilter();
-        var context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
         bool nextCalled = false;
 
         await filter.ConsumeAsync<TestOrderEvent>(context, (ctx, ct) =>
@@ -137,7 +137,7 @@ public class PipelineFiltersTest
     {
         ILogger<LoggingConsumeFilter> logger = NullLogger<LoggingConsumeFilter>.Instance;
         var filter = new LoggingConsumeFilter(logger);
-        var context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
 
         Func<Task> act = async () => await filter.ConsumeAsync<TestOrderEvent>(
             context,
@@ -150,7 +150,7 @@ public class PipelineFiltersTest
     public async Task LoggingConsumeFilter_WhenNextThrows_ShouldRethrow()
     {
         var filter = new LoggingConsumeFilter();
-        var context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
 
         Func<Task> act = async () => await filter.ConsumeAsync<TestOrderEvent>(
             context,
@@ -164,7 +164,7 @@ public class PipelineFiltersTest
     public async Task LoggingConsumeFilter_WithNullLogger_ShouldNotThrow()
     {
         var filter = new LoggingConsumeFilter(null);
-        var context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
+        ConsumeFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreateConsumeFilterContext(new TestOrderEvent());
 
         Func<Task> act = async () => await filter.ConsumeAsync<TestOrderEvent>(
             context,
@@ -301,8 +301,8 @@ public class PipelineFiltersTest
     [Fact]
     public void RateLimitingConsumeFilterOptions_Default_ShouldReturnNewInstance()
     {
-        var opts1 = RateLimitingConsumeFilterOptions.Default;
-        var opts2 = RateLimitingConsumeFilterOptions.Default;
+        RateLimitingConsumeFilterOptions opts1 = RateLimitingConsumeFilterOptions.Default;
+        RateLimitingConsumeFilterOptions opts2 = RateLimitingConsumeFilterOptions.Default;
 
         opts1.Should().NotBeSameAs(opts2);
     }
@@ -310,7 +310,7 @@ public class PipelineFiltersTest
     [Fact]
     public void RateLimitKeyMode_AllValues_ShouldBeDefined()
     {
-        var values = Enum.GetValues<RateLimitKeyMode>();
+        RateLimitKeyMode[] values = Enum.GetValues<RateLimitKeyMode>();
 
         values.Should().Contain(RateLimitKeyMode.ByQueue);
         values.Should().Contain(RateLimitKeyMode.ByMessageType);
@@ -323,7 +323,7 @@ public class PipelineFiltersTest
     [Fact]
     public void RateLimitExceededBehavior_AllValues_ShouldBeDefined()
     {
-        var values = Enum.GetValues<RateLimitExceededBehavior>();
+        RateLimitExceededBehavior[] values = Enum.GetValues<RateLimitExceededBehavior>();
 
         values.Should().Contain(RateLimitExceededBehavior.Throw);
         values.Should().Contain(RateLimitExceededBehavior.Retry);
@@ -339,7 +339,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_Constructor_ShouldSetProperties()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var msg = new TestOrderEvent { Name = "O1" };
 
         var ctx = new SendFilterContext<TestOrderEvent>(
@@ -362,7 +362,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_NullMessage_ShouldThrow()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         Action act = () => new SendFilterContext<TestOrderEvent>(null!, "queue", provider);
 
@@ -373,7 +373,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_NullQueue_ShouldThrow()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         Action act = () => new SendFilterContext<TestOrderEvent>(
             new TestOrderEvent(), null!, provider);
@@ -394,7 +394,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_SkipRemainingFilters_ShouldSetFlag()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
         ctx.SkipRemainingFilters();
@@ -406,7 +406,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_CancelSend_ShouldSetFlagAndReason()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
         ctx.CancelSend("test reason");
@@ -419,7 +419,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_SetCorrelationId_ShouldUpdateHeader()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
         ctx.SetCorrelationId("new-corr");
@@ -433,7 +433,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_SetCausationId_ShouldUpdateHeader()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
         ctx.SetCausationId("caus-id");
@@ -446,7 +446,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_SetException_ShouldStoreException()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
         var ex = new InvalidOperationException("err");
 
@@ -459,7 +459,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_ResetSkip_ShouldClearFlag()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
         ctx.SkipRemainingFilters();
 
@@ -472,7 +472,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_ResetCancel_ShouldClearFlagAndReason()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
         ctx.CancelSend("reason");
 
@@ -486,7 +486,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_AutoGeneratesMessageId_WhenNotProvided()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
@@ -498,8 +498,8 @@ public class PipelineFiltersTest
     public void SendFilterContext_SentAt_ShouldBeRecent()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
-        var before = DateTimeOffset.UtcNow;
+        ServiceProvider provider = services.BuildServiceProvider();
+        DateTimeOffset before = DateTimeOffset.UtcNow;
 
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 
@@ -511,7 +511,7 @@ public class PipelineFiltersTest
     public void SendFilterContext_Items_ShouldBeEmpty_Initially()
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         var ctx = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "q", provider);
 

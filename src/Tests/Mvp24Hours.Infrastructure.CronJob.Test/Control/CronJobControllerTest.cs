@@ -112,7 +112,7 @@ public class CronJobControllerTest
     [Fact]
     public async Task TriggerAsync_ShouldInvokeCallback_WhenRegistered()
     {
-        var triggered = false;
+        bool triggered = false;
         _controller.Register("TriggerJob", triggerCallback: _ =>
         {
             triggered = true;

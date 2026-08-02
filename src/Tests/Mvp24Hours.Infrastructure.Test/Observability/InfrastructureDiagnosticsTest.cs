@@ -179,7 +179,7 @@ public class InfrastructureDiagnosticsTest
     {
         Mock<ISubsystemDiagnosticsProvider> emptyProvider = ObservabilityTestHelpers.CreateProviderMock(
             "Email",
-            errors: Array.Empty<ErrorInfo>());
+            errors: []);
         Mock<ISubsystemDiagnosticsProvider> errorProvider = ObservabilityTestHelpers.CreateProviderMock(
             "Sms",
             errors:

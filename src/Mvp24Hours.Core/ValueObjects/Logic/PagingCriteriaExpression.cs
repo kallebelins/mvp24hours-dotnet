@@ -28,19 +28,19 @@ public class PagingCriteriaExpression<T>(
 
     #region [ Properties ]
     /// <summary>
-    /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.OrderByAscendingExpr"/>
+    /// <see cref="IPagingCriteriaExpression{T}.OrderByAscendingExpr"/>
     /// </summary>
     [IgnoreDataMember]
     [JsonIgnore]
     public IList<Expression<Func<T, dynamic>>> OrderByAscendingExpr => orderByAscendingExpr ??= [];
     /// <summary>
-    /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.OrderByDescendingExpr"/>
+    /// <see cref="IPagingCriteriaExpression{T}.OrderByDescendingExpr"/>
     /// </summary>
     [IgnoreDataMember]
     [JsonIgnore]
     public IList<Expression<Func<T, dynamic>>> OrderByDescendingExpr => orderByDescendingExpr ??= [];
     /// <summary>
-    /// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IPagingCriteria.NavigationExpr"/>
+    /// <see cref="IPagingCriteriaExpression{T}.NavigationExpr"/>
     /// </summary>
     [IgnoreDataMember]
     [JsonIgnore]

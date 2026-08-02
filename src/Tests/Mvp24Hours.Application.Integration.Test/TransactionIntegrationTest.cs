@@ -24,6 +24,11 @@ public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAs
 
     public Task InitializeAsync()
     {
+        if (!_fixture.IsAvailable)
+        {
+            return Task.CompletedTask;
+        }
+
         return _fixture.ClearDatabaseAsync();
     }
 
@@ -34,7 +39,7 @@ public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAs
 
     #region [ DbContext Transaction Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task Transaction_RollbackOnError_ShouldNotPersist()
     {
         // Arrange
@@ -69,7 +74,7 @@ public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAs
         finalCount.Should().Be(initialCount);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task Transaction_CommitOnSuccess_ShouldPersist()
     {
         // Arrange
@@ -103,7 +108,7 @@ public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAs
         finalCount.Should().Be(initialCount + 1);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task Transaction_NestedOperations_ShouldWorkCorrectly()
     {
         // Arrange
@@ -154,7 +159,7 @@ public class TransactionIntegrationTest(SqlServerContainerFixture fixture) : IAs
 
     #region [ Concurrent Operations Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task ConcurrentOperations_ShouldHandleIsolation()
     {
         // Arrange

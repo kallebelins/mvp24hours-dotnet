@@ -12,7 +12,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GenerateSqlServerRls<TestTenantEntity>("dbo", "TenantEntities");
+        string script = helper.GenerateSqlServerRls<TestTenantEntity>("dbo", "TenantEntities");
 
         script.Should().Contain("TenantPolicy_TenantEntities");
         script.Should().Contain("fn_tenant_predicate_TenantEntities");
@@ -25,7 +25,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GenerateSqlServerRlsScript("sales", "Orders", "TenantId");
+        string script = helper.GenerateSqlServerRlsScript("sales", "Orders", "TenantId");
 
         script.Should().Contain("TenantPolicy_Orders");
         script.Should().Contain("fn_tenant_predicate_Orders");
@@ -38,7 +38,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper(sessionContextKey: "CurrentTenant");
 
-        var script = helper.GenerateSqlServerRlsScript("dbo", "Products");
+        string script = helper.GenerateSqlServerRlsScript("dbo", "Products");
 
         script.Should().Contain("SESSION_CONTEXT(N'CurrentTenant')");
         script.Should().NotContain("SESSION_CONTEXT(N'TenantId')");
@@ -49,7 +49,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GeneratePostgreSqlRls<TestTenantEntity>("public", "tenant_entities");
+        string script = helper.GeneratePostgreSqlRls<TestTenantEntity>("public", "tenant_entities");
 
         script.Should().Contain("tenant_isolation_policy");
         script.Should().Contain("ENABLE ROW LEVEL SECURITY");
@@ -62,7 +62,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GeneratePostgreSqlRlsScript("app", "customers", "TenantId");
+        string script = helper.GeneratePostgreSqlRlsScript("app", "customers", "TenantId");
 
         script.Should().Contain("CREATE POLICY tenant_isolation_policy ON \"app\".\"customers\"");
         script.Should().Contain("DROP POLICY IF EXISTS tenant_isolation_policy");
@@ -74,7 +74,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GenerateSqlServerDropRlsScript("dbo", "Products");
+        string script = helper.GenerateSqlServerDropRlsScript("dbo", "Products");
 
         script.Should().Contain("DROP SECURITY POLICY [dbo].[TenantPolicy_Products]");
         script.Should().Contain("DROP FUNCTION Security.fn_tenant_predicate_Products");
@@ -85,7 +85,7 @@ public class RowLevelSecurityHelperTest
     {
         var helper = new RowLevelSecurityHelper();
 
-        var script = helper.GeneratePostgreSqlDropRlsScript("public", "products");
+        string script = helper.GeneratePostgreSqlDropRlsScript("public", "products");
 
         script.Should().Contain("DROP POLICY IF EXISTS tenant_isolation_policy ON \"public\".\"products\"");
         script.Should().Contain("DISABLE ROW LEVEL SECURITY");
@@ -99,7 +99,7 @@ public class RowLevelSecurityHelperTest
         modelBuilder.Entity<TestTenantEntity>().ToTable("TenantEntities", "dbo");
         modelBuilder.Entity<TestSoftDeleteEntity>();
 
-        var scripts = helper.GenerateRlsScriptsForModel(modelBuilder, DatabaseType.SqlServer);
+        Dictionary<string, string> scripts = helper.GenerateRlsScriptsForModel(modelBuilder, DatabaseType.SqlServer);
 
         scripts.Should().ContainKey("dbo.TenantEntities");
         scripts["dbo.TenantEntities"].Should().Contain("TenantPolicy_TenantEntities");
@@ -113,7 +113,7 @@ public class RowLevelSecurityHelperTest
         var modelBuilder = new ModelBuilder();
         modelBuilder.Entity<TestTenantEntity>().ToTable("TenantEntities");
 
-        var script = helper.GenerateCombinedRlsScript(modelBuilder, DatabaseType.PostgreSql, "public");
+        string script = helper.GenerateCombinedRlsScript(modelBuilder, DatabaseType.PostgreSql, "public");
 
         script.Should().Contain("-- Row-Level Security Configuration");
         script.Should().Contain("-- Database Type: PostgreSql");

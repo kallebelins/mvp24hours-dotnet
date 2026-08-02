@@ -185,7 +185,7 @@ public class CronJobServiceAdvancedTest
     public void Constructor_ShouldThrow_WhenHostIsNull()
     {
         var config = new ScheduleConfig<ControllableCronJob>();
-        var sp = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider sp = new ServiceCollection().BuildServiceProvider();
 
         Action act = () => _ = new ControllableCronJob(
             config,
@@ -216,7 +216,7 @@ public class CronJobServiceAdvancedTest
     {
         var config = new ScheduleConfig<ControllableCronJob>();
         var host = new Mock<IHostApplicationLifetime>();
-        var sp = new ServiceCollection().BuildServiceProvider();
+        ServiceProvider sp = new ServiceCollection().BuildServiceProvider();
 
         Action act = () => _ = new ControllableCronJob(
             config,

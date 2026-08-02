@@ -60,16 +60,11 @@ public sealed class ActiveAppTestEntitySpec : Specification<AppTestEntity>
     protected override Expression<Func<AppTestEntity, bool>> Criteria => e => e.Active;
 }
 
-public sealed class BulkTestDbContext : TestDbContext, IUnitOfWorkAsync
+public sealed class BulkTestDbContext(DbContextOptions options) : TestDbContext(options), IUnitOfWorkAsync
 {
-    private readonly Dictionary<Type, object> _repositories = new();
+    private readonly Dictionary<Type, object> _repositories = [];
     private static readonly IOptions<EFCoreRepositoryOptions> RepositoryOptions =
         Microsoft.Extensions.Options.Options.Create(new EFCoreRepositoryOptions { MaxQtyByQueryPage = 100 });
-
-    public BulkTestDbContext(DbContextOptions options)
-        : base(options)
-    {
-    }
 
     public IRepositoryAsync<T> GetRepository<T>()
         where T : class, IEntityBase
@@ -84,7 +79,9 @@ public sealed class BulkTestDbContext : TestDbContext, IUnitOfWorkAsync
     }
 
     public new Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => base.SaveChangesAsync(cancellationToken);
+    {
+        return base.SaveChangesAsync(cancellationToken);
+    }
 
     public Task RollbackAsync()
     {
@@ -92,12 +89,18 @@ public sealed class BulkTestDbContext : TestDbContext, IUnitOfWorkAsync
         return Task.CompletedTask;
     }
 
-    public IDbConnection GetConnection() => Database.GetDbConnection();
+    public IDbConnection GetConnection()
+    {
+        return Database.GetDbConnection();
+    }
 }
 
 public class AppTestEntityValidator : AbstractValidator<AppTestEntity>
 {
-    public AppTestEntityValidator() => RuleFor(x => x.Name).NotEmpty();
+    public AppTestEntityValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+    }
 }
 
 public sealed class TestAutoMapperProfile : Profile
@@ -110,162 +113,144 @@ public sealed class TestAutoMapperProfile : Profile
 
 public class AppTestEntityDtoValidator : AbstractValidator<AppTestEntityDto>
 {
-    public AppTestEntityDtoValidator() => RuleFor(x => x.Name).NotEmpty();
+    public AppTestEntityDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+    }
 }
 
 public class AppTestCreateDtoValidator : AbstractValidator<AppTestCreateDto>
 {
-    public AppTestCreateDtoValidator() => RuleFor(x => x.Name).NotEmpty();
+    public AppTestCreateDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+    }
 }
 
 public class AppTestUpdateDtoValidator : AbstractValidator<AppTestUpdateDto>
 {
-    public AppTestUpdateDtoValidator() => RuleFor(x => x.Name).NotEmpty();
+    public AppTestUpdateDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty();
+    }
 }
 
-public sealed class TestQueryService : QueryServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestQueryService(IUnitOfWorkAsync unitOfWork) : QueryServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork)
 {
-    public TestQueryService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork) { }
 }
 
-public sealed class TestCommandService : CommandServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestCommandService(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null) : CommandServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, validator)
 {
-    public TestCommandService(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestApplicationServiceAsync : ApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestApplicationServiceAsync(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null) : ApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, validator)
 {
-    public TestApplicationServiceAsync(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestApplicationServiceWithDtoAsync : ApplicationServiceBaseWithDtoAsync<AppTestEntity, AppTestEntityDto, IUnitOfWorkAsync>
+public sealed class TestApplicationServiceWithDtoAsync(
+    IUnitOfWorkAsync unitOfWork,
+    IMapper mapper,
+    IValidator<AppTestEntity>? entityValidator = null,
+    IValidator<AppTestEntityDto>? dtoValidator = null) : ApplicationServiceBaseWithDtoAsync<AppTestEntity, AppTestEntityDto, IUnitOfWorkAsync>(unitOfWork, mapper, entityValidator, dtoValidator)
 {
-    public TestApplicationServiceWithDtoAsync(
-        IUnitOfWorkAsync unitOfWork,
-        IMapper mapper,
-        IValidator<AppTestEntity>? entityValidator = null,
-        IValidator<AppTestEntityDto>? dtoValidator = null)
-        : base(unitOfWork, mapper, entityValidator, dtoValidator) { }
 }
 
-public sealed class TestApplicationServiceWithSeparateDtosAsync
-    : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWorkAsync>
+public sealed class TestApplicationServiceWithSeparateDtosAsync(
+    IUnitOfWorkAsync unitOfWork,
+    IMapper mapper,
+    IValidator<AppTestEntity>? entityValidator = null,
+    IValidator<AppTestCreateDto>? createValidator = null,
+    IValidator<AppTestUpdateDto>? updateValidator = null)
+        : ApplicationServiceBaseWithSeparateDtosAsync<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWorkAsync>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
 {
-    public TestApplicationServiceWithSeparateDtosAsync(
-        IUnitOfWorkAsync unitOfWork,
-        IMapper mapper,
-        IValidator<AppTestEntity>? entityValidator = null,
-        IValidator<AppTestCreateDto>? createValidator = null,
-        IValidator<AppTestUpdateDto>? updateValidator = null)
-        : base(unitOfWork, mapper, entityValidator, createValidator, updateValidator) { }
 }
 
-public sealed class TestRepositoryService : RepositoryServiceAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestRepositoryService(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null) : RepositoryServiceAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, validator)
 {
-    public TestRepositoryService(IUnitOfWorkAsync unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestRepositoryPagingService : RepositoryPagingServiceAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestRepositoryPagingService(IUnitOfWorkAsync unitOfWork) : RepositoryPagingServiceAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork)
 {
-    public TestRepositoryPagingService(IUnitOfWorkAsync unitOfWork) : base(unitOfWork) { }
 }
 
-public sealed class TestApplicationService : ApplicationServiceBase<AppTestEntity, IUnitOfWork>
+public sealed class TestApplicationService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null) : ApplicationServiceBase<AppTestEntity, IUnitOfWork>(unitOfWork, validator)
 {
-    public TestApplicationService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestApplicationServiceWithDto : ApplicationServiceBaseWithDto<AppTestEntity, AppTestEntityDto, IUnitOfWork>
+public sealed class TestApplicationServiceWithDto(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestEntityDto>? dtoValidator = null) : ApplicationServiceBaseWithDto<AppTestEntity, AppTestEntityDto, IUnitOfWork>(unitOfWork, mapper, entityValidator, dtoValidator)
 {
-    public TestApplicationServiceWithDto(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestEntityDto>? dtoValidator = null)
-        : base(unitOfWork, mapper, entityValidator, dtoValidator) { }
 }
 
-public sealed class TestApplicationServiceWithSeparateDtos : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWork>
+public sealed class TestApplicationServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestCreateDto>? createValidator = null, IValidator<AppTestUpdateDto>? updateValidator = null) : ApplicationServiceBaseWithSeparateDtos<AppTestEntity, AppTestEntityDto, AppTestCreateDto, AppTestUpdateDto, IUnitOfWork>(unitOfWork, mapper, entityValidator, createValidator, updateValidator)
 {
-    public TestApplicationServiceWithSeparateDtos(IUnitOfWork unitOfWork, IMapper mapper, IValidator<AppTestEntity>? entityValidator = null, IValidator<AppTestCreateDto>? createValidator = null, IValidator<AppTestUpdateDto>? updateValidator = null)
-        : base(unitOfWork, mapper, entityValidator, createValidator, updateValidator) { }
 }
 
-public sealed class TestSyncQueryService : QueryServiceBase<AppTestEntity, IUnitOfWork>
+public sealed class TestSyncQueryService(IUnitOfWork unitOfWork) : QueryServiceBase<AppTestEntity, IUnitOfWork>(unitOfWork)
 {
-    public TestSyncQueryService(IUnitOfWork unitOfWork) : base(unitOfWork) { }
 }
 
-public sealed class TestSyncCommandService : CommandServiceBase<AppTestEntity, IUnitOfWork>
+public sealed class TestSyncCommandService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null) : CommandServiceBase<AppTestEntity, IUnitOfWork>(unitOfWork, validator)
 {
-    public TestSyncCommandService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestSyncRepositoryService : RepositoryService<AppTestEntity, IUnitOfWork>
+public sealed class TestSyncRepositoryService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null) : RepositoryService<AppTestEntity, IUnitOfWork>(unitOfWork, validator)
 {
-    public TestSyncRepositoryService(IUnitOfWork unitOfWork, IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, validator) { }
 }
 
-public sealed class TestSyncRepositoryPagingService : RepositoryPagingService<AppTestEntity, IUnitOfWork>
+public sealed class TestSyncRepositoryPagingService(IUnitOfWork unitOfWork) : RepositoryPagingService<AppTestEntity, IUnitOfWork>(unitOfWork)
 {
-    public TestSyncRepositoryPagingService(IUnitOfWork unitOfWork) : base(unitOfWork) { }
 }
 
-public sealed class TestCacheableQueryService : CacheableQueryServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestCacheableQueryService(
+    IUnitOfWorkAsync unitOfWork,
+    IQueryCacheProvider cacheProvider,
+    IQueryCacheKeyGenerator keyGenerator) : CacheableQueryServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, cacheProvider, keyGenerator, NullLogger<TestCacheableQueryService>.Instance)
 {
-    public TestCacheableQueryService(
-        IUnitOfWorkAsync unitOfWork,
-        IQueryCacheProvider cacheProvider,
-        IQueryCacheKeyGenerator keyGenerator)
-        : base(unitOfWork, cacheProvider, keyGenerator, NullLogger<TestCacheableQueryService>.Instance) { }
-
-    public void SetCacheEnabled(bool enabled) => CacheEnabled = enabled;
+    public void SetCacheEnabled(bool enabled)
+    {
+        CacheEnabled = enabled;
+    }
 
     public bool IsCacheEnabled => CacheEnabled;
 
-    public IDisposable DisableCacheForTest() => DisableCache();
+    public IDisposable DisableCacheForTest()
+    {
+        return DisableCache();
+    }
 }
 
-public sealed class TestCacheableApplicationService : CacheableApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestCacheableApplicationService(
+    IUnitOfWorkAsync unitOfWork,
+    IQueryCacheProvider cacheProvider,
+    ICacheInvalidator cacheInvalidator,
+    IQueryCacheKeyGenerator keyGenerator,
+    IValidator<AppTestEntity>? validator = null) : CacheableApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, cacheProvider, cacheInvalidator, keyGenerator,
+        NullLogger<TestCacheableApplicationService>.Instance, validator)
 {
-    public TestCacheableApplicationService(
-        IUnitOfWorkAsync unitOfWork,
-        IQueryCacheProvider cacheProvider,
-        ICacheInvalidator cacheInvalidator,
-        IQueryCacheKeyGenerator keyGenerator,
-        IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, cacheProvider, cacheInvalidator, keyGenerator,
-            NullLogger<TestCacheableApplicationService>.Instance, validator) { }
 }
 
-public sealed class TestEventAwareCommandService : EventAwareCommandServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>
+public sealed class TestEventAwareCommandService(
+    IUnitOfWorkAsync unitOfWork,
+    IApplicationEventDispatcher eventDispatcher,
+    IValidator<AppTestEntity>? validator = null) : EventAwareCommandServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, eventDispatcher, validator)
 {
-    public TestEventAwareCommandService(
-        IUnitOfWorkAsync unitOfWork,
-        IApplicationEventDispatcher eventDispatcher,
-        IValidator<AppTestEntity>? validator = null)
-        : base(unitOfWork, eventDispatcher, validator) { }
-
-    public void SetDispatchEvents(bool enabled) => DispatchEvents = enabled;
+    public void SetDispatchEvents(bool enabled)
+    {
+        DispatchEvents = enabled;
+    }
 }
 
-public sealed class TestBulkDtoService : BulkCommandServiceWithDtoBaseAsync<TestEntity, AppTestEntityDto, BulkTestDbContext>
+public sealed class TestBulkDtoService(BulkTestDbContext dbContext, IMapper mapper, IValidator<AppTestEntityDto>? dtoValidator = null) : BulkCommandServiceWithDtoBaseAsync<TestEntity, AppTestEntityDto, BulkTestDbContext>(dbContext, mapper, dtoValidator)
 {
-    public TestBulkDtoService(BulkTestDbContext dbContext, IMapper mapper, IValidator<AppTestEntityDto>? dtoValidator = null)
-        : base(dbContext, mapper, dtoValidator) { }
 }
 
-public sealed class TestBulkSeparateDtosService
-    : BulkCommandServiceWithSeparateDtosBaseAsync<TestEntity, AppTestCreateDto, AppTestUpdateDto, BulkTestDbContext>
+public sealed class TestBulkSeparateDtosService(
+    BulkTestDbContext dbContext,
+    IMapper mapper,
+    IValidator<AppTestCreateDto>? createValidator = null,
+    IValidator<AppTestUpdateDto>? updateValidator = null)
+        : BulkCommandServiceWithSeparateDtosBaseAsync<TestEntity, AppTestCreateDto, AppTestUpdateDto, BulkTestDbContext>(dbContext, mapper, createValidator, updateValidator)
 {
-    public TestBulkSeparateDtosService(
-        BulkTestDbContext dbContext,
-        IMapper mapper,
-        IValidator<AppTestCreateDto>? createValidator = null,
-        IValidator<AppTestUpdateDto>? updateValidator = null)
-        : base(dbContext, mapper, createValidator, updateValidator) { }
 }
 
 public sealed class TestApplicationEvent : IApplicationEvent
@@ -290,7 +275,9 @@ public sealed class CapturingEventHandler : IApplicationEventHandler<TestApplica
 public sealed class FailingEventHandler : IApplicationEventHandler<TestApplicationEvent>
 {
     public Task HandleAsync(TestApplicationEvent @event, CancellationToken cancellationToken = default)
-        => throw new InvalidOperationException("Handler failed");
+    {
+        throw new InvalidOperationException("Handler failed");
+    }
 }
 
 public sealed class TestCacheableQuery : ICacheableQuery
@@ -298,7 +285,11 @@ public sealed class TestCacheableQuery : ICacheableQuery
     public int CategoryId { get; init; }
     public TimeSpan CacheDuration => TimeSpan.FromMinutes(10);
     public bool UseSlidingExpiration => true;
-    public string GetCacheKey() => $"category_{CategoryId}";
+    public string GetCacheKey()
+    {
+        return $"category_{CategoryId}";
+    }
+
     public string CacheRegion => "Products";
 }
 
@@ -494,7 +485,9 @@ public static class ApplicationTestHelpers
     }
 
     public static InMemoryQueryCacheProvider CreateInMemoryQueryCacheProvider()
-        => new();
+    {
+        return new();
+    }
 
     public static QueryCacheProvider CreateQueryCacheProvider(
         out MemoryDistributedCache distributedCache,
@@ -509,7 +502,9 @@ public static class ApplicationTestHelpers
     }
 
     public static CacheInvalidator CreateCacheInvalidator(IQueryCacheProvider cacheProvider)
-        => new(cacheProvider, new QueryCacheKeyGenerator(), NullLogger<CacheInvalidator>.Instance);
+    {
+        return new(cacheProvider, new QueryCacheKeyGenerator(), NullLogger<CacheInvalidator>.Instance);
+    }
 
     public static ServiceProvider CreateEventDispatcherServices(
         Action<ApplicationEventDispatcherOptions>? configure = null,
@@ -588,5 +583,7 @@ public sealed class InMemoryQueryCacheProvider : IQueryCacheProvider
     }
 
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
-        => Task.FromResult(_store.ContainsKey(key));
+    {
+        return Task.FromResult(_store.ContainsKey(key));
+    }
 }

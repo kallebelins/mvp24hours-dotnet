@@ -22,10 +22,7 @@ public class AdvancedBehaviorsTest
         services.AddMemoryCache();
         services.AddSingleton<IDistributedCache, MemoryDistributedCache>();
         services.AddSingleton<IIdempotencyKeyGenerator, DefaultIdempotencyKeyGenerator>();
-        services.AddMvpMediator(options =>
-        {
-            options.RegisterHandlersFromAssembly(typeof(AuthorizedAdminCommand).Assembly);
-        });
+        services.AddMvpMediator(options => options.RegisterHandlersFromAssembly(typeof(AuthorizedAdminCommand).Assembly));
         configure?.Invoke(services);
         return services.BuildServiceProvider();
     }

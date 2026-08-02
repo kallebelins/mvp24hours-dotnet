@@ -38,8 +38,8 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler(new AuthenticationOptions());
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions());
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -49,12 +49,12 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithBearerTokenProvider_ShouldSetAuthorizationHeader()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
         var handler = new AuthenticationDelegatingHandler(
             NullLogger<AuthenticationDelegatingHandler>.Instance,
             AuthenticationScheme.Bearer,
             tokenProvider: () => Task.FromResult<string?>("my-jwt-token"));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -64,13 +64,13 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithStaticBearerToken_ShouldStripExistingPrefix()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new AuthenticationOptions
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions
         {
             Scheme = AuthenticationScheme.Bearer,
             StaticToken = "Bearer already-prefixed"
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -80,13 +80,13 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithApiKeyInHeader_ShouldAddConfiguredHeader()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
         var handler = new AuthenticationDelegatingHandler(
             NullLogger<AuthenticationDelegatingHandler>.Instance,
             AuthenticationScheme.ApiKey,
             apiKey: "secret-key",
             apiKeyHeaderName: "X-Custom-Key");
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -96,15 +96,15 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithApiKeyInQueryString_ShouldAppendQueryParameter()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new AuthenticationOptions
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions
         {
             Scheme = AuthenticationScheme.ApiKey,
             ApiKey = "query-key",
             ApiKeyLocation = ApiKeyLocation.QueryString,
             ApiKeyQueryParamName = "key"
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource?foo=1");
 
@@ -115,13 +115,13 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithBasicAuth_ShouldSetEncodedCredentials()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
         var handler = new AuthenticationDelegatingHandler(
             NullLogger<AuthenticationDelegatingHandler>.Instance,
             AuthenticationScheme.Basic,
             username: "user",
             password: "pass");
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -132,9 +132,9 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNoneScheme_ShouldNotAddAuthHeader()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new AuthenticationOptions { Scheme = AuthenticationScheme.None });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions { Scheme = AuthenticationScheme.None });
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 
@@ -144,14 +144,14 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenTokenProviderFailsAndThrowDisabled_ShouldContinue()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new AuthenticationOptions
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions
         {
             Scheme = AuthenticationScheme.Bearer,
             ThrowOnAuthenticationFailure = false,
             TokenProvider = () => throw new InvalidOperationException("token store down")
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -162,13 +162,13 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenTokenProviderFailsAndThrowEnabled_ShouldRethrow()
     {
-        var handler = CreateHandler(new AuthenticationOptions
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions
         {
             Scheme = AuthenticationScheme.Bearer,
             ThrowOnAuthenticationFailure = true,
             TokenProvider = () => throw new InvalidOperationException("token store down")
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.GetAsync("/resource");
 
@@ -178,13 +178,13 @@ public class AuthenticationDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithEmptyBearerToken_ShouldNotSetAuthorization()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(new AuthenticationOptions
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        AuthenticationDelegatingHandler handler = CreateHandler(new AuthenticationOptions
         {
             Scheme = AuthenticationScheme.Bearer,
             TokenProvider = () => Task.FromResult<string?>("  ")
         });
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         await client.GetAsync("/resource");
 

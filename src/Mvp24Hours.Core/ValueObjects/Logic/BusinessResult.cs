@@ -9,7 +9,7 @@ using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 namespace Mvp24Hours.Core.ValueObjects.Logic;
 
 /// <summary>
-/// <see cref="Mvp24Hours.Core.Contract.Logic.IBusinessResult{T}"/>
+/// <see cref="Mvp24Hours.Core.Contract.ValueObjects.Logic.IBusinessResult{T}"/>
 /// </summary>
 /// <remarks>
 /// <para>

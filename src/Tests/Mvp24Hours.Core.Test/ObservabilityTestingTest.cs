@@ -379,9 +379,7 @@ public class ObservabilityTestingTest
         }
 
         listener.HasErrors().Should().BeTrue();
-        IReadOnlyList<RecordedActivity> errors = listener.GetErrorActivities()
-            .Where(a => a.OperationName == errorName)
-            .ToList();
+        IReadOnlyList<RecordedActivity> errors = [.. listener.GetErrorActivities().Where(a => a.OperationName == errorName)];
         errors.Should().HaveCount(1);
         errors[0].OperationName.Should().Be(errorName);
     }

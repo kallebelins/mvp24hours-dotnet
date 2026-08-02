@@ -5,6 +5,7 @@
 //=====================================================================================
 using System.Net.Security;
 using System.Security.Authentication;
+using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Security;
 using Xunit;
 
@@ -18,7 +19,7 @@ public class SecurityTest
     [Fact]
     public void MongoDbAuthMechanism_HasExpectedValues()
     {
-        var values = Enum.GetValues<MongoDbAuthMechanism>();
+        MongoDbAuthMechanism[] values = Enum.GetValues<MongoDbAuthMechanism>();
         Assert.Contains(MongoDbAuthMechanism.Default, values);
         Assert.Contains(MongoDbAuthMechanism.ScramSha1, values);
         Assert.Contains(MongoDbAuthMechanism.ScramSha256, values);
@@ -102,7 +103,7 @@ public class SecurityTest
             Mechanism = MongoDbAuthMechanism.Default
         };
 
-        var credential = opts.CreateCredential();
+        MongoCredential? credential = opts.CreateCredential();
         Assert.Null(credential);
     }
 
@@ -116,7 +117,7 @@ public class SecurityTest
             Password = "pass"
         };
 
-        var credential = opts.CreateCredential();
+        MongoCredential? credential = opts.CreateCredential();
         Assert.NotNull(credential);
     }
 
@@ -161,7 +162,7 @@ public class SecurityTest
             Mechanism = MongoDbAuthMechanism.AwsIam
         };
 
-        var credential = opts.CreateCredential();
+        MongoCredential? credential = opts.CreateCredential();
         Assert.NotNull(credential);
     }
 

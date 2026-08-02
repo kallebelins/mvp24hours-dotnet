@@ -13,7 +13,7 @@ public class MockClockTest
     [Fact]
     public void FromDate_ShouldInitializeUtcMidnight()
     {
-        MockClock clock = MockClock.FromDate(2024, 8, 20);
+        var clock = MockClock.FromDate(2024, 8, 20);
 
         clock.UtcNow.Should().Be(new DateTime(2024, 8, 20, 0, 0, 0, DateTimeKind.Utc));
         clock.UtcToday.Should().Be(new DateTime(2024, 8, 20, 0, 0, 0, DateTimeKind.Utc));
@@ -22,7 +22,7 @@ public class MockClockTest
     [Fact]
     public void FromDateTime_ShouldInitializeExactUtcTime()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 8, 20, 13, 45, 30);
+        var clock = MockClock.FromDateTime(2024, 8, 20, 13, 45, 30);
 
         clock.UtcNow.Should().Be(new DateTime(2024, 8, 20, 13, 45, 30, DateTimeKind.Utc));
     }
@@ -30,7 +30,7 @@ public class MockClockTest
     [Fact]
     public void AdvanceBy_ShouldMoveUtcNowForward()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 1, 1, 0, 0, 0);
+        var clock = MockClock.FromDateTime(2024, 1, 1, 0, 0, 0);
 
         clock.AdvanceBy(TimeSpan.FromHours(3));
 
@@ -41,7 +41,7 @@ public class MockClockTest
     [Fact]
     public void RewindBy_ShouldMoveUtcNowBackward()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 1, 1, 12, 0, 0);
+        var clock = MockClock.FromDateTime(2024, 1, 1, 12, 0, 0);
 
         clock.RewindBy(TimeSpan.FromMinutes(30));
 
@@ -51,7 +51,7 @@ public class MockClockTest
     [Fact]
     public void Reset_ShouldRestoreInitialTime()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 2, 1, 9, 0, 0);
+        var clock = MockClock.FromDateTime(2024, 2, 1, 9, 0, 0);
         clock.AdvanceBy(TimeSpan.FromDays(2));
         clock.SetUtcNow(new DateTime(2024, 2, 10, 0, 0, 0, DateTimeKind.Utc));
 
@@ -63,7 +63,7 @@ public class MockClockTest
     [Fact]
     public void AdvanceHours_ShouldUseConvenienceMethod()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 3, 1, 0, 0, 0);
+        var clock = MockClock.FromDateTime(2024, 3, 1, 0, 0, 0);
 
         clock.AdvanceHours(5);
 
@@ -73,7 +73,7 @@ public class MockClockTest
     [Fact]
     public void FromYear_ShouldStartAtJanuaryFirst()
     {
-        MockClock clock = MockClock.FromYear(2023);
+        var clock = MockClock.FromYear(2023);
 
         clock.UtcNow.Should().Be(new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc));
     }

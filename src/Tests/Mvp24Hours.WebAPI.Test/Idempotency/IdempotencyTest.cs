@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
@@ -13,7 +14,7 @@ public class IdempotencyTest
     [Fact]
     public async Task DefaultIdempotencyKeyGenerator_Should_ReadHeaderKey()
     {
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders");
         context.Request.Headers["Idempotency-Key"] = "order-123";
         var sut = new DefaultIdempotencyKeyGenerator(Options.Create(new IdempotencyOptions()));
 
@@ -27,7 +28,7 @@ public class IdempotencyTest
     [Fact]
     public async Task DefaultIdempotencyKeyGenerator_Should_GenerateFromBody_WhenNoHeader()
     {
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders", body: "{\"name\":\"order\"}");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/orders", body: "{\"name\":\"order\"}");
         var options = new IdempotencyOptions { KeySource = IdempotencyKeySource.RequestBody };
         var sut = new DefaultIdempotencyKeyGenerator(Options.Create(options));
 
@@ -41,7 +42,7 @@ public class IdempotencyTest
     [Fact]
     public async Task CqrsIdempotencyKeyGenerator_Should_UseCommandBodyIdempotencyKey()
     {
-        var context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/payments", body: "{\"idempotencyKey\":\"pay-1\"}");
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext(method: "POST", path: "/api/payments", body: "{\"idempotencyKey\":\"pay-1\"}");
         var sut = new CqrsIdempotencyKeyGenerator(Options.Create(new IdempotencyOptions { IntegrateWithCqrs = true }));
 
         IdempotencyKeyResult result = await sut.GenerateKeyAsync(context);

@@ -57,7 +57,7 @@ public class ParallelOperationBuilderTest
     public void ParallelBuilder_Add_Should_ThrowWhenOperationIsInvalid()
     {
         var pipeline = new Pipeline();
-        var builder = pipeline.BeginParallel();
+        IParallelOperationBuilder<IPipeline> builder = pipeline.BeginParallel();
 
         Action act = () => builder.Add(new object());
 
@@ -68,7 +68,7 @@ public class ParallelOperationBuilderTest
     public void ParallelBuilder_WithMaxDegreeOfParallelism_Should_ValidateInput()
     {
         var pipeline = new Pipeline();
-        var builder = pipeline.BeginParallel();
+        IParallelOperationBuilder<IPipeline> builder = pipeline.BeginParallel();
 
         Action act = () => builder.WithMaxDegreeOfParallelism(0);
 

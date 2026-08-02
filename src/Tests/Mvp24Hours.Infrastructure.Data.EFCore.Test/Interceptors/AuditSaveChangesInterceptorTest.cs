@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
@@ -10,11 +12,11 @@ public class AuditSaveChangesInterceptorTest
     [Fact]
     public void SaveChanges_OnAdd_SetsCreatedAtAndCreatedBy()
     {
-        var userProvider = EfCoreTestHelpers.CreateUserProvider("audit-user");
-        var clock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 15, 30, 0, DateTimeKind.Utc));
+        Mock<ICurrentUserProvider> userProvider = EfCoreTestHelpers.CreateUserProvider("audit-user");
+        Mock<IClock> clock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 15, 30, 0, DateTimeKind.Utc));
         var interceptor = new AuditSaveChangesInterceptor(userProvider.Object, clock.Object);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         var entity = new TestAuditableEntity { Name = "New" };
@@ -30,24 +32,24 @@ public class AuditSaveChangesInterceptorTest
     [Fact]
     public void SaveChanges_OnModify_SetsModifiedAtAndModifiedBy()
     {
-        var userProvider = EfCoreTestHelpers.CreateUserProvider("modifier-user");
-        var createdClock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 10, 0, 0, DateTimeKind.Utc));
-        var modifiedClock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 16, 0, 0, DateTimeKind.Utc));
-        var databaseName = $"Audit_{Guid.NewGuid():N}";
+        Mock<ICurrentUserProvider> userProvider = EfCoreTestHelpers.CreateUserProvider("modifier-user");
+        Mock<IClock> createdClock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 10, 0, 0, DateTimeKind.Utc));
+        Mock<IClock> modifiedClock = EfCoreTestHelpers.CreateClock(new DateTime(2026, 7, 18, 16, 0, 0, DateTimeKind.Utc));
+        string databaseName = $"Audit_{Guid.NewGuid():N}";
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName, options =>
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName, options =>
                    options.AddInterceptors(new AuditSaveChangesInterceptor(userProvider.Object, createdClock.Object))))
         {
             context.AuditableEntities.Add(new TestAuditableEntity { Name = "Original" });
             context.SaveChanges();
         }
 
-        using var modifyContext = EfCoreTestHelpers.CreateContext(databaseName, options =>
+        using TestDbContext modifyContext = EfCoreTestHelpers.CreateContext(databaseName, options =>
             options.AddInterceptors(new AuditSaveChangesInterceptor(userProvider.Object, modifiedClock.Object)));
 
-        var tracked = modifyContext.AuditableEntities.Single();
-        var originalCreatedAt = tracked.CreatedAt;
-        var originalCreatedBy = tracked.CreatedBy;
+        TestAuditableEntity tracked = modifyContext.AuditableEntities.Single();
+        DateTime originalCreatedAt = tracked.CreatedAt;
+        string originalCreatedBy = tracked.CreatedBy;
         tracked.Name = "Updated";
         modifyContext.SaveChanges();
 

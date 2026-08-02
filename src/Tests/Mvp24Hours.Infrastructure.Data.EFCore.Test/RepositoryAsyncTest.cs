@@ -17,7 +17,10 @@ public class RepositoryAsyncTest : IDisposable
         _provider = EfCoreTestHelpers.CreateAsyncServices(_databaseName);
     }
 
-    public void Dispose() => _provider.Dispose();
+    public void Dispose()
+    {
+        _provider.Dispose();
+    }
 
     [Fact]
     public async Task AddAsync_SingleEntity_ShouldPersistAndBeRetrievableById()

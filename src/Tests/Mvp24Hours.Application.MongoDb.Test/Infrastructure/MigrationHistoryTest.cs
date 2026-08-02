@@ -26,7 +26,7 @@ public class MigrationHistoryTest
     [Fact]
     public void MigrationStatus_HasFiveValues()
     {
-        var values = Enum.GetValues<MigrationStatus>();
+        MigrationStatus[] values = Enum.GetValues<MigrationStatus>();
         Assert.Equal(5, values.Length);
     }
 
@@ -54,7 +54,7 @@ public class MigrationHistoryTest
     [Fact]
     public void MongoDbMigrationHistory_CanAssignAllProperties()
     {
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
         var history = new MongoDbMigrationHistory
         {
             Id = "507f1f77bcf86cd799439011",
@@ -103,7 +103,7 @@ public class MigrationHistoryTest
     [Fact]
     public void MongoDbMigrationHistory_Status_AllStatesAreAssignable()
     {
-        foreach (var status in Enum.GetValues<MigrationStatus>())
+        foreach (MigrationStatus status in Enum.GetValues<MigrationStatus>())
         {
             var history = new MongoDbMigrationHistory { Status = status };
             Assert.Equal(status, history.Status);

@@ -11,7 +11,7 @@ public class BindersTest
     [Fact]
     public async Task TimeOnlyModelBinder_Should_BindValidTime()
     {
-        var context = WebApiTestHelpers.CreateModelBindingContext("time", "13:45", typeof(TimeOnly));
+        ModelBindingContext context = WebApiTestHelpers.CreateModelBindingContext("time", "13:45", typeof(TimeOnly));
 
         await new TimeOnlyModelBinder().BindModelAsync(context);
 
@@ -22,7 +22,7 @@ public class BindersTest
     [Fact]
     public async Task TimeOnlyModelBinder_Should_AddError_OnInvalidTime()
     {
-        var context = WebApiTestHelpers.CreateModelBindingContext("time", "bad-time", typeof(TimeOnly));
+        ModelBindingContext context = WebApiTestHelpers.CreateModelBindingContext("time", "bad-time", typeof(TimeOnly));
 
         await new TimeOnlyModelBinder().BindModelAsync(context);
 
@@ -32,7 +32,7 @@ public class BindersTest
     [Fact]
     public async Task DateOnlyModelBinder_Should_BindValidDate()
     {
-        var context = WebApiTestHelpers.CreateModelBindingContext("date", "2026-07-18", typeof(DateOnly));
+        ModelBindingContext context = WebApiTestHelpers.CreateModelBindingContext("date", "2026-07-18", typeof(DateOnly));
 
         await new DateOnlyModelBinder().BindModelAsync(context);
 
@@ -43,7 +43,7 @@ public class BindersTest
     [Fact]
     public async Task DateOnlyModelBinder_Should_AddError_OnInvalidDate()
     {
-        var context = WebApiTestHelpers.CreateModelBindingContext("date", "99-99-9999", typeof(DateOnly));
+        ModelBindingContext context = WebApiTestHelpers.CreateModelBindingContext("date", "99-99-9999", typeof(DateOnly));
 
         await new DateOnlyModelBinder().BindModelAsync(context);
 
@@ -90,5 +90,8 @@ internal sealed class TestModelBinderProviderContext(Type modelType) : ModelBind
     public override BindingInfo BindingInfo => new();
     public override ModelMetadata Metadata { get; } = new EmptyModelMetadataProvider().GetMetadataForType(modelType);
     public override IModelMetadataProvider MetadataProvider => _provider;
-    public override IModelBinder CreateBinder(ModelMetadata metadata) => throw new NotImplementedException();
+    public override IModelBinder CreateBinder(ModelMetadata metadata)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -1,8 +1,8 @@
 using AutoMapper;
+using Mvp24Hours.Application.Contract.Cache;
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Contract.Transaction;
 using Mvp24Hours.Application.Extensions;
-using Mvp24Hours.Application.Contract.Cache;
 using Mvp24Hours.Application.Logic.Pagination;
 using Mvp24Hours.Application.Test.Support;
 using Mvp24Hours.Core.Contract.Logic;

@@ -18,7 +18,10 @@ internal static class DelegatingHandlerTestHelpers
 {
     public const string DefaultUri = "https://api.example.com/resource";
 
-    public static ILogger<T> Logger<T>() => NullLoggerFactory.Instance.CreateLogger<T>();
+    public static ILogger<T> Logger<T>()
+    {
+        return NullLoggerFactory.Instance.CreateLogger<T>();
+    }
 
     public static RetryPolicyOptions CreateRetryOptions(
         int maxRetries = 3,

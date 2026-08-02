@@ -331,6 +331,7 @@ public static class KeyedServiceExtensions
     /// <typeparam name="TService">The service type.</typeparam>
     /// <param name="provider">The service provider.</param>
     /// <param name="serviceKey">The service key.</param>
+    /// <param name="useDefaultIfNotFound"></param>
     /// <returns>The service instance.</returns>
     public static TService GetKeyedServiceOrDefault<TService>(
         this IServiceProvider provider,

@@ -20,7 +20,7 @@ public class EFCoreDiagnosticsListenerTest
             NullLogger<EFCoreDiagnosticsListener>.Instance,
             metrics);
 
-        var act = () => listener.Subscribe();
+        Action act = () => listener.Subscribe();
         act.Should().NotThrow();
     }
 
@@ -30,7 +30,7 @@ public class EFCoreDiagnosticsListenerTest
         using var listener = new EFCoreDiagnosticsListener();
         listener.Subscribe();
 
-        var act = () =>
+        Action act = () =>
         {
             listener.Dispose();
             listener.Dispose();
@@ -45,8 +45,8 @@ public class EFCoreDiagnosticsListenerTest
         using var listener = new EFCoreDiagnosticsListener(
             NullLogger<EFCoreDiagnosticsListener>.Instance);
 
-        var completed = () => listener.OnCompleted();
-        var error = () => listener.OnError(new InvalidOperationException("diag"));
+        Action completed = () => listener.OnCompleted();
+        Action error = () => listener.OnError(new InvalidOperationException("diag"));
 
         completed.Should().NotThrow();
         error.Should().NotThrow();
@@ -57,7 +57,7 @@ public class EFCoreDiagnosticsListenerTest
     {
         using var listener = new EFCoreDiagnosticsListener();
 
-        var act = () => listener.OnNext(new KeyValuePair<string, object?>("Unknown.Event", null));
+        Action act = () => listener.OnNext(new KeyValuePair<string, object?>("Unknown.Event", null));
         act.Should().NotThrow();
     }
 }

@@ -208,10 +208,7 @@ public class ResilientAndAdvancedServiceAdvancedTest
     [Fact]
     public async Task Advanced_Cancellation_ShouldDispatchCancelledEvent()
     {
-        ServiceProvider sp = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            RegisterEventHandler(services, new RecordingCronJobEventHandler());
-        });
+        ServiceProvider sp = CronJobTestHelpers.BuildAdvancedJobServices(services => RegisterEventHandler(services, new RecordingCronJobEventHandler()));
 
         RecordingCronJobEventHandler handler = sp.GetRequiredService<RecordingCronJobEventHandler>();
         using var cts = new CancellationTokenSource();
@@ -238,10 +235,7 @@ public class ResilientAndAdvancedServiceAdvancedTest
             [nameof(TestAdvancedCronJob)],
             requireSuccess: true));
 
-        ServiceProvider sp = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            services.AddSingleton<ICronJobDependencyTracker>(tracker);
-        });
+        ServiceProvider sp = CronJobTestHelpers.BuildAdvancedJobServices(services => services.AddSingleton<ICronJobDependencyTracker>(tracker));
 
         TestAdvancedCronJob job = CronJobTestHelpers.CreateAdvancedJob(
             sp,

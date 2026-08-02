@@ -11,7 +11,7 @@ public class MiddlewareTest
     public async Task TimeoutPipelineMiddleware_Should_ThrowWhenOperationExceedsTimeout()
     {
         var middleware = new TimeoutPipelineMiddleware(TimeSpan.FromMilliseconds(100));
-        var message = PipeTestHelpers.CreateMessage();
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
 
         Func<Task> act = () => middleware.ExecuteAsync(message, () => Task.Delay(500));
 
@@ -37,7 +37,7 @@ public class MiddlewareTest
             new OrderTrackingMiddleware(-200, order),
             new OrderTrackingMiddleware(-300, order)
         };
-        var message = PipeTestHelpers.CreateMessage();
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
 
         await PipelineMiddlewareExecutor.ExecuteAsync(
             middlewares,

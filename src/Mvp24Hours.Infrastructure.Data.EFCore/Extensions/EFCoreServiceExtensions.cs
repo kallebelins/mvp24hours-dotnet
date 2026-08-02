@@ -299,6 +299,8 @@ public static class EFCoreServiceExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="options">Repository configuration options.</param>
+    /// <param name="streamingRepositoryAsync"></param>
+    /// <param name="unitOfWorkAsync"></param>
     /// <param name="lifetime">The service lifetime. Default is Scoped.</param>
     /// <returns>The service collection for chaining.</returns>
     /// <remarks>
@@ -381,6 +383,8 @@ public static class EFCoreServiceExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="options">Repository configuration options.</param>
+    /// <param name="bulkOperationsRepositoryAsync"></param>
+    /// <param name="unitOfWorkAsync"></param>
     /// <param name="lifetime">The service lifetime. Default is Scoped.</param>
     /// <returns>The service collection for chaining.</returns>
     /// <remarks>

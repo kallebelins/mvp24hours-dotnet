@@ -20,10 +20,10 @@ public class TestingExtensionsTest
         using ServiceProvider provider = services.BuildServiceProvider();
         using IServiceScope scope = provider.CreateScope();
 
-        var context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
-        var repository = unitOfWork.GetRepository<TestEntity>();
+        TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+        DbContext dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+        IUnitOfWorkAsync unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWorkAsync>();
+        IRepositoryAsync<TestEntity> repository = unitOfWork.GetRepository<TestEntity>();
 
         context.Should().NotBeNull();
         dbContext.Should().BeOfType<TestDbContext>();
@@ -39,8 +39,8 @@ public class TestingExtensionsTest
 
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
-        var repository = unitOfWork.GetRepository<TestEntity>();
+        IUnitOfWork unitOfWork = provider.GetRequiredService<IUnitOfWork>();
+        IRepository<TestEntity> repository = unitOfWork.GetRepository<TestEntity>();
 
         repository.Should().BeOfType<RepositoryFake<TestEntity>>();
     }
@@ -53,8 +53,8 @@ public class TestingExtensionsTest
 
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        var unitOfWork = provider.GetRequiredService<IUnitOfWorkAsync>();
-        var repository = unitOfWork.GetRepository<TestEntity>();
+        IUnitOfWorkAsync unitOfWork = provider.GetRequiredService<IUnitOfWorkAsync>();
+        IRepositoryAsync<TestEntity> repository = unitOfWork.GetRepository<TestEntity>();
 
         repository.Should().BeOfType<RepositoryFakeAsync<TestEntity>>();
     }
@@ -63,14 +63,11 @@ public class TestingExtensionsTest
     public void AddMvp24HoursTestDbContextFactory_ShouldResolveFactory()
     {
         var services = new ServiceCollection();
-        services.AddMvp24HoursTestDbContextFactory<TestDbContext>(o =>
-        {
-            o.CreateNewDatabasePerTest = true;
-        });
+        services.AddMvp24HoursTestDbContextFactory<TestDbContext>(o => o.CreateNewDatabasePerTest = true);
 
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        var factory = provider.GetRequiredService<ITestDbContextFactory<TestDbContext>>();
+        ITestDbContextFactory<TestDbContext> factory = provider.GetRequiredService<ITestDbContextFactory<TestDbContext>>();
         using TestDbContext context = factory.CreateContext();
 
         context.Database.IsInMemory().Should().BeTrue();
@@ -84,7 +81,7 @@ public class TestingExtensionsTest
 
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        var factory = provider.GetRequiredService<InMemoryDbContextFactory<TestDbContext>>();
+        InMemoryDbContextFactory<TestDbContext> factory = provider.GetRequiredService<InMemoryDbContextFactory<TestDbContext>>();
         using TestDbContext context = factory.CreateContextWithData<TestEntitySeeder>();
 
         context.Entities.Should().HaveCount(TestEntitySeeder.DefaultSeedCount);

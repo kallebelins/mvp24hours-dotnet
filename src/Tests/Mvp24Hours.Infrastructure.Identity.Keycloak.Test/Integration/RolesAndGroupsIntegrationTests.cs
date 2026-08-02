@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Contract.Logic;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Admin;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Admin.Requests;
@@ -34,7 +35,7 @@ public sealed class RolesAndGroupsIntegrationTests(KeycloakFixture fixture)
 
         try
         {
-            var createdRole = await roles.CreateRealmRoleAsync(new RoleRepresentation
+            IBusinessResult<RoleRepresentation> createdRole = await roles.CreateRealmRoleAsync(new RoleRepresentation
             {
                 Name = roleName,
                 Description = "Created by an integration test"
@@ -42,11 +43,11 @@ public sealed class RolesAndGroupsIntegrationTests(KeycloakFixture fixture)
             createdRole.HasErrors.Should().BeFalse();
             createdRole.Data!.Name.Should().Be(roleName);
 
-            var loadedRole = await roles.GetRealmRoleByNameAsync(roleName);
+            IBusinessResult<RoleRepresentation> loadedRole = await roles.GetRealmRoleByNameAsync(roleName);
             loadedRole.HasErrors.Should().BeFalse();
             loadedRole.Data!.Id.Should().NotBeNullOrWhiteSpace();
 
-            var createdGroup = await groups.CreateGroupAsync(new CreateGroupRequest
+            IBusinessResult<string> createdGroup = await groups.CreateGroupAsync(new CreateGroupRequest
             {
                 Name = groupName,
                 Attributes = new() { ["source"] = ["integration-test"] }
@@ -54,11 +55,11 @@ public sealed class RolesAndGroupsIntegrationTests(KeycloakFixture fixture)
             createdGroup.HasErrors.Should().BeFalse();
             groupId = createdGroup.Data;
 
-            var loadedGroup = await groups.GetGroupByIdAsync(groupId!);
+            IBusinessResult<GroupRepresentation> loadedGroup = await groups.GetGroupByIdAsync(groupId!);
             loadedGroup.HasErrors.Should().BeFalse();
             loadedGroup.Data!.Name.Should().Be(groupName);
 
-            var createdUser = await users.CreateUserAsync(new CreateUserRequest
+            IBusinessResult<string> createdUser = await users.CreateUserAsync(new CreateUserRequest
             {
                 Username = username,
                 Enabled = true
@@ -66,7 +67,7 @@ public sealed class RolesAndGroupsIntegrationTests(KeycloakFixture fixture)
             createdUser.HasErrors.Should().BeFalse();
             userId = createdUser.Data;
 
-            var added = await users.AddUserToGroupAsync(new AddUserToGroupRequest
+            IBusinessResult<bool> added = await users.AddUserToGroupAsync(new AddUserToGroupRequest
             {
                 UserId = userId!,
                 GroupId = groupId!
@@ -76,7 +77,7 @@ public sealed class RolesAndGroupsIntegrationTests(KeycloakFixture fixture)
                 .Should()
                 .ContainSingle(user => user.Id == userId);
 
-            var assigned = await users.AssignRealmRolesAsync(new AssignRolesRequest
+            IBusinessResult<bool> assigned = await users.AssignRealmRolesAsync(new AssignRolesRequest
             {
                 UserId = userId!,
                 Roles = [loadedRole.Data]

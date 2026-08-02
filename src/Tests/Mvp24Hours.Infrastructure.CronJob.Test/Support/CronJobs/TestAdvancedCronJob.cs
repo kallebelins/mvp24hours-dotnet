@@ -34,9 +34,15 @@ public sealed class TestAdvancedCronJob(
     public Exception? LastFailure { get; private set; }
     public object? LastContextProperty { get; private set; }
 
-    public ICronJobContext CallGetContext() => GetContext();
+    public ICronJobContext CallGetContext()
+    {
+        return GetContext();
+    }
 
-    public void CallSetContextProperty(string key, object? value) => SetContextProperty(key, value);
+    public void CallSetContextProperty(string key, object? value)
+    {
+        SetContextProperty(key, value);
+    }
 
     protected override async Task ExecuteAsync(ICronJobContext context, CancellationToken cancellationToken)
     {

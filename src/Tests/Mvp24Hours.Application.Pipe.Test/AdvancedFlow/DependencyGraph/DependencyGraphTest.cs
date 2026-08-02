@@ -62,7 +62,7 @@ public class DependencyGraphTest
     [Fact]
     public void DependencyGraphNode_Should_AddDependencies()
     {
-        var node = new LambdaDependencyGraphNode<string>("node", (_, _) => OperationResult<object>.Success(new object()))
+        DependencyGraphNodeBase<string> node = new LambdaDependencyGraphNode<string>("node", (_, _) => OperationResult<object>.Success(new object()))
             .DependsOn("dep1", "dep2");
 
         node.Dependencies.Should().BeEquivalentTo(["dep1", "dep2"]);

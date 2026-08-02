@@ -1,6 +1,7 @@
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology;
+using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Topology;
 
@@ -65,7 +66,7 @@ public class TopologyTest
             topology.RoutingKey = "order.created";
         });
 
-        var topology = MessageTopologyRegistry.Instance.GetTopology<TestOrderEvent>();
+        IMessageTopology<TestOrderEvent> topology = MessageTopologyRegistry.Instance.GetTopology<TestOrderEvent>();
 
         topology.ExchangeName.Should().Be("orders");
         topology.RoutingKey.Should().Be("order.created");
@@ -239,23 +240,17 @@ public class TopologyTest
     {
         MessageTopologyRegistry.Instance.Clear();
 
-        var topology = MessageTopologyRegistry.Instance.GetTopology<TestPaymentCompletedEvent>();
+        IMessageTopology<TestPaymentCompletedEvent> topology = MessageTopologyRegistry.Instance.GetTopology<TestPaymentCompletedEvent>();
 
         // After clear, the registry may auto-create a default or return null
         // The important behavior is the registry handles missing types gracefully
-        if (topology != null)
-        {
-            topology.ExchangeName.Should().BeNull();
-        }
+        topology?.ExchangeName.Should().BeNull();
     }
 
     [Fact]
     public void MessageTopologyRegistry_HasTopology_WhenRegistered_ShouldReturnTrue()
     {
-        MessageTopologyRegistry.Instance.Register<TestOrderCommand>(t =>
-        {
-            t.ExchangeName = "commands";
-        });
+        MessageTopologyRegistry.Instance.Register<TestOrderCommand>(t => t.ExchangeName = "commands");
 
         bool has = MessageTopologyRegistry.Instance.HasTopology<TestOrderCommand>();
 
@@ -265,8 +260,8 @@ public class TopologyTest
     [Fact]
     public void MessageTopologyRegistry_Instance_ShouldBeSingleton()
     {
-        var instance1 = MessageTopologyRegistry.Instance;
-        var instance2 = MessageTopologyRegistry.Instance;
+        MessageTopologyRegistry instance1 = MessageTopologyRegistry.Instance;
+        MessageTopologyRegistry instance2 = MessageTopologyRegistry.Instance;
 
         instance1.Should().BeSameAs(instance2);
     }
@@ -325,7 +320,7 @@ public class TopologyTest
     {
         EndpointConvention.MapToQueue<TestOrderEvent>("q1");
         EndpointConvention.MapToQueue<TestPaymentCompletedEvent>("q2");
-        
+
         EndpointConvention.Reset();
 
         EndpointConvention.GetEndpoint<TestOrderEvent>().Should().BeNull();

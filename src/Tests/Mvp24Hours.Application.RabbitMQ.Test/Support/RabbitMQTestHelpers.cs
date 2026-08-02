@@ -121,5 +121,8 @@ internal static class RabbitMQTestHelpers
         return new InMemoryBus(services.BuildServiceProvider());
     }
 
-    public static ILogger<T> CreateNullLogger<T>() => NullLogger<T>.Instance;
+    public static ILogger<T> CreateNullLogger<T>()
+    {
+        return NullLogger<T>.Instance;
+    }
 }

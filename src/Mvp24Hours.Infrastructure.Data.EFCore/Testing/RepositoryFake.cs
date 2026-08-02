@@ -460,8 +460,7 @@ public class RepositoryFake<TEntity>(Func<TEntity, object?> keySelector) : IRepo
     /// Seeds the repository with data using a seeder.
     /// </summary>
     /// <param name="seedAction">Action to generate seed data.</param>
-    /// <example>
-    /// <code>
+    /// <example><![CDATA[
     /// repository.SeedData(list =>
     /// {
     ///     for (int i = 1; i <= 10; i++)
@@ -469,8 +468,7 @@ public class RepositoryFake<TEntity>(Func<TEntity, object?> keySelector) : IRepo
     ///         list.Add(new Customer { Id = i, Name = $"Customer {i}" });
     ///     }
     /// });
-    /// </code>
-    /// </example>
+    /// ]]></example>
     public void SeedData(Action<List<TEntity>> seedAction)
     {
         ArgumentNullException.ThrowIfNull(seedAction);

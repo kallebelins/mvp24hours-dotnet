@@ -58,7 +58,7 @@ public class SecurityTest
         using var stream = new MemoryStream();
         using IBsonWriter writer = new BsonBinaryWriter(stream);
         writer.WriteStartDocument();
-        BsonSerializationContext writeContext = BsonSerializationContext.CreateRoot(writer);
+        var writeContext = BsonSerializationContext.CreateRoot(writer);
         writer.WriteName("secret");
         serializer.Serialize(writeContext, default, "secret");
         writer.WriteEndDocument();
@@ -67,7 +67,7 @@ public class SecurityTest
         using IBsonReader reader = new BsonBinaryReader(stream);
         reader.ReadStartDocument();
         reader.ReadName();
-        BsonDeserializationContext readContext = BsonDeserializationContext.CreateRoot(reader);
+        var readContext = BsonDeserializationContext.CreateRoot(reader);
         string decrypted = serializer.Deserialize(readContext, default);
         reader.ReadEndDocument();
 
@@ -141,7 +141,7 @@ public class SecurityTest
     [Fact]
     public void MongoDbAuthenticationOptions_X509_ShouldEnableTlsWithCertificate()
     {
-        using var certificate = CreateSelfSignedCertificate();
+        using X509Certificate2 certificate = CreateSelfSignedCertificate();
         var options = new MongoDbAuthenticationOptions
         {
             Mechanism = MongoDbAuthMechanism.X509,
@@ -159,7 +159,7 @@ public class SecurityTest
 
     private static X509Certificate2 CreateSelfSignedCertificate()
     {
-        using RSA rsa = RSA.Create(2048);
+        using var rsa = RSA.Create(2048);
         var request = new CertificateRequest(
             "CN=MongoDbTest",
             rsa,

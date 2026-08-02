@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Migrations;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Migrations;
 
@@ -53,6 +53,9 @@ public class MigrationExtensionsTest
 
     private sealed class TestMigrationSeeder : IDataSeeder
     {
-        public Task SeedAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SeedAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

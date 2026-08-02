@@ -22,9 +22,15 @@ public sealed class CollectingLogger<T> : ILogger<T>
 {
     public List<(LogLevel Level, string Message, Exception? Exception)> Entries { get; } = [];
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+    {
+        return NullScope.Instance;
+    }
 
-    public bool IsEnabled(LogLevel logLevel) => true;
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return true;
+    }
 
     public void Log<TState>(
         LogLevel logLevel,
@@ -66,14 +72,25 @@ public sealed class MockUnitOfWork : IUnitOfWork
         return RowsAffected;
     }
 
-    public void Rollback() => OperationsLog.Add("Rollback");
+    public void Rollback()
+    {
+        OperationsLog.Add("Rollback");
+    }
 
-    public IRepository<T> GetRepository<T>() where T : class, IEntityBase =>
+    public IRepository<T> GetRepository<T>() where T : class, IEntityBase
+    {
         throw new NotImplementedException();
+    }
 
-    public IDbConnection GetConnection() => throw new NotImplementedException();
+    public IDbConnection GetConnection()
+    {
+        throw new NotImplementedException();
+    }
 
-    public void Dispose() => OperationsLog.Add("Dispose");
+    public void Dispose()
+    {
+        OperationsLog.Add("Dispose");
+    }
 }
 
 /// <summary>
@@ -85,7 +102,9 @@ public sealed class ThrowingPublisher : IPublisher
 
     public Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : IMediatorNotification
-        => throw new InvalidOperationException(Message);
+    {
+        throw new InvalidOperationException(Message);
+    }
 }
 
 /// <summary>
@@ -128,10 +147,15 @@ public sealed class FailingTestAggregate : CoreHasDomainEvents
 
     public IReadOnlyCollection<CoreDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 
-    public void RaiseFailingEvent(string reason = "fail") =>
+    public void RaiseFailingEvent(string reason = "fail")
+    {
         _domainEvents.Add(new FailingDispatchEvent { Reason = reason });
+    }
 }
 
 /// <summary>
@@ -152,27 +176,45 @@ public sealed class CreateUserMustBeAdultValidator : AbstractValidator<CreateUse
 /// </summary>
 public sealed class CreateUserNullPropertyValidator : IValidator<CreateUserCommand>
 {
-    public bool CanValidateInstancesOfType(Type type) => type == typeof(CreateUserCommand);
+    public bool CanValidateInstancesOfType(Type type)
+    {
+        return type == typeof(CreateUserCommand);
+    }
 
-    public IValidatorDescriptor CreateDescriptor() => throw new NotSupportedException();
+    public IValidatorDescriptor CreateDescriptor()
+    {
+        throw new NotSupportedException();
+    }
 
-    public ValidationResult Validate(IValidationContext context) =>
-        Validate((ValidationContext<CreateUserCommand>)context);
+    public ValidationResult Validate(IValidationContext context)
+    {
+        return Validate((ValidationContext<CreateUserCommand>)context);
+    }
 
-    public Task<ValidationResult> ValidateAsync(IValidationContext context, CancellationToken cancellation = default) =>
-        ValidateAsync((ValidationContext<CreateUserCommand>)context, cancellation);
+    public Task<ValidationResult> ValidateAsync(IValidationContext context, CancellationToken cancellation = default)
+    {
+        return ValidateAsync((ValidationContext<CreateUserCommand>)context, cancellation);
+    }
 
-    public ValidationResult Validate(CreateUserCommand instance) =>
-        new([new ValidationFailure(null!, "Custom error") { ErrorCode = "CUSTOM_CODE" }]);
+    public ValidationResult Validate(CreateUserCommand instance)
+    {
+        return new([new ValidationFailure(null!, "Custom error") { ErrorCode = "CUSTOM_CODE" }]);
+    }
 
-    public Task<ValidationResult> ValidateAsync(CreateUserCommand instance, CancellationToken cancellation = default) =>
-        Task.FromResult(Validate(instance));
+    public Task<ValidationResult> ValidateAsync(CreateUserCommand instance, CancellationToken cancellation = default)
+    {
+        return Task.FromResult(Validate(instance));
+    }
 
-    public ValidationResult Validate(ValidationContext<CreateUserCommand> context) =>
-        Validate(context.InstanceToValidate);
+    public ValidationResult Validate(ValidationContext<CreateUserCommand> context)
+    {
+        return Validate(context.InstanceToValidate);
+    }
 
-    public Task<ValidationResult> ValidateAsync(ValidationContext<CreateUserCommand> context, CancellationToken cancellation = default) =>
-        Task.FromResult(Validate(context.InstanceToValidate));
+    public Task<ValidationResult> ValidateAsync(ValidationContext<CreateUserCommand> context, CancellationToken cancellation = default)
+    {
+        return Task.FromResult(Validate(context.InstanceToValidate));
+    }
 }
 
 /// <summary>
@@ -190,13 +232,15 @@ public sealed record UserRegisteredIntegrationEvent : IntegrationEventBase
 public sealed class UserRegisteredToIntegrationConverter
     : IDomainToIntegrationEventConverter<UserRegisteredEvent, UserRegisteredIntegrationEvent>
 {
-    public UserRegisteredIntegrationEvent? Convert(UserRegisteredEvent domainEvent) =>
-        new()
+    public UserRegisteredIntegrationEvent? Convert(UserRegisteredEvent domainEvent)
+    {
+        return new()
         {
             UserId = domainEvent.UserId,
             Email = domainEvent.Email,
             CorrelationId = domainEvent.EventId.ToString()
         };
+    }
 }
 
 /// <summary>
@@ -204,20 +248,30 @@ public sealed class UserRegisteredToIntegrationConverter
 /// </summary>
 public sealed class StubInboxStore : IInboxStore
 {
-    public Task<bool> ExistsAsync(Guid messageId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(false);
+    public Task<bool> ExistsAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 
-    public Task MarkAsProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task MarkAsProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task<InboxMessage?> GetByIdAsync(Guid messageId, CancellationToken cancellationToken = default) =>
-        Task.FromResult<InboxMessage?>(null);
+    public Task<InboxMessage?> GetByIdAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<InboxMessage?>(null);
+    }
 
-    public Task<IReadOnlyList<InboxMessage>> GetByTimeRangeAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<InboxMessage>>([]);
+    public Task<IReadOnlyList<InboxMessage>> GetByTimeRangeAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<InboxMessage>>([]);
+    }
 
-    public Task<int> CleanupAsync(DateTime olderThan, CancellationToken cancellationToken = default) =>
-        Task.FromResult(0);
+    public Task<int> CleanupAsync(DateTime olderThan, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(0);
+    }
 }
 
 /// <summary>
@@ -234,17 +288,25 @@ public sealed class StubOutboxStore : IIntegrationEventOutbox
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<OutboxMessage>> GetPendingAsync(int batchSize = 100, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<OutboxMessage>>([]);
+    public Task<IReadOnlyList<OutboxMessage>> GetPendingAsync(int batchSize = 100, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<OutboxMessage>>([]);
+    }
 
-    public Task MarkAsPublishedAsync(Guid messageId, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task MarkAsPublishedAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task MarkAsFailedAsync(Guid messageId, string error, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task MarkAsFailedAsync(Guid messageId, string error, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task<int> CleanupAsync(DateTime olderThan, CancellationToken cancellationToken = default) =>
-        Task.FromResult(0);
+    public Task<int> CleanupAsync(DateTime olderThan, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(0);
+    }
 }
 
 /// <summary>
@@ -252,29 +314,45 @@ public sealed class StubOutboxStore : IIntegrationEventOutbox
 /// </summary>
 public sealed class StubDeadLetterStore : IDeadLetterStore
 {
-    public Task AddAsync(DeadLetterMessage message, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task AddAsync(DeadLetterMessage message, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task<IReadOnlyList<DeadLetterMessage>> GetAllAsync(int limit = 100, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<DeadLetterMessage>>([]);
+    public Task<IReadOnlyList<DeadLetterMessage>> GetAllAsync(int limit = 100, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<DeadLetterMessage>>([]);
+    }
 
-    public Task<IReadOnlyList<DeadLetterMessage>> GetByEventTypeAsync(string eventType, int limit = 100, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<DeadLetterMessage>>([]);
+    public Task<IReadOnlyList<DeadLetterMessage>> GetByEventTypeAsync(string eventType, int limit = 100, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<DeadLetterMessage>>([]);
+    }
 
-    public Task<DeadLetterMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-        Task.FromResult<DeadLetterMessage?>(null);
+    public Task<DeadLetterMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<DeadLetterMessage?>(null);
+    }
 
-    public Task<bool> RequeueAsync(Guid id, CancellationToken cancellationToken = default) =>
-        Task.FromResult(false);
+    public Task<bool> RequeueAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 
-    public Task MarkAsResolvedAsync(Guid id, string resolution, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task MarkAsResolvedAsync(Guid id, string resolution, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
-        Task.FromResult(false);
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 
-    public Task<int> GetCountAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(0);
+    public Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(0);
+    }
 }
 
 /// <summary>
@@ -283,8 +361,13 @@ public sealed class StubDeadLetterStore : IDeadLetterStore
 public sealed class StubIntegrationEventPublisher : IIntegrationEventPublisher
 {
     public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : IIntegrationEvent => Task.CompletedTask;
+        where TEvent : IIntegrationEvent
+    {
+        return Task.CompletedTask;
+    }
 
-    public Task PublishFromOutboxAsync(OutboxMessage message, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task PublishFromOutboxAsync(OutboxMessage message, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
 }

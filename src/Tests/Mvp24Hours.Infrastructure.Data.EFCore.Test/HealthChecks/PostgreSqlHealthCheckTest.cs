@@ -10,8 +10,9 @@ namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.HealthChecks;
 [Trait("Category", "Unit")]
 public class PostgreSqlHealthCheckTest
 {
-    private static HealthCheckContext CreateContext() =>
-        new()
+    private static HealthCheckContext CreateContext()
+    {
+        return new()
         {
             Registration = new HealthCheckRegistration(
                 "postgresql",
@@ -19,6 +20,7 @@ public class PostgreSqlHealthCheckTest
                 HealthStatus.Unhealthy,
                 null)
         };
+    }
 
     [Fact]
     public void Options_Defaults_ShouldMatchExpected()
@@ -57,7 +59,7 @@ public class PostgreSqlHealthCheckTest
     [Fact]
     public void Constructor_WithNullConnectionFactory_Throws()
     {
-        var act = () => new PostgreSqlHealthCheck(
+        Func<PostgreSqlHealthCheck> act = () => new PostgreSqlHealthCheck(
             "Host=localhost;",
             new PostgreSqlHealthCheckOptions(),
             NullLogger<PostgreSqlHealthCheck>.Instance,
@@ -81,12 +83,24 @@ public class PostgreSqlHealthCheckTest
 
         public override void ChangeDatabase(string databaseName) { }
         public override void Close() { }
-        public override void Open() => throw new InvalidOperationException("Simulated connection failure");
-        public override Task OpenAsync(CancellationToken cancellationToken) =>
-            Task.FromException(new InvalidOperationException("Simulated connection failure"));
+        public override void Open()
+        {
+            throw new InvalidOperationException("Simulated connection failure");
+        }
 
-        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) =>
+        public override Task OpenAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromException(new InvalidOperationException("Simulated connection failure"));
+        }
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+        {
             throw new NotSupportedException();
-        protected override DbCommand CreateDbCommand() => throw new NotSupportedException();
+        }
+
+        protected override DbCommand CreateDbCommand()
+        {
+            throw new NotSupportedException();
+        }
     }
 }

@@ -28,10 +28,7 @@ public class SecurityServiceExtensionsTest
     {
         var services = new ServiceCollection();
 
-        services.AddEnvironmentVariableSecretProvider(options =>
-        {
-            options.VariableNamePrefix = "MVP24H_";
-        });
+        services.AddEnvironmentVariableSecretProvider(options => options.VariableNamePrefix = "MVP24H_");
 
         ServiceProvider sp = services.BuildServiceProvider();
         ISecretProvider provider = sp.GetRequiredService<ISecretProvider>();

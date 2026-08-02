@@ -13,11 +13,13 @@ public class ApplicationServiceBaseWithDtoAsyncTest
         Mock<IUnitOfWorkAsync> uow,
         IValidator<AppTestEntity>? entityValidator = null,
         IValidator<AppTestEntityDto>? dtoValidator = null)
-        => new(
-            uow.Object,
-            ApplicationTestHelpers.CreateAppEntityMapper(),
-            entityValidator,
-            dtoValidator);
+    {
+        return new(
+                uow.Object,
+                ApplicationTestHelpers.CreateAppEntityMapper(),
+                entityValidator,
+                dtoValidator);
+    }
 
     [Fact]
     public async Task ListAsync_ShouldMapEntitiesToDtos()
@@ -25,7 +27,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
         var items = new List<AppTestEntity> { new() { Id = 1, Name = "Mapped", Active = true } };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupList(repo, items);
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<IList<AppTestEntityDto>> result = await service.ListAsync();
 
@@ -38,7 +40,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupList(repo, []);
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<IList<AppTestEntityDto>> result = await service.ListAsync();
 
@@ -51,7 +53,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
         var items = new List<AppTestEntity> { new() { Id = 2, Name = "Filtered", Active = false } };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<IList<AppTestEntityDto>> result = await service.GetByAsync(e => e.Active == false);
 
@@ -65,7 +67,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
         var entity = new AppTestEntity { Id = 3, Name = "ById", Active = true };
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 3, entity);
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<AppTestEntityDto> result = await service.GetByIdAsync(3);
 
@@ -77,7 +79,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         ApplicationTestHelpers.SetupGetById(repo, 99, null);
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<AppTestEntityDto> result = await service.GetByIdAsync(99);
 
@@ -88,7 +90,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task AddAsync_ValidDto_ShouldPersistAndSaveChanges()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
+        TestApplicationServiceWithDtoAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
         var dto = new AppTestEntityDto { Name = "Valid", Active = true };
 
         IBusinessResult<int> result = await service.AddAsync(dto);
@@ -102,7 +104,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task AddAsync_InvalidDto_ShouldReturnValidationErrors()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
+        TestApplicationServiceWithDtoAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
 
         IBusinessResult<int> result = await service.AddAsync(new AppTestEntityDto { Name = "" });
 
@@ -114,7 +116,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task AddAsync_EmptyList_ShouldReturnZeroWithoutSave()
     {
         (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.AddAsync([]);
 
@@ -126,7 +128,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task ModifyAsync_ValidDto_ShouldUpdateAndSave()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
+        TestApplicationServiceWithDtoAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
         var dto = new AppTestEntityDto { Name = "Updated", Active = true };
 
         IBusinessResult<int> result = await service.ModifyAsync(dto);
@@ -139,7 +141,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task ModifyAsync_InvalidDto_ShouldReturnValidationErrors()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
+        TestApplicationServiceWithDtoAsync service = CreateService(uow, new AppTestEntityValidator(), new AppTestEntityDtoValidator());
 
         IBusinessResult<int> result = await service.ModifyAsync(new AppTestEntityDto { Name = "" });
 
@@ -151,7 +153,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task ModifyAsync_EmptyList_ShouldReturnZeroWithoutSave()
     {
         (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.ModifyAsync([]);
 
@@ -163,7 +165,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task RemoveAsync_ShouldRemoveAndSave()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
         var dto = new AppTestEntityDto { Name = "Delete", Active = true };
 
         IBusinessResult<int> result = await service.RemoveAsync(dto);
@@ -176,7 +178,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task RemoveAsync_EmptyList_ShouldReturnZeroWithoutSave()
     {
         (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.RemoveAsync([]);
 
@@ -188,7 +190,7 @@ public class ApplicationServiceBaseWithDtoAsyncTest
     public async Task RemoveByIdAsync_ShouldRemoveByIdAndSave()
     {
         (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
-        var service = CreateService(uow);
+        TestApplicationServiceWithDtoAsync service = CreateService(uow);
 
         IBusinessResult<int> result = await service.RemoveByIdAsync(10);
 

@@ -2,9 +2,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Converters;
+using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Serialization.Json;
 using Mvp24Hours.Core.Serialization.SourceGeneration;
-using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -37,8 +37,10 @@ public class SerializationTest
     [Fact]
     public void CompositeContractResolver_UsesFirstMatchingResolver()
     {
-        var composite = new CompositeContractResolver();
-        composite.Add(new DefaultContractResolver());
+        var composite = new CompositeContractResolver
+        {
+            new DefaultContractResolver()
+        };
 
         JsonContract contract = composite.ResolveContract(typeof(FieldContainer));
 

@@ -114,9 +114,10 @@ public static class AutoMappingExtensions
     /// Maps the specified sources to the specified destination type.
     /// </summary>
     /// <typeparam name="T">The type of the destination</typeparam>
+    /// <param name="mapper">AutoMapper instance.</param>
     /// <param name="sources">The sources.</param>
     /// <returns></returns>
-    /// <example>
+    /// <example><![CDATA[
     /// Retrieve the person, address and comment entities 
     /// and map them on to a person view model entity.
     /// 
@@ -126,7 +127,7 @@ public static class AutoMappingExtensions
     /// var comment = _personTasks.GetComment(personId);
     /// 
     /// var personViewModel = EntityMapper.Map<PersonViewModel>(person, address, comment);
-    /// </example>
+    /// ]]></example>
     public static T? MapMerge<T>(this IMapper mapper, IList<object>? sources) where T : class
     {
         return MapMerge<T>(mapper, sources?.ToArray());
@@ -136,9 +137,10 @@ public static class AutoMappingExtensions
     /// Maps the specified sources to the specified destination type.
     /// </summary>
     /// <typeparam name="T">The type of the destination</typeparam>
+    /// <param name="mapper">AutoMapper instance.</param>
     /// <param name="sources">The sources.</param>
     /// <returns></returns>
-    /// <example>
+    /// <example><![CDATA[
     /// Retrieve the person, address and comment entities 
     /// and map them on to a person view model entity.
     /// 
@@ -148,7 +150,7 @@ public static class AutoMappingExtensions
     /// var comment = _personTasks.GetComment(personId);
     /// 
     /// var personViewModel = EntityMapper.Map<PersonViewModel>(person, address, comment);
-    /// </example>
+    /// ]]></example>
     public static T? MapMerge<T>(this IMapper mapper, params object?[]? sources) where T : class
     {
         // If there are no sources just return the destination object
@@ -174,6 +176,7 @@ public static class AutoMappingExtensions
     /// <summary>
     /// Maps the specified sources to the specified destination.
     /// </summary>
+    /// <param name="mapper"></param>
     /// <param name="destination">The destination.</param>
     /// <param name="sources">The sources.</param>
     private static void Map(IMapper mapper, object destination, params object?[] sources)
@@ -205,6 +208,7 @@ public static class AutoMappingExtensions
     /// Maps the specified source to the destination.
     /// </summary>
     /// <typeparam name="T">type of teh destination</typeparam>
+    /// <param name="mapper"></param>
     /// <param name="source">The source.</param>
     /// <returns></returns>
     private static T? Map<T>(IMapper mapper, object source) where T : class

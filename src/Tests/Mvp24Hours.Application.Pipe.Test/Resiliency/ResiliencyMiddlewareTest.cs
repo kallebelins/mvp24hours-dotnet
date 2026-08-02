@@ -56,7 +56,7 @@ public class ResiliencyMiddlewareTest
             OnDeadLettered = dl => captured = dl
         };
         var middleware = new DeadLetterPipelineMiddleware(store, options);
-        var message = PipeTestHelpers.CreateMessage();
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
 
         await middleware.ExecuteAsync(message, () => throw new InvalidOperationException("pipeline failed"));
 
@@ -70,7 +70,7 @@ public class ResiliencyMiddlewareTest
     {
         var store = new InMemoryDeadLetterStore();
         var middleware = new DeadLetterPipelineMiddleware(store, new DeadLetterOptions { DeadLetterOnFaulty = true });
-        var message = PipeTestHelpers.CreateMessage();
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
 
         await middleware.ExecuteAsync(message, () =>
         {
@@ -86,7 +86,7 @@ public class ResiliencyMiddlewareTest
     {
         var store = new InMemoryDeadLetterStore();
         var middleware = new DeadLetterPipelineMiddleware(store);
-        var message = PipeTestHelpers.CreateMessage();
+        IPipelineMessage message = PipeTestHelpers.CreateMessage();
 
         await middleware.ExecuteAsync(message, () => throw new RetryExhaustedException(3, new InvalidOperationException("inner")));
 
@@ -103,18 +103,15 @@ public class ResiliencyMiddlewareTest
             QueueLimit = 0
         });
 
-        var message = PipeTestHelpers.CreateMessage().WithCurrentOperation(new TestBulkheadOperation("test-bulkhead", 1, 0));
+        IPipelineMessage message = PipeTestHelpers.CreateMessage().WithCurrentOperation(new TestBulkheadOperation("test-bulkhead", 1, 0));
         var entered = new TaskCompletionSource();
         var release = new TaskCompletionSource();
 
-        Task first = Task.Run(async () =>
-        {
-            await middleware.ExecuteAsync(message, async () =>
+        var first = Task.Run(async () => await middleware.ExecuteAsync(message, async () =>
             {
                 entered.TrySetResult();
                 await release.Task;
-            });
-        });
+            }));
 
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
@@ -139,7 +136,7 @@ public class ResiliencyMiddlewareTest
             }
         };
         using var middleware = new RateLimitingPipelineMiddleware(provider, options);
-        var message = PipeTestHelpers.CreateMessage().WithCurrentOperation(new TestRateLimitedOperation());
+        IPipelineMessage message = PipeTestHelpers.CreateMessage().WithCurrentOperation(new TestRateLimitedOperation());
 
         await middleware.ExecuteAsync(message, () => Task.CompletedTask);
 

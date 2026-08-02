@@ -3,8 +3,10 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using DotNet.Testcontainers.Builders;
 using Mvp24Hours.Application.Integration.Test.Data;
 using Mvp24Hours.Application.Integration.Test.Services;
+using Mvp24Hours.Application.Integration.Test.Support;
 using Mvp24Hours.Extensions;
 using Testcontainers.MsSql;
 
@@ -17,63 +19,67 @@ namespace Mvp24Hours.Application.Integration.Test.Fixtures;
 public class SqlServerContainerFixture : IAsyncLifetime
 {
     private const string DatabaseName = "Mvp24HoursIntegrationTest";
-    private readonly MsSqlContainer _container;
-
-    public SqlServerContainerFixture()
-    {
-        _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
-            .WithPassword("YourStrong@Passw0rd!")
-            .WithEnvironment("ACCEPT_EULA", "Y")
-            .WithEnvironment("MSSQL_PID", "Developer")
-            .Build();
-    }
+    private MsSqlContainer? _container;
 
     public IServiceProvider ServiceProvider { get; private set; } = null!;
-    public string ConnectionString { get; private set; } = null!;
+    public string ConnectionString { get; private set; } = string.Empty;
+    public bool IsAvailable { get; private set; }
 
     public async Task InitializeAsync()
     {
-        // Start the SQL Server container
-        await _container.StartAsync();
-
-        // Build connection string with dedicated database
-        var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_container.GetConnectionString())
+        if (!DockerAvailability.IsAvailable)
         {
-            InitialCatalog = DatabaseName,
-            TrustServerCertificate = true
-        };
-        ConnectionString = builder.ConnectionString;
+            return;
+        }
 
-        // Configure services
-        var services = new ServiceCollection();
+        try
+        {
+            _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
+                .WithPassword("YourStrong@Passw0rd!")
+                .WithEnvironment("ACCEPT_EULA", "Y")
+                .WithEnvironment("MSSQL_PID", "Developer")
+                .Build();
 
-        // Add DbContext with SQL Server
-        services.AddDbContext<TestDbContext>(options =>
-            options.UseSqlServer(ConnectionString));
+            await _container.StartAsync().ConfigureAwait(false);
 
-        // Add Mvp24Hours EFCore integration
-        services.AddMvp24HoursDbContext<TestDbContext>();
-        services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
+            var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_container.GetConnectionString())
+            {
+                InitialCatalog = DatabaseName,
+                TrustServerCertificate = true
+            };
+            ConnectionString = builder.ConnectionString;
 
-        // Register services
-        services.AddScoped<ProductService>();
-        services.AddScoped<ProductPagingService>();
-        services.AddScoped<CategoryService>();
+            var services = new ServiceCollection();
+            services.AddDbContext<TestDbContext>(options =>
+                options.UseSqlServer(ConnectionString));
+            services.AddMvp24HoursDbContext<TestDbContext>();
+            services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
+            services.AddScoped<ProductService>();
+            services.AddScoped<ProductPagingService>();
+            services.AddScoped<CategoryService>();
 
-        ServiceProvider = services.BuildServiceProvider();
+            ServiceProvider = services.BuildServiceProvider();
 
-        // Ensure database is created
-        using IServiceScope scope = ServiceProvider.CreateScope();
-        TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-        await dbContext.Database.EnsureCreatedAsync();
+            using IServiceScope scope = ServiceProvider.CreateScope();
+            TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+            await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
+            IsAvailable = true;
+        }
+        catch (Exception ex) when (IsDockerUnavailable(ex))
+        {
+            IsAvailable = false;
+            ConnectionString = string.Empty;
+            ServiceProvider = new ServiceCollection().BuildServiceProvider();
+        }
     }
 
     public async Task DisposeAsync()
     {
-        // Simply stop and dispose container - no need to delete database
-        // as the container will be destroyed anyway
-        await _container.StopAsync();
-        await _container.DisposeAsync();
+        if (_container is not null)
+        {
+            await _container.StopAsync().ConfigureAwait(false);
+            await _container.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -81,6 +87,11 @@ public class SqlServerContainerFixture : IAsyncLifetime
     /// </summary>
     public IServiceScope CreateScope()
     {
+        if (!IsAvailable)
+        {
+            throw new InvalidOperationException(DockerAvailability.SkipReason);
+        }
+
         return ServiceProvider.CreateScope();
     }
 
@@ -89,13 +100,32 @@ public class SqlServerContainerFixture : IAsyncLifetime
     /// </summary>
     public async Task ClearDatabaseAsync()
     {
+        if (!IsAvailable)
+        {
+            return;
+        }
+
         using IServiceScope scope = ServiceProvider.CreateScope();
         TestDbContext dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 
-        // Remove all entities (order matters for foreign keys)
         dbContext.Products.RemoveRange(dbContext.Products);
         dbContext.Categories.RemoveRange(dbContext.Categories);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
+    }
+
+    private static bool IsDockerUnavailable(Exception ex)
+    {
+        if (ex is DockerUnavailableException)
+        {
+            return true;
+        }
+
+        if (ex is AggregateException aggregate)
+        {
+            return aggregate.Flatten().InnerExceptions.Any(static e => e is DockerUnavailableException);
+        }
+
+        return false;
     }
 }
 
@@ -106,4 +136,3 @@ public class SqlServerContainerFixture : IAsyncLifetime
 public class SqlServerCollectionDefinition : ICollectionFixture<SqlServerContainerFixture>
 {
 }
-

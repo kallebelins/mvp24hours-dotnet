@@ -105,7 +105,7 @@ public class EFCoreActivitySourceTest
     public void StartQueryActivity_WithLongSql_ShouldTruncateStatement()
     {
         using var listener = new FakeActivityListener(EFCoreActivitySource.SourceName);
-        string longSql = new string('x', 2500);
+        string longSql = new('x', 2500);
 
         using Activity? activity = EFCoreActivitySource.StartQueryActivity(longSql);
         string? statement = activity!.GetTagItem(EFCoreActivitySource.TagNames.DbStatement) as string;
@@ -120,10 +120,10 @@ public class EFCoreActivitySourceTest
     [Fact]
     public void SetSuccess_AndSetError_WithNullActivity_ShouldNotThrow()
     {
-        var success = () => EFCoreActivitySource.SetSuccess(null, 1);
-        var error = () => EFCoreActivitySource.SetError(null, new Exception("x"));
-        var context = () => EFCoreActivitySource.SetContext(null, "c");
-        var duration = () => EFCoreActivitySource.SetDuration(null, 1);
+        Action success = () => EFCoreActivitySource.SetSuccess(null, 1);
+        Action error = () => EFCoreActivitySource.SetError(null, new Exception("x"));
+        Action context = () => EFCoreActivitySource.SetContext(null, "c");
+        Action duration = () => EFCoreActivitySource.SetDuration(null, 1);
 
         success.Should().NotThrow();
         error.Should().NotThrow();

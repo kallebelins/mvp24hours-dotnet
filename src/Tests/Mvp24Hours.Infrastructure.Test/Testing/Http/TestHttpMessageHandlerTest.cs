@@ -48,7 +48,7 @@ public class TestHttpMessageHandlerTest
         HttpResponseMessage response = await client.GetAsync("https://api.example.com/item");
 
         string body = await response.Content.ReadAsStringAsync();
-        using JsonDocument doc = JsonDocument.Parse(body);
+        using var doc = JsonDocument.Parse(body);
         doc.RootElement.GetProperty("id").GetInt32().Should().Be(42);
         doc.RootElement.GetProperty("name").GetString().Should().Be("Test");
     }

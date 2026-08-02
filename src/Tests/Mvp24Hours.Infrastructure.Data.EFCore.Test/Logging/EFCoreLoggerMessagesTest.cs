@@ -13,7 +13,7 @@ public class EFCoreLoggerMessagesTest
     {
         ILogger logger = NullLogger.Instance;
 
-        var act = () =>
+        Action act = () =>
         {
             EFCoreLoggerMessages.QueryExecuted(logger, "GetAll", "Customer", 12);
             EFCoreLoggerMessages.SlowQueryDetected(logger, "GetAll", "Customer", 1500, 1000);
@@ -63,7 +63,7 @@ public class EFCoreLoggerMessagesTest
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(int) && f.Name.EndsWith("EventId"));
 
-        var values = eventIdFields.Select(f => (Name: f.Name, Value: (int)f.GetRawConstantValue()!)).ToList();
+        var values = eventIdFields.Select(f => (f.Name, Value: (int)f.GetRawConstantValue()!)).ToList();
 
         values.Should().NotBeEmpty();
         values.Select(v => v.Value).Should().OnlyHaveUniqueItems();

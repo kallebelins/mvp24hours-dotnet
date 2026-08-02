@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
@@ -10,7 +12,7 @@ public class TenantSaveChangesInterceptorTest
     [Fact]
     public void SaveChanges_OnAdd_SetsTenantIdFromProvider()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-abc");
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-abc");
         var options = new TenantInterceptorOptions
         {
             ValidateTenantOnAdd = false,
@@ -19,7 +21,7 @@ public class TenantSaveChangesInterceptorTest
         };
         var interceptor = new TenantSaveChangesInterceptor(tenantProvider.Object, options);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: builder =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: builder =>
             builder.AddInterceptors(interceptor));
 
         var entity = new TestTenantEntity { Name = "Tenant Item" };
@@ -32,16 +34,16 @@ public class TenantSaveChangesInterceptorTest
     [Fact]
     public void SaveChanges_OnModify_PreventTenantIdChange_KeepsOriginalTenantId()
     {
-        var tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-original");
+        Mock<ITenantProvider> tenantProvider = EfCoreTestHelpers.CreateTenantProvider("tenant-original");
         var options = new TenantInterceptorOptions
         {
             ValidateTenantOnAdd = false,
             ValidateTenantOnModify = false,
             PreventTenantIdChange = true
         };
-        var databaseName = $"Tenant_{Guid.NewGuid():N}";
+        string databaseName = $"Tenant_{Guid.NewGuid():N}";
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName, builder =>
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName, builder =>
                    builder.AddInterceptors(new TenantSaveChangesInterceptor(tenantProvider.Object, options))))
         {
             context.TenantEntities.Add(new TestTenantEntity { Name = "Item", TenantId = "tenant-original" });
@@ -50,18 +52,18 @@ public class TenantSaveChangesInterceptorTest
 
         tenantProvider.Setup(x => x.TenantId).Returns("tenant-other");
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName, builder =>
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName, builder =>
                    builder.AddInterceptors(new TenantSaveChangesInterceptor(tenantProvider.Object, options))))
         {
-            var entity = context.TenantEntities.Single();
+            TestTenantEntity entity = context.TenantEntities.Single();
             entity.Name = "Updated";
             entity.TenantId = "tenant-other";
             context.SaveChanges();
         }
 
-        using (var context = EfCoreTestHelpers.CreateContext(databaseName))
+        using (TestDbContext context = EfCoreTestHelpers.CreateContext(databaseName))
         {
-            var entity = context.TenantEntities.Single();
+            TestTenantEntity entity = context.TenantEntities.Single();
             entity.TenantId.Should().Be("tenant-original");
             entity.Name.Should().Be("Updated");
         }

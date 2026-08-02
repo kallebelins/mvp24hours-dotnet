@@ -62,7 +62,7 @@ public class ExtensionsSmokeTest
     [Fact]
     public void ApplicationBuilderExtensions_Should_ReturnBuilderForSecurityPipeline()
     {
-        var app = CreateAppBuilder();
+        IApplicationBuilder app = CreateAppBuilder();
 
         IApplicationBuilder result = app
             .UseMvp24HoursSecurityHeaders()
@@ -77,7 +77,7 @@ public class ExtensionsSmokeTest
     [Fact]
     public void ApplicationBuilderExtensions_Should_ReturnBuilderForObservabilityPipeline()
     {
-        var app = CreateAppBuilder();
+        IApplicationBuilder app = CreateAppBuilder();
 
         IApplicationBuilder result = app
             .UseMvp24HoursRequestContext()
@@ -90,7 +90,7 @@ public class ExtensionsSmokeTest
     [Fact]
     public void ApplicationBuilderExtensions_Should_AddProblemDetailsAndRateLimiting()
     {
-        var app = CreateAppBuilder();
+        IApplicationBuilder app = CreateAppBuilder();
 
         IApplicationBuilder result = app
             .UseMvp24HoursProblemDetails()

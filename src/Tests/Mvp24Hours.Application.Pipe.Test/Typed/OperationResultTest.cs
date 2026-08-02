@@ -29,7 +29,7 @@ public class OperationResultTest
     [Fact, Priority(2)]
     public void OperationResult_Success_WithMessages_ShouldIncludeMessages()
     {
-        var msgs = new[] { new MessageResult("info msg", Core.Enums.MessageType.Info) };
+        MessageResult[] msgs = [new MessageResult("info msg", Core.Enums.MessageType.Info)];
 
         IOperationResult<string> result = OperationResult<string>.Success("hello", msgs);
 
@@ -63,11 +63,11 @@ public class OperationResultTest
     [Fact, Priority(5)]
     public void OperationResult_Failure_FromMessages_ShouldContainAll()
     {
-        var msgs = new[]
-        {
+        MessageResult[] msgs =
+        [
             new MessageResult("err1", Core.Enums.MessageType.Error),
             new MessageResult("err2", Core.Enums.MessageType.Error)
-        };
+        ];
 
         IOperationResult<int> result = OperationResult<int>.Failure(msgs);
 

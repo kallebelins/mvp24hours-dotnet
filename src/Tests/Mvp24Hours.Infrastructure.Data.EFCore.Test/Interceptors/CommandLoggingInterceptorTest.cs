@@ -12,11 +12,11 @@ public class CommandLoggingInterceptorTest
     {
         var interceptor = new CommandLoggingInterceptor();
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         context.Entities.Add(new TestEntity { Name = "Logged" });
-        var act = () => context.SaveChanges();
+        Func<int> act = () => context.SaveChanges();
 
         act.Should().NotThrow();
     }
@@ -26,11 +26,11 @@ public class CommandLoggingInterceptorTest
     {
         var interceptor = new CommandLoggingInterceptor(NullLogger.Instance, logAllQueries: false);
 
-        using var context = EfCoreTestHelpers.CreateContext(configure: options =>
+        using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
             options.AddInterceptors(interceptor));
 
         context.Entities.Add(new TestEntity { Name = "Logged" });
-        var act = () => context.SaveChanges();
+        Func<int> act = () => context.SaveChanges();
 
         act.Should().NotThrow();
     }

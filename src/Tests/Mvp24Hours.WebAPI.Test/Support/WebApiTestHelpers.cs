@@ -40,9 +40,14 @@ internal static class WebApiTestHelpers
     }
 
     public static IOptions<T> CreateOptions<T>(T value) where T : class
-        => Options.Create(value);
+    {
+        return Options.Create(value);
+    }
 
-    public static ILogger<T> CreateNullLogger<T>() => NullLogger<T>.Instance;
+    public static ILogger<T> CreateNullLogger<T>()
+    {
+        return NullLogger<T>.Instance;
+    }
 
     public static async Task<string> ReadResponseBodyAsync(HttpContext context)
     {
@@ -102,7 +107,7 @@ internal static class WebApiTestHelpers
 
         return new ActionExecutingContext(
             context,
-            new List<IFilterMetadata>(),
+            [],
             new Dictionary<string, object?>(),
             controller: new object());
     }
@@ -118,7 +123,7 @@ internal static class WebApiTestHelpers
 
         return new ResultExecutingContext(
             actionContext,
-            new List<IFilterMetadata>(),
+            [],
             result,
             controller: new object());
     }
@@ -134,7 +139,7 @@ internal static class WebApiTestHelpers
 
         return new ResultExecutedContext(
             actionContext,
-            new List<IFilterMetadata>(),
+            [],
             result,
             controller: new object());
     }
@@ -181,12 +186,35 @@ internal static class WebApiTestHelpers
     {
         var queryDict = new Dictionary<string, StringValues>();
 
-        if (limit != null) queryDict["limit"] = limit;
-        if (offset != null) queryDict["offset"] = offset;
-        if (pageSize != null) queryDict["pageSize"] = pageSize;
-        if (page != null) queryDict["page"] = page;
-        if (orderBy != null) queryDict["orderBy"] = orderBy;
-        if (navigation != null) queryDict["navigation"] = navigation;
+        if (limit != null)
+        {
+            queryDict["limit"] = limit;
+        }
+
+        if (offset != null)
+        {
+            queryDict["offset"] = offset;
+        }
+
+        if (pageSize != null)
+        {
+            queryDict["pageSize"] = pageSize;
+        }
+
+        if (page != null)
+        {
+            queryDict["page"] = page;
+        }
+
+        if (orderBy != null)
+        {
+            queryDict["orderBy"] = orderBy;
+        }
+
+        if (navigation != null)
+        {
+            queryDict["navigation"] = navigation;
+        }
 
         var metadataProvider = new EmptyModelMetadataProvider();
         ModelMetadata metadata = metadataProvider.GetMetadataForType(modelType ?? typeof(Mvp24Hours.Core.ValueObjects.Logic.PagingCriteria));
@@ -215,17 +243,22 @@ internal static class WebApiTestHelpers
 internal sealed class StubDelegatingHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> handler) : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        => handler(request);
+    {
+        return handler(request);
+    }
 }
 
 internal sealed class TestEndpointFilterInvocationContext(HttpContext httpContext, params object?[] args)
     : EndpointFilterInvocationContext
 {
-    private readonly IList<object?> _arguments = args.ToList();
+    private readonly IList<object?> _arguments = [.. args];
 
     public override HttpContext HttpContext { get; } = httpContext;
 
     public override IList<object?> Arguments => _arguments;
 
-    public override T GetArgument<T>(int index) => (T)_arguments[index]!;
+    public override T GetArgument<T>(int index)
+    {
+        return (T)_arguments[index]!;
+    }
 }

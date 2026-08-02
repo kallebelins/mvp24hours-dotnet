@@ -45,7 +45,7 @@ public class DomainToIntegrationEventExtensionsTest
 
         // Assert
         Assert.NotNull(result);
-        var typed = Assert.IsType<UserRegisteredIntegrationEvent>(result);
+        UserRegisteredIntegrationEvent typed = Assert.IsType<UserRegisteredIntegrationEvent>(result);
         Assert.Equal(42, typed.UserId);
         Assert.Equal("user@test.com", typed.Email);
     }

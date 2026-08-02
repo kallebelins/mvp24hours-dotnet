@@ -48,6 +48,7 @@ public class CheckpointablePipeline<TState> where TState : class, new()
     /// <param name="pipelineName">Name of the pipeline.</param>
     /// <param name="checkpointStore">Store for persisting checkpoints.</param>
     /// <param name="options">Checkpoint options.</param>
+    /// <param name="logger"></param>
     public CheckpointablePipeline(
         string pipelineName,
         ICheckpointStore checkpointStore,

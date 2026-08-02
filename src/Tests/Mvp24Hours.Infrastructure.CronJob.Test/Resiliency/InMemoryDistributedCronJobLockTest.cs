@@ -161,7 +161,7 @@ public class InMemoryDistributedCronJobLockTest
     [Fact]
     public void CronJobResilienceConfig_Default_ShouldDisableRetryAndCircuitBreaker()
     {
-        CronJobResilienceConfig<object> config = CronJobResilienceConfig<object>.Default();
+        var config = CronJobResilienceConfig<object>.Default();
 
         config.EnableRetry.Should().BeFalse();
         config.EnableCircuitBreaker.Should().BeFalse();
@@ -187,7 +187,7 @@ public class InMemoryDistributedCronJobLockTest
     [Fact]
     public void CronJobResilienceConfig_FullResilience_ShouldEnableAllFeatures()
     {
-        CronJobResilienceConfig<object> config = CronJobResilienceConfig<object>.FullResilience();
+        var config = CronJobResilienceConfig<object>.FullResilience();
 
         config.EnableRetry.Should().BeTrue();
         config.EnableCircuitBreaker.Should().BeTrue();

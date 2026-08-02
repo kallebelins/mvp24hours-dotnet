@@ -28,7 +28,7 @@ public class PerformanceAttributesTest
     [Fact]
     public void MongoIndexType_HasExpectedCount()
     {
-        var values = Enum.GetValues<MongoIndexType>();
+        MongoIndexType[] values = Enum.GetValues<MongoIndexType>();
         Assert.Equal(7, values.Length);
     }
 
@@ -97,7 +97,7 @@ public class PerformanceAttributesTest
     [Fact]
     public void MongoIndexAttribute_AllowsOnlyOnProperty()
     {
-        var usageAttr = typeof(MongoIndexAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(MongoIndexAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -151,7 +151,7 @@ public class PerformanceAttributesTest
     [Fact]
     public void MongoTtlIndexAttribute_AllowsOnlyOnProperty()
     {
-        var usageAttr = typeof(MongoTtlIndexAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(MongoTtlIndexAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();
@@ -220,7 +220,7 @@ public class PerformanceAttributesTest
     [Fact]
     public void MongoCompoundIndexAttribute_AllowsOnClass_AndMultiple()
     {
-        var usageAttr = typeof(MongoCompoundIndexAttribute)
+        AttributeUsageAttribute? usageAttr = typeof(MongoCompoundIndexAttribute)
             .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>()
             .FirstOrDefault();

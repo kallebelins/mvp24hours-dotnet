@@ -53,7 +53,7 @@ public class ReadWriteDbContextTest
 
     private static TestReadDbContext CreateReadContext()
     {
-        var options = new DbContextOptionsBuilder<TestReadDbContext>()
+        DbContextOptions<TestReadDbContext> options = new DbContextOptionsBuilder<TestReadDbContext>()
             .UseInMemoryDatabase($"ReadCtx_{Guid.NewGuid():N}")
             .Options;
         var context = new TestReadDbContext(options);
@@ -63,7 +63,7 @@ public class ReadWriteDbContextTest
 
     private static TestWriteDbContext CreateWriteContext()
     {
-        var options = new DbContextOptionsBuilder<TestWriteDbContext>()
+        DbContextOptions<TestWriteDbContext> options = new DbContextOptionsBuilder<TestWriteDbContext>()
             .UseInMemoryDatabase($"WriteCtx_{Guid.NewGuid():N}")
             .Options;
         var context = new TestWriteDbContext(options);
@@ -71,23 +71,13 @@ public class ReadWriteDbContextTest
         return context;
     }
 
-    private sealed class TestReadDbContext : ReadDbContextBase
+    private sealed class TestReadDbContext(DbContextOptions options) : ReadDbContextBase(options)
     {
-        public TestReadDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         public DbSet<TestEntity> Entities => Set<TestEntity>();
     }
 
-    private sealed class TestWriteDbContext : WriteDbContextBase
+    private sealed class TestWriteDbContext(DbContextOptions options) : WriteDbContextBase(options)
     {
-        public TestWriteDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         public DbSet<TestEntity> Entities => Set<TestEntity>();
     }
 }

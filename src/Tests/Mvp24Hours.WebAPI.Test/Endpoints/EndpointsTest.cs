@@ -3,6 +3,7 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
@@ -23,12 +24,12 @@ public class EndpointsTest
         services.AddSingleton<IValidator<CreateOrderRequest>, FailingOrderValidator>();
         HttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.RequestServices = services.BuildServiceProvider();
-        var invocation = WebApiTestHelpers.CreateEndpointFilterContext(context, new CreateOrderRequest(""));
+        EndpointFilterInvocationContext invocation = WebApiTestHelpers.CreateEndpointFilterContext(context, new CreateOrderRequest(""));
         var sut = new ValidationEndpointFilter<CreateOrderRequest>();
 
         object? result = await sut.InvokeAsync(invocation, _ => ValueTask.FromResult<object?>("ok"));
 
-            result.Should().BeOfType<ProblemHttpResult>();
+        result.Should().BeOfType<ProblemHttpResult>();
     }
 
     [Fact]
@@ -38,7 +39,7 @@ public class EndpointsTest
         services.AddSingleton<IValidator<CreateOrderRequest>, PassingOrderValidator>();
         HttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.RequestServices = services.BuildServiceProvider();
-        var invocation = WebApiTestHelpers.CreateEndpointFilterContext(context, new CreateOrderRequest("ok"));
+        EndpointFilterInvocationContext invocation = WebApiTestHelpers.CreateEndpointFilterContext(context, new CreateOrderRequest("ok"));
         var sut = new ValidationEndpointFilter<CreateOrderRequest>();
 
         object? result = await sut.InvokeAsync(invocation, _ => ValueTask.FromResult<object?>("next-called"));
@@ -91,9 +92,9 @@ public class EndpointsTest
     [Fact]
     public void EndpointGroupExtensions_Should_CreateApiGroup()
     {
-        var app = WebApplication.CreateBuilder().Build();
+        WebApplication app = WebApplication.CreateBuilder().Build();
 
-        var group = app.MapMvpApiGroup("/api/orders", "Orders", requireAuthorization: false);
+        RouteGroupBuilder group = app.MapMvpApiGroup("/api/orders", "Orders", requireAuthorization: false);
 
         group.Should().NotBeNull();
     }
@@ -101,7 +102,7 @@ public class EndpointsTest
     [Fact]
     public void EndpointGroupExtensions_Should_Throw_WhenPrefixIsEmpty()
     {
-        var app = WebApplication.CreateBuilder().Build();
+        WebApplication app = WebApplication.CreateBuilder().Build();
 
         Action act = () => app.MapMvpGroup("", null);
 

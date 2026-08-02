@@ -39,7 +39,10 @@ internal static class HealthChecksTestHelpers
         };
     }
 
-    public static ILogger<T> CreateLogger<T>() => NullLogger<T>.Instance;
+    public static ILogger<T> CreateLogger<T>()
+    {
+        return NullLogger<T>.Instance;
+    }
 
     public static InMemoryFileStorageProvider CreateInMemoryStorage()
     {

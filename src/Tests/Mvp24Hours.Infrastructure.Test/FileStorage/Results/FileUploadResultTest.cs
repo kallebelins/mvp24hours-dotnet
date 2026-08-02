@@ -19,7 +19,7 @@ public class FileUploadResultTest
         DateTimeOffset uploadedAt = new(2024, 5, 10, 12, 0, 0, TimeSpan.Zero);
         IFileMetadata metadata = CreateMetadata();
 
-        FileUploadResult result = FileUploadResult.Successful("docs/file.txt", metadata, uploadedAt);
+        var result = FileUploadResult.Successful("docs/file.txt", metadata, uploadedAt);
 
         result.Success.Should().BeTrue();
         result.IsFailure.Should().BeFalse();
@@ -46,7 +46,7 @@ public class FileUploadResultTest
         DateTimeOffset uploadedAt = new(2024, 5, 10, 12, 0, 0, TimeSpan.Zero);
         InvalidOperationException exception = new("inner failure");
 
-        FileUploadResult result = FileUploadResult.Failed("upload failed", exception, uploadedAt);
+        var result = FileUploadResult.Failed("upload failed", exception, uploadedAt);
 
         result.Success.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -72,7 +72,7 @@ public class FileUploadResultTest
     {
         InvalidOperationException exception = new("disk full");
 
-        FileUploadResult result = FileUploadResult.Failed(exception);
+        var result = FileUploadResult.Failed(exception);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("disk full");

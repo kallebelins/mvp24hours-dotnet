@@ -1,7 +1,7 @@
 using System.Net;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.Enums;
+using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Core.Test.Exceptions;
@@ -33,8 +33,8 @@ public class ExceptionsTest
     [Fact]
     public void UnauthorizedException_FactoryMethods_SetExpectedMessages()
     {
-        UnauthorizedException expired = UnauthorizedException.TokenExpired();
-        UnauthorizedException invalid = UnauthorizedException.InvalidCredentials();
+        var expired = UnauthorizedException.TokenExpired();
+        var invalid = UnauthorizedException.InvalidCredentials();
 
         expired.AuthenticationScheme.Should().Be("Bearer");
         expired.Message.Should().Contain("expired");
@@ -44,8 +44,8 @@ public class ExceptionsTest
     [Fact]
     public void ForbiddenException_FactoryMethods_SetMetadata()
     {
-        ForbiddenException missingRole = ForbiddenException.MissingRole("Admin");
-        ForbiddenException notOwner = ForbiddenException.NotOwner<SampleEntity>(99);
+        var missingRole = ForbiddenException.MissingRole("Admin");
+        var notOwner = ForbiddenException.NotOwner<SampleEntity>(99);
 
         missingRole.RequiredPermission.Should().Be("Admin");
         notOwner.ResourceName.Should().Be(nameof(SampleEntity));
@@ -63,8 +63,8 @@ public class ExceptionsTest
     [Fact]
     public void ConflictException_FactoryMethods_SetConflictDetails()
     {
-        ConflictException duplicate = ConflictException.Duplicate<SampleEntity>("Code", "ABC");
-        ConflictException concurrency = ConflictException.ConcurrencyConflict<SampleEntity>(1);
+        var duplicate = ConflictException.Duplicate<SampleEntity>("Code", "ABC");
+        var concurrency = ConflictException.ConcurrencyConflict<SampleEntity>(1);
 
         duplicate.PropertyName.Should().Be("Code");
         concurrency.PropertyName.Should().Be("Version");
@@ -73,8 +73,8 @@ public class ExceptionsTest
     [Fact]
     public void DomainException_FactoryMethods_SetRuleNames()
     {
-        DomainException transition = DomainException.InvalidStateTransition<SampleEntity>("Pending", "Shipped");
-        DomainException rule = DomainException.RuleViolation<SampleEntity>("Amount must be positive");
+        var transition = DomainException.InvalidStateTransition<SampleEntity>("Pending", "Shipped");
+        var rule = DomainException.RuleViolation<SampleEntity>("Amount must be positive");
 
         transition.RuleName.Should().Be("INVALID_STATE_TRANSITION");
         rule.EntityName.Should().Be(nameof(SampleEntity));

@@ -24,8 +24,8 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNullRequest_ShouldThrowArgumentNullException()
     {
-        var handler = CreateHandler(TimeSpan.FromSeconds(1));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler);
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromSeconds(1));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler);
 
         Func<Task> act = () => client.SendAsync(null!);
 
@@ -35,12 +35,12 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenDisabled_ShouldPassThroughWithoutTimeout()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(50));
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(50));
         var handler = new TimeoutDelegatingHandler(
             NullLogger<TimeoutDelegatingHandler>.Instance,
             TimeSpan.FromMilliseconds(10),
             enabled: false);
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -50,9 +50,9 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenRequestCompletesInTime_ShouldReturnResponse()
     {
-        var inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
-        var handler = CreateHandler(TimeSpan.FromSeconds(5));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        TestHttpMessageHandler inner = new TestHttpMessageHandler().RespondWith(HttpStatusCode.OK);
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromSeconds(5));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         HttpResponseMessage response = await client.GetAsync("/resource");
 
@@ -62,9 +62,9 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WhenDefaultTimeoutExceeded_ShouldThrowHttpRequestTimeoutException()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromSeconds(5));
-        var handler = CreateHandler(TimeSpan.FromMilliseconds(30));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromSeconds(5));
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromMilliseconds(30));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         Func<Task> act = () => client.GetAsync("/resource");
 
@@ -77,9 +77,9 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithPerRequestTimeout_ShouldOverrideDefault()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(80));
-        var handler = CreateHandler(TimeSpan.FromMilliseconds(20));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(80));
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromMilliseconds(20));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/resource");
         request.SetTimeout(TimeSpan.FromSeconds(2));
@@ -92,9 +92,9 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithNoTimeout_ShouldPassThrough()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(40));
-        var handler = CreateHandler(TimeSpan.FromMilliseconds(10));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(40));
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromMilliseconds(10));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/resource");
         request.NoTimeout();
@@ -107,9 +107,9 @@ public class TimeoutDelegatingHandlerTest
     [Fact]
     public async Task SendAsync_WithClearTimeout_ShouldUseInfiniteTimeout()
     {
-        var inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(40));
-        var handler = CreateHandler(TimeSpan.FromMilliseconds(10));
-        using var client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
+        HttpMessageHandler inner = DelegatingHandlerTestHelpers.CreateDelayedHandler(TimeSpan.FromMilliseconds(40));
+        TimeoutDelegatingHandler handler = CreateHandler(TimeSpan.FromMilliseconds(10));
+        using HttpClient client = DelegatingHandlerTestHelpers.CreateClient(handler, inner);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/resource");
         request.ClearTimeout();

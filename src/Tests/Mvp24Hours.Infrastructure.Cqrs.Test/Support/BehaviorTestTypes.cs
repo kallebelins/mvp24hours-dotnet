@@ -17,7 +17,9 @@ public class AuthorizedAdminCommand : IMediatorCommand<string>, IAuthorized
 public class AuthorizedAdminCommandHandler : IMediatorCommandHandler<AuthorizedAdminCommand, string>
 {
     public Task<string> Handle(AuthorizedAdminCommand request, CancellationToken cancellationToken)
-        => Task.FromResult("admin-ok");
+    {
+        return Task.FromResult("admin-ok");
+    }
 }
 
 public class RestrictedCommand : IMediatorCommand<string>, IAuthorized
@@ -30,7 +32,9 @@ public class RestrictedCommand : IMediatorCommand<string>, IAuthorized
 public class RestrictedCommandHandler : IMediatorCommandHandler<RestrictedCommand, string>
 {
     public Task<string> Handle(RestrictedCommand request, CancellationToken cancellationToken)
-        => Task.FromResult("restricted-ok");
+    {
+        return Task.FromResult("restricted-ok");
+    }
 }
 
 public class CacheableTestQuery : IMediatorQuery<string>, ICacheable
@@ -59,7 +63,9 @@ public class CacheInvalidatingCommand : IMediatorCommand<string>, ICacheInvalida
 public class CacheInvalidatingCommandHandler : IMediatorCommandHandler<CacheInvalidatingCommand, string>
 {
     public Task<string> Handle(CacheInvalidatingCommand request, CancellationToken cancellationToken)
-        => Task.FromResult("invalidated");
+    {
+        return Task.FromResult("invalidated");
+    }
 }
 
 public class RetryTestCommand : IMediatorCommand<string>, IRetryable

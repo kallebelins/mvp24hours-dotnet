@@ -46,7 +46,7 @@ public class ActivityExtensionsTest
 
         try
         {
-            using Activity activity = new Activity("unit-test");
+            using var activity = new Activity("unit-test");
             activity.Start();
 
             activity.GetTraceId().Should().Be(activity.TraceId.ToHexString());
@@ -66,10 +66,10 @@ public class ActivityExtensionsTest
 
         try
         {
-            using Activity parent = new Activity("parent");
+            using var parent = new Activity("parent");
             parent.Start();
 
-            using Activity child = new Activity("child");
+            using var child = new Activity("child");
             child.SetParentId(parent.Id!);
             child.Start();
 
@@ -89,7 +89,7 @@ public class ActivityExtensionsTest
 
         try
         {
-            using Activity activity = new Activity("hierarchical-test");
+            using var activity = new Activity("hierarchical-test");
             activity.Start();
 
             activity.GetTraceId().Should().Be(activity.RootId);
@@ -109,10 +109,10 @@ public class ActivityExtensionsTest
 
         try
         {
-            using Activity parent = new Activity("parent");
+            using var parent = new Activity("parent");
             parent.Start();
 
-            using Activity child = new Activity("child");
+            using var child = new Activity("child");
             child.SetParentId(parent.Id!);
             child.Start();
 

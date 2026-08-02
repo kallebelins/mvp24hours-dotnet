@@ -32,16 +32,24 @@ internal static class HelpersTestHelpers
     }
 
     public static byte[] ExportCertificateBytes(X509Certificate2 certificate)
-        => certificate.Export(X509ContentType.Cert);
+    {
+        return certificate.Export(X509ContentType.Cert);
+    }
 
     public static byte[] ExportPfxBytes(X509Certificate2 certificate, string password)
-        => certificate.Export(X509ContentType.Pfx, password);
+    {
+        return certificate.Export(X509ContentType.Pfx, password);
+    }
 
     public static string ExportCertificateBase64(X509Certificate2 certificate)
-        => Convert.ToBase64String(ExportCertificateBytes(certificate));
+    {
+        return Convert.ToBase64String(ExportCertificateBytes(certificate));
+    }
 
     public static string ExportPfxBase64(X509Certificate2 certificate, string password)
-        => Convert.ToBase64String(ExportPfxBytes(certificate, password));
+    {
+        return Convert.ToBase64String(ExportPfxBytes(certificate, password));
+    }
 
     public sealed class TempDirectory : IDisposable
     {

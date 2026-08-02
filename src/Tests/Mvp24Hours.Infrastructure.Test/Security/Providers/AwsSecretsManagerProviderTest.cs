@@ -130,5 +130,7 @@ public class AwsSecretsManagerProviderTest
     }
 
     private static AwsSecretsManagerProvider CreateProvider()
-        => new(SecurityTestHelpers.CreateAwsOptions());
+    {
+        return new(SecurityTestHelpers.CreateAwsOptions());
+    }
 }

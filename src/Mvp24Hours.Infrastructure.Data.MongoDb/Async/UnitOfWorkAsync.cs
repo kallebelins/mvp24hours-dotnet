@@ -22,7 +22,7 @@ public class UnitOfWorkAsync : IUnitOfWorkAsync
     /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
     /// </summary>
     /// <param name="dbContext">MongoDB context.</param>
-    /// <param name="repositories">Dictionary of repositories.</param>
+    /// <param name="_repositories"></param>
     /// <param name="logger">Optional logger instance.</param>
     public UnitOfWorkAsync(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWorkAsync>? logger = null)
     {
@@ -36,8 +36,8 @@ public class UnitOfWorkAsync : IUnitOfWorkAsync
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitOfWorkAsync"/> class.
     /// </summary>
-    /// <param name="dbContext">MongoDB context.</param>
-    /// <param name="serviceProvider">Service provider for resolving repositories.</param>
+    /// <param name="_dbContext"></param>
+    /// <param name="_serviceProvider"></param>
     /// <param name="logger">Optional logger instance.</param>
     [ActivatorUtilitiesConstructor]
     public UnitOfWorkAsync(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWorkAsync>? logger = null)

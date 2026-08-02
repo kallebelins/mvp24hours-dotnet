@@ -120,7 +120,7 @@ internal static class EmailTestHelpers
             .ReturnsAsync(result ?? EmailSendResult.Successful("mock-msg-id"));
         mock.Setup(s => s.SendBatchAsync(It.IsAny<IEnumerable<EmailMessage>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IEnumerable<EmailMessage> messages, CancellationToken _) =>
-                messages.Select(_ => result ?? EmailSendResult.Successful("mock-msg-id")).ToList());
+                [.. messages.Select(_ => result ?? EmailSendResult.Successful("mock-msg-id"))]);
         return mock;
     }
 

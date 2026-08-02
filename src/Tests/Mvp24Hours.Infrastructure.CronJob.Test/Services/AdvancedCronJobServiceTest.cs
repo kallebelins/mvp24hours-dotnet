@@ -46,10 +46,7 @@ public class AdvancedCronJobServiceTest
     [Fact]
     public async Task DoWork_ShouldSkip_WhenJobIsPaused()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            RegisterEventHandler(services, new RecordingCronJobEventHandler());
-        });
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => RegisterEventHandler(services, new RecordingCronJobEventHandler()));
 
         ICronJobStateStore stateStore = serviceProvider.GetRequiredService<ICronJobStateStore>();
         await stateStore.SetPausedAsync(nameof(TestAdvancedCronJob), true);
@@ -92,9 +89,7 @@ public class AdvancedCronJobServiceTest
     [Fact]
     public async Task DoWork_ShouldRun_WhenDependenciesAreSatisfied()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            services.AddSingleton<ICronJobDependencyTracker>(sp =>
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => services.AddSingleton<ICronJobDependencyTracker>(sp =>
             {
                 var tracker = new InMemoryCronJobDependencyTracker();
                 tracker.RegisterDependency(new CronJobDependency(
@@ -102,8 +97,7 @@ public class AdvancedCronJobServiceTest
                     ["PrerequisiteJob"]));
                 tracker.RecordCompletionAsync("PrerequisiteJob", true, Guid.NewGuid()).GetAwaiter().GetResult();
                 return tracker;
-            });
-        });
+            }));
 
         TestAdvancedCronJob job = CronJobTestHelpers.CreateAdvancedJob(serviceProvider);
 
@@ -116,10 +110,7 @@ public class AdvancedCronJobServiceTest
     public async Task DoWork_ShouldSkip_WhenDistributedLockUnavailable()
     {
         ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(
-            configure: services =>
-            {
-                RegisterEventHandler(services, new RecordingCronJobEventHandler());
-            },
+            configure: services => RegisterEventHandler(services, new RecordingCronJobEventHandler()),
             useDistributedLocking: true);
 
         IDistributedCronJobLock distributedLock = serviceProvider.GetRequiredService<IDistributedCronJobLock>();
@@ -160,10 +151,7 @@ public class AdvancedCronJobServiceTest
     [Fact]
     public async Task DoWork_ShouldDispatchLifecycleEvents()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            RegisterEventHandler(services, new RecordingCronJobEventHandler());
-        });
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => RegisterEventHandler(services, new RecordingCronJobEventHandler()));
 
         RecordingCronJobEventHandler handler = serviceProvider.GetRequiredService<RecordingCronJobEventHandler>();
         TestAdvancedCronJob job = CronJobTestHelpers.CreateAdvancedJob(serviceProvider);
@@ -176,10 +164,7 @@ public class AdvancedCronJobServiceTest
     [Fact]
     public async Task DoWork_ShouldClearContextAfterExecution()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            services.AddSingleton<ICronJobContextAccessor, CronJobContextAccessor>();
-        });
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => services.AddSingleton<ICronJobContextAccessor, CronJobContextAccessor>());
 
         ICronJobContextAccessor accessor = serviceProvider.GetRequiredService<ICronJobContextAccessor>();
         TestAdvancedCronJob job = CronJobTestHelpers.CreateAdvancedJob(serviceProvider);
@@ -192,17 +177,14 @@ public class AdvancedCronJobServiceTest
     [Fact]
     public async Task DoWork_ShouldRecordDependencyCompletionOnSuccess()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            services.AddSingleton<ICronJobDependencyTracker>(sp =>
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => services.AddSingleton<ICronJobDependencyTracker>(sp =>
             {
                 var tracker = new InMemoryCronJobDependencyTracker();
                 tracker.RegisterDependency(new CronJobDependency(
                     "ConsumerJob",
                     [nameof(TestAdvancedCronJob)]));
                 return tracker;
-            });
-        });
+            }));
 
         ICronJobDependencyTracker tracker = serviceProvider.GetRequiredService<ICronJobDependencyTracker>();
         TestAdvancedCronJob job = CronJobTestHelpers.CreateAdvancedJob(serviceProvider);

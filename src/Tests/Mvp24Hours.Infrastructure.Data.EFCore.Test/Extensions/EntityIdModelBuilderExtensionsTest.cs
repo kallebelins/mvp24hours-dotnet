@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mvp24Hours.Core.ValueObjects;
 using Mvp24Hours.Extensions;
 
@@ -10,23 +11,23 @@ public class EntityIdModelBuilderExtensionsTest
     [Fact]
     public void HasGuidEntityIdConversion_RoundTripsWithInMemory()
     {
-        var databaseName = $"EntityId_Guid_{Guid.NewGuid():N}";
+        string databaseName = $"EntityId_Guid_{Guid.NewGuid():N}";
         var id = CustomerId.New();
 
-        using (var context = CreateGuidConversionContext(databaseName))
+        using (GuidConversionDbContext context = CreateGuidConversionContext(databaseName))
         {
             context.Customers.Add(new CustomerWithGuidId { Id = id, Name = "Acme" });
             context.SaveChanges();
         }
 
-        using (var context = CreateGuidConversionContext(databaseName))
+        using (GuidConversionDbContext context = CreateGuidConversionContext(databaseName))
         {
-            var entity = context.Customers.Single();
+            CustomerWithGuidId entity = context.Customers.Single();
 
             entity.Id.Should().Be(id);
             entity.Name.Should().Be("Acme");
 
-            var converter = context.Model
+            ValueConverter? converter = context.Model
                 .FindEntityType(typeof(CustomerWithGuidId))!
                 .FindProperty(nameof(CustomerWithGuidId.Id))!
                 .GetValueConverter();
@@ -40,28 +41,28 @@ public class EntityIdModelBuilderExtensionsTest
     [Fact]
     public void ApplyStronglyTypedIdConversions_ConfiguresConvertersWithoutThrowing()
     {
-        var databaseName = $"EntityId_Apply_{Guid.NewGuid():N}";
+        string databaseName = $"EntityId_Apply_{Guid.NewGuid():N}";
         var customerId = CustomerId.New();
         var orderId = OrderId.New();
 
-        using (var context = CreateAutoConversionContext(databaseName))
+        using (AutoConversionDbContext context = CreateAutoConversionContext(databaseName))
         {
             context.Customers.Add(new CustomerWithGuidId { Id = customerId, Name = "Auto" });
             context.Orders.Add(new OrderWithGuidId { Id = orderId, CustomerName = "Buyer" });
             context.SaveChanges();
         }
 
-        using (var context = CreateAutoConversionContext(databaseName))
+        using (AutoConversionDbContext context = CreateAutoConversionContext(databaseName))
         {
             context.Customers.Single().Id.Should().Be(customerId);
             context.Orders.Single().Id.Should().Be(orderId);
 
-            var customerConverter = context.Model
+            ValueConverter? customerConverter = context.Model
                 .FindEntityType(typeof(CustomerWithGuidId))!
                 .FindProperty(nameof(CustomerWithGuidId.Id))!
                 .GetValueConverter();
 
-            var orderConverter = context.Model
+            ValueConverter? orderConverter = context.Model
                 .FindEntityType(typeof(OrderWithGuidId))!
                 .FindProperty(nameof(OrderWithGuidId.Id))!
                 .GetValueConverter();
@@ -76,14 +77,14 @@ public class EntityIdModelBuilderExtensionsTest
     [Fact]
     public void ApplyStronglyTypedIdConversions_OnEntityBuilder_ConfiguresConverter()
     {
-        var options = new DbContextOptionsBuilder<EntityBuilderConversionDbContext>()
+        DbContextOptions<EntityBuilderConversionDbContext> options = new DbContextOptionsBuilder<EntityBuilderConversionDbContext>()
             .UseInMemoryDatabase($"EntityId_EntityBuilder_{Guid.NewGuid():N}")
             .Options;
 
         using var context = new EntityBuilderConversionDbContext(options);
         context.Database.EnsureCreated();
 
-        var converter = context.Model
+        ValueConverter? converter = context.Model
             .FindEntityType(typeof(CustomerWithGuidId))!
             .FindProperty(nameof(CustomerWithGuidId.Id))!
             .GetValueConverter();
@@ -95,7 +96,7 @@ public class EntityIdModelBuilderExtensionsTest
 
     private static GuidConversionDbContext CreateGuidConversionContext(string databaseName)
     {
-        var options = new DbContextOptionsBuilder<GuidConversionDbContext>()
+        DbContextOptions<GuidConversionDbContext> options = new DbContextOptionsBuilder<GuidConversionDbContext>()
             .UseInMemoryDatabase(databaseName)
             .Options;
 
@@ -106,7 +107,7 @@ public class EntityIdModelBuilderExtensionsTest
 
     private static AutoConversionDbContext CreateAutoConversionContext(string databaseName)
     {
-        var options = new DbContextOptionsBuilder<AutoConversionDbContext>()
+        DbContextOptions<AutoConversionDbContext> options = new DbContextOptionsBuilder<AutoConversionDbContext>()
             .UseInMemoryDatabase(databaseName)
             .Options;
 
@@ -127,13 +128,8 @@ public class EntityIdModelBuilderExtensionsTest
         public string CustomerName { get; set; } = string.Empty;
     }
 
-    private sealed class GuidConversionDbContext : DbContext
+    private sealed class GuidConversionDbContext(DbContextOptions options) : DbContext(options)
     {
-        public GuidConversionDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         public DbSet<CustomerWithGuidId> Customers => Set<CustomerWithGuidId>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -147,13 +143,8 @@ public class EntityIdModelBuilderExtensionsTest
         }
     }
 
-    private sealed class AutoConversionDbContext : DbContext
+    private sealed class AutoConversionDbContext(DbContextOptions options) : DbContext(options)
     {
-        public AutoConversionDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         public DbSet<CustomerWithGuidId> Customers => Set<CustomerWithGuidId>();
         public DbSet<OrderWithGuidId> Orders => Set<OrderWithGuidId>();
 
@@ -165,13 +156,8 @@ public class EntityIdModelBuilderExtensionsTest
         }
     }
 
-    private sealed class EntityBuilderConversionDbContext : DbContext
+    private sealed class EntityBuilderConversionDbContext(DbContextOptions options) : DbContext(options)
     {
-        public EntityBuilderConversionDbContext(DbContextOptions options)
-            : base(options)
-        {
-        }
-
         public DbSet<CustomerWithGuidId> Customers => Set<CustomerWithGuidId>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

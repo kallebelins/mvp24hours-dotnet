@@ -53,7 +53,7 @@ public class DistributedLockHealthCheckTest
     public async Task CheckHealthAsync_WhenAcquireAndReleaseSucceed_ShouldReturnHealthy()
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock();
-        var check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
+        DistributedLockHealthCheck check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
         {
             DegradedThresholdMs = 10_000,
             FailureThresholdMs = 30_000
@@ -72,7 +72,7 @@ public class DistributedLockHealthCheckTest
     public async Task CheckHealthAsync_WithProviderName_ShouldCreateNamedProvider()
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock(providerName: "Redis");
-        var check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
+        DistributedLockHealthCheck check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
         {
             ProviderName = "Redis",
             DegradedThresholdMs = 10_000,
@@ -91,7 +91,7 @@ public class DistributedLockHealthCheckTest
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock(
             createException: new InvalidOperationException("no providers"));
-        var check = CreateCheck(factory.Object);
+        DistributedLockHealthCheck check = CreateCheck(factory.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -105,7 +105,7 @@ public class DistributedLockHealthCheckTest
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock(
             result: LockAcquisitionResult.Failed("already locked"));
-        var check = CreateCheck(factory.Object);
+        DistributedLockHealthCheck check = CreateCheck(factory.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -123,7 +123,7 @@ public class DistributedLockHealthCheckTest
 
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock(
             result: LockAcquisitionResult.Acquired(handle.Object));
-        var check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
+        DistributedLockHealthCheck check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
         {
             DegradedThresholdMs = 10_000,
             FailureThresholdMs = 30_000
@@ -140,7 +140,7 @@ public class DistributedLockHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsFailureThreshold_ShouldReturnUnhealthy()
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock();
-        var check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
+        DistributedLockHealthCheck check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 0
@@ -156,7 +156,7 @@ public class DistributedLockHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsDegradedThreshold_ShouldReturnDegraded()
     {
         Mock<IDistributedLockFactory> factory = HealthChecksTestHelpers.CreateLockFactoryMock();
-        var check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
+        DistributedLockHealthCheck check = CreateCheck(factory.Object, new DistributedLockHealthCheckOptions
         {
             DegradedThresholdMs = 0,
             FailureThresholdMs = 30_000
@@ -181,7 +181,7 @@ public class DistributedLockHealthCheckTest
         var factory = new Mock<IDistributedLockFactory>();
         factory.Setup(f => f.Create()).Returns(lockMock.Object);
 
-        var check = CreateCheck(factory.Object);
+        DistributedLockHealthCheck check = CreateCheck(factory.Object);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 

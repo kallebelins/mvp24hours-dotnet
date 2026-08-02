@@ -95,19 +95,25 @@ public class ObservabilityServiceExtensionsTest
     {
         public string SubsystemName => "Test";
 
-        public Task<SubsystemDiagnostics> GetDiagnosticsAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(new SubsystemDiagnostics
+        public Task<SubsystemDiagnostics> GetDiagnosticsAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new SubsystemDiagnostics
             {
                 SubsystemName = "Test",
                 Health = SubsystemHealth.Healthy
             });
+        }
 
-        public Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(new Dictionary<string, object> { ["count"] = 1 });
+        public Task<Dictionary<string, object>> GetMetricsAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new Dictionary<string, object> { ["count"] = 1 });
+        }
 
         public Task<IReadOnlyList<ErrorInfo>> GetRecentErrorsAsync(
             int maxErrors = 10,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<ErrorInfo>>(Array.Empty<ErrorInfo>());
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<ErrorInfo>>([]);
+        }
     }
 }

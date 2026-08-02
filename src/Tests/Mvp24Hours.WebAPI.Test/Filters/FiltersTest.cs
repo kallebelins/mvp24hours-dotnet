@@ -17,9 +17,9 @@ public class FiltersTest
     [Fact]
     public void ModelStateValidationFilter_Should_SetBadRequest_WhenModelInvalid()
     {
-        var options = Options.Create(new MvpProblemDetailsOptions());
+        IOptions<MvpProblemDetailsOptions> options = Options.Create(new MvpProblemDetailsOptions());
         var sut = new ModelStateValidationFilter(options);
-        var context = WebApiTestHelpers.CreateActionExecutingContext();
+        ActionExecutingContext context = WebApiTestHelpers.CreateActionExecutingContext();
         context.ModelState.AddModelError("name", "required");
 
         sut.OnActionExecuting(context);
@@ -31,7 +31,7 @@ public class FiltersTest
     public void ModelStateValidationFilter_Should_KeepResultNull_WhenValid()
     {
         var sut = new ModelStateValidationFilter(Options.Create(new MvpProblemDetailsOptions()));
-        var context = WebApiTestHelpers.CreateActionExecutingContext();
+        ActionExecutingContext context = WebApiTestHelpers.CreateActionExecutingContext();
 
         sut.OnActionExecuting(context);
 
@@ -42,7 +42,7 @@ public class FiltersTest
     public void ProblemDetailsResultFilter_Should_ConvertStatusCodeResult()
     {
         var sut = new ProblemDetailsResultFilter(Options.Create(new MvpProblemDetailsOptions()));
-        var context = WebApiTestHelpers.CreateResultExecutingContext(new StatusCodeResult(StatusCodes.Status404NotFound));
+        ResultExecutingContext context = WebApiTestHelpers.CreateResultExecutingContext(new StatusCodeResult(StatusCodes.Status404NotFound));
 
         sut.OnResultExecuting(context);
 
@@ -59,9 +59,9 @@ public class FiltersTest
         var registry = new ContentFormatterRegistry(options);
         var negotiator = new AcceptHeaderNegotiator(options, registry);
         var sut = new ContentNegotiationResultFilter(negotiator, Options.Create(options), NullLogger<ContentNegotiationResultFilter>.Instance);
-        var httpContext = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext httpContext = WebApiTestHelpers.CreateHttpContext();
         httpContext.Request.Headers["Accept"] = "application/json";
-        var resultExecutingContext = WebApiTestHelpers.CreateResultExecutingContext(new ObjectResult(new { ok = true }), httpContext);
+        ResultExecutingContext resultExecutingContext = WebApiTestHelpers.CreateResultExecutingContext(new ObjectResult(new { ok = true }), httpContext);
 
         async Task<ResultExecutedContext> Next()
         {
@@ -79,7 +79,7 @@ public class FiltersTest
     public void RequireAcceptableMediaTypeAttribute_Should_Set406_WhenMediaTypeIsInvalid()
     {
         var sut = new RequireAcceptableMediaTypeAttribute("application/xml");
-        var context = WebApiTestHelpers.CreateActionExecutingContext();
+        ActionExecutingContext context = WebApiTestHelpers.CreateActionExecutingContext();
         context.HttpContext.Request.Headers["Accept"] = "application/json";
 
         sut.OnActionExecuting(context);

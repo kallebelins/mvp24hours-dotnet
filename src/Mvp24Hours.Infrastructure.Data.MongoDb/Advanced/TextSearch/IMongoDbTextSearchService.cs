@@ -93,7 +93,6 @@ public interface IMongoDbTextSearchService<TDocument>
     /// <summary>
     /// Performs a text search with a LINQ expression filter.
     /// </summary>
-    /// <typeparam name="TDocument">The document type.</typeparam>
     /// <param name="searchText">The text to search for.</param>
     /// <param name="filter">Additional filter expression.</param>
     /// <param name="options">Optional search options.</param>

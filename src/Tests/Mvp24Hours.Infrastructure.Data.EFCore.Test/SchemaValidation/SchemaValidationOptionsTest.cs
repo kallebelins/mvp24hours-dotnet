@@ -26,7 +26,7 @@ public class SchemaValidationOptionsTest
     [Fact]
     public void Development_ShouldEnableStrictValidation()
     {
-        SchemaValidationOptions options = SchemaValidationOptions.Development();
+        var options = SchemaValidationOptions.Development();
 
         options.ValidateOnStartup.Should().BeTrue();
         options.ThrowOnValidationFailure.Should().BeTrue();
@@ -37,7 +37,7 @@ public class SchemaValidationOptionsTest
     [Fact]
     public void ContinuousIntegration_ShouldDisableCache()
     {
-        SchemaValidationOptions options = SchemaValidationOptions.ContinuousIntegration();
+        var options = SchemaValidationOptions.ContinuousIntegration();
 
         options.CacheValidationResults.Should().BeFalse();
         options.ValidateIndexes.Should().BeTrue();

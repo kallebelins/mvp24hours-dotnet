@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Migrations;
-using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
+using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Migrations;
 
@@ -14,7 +14,7 @@ public class MigrationServiceTest
     private static MigrationService<TestDbContext> CreateService(TestDbContext? context = null)
     {
         TestDbContext dbContext = context ?? EfCoreTestHelpers.CreateContext();
-        var logger = new LoggerFactory().CreateLogger<MigrationService<TestDbContext>>();
+        ILogger<MigrationService<TestDbContext>> logger = new LoggerFactory().CreateLogger<MigrationService<TestDbContext>>();
         return new MigrationService<TestDbContext>(
             dbContext,
             Options.Create(new MigrationOptions()),
@@ -25,7 +25,7 @@ public class MigrationServiceTest
     public async Task EnsureDatabaseCreatedAsync_ShouldCreateInMemoryDatabase()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         bool created = await service.EnsureDatabaseCreatedAsync();
 
@@ -37,7 +37,7 @@ public class MigrationServiceTest
     public async Task DeleteDatabaseAsync_ShouldRemoveInMemoryDatabase()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         bool deleted = await service.DeleteDatabaseAsync();
 
@@ -48,7 +48,7 @@ public class MigrationServiceTest
     public async Task GetPendingAndAppliedMigrationsAsync_OnInMemory_ShouldThrowRelationalException()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         Func<Task> pending = () => service.GetPendingMigrationsAsync();
         Func<Task> applied = () => service.GetAppliedMigrationsAsync();
@@ -66,7 +66,7 @@ public class MigrationServiceTest
     public async Task MigrateAsync_OnInMemory_ShouldReturnFailedWhenMigrationApisUnavailable()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         MigrationResult result = await service.MigrateAsync();
 
@@ -78,7 +78,7 @@ public class MigrationServiceTest
     public async Task ValidateSchemaAsync_ShouldReturnValidForConfiguredModel()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         SchemaValidationResult result = await service.ValidateSchemaAsync();
 
@@ -90,7 +90,7 @@ public class MigrationServiceTest
     public async Task MigrateToAsync_OnInMemory_ShouldReturnFailedResult()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         MigrationResult result = await service.MigrateToAsync("DoesNotExist");
 
@@ -102,7 +102,7 @@ public class MigrationServiceTest
     public async Task RollbackLastAsync_OnInMemory_ShouldThrowRelationalException()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         Func<Task> act = () => service.RollbackLastAsync();
 
@@ -114,7 +114,7 @@ public class MigrationServiceTest
     public async Task GetMigrationScriptAsync_ShouldReturnScriptOrEmptyString()
     {
         using TestDbContext context = EfCoreTestHelpers.CreateContext();
-        var service = CreateService(context);
+        MigrationService<TestDbContext> service = CreateService(context);
 
         try
         {
@@ -138,7 +138,7 @@ public class MigrationServiceTest
         using ServiceProvider provider = services.BuildServiceProvider();
         using IServiceScope scope = provider.CreateScope();
 
-        var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
+        IMigrationService migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
         migrationService.Should().BeOfType<MigrationService<TestDbContext>>();
     }
 }

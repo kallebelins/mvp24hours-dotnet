@@ -825,10 +825,7 @@ public class FluentBuildersTest
         var services = new ServiceCollection();
         var builder = new RabbitMQConfigurationBuilder(services);
 
-        Action act = () => builder.AddRequestClient<TestOrderCommand, TestOrderResponse>(opts =>
-        {
-            opts.TimeoutMilliseconds = 30000;
-        });
+        Action act = () => builder.AddRequestClient<TestOrderCommand, TestOrderResponse>(opts => opts.TimeoutMilliseconds = 30000);
 
         act.Should().NotThrow();
     }
@@ -849,7 +846,7 @@ public class FluentBuildersTest
         var services = new ServiceCollection();
         var builder = new RabbitMQConfigurationBuilder(services);
 
-        var result = builder
+        RabbitMQConfigurationBuilder result = builder
             .Host("localhost", 5672)
             .UseRetry(r => r.Immediate(3))
             .UseCircuitBreaker(cb => cb.TripThreshold(10))

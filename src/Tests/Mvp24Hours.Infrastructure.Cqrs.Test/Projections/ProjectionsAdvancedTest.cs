@@ -249,13 +249,18 @@ public class ProjectionsAdvancedTest
     {
         public override string Name => "IncrementalTest";
 
-        protected override void RegisterEventHandlers() => Handles<OrderCreatedEvent>();
+        protected override void RegisterEventHandlers()
+        {
+            Handles<OrderCreatedEvent>();
+        }
 
         public override Task ProcessEventAsync(
             IMediatorDomainEvent @event,
             ProjectionContext context,
             CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class TestApplyProjection(IReadModelRepository<OrderSummaryReadModel> repository)
@@ -263,7 +268,10 @@ public class ProjectionsAdvancedTest
     {
         public override string Name => "ApplyTest";
 
-        protected override void RegisterEventHandlers() => Handles<OrderCreatedEvent>();
+        protected override void RegisterEventHandlers()
+        {
+            Handles<OrderCreatedEvent>();
+        }
 
         private Task Apply(
             OrderCreatedEvent @event,
@@ -350,7 +358,10 @@ public class ProjectionsAdvancedTest
 
         public bool RebuildCalled { get; private set; }
 
-        public Task StartAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task StartAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
 
         public Task StopAsync(CancellationToken cancellationToken = default)
         {
@@ -364,13 +375,24 @@ public class ProjectionsAdvancedTest
             return Task.CompletedTask;
         }
 
-        public Task RebuildAllAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RebuildAllAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
 
-        public IReadOnlyList<ProjectionInfo> GetProjectionInfos() => [];
+        public IReadOnlyList<ProjectionInfo> GetProjectionInfos()
+        {
+            return [];
+        }
 
-        public ProjectionInfo? GetProjectionInfo(string projectionName) => null;
+        public ProjectionInfo? GetProjectionInfo(string projectionName)
+        {
+            return null;
+        }
 
         public Task ProcessEventAsync(StoredEvent storedEvent, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        {
+            return Task.CompletedTask;
+        }
     }
 }

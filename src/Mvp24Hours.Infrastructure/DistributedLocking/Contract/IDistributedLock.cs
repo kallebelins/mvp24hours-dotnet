@@ -130,7 +130,7 @@ public interface IDistributedLock
     /// <example>
     /// <code>
     /// var result = await distributedLock.TryAcquireWithFenceAsync("resource", options, cancellationToken);
-    /// if (result.IsAcquired && result.FencedToken.HasValue)
+    /// if (result.IsAcquired &amp;&amp; result.FencedToken.HasValue)
     /// {
     ///     var token = result.FencedToken.Value;
     ///     // Store token for later comparison

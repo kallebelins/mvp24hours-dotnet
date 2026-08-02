@@ -11,10 +11,14 @@ namespace Mvp24Hours.Infrastructure.Test.Support;
 internal static class SecurityTestHelpers
 {
     public static string UniqueSecretName(string prefix = "mvp24h-sec")
-        => $"{prefix}-{Guid.NewGuid():N}";
+    {
+        return $"{prefix}-{Guid.NewGuid():N}";
+    }
 
     public static IOptions<T> AsOptions<T>(T value) where T : class
-        => Options.Create(value);
+    {
+        return Options.Create(value);
+    }
 
     public static EnvironmentVariableOptions CreateEnvironmentVariableOptions(
         string? prefix = null,

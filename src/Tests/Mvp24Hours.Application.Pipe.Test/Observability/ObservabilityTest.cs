@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Infrastructure.Pipe;
@@ -83,7 +84,7 @@ public class ObservabilityTest
             CriticalSuccessRate = 0.80
         });
 
-        var result = await healthCheck.CheckHealthAsync(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext());
+        HealthCheckResult result = await healthCheck.CheckHealthAsync(new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext());
 
         result.Status.Should().Be(Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy);
     }

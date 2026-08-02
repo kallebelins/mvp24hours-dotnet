@@ -23,7 +23,7 @@ public class ValidationBehaviorTest
     {
         // Arrange
         var behavior = new ValidationBehavior<CreateUserCommand, int>([]);
-        var called = false;
+        bool called = false;
 
         // Act
         int result = await behavior.Handle(
@@ -77,7 +77,7 @@ public class ValidationBehaviorTest
     {
         // Arrange
         var behavior = new ValidationBehavior<CreateUserCommand, int>([new CreateUserCommandValidator()]);
-        var called = false;
+        bool called = false;
 
         // Act
         await Assert.ThrowsAsync<ValidationException>(() =>

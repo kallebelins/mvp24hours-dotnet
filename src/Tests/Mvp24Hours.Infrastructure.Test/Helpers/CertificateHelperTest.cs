@@ -40,7 +40,7 @@ public class CertificateHelperTest
     public void LoadCertificate_WithFilePath_ShouldLoadFromFile()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         using var temp = new HelpersTestHelpers.TempDirectory();
         string filePath = Path.Combine(temp.Path, "cert.cer");
         File.WriteAllBytes(filePath, HelpersTestHelpers.ExportCertificateBytes(cert));
@@ -59,7 +59,7 @@ public class CertificateHelperTest
     public void LoadCertificate_WithBase64_ShouldLoadFromBase64WhenFilePathMissing()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         var options = new CertificateOptions
         {
             Base64Certificate = HelpersTestHelpers.ExportCertificateBase64(cert)
@@ -77,8 +77,8 @@ public class CertificateHelperTest
     public void LoadCertificate_WithFilePathAndBase64_ShouldPreferFilePath()
     {
         // Arrange
-        using var fileCert = HelpersTestHelpers.CreateSelfSignedCertificate("CN=FromFile");
-        using var base64Cert = HelpersTestHelpers.CreateSelfSignedCertificate("CN=FromBase64");
+        using X509Certificate2 fileCert = HelpersTestHelpers.CreateSelfSignedCertificate("CN=FromFile");
+        using X509Certificate2 base64Cert = HelpersTestHelpers.CreateSelfSignedCertificate("CN=FromBase64");
         using var temp = new HelpersTestHelpers.TempDirectory();
         string filePath = Path.Combine(temp.Path, "cert.cer");
         File.WriteAllBytes(filePath, HelpersTestHelpers.ExportCertificateBytes(fileCert));
@@ -128,7 +128,7 @@ public class CertificateHelperTest
     public void LoadFromFile_WithValidCerFile_ShouldReturnCertificate()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         using var temp = new HelpersTestHelpers.TempDirectory();
         string filePath = Path.Combine(temp.Path, "cert.cer");
         File.WriteAllBytes(filePath, HelpersTestHelpers.ExportCertificateBytes(cert));
@@ -145,7 +145,7 @@ public class CertificateHelperTest
     public void LoadFromFile_WithValidPfxFile_ShouldReturnCertificate()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         using var temp = new HelpersTestHelpers.TempDirectory();
         const string password = "test-pwd";
         string filePath = Path.Combine(temp.Path, "cert.pfx");
@@ -162,7 +162,7 @@ public class CertificateHelperTest
     public void LoadFromBase64_WithValidCertificate_ShouldReturnCertificate()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         string base64 = HelpersTestHelpers.ExportCertificateBase64(cert);
 
         // Act
@@ -176,7 +176,7 @@ public class CertificateHelperTest
     public void LoadFromBase64_WithValidPfx_ShouldReturnCertificate()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         const string password = "test-pwd";
         string base64 = HelpersTestHelpers.ExportPfxBase64(cert, password);
 
@@ -213,7 +213,7 @@ public class CertificateHelperTest
     public void LoadFromBytes_WithValidBytes_ShouldReturnCertificate()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
         byte[] bytes = HelpersTestHelpers.ExportCertificateBytes(cert);
 
         // Act
@@ -274,7 +274,7 @@ public class CertificateHelperTest
     public void IsValid_WithValidSelfSignedCertificate_ShouldReturnTrue()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
 
         // Act
         bool result = CertificateHelper.IsValid(cert);
@@ -298,7 +298,7 @@ public class CertificateHelperTest
     public void EnsureValid_WithValidSelfSignedCertificate_ShouldNotThrow()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
 
         // Act
         Action act = () => CertificateHelper.EnsureValid(cert);
@@ -321,7 +321,7 @@ public class CertificateHelperTest
     public void GetDaysUntilExpiration_WithValidCertificate_ShouldReturnNonNegativeDays()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
 
         // Act
         int days = CertificateHelper.GetDaysUntilExpiration(cert);
@@ -344,7 +344,7 @@ public class CertificateHelperTest
     public void GetCertificateInfo_WithValidCertificate_ShouldContainSubjectAndThumbprint()
     {
         // Arrange
-        using var cert = HelpersTestHelpers.CreateSelfSignedCertificate();
+        using X509Certificate2 cert = HelpersTestHelpers.CreateSelfSignedCertificate();
 
         // Act
         string info = CertificateHelper.GetCertificateInfo(cert);

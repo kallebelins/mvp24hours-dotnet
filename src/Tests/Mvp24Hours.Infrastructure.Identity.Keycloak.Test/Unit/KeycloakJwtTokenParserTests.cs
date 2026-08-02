@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Application.Logic;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.Options;
+using Mvp24Hours.Infrastructure.Identity.Keycloak.Core.ValueObjects.Authorization;
 
 namespace Mvp24Hours.Infrastructure.Identity.Keycloak.Test.Unit;
 
@@ -30,7 +31,7 @@ public sealed class KeycloakJwtTokenParserTests
                 JsonClaimValueTypes.Json));
         KeycloakJwtTokenParser parser = CreateParser();
 
-        var token = parser.ParseUserToken($"Bearer {jwt}");
+        UserToken? token = parser.ParseUserToken($"Bearer {jwt}");
 
         token.Should().NotBeNull();
         token!.Id.Should().Be(UserId);

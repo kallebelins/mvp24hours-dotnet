@@ -22,9 +22,15 @@ public class TestArticle : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class TestPlace : IEntityBase
@@ -37,9 +43,15 @@ public class TestPlace : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class TestLogEntry : IEntityBase
@@ -50,9 +62,15 @@ public class TestLogEntry : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 [BsonCollection("indexed_customers")]
@@ -78,9 +96,15 @@ public class IndexedCustomer : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class ValidatedUser
@@ -107,9 +131,15 @@ public class TenantInvoice : IEntityBase, ITenantEntity
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class TenantOrder : IEntityBase, ITenantEntity<Guid>
@@ -122,9 +152,15 @@ public class TenantOrder : IEntityBase, ITenantEntity<Guid>
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class TestEntity : IEntityBase
@@ -135,9 +171,15 @@ public class TestEntity : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class CustomerDto
@@ -156,9 +198,15 @@ public class OrderDocument : IEntityBase
 
     public object EntityKey => Id;
 
-    public IReadOnlyCollection<MessageResult> GetNotifications() => [];
+    public IReadOnlyCollection<MessageResult> GetNotifications()
+    {
+        return [];
+    }
 
-    public bool HasNotifications() => false;
+    public bool HasNotifications()
+    {
+        return false;
+    }
 }
 
 public class FakeTenantProvider(string? tenantId) : ITenantProvider

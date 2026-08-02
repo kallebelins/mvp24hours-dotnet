@@ -14,9 +14,9 @@ public class JobExecutionResultTest
     public void Success_ShouldCreateSuccessfulResult()
     {
         DateTimeOffset completedAt = DateTimeOffset.UtcNow;
-        TimeSpan duration = TimeSpan.FromMilliseconds(120);
+        var duration = TimeSpan.FromMilliseconds(120);
 
-        JobExecutionResult result = JobExecutionResult.Success(duration, completedAt);
+        var result = JobExecutionResult.Success(duration, completedAt);
 
         result.Status.Should().Be(JobExecutionStatus.Success);
         result.Duration.Should().Be(duration);
@@ -33,7 +33,7 @@ public class JobExecutionResultTest
     [Fact]
     public void Failed_WithMessage_ShouldCreateFailedResult()
     {
-        JobExecutionResult result = JobExecutionResult.Failed("boom", willRetry: false);
+        var result = JobExecutionResult.Failed("boom", willRetry: false);
 
         result.Status.Should().Be(JobExecutionStatus.Failed);
         result.ErrorMessage.Should().Be("boom");
@@ -44,7 +44,7 @@ public class JobExecutionResultTest
     [Fact]
     public void Failed_WithMessageAndRetry_ShouldCreateRetryingResult()
     {
-        JobExecutionResult result = JobExecutionResult.Failed("retry-me", willRetry: true);
+        var result = JobExecutionResult.Failed("retry-me", willRetry: true);
 
         result.Status.Should().Be(JobExecutionStatus.Retrying);
         result.IsRetrying.Should().BeTrue();
@@ -67,7 +67,7 @@ public class JobExecutionResultTest
     {
         var exception = new InvalidOperationException("exception boom");
 
-        JobExecutionResult result = JobExecutionResult.Failed(exception);
+        var result = JobExecutionResult.Failed(exception);
 
         result.Status.Should().Be(JobExecutionStatus.Failed);
         result.ErrorMessage.Should().Be("exception boom");
@@ -85,7 +85,7 @@ public class JobExecutionResultTest
     [Fact]
     public void Cancelled_ShouldCreateCancelledResult()
     {
-        JobExecutionResult result = JobExecutionResult.Cancelled(TimeSpan.FromSeconds(1));
+        var result = JobExecutionResult.Cancelled(TimeSpan.FromSeconds(1));
 
         result.Status.Should().Be(JobExecutionStatus.Cancelled);
         result.IsCancelled.Should().BeTrue();
@@ -97,7 +97,7 @@ public class JobExecutionResultTest
     {
         var exception = new TimeoutException("timeout");
 
-        JobExecutionResult result = JobExecutionResult.Retrying("timeout", exception);
+        var result = JobExecutionResult.Retrying("timeout", exception);
 
         result.Status.Should().Be(JobExecutionStatus.Retrying);
         result.IsRetrying.Should().BeTrue();

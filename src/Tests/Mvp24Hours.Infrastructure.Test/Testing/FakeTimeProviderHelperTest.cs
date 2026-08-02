@@ -32,7 +32,7 @@ public class FakeTimeProviderHelperTest
     [Fact]
     public void FromClock_WithMockClock_ShouldReflectAdvanceBy()
     {
-        MockClock clock = MockClock.FromDateTime(2024, 3, 1, 8, 0, 0);
+        var clock = MockClock.FromDateTime(2024, 3, 1, 8, 0, 0);
         TimeProvider provider = FakeTimeProviderHelper.FromClock(clock);
 
         provider.GetUtcNow().Should().Be(clock.UtcNowOffset);
@@ -58,7 +58,7 @@ public class FakeTimeProviderHelperTest
     [Fact]
     public void ToClock_RoundTripWithMockClock_ShouldPreserveAdvancingTime()
     {
-        MockClock original = MockClock.FromDateTime(2024, 7, 4, 14, 0, 0);
+        var original = MockClock.FromDateTime(2024, 7, 4, 14, 0, 0);
         TimeProvider provider = FakeTimeProviderHelper.FromClock(original);
         IClock roundTrip = FakeTimeProviderHelper.ToClock(provider);
 

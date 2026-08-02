@@ -32,12 +32,10 @@ namespace Mvp24Hours.WebAPI.Binders;
 /// - <c>navigation</c>: Comma-separated list of navigation properties to include (supports multiple values)
 /// </para>
 /// </remarks>
-/// <example>
-/// <code>
+/// <example><![CDATA[
 /// // Query string: ?limit=20&offset=0&orderBy=Name,Email&navigation=Orders
 /// app.MapGet("/customers", (IPagingCriteria paging) => { ... });
-/// </code>
-/// </example>
+/// ]]></example>
 public class PagingCriteriaModelBinder : IModelBinder
 {
     /// <inheritdoc />

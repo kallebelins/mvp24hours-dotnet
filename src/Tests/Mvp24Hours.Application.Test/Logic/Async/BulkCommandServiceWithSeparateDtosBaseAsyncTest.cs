@@ -14,7 +14,7 @@ public class BulkCommandServiceWithSeparateDtosBaseAsyncTest : IDisposable
 
     public BulkCommandServiceWithSeparateDtosBaseAsyncTest()
     {
-        var options = new DbContextOptionsBuilder<BulkTestDbContext>()
+        DbContextOptions<BulkTestDbContext> options = new DbContextOptionsBuilder<BulkTestDbContext>()
             .UseInMemoryDatabase($"BulkSep_{Guid.NewGuid():N}")
             .Options;
         _context = new BulkTestDbContext(options);
@@ -26,7 +26,10 @@ public class BulkCommandServiceWithSeparateDtosBaseAsyncTest : IDisposable
             new AppTestUpdateDtoValidator());
     }
 
-    public void Dispose() => _context.Dispose();
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
 
     [Fact]
     public async Task BulkAddAsync_CreateDtos_ShouldInsertEntities()

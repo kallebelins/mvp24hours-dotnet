@@ -67,7 +67,7 @@ public class DatabaseExtensionsTest
     {
         string missing = Path.Combine(Path.GetTempPath(), $"missing_{Guid.NewGuid():N}.sql");
 
-        var act = () => DatabaseExtensions.ReadSqlScriptFile(missing);
+        Func<string[]> act = () => DatabaseExtensions.ReadSqlScriptFile(missing);
 
         act.Should().Throw<FileNotFoundException>().WithMessage("*script*");
     }
@@ -77,7 +77,7 @@ public class DatabaseExtensionsTest
     {
         string missing = Path.Combine(Path.GetTempPath(), $"missing_async_{Guid.NewGuid():N}.sql");
 
-        var act = async () => await DatabaseExtensions.ReadSqlScriptFileAsync(missing);
+        Func<Task<string[]>> act = async () => await DatabaseExtensions.ReadSqlScriptFileAsync(missing);
 
         await act.Should().ThrowAsync<FileNotFoundException>();
     }

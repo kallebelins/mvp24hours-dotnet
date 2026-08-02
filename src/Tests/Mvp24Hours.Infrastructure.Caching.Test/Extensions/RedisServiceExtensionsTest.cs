@@ -57,7 +57,7 @@ public class RedisServiceExtensionsTest
     public void AddMvp24HoursCachingRedis_WithConfigurationOptions_ShouldRegisterDistributedCacheAndOptions()
     {
         var services = new ServiceCollection();
-        ConfigurationOptions configurationOptions = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
+        var configurationOptions = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
         const string instanceName = "My.App";
 
         IServiceCollection result = services.AddMvp24HoursCachingRedis(configurationOptions, instanceName);
@@ -89,7 +89,7 @@ public class RedisServiceExtensionsTest
     public void AddMvp24HoursCachingRedis_WithConfigurationOptionsAndNullInstanceName_ShouldUseDefaultWithoutSuffix()
     {
         var services = new ServiceCollection();
-        ConfigurationOptions configurationOptions = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
+        var configurationOptions = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
 
         services.AddMvp24HoursCachingRedis(configurationOptions);
         ServiceProvider provider = services.BuildServiceProvider();

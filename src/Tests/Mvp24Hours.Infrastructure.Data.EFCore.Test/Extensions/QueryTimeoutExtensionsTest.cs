@@ -9,7 +9,7 @@ public class QueryTimeoutExtensionsTest
 {
     private static TestDbContext CreateSqliteContext()
     {
-        var options = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
             .UseSqlite($"Data Source=file:timeout_{Guid.NewGuid():N}?mode=memory&cache=shared")
             .Options;
         var context = new TestDbContext(options);

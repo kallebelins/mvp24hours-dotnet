@@ -28,7 +28,7 @@ public class CacheableApplicationServiceBaseAsyncTest
     [Fact]
     public async Task AddAsync_OnSuccess_ShouldInvalidateEntityCache()
     {
-        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
         IQueryCacheProvider cache = ApplicationTestHelpers.CreateInMemoryQueryCacheProvider();
         CacheInvalidator invalidator = ApplicationTestHelpers.CreateCacheInvalidator(cache);
         var service = new TestCacheableApplicationService(uow.Object, cache, invalidator, new QueryCacheKeyGenerator());

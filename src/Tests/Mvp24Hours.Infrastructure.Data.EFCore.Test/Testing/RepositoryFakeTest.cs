@@ -23,10 +23,7 @@ public class RepositoryFakeTest
     {
         var repository = new RepositoryFake<TestEntity>();
 
-        repository.SeedData(list =>
-        {
-            list.Add(new TestEntity { Id = 42, Name = "Action-Seed" });
-        });
+        repository.SeedData(list => list.Add(new TestEntity { Id = 42, Name = "Action-Seed" }));
 
         repository.GetById(42)!.Name.Should().Be("Action-Seed");
     }

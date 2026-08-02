@@ -10,7 +10,7 @@ public class CronJobContextTest
     public void Constructor_ShouldInitializeProperties()
     {
         using var cts = new CancellationTokenSource();
-        var scheduled = DateTimeOffset.UtcNow.AddMinutes(5);
+        DateTimeOffset scheduled = DateTimeOffset.UtcNow.AddMinutes(5);
         var parentId = Guid.NewGuid();
 
         CronJobContext context = CronJobTestHelpers.CreateContext(

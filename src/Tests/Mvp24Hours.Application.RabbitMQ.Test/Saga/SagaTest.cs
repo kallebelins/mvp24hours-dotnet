@@ -51,7 +51,7 @@ public class SagaTest
     public async Task InMemorySagaRepository_CreateDuplicate_ShouldThrow()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid correlationId = Guid.NewGuid();
+        var correlationId = Guid.NewGuid();
 
         await repository.CreateAsync(correlationId, "Initial");
 
@@ -65,7 +65,7 @@ public class SagaTest
     public async Task InMemorySagaRepository_UpdateAsync_WithWrongVersion_ShouldReturnFalse()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid correlationId = Guid.NewGuid();
+        var correlationId = Guid.NewGuid();
         SagaInstance<TestOrderSagaData> saga = await repository.CreateAsync(correlationId, "Initial");
 
         bool updated = await repository.UpdateAsync(
@@ -80,8 +80,8 @@ public class SagaTest
     public async Task InMemorySagaRepository_FindByStateAsync_ShouldFilter()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid id1 = Guid.NewGuid();
-        Guid id2 = Guid.NewGuid();
+        var id1 = Guid.NewGuid();
+        var id2 = Guid.NewGuid();
         await repository.CreateAsync(id1, "AwaitingPayment");
         await repository.CreateAsync(id2, "Shipped");
 
@@ -133,10 +133,10 @@ public class SagaTest
     public async Task InMemorySagaRepository_CreateAndFind_ShouldReturnSaga()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid id = Guid.NewGuid();
+        var id = Guid.NewGuid();
 
-        var created = await repository.CreateAsync(id, "Initial");
-        var retrieved = await repository.FindAsync(id);
+        SagaInstance<TestOrderSagaData> created = await repository.CreateAsync(id, "Initial");
+        SagaInstance<TestOrderSagaData>? retrieved = await repository.FindAsync(id);
 
         retrieved.Should().NotBeNull();
         retrieved!.CorrelationId.Should().Be(id);
@@ -149,7 +149,7 @@ public class SagaTest
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
 
-        var result = await repository.FindAsync(Guid.NewGuid());
+        SagaInstance<TestOrderSagaData>? result = await repository.FindAsync(Guid.NewGuid());
 
         result.Should().BeNull();
     }
@@ -158,11 +158,11 @@ public class SagaTest
     public async Task InMemorySagaRepository_DeleteAsync_ShouldRemoveSaga()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid id = Guid.NewGuid();
+        var id = Guid.NewGuid();
         await repository.CreateAsync(id, "Initial");
 
         bool deleted = await repository.DeleteAsync(id);
-        var result = await repository.FindAsync(id);
+        SagaInstance<TestOrderSagaData>? result = await repository.FindAsync(id);
 
         deleted.Should().BeTrue();
         result.Should().BeNull();
@@ -172,7 +172,7 @@ public class SagaTest
     public async Task InMemorySagaRepository_UpdateAsync_ShouldModifyData()
     {
         var repository = new InMemorySagaRepository<TestOrderSagaData>();
-        Guid id = Guid.NewGuid();
+        var id = Guid.NewGuid();
         SagaInstance<TestOrderSagaData> saga = await repository.CreateAsync(id, "Initial");
 
         bool updated = await repository.UpdateAsync(
@@ -180,7 +180,7 @@ public class SagaTest
             expectedVersion: saga.Version,
             instance => instance.Data.OrderId = "updated-order");
 
-        var result = await repository.FindAsync(id);
+        SagaInstance<TestOrderSagaData>? result = await repository.FindAsync(id);
         updated.Should().BeTrue();
         result!.Data.OrderId.Should().Be("updated-order");
     }
@@ -231,7 +231,7 @@ public class SagaTest
     [Fact]
     public async Task SagaConsumeContext_TransitionToAsync_ShouldUpdateState()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -246,7 +246,7 @@ public class SagaTest
     [Fact]
     public async Task SagaConsumeContext_CompleteAsync_ShouldMarkCompleted()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -261,7 +261,7 @@ public class SagaTest
     [Fact]
     public async Task SagaConsumeContext_FaultAsync_ShouldMarkFaulted()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -277,7 +277,7 @@ public class SagaTest
     [Fact]
     public void SagaConsumeContext_SetAndGetMetadata_ShouldWork()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -292,7 +292,7 @@ public class SagaTest
     [Fact]
     public void SagaConsumeContext_IsNew_ShouldReflectConstructorValue()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -304,7 +304,7 @@ public class SagaTest
     [Fact]
     public void SagaConsumeContext_GetSagaInstance_ShouldReturnSameInstance()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
         var sagaInstance = new SagaInstance<TestOrderSagaData>();
         var ctx = new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(
@@ -327,7 +327,7 @@ public class SagaTest
     [Fact]
     public void SagaConsumeContext_NullInstance_ShouldThrow()
     {
-        var innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
+        TestConsumeContext<TestOrderCreatedEvent> innerContext = RabbitMQTestHelpers.CreateTestConsumeContext(
             new TestOrderCreatedEvent { OrderId = "42", CorrelationId = Guid.NewGuid() });
 
         Action act = () => new SagaConsumeContext<TestOrderSagaData, TestOrderCreatedEvent>(

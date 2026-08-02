@@ -74,12 +74,10 @@ public class SerializationTest
         var serializer = new JsonMessageSerializer();
         byte[] invalid = System.Text.Encoding.UTF8.GetBytes("not-valid-json{{{}}}");
 
-        Action act = () => serializer.Deserialize<TestOrderEvent>(invalid);
-
         // Either throws a JsonException or returns null depending on implementation
         try
         {
-            var result = serializer.Deserialize<TestOrderEvent>(invalid);
+            TestOrderEvent? result = serializer.Deserialize<TestOrderEvent>(invalid);
             result.Should().BeNull();
         }
         catch (System.Text.Json.JsonException)

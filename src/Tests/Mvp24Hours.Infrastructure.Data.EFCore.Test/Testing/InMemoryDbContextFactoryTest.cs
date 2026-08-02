@@ -55,10 +55,7 @@ public class InMemoryDbContextFactoryTest
     {
         using var factory = new InMemoryDbContextFactory<TestDbContext>();
 
-        using TestDbContext context = factory.CreateContextWithData(ctx =>
-        {
-            ctx.Entities.Add(new TestEntity { Id = 99, Name = "Inline" });
-        });
+        using TestDbContext context = factory.CreateContextWithData(ctx => ctx.Entities.Add(new TestEntity { Id = 99, Name = "Inline" }));
 
         context.Entities.Should().ContainSingle(e => e.Name == "Inline");
     }

@@ -189,6 +189,7 @@ public class RowLevelSecurityHelper(
     /// </summary>
     /// <param name="context">The DbContext.</param>
     /// <param name="tenantId">The tenant ID to set.</param>
+    /// <param name="cancellationToken"></param>
     public async System.Threading.Tasks.Task SetSqlServerTenantContextAsync(
         DbContext context,
         string tenantId,
@@ -324,6 +325,7 @@ public class RowLevelSecurityHelper(
     /// </summary>
     /// <param name="context">The DbContext.</param>
     /// <param name="tenantId">The tenant ID to set.</param>
+    /// <param name="cancellationToken"></param>
     public async System.Threading.Tasks.Task SetPostgreSqlTenantContextAsync(
         DbContext context,
         string tenantId,

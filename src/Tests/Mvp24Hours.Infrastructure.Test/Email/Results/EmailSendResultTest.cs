@@ -15,7 +15,7 @@ public class EmailSendResultTest
     {
         DateTimeOffset sentAt = DateTimeOffset.UtcNow.AddMinutes(-1);
 
-        EmailSendResult result = EmailSendResult.Successful("msg-42", sentAt);
+        var result = EmailSendResult.Successful("msg-42", sentAt);
 
         result.Success.Should().BeTrue();
         result.IsFailure.Should().BeFalse();
@@ -31,7 +31,7 @@ public class EmailSendResultTest
     {
         var exception = new InvalidOperationException("inner");
 
-        EmailSendResult result = EmailSendResult.Failed("Send failed", exception);
+        var result = EmailSendResult.Failed("Send failed", exception);
 
         result.Success.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -55,7 +55,7 @@ public class EmailSendResultTest
     [Fact]
     public void Failed_WithErrorsList_ShouldCreateFailureResult()
     {
-        EmailSendResult result = EmailSendResult.Failed(["Error 1", "Error 2"]);
+        var result = EmailSendResult.Failed(["Error 1", "Error 2"]);
 
         result.Errors.Should().Equal("Error 1", "Error 2");
         result.FirstError.Should().Be("Error 1");
@@ -82,7 +82,7 @@ public class EmailSendResultTest
     {
         var exception = new TimeoutException("Timed out");
 
-        EmailSendResult result = EmailSendResult.Failed(exception);
+        var result = EmailSendResult.Failed(exception);
 
         result.Errors.Should().ContainSingle("Timed out");
         result.Exception.Should().BeSameAs(exception);

@@ -3,6 +3,7 @@ using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
 using Mvp24Hours.Infrastructure.RabbitMQ;
+using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test;
@@ -12,7 +13,7 @@ public class MvpRabbitMQClientTest
     [Fact]
     public void Publish_WithoutRoutingKeyOrDefault_ShouldThrow()
     {
-        var options = RabbitMQTestHelpers.CreateClientOptions(defaultRoutingKey: string.Empty);
+        RabbitMQClientOptions options = RabbitMQTestHelpers.CreateClientOptions(defaultRoutingKey: string.Empty);
         IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(options);
         MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
 

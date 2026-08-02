@@ -221,10 +221,7 @@ public class NativeResilienceServiceExtensionsTest
     {
         var services = new ServiceCollection();
 
-        services.AddNativeResiliencePipeline("direct", builder =>
-        {
-            builder.AddTimeout(TimeSpan.FromSeconds(5));
-        });
+        services.AddNativeResiliencePipeline("direct", builder => builder.AddTimeout(TimeSpan.FromSeconds(5)));
 
         using ServiceProvider provider = services.BuildServiceProvider();
         ResiliencePipelineProvider<string> pipelineProvider =
@@ -239,10 +236,7 @@ public class NativeResilienceServiceExtensionsTest
     {
         var services = new ServiceCollection();
 
-        services.AddNativeResiliencePipeline<string>("typed-direct", builder =>
-        {
-            builder.AddTimeout(TimeSpan.FromSeconds(5));
-        });
+        services.AddNativeResiliencePipeline<string>("typed-direct", builder => builder.AddTimeout(TimeSpan.FromSeconds(5)));
 
         using ServiceProvider provider = services.BuildServiceProvider();
         ResiliencePipelineProvider<string> pipelineProvider =

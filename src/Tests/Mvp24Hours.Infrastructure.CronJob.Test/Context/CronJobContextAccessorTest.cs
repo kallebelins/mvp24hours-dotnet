@@ -11,10 +11,7 @@ public class CronJobContextAccessorTest
     [Fact]
     public async Task Context_ShouldBeAvailableDuringAdvancedJobExecution()
     {
-        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services =>
-        {
-            services.AddSingleton<ICronJobContextAccessor, CronJobContextAccessor>();
-        });
+        ServiceProvider serviceProvider = CronJobTestHelpers.BuildAdvancedJobServices(services => services.AddSingleton<ICronJobContextAccessor, CronJobContextAccessor>());
 
         ICronJobContextAccessor accessor = serviceProvider.GetRequiredService<ICronJobContextAccessor>();
         ICronJobContext? capturedContext = null;

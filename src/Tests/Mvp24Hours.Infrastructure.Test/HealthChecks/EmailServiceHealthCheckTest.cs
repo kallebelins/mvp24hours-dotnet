@@ -53,7 +53,7 @@ public class EmailServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenSendTestEmailDisabled_ShouldReturnHealthyWithoutSending()
     {
         Mock<IEmailService> mock = HealthChecksTestHelpers.CreateEmailServiceMock();
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions { SendTestEmail = false });
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions { SendTestEmail = false });
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -77,7 +77,7 @@ public class EmailServiceHealthCheckTest
             DegradedThresholdMs = 10_000,
             FailureThresholdMs = 30_000
         };
-        var check = CreateCheck(mock.Object, options);
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, options);
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -100,7 +100,7 @@ public class EmailServiceHealthCheckTest
     {
         Mock<IEmailService> mock = HealthChecksTestHelpers.CreateEmailServiceMock(
             EmailSendResult.Failed("smtp down"));
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
         {
             SendTestEmail = true,
             DegradedThresholdMs = 10_000,
@@ -118,7 +118,7 @@ public class EmailServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsFailureThreshold_ShouldReturnUnhealthy()
     {
         Mock<IEmailService> mock = HealthChecksTestHelpers.CreateEmailServiceMock();
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
         {
             SendTestEmail = true,
             DegradedThresholdMs = 0,
@@ -135,7 +135,7 @@ public class EmailServiceHealthCheckTest
     public async Task CheckHealthAsync_WhenResponseExceedsDegradedThreshold_ShouldReturnDegraded()
     {
         Mock<IEmailService> mock = HealthChecksTestHelpers.CreateEmailServiceMock();
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
         {
             SendTestEmail = true,
             DegradedThresholdMs = 0,
@@ -154,7 +154,7 @@ public class EmailServiceHealthCheckTest
         var mock = new Mock<IEmailService>();
         mock.Setup(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("provider error"));
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions { SendTestEmail = true });
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions { SendTestEmail = true });
 
         HealthCheckResult result = await check.CheckHealthAsync(HealthChecksTestHelpers.CreateContext());
 
@@ -169,7 +169,7 @@ public class EmailServiceHealthCheckTest
         var mock = new Mock<IEmailService>();
         mock.Setup(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaskCanceledException());
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
         {
             SendTestEmail = true,
             TimeoutSeconds = 1
@@ -186,7 +186,7 @@ public class EmailServiceHealthCheckTest
     public async Task CheckHealthAsync_WithDefaultRecipient_ShouldUseExampleAddress()
     {
         Mock<IEmailService> mock = HealthChecksTestHelpers.CreateEmailServiceMock();
-        var check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
+        EmailServiceHealthCheck check = CreateCheck(mock.Object, new EmailServiceHealthCheckOptions
         {
             SendTestEmail = true,
             TestEmailRecipient = null,

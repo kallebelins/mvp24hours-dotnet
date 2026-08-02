@@ -36,18 +36,20 @@ public class SpecificationTest
         }
     }
 
-    private static List<Product> CreateProducts() =>
-    [
+    private static List<Product> CreateProducts()
+    {
+        return [
         new() { Id = 1, Name = "Alpha", Price = 10m, Active = true },
         new() { Id = 2, Name = "Beta", Price = 0m, Active = true },
         new() { Id = 3, Name = "Gamma", Price = 20m, Active = false },
         new() { Id = 4, Name = "Delta", Price = 30m, Active = true }
     ];
+    }
 
     [Fact]
     public void Create_WithExpression_FiltersEntities()
     {
-        Specification<Product> spec = Specification<Product>.Create(p => p.Price >= 20m);
+        var spec = Specification<Product>.Create(p => p.Price >= 20m);
 
         spec.IsSatisfiedBy(new Product { Price = 25m }).Should().BeTrue();
         spec.IsSatisfiedBy(new Product { Price = 5m }).Should().BeFalse();
@@ -65,7 +67,7 @@ public class SpecificationTest
     [Fact]
     public void IsSatisfiedBy_WithNull_ReturnsFalse()
     {
-        Specification<Product> spec = Specification<Product>.Create(p => p.Active);
+        var spec = Specification<Product>.Create(p => p.Active);
 
         spec.IsSatisfiedBy(null!).Should().BeFalse();
     }
@@ -73,8 +75,8 @@ public class SpecificationTest
     [Fact]
     public void CompositeOperators_AndOrNot_WorkCorrectly()
     {
-        Specification<Product> active = Specification<Product>.Create(p => p.Active);
-        Specification<Product> expensive = Specification<Product>.Create(p => p.Price >= 20m);
+        var active = Specification<Product>.Create(p => p.Active);
+        var expensive = Specification<Product>.Create(p => p.Price >= 20m);
         var product = new Product { Active = true, Price = 30m };
 
         (active & expensive).IsSatisfiedBy(product).Should().BeTrue();
@@ -85,7 +87,7 @@ public class SpecificationTest
     [Fact]
     public void EnhancedSpecification_ExposesIncludesOrderAndPaging()
     {
-        var spec = new ActiveProductsSpecification().WithIncludesAndPaging();
+        ActiveProductsSpecification spec = new ActiveProductsSpecification().WithIncludesAndPaging();
 
         spec.Includes.Should().HaveCount(1);
         spec.IncludeStrings.Should().Contain("Category");
@@ -99,10 +101,10 @@ public class SpecificationTest
     public void InMemorySpecificationEvaluator_AppliesCriteriaOrderingAndPaging()
     {
         List<Product> products = CreateProducts();
-        var spec = new ActiveProductsSpecification().WithTopResult();
-        var evaluator = InMemorySpecificationEvaluator<Product>.Default;
+        ActiveProductsSpecification spec = new ActiveProductsSpecification().WithTopResult();
+        InMemorySpecificationEvaluator<Product> evaluator = InMemorySpecificationEvaluator<Product>.Default;
 
-        List<Product> result = evaluator.GetQuery(products.AsQueryable(), spec).ToList();
+        var result = evaluator.GetQuery(products.AsQueryable(), spec).ToList();
 
         result.Should().HaveCount(1);
         result[0].Name.Should().Be("Delta");
@@ -112,9 +114,9 @@ public class SpecificationTest
     public void InMemorySpecificationEvaluator_NonGenericDelegatesToGeneric()
     {
         List<Product> products = CreateProducts();
-        Specification<Product> spec = Specification<Product>.Create(p => p.Active && p.Price > 0);
+        var spec = Specification<Product>.Create(p => p.Active && p.Price > 0);
 
-        List<Product> result = InMemorySpecificationEvaluator.Default
+        var result = InMemorySpecificationEvaluator.Default
             .GetQuery(products.AsQueryable(), spec)
             .ToList();
 

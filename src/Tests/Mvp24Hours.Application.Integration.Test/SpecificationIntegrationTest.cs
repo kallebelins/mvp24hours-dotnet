@@ -24,6 +24,11 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     public async Task InitializeAsync()
     {
+        if (!_fixture.IsAvailable)
+        {
+            return;
+        }
+
         await _fixture.ClearDatabaseAsync();
         await SeedTestDataAsync();
     }
@@ -62,7 +67,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     #region [ ActiveProductSpecification Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task ActiveProductSpecification_ShouldReturnOnlyActiveProducts()
     {
         // Arrange
@@ -81,7 +86,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
         result.GetDataValue()!.Should().AllSatisfy(p => p.IsActive.Should().BeTrue());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ActiveProductSpecification_Expression_ShouldFilterCorrectly()
     {
         // Arrange
@@ -100,7 +105,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     #region [ PriceRangeSpecification Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task PriceRangeSpecification_ShouldReturnProductsInRange()
     {
         // Arrange
@@ -146,7 +151,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     #region [ LowStockSpecification Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task LowStockSpecification_DefaultThreshold_ShouldReturnLowStockProducts()
     {
         // Arrange
@@ -191,7 +196,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     #region [ Combined Specifications Tests ]
 
-    [Fact]
+    [DockerFact]
     public async Task CombinedSpecifications_ActiveAndPriceRange_ShouldWork()
     {
         // Arrange
@@ -212,7 +217,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
         });
     }
 
-    [Fact]
+    [DockerFact]
     public async Task CombinedSpecifications_ActiveAndLowStock_ShouldWork()
     {
         // Arrange
@@ -236,7 +241,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
         });
     }
 
-    [Fact]
+    [DockerFact]
     public async Task CombinedSpecifications_AllThree_ShouldWork()
     {
         // Arrange
@@ -261,7 +266,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
 
     #region [ Specification with Pagination ]
 
-    [Fact]
+    [DockerFact]
     public async Task SpecificationWithPagination_ShouldRespectBothFilters()
     {
         // Arrange

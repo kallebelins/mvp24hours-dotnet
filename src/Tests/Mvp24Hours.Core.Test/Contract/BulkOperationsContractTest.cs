@@ -31,7 +31,7 @@ public class BulkOperationsContractTest
     {
         var elapsed = TimeSpan.FromMilliseconds(250);
 
-        BulkOperationResult result = BulkOperationResult.Success(42, elapsed);
+        var result = BulkOperationResult.Success(42, elapsed);
 
         result.IsSuccess.Should().BeTrue();
         result.RowsAffected.Should().Be(42);
@@ -44,7 +44,7 @@ public class BulkOperationsContractTest
     {
         var elapsed = TimeSpan.FromSeconds(1);
 
-        BulkOperationResult result = BulkOperationResult.Failure("timeout", elapsed);
+        var result = BulkOperationResult.Failure("timeout", elapsed);
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorMessage.Should().Be("timeout");

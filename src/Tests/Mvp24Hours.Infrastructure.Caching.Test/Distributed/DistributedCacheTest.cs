@@ -248,7 +248,7 @@ public class MultiLevelCacheCoordinationTest
     public async Task PromoteToL1Async_WhenMissingInL2_ShouldReturnFalse()
     {
 #pragma warning disable CS0618
-        var cache = CacheTestHelpers.CreateMultiLevelCache();
+        MultiLevelCache cache = CacheTestHelpers.CreateMultiLevelCache();
 #pragma warning restore CS0618
 
         bool promoted = await cache.PromoteToL1Async<TestEntity>("missing");
@@ -366,7 +366,7 @@ public class MultiLevelCacheCoordinationTest
     public async Task GetOrSetAsync_NullFactory_ShouldThrow()
     {
 #pragma warning disable CS0618
-        var cache = CacheTestHelpers.CreateMultiLevelCache();
+        MultiLevelCache cache = CacheTestHelpers.CreateMultiLevelCache();
 #pragma warning restore CS0618
 
         await Assert.ThrowsAsync<ArgumentNullException>(() =>

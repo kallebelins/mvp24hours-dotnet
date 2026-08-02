@@ -5,8 +5,7 @@ namespace Mvp24Hours.Core.Serialization.Json;
 /// <summary>
 /// <see href="https://gist.github.com/TheMulti0/cd2b1a40677fd74480958b363e206388"/>
 /// </summary>
-/// <remarks>
-/// <code>
+/// <remarks><![CDATA[
 ///  new JsonSerializerSettings
 ///  {
 ///      ContractResolver = new CompositeContractResolver
@@ -15,8 +14,7 @@ namespace Mvp24Hours.Core.Serialization.Json;
 ///          new DefaultContractResolver()
 ///      }
 ///  }
-/// </code>
-/// </remarks>
+/// ]]></remarks>
 public class CompositeContractResolver : IContractResolver, IEnumerable<IContractResolver>
 {
     private readonly IList<IContractResolver> _contractResolvers = [];

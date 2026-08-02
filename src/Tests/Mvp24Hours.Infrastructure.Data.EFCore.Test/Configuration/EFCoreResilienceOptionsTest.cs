@@ -61,7 +61,7 @@ public class EFCoreResilienceOptionsTest
     [Fact]
     public void Production_ShouldReturnProductionDefaults()
     {
-        EFCoreResilienceOptions options = EFCoreResilienceOptions.Production();
+        var options = EFCoreResilienceOptions.Production();
 
         options.EnableRetryOnFailure.Should().BeTrue();
         options.MaxRetryCount.Should().Be(6);
@@ -76,7 +76,7 @@ public class EFCoreResilienceOptionsTest
     [Fact]
     public void Development_ShouldReturnDevelopmentDefaults()
     {
-        EFCoreResilienceOptions options = EFCoreResilienceOptions.Development();
+        var options = EFCoreResilienceOptions.Development();
 
         options.EnableRetryOnFailure.Should().BeTrue();
         options.MaxRetryCount.Should().Be(3);
@@ -91,7 +91,7 @@ public class EFCoreResilienceOptionsTest
     [Fact]
     public void AzureSql_ShouldReturnAzureDefaults()
     {
-        EFCoreResilienceOptions options = EFCoreResilienceOptions.AzureSql();
+        var options = EFCoreResilienceOptions.AzureSql();
 
         options.EnableRetryOnFailure.Should().BeTrue();
         options.MaxRetryCount.Should().Be(10);
@@ -108,7 +108,7 @@ public class EFCoreResilienceOptionsTest
     [Fact]
     public void NoResilience_ShouldDisableResilienceFeatures()
     {
-        EFCoreResilienceOptions options = EFCoreResilienceOptions.NoResilience();
+        var options = EFCoreResilienceOptions.NoResilience();
 
         options.EnableRetryOnFailure.Should().BeFalse();
         options.EnableDbContextPooling.Should().BeFalse();

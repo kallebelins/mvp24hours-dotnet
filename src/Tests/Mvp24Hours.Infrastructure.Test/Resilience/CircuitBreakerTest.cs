@@ -232,7 +232,7 @@ public class CircuitBreakerTest
     [Fact]
     public async Task VoidCircuitBreaker_ShouldDelegateToInner()
     {
-        var options = GenericResilienceTestHelpers.CreateCircuitBreakerOptions();
+        CircuitBreakerOptions options = GenericResilienceTestHelpers.CreateCircuitBreakerOptions();
         var breaker = new CircuitBreaker(options, "VoidOp");
 
         await breaker.ExecuteAsync(_ => Task.CompletedTask);

@@ -24,6 +24,11 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     public async Task InitializeAsync()
     {
+        if (!_fixture.IsAvailable)
+        {
+            return;
+        }
+
         await _fixture.ClearDatabaseAsync();
         await SeedTestDataAsync();
     }
@@ -65,7 +70,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     #region [ Basic Pagination ]
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_FirstPage_ShouldReturnPagedResults()
     {
         // Arrange
@@ -86,7 +91,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.Paging!.Offset.Should().Be(0);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_SecondPage_ShouldReturnDifferentResults()
     {
         // Arrange
@@ -112,7 +117,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         firstPageIds.Should().NotIntersectWith(secondPageIds);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_WithDifferentPageSizes_ShouldRespectLimit()
     {
         // Arrange
@@ -134,7 +139,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     #region [ Filtered Pagination ]
 
-    [Fact]
+    [DockerFact]
     public async Task GetByWithPaginationAsync_WithFilter_ShouldReturnFilteredPagedResults()
     {
         // Arrange
@@ -155,7 +160,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.GetDataValue()!.Should().AllSatisfy(p => p.IsActive.Should().BeTrue());
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByWithPaginationAsync_WithPriceFilter_ShouldReturnCorrectProducts()
     {
         // Arrange
@@ -176,7 +181,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.GetDataValue()!.Should().AllSatisfy(p => p.Price.Should().BeGreaterThan(100m));
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByWithPaginationAsync_WithCategoryFilter_ShouldReturnProductsFromCategory()
     {
         // Arrange
@@ -205,7 +210,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     #region [ Counting ]
 
-    [Fact]
+    [DockerFact]
     public async Task ListCountAsync_ShouldReturnTotalCount()
     {
         // Arrange
@@ -221,7 +226,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.GetDataValue().Should().Be(50);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByCountAsync_WithFilter_ShouldReturnFilteredCount()
     {
         // Arrange
@@ -241,7 +246,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     #region [ Edge Cases ]
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_BeyondLastPage_ShouldReturnEmptyList()
     {
         // Arrange
@@ -259,7 +264,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.HasData().Should().BeFalse();
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_LastPartialPage_ShouldReturnRemainingItems()
     {
         // Arrange
@@ -285,7 +290,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         result.GetDataValue()!.Count.Should().Be(5); // 50 - 45 = 5 remaining items
     }
 
-    [Fact]
+    [DockerFact]
     public async Task ListWithPaginationAsync_SingleItemPage_ShouldWork()
     {
         // Arrange
@@ -307,7 +312,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
 
     #region [ Complex Queries ]
 
-    [Fact]
+    [DockerFact]
     public async Task GetByWithPaginationAsync_ComplexFilter_ShouldReturnCorrectResults()
     {
         // Arrange
@@ -333,7 +338,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
         });
     }
 
-    [Fact]
+    [DockerFact]
     public async Task GetByWithPaginationAsync_ContainsFilter_ShouldWork()
     {
         // Arrange

@@ -137,7 +137,7 @@ public class PerformanceUnitTest
     [Fact]
     public void MongoDbProjectionOptions_BuildSourceProjection_ShouldCombineIncludeExclude()
     {
-        var options = new MongoDbProjectionOptions<IndexedCustomer, CustomerDto>()
+        MongoDbProjectionOptions<IndexedCustomer, CustomerDto> options = new MongoDbProjectionOptions<IndexedCustomer, CustomerDto>()
             .Include(c => c.Email)
             .Exclude(c => c.Active);
 
@@ -148,7 +148,7 @@ public class PerformanceUnitTest
     [Fact]
     public void MongoDbProjectionOptions_Build_ShouldRequireProjectExpression()
     {
-        var options = new MongoDbProjectionOptions<IndexedCustomer, CustomerDto>()
+        MongoDbProjectionOptions<IndexedCustomer, CustomerDto> options = new MongoDbProjectionOptions<IndexedCustomer, CustomerDto>()
             .Include(c => c.Email);
 
         Action act = () => options.Build();
@@ -170,7 +170,7 @@ public class PerformanceUnitTest
     [Fact]
     public void MongoCompoundIndexAttribute_ShouldParseFieldDirections()
     {
-        var attr = new MongoCompoundIndexAttribute { Fields = "Name:asc,Score:desc,Hash:hashed" };
+        _ = new MongoCompoundIndexAttribute { Fields = "Name:asc,Score:desc,Hash:hashed" };
         var manager = new MongoDbIndexManager();
         IReadOnlyList<CreateIndexModel<IndexedCustomer>> models = manager.BuildIndexModels<IndexedCustomer>();
         models.Should().NotBeEmpty();

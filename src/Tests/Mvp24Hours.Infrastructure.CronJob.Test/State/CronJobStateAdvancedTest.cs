@@ -112,10 +112,7 @@ public class CronJobStateAdvancedTest
         var store = new InMemoryCronJobStateStore();
 
         await Task.WhenAll(
-            Enumerable.Range(0, 20).Select(async i =>
-            {
-                await store.SaveStateAsync(new CronJobState("Concurrent") { ExecutionCount = i });
-            }));
+            Enumerable.Range(0, 20).Select(async i => await store.SaveStateAsync(new CronJobState("Concurrent") { ExecutionCount = i })));
 
         CronJobState? loaded = await store.GetStateAsync("Concurrent");
         loaded.Should().NotBeNull();

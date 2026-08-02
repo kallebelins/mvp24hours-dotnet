@@ -275,7 +275,7 @@ public class MoreConfigurationOptionsTest
     {
         var sut = new OutputCachePolicyOptions();
 
-        var result = sut
+        OutputCachePolicyOptions result = sut
             .Expire(TimeSpan.FromMinutes(5))
             .SetTags("products", "catalog")
             .SetVaryByHeader("Accept", "Accept-Language")

@@ -26,7 +26,7 @@ public class ExceptionMappersTest
     [Fact]
     public void DefaultExceptionToProblemDetailsMapper_Should_IncludeTraceId()
     {
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         context.TraceIdentifier = "trace-01";
         var sut = new DefaultExceptionToProblemDetailsMapper(Options.Create(new MvpProblemDetailsOptions()));
 
@@ -40,7 +40,7 @@ public class ExceptionMappersTest
     {
         var validationError = new MessageResult("name", "required", MessageType.Error);
         var exception = new ValidationException("invalid", [validationError]);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
         var sut = new ValidationProblemDetailsMapper(Options.Create(new MvpProblemDetailsOptions()));
 
         ProblemDetails details = sut.Map(exception, context);
@@ -64,7 +64,7 @@ public class ExceptionMappersTest
         var specialized = new FakeMapper();
         var defaultMapper = new DefaultExceptionToProblemDetailsMapper(Options.Create(new MvpProblemDetailsOptions()));
         var sut = new CompositeExceptionToProblemDetailsMapper([specialized], defaultMapper);
-        var context = WebApiTestHelpers.CreateHttpContext();
+        DefaultHttpContext context = WebApiTestHelpers.CreateHttpContext();
 
         ProblemDetails details = sut.Map(new NotSupportedException("special"), context);
 
@@ -75,14 +75,23 @@ public class ExceptionMappersTest
 
 internal sealed class FakeMapper : IExceptionToProblemDetailsMapper
 {
-    public bool CanHandle(Exception exception) => exception is NotSupportedException;
-
-    public int GetStatusCode(Exception exception) => 418;
-
-    public ProblemDetails Map(Exception exception, HttpContext context) => new()
+    public bool CanHandle(Exception exception)
     {
-        Status = 418,
-        Title = "custom",
-        Detail = exception.Message
-    };
+        return exception is NotSupportedException;
+    }
+
+    public int GetStatusCode(Exception exception)
+    {
+        return 418;
+    }
+
+    public ProblemDetails Map(Exception exception, HttpContext context)
+    {
+        return new()
+        {
+            Status = 418,
+            Title = "custom",
+            Detail = exception.Message
+        };
+    }
 }

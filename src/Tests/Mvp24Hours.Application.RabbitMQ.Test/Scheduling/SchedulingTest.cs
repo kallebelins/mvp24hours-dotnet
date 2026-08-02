@@ -1,10 +1,11 @@
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
+using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Scheduling;
 
@@ -92,7 +93,7 @@ public class SchedulingTest
     public async Task MessageScheduler_ScheduleInFuture_ShouldPersistMessage()
     {
         var store = new InMemoryScheduledMessageStore();
-        var client = RabbitMQTestHelpers.CreateInMemoryBus();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
         var scheduler = new MessageScheduler(
             store,
             client,
@@ -112,7 +113,7 @@ public class SchedulingTest
     public async Task MessageScheduler_ScheduleInPast_ShouldThrow()
     {
         var store = new InMemoryScheduledMessageStore();
-        var client = RabbitMQTestHelpers.CreateInMemoryBus();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
         var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
 
         Func<Task> act = () => scheduler.ScheduleMessageAsync(

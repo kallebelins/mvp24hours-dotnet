@@ -34,6 +34,7 @@ namespace Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga;
 /// </remarks>
 /// <param name="options">Saga execution options.</param>
 /// <param name="stateStore">Optional state store for persistence.</param>
+/// <param name="logger"></param>
 public class PipelineSagaOrchestrator<TContext>(
     PipelineSagaOptions? options = null,
     IPipelineSagaStateStore<TContext>? stateStore = null,

@@ -27,8 +27,8 @@ public static class TaskExtensions
     }
 
     /// <summary>
-    /// Executes an async Task<T> method which has a T return type synchronously
-    /// USAGE: T result = AsyncUtil.RunSync(() => AsyncMethod<T>());
+    /// Executes an async Task&lt;T&gt; method which has a T return type synchronously
+    /// USAGE: T result = AsyncUtil.RunSync(() => AsyncMethod&lt;T&gt;());
     /// </summary>
     public static TResult RunSync<TResult>(this Func<Task<TResult>> task)
     {

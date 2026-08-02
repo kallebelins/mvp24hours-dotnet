@@ -12,10 +12,11 @@ namespace Mvp24Hours.Infrastructure.Email.Results;
 /// <para>
 /// This class encapsulates the outcome of sending an email, including success status,
 /// message ID (if provided by the email provider), and any error information.
-/// </remarks>
+/// </para>
 /// <para>
 /// The result is immutable and provides factory methods for creating success and failure results.
 /// </para>
+/// </remarks>
 public class EmailSendResult
 {
     /// <summary>
