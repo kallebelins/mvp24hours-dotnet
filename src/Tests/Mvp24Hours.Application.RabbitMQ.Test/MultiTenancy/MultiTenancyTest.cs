@@ -268,6 +268,62 @@ public class MultiTenancyTest
         factory.GetVirtualHost("acme").Should().Be("/tenants/acme");
     }
 
+    [Fact]
+    public void TenantConnectionFactory_GetVirtualHost_WithStaticConfig_ShouldReturnConfiguredValue()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory(new TenantRabbitMQOptions
+        {
+            Tenants =
+            {
+                ["tenant-static"] = new TenantRabbitMQConnectionConfig { VirtualHost = "/custom-vhost" }
+            }
+        });
+
+        factory.GetVirtualHost("tenant-static").Should().Be("/custom-vhost");
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_GetOrCreateConnection_WithNullTenantId_ShouldThrow()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+
+        Action act = () => factory.GetOrCreateConnection(null!);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_GetOrCreateChannel_ShouldCreateModelFromPooledConnection()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> connectionMock = CreateOpenConnectionMock();
+        Mock<IModel> channelMock = new();
+        connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
+        InjectPooledConnection(factory, "tenant-channel", connectionMock.Object);
+
+        IModel channel = factory.GetOrCreateChannel("tenant-channel");
+
+        channel.Should().BeSameAs(channelMock.Object);
+        connectionMock.Verify(c => c.CreateModel(), Times.Once);
+    }
+
+    [Fact]
+    public void TenantConnectionFactory_CloseAllConnections_ShouldCloseEveryTenant()
+    {
+        using TenantConnectionFactory factory = CreateTenantConnectionFactory();
+        Mock<IConnection> first = CreateOpenConnectionMock();
+        Mock<IConnection> second = CreateOpenConnectionMock();
+        InjectPooledConnection(factory, "tenant-1", first.Object);
+        InjectPooledConnection(factory, "tenant-2", second.Object);
+
+        factory.CloseAllConnections();
+
+        factory.HasConnection("tenant-1").Should().BeFalse();
+        factory.HasConnection("tenant-2").Should().BeFalse();
+        first.Verify(c => c.Close(), Times.Once);
+        second.Verify(c => c.Close(), Times.Once);
+    }
+
     private static TenantConnectionFactory CreateTenantConnectionFactory(TenantRabbitMQOptions? tenantOptions = null)
     {
         tenantOptions ??= new TenantRabbitMQOptions();

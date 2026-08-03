@@ -125,4 +125,13 @@ internal static class RabbitMQTestHelpers
     {
         return NullLogger<T>.Instance;
     }
+
+    public static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        while (!condition())
+        {
+            await Task.Delay(50, cts.Token);
+        }
+    }
 }

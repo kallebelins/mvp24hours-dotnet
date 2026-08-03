@@ -197,4 +197,146 @@ public class ApplicationServiceBaseAsyncTest
 
         result.Data.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task GetByCountAsync_ShouldReturnRepositoryCount()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        repo.Setup(r => r.GetByCountAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<int> result = await service.GetByCountAsync(e => e.Active);
+
+        result.Data.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GetByAnyAsync_ShouldReturnRepositoryResult()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        repo.Setup(r => r.GetByAnyAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<bool> result = await service.GetByAnyAsync(e => e.Active);
+
+        result.Data.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ModifyAsync_InvalidEntity_ShouldReturnValidationErrors()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object, new AppTestEntityValidator());
+
+        IBusinessResult<int> result = await service.ModifyAsync(new AppTestEntity { Id = 1, Name = "" });
+
+        result.HasErrors.Should().BeTrue();
+        repo.Verify(r => r.ModifyAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ModifyAsync_BatchValidEntities_ShouldUpdateAll()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object, new AppTestEntityValidator());
+
+        IBusinessResult<int> result = await service.ModifyAsync([
+            new AppTestEntity { Id = 1, Name = "A" },
+            new AppTestEntity { Id = 2, Name = "B" }
+        ]);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.ModifyAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ModifyAsync_EmptyBatch_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<int> result = await service.ModifyAsync([]);
+
+        result.Data.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_Batch_ShouldRemoveAllEntities()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<int> result = await service.RemoveAsync([
+            new AppTestEntity { Id = 1, Name = "A" },
+            new AppTestEntity { Id = 2, Name = "B" }
+        ]);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.RemoveAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_EmptyBatch_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<int> result = await service.RemoveAsync([]);
+
+        result.Data.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CountBySpecificationAsync_WithNullSpec_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<int> result = await service.CountBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetBySpecificationAsync_WithNullSpec_ShouldReturnEmptyList()
+    {
+        (Mock<IUnitOfWorkAsync> uow, _) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<IList<AppTestEntity>> result = await service.GetBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetSingleBySpecificationAsync_WithFallback_ShouldReturnSingleMatch()
+    {
+        var items = new List<AppTestEntity> { new() { Id = 1, Name = "Single", Active = true } };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<AppTestEntity?> result = await service.GetSingleBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data!.Name.Should().Be("Single");
+    }
+
+    [Fact]
+    public async Task GetFirstBySpecificationAsync_WithFallback_ShouldReturnFirstMatch()
+    {
+        var items = new List<AppTestEntity>
+        {
+            new() { Id = 1, Name = "First", Active = true },
+            new() { Id = 2, Name = "Second", Active = true }
+        };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) = ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
+        var service = new TestApplicationServiceAsync(uow.Object);
+
+        IBusinessResult<AppTestEntity?> result = await service.GetFirstBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data!.Name.Should().Be("First");
+    }
 }

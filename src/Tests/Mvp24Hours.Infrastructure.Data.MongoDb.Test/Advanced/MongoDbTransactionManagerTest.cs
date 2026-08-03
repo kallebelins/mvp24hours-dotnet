@@ -1,6 +1,10 @@
+using System.Net;
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Clusters;
+using MongoDB.Driver.Core.Connections;
+using MongoDB.Driver.Core.Servers;
 using Moq;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Transactions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
@@ -269,6 +273,143 @@ public class MongoDbTransactionManagerUnitTest
         sessionMock.Verify(s => s.AbortTransaction(), Times.Once);
         sessionMock.Verify(s => s.Dispose(), Times.Once);
         manager.CurrentSession.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task BeginTransactionAsync_WithTransactionOptions_ShouldStartTransactionWithOptions()
+    {
+        Mock<IClientSessionHandle> sessionMock = CreateSessionMock(isInTransaction: false);
+        var clientMock = new Mock<IMongoClient>();
+        clientMock
+            .Setup(c => c.StartSessionAsync(It.IsAny<ClientSessionOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessionMock.Object);
+
+        var manager = new MongoDbTransactionManager(clientMock.Object);
+        var transactionOptions = new TransactionOptions(readConcern: ReadConcern.Local);
+
+        await manager.BeginTransactionAsync(transactionOptions);
+
+        sessionMock.Verify(s => s.StartTransaction(
+            It.Is<TransactionOptions>(o => o.ReadConcern == ReadConcern.Local)), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteInTransactionAsync_VoidOverload_ShouldExecuteOperation()
+    {
+        Mock<IClientSessionHandle> sessionMock = CreateSessionMock(isInTransaction: false);
+        var clientMock = new Mock<IMongoClient>();
+        clientMock
+            .Setup(c => c.StartSessionAsync(It.IsAny<ClientSessionOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessionMock.Object);
+
+        var manager = new MongoDbTransactionManager(clientMock.Object);
+        bool operationExecuted = false;
+
+        await manager.ExecuteInTransactionAsync(async (_, _) =>
+        {
+            operationExecuted = true;
+            await Task.CompletedTask;
+        });
+
+        operationExecuted.Should().BeTrue();
+        sessionMock.Verify(s => s.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteInTransactionAsync_WhenCommitReturnsUnknownResult_ShouldRetryAndSucceed()
+    {
+        Mock<IClientSessionHandle> sessionMock = CreateSessionMock(isInTransaction: false);
+        int commitAttempts = 0;
+        sessionMock
+            .Setup(s => s.CommitTransactionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                commitAttempts++;
+                if (commitAttempts == 1)
+                {
+                    throw CreateUnknownCommitResultException();
+                }
+
+                return Task.CompletedTask;
+            });
+
+        var clientMock = new Mock<IMongoClient>();
+        clientMock
+            .Setup(c => c.StartSessionAsync(It.IsAny<ClientSessionOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessionMock.Object);
+
+        var manager = new MongoDbTransactionManager(
+            clientMock.Object,
+            options: new MongoDbTransactionOptions { MaxCommitRetries = 3, RetryDelayMs = 1 });
+
+        int result = await manager.ExecuteInTransactionAsync((_, _) => Task.FromResult(99));
+
+        result.Should().Be(99);
+        await WaitUntilAsync(() => commitAttempts >= 2, TimeSpan.FromSeconds(5));
+        sessionMock.Verify(s => s.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task CommitTransactionAsync_WhenUnknownCommitResult_ShouldRetryAndSucceed()
+    {
+        Mock<IClientSessionHandle> sessionMock = CreateSessionMock(isInTransaction: true);
+        int commitAttempts = 0;
+        sessionMock
+            .Setup(s => s.CommitTransactionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                commitAttempts++;
+                if (commitAttempts == 1)
+                {
+                    throw CreateUnknownCommitResultException();
+                }
+
+                return Task.CompletedTask;
+            });
+
+        var clientMock = new Mock<IMongoClient>();
+        clientMock
+            .Setup(c => c.StartSessionAsync(It.IsAny<ClientSessionOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessionMock.Object);
+
+        var manager = new MongoDbTransactionManager(
+            clientMock.Object,
+            options: new MongoDbTransactionOptions { MaxCommitRetries = 3, RetryDelayMs = 1 });
+
+        await manager.BeginTransactionAsync();
+        await manager.CommitTransactionAsync();
+
+        await WaitUntilAsync(() => commitAttempts >= 2, TimeSpan.FromSeconds(5));
+        sessionMock.Verify(s => s.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    private static MongoCommandException CreateUnknownCommitResultException()
+    {
+        var connectionId = new ConnectionId(new ServerId(new ClusterId(1), new DnsEndPoint("localhost", 27017)), 1);
+        var result = new BsonDocument
+        {
+            { "code", 112 },
+            { "codeName", "WriteConflict" },
+            { "errorLabels", new BsonArray { "UnknownTransactionCommitResult" } }
+        };
+
+        return new MongoCommandException(connectionId, "Unknown commit result", [], result);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow.Add(timeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return;
+            }
+
+            await Task.Delay(10);
+        }
+
+        condition().Should().BeTrue("expected condition to be met before timeout");
     }
 
     private static Mock<IClientSessionHandle> CreateSessionMock(bool isInTransaction)

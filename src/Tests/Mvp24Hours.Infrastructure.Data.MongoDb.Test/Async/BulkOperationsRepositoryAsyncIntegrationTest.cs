@@ -1,6 +1,8 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.MongoDb;
+using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
@@ -345,5 +347,200 @@ public class BulkOperationsRepositoryAsyncIntegrationTest(MongoDbIntegrationFixt
             Builders<TestEntity>.Update.Set(e => e.Name, "Def-Archived"));
 
         modified.Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task BulkInsertAsync_Unordered_WithDuplicateKey_ShouldReturnPartialSuccess()
+    {
+        string databaseName = $"bulk_partial_{Guid.NewGuid():N}";
+        await CleanupAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+        IMongoCollection<TestEntity> collection = fixture.Client.GetDatabase(databaseName).GetCollection<TestEntity>(typeof(TestEntity).Name);
+
+        var existingId = ObjectId.GenerateNewId();
+        await collection.InsertOneAsync(new TestEntity { Id = existingId, Name = "Existing" });
+        long initialCount = await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty);
+
+        List<TestEntity> entities =
+        [
+            new TestEntity { Name = "Partial-First" },
+            new TestEntity { Id = existingId, Name = "Partial-Duplicate" },
+            new TestEntity { Name = "Partial-Second" }
+        ];
+
+        BulkOperationResult result = await repository.BulkInsertAsync(
+            entities,
+            new MongoDbBulkOperationOptions { IsOrdered = false, UseTransaction = false, BatchSize = 10 });
+
+        result.IsSuccess.Should().BeTrue();
+        result.RowsAffected.Should().BeGreaterThan(0);
+
+        await WaitUntilAsync(
+            async () => await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty) >= initialCount + 2,
+            TimeSpan.FromSeconds(10));
+
+        long finalCount = await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty);
+        finalCount.Should().Be(initialCount + 2);
+        (await repository.GetByCountAsync(e => e.Name == "Partial-First")).Should().Be(1);
+        (await repository.GetByCountAsync(e => e.Name == "Partial-Second")).Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task BulkInsertAsync_Ordered_WithDuplicateKey_ShouldReturnFailure()
+    {
+        string databaseName = $"bulk_ordered_{Guid.NewGuid():N}";
+        await CleanupAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+        IMongoCollection<TestEntity> collection = fixture.Client.GetDatabase(databaseName).GetCollection<TestEntity>(typeof(TestEntity).Name);
+
+        var existingId = ObjectId.GenerateNewId();
+        await collection.InsertOneAsync(new TestEntity { Id = existingId, Name = "Existing" });
+        long initialCount = await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty);
+
+        List<TestEntity> entities =
+        [
+            new TestEntity { Name = "Ordered-First" },
+            new TestEntity { Id = existingId, Name = "Ordered-Duplicate" },
+            new TestEntity { Name = "Ordered-Second" }
+        ];
+
+        BulkOperationResult result = await repository.BulkInsertAsync(
+            entities,
+            new MongoDbBulkOperationOptions { IsOrdered = true, UseTransaction = false, BatchSize = 10 });
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Contain("partially failed");
+
+        long finalCount = await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty);
+        finalCount.Should().BeLessThan(initialCount + 3);
+        (await repository.GetByCountAsync(e => e.Name == "Ordered-Second")).Should().Be(0);
+    }
+
+    [DockerFact]
+    public async Task BulkWriteAsync_Unordered_WithDuplicateKey_ShouldReturnPartialSuccess()
+    {
+        string databaseName = $"bulkwrite_partial_{Guid.NewGuid():N}";
+        await CleanupAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+        IMongoCollection<TestEntity> collection = fixture.Client.GetDatabase(databaseName).GetCollection<TestEntity>(typeof(TestEntity).Name);
+
+        var existingId = ObjectId.GenerateNewId();
+        await collection.InsertOneAsync(new TestEntity { Id = existingId, Name = "Existing" });
+        long initialCount = await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty);
+
+        IEnumerable<WriteModel<TestEntity>> writeModels =
+        [
+            new InsertOneModel<TestEntity>(new TestEntity { Name = "Write-First" }),
+            new InsertOneModel<TestEntity>(new TestEntity { Id = existingId, Name = "Write-Duplicate" }),
+            new InsertOneModel<TestEntity>(new TestEntity { Name = "Write-Second" })
+        ];
+
+        MongoDbBulkOperationResult result = await repository.BulkWriteAsync(
+            writeModels,
+            new MongoDbBulkOperationOptions { IsOrdered = false, UseTransaction = false });
+
+        result.IsSuccess.Should().BeTrue();
+        result.InsertedCount.Should().BeGreaterThan(0);
+
+        await WaitUntilAsync(
+            async () => await collection.CountDocumentsAsync(FilterDefinition<TestEntity>.Empty) >= initialCount + 2,
+            TimeSpan.FromSeconds(10));
+
+        (await repository.GetByCountAsync(e => e.Name == "Write-First")).Should().Be(1);
+        (await repository.GetByCountAsync(e => e.Name == "Write-Second")).Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task BulkWriteAsync_Ordered_WithDuplicateKey_ShouldReturnFailure()
+    {
+        string databaseName = $"bulkwrite_ordered_{Guid.NewGuid():N}";
+        await CleanupAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+        IMongoCollection<TestEntity> collection = fixture.Client.GetDatabase(databaseName).GetCollection<TestEntity>(typeof(TestEntity).Name);
+
+        var existingId = ObjectId.GenerateNewId();
+        await collection.InsertOneAsync(new TestEntity { Id = existingId, Name = "Existing" });
+
+        IEnumerable<WriteModel<TestEntity>> writeModels =
+        [
+            new InsertOneModel<TestEntity>(new TestEntity { Name = "WriteOrdered-First" }),
+            new InsertOneModel<TestEntity>(new TestEntity { Id = existingId, Name = "WriteOrdered-Duplicate" }),
+            new InsertOneModel<TestEntity>(new TestEntity { Name = "WriteOrdered-Second" })
+        ];
+
+        MongoDbBulkOperationResult result = await repository.BulkWriteAsync(
+            writeModels,
+            new MongoDbBulkOperationOptions { IsOrdered = true, UseTransaction = false });
+
+        result.IsSuccess.Should().BeFalse();
+        result.WriteErrorCount.Should().BeGreaterThan(0);
+        (await repository.GetByCountAsync(e => e.Name == "WriteOrdered-Second")).Should().Be(0);
+    }
+
+    [DockerFact]
+    public async Task BulkInsertAsync_WithoutBypassDocumentValidation_ShouldFailOnInvalidDocuments()
+    {
+        string databaseName = $"bulk_validation_{Guid.NewGuid():N}";
+        await SetupValidatedTestEntityCollectionAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+
+        BulkOperationResult result = await repository.BulkInsertAsync(
+            [new TestEntity { Name = string.Empty }],
+            new MongoDbBulkOperationOptions { BypassDocumentValidation = false, UseTransaction = false });
+
+        result.IsSuccess.Should().BeFalse();
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
+    [DockerFact]
+    public async Task BulkInsertAsync_WithBypassDocumentValidation_ShouldInsertInvalidDocuments()
+    {
+        string databaseName = $"bulk_bypass_{Guid.NewGuid():N}";
+        await SetupValidatedTestEntityCollectionAsync(databaseName);
+        BulkOperationsRepositoryAsync<TestEntity> repository = CreateRepository(databaseName);
+
+        BulkOperationResult result = await repository.BulkInsertAsync(
+            [new TestEntity { Name = string.Empty }],
+            new MongoDbBulkOperationOptions { BypassDocumentValidation = true, UseTransaction = false });
+
+        result.IsSuccess.Should().BeTrue();
+        result.RowsAffected.Should().Be(1);
+
+        await WaitUntilAsync(async () => await repository.ListCountAsync() == 1, TimeSpan.FromSeconds(10));
+        (await repository.ListAsync()).Should().ContainSingle().Which.Name.Should().BeEmpty();
+    }
+
+    private async Task SetupValidatedTestEntityCollectionAsync(string databaseName)
+    {
+        IMongoDatabase database = fixture.Client.GetDatabase(databaseName);
+        await database.DropCollectionAsync(typeof(TestEntity).Name);
+
+        BsonDocument schema = new JsonSchemaBuilder()
+            .WithBsonType("object")
+            .WithRequired("Name")
+            .WithProperty("Name", p => p.WithBsonType("string").WithMinLength(1))
+            .Build();
+
+        var validationService = new MongoDbSchemaValidationService(database);
+        await validationService.CreateCollectionWithValidationAsync(typeof(TestEntity).Name, schema);
+    }
+
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow.Add(timeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (await condition())
+            {
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+
+        if (!await condition())
+        {
+            throw new TimeoutException($"Condition was not met within {timeout.TotalSeconds} seconds.");
+        }
     }
 }

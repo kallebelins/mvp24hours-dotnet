@@ -29,8 +29,7 @@ public class SpecificationIntegrationTest(SqlServerContainerFixture fixture) : I
             return;
         }
 
-        await _fixture.ClearDatabaseAsync();
-        await SeedTestDataAsync();
+        await _fixture.ResetDatabaseAsync(SeedTestDataAsync);
     }
 
     public Task DisposeAsync()

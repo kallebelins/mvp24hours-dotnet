@@ -271,4 +271,76 @@ public class TypedResultsExtensionsExtendedTest
         result.ProblemDetails.Extensions.Should().ContainKey("entityId");
         result.ProblemDetails.Extensions.Should().ContainKey("stackTrace");
     }
+
+    [Fact]
+    public void ToProblem_WithIncludeDetailsFalse_Should_HideUnexpectedExceptionMessage()
+    {
+        var exception = new Exception("sensitive internal details");
+
+        ProblemHttpResult result = exception.ToProblem(includeDetails: false);
+
+        result.ProblemDetails.Detail.Should().Be("An unexpected error has occurred. Please try again later.");
+        result.ProblemDetails.Extensions.Should().NotContainKey("exception");
+    }
+
+    [Fact]
+    public void ToProblem_WithIncludeDetailsFalse_Should_KeepSafeDomainExceptionMessage()
+    {
+        var exception = new DomainException("Order must be active", "Order", "MustBeActive");
+
+        ProblemHttpResult result = exception.ToProblem(includeDetails: false);
+
+        result.ProblemDetails.Detail.Should().Be("Order must be active");
+        result.ProblemDetails.Extensions.Should().NotContainKey("exception");
+    }
+
+    [Fact]
+    public void ToProblem_Should_MapOperationCanceledException()
+    {
+        var exception = new OperationCanceledException("request aborted");
+
+        ProblemHttpResult result = exception.ToProblem(includeDetails: true);
+
+        result.StatusCode.Should().Be(499);
+        result.ProblemDetails.Title.Should().Be("Request Cancelled");
+    }
+
+    [Fact]
+    public void ToProblem_Should_MapNotImplementedException()
+    {
+        var exception = new NotImplementedException("feature pending");
+
+        ProblemHttpResult result = exception.ToProblem(includeDetails: true);
+
+        result.StatusCode.Should().Be(StatusCodes.Status501NotImplemented);
+        result.ProblemDetails.Title.Should().Be("Not Implemented");
+    }
+
+    [Fact]
+    public void ToProblem_Should_MapArgumentNullException()
+    {
+        var exception = new ArgumentNullException("orderId");
+
+        ProblemHttpResult result = exception.ToProblem(includeDetails: true);
+
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        result.ProblemDetails.Title.Should().Be("Missing Required Value");
+    }
+
+    [Fact]
+    public void ValidationProblem_WithDictionary_Should_CreateValidationProblem()
+    {
+        var errors = new Dictionary<string, string[]>
+        {
+            ["Email"] = ["Required", "Invalid format"],
+            ["Name"] = ["Required"]
+        };
+
+        ValidationProblem result = TypedResultsExtensions.ValidationProblem(errors, "/users");
+
+        result.Should().BeOfType<ValidationProblem>();
+        result.ProblemDetails.Errors.Should().ContainKey("Email");
+        result.ProblemDetails.Errors["Email"].Should().HaveCount(2);
+        result.ProblemDetails.Instance.Should().Be("/users");
+    }
 }

@@ -23,7 +23,7 @@
     Skip TreatWarningsAsErrors build.
 
 .PARAMETER MinimumLineCoverage
-    Coverage floor (default 65 — Phase 2 gate).
+    Coverage floor (default 75 — Phase 3 gate).
 
 .EXAMPLE
     ./scripts/run-ci-local.ps1
@@ -35,7 +35,7 @@ param(
     [switch]$SkipIntegration,
     [switch]$SkipFormat,
     [switch]$SkipWarningsGate,
-    [double]$MinimumLineCoverage = 65
+    [double]$MinimumLineCoverage = 75
 )
 
 $ErrorActionPreference = 'Stop'
@@ -51,6 +51,53 @@ function Invoke-Step {
     & $Action
     if ($LASTEXITCODE -ne 0) {
         throw "Step failed: $Name (exit code $LASTEXITCODE)"
+    }
+}
+
+function Invoke-TestProjectsWithCoverage {
+    param(
+        [string]$Filter,
+        [string]$ResultsDirectory
+    )
+
+    if (Test-Path $ResultsDirectory) {
+        Remove-Item $ResultsDirectory -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Force $ResultsDirectory | Out-Null
+
+    $testProjects = Get-ChildItem src/Tests -Filter *.csproj -Recurse
+    foreach ($project in $testProjects) {
+        $projectName = [System.IO.Path]::GetFileNameWithoutExtension($project.Name)
+        Write-Host "  -> $projectName" -ForegroundColor DarkGray
+
+        $attempt = 0
+        $maxAttempts = 2
+        do {
+            $attempt++
+            if ($attempt -gt 1) {
+                Write-Host "    retry $attempt/$maxAttempts after testhost failure" -ForegroundColor Yellow
+                [System.GC]::Collect()
+                [System.GC]::WaitForPendingFinalizers()
+                Start-Sleep -Seconds 2
+            }
+
+            dotnet test $project.FullName `
+                --configuration Release `
+                --no-build `
+                --filter $Filter `
+                --verbosity quiet `
+                --settings coverlet.runsettings `
+                --collect:"XPlat Code Coverage" `
+                --results-directory (Join-Path $ResultsDirectory $projectName)
+        } while ($LASTEXITCODE -ne 0 -and $attempt -lt $maxAttempts)
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "Tests failed in $projectName (exit code $LASTEXITCODE)"
+        }
+
+        [System.GC]::Collect()
+        [System.GC]::WaitForPendingFinalizers()
     }
 }
 
@@ -84,32 +131,12 @@ try {
     }
     else {
         Invoke-Step 'Unit tests (with coverage)' {
-            if (Test-Path ./test-results/unit) {
-                Remove-Item ./test-results/unit -Recurse -Force
-            }
-            dotnet test src/Mvp24Hours.slnx `
-                --configuration Release `
-                --no-build `
-                --filter "Category!=Integration" `
-                --verbosity minimal `
-                --settings coverlet.runsettings `
-                --collect:"XPlat Code Coverage" `
-                --results-directory ./test-results/unit
+            Invoke-TestProjectsWithCoverage -Filter "Category!=Integration" -ResultsDirectory ./test-results/unit
         }
 
         if (-not $SkipIntegration) {
             Invoke-Step 'Integration tests (with coverage)' {
-                if (Test-Path ./test-results/integration) {
-                    Remove-Item ./test-results/integration -Recurse -Force
-                }
-                dotnet test src/Mvp24Hours.slnx `
-                    --configuration Release `
-                    --no-build `
-                    --filter "Category=Integration" `
-                    --verbosity minimal `
-                    --settings coverlet.runsettings `
-                    --collect:"XPlat Code Coverage" `
-                    --results-directory ./test-results/integration
+                Invoke-TestProjectsWithCoverage -Filter "Category=Integration" -ResultsDirectory ./test-results/integration
             }
         }
 

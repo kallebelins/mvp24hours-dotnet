@@ -6,6 +6,7 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Consumers;
 
+[Trait("Category", "Unit")]
 public class ConsumersTest
 {
     [Fact]

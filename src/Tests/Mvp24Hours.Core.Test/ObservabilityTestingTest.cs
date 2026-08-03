@@ -593,21 +593,22 @@ public class ObservabilityTestingTest
     {
         // Arrange
         using var fixture = new ObservabilityTestFixture("Mvp24Hours.*");
+        fixture.Reset();
 
         var logger = (ILogger)fixture.LoggerProvider.CreateLogger("Test");
         logger.LogInformation("Test log");
 
-        using (Mvp24HoursActivitySources.Core.Source.StartActivity("TestActivity")) { }
+        using (Mvp24HoursActivitySources.Core.Source.StartActivity("ResetTestActivity")) { }
 
-        fixture.LoggerProvider.LogCount.Should().BeGreaterThan(0);
-        fixture.ActivityListener.ActivityCount.Should().BeGreaterThan(0);
+        fixture.LoggerProvider.ContainsLog(LogLevel.Information, "Test log").Should().BeTrue();
+        fixture.ActivityListener.HasActivity("ResetTestActivity").Should().BeTrue();
 
         // Act
         fixture.Reset();
 
-        // Assert
+        // Assert — use targeted checks; ActivityCount is shared across parallel tests using Mvp24Hours sources
         fixture.LoggerProvider.LogCount.Should().Be(0);
-        fixture.ActivityListener.ActivityCount.Should().Be(0);
+        fixture.ActivityListener.HasActivity("ResetTestActivity").Should().BeFalse();
         fixture.MeterListener.MeasurementCount.Should().Be(0);
     }
 

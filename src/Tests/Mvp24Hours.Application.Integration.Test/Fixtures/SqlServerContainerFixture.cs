@@ -19,6 +19,7 @@ namespace Mvp24Hours.Application.Integration.Test.Fixtures;
 public class SqlServerContainerFixture : IAsyncLifetime
 {
     private const string DatabaseName = "Mvp24HoursIntegrationTest";
+    private readonly SemaphoreSlim _databaseLock = new(1, 1);
     private MsSqlContainer? _container;
 
     public IServiceProvider ServiceProvider { get; private set; } = null!;
@@ -100,7 +101,46 @@ public class SqlServerContainerFixture : IAsyncLifetime
     /// <summary>
     /// Clears all data from the database (for test isolation).
     /// </summary>
-    public async Task ClearDatabaseAsync()
+    public Task ClearDatabaseAsync()
+    {
+        return ExecuteWithDatabaseLockAsync(ClearDatabaseCoreAsync);
+    }
+
+    /// <summary>
+    /// Atomically clears the database and runs a seed action under the same lock.
+    /// </summary>
+    public Task ResetDatabaseAsync(Func<Task> seedAsync)
+    {
+        return ExecuteWithDatabaseLockAsync(async () =>
+        {
+            await ClearDatabaseCoreAsync().ConfigureAwait(false);
+            await seedAsync().ConfigureAwait(false);
+        });
+    }
+
+    /// <summary>
+    /// Runs an action under an exclusive database lock (clear + seed must use this to stay atomic).
+    /// </summary>
+    public async Task ExecuteWithDatabaseLockAsync(Func<Task> action)
+    {
+        if (!IsAvailable)
+        {
+            await action().ConfigureAwait(false);
+            return;
+        }
+
+        await _databaseLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        finally
+        {
+            _databaseLock.Release();
+        }
+    }
+
+    private async Task ClearDatabaseCoreAsync()
     {
         if (!IsAvailable)
         {
@@ -119,7 +159,7 @@ public class SqlServerContainerFixture : IAsyncLifetime
 /// <summary>
 /// Collection definition for SQL Server tests.
 /// </summary>
-[CollectionDefinition("SqlServer")]
+[CollectionDefinition("SqlServer", DisableParallelization = true)]
 public class SqlServerCollectionDefinition : ICollectionFixture<SqlServerContainerFixture>
 {
 }

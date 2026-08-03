@@ -308,6 +308,107 @@ public class ChannelBatchProcessorTest
         await act.Should().ThrowAsync<ObjectDisposedException>();
     }
 
+    [Fact]
+    public async Task AddMessageAsync_WithoutRegisteredConsumer_ShouldAckAllMessages()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 2, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(200) };
+        var services = new ServiceCollection();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options, provider, serializer, logger, channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "no-consumer" }, deliveryTag: 20));
+
+        await WaitUntilAsync(() => channelMock.Invocations.Any(i => i.Method.Name == "BasicAck"), TimeSpan.FromSeconds(5));
+
+        channelMock.Verify(c => c.BasicAck(20, false), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WhenConsumerThrows_ShouldNackAllMessages()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 1, MinBatchSize = 1, BatchTimeout = TimeSpan.FromMilliseconds(200), RequeueOnFailure = true };
+        var services = new ServiceCollection();
+        services.AddSingleton<IBatchConsumer<TestOrderEvent>, ThrowingBatchConsumer>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options, provider, serializer, logger, channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "throw" }, deliveryTag: 21));
+
+        await WaitUntilAsync(() => channelMock.Invocations.Any(i => i.Method.Name == "BasicNack"), TimeSpan.FromSeconds(5));
+
+        channelMock.Verify(c => c.BasicNack(21, false, true), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddMessageAsync_WhenMaxBatchSizeReached_ShouldProcessFullBatch()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 3, MinBatchSize = 1, BatchTimeout = TimeSpan.FromSeconds(5) };
+        var services = new ServiceCollection();
+        services.AddSingleton<IBatchConsumer<TestOrderEvent>, TestBatchConsumer>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        await using var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options, provider, serializer, logger, channel: channelMock.Object);
+
+        processor.Start();
+        for (ulong tag = 30; tag < 33; tag++)
+        {
+            await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = $"batch-{tag}" }, deliveryTag: tag));
+        }
+
+        await WaitUntilAsync(() => channelMock.Invocations.Count(i => i.Method.Name == "BasicAck") >= 3, TimeSpan.FromSeconds(5));
+
+        channelMock.Verify(c => c.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(3));
+    }
+
+    [Fact]
+    public async Task FlushAsync_ShouldProcessPendingMessages()
+    {
+        var options = new BatchConsumerOptions { MaxBatchSize = 10, MinBatchSize = 5, BatchTimeout = TimeSpan.FromSeconds(30) };
+        var services = new ServiceCollection();
+        services.AddSingleton<IBatchConsumer<TestOrderEvent>, TestBatchConsumer>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        var serializer = new JsonMessageSerializer();
+        ILogger<ChannelBatchProcessor<TestOrderEvent>> logger = NullLogger<ChannelBatchProcessor<TestOrderEvent>>.Instance;
+        var channelMock = new Mock<IModel>();
+
+        var processor = new ChannelBatchProcessor<TestOrderEvent>(
+            options, provider, serializer, logger, channel: channelMock.Object);
+
+        processor.Start();
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "flush-1" }, deliveryTag: 40));
+        await processor.AddMessageAsync(CreateEventArgs(new TestOrderEvent { Name = "flush-2" }, deliveryTag: 41));
+        await processor.FlushAsync();
+
+        channelMock.Verify(c => c.BasicAck(40, false), Times.Once);
+        channelMock.Verify(c => c.BasicAck(41, false), Times.Once);
+        await processor.DisposeAsync();
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        while (!condition())
+        {
+            await Task.Delay(50, cts.Token);
+        }
+    }
+
     private static BasicDeliverEventArgs CreateEventArgs(TestOrderEvent message, ulong deliveryTag)
     {
         byte[] body = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message));
@@ -341,6 +442,14 @@ public class ChannelBatchProcessorTest
                     ? (IBatchMessageResult)BatchMessageResult.Ack(m.DeliveryTag)
                     : BatchMessageResult.Nack(m.DeliveryTag, requeue: true));
             return Task.FromResult<IEnumerable<IBatchMessageResult>?>(results);
+        }
+    }
+
+    private sealed class ThrowingBatchConsumer : IBatchConsumer<TestOrderEvent>
+    {
+        public Task<IEnumerable<IBatchMessageResult>?> ConsumeAsync(IBatchConsumeContext<TestOrderEvent> context, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("batch consumer failure");
         }
     }
 }

@@ -12,6 +12,7 @@ using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Consumers;
 
+[Trait("Category", "Unit")]
 public class BatchConsumerProcessorTest
 {
     private static BatchConsumerOptions CreateOptions(Action<BatchConsumerOptions>? configure = null)

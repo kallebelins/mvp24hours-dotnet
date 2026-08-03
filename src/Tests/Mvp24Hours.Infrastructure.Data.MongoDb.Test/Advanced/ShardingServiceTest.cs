@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Moq;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Sharding;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Advanced;
@@ -70,5 +71,60 @@ public class ShardingServiceTest
         options.ShardKeyFields.Should().HaveCount(2);
         options.UniqueShardKey.Should().BeTrue();
         options.NumInitialChunks.Should().Be(4);
+    }
+
+    [Fact]
+    public void Constructor_WithNullClient_ShouldThrowArgumentNullException()
+    {
+        Action act = () => _ = new MongoDbShardingService(null!);
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task GetShardDistributionAsync_ShouldMapShardStats()
+    {
+        var clientMock = new Moq.Mock<IMongoClient>();
+        var databaseMock = new Moq.Mock<IMongoDatabase>();
+        var stats = new BsonDocument
+        {
+            { "count", 100 },
+            { "size", 2048 },
+            {
+                "shards", new BsonDocument
+                {
+                    {
+                        "shard01", new BsonDocument
+                        {
+                            { "count", 60 },
+                            { "size", 1200 }
+                        }
+                    },
+                    {
+                        "shard02", new BsonDocument
+                        {
+                            { "count", 40 },
+                            { "size", 848 }
+                        }
+                    }
+                }
+            }
+        };
+
+        clientMock.Setup(c => c.GetDatabase("orders", null)).Returns(databaseMock.Object);
+        databaseMock
+            .Setup(d => d.RunCommandAsync(
+                It.IsAny<BsonDocumentCommand<BsonDocument>>(),
+                It.IsAny<ReadPreference>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(stats);
+
+        var service = new MongoDbShardingService(clientMock.Object);
+
+        ShardDistribution distribution = await service.GetShardDistributionAsync("orders", "items");
+
+        distribution.TotalDocuments.Should().Be(100);
+        distribution.TotalDataSize.Should().Be(2048);
+        distribution.ShardStats.Should().HaveCount(2);
+        distribution.ShardStats[0].PercentageOfTotal.Should().Be(60);
     }
 }

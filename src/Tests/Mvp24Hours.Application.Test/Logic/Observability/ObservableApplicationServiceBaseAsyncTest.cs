@@ -5,6 +5,7 @@ using Mvp24Hours.Application.Logic.Observability;
 using Mvp24Hours.Application.Test.Support;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Test.Logic.Observability;
 
@@ -324,5 +325,266 @@ public class ObservableApplicationServiceBaseAsyncTest
             "Command",
             It.IsAny<long>(),
             nameof(InvalidOperationException)), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddAsync_BatchValidEntities_ShouldPersistAll()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(
+            uow,
+            repo,
+            validator: new AppTestEntityValidator());
+        var entities = new List<AppTestEntity>
+        {
+            new() { Name = "One" },
+            new() { Name = "Two" }
+        };
+
+        IBusinessResult<int> result = await service.AddAsync(entities);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.AddAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task AddAsync_BatchWithInvalidEntity_ShouldReturnValidationErrors()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(
+            uow,
+            repo,
+            validator: new AppTestEntityValidator());
+
+        IBusinessResult<int> result = await service.AddAsync([
+            new AppTestEntity { Name = "Valid" },
+            new AppTestEntity { Name = "" }
+        ]);
+
+        result.HasErrors.Should().BeTrue();
+        repo.Verify(r => r.AddAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ModifyAsync_InvalidEntity_ShouldReturnValidationErrors()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(
+            uow,
+            repo,
+            validator: new AppTestEntityValidator());
+
+        IBusinessResult<int> result = await service.ModifyAsync(new AppTestEntity { Id = 1, Name = "" });
+
+        result.HasErrors.Should().BeTrue();
+        repo.Verify(r => r.ModifyAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ModifyAsync_BatchValidEntities_ShouldPersistAll()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(
+            uow,
+            repo,
+            validator: new AppTestEntityValidator());
+
+        IBusinessResult<int> result = await service.ModifyAsync([
+            new AppTestEntity { Id = 1, Name = "A" },
+            new AppTestEntity { Id = 2, Name = "B" }
+        ]);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.ModifyAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_Batch_ShouldRemoveAllEntities()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+        var entities = new List<AppTestEntity>
+        {
+            new() { Id = 1, Name = "A" },
+            new() { Id = 2, Name = "B" }
+        };
+
+        IBusinessResult<int> result = await service.RemoveAsync(entities);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.RemoveAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RemoveAsync_EmptyBatch_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<int> result = await service.RemoveAsync([]);
+
+        result.Data.Should().Be(0);
+        repo.Verify(r => r.RemoveAsync(It.IsAny<AppTestEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RemoveByIdAsync_Batch_ShouldRemoveAllIds()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<int> result = await service.RemoveByIdAsync([1, 2]);
+
+        result.Data.Should().Be(1);
+        repo.Verify(r => r.RemoveByIdAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task GetByAnyAsync_ShouldReturnRepositoryResult()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        repo.Setup(r => r.GetByAnyAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<bool> result = await service.GetByAnyAsync(e => e.Active);
+
+        result.Data.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetByCountAsync_ShouldReturnRepositoryCount()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        repo.Setup(r => r.GetByCountAsync(It.IsAny<Expression<Func<AppTestEntity, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(6);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<int> result = await service.GetByCountAsync(e => e.Active);
+
+        result.Data.Should().Be(6);
+    }
+
+    [Fact]
+    public async Task GetByAsync_ShouldReturnFilteredEntities()
+    {
+        var items = new List<AppTestEntity> { new() { Id = 1, Active = true } };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<IList<AppTestEntity>> result = await service.GetByAsync(e => e.Active);
+
+        result.Data.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task ListAsync_WithPagingCriteria_ShouldReturnEntities()
+    {
+        var items = new List<AppTestEntity> { new() { Id = 1, Name = "Paged" } };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupList(repo, items);
+        TestObservableApplicationService service = CreateService(uow, repo);
+        var criteria = new PagingCriteria(limit: 10, offset: 0);
+
+        IBusinessResult<IList<AppTestEntity>> result = await service.ListAsync(criteria);
+
+        result.Data.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task CountBySpecificationAsync_WithNullSpec_ShouldReturnZero()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<int> result = await service.CountBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetBySpecificationAsync_WithReadOnlyRepository_ShouldUseSpecificationMethod()
+    {
+        var items = new List<AppTestEntity> { new() { Id = 1, Active = true } };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        Mock<IReadOnlyRepositoryAsync<AppTestEntity>> readOnly = repo.As<IReadOnlyRepositoryAsync<AppTestEntity>>();
+        readOnly.Setup(r => r.GetBySpecificationAsync(It.IsAny<ActiveAppTestEntitySpec>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<IList<AppTestEntity>> result = await service.GetBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetSingleBySpecificationAsync_WithNullSpec_ShouldReturnNull()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<AppTestEntity?> result =
+            await service.GetSingleBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetSingleBySpecificationAsync_WithoutReadOnlyRepository_ShouldFallbackToExpression()
+    {
+        var items = new List<AppTestEntity>
+        {
+            new() { Id = 1, Name = "Only", Active = true }
+        };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupGetByAnyExpression(repo, items);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<AppTestEntity?> result = await service.GetSingleBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data!.Name.Should().Be("Only");
+    }
+
+    [Fact]
+    public async Task GetFirstBySpecificationAsync_WithReadOnlyRepository_ShouldUseSpecificationMethod()
+    {
+        var entity = new AppTestEntity { Id = 2, Name = "First", Active = true };
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        ApplicationTestHelpers.SetupReadOnlySpecification<AppTestEntity, ActiveAppTestEntitySpec>(repo, firstResult: entity);
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<AppTestEntity?> result = await service.GetFirstBySpecificationAsync(new ActiveAppTestEntitySpec());
+
+        result.Data!.Name.Should().Be("First");
+    }
+
+    [Fact]
+    public async Task GetFirstBySpecificationAsync_WithNullSpec_ShouldReturnNull()
+    {
+        (Mock<IUnitOfWorkAsync> uow, Mock<IRepositoryAsync<AppTestEntity>> repo) =
+            ApplicationTestHelpers.CreateRepositoryMocks<AppTestEntity>();
+        TestObservableApplicationService service = CreateService(uow, repo);
+
+        IBusinessResult<AppTestEntity?> result =
+            await service.GetFirstBySpecificationAsync<ActiveAppTestEntitySpec>(null!);
+
+        result.Data.Should().BeNull();
     }
 }

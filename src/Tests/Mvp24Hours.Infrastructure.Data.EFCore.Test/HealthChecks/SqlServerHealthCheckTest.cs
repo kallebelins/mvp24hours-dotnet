@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging.Abstractions;
+using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.HealthChecks;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.HealthChecks;
@@ -83,5 +85,97 @@ public class SqlServerHealthCheckTest
             null!);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WithEmptyConnectionString_ReturnsUnhealthyWithGenericError()
+    {
+        var check = new SqlServerHealthCheck(
+            string.Empty,
+            new SqlServerHealthCheckOptions
+            {
+                CheckDatabaseState = false,
+                CheckBlockingSessions = false,
+                CheckLongRunningQueries = false
+            },
+            NullLogger<SqlServerHealthCheck>.Instance);
+
+        HealthCheckResult result = await check.CheckHealthAsync(CreateContext());
+
+        result.Status.Should().Be(HealthStatus.Unhealthy);
+        result.Data.Should().ContainKey("error");
+    }
+
+    [Fact]
+    public void Constructor_WithNullOptions_ShouldUseDefaults()
+    {
+        var check = new SqlServerHealthCheck(
+            "Server=.;Database=x;",
+            null,
+            NullLogger<SqlServerHealthCheck>.Instance);
+
+        check.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WithInvalidConnectionAndAllChecksDisabled_ReturnsUnhealthy()
+    {
+        const string connectionString =
+            "Server=127.0.0.1,1;Database=NonExistent;User Id=sa;Password=invalid;Connect Timeout=1;TrustServerCertificate=True;";
+
+        var options = new SqlServerHealthCheckOptions
+        {
+            QueryTimeoutSeconds = 1,
+            CheckDatabaseState = false,
+            CheckBlockingSessions = false,
+            CheckLongRunningQueries = false,
+            DegradedThresholdMs = 1,
+            FailureThresholdMs = 1
+        };
+
+        var check = new SqlServerHealthCheck(
+            connectionString,
+            options,
+            NullLogger<SqlServerHealthCheck>.Instance);
+
+        HealthCheckResult result = await check.CheckHealthAsync(CreateContext());
+
+        result.Status.Should().Be(HealthStatus.Unhealthy);
+        result.Data.Should().ContainKey("sqlErrorNumber");
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WithMalformedConnectionString_ReturnsUnhealthyWithGenericError()
+    {
+        var check = new SqlServerHealthCheck(
+            "not-a-valid-connection-string-format",
+            new SqlServerHealthCheckOptions
+            {
+                CheckDatabaseState = false,
+                CheckBlockingSessions = false,
+                CheckLongRunningQueries = false
+            },
+            NullLogger<SqlServerHealthCheck>.Instance);
+
+        HealthCheckResult result = await check.CheckHealthAsync(CreateContext());
+
+        result.Status.Should().Be(HealthStatus.Unhealthy);
+        result.Data.Should().ContainKey("error");
+    }
+
+    [Fact]
+    public void AddMvp24HoursSqlServerCheck_ShouldRegisterHealthCheck()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddHealthChecks()
+            .AddMvp24HoursSqlServerCheck(
+                "Server=127.0.0.1,1;Database=x;Connect Timeout=1;TrustServerCertificate=True;",
+                configureOptions: o => o.CheckDatabaseState = false);
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+        HealthCheckService healthCheckService = provider.GetRequiredService<HealthCheckService>();
+
+        healthCheckService.Should().NotBeNull();
     }
 }

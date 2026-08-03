@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
+using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Observability;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
@@ -170,6 +171,82 @@ public class ObservabilityTest
         mermaid.Should().Contain("Start --> End");
     }
 
+    [Fact]
+    public void PipelineVisualizer_AsyncPipeline_Should_GenerateDotAsciiAndJson()
+    {
+        var asyncPipeline = new PipelineAsync();
+        asyncPipeline.Add<RequiredValidationOperationAsync>();
+        asyncPipeline.Add<ParallelGroupOperationAsync>();
+        asyncPipeline.AddInterceptors(_ => { }, PipelineInterceptorType.PreOperation);
+
+        var metrics = new PipelineMetrics();
+        metrics.RecordOperationStart("p-async", "RequiredValidationOperationAsync", 0);
+        metrics.RecordOperationEnd("p-async", "RequiredValidationOperationAsync", TimeSpan.FromMilliseconds(18), success: true);
+
+        var visualizer = new PipelineVisualizer();
+        var options = new PipelineVisualizationOptions
+        {
+            Title = "Async Coverage Pipeline",
+            Direction = DiagramDirection.RightToLeft,
+            IncludeInterceptors = true,
+            IncludeMetrics = true,
+            MetricsProvider = metrics,
+            HighlightRequiredOperations = true,
+            ShowOperationTypes = true
+        };
+
+        string dot = visualizer.ToDot(asyncPipeline, options);
+        string ascii = visualizer.ToAscii(asyncPipeline, options);
+        string json = visualizer.ToJson(asyncPipeline, options);
+        string mermaid = visualizer.ToMermaid(asyncPipeline, options);
+
+        dot.Should().Contain("rankdir=RL");
+        dot.Should().Contain("hexagon");
+        dot.Should().Contain("parallelogram");
+        dot.Should().Contain("PreOperation Interceptors");
+        ascii.Should().Contain("(Validation)");
+        ascii.Should().Contain("(Parallel)");
+        ascii.Should().Contain("Interceptors:");
+        json.Should().Contain("\"category\": \"Validation\"");
+        json.Should().Contain("\"category\": \"Parallel\"");
+        mermaid.Should().Contain("flowchart RL");
+        mermaid.Should().Contain("Validation");
+        mermaid.Should().Contain("Parallel");
+    }
+
+    [Fact]
+    public void PipelineVisualizer_SyncPipeline_Should_RenderValidationAndParallelCategoriesWithInterceptors()
+    {
+        var pipeline = new Pipeline();
+        pipeline.Add<RequiredValidationOperation>();
+        pipeline.Add<ParallelGroupOperation>();
+        pipeline.AddInterceptors(_ => { }, PipelineInterceptorType.PostOperation);
+
+        var visualizer = new PipelineVisualizer();
+        var options = new PipelineVisualizationOptions
+        {
+            Title = "Category Pipeline",
+            Direction = DiagramDirection.RightToLeft,
+            IncludeInterceptors = true,
+            ShowOperationTypes = true
+        };
+
+        string dot = visualizer.ToDot(pipeline, options);
+        string ascii = visualizer.ToAscii(pipeline, options);
+        string mermaid = visualizer.ToMermaid(pipeline, options);
+
+        dot.Should().Contain("rankdir=RL");
+        dot.Should().Contain("hexagon");
+        dot.Should().Contain("parallelogram");
+        dot.Should().Contain("PostOperation Interceptors");
+        ascii.Should().Contain("(Validation)");
+        ascii.Should().Contain("(Parallel)");
+        mermaid.Should().Contain("flowchart RL");
+        mermaid.Should().Contain("Validation");
+        mermaid.Should().Contain("Parallel");
+        mermaid.Should().Contain("PostOperation Interceptors");
+    }
+
     private sealed class RequiredValidationOperation : OperationBase
     {
         public override bool IsRequired => true;
@@ -194,6 +271,24 @@ public class ObservabilityTest
     }
 
     private sealed class SubPipelineTestOperationAsync : OperationBaseAsync
+    {
+        public override Task ExecuteAsync(IPipelineMessage input)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RequiredValidationOperationAsync : OperationBaseAsync
+    {
+        public override bool IsRequired => true;
+
+        public override Task ExecuteAsync(IPipelineMessage input)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ParallelGroupOperationAsync : OperationBaseAsync
     {
         public override Task ExecuteAsync(IPipelineMessage input)
         {

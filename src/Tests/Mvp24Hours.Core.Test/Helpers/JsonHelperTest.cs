@@ -1,3 +1,6 @@
+using Mvp24Hours.Core.Contract.ValueObjects.Logic;
+using Mvp24Hours.Core.ValueObjects.Logic;
+
 namespace Mvp24Hours.Core.Test.Helpers;
 
 /// <summary>
@@ -281,6 +284,46 @@ public class JsonHelperTest
 
         // Assert
         result.Should().HaveCount(10000);
+    }
+
+    #endregion
+
+    #region [ Settings Factory Tests ]
+
+    [Fact]
+    public void JsonBusinessResultSettings_ShouldSerializeBusinessResult()
+    {
+        IBusinessResult<Person> result = new BusinessResult<Person>(new Person { Id = 1, Name = "Jane", Age = 25 });
+
+        string json = JsonHelper.Serialize(result, JsonHelper.JsonBusinessResultSettings<Person>());
+
+        json.Should().Contain("Jane");
+        json.Should().Contain("hasErrors");
+    }
+
+    [Fact]
+    public void JsonBusinessEventSettings_ShouldSerializeBusinessEvent()
+    {
+        IBusinessEvent businessEvent = new BusinessEvent(new { Message = "created" }, "evt-1");
+
+        string json = JsonHelper.Serialize(businessEvent, JsonHelper.JsonBusinessEventSettings());
+
+        json.Should().Contain("evt-1");
+        json.Should().Contain("created");
+    }
+
+    [Fact]
+    public void JsonPagingResultSettings_WithCustomSettings_ShouldMergeOptions()
+    {
+        var customSettings = new Newtonsoft.Json.JsonSerializerSettings
+        {
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Include
+        };
+
+        Newtonsoft.Json.JsonSerializerSettings settings = JsonHelper.JsonPagingResultSettings<Person>(customSettings);
+
+        settings.NullValueHandling.Should().Be(Newtonsoft.Json.NullValueHandling.Include);
+        settings.Converters.Should().NotBeEmpty();
     }
 
     #endregion

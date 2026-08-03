@@ -219,6 +219,44 @@ public sealed class TestCacheableQueryService(
     {
         return DisableCache();
     }
+
+    public Task<IBusinessResult<IList<AppTestEntity>>> ListWithCacheForTest(
+        TimeSpan cacheDuration,
+        CancellationToken cancellationToken = default)
+    {
+        return ListWithCacheAsync(cacheDuration, cancellationToken);
+    }
+
+    public Task<IBusinessResult<IList<AppTestEntity>>> GetByWithCacheForTest(
+        Expression<Func<AppTestEntity, bool>> clause,
+        QueryCacheEntryOptions cacheOptions,
+        CancellationToken cancellationToken = default)
+    {
+        return GetByWithCacheAsync(clause, cacheOptions, cancellationToken);
+    }
+
+    public Task<IBusinessResult<AppTestEntity?>> GetByIdWithCacheForTest(
+        object id,
+        QueryCacheEntryOptions cacheOptions,
+        CancellationToken cancellationToken = default)
+    {
+        return GetByIdWithCacheAsync(id, cacheOptions, cancellationToken);
+    }
+
+    public Task InvalidateCacheForTest(CancellationToken cancellationToken = default)
+    {
+        return InvalidateCacheAsync(cancellationToken);
+    }
+
+    public Task InvalidateCacheByIdForTest(object id, CancellationToken cancellationToken = default)
+    {
+        return InvalidateCacheByIdAsync(id, cancellationToken);
+    }
+
+    public string GenerateCacheKeyForTest(string operation, params object?[] parameters)
+    {
+        return GenerateCacheKey(operation, parameters);
+    }
 }
 
 public sealed class TestCacheableApplicationService(

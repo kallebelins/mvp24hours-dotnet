@@ -29,8 +29,7 @@ public class RepositoryPagingServiceIntegrationTest(SqlServerContainerFixture fi
             return;
         }
 
-        await _fixture.ClearDatabaseAsync();
-        await SeedTestDataAsync();
+        await _fixture.ResetDatabaseAsync(SeedTestDataAsync);
     }
 
     public Task DisposeAsync()

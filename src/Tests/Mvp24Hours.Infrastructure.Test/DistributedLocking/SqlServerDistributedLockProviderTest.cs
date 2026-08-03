@@ -92,4 +92,29 @@ public class SqlServerDistributedLockProviderTest
         result.IsAcquired.Should().BeFalse();
         (result.IsTimeout || result.IsFailed).Should().BeTrue();
     }
+
+    [Fact]
+    public async Task TryAcquireAsync_WhenNotAcquired_ShouldNotReturnLockHandle()
+    {
+        var provider = new SqlServerDistributedLockProvider(
+            DistributedLockingTestHelpers.UnreachableSqlServerConnectionString());
+
+        LockAcquisitionResult result = await provider.TryAcquireAsync(
+            DistributedLockingTestHelpers.UniqueResource(),
+            DistributedLockingTestHelpers.FastFailOptions(acquisitionTimeout: TimeSpan.Zero));
+
+        result.IsAcquired.Should().BeFalse();
+        result.LockHandle.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task IsLockedAsync_WithEmptyResource_ShouldThrow()
+    {
+        var provider = new SqlServerDistributedLockProvider(
+            DistributedLockingTestHelpers.UnreachableSqlServerConnectionString());
+
+        Func<Task> act = () => provider.IsLockedAsync("  ");
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
 }

@@ -477,10 +477,10 @@ public class RateLimitingTest : IDisposable
     public async Task FixedWindowRateLimiter_ResetsAfterWindow()
     {
         // Arrange
-        string key = "fixed_window_reset";
+        string key = $"fixed_window_reset_{Guid.NewGuid():N}";
         var options = NativeRateLimiterOptions.FixedWindow(
             permitLimit: 2,
-            window: TimeSpan.FromMilliseconds(100));
+            window: TimeSpan.FromSeconds(1));
 
         // Act - Acquire all permits
         RateLimitLease lease1 = await _rateLimiterProvider.AcquireAsync(key, options, 1);
@@ -495,8 +495,14 @@ public class RateLimitingTest : IDisposable
         lease2.Dispose();
         lease3.Dispose();
 
-        // Wait for window to reset
-        await Task.Delay(150);
+        // Wait for window to reset using RetryAfter when available
+        var waitTime = TimeSpan.FromMilliseconds(1100);
+        if (lease3.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
+        {
+            waitTime = retryAfter + TimeSpan.FromMilliseconds(100);
+        }
+
+        await Task.Delay(waitTime);
 
         // Act - Try again after window reset
         RateLimitLease lease4 = await _rateLimiterProvider.AcquireAsync(key, options, 1);

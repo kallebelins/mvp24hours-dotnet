@@ -223,6 +223,117 @@ public class PipelineFiltersTest
         act.Should().Throw<ArgumentNullException>();
     }
 
+    [Fact]
+    public void FilterPipelineExecutor_WithNullOptions_ShouldThrow()
+    {
+        var services = new ServiceCollection();
+        IServiceProvider provider = services.BuildServiceProvider();
+
+        Action act = () => new FilterPipelineExecutor(provider, null!);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_PublishFilters_ShouldExecuteInOrder()
+    {
+        var sequence = new List<string>();
+        var services = new ServiceCollection();
+        services.AddSingleton<IPublishFilter<TestOrderEvent>>(new SequencePublishFilter("typed", sequence));
+        services.AddSingleton<IPublishFilter>(new SequenceGlobalPublishFilter("global", sequence));
+        FilterPipelineOptions options = new FilterPipelineOptions()
+            .UsePublishFilter<SequenceInlinePublishFilter, TestOrderEvent>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        SequenceInlinePublishFilter.Sequence = sequence;
+        var executor = new FilterPipelineExecutor(provider, options);
+        PublishFilterContext<TestOrderEvent> context = RabbitMQTestHelpers.CreatePublishFilterContext(new TestOrderEvent());
+
+        await executor.ExecutePublishFiltersAsync(context, (_, _) =>
+        {
+            sequence.Add("final");
+            return Task.CompletedTask;
+        });
+
+        sequence.Should().Contain("global");
+        sequence.Should().Contain("typed");
+        sequence.Should().Contain("inline");
+        sequence[^1].Should().Be("final");
+    }
+
+    [Fact]
+    public async Task FilterPipelineExecutor_SendFilters_ShouldExecuteInOrder()
+    {
+        var sequence = new List<string>();
+        var services = new ServiceCollection();
+        services.AddSingleton<ISendFilter<TestOrderEvent>>(new SequenceSendFilter("typed", sequence));
+        FilterPipelineOptions options = new FilterPipelineOptions()
+            .UseSendFilter<SequenceInlineSendFilter, TestOrderEvent>();
+        IServiceProvider provider = services.BuildServiceProvider();
+        SequenceInlineSendFilter.Sequence = sequence;
+        var executor = new FilterPipelineExecutor(provider, options);
+        var context = new SendFilterContext<TestOrderEvent>(new TestOrderEvent(), "queue", provider);
+
+        await executor.ExecuteSendFiltersAsync(context, (_, _) =>
+        {
+            sequence.Add("final");
+            return Task.CompletedTask;
+        });
+
+        sequence.Should().Contain("typed");
+        sequence.Should().Contain("inline");
+        sequence[^1].Should().Be("final");
+    }
+
+    private sealed class SequencePublishFilter(string marker, List<string> sequence) : IPublishFilter<TestOrderEvent>
+    {
+        public Task PublishAsync(IPublishFilterContext<TestOrderEvent> context, PublishFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            sequence.Add(marker);
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceGlobalPublishFilter(string marker, List<string> sequence) : IPublishFilter
+    {
+        public Task PublishAsync<TMessage>(IPublishFilterContext<TMessage> context, PublishFilterDelegate<TMessage> next, CancellationToken cancellationToken = default)
+            where TMessage : class
+        {
+            sequence.Add(marker);
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceInlinePublishFilter : IPublishFilter<TestOrderEvent>
+    {
+        internal static List<string>? Sequence;
+
+        public Task PublishAsync(IPublishFilterContext<TestOrderEvent> context, PublishFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            Sequence?.Add("inline");
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceSendFilter(string marker, List<string> sequence) : ISendFilter<TestOrderEvent>
+    {
+        public Task SendAsync(ISendFilterContext<TestOrderEvent> context, SendFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            sequence.Add(marker);
+            return next(context, cancellationToken);
+        }
+    }
+
+    private sealed class SequenceInlineSendFilter : ISendFilter<TestOrderEvent>
+    {
+        internal static List<string>? Sequence;
+
+        public Task SendAsync(ISendFilterContext<TestOrderEvent> context, SendFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)
+        {
+            Sequence?.Add("inline");
+            return next(context, cancellationToken);
+        }
+    }
+
     private sealed class SequenceConsumeFilter(string marker, List<string> sequence) : IConsumeFilter<TestOrderEvent>
     {
         public Task ConsumeAsync(IConsumeFilterContext<TestOrderEvent> context, ConsumeFilterDelegate<TestOrderEvent> next, CancellationToken cancellationToken = default)

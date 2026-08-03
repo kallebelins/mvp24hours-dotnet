@@ -473,6 +473,107 @@ public class NativeProblemDetailsExtensionsTest
         body.Should().Contain("MaxItemsRule");
     }
 
+    [Fact]
+    public async Task UseNativeProblemDetailsHandling_Should_Return400ProblemDetails_ForArgumentNullException()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(options => options.IncludeExceptionDetails = true),
+            endpoints => endpoints.MapGet("/fail", (HttpContext _) => throw new ArgumentNullException("id")));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/fail");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("traceId");
+    }
+
+    [Fact]
+    public async Task UseNativeProblemDetailsHandling_Should_IncludeConflictExtensions()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(options => options.IncludeExceptionDetails = true),
+            endpoints => endpoints.MapGet("/fail", (HttpContext _) =>
+                throw new ConflictException("duplicate", "Order", "Sku", "ABC-123")));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/fail");
+
+        string body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("propertyName");
+        body.Should().Contain("conflictingValue");
+    }
+
+    [Fact]
+    public async Task UseNativeProblemDetailsHandling_Should_IncludeMvpExceptionContext()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(options => options.IncludeExceptionDetails = true),
+            endpoints => endpoints.MapGet("/fail", (HttpContext _) =>
+                throw new Mvp24HoursException("failed", "ERR001", new Dictionary<string, object> { ["orderId"] = 10 })));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/fail");
+
+        string body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("errorCode");
+        body.Should().Contain("context");
+    }
+
+    [Fact]
+    public async Task UseNativeProblemDetailsHandling_Should_ReturnStatusCodePage_For502()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(),
+            endpoints => endpoints.MapGet("/bad-gateway", async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status502BadGateway;
+                await Task.CompletedTask;
+            }));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/bad-gateway");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadGateway);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("Bad Gateway");
+    }
+
+    [Fact]
+    public async Task UseNativeProblemDetailsHandling_Should_ReturnStatusCodePage_For504()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(),
+            endpoints => endpoints.MapGet("/timeout", async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+                await Task.CompletedTask;
+            }));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/timeout");
+
+        response.StatusCode.Should().Be(HttpStatusCode.GatewayTimeout);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("Gateway Timeout");
+    }
+
+    [Fact]
+    public async Task AddNativeProblemDetails_CustomizeProblemDetails_ShouldIncludeRequestId()
+    {
+        using IHost host = await CreateHost(
+            app => app.UseNativeProblemDetailsHandling(),
+            services => services.AddNativeProblemDetails(),
+            endpoints => endpoints.MapGet("/fail", (HttpContext _) => throw new Core.Exceptions.ValidationException("invalid")));
+
+        HttpClient client = host.GetTestClient();
+        HttpResponseMessage response = await client.GetAsync("/fail");
+
+        (await response.Content.ReadAsStringAsync()).Should().Contain("requestId");
+    }
+
     private static async Task<IHost> CreateHost(
         Action<IApplicationBuilder> configureApp,
         Action<IServiceCollection> configureServices,

@@ -19,6 +19,7 @@
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Testcontainers.MongoDb" />
@@ -26,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Mvp24Hours.Infrastructure.Data.MongoDb\Mvp24Hours.Infrastructure.Data.MongoDb.csproj" />
+    <ProjectReference Include="..\..\Mvp24Hours.Infrastructure\Mvp24Hours.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

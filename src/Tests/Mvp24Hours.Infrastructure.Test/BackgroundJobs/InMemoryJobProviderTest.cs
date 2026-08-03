@@ -367,12 +367,197 @@ public class InMemoryJobProviderTest
     }
 
     [Fact]
-    public async Task WaitForChildrenAsync_WithNoChildren_ShouldComplete()
+    public async Task CancelChildrenAsync_WithEmptyParentJobId_ShouldThrowArgumentException()
     {
         InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
 
-        Func<Task> act = () => provider.WaitForChildrenAsync("parent-no-children");
+        Func<Task> act = () => provider.CancelChildrenAsync("");
 
-        await act.Should().NotThrowAsync();
+        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("parentJobId");
+    }
+
+    [Fact]
+    public async Task GetBatchStatusAsync_WithEmptyBatchId_ShouldThrowArgumentException()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        Func<Task> act = () => provider.GetBatchStatusAsync("  ");
+
+        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("batchId");
+    }
+
+    [Fact]
+    public async Task CancelBatchAsync_WithUnknownBatchId_ShouldReturnFalse()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        bool cancelled = await provider.CancelBatchAsync("missing-batch");
+
+        cancelled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CancelBatchAsync_WithEmptyBatchId_ShouldThrowArgumentException()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        Func<Task> act = () => provider.CancelBatchAsync("");
+
+        await act.Should().ThrowAsync<ArgumentException>().WithParameterName("batchId");
+    }
+
+    [Fact]
+    public async Task EnqueueChildAsync_WithNullArgs_ShouldThrowArgumentNullException()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        Func<Task> act = () => provider.EnqueueChildAsync<BackgroundJobsTestHelpers.DummyJobWithArgs, BackgroundJobsTestHelpers.DummyJobArgs>(
+            "parent",
+            null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("args");
+    }
+
+    [Fact]
+    public async Task ContinueWithAsync_WithNullArgs_ShouldThrowArgumentNullException()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        Func<Task> act = () => provider.ContinueWithAsync<BackgroundJobsTestHelpers.DummyJobWithArgs, BackgroundJobsTestHelpers.DummyJobArgs>(
+            "parent",
+            null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("args");
+    }
+
+    [Fact]
+    public async Task ScheduleRecurringAsync_WithArgs_ShouldExecuteOnce()
+    {
+        BackgroundJobsTestHelpers.TrackingJobWithArgs.Reset();
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        string jobId = await provider.ScheduleRecurringAsync<BackgroundJobsTestHelpers.TrackingJobWithArgs, BackgroundJobsTestHelpers.DummyJobArgs>(
+            "0 * * * *",
+            new BackgroundJobsTestHelpers.DummyJobArgs { Value = "recurring" });
+
+        JobStatus? status = await BackgroundJobsTestHelpers.WaitForJobStatusAsync(
+            provider,
+            jobId,
+            s => s is JobStatus.Completed);
+
+        status.Should().Be(JobStatus.Completed);
+        BackgroundJobsTestHelpers.TrackingJobWithArgs.LastValue.Should().Be("recurring");
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_WithRetryAndExponentialBackoff_ShouldEventuallyFail()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+        var options = new JobOptions
+        {
+            MaxRetryAttempts = 1,
+            UseExponentialBackoff = true,
+            InitialRetryDelay = TimeSpan.FromMilliseconds(20),
+            MaxRetryDelay = TimeSpan.FromMilliseconds(50)
+        };
+
+        string jobId = await provider.EnqueueAsync<BackgroundJobsTestHelpers.FailingJob>(options);
+
+        JobStatus? status = await BackgroundJobsTestHelpers.WaitForJobStatusAsync(
+            provider,
+            jobId,
+            s => s is JobStatus.Failed,
+            TimeSpan.FromSeconds(5));
+
+        status.Should().Be(JobStatus.Failed);
+    }
+
+    [Fact]
+    public async Task ScheduleAsync_WithFutureDateTime_ShouldComplete()
+    {
+        BackgroundJobsTestHelpers.TrackingJob.Reset();
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        string jobId = await provider.ScheduleAsync<BackgroundJobsTestHelpers.TrackingJob>(
+            DateTimeOffset.UtcNow.AddMilliseconds(150));
+
+        JobStatus? status = await BackgroundJobsTestHelpers.WaitForJobStatusAsync(
+            provider,
+            jobId,
+            s => s is JobStatus.Completed,
+            TimeSpan.FromSeconds(5));
+
+        status.Should().Be(JobStatus.Completed);
+    }
+
+    [Fact]
+    public async Task ContinueWithAsync_OnParentFailure_ShouldExecuteWhenFailureOnly()
+    {
+        BackgroundJobsTestHelpers.TrackingJob.Reset();
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+        var options = new JobOptions { MaxRetryAttempts = 0 };
+
+        string parentJobId = await provider.EnqueueAsync<BackgroundJobsTestHelpers.FailingJob>(options);
+        _ = await provider.ContinueWithAsync<BackgroundJobsTestHelpers.TrackingJob>(
+            parentJobId,
+            new ContinuationOptions { ExecuteOnFailureOnly = true, ExecuteOnSuccessOnly = false });
+
+        await BackgroundJobsTestHelpers.WaitForJobStatusAsync(
+            provider,
+            parentJobId,
+            s => s is JobStatus.Failed,
+            TimeSpan.FromSeconds(5));
+
+        await Task.Delay(300);
+
+        BackgroundJobsTestHelpers.TrackingJob.ExecutionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CancelChildrenAsync_WithNoChildren_ShouldReturnZero()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        int cancelled = await provider.CancelChildrenAsync("parent-no-children");
+
+        cancelled.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetBatchStatusAsync_WithUnknownBatchId_ShouldReturnNull()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        BatchStatus? status = await provider.GetBatchStatusAsync("missing-batch-id");
+
+        status.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CancelAsync_OnScheduledJob_ShouldReturnTrue()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+
+        string jobId = await provider.ScheduleAsync<BackgroundJobsTestHelpers.DummyJob>(TimeSpan.FromMinutes(5));
+        bool cancelled = await provider.CancelAsync(jobId);
+
+        cancelled.Should().BeTrue();
+        (await provider.GetStatusAsync(jobId)).Should().Be(JobStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task CancelAsync_OnRunningJob_ShouldReturnFalse()
+    {
+        InMemoryJobProvider provider = BackgroundJobsTestHelpers.CreateInMemoryProvider();
+        string jobId = await provider.EnqueueAsync<BackgroundJobsTestHelpers.DummyJob>();
+
+        await BackgroundJobsTestHelpers.WaitForJobStatusAsync(
+            provider,
+            jobId,
+            s => s is JobStatus.Completed);
+
+        bool cancelled = await provider.CancelAsync(jobId);
+
+        cancelled.Should().BeFalse();
     }
 }

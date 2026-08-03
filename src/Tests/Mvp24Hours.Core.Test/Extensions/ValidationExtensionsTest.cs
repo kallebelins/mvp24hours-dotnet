@@ -185,6 +185,50 @@ public class ValidationExtensionsTest
         "".IsValidCreditCard().Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("12056435391", true)]
+    [InlineData("12345678901", false)]
+    [InlineData("", false)]
+    public void IsValidPis_ValidatesCheckDigit(string pis, bool expected)
+    {
+        pis.IsValidPis().Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("1298765432100", false)]
+    [InlineData("abc", false)]
+    [InlineData("", false)]
+    public void IsValidCNS_ValidatesFormatAndChecksum(string cns, bool expected)
+    {
+        cns.IsValidCNS().Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("00654387901", false)]
+    [InlineData("123456789", false)]
+    [InlineData("", false)]
+    public void IsValidRenavam_ValidatesCheckDigit(string renavam, bool expected)
+    {
+        renavam.IsValidRenavam().Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("000000000000", false)]
+    public void IsValidTituloEleitor_RejectsInvalidValues(string titulo, bool expected)
+    {
+        titulo.IsValidTituloEleitor().Should().Be(expected);
+    }
+
+    [Fact]
+    public void IsValidCreditCard_WithExpiryAndCvv_ShouldValidateAllParts()
+    {
+        string futureYear = (DateTime.Now.Year + 1).ToString();
+        "1298123456789012".IsValidCreditCard($"06/{futureYear}", "123").Should().BeTrue();
+        "1298123456789012".IsValidCreditCard("13/2020", "123").Should().BeFalse();
+        "1298123456789012".IsValidCreditCard($"06/{futureYear}", "12").Should().BeFalse();
+        "".IsValidCreditCard($"06/{futureYear}", "123").Should().BeFalse();
+    }
+
     #endregion
 
     #region ValidatorEntityExtensions

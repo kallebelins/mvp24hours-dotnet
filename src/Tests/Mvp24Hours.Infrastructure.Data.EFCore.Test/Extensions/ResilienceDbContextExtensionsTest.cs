@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mvp24Hours.Extensions;
+using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Resilience;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
@@ -120,5 +121,90 @@ public class ResilienceDbContextExtensionsTest
 
         provider.GetRequiredService<DbContextCircuitBreaker>().Should().NotBeNull();
         provider.GetServices<IHostedService>().Should().Contain(s => s is DbContextPoolMonitor);
+    }
+
+    [Fact]
+    public void AddMvp24HoursDbContextWithResilience_ShouldRegisterDbContext()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursDbContextWithResilience<TestDbContext>(
+            "Server=(localdb)\\mssqllocaldb;Database=ResilienceTest;Trusted_Connection=True;",
+            o => o.EnableDbContextPooling = false,
+            o => o.EnableSensitiveDataLogging());
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<TestDbContext>().Should().NotBeNull();
+        provider.GetRequiredService<DbContext>().Should().BeOfType<TestDbContext>();
+    }
+
+    [Fact]
+    public void AddMvp24HoursDbContextWithResilience_WithPooling_ShouldRegisterPooledContext()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursDbContextWithResilience<TestDbContext>(
+            "Server=(localdb)\\mssqllocaldb;Database=ResiliencePoolTest;Trusted_Connection=True;",
+            o =>
+            {
+                o.EnableDbContextPooling = true;
+                o.PoolSize = 64;
+            });
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<TestDbContext>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddMvp24HoursAzureSqlDbContext_ShouldRegisterDbContext()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursAzureSqlDbContext<TestDbContext>(
+            "Server=tcp:example.database.windows.net;Database=AzureTest;User Id=x;Password=y;");
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<TestDbContext>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddMvp24HoursDevDbContext_ShouldRegisterDbContextWithSensitiveLogging()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvp24HoursDevDbContext<TestDbContext>(
+            "Server=(localdb)\\mssqllocaldb;Database=DevTest;Trusted_Connection=True;");
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<TestDbContext>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void UseSqlServerWithResilience_ShouldConfigureProvider()
+    {
+        var builder = new DbContextOptionsBuilder<TestDbContext>();
+
+        DbContextOptionsBuilder result = builder.UseSqlServerWithResilience(
+            "Server=(localdb)\\mssqllocaldb;Database=OptionsTest;Trusted_Connection=True;",
+            new EFCoreResilienceOptions { CommandTimeoutSeconds = 45, MaxRetryCount = 3 });
+
+        result.Should().BeSameAs(builder);
+        builder.Options.Extensions.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void WithCommandTimeout_OnSqliteOptionsBuilder_ShouldSetTimeout()
+    {
+        DbContextOptionsBuilder<TestDbContext> builder = new DbContextOptionsBuilder<TestDbContext>()
+            .UseSqlite($"Data Source=file:cmd_{Guid.NewGuid():N}?mode=memory&cache=shared");
+
+        builder.WithCommandTimeout(75);
+
+        builder.Options.FindExtension<Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension>()
+            ?.CommandTimeout.Should().Be(75);
     }
 }

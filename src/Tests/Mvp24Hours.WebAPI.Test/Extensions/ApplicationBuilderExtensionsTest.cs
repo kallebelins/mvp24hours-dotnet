@@ -211,6 +211,96 @@ public class ApplicationBuilderExtensionsTest
     }
 
     [Fact]
+    public void UseMvp24HoursRateLimiting_Enabled_ShouldReturnSameBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursRateLimiting(enabled: true);
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursIdempotency_Enabled_ShouldReturnSameBuilder()
+    {
+        WebApplication app = CreateWebApplication(services => services.AddMvp24HoursIdempotencyInMemory());
+
+        IApplicationBuilder result = app.UseMvp24HoursIdempotency(enabled: true);
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursContentNegotiation_Enabled_ShouldReturnSameBuilder()
+    {
+        WebApplication app = CreateWebApplication(services => services.AddMvp24HoursContentNegotiation());
+
+        IApplicationBuilder result = app.UseMvp24HoursContentNegotiation(enabled: true);
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursRequestContext_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursRequestContext();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursRequestLogging_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursRequestLogging();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursRequestTelemetry_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursRequestTelemetry();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursProblemDetails_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursProblemDetails();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursSecurityHeaders_ShouldReturnBuilder()
+    {
+        IApplicationBuilder app = CreateAppBuilder();
+
+        IApplicationBuilder result = app.UseMvp24HoursSecurityHeaders();
+
+        result.Should().BeSameAs(app);
+    }
+
+    [Fact]
+    public void UseMvp24HoursRateLimiting_WithNullBuilder_ShouldThrow()
+    {
+        IApplicationBuilder? app = null;
+
+        Action act = () => app!.UseMvp24HoursRateLimiting();
+
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
     public void UseMvp24HoursResponseCompression_ShouldThrow_WhenBuilderIsNull()
     {
         IApplicationBuilder? app = null;

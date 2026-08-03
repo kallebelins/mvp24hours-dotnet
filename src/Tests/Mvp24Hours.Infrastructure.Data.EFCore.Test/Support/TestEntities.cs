@@ -119,3 +119,49 @@ public class TestDbContextWithUser(DbContextOptions options, object? entityLogBy
     public DbSet<TestEntityLog> EntityLogs => Set<TestEntityLog>();
     public DbSet<TestLogEntity> LogEntities => Set<TestLogEntity>();
 }
+
+public class TestParentEntity : EntityBase<int>
+{
+    public string Name { get; set; } = string.Empty;
+    public ICollection<TestChildEntity> Children { get; set; } = [];
+}
+
+public class TestChildEntity : EntityBase<int>
+{
+    public string Label { get; set; } = string.Empty;
+    public int ParentId { get; set; }
+    public TestParentEntity Parent { get; set; } = null!;
+    public int SortOrder { get; set; }
+}
+
+public class TestRelationDbContext(DbContextOptions options) : Mvp24HoursContext(options)
+{
+    public DbSet<TestParentEntity> Parents => Set<TestParentEntity>();
+    public DbSet<TestChildEntity> Children => Set<TestChildEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestChildEntity>()
+            .HasOne(c => c.Parent)
+            .WithMany(p => p.Children)
+            .HasForeignKey(c => c.ParentId);
+    }
+}
+
+public class UnmappedSchemaEntity
+{
+    public int Id { get; set; }
+}
+
+public class InvalidSchemaDbContext(DbContextOptions options) : Mvp24HoursContext(options)
+{
+    public DbSet<UnmappedSchemaEntity> Unmapped => Set<UnmappedSchemaEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UnmappedSchemaEntity>().HasNoKey().ToTable((string?)null);
+    }
+}
+
+public sealed class TestDbContextWithFixedUser(DbContextOptions options)
+    : TestDbContextWithUser(options, "operator");

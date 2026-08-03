@@ -359,6 +359,64 @@ public class MvpRabbitMQClientTest
         consumer.RejectedCalled.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task HandleConsumeAsync_SuccessfulConsumer_ShouldAckMessage()
+    {
+        var channelMock = new Mock<IModel>();
+        channelMock.Setup(c => c.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()));
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider();
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+        var consumer = new SuccessAsyncConsumer();
+        BasicDeliverEventArgs args = CreateBusinessEventArgs(new CustomerEvent { Id = 1, Name = "success" });
+
+        await InvokeHandleConsumeAsync(client, args, channelMock.Object, consumer);
+
+        channelMock.Verify(c => c.BasicAck(1, false), Times.Once);
+        consumer.ReceivedCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void HandleConsume_SyncConsumerSuccess_ShouldAckMessage()
+    {
+        var channelMock = new Mock<IModel>();
+        channelMock.Setup(c => c.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()));
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider();
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+        var consumer = new SuccessSyncConsumer();
+        BasicDeliverEventArgs args = CreateBusinessEventArgs(new CustomerEvent { Id = 2, Name = "sync-success" });
+
+        InvokeHandleConsume(client, args, channelMock.Object, consumer);
+
+        channelMock.Verify(c => c.BasicAck(1, false), Times.Once);
+        consumer.ReceivedCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void HandleConsume_SyncConsumerFailure_ShouldInvokeRecoveryHooks()
+    {
+        var channelMock = new Mock<IModel>();
+        channelMock.Setup(c => c.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()));
+        channelMock.Setup(c => c.BasicNack(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<bool>()));
+        channelMock.Setup(c => c.BasicPublish(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<IBasicProperties>(),
+            It.IsAny<ReadOnlyMemory<byte>>()));
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider();
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+        var consumer = new RecoverySyncConsumer();
+        BasicDeliverEventArgs args = CreateBusinessEventArgs(new CustomerEvent { Id = 3, Name = "sync-fail" }, redeliveredCount: 5);
+
+        InvokeHandleConsume(client, args, channelMock.Object, consumer);
+
+        consumer.FailureCalled.Should().BeTrue();
+        consumer.RejectedCalled.Should().BeTrue();
+    }
+
     private static BasicDeliverEventArgs CreateBusinessEventArgs(CustomerEvent message, int redeliveredCount = 0)
     {
         string payload = message.ToBusinessEvent("recovery-token").ToSerialize(JsonHelper.JsonBusinessEventSettings());
@@ -394,10 +452,26 @@ public class MvpRabbitMQClientTest
         var task = (Task)method!.Invoke(client, [args, channel, consumer])!;
         await task;
     }
+
+    private static void InvokeHandleConsume(
+        MvpRabbitMQClient client,
+        BasicDeliverEventArgs args,
+        IModel channel,
+        IMvpRabbitMQConsumerSync consumer)
+    {
+        System.Reflection.MethodInfo? method = typeof(MvpRabbitMQClient).GetMethod(
+            "HandleConsume",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        method.Should().NotBeNull();
+        method!.Invoke(client, [args, channel, consumer]);
+    }
 }
 
 internal sealed class RecoverySyncConsumer : IMvpRabbitMQConsumerSync, IMvpRabbitMQConsumerRecoverySync
 {
+    public bool FailureCalled { get; private set; }
+    public bool RejectedCalled { get; private set; }
+
     public string RoutingKey => "recovery-sync";
     public string QueueName => "recovery-sync-queue";
 
@@ -406,9 +480,42 @@ internal sealed class RecoverySyncConsumer : IMvpRabbitMQConsumerSync, IMvpRabbi
         throw new InvalidOperationException("forced failure");
     }
 
-    public void Failure(Exception ex, string token) { }
+    public void Failure(Exception ex, string token)
+    {
+        FailureCalled = true;
+    }
 
-    public void Rejected(object message, string token) { }
+    public void Rejected(object message, string token)
+    {
+        RejectedCalled = true;
+    }
+}
+
+internal sealed class SuccessSyncConsumer : IMvpRabbitMQConsumerSync
+{
+    public bool ReceivedCalled { get; private set; }
+
+    public string RoutingKey => "success-sync";
+    public string QueueName => "success-sync-queue";
+
+    public void Received(object message, string token)
+    {
+        ReceivedCalled = true;
+    }
+}
+
+internal sealed class SuccessAsyncConsumer : IMvpRabbitMQConsumerAsync
+{
+    public bool ReceivedCalled { get; private set; }
+
+    public string RoutingKey => "success-async";
+    public string QueueName => "success-async-queue";
+
+    public Task ReceivedAsync(object message, string token)
+    {
+        ReceivedCalled = true;
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class RecoveryAsyncConsumer : IMvpRabbitMQConsumerAsync, IMvpRabbitMQConsumerRecoveryAsync

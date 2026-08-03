@@ -9,6 +9,7 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Scheduling;
 
+[Trait("Category", "Unit")]
 public class SchedulingTest
 {
     [Fact]
@@ -145,5 +146,189 @@ public class SchedulingTest
         ScheduledMessage? loaded = await store.GetByIdAsync(message.Id);
         loaded.Should().NotBeNull();
         loaded!.RoutingKey.Should().Be("order");
+    }
+
+    [Fact]
+    public async Task InMemoryScheduledMessageStore_FullLifecycle_ShouldSupportAllQueries()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        var pending = new ScheduledMessage
+        {
+            Id = Guid.NewGuid(),
+            Payload = "{}",
+            MessageType = typeof(TestOrderEvent).FullName!,
+            RoutingKey = "order",
+            ScheduledTime = DateTimeOffset.UtcNow.AddMinutes(-1),
+            Status = ScheduledMessageStatus.Pending
+        };
+        var recurring = new ScheduledMessage
+        {
+            Id = Guid.NewGuid(),
+            Payload = "{}",
+            MessageType = typeof(TestOrderEvent).FullName!,
+            RoutingKey = "recurring",
+            ScheduledTime = DateTimeOffset.UtcNow,
+            Status = ScheduledMessageStatus.Active,
+            RecurringSchedule = new RecurringSchedule { Type = RecurringScheduleType.Interval, Interval = TimeSpan.FromMinutes(1) },
+            NextExecutionTime = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+
+        await store.AddAsync(pending);
+        await store.AddAsync(recurring);
+
+        (await store.GetPendingMessagesAsync()).Should().ContainSingle(m => m.Id == pending.Id);
+        (await store.GetActiveRecurringMessagesAsync()).Should().ContainSingle(m => m.Id == recurring.Id);
+        (await store.GetDueMessagesAsync()).Should().HaveCount(2);
+        (await store.GetByStatusAsync(ScheduledMessageStatus.Pending)).Should().ContainSingle(m => m.Id == pending.Id);
+
+        await store.MarkAsProcessingAsync(pending.Id);
+        await store.MarkAsCompletedAsync(pending.Id);
+        await store.MarkAsFailedAsync(recurring.Id, "failed");
+
+        Dictionary<ScheduledMessageStatus, int> counts = await store.GetStatusCountsAsync();
+        counts[ScheduledMessageStatus.Completed].Should().Be(1);
+        counts[ScheduledMessageStatus.Failed].Should().Be(1);
+
+        pending.ProcessedAt = DateTimeOffset.UtcNow.AddDays(-10);
+        await store.UpdateAsync(pending);
+        int removed = await store.CleanupOldMessagesAsync(DateTimeOffset.UtcNow.AddDays(-1));
+        removed.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task MessageScheduler_ScheduleWithDelay_ShouldPersistMessage()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
+
+        Guid id = await scheduler.ScheduleMessageAsync(
+            TimeSpan.FromMinutes(10),
+            new TestOrderEvent { Name = "delay" },
+            routingKey: "order-event");
+
+        ScheduledMessage? stored = await store.GetByIdAsync(id);
+        stored.Should().NotBeNull();
+        stored!.RoutingKey.Should().Be("order-event");
+    }
+
+    [Fact]
+    public async Task MessageScheduler_ScheduleWithZeroDelay_ShouldThrow()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
+
+        Func<Task> act = () => scheduler.ScheduleMessageAsync(
+            TimeSpan.Zero,
+            new TestOrderEvent(),
+            routingKey: "order");
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*Delay must be positive*");
+    }
+
+    [Fact]
+    public async Task MessageScheduler_CancelScheduledMessage_ShouldMarkAsCancelled()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
+
+        Guid id = await scheduler.ScheduleMessageAsync(
+            DateTimeOffset.UtcNow.AddMinutes(5),
+            new TestOrderEvent { Name = "cancel" },
+            new ScheduleMessageOptions { RoutingKey = "order" });
+
+        bool cancelled = await scheduler.CancelScheduledMessageAsync(id);
+
+        cancelled.Should().BeTrue();
+        ScheduledMessage? stored = await store.GetByIdAsync(id);
+        stored.Should().NotBeNull();
+        stored!.Status.Should().Be(ScheduledMessageStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task MessageScheduler_ProcessDueMessagesAsync_ShouldPublishDueMessage()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
+        var dueMessage = new ScheduledMessage
+        {
+            Id = Guid.NewGuid(),
+            Payload = System.Text.Json.JsonSerializer.Serialize(new TestOrderEvent { Name = "due" }),
+            MessageType = typeof(TestOrderEvent).AssemblyQualifiedName!,
+            RoutingKey = "order-event",
+            ScheduledTime = DateTimeOffset.UtcNow.AddMinutes(-1),
+            Status = ScheduledMessageStatus.Pending
+        };
+        await store.AddAsync(dueMessage);
+
+        int processed = await scheduler.ProcessDueMessagesAsync();
+
+        processed.Should().Be(1);
+        client.WasPublished<TestOrderEvent>().Should().BeTrue();
+        (await store.GetByIdAsync(dueMessage.Id))!.Status.Should().Be(ScheduledMessageStatus.Completed);
+    }
+
+    [Fact]
+    public async Task MessageScheduler_ScheduleRecurringInterval_ShouldPersistActiveMessage()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(
+            store,
+            client,
+            Options.Create(new MessageSchedulerOptions { MinimumRecurringInterval = TimeSpan.FromMinutes(1) }));
+
+        Guid id = await scheduler.ScheduleRecurringMessageAsync(
+            TimeSpan.FromMinutes(5),
+            new TestOrderEvent { Name = "recurring" },
+            routingKey: "order-event",
+            maxExecutions: 3);
+
+        ScheduledMessage? stored = await store.GetByIdAsync(id);
+        stored.Should().NotBeNull();
+        stored!.IsRecurring.Should().BeTrue();
+        stored.Status.Should().Be(ScheduledMessageStatus.Active);
+    }
+
+    [Fact]
+    public async Task MessageScheduler_PauseAndResumeRecurring_ShouldToggleStatus()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(
+            store,
+            client,
+            Options.Create(new MessageSchedulerOptions { MinimumRecurringInterval = TimeSpan.FromMinutes(1) }));
+
+        Guid id = await scheduler.ScheduleRecurringMessageAsync(
+            TimeSpan.FromMinutes(5),
+            new TestOrderEvent { Name = "pause-resume" },
+            routingKey: "order-event");
+
+        (await scheduler.PauseRecurringMessageAsync(id)).Should().BeTrue();
+        (await store.GetByIdAsync(id))!.Status.Should().Be(ScheduledMessageStatus.Paused);
+
+        (await scheduler.ResumeRecurringMessageAsync(id)).Should().BeTrue();
+        (await store.GetByIdAsync(id))!.Status.Should().Be(ScheduledMessageStatus.Active);
+    }
+
+    [Fact]
+    public async Task MessageScheduler_ScheduleRecurringCron_WithInvalidExpression_ShouldThrow()
+    {
+        var store = new InMemoryScheduledMessageStore();
+        InMemoryBus client = RabbitMQTestHelpers.CreateInMemoryBus();
+        var scheduler = new MessageScheduler(store, client, Options.Create(new MessageSchedulerOptions()));
+
+        Func<Task> act = () => scheduler.ScheduleRecurringMessageAsync(
+            "not-a-cron",
+            new TestOrderEvent(),
+            routingKey: "order");
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*Invalid CRON*");
     }
 }

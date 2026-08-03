@@ -126,6 +126,108 @@ public class BulkOperationsRepositoryAsyncTest : IDisposable
         result.RowsAffected.Should().Be(0);
     }
 
+    [Fact]
+    public async Task BulkInsertAsync_WithNullOptions_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.BulkInsertAsync(EfCoreTestHelpers.CreateEntities(1), null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task BulkUpdateAsync_WithNullOptions_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.BulkUpdateAsync(EfCoreTestHelpers.CreateEntities(1), null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task BulkDeleteAsync_WithNullOptions_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.BulkDeleteAsync(EfCoreTestHelpers.CreateEntities(1), null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task BulkInsertAsync_WithBypassChangeTrackingDisabled_ShouldInsertViaTracking()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+        var options = new BulkOperationOptions { BypassChangeTracking = false, BatchSize = 5 };
+
+        BulkOperationResult result = await repository.BulkInsertAsync(EfCoreTestHelpers.CreateEntities(5, "Tracked"), options);
+
+        result.IsSuccess.Should().BeTrue();
+        (await repository.ListCountAsync()).Should().Be(5);
+    }
+
+    [Fact]
+    public async Task BulkUpdateAsync_WithBypassChangeTrackingDisabled_ShouldUpdateViaTracking()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        await repository.BulkInsertAsync(EfCoreTestHelpers.CreateEntities(3, "TrackUpdate"));
+        IList<TestEntity> items = await repository.ListAsync();
+        foreach (TestEntity entity in items)
+        {
+            entity.Score = 999;
+        }
+
+        BulkOperationResult result = await repository.BulkUpdateAsync([.. items], new BulkOperationOptions { BypassChangeTracking = false });
+
+        result.IsSuccess.Should().BeTrue();
+        (await repository.ListAsync()).Should().OnlyContain(e => e.Score == 999);
+    }
+
+    [Fact]
+    public async Task BulkDeleteAsync_WithBypassChangeTrackingDisabled_ShouldDeleteViaTracking()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        await repository.BulkInsertAsync(EfCoreTestHelpers.CreateEntities(4, "TrackDelete"));
+        IList<TestEntity> items = await repository.ListAsync();
+
+        BulkOperationResult result = await repository.BulkDeleteAsync([.. items], new BulkOperationOptions { BypassChangeTracking = false });
+
+        result.IsSuccess.Should().BeTrue();
+        (await repository.ListCountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ExecuteUpdateAsync_WithNullPredicate_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.ExecuteUpdateAsync(null!, e => e.Score, 0);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task ExecuteDeleteAsync_WithNullPredicate_ShouldThrow()
+    {
+        using IServiceScope scope = _provider.CreateScope();
+        IBulkOperationsRepositoryAsync<TestEntity> repository = scope.ServiceProvider.GetRequiredService<IBulkOperationsRepositoryAsync<TestEntity>>();
+
+        Func<Task> act = () => repository.ExecuteDeleteAsync(null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
     [Fact(Skip = "InMemory provider does not support ExecuteUpdate/ExecuteDelete. See BulkOperationsIntegrationTest in Application.Integration.Test.")]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteUpdateAsync_ShouldUpdateMatchingEntities()

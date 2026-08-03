@@ -78,17 +78,52 @@ public static class JsonHelper
         return JsonConvert.DeserializeAnonymousType(value, anonymousType, jsonSerializerSettings ?? JsonDefaultSettings);
     }
 
+    private static JsonSerializerSettings CreateSettingsWithConverters(params JsonConverter[] converters)
+    {
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = JsonDefaultSettings.ContractResolver,
+            DateFormatHandling = JsonDefaultSettings.DateFormatHandling,
+            DateFormatString = JsonDefaultSettings.DateFormatString,
+            NullValueHandling = JsonDefaultSettings.NullValueHandling,
+            ReferenceLoopHandling = JsonDefaultSettings.ReferenceLoopHandling
+        };
+
+        foreach (JsonConverter converter in JsonDefaultSettings.Converters)
+        {
+            settings.Converters.Add(converter);
+        }
+
+        foreach (JsonConverter converter in converters)
+        {
+            settings.Converters.Add(converter);
+        }
+
+        return settings;
+    }
+
     /// <summary>
     /// 
     /// </summary>
     public static JsonSerializerSettings JsonPagingResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
     {
-        JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
-        settings.Converters.Add(new ValueObjectConverter<IPagingResult<T>, PagingResult<T>>());
-        settings.Converters.Add(new ValueObjectConverter<IPageResult, PageResult>());
-        settings.Converters.Add(new ValueObjectConverter<ISummaryResult, SummaryResult>());
-        settings.Converters.Add(new ValueObjectConverter<IMessageResult, MessageResult>());
-        return settings;
+        if (jsonSerializerSettings != null)
+        {
+            JsonSerializerSettings settings = CreateSettingsWithConverters(
+                new ValueObjectConverter<IPagingResult<T>, PagingResult<T>>(),
+                new ValueObjectConverter<IPageResult, PageResult>(),
+                new ValueObjectConverter<ISummaryResult, SummaryResult>(),
+                new ValueObjectConverter<IMessageResult, MessageResult>());
+            settings.ContractResolver = jsonSerializerSettings.ContractResolver ?? settings.ContractResolver;
+            settings.NullValueHandling = jsonSerializerSettings.NullValueHandling;
+            return settings;
+        }
+
+        return CreateSettingsWithConverters(
+            new ValueObjectConverter<IPagingResult<T>, PagingResult<T>>(),
+            new ValueObjectConverter<IPageResult, PageResult>(),
+            new ValueObjectConverter<ISummaryResult, SummaryResult>(),
+            new ValueObjectConverter<IMessageResult, MessageResult>());
     }
 
     /// <summary>
@@ -96,11 +131,21 @@ public static class JsonHelper
     /// </summary>
     public static JsonSerializerSettings JsonBusinessResultSettings<T>(JsonSerializerSettings? jsonSerializerSettings = null)
     {
-        JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
-        settings.Converters.Add(new ValueObjectConverter<IBusinessResult<T>, BusinessResult<T>>());
-        settings.Converters.Add(new ValueObjectConverter<ISummaryResult, SummaryResult>());
-        settings.Converters.Add(new ValueObjectConverter<IMessageResult, MessageResult>());
-        return settings;
+        if (jsonSerializerSettings != null)
+        {
+            JsonSerializerSettings settings = CreateSettingsWithConverters(
+                new ValueObjectConverter<IBusinessResult<T>, BusinessResult<T>>(),
+                new ValueObjectConverter<ISummaryResult, SummaryResult>(),
+                new ValueObjectConverter<IMessageResult, MessageResult>());
+            settings.ContractResolver = jsonSerializerSettings.ContractResolver ?? settings.ContractResolver;
+            settings.NullValueHandling = jsonSerializerSettings.NullValueHandling;
+            return settings;
+        }
+
+        return CreateSettingsWithConverters(
+            new ValueObjectConverter<IBusinessResult<T>, BusinessResult<T>>(),
+            new ValueObjectConverter<ISummaryResult, SummaryResult>(),
+            new ValueObjectConverter<IMessageResult, MessageResult>());
     }
 
     /// <summary>
@@ -108,8 +153,15 @@ public static class JsonHelper
     /// </summary>
     public static JsonSerializerSettings JsonBusinessEventSettings(JsonSerializerSettings? jsonSerializerSettings = null)
     {
-        JsonSerializerSettings settings = jsonSerializerSettings ?? JsonDefaultSettings;
-        settings.Converters.Add(new ValueObjectConverter<IBusinessEvent, BusinessEvent>());
-        return settings;
+        if (jsonSerializerSettings != null)
+        {
+            JsonSerializerSettings settings = CreateSettingsWithConverters(
+                new ValueObjectConverter<IBusinessEvent, BusinessEvent>());
+            settings.ContractResolver = jsonSerializerSettings.ContractResolver ?? settings.ContractResolver;
+            settings.NullValueHandling = jsonSerializerSettings.NullValueHandling;
+            return settings;
+        }
+
+        return CreateSettingsWithConverters(new ValueObjectConverter<IBusinessEvent, BusinessEvent>());
     }
 }

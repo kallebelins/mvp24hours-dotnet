@@ -32,17 +32,6 @@ public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFi
         return [.. Enumerable.Range(1, count).Select(i => new TestEntity { Name = $"{prefix}-{i}" })];
     }
 
-    [Fact]
-    [Trait("Category", "Unit")]
-    public void BulkInsertAsync_ShouldThrow_WhenContextIsNull()
-    {
-        Mvp24HoursContext? context = null;
-
-        Func<Task> act = () => context!.BulkInsertAsync([new TestEntity { Name = "x" }]);
-
-        act.Should().ThrowAsync<ArgumentNullException>();
-    }
-
     [DockerFact]
     public async Task BulkInsertAsync_ShouldInsertAllEntities()
     {
@@ -107,17 +96,6 @@ public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFi
         (await context.Set<TestEntity>().Find(e => e.Name.StartsWith("Updated-")).CountDocumentsAsync()).Should().Be(6);
     }
 
-    [Fact]
-    [Trait("Category", "Unit")]
-    public void BulkUpdateAsync_ShouldThrow_WhenKeySelectorIsNull()
-    {
-        Mvp24HoursContext context = CreateContext();
-
-        Func<Task> act = () => context.BulkUpdateAsync([new TestEntity()], null!);
-
-        act.Should().ThrowAsync<ArgumentNullException>();
-    }
-
     [DockerFact]
     public async Task BulkDeleteAsync_ShouldRemoveMatchingDocuments()
     {
@@ -149,17 +127,6 @@ public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFi
             Builders<TestEntity>.Update.Set(e => e.Name, "Status-Archived"));
 
         modified.Should().Be(2);
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public void UpdateManyAsync_ShouldThrow_WhenFilterIsNull()
-    {
-        Mvp24HoursContext context = CreateContext();
-
-        Func<Task> act = () => context.UpdateManyAsync<TestEntity>(null!, Builders<TestEntity>.Update.Set(e => e.Name, "x"));
-
-        act.Should().ThrowAsync<ArgumentNullException>();
     }
 
     [DockerFact]
@@ -217,12 +184,5 @@ public class MongoDbBulkOperationsExtensionsIntegrationTest(MongoDbIntegrationFi
 
         result.IsSuccess.Should().BeTrue();
         result.InsertedCount.Should().Be(0);
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    public void SetLogger_ShouldAllowLoggingDuringBulkOperations()
-    {
-        MongoDbBulkOperationsExtensions.SetLogger(NullLogger.Instance);
     }
 }

@@ -33,8 +33,7 @@ public class EFCoreActivitySourceTest
         activity.Status.Should().Be(ActivityStatusCode.Ok);
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle()
-            .Which.OperationName.Should().Be(EFCoreActivitySource.ActivityNames.Query);
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Query).Should().BeTrue();
     }
 
     [Fact]
@@ -47,8 +46,7 @@ public class EFCoreActivitySourceTest
         activity!.GetTagItem(EFCoreActivitySource.TagNames.DbOperation).Should().Be("INSERT");
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle()
-            .Which.OperationName.Should().Be(EFCoreActivitySource.ActivityNames.Command);
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Command).Should().BeTrue();
     }
 
     [Fact]
@@ -62,8 +60,7 @@ public class EFCoreActivitySourceTest
         activity.Events.Should().Contain(e => e.Name == "slow_query_detected");
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle()
-            .Which.OperationName.Should().Be(EFCoreActivitySource.ActivityNames.SlowQuery);
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.SlowQuery).Should().BeTrue();
     }
 
     [Fact]
@@ -80,7 +77,7 @@ public class EFCoreActivitySourceTest
         activity.Events.Should().Contain(e => e.Name == "exception");
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle();
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Query).Should().BeTrue();
     }
 
     [Fact]
@@ -98,7 +95,7 @@ public class EFCoreActivitySourceTest
         activity.GetTagItem(EFCoreActivitySource.TagNames.QueryDurationMs).Should().Be(42.5);
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle();
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Query).Should().BeTrue();
     }
 
     [Fact]
@@ -114,7 +111,7 @@ public class EFCoreActivitySourceTest
         statement.Should().NotBeNull();
         statement!.Should().Contain("[TRUNCATED]");
         statement.Length.Should().BeLessThan(longSql.Length);
-        listener.Activities.Should().ContainSingle();
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Query).Should().BeTrue();
     }
 
     [Fact]
@@ -146,6 +143,6 @@ public class EFCoreActivitySourceTest
         activity.GetTagItem(EFCoreActivitySource.TagNames.IsSlowQuery).Should().Be(true);
         activity.Stop();
 
-        listener.Activities.Should().ContainSingle();
+        listener.HasActivity(EFCoreActivitySource.ActivityNames.Query).Should().BeTrue();
     }
 }

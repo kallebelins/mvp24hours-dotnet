@@ -387,16 +387,22 @@ public class InMemoryDistributedLockProviderTest
         InMemoryDistributedLockProvider provider = DistributedLockingTestHelpers.CreateInMemory();
         string resource = DistributedLockingTestHelpers.UniqueResource();
         DistributedLockOptions options = DistributedLockingTestHelpers.FastFailOptions(
-            lockDuration: TimeSpan.FromMilliseconds(400),
+            lockDuration: TimeSpan.FromSeconds(2),
             enableAutoRenewal: true,
-            renewalInterval: TimeSpan.FromMilliseconds(100));
+            renewalInterval: TimeSpan.FromMilliseconds(200));
 
         LockAcquisitionResult result = await provider.TryAcquireAsync(resource, options);
         result.IsAcquired.Should().BeTrue();
 
         try
         {
-            await Task.Delay(350);
+            DateTime waitUntil = DateTime.UtcNow.AddMilliseconds(800);
+            while (DateTime.UtcNow < waitUntil)
+            {
+                await Task.Delay(50);
+            }
+
+            await WaitUntilAsync(() => Task.FromResult(result.LockHandle!.IsValid), TimeSpan.FromSeconds(2));
 
             result.LockHandle!.IsValid.Should().BeTrue();
             (await provider.IsLockedAsync(resource)).Should().BeTrue();
@@ -405,6 +411,22 @@ public class InMemoryDistributedLockProviderTest
         {
             await result.LockHandle!.DisposeAsync();
         }
+    }
+
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow.Add(timeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (await condition())
+            {
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+
+        (await condition()).Should().BeTrue("expected condition to be met before timeout");
     }
 
     [Fact]

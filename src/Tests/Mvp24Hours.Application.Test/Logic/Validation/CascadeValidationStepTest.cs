@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
 
@@ -105,6 +107,93 @@ public class CascadeValidationStepTest
     }
 
     [Fact]
+    public void Execute_NestedCollection_ShouldValidateEachItem()
+    {
+        var step = new CascadeValidationStep<ParentWithNestedCollection>();
+        var context = new ValidationStepContext(ValidationOptions.Default, null);
+
+        ValidationServiceResult result = step.Execute(
+            new ParentWithNestedCollection
+            {
+                Children = [new NestedChild { Name = "" }, new NestedChild { Name = "Valid" }]
+            },
+            context);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Key!.Contains("Children[0]", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Execute_WithFluentValidationValidator_ShouldReturnErrors()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IValidator<NestedChild>, NestedChildFluentValidator>();
+        var step = new CascadeValidationStep<ParentWithRegisteredValidator>(services.BuildServiceProvider());
+        var context = new ValidationStepContext(ValidationOptions.Default, services.BuildServiceProvider());
+
+        ValidationServiceResult result = step.Execute(
+            new ParentWithRegisteredValidator { Child = new NestedChild { Name = "" } },
+            context);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Key!.Contains("Child", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithFluentValidationValidator_ShouldReturnErrors()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IValidator<NestedChild>, NestedChildFluentValidator>();
+        var step = new CascadeValidationStep<ParentWithRegisteredValidator>(services.BuildServiceProvider());
+        var context = new ValidationStepContext(ValidationOptions.Default, services.BuildServiceProvider());
+
+        ValidationServiceResult result = await step.ExecuteAsync(
+            new ParentWithRegisteredValidator { Child = new NestedChild { Name = "" } },
+            context);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Execute_StopOnFirstError_ShouldReturnAfterFirstFailure()
+    {
+        var step = new CascadeValidationStep<ParentWithNestedCollection>();
+        var context = new ValidationStepContext(
+            new ValidationOptions { ValidateNestedObjects = true, StopOnFirstError = true },
+            null);
+
+        ValidationServiceResult result = step.Execute(
+            new ParentWithNestedCollection
+            {
+                Children =
+                [
+                    new NestedChild { Name = "" },
+                    new NestedChild { Name = "" }
+                ]
+            },
+            context);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Execute_IncludePropertyPath_ShouldPrefixNestedPath()
+    {
+        var step = new CascadeValidationStep<ParentWithInvalidChild>();
+        var context = new ValidationStepContext(
+            new ValidationOptions { ValidateNestedObjects = true, IncludePropertyPath = true },
+            null);
+
+        ValidationServiceResult result = step.Execute(
+            new ParentWithInvalidChild { Child = new NestedChild { Name = "" } },
+            context);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Key!.StartsWith("Child.", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Execute_IHasNestedValidation_ShouldValidateNestedType()
     {
         var step = new CascadeValidationStep<ParentWithNestedInterface>();
@@ -151,5 +240,24 @@ public class CascadeValidationStepTest
     {
         [Required]
         public string Line { get; set; } = string.Empty;
+    }
+
+    private sealed class ParentWithNestedCollection
+    {
+        [ValidateNested]
+        public List<NestedChild> Children { get; set; } = [];
+    }
+
+    private sealed class ParentWithRegisteredValidator
+    {
+        public NestedChild? Child { get; set; }
+    }
+
+    private sealed class NestedChildFluentValidator : AbstractValidator<NestedChild>
+    {
+        public NestedChildFluentValidator()
+        {
+            RuleFor(x => x.Name).NotEmpty();
+        }
     }
 }

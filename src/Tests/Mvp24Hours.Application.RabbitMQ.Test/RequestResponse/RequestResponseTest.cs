@@ -10,6 +10,7 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.RequestResponse;
 
+[Trait("Category", "Unit")]
 public class RequestResponseTest
 {
     [Fact]
