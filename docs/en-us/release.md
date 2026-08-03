@@ -58,12 +58,15 @@ Follow the complete [9.1.x → 10.0.0 migration](migration.md?id=_91x-1000).
 - Local and CI Release builds use warnings as errors. A Release
   `TreatWarningsAsErrors=true` build of the solution reports zero errors and
   zero warnings, with only the intentional `NU1510` residual allowed.
-- CI instruments **18** test projects on the .NET 10 SDK and enforces a **37%**
-  line-coverage floor; the product target remains **95%**.
-- `CHANGELOG.md` records an expanded suite of **4,492 passed, 0 failed, and 6
-  skipped** with consolidated line coverage of **37.7%**. Those exact counts
-  come from release evidence files under `tasks/` that are not currently
-  committed; treat the CI gates above as the reproducible verification baseline.
+- CI instruments **19** test projects in `src/Mvp24Hours.slnx` on the .NET 10 SDK
+  with split **unit** (`Category!=Integration`) and **integration** (`Category=Integration`)
+  jobs (integration requires Docker). Merged coverage enforces a **55%** line floor;
+  product target remains **95%**.
+- Versioned baseline: **59.4%** consolidated line coverage (74,605 coverable lines) —
+  see [`docs/en-us/testing/coverage-baseline.md`](en-us/testing/coverage-baseline.md).
+  Reproduce with `./scripts/run-ci-local.ps1 -SkipSamples`.
+- Historical v10 expansion snapshot (**37.7%**, 4,492 passed / 6 skipped) remains in
+  `CHANGELOG.md`; evidence files under `tasks/` are not committed.
 
 ## 9.1.210 (January 2026)
 

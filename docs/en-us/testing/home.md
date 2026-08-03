@@ -78,8 +78,17 @@ public class CheckoutApiTest
 Run one category with:
 
 ```bash
-dotnet test --filter "Category=Unit"
-dotnet test --filter "Category=Integration"
+dotnet test src/Mvp24Hours.slnx --filter "Category=Unit"
+dotnet test src/Mvp24Hours.slnx --filter "Category=Integration"
+```
+
+Main CI splits the same way on ubuntu: unit tests (`Category!=Integration`) and integration tests (`Category=Integration`, Docker required). Coverage from both jobs is merged before the regression gate. See [coverage baseline](coverage-baseline.md) for phase targets.
+
+Local mirror (unit + integration + 45% gate):
+
+```powershell
+./scripts/run-ci-local.ps1 -SkipSamples
+./scripts/run-ci-local.ps1 -SkipSamples -SkipIntegration   # no Docker
 ```
 
 `Category=Integration` may require Docker or another external service. The trait describes the boundary; it is not automatically added by any Mvp24Hours helper.

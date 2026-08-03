@@ -210,7 +210,7 @@ public class Test7BulkOperations
     // The tests are marked with [Trait("Category", "RequiresRealDatabase")]
     // and are skipped during CI when using InMemory.
 
-    [Fact(Skip = "ExecuteUpdateAsync is not supported by InMemory provider"), Priority(30)]
+    [Fact(Skip = "ExecuteUpdateAsync is not supported by InMemory provider. See BulkOperationsIntegrationTest in Application.Integration.Test."), Priority(30)]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteUpdate_SingleProperty_ShouldUpdateMatchingEntities()
     {
@@ -242,7 +242,7 @@ public class Test7BulkOperations
 
     #region Execute Delete Tests (.NET 7+)
 
-    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider"), Priority(40)]
+    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider. See BulkOperationsIntegrationTest in Application.Integration.Test."), Priority(40)]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteDelete_ShouldDeleteMatchingEntities()
     {
@@ -267,7 +267,7 @@ public class Test7BulkOperations
         Assert.True(rowsAffected >= 0);
     }
 
-    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider"), Priority(41)]
+    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider. See BulkOperationsIntegrationTest in Application.Integration.Test."), Priority(41)]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteDelete_WithNoMatches_ShouldReturnZero()
     {
@@ -302,7 +302,7 @@ public class Test7BulkOperations
         Assert.True(result.IsSuccess);
     }
 
-    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider"), Priority(51)]
+    [Fact(Skip = "ExecuteDeleteAsync is not supported by InMemory provider. See BulkOperationsIntegrationTest in Application.Integration.Test."), Priority(51)]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task DbContextExtension_ExecuteDelete_ShouldWork()
     {

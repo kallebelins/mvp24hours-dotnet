@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SummaryJsonPath,
 
-    [double]$MinimumLineCoverage = 37,
+    [double]$MinimumLineCoverage = 55,
 
     [double]$TargetLineCoverage = 95
 )

@@ -35,4 +35,18 @@ public class ReadWriteExtensionsTest
         options.PrimaryConnectionString.Should().Be("primary");
         options.ReplicaConnectionStrings.Should().ContainSingle("replica");
     }
+
+    [Fact]
+    public void AddMvp24HoursReadWriteSplitting_ShouldReturnSameServiceCollectionForChaining()
+    {
+        var services = new ServiceCollection();
+
+        IServiceCollection result = services.AddMvp24HoursReadWriteSplitting<TestDbContext>(options =>
+        {
+            options.PrimaryConnectionString = "primary";
+            options.ReplicaConnectionStrings = ["replica"];
+        });
+
+        result.Should().BeSameAs(services);
+    }
 }

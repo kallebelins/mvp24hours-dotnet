@@ -60,7 +60,7 @@ public class SafeExecutorTest
     {
         // Act
         IBusinessResultWithStatus<string> result = SafeExecutor.Execute<string>(
-            () => throw new ValidationException("Validation failed"),
+            () => throw new Core.Exceptions.ValidationException("Validation failed"),
             _mapper,
             _logger);
 
@@ -584,7 +584,7 @@ public class SafeExecutorTest
         {
             await Task.Delay(1);
             count++;
-            throw new ValidationException("Validation error");
+            throw new Core.Exceptions.ValidationException("Validation error");
         }, _mapper, _logger);
         result2.StatusCode.Should().Be(ResultStatusCode.ValidationFailed);
 

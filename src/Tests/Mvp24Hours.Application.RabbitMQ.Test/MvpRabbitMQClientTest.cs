@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Dto;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Testing;
+using RabbitMQ.Client;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test;
 
@@ -190,5 +192,60 @@ public class MvpRabbitMQClientTest
         id.Should().NotBeNullOrWhiteSpace();
         bus.WasPublished<TestOrderEvent>().Should().BeTrue();
         bus.PublishedCount<TestOrderEvent>().Should().Be(1);
+    }
+
+    [Fact]
+    public void PublishBatch_WithMockConnection_ShouldReturnAllMessageIds()
+    {
+        var batchMock = new Mock<IBasicPublishBatch>();
+        var channelMock = new Mock<IModel>();
+        var propertiesMock = new Mock<IBasicProperties>();
+        propertiesMock.SetupAllProperties();
+        channelMock.Setup(c => c.CreateBasicProperties()).Returns(propertiesMock.Object);
+        channelMock.Setup(c => c.IsOpen).Returns(true);
+        channelMock.Setup(c => c.CreateBasicPublishBatch()).Returns(batchMock.Object);
+        channelMock.Setup(c => c.ConfirmSelect());
+        channelMock.Setup(c => c.WaitForConfirmsOrDie(It.IsAny<TimeSpan>()));
+
+        var connectionMock = RabbitMQTestHelpers.CreateMockConnection();
+        connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+
+        IEnumerable<string> ids = client.PublishBatch([
+            (new CustomerEvent { Id = 1, Name = "b1", Active = true }, "route-1"),
+            (new CustomerEvent { Id = 2, Name = "b2", Active = true }, "route-2")
+        ]);
+
+        ids.Should().HaveCount(2);
+        batchMock.Verify(b => b.Publish(), Times.Once);
+    }
+
+    [Fact]
+    public async Task PublishBatchAsync_ShouldReturnAllMessageIds()
+    {
+        var batchMock = new Mock<IBasicPublishBatch>();
+        var channelMock = new Mock<IModel>();
+        var propertiesMock = new Mock<IBasicProperties>();
+        propertiesMock.SetupAllProperties();
+        channelMock.Setup(c => c.CreateBasicProperties()).Returns(propertiesMock.Object);
+        channelMock.Setup(c => c.IsOpen).Returns(true);
+        channelMock.Setup(c => c.CreateBasicPublishBatch()).Returns(batchMock.Object);
+        channelMock.Setup(c => c.ConfirmSelect());
+        channelMock.Setup(c => c.WaitForConfirmsOrDie(It.IsAny<TimeSpan>()));
+
+        var connectionMock = RabbitMQTestHelpers.CreateMockConnection();
+        connectionMock.Setup(c => c.CreateModel()).Returns(channelMock.Object);
+
+        IServiceProvider provider = RabbitMQTestHelpers.CreateClientServiceProvider(connection: connectionMock.Object);
+        MvpRabbitMQClient client = provider.GetRequiredService<MvpRabbitMQClient>();
+
+        IEnumerable<string> ids = await client.PublishBatchAsync([
+            (new CustomerEvent { Id = 3, Name = "async-b1", Active = true }, "route-1"),
+            (new CustomerEvent { Id = 4, Name = "async-b2", Active = true }, "route-2")
+        ]);
+
+        ids.Should().HaveCount(2);
     }
 }

@@ -121,4 +121,38 @@ public class HealthCheckExtensionsTest
 
         healthChecks.Should().NotBeNull();
     }
+
+    [Fact]
+    public void AddMvp24HoursPostgreSqlCheck_ShouldRegisterNamedCheck()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddHealthChecks()
+            .AddMvp24HoursPostgreSqlCheck(
+                "Host=invalid;Database=x;Username=x;Password=x;Timeout=1",
+                _ => new SqliteConnection("Data Source=:memory:"),
+                name: "postgres-test",
+                timeout: TimeSpan.FromSeconds(2));
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<HealthCheckService>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddMvp24HoursMySqlCheck_ShouldRegisterNamedCheck()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddHealthChecks()
+            .AddMvp24HoursMySqlCheck(
+                "Server=invalid;Database=x;User=x;Password=x;Connection Timeout=1",
+                _ => new SqliteConnection("Data Source=:memory:"),
+                name: "mysql-test",
+                timeout: TimeSpan.FromSeconds(2));
+
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<HealthCheckService>().Should().NotBeNull();
+    }
 }

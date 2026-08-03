@@ -11,10 +11,13 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   SOLUTION_PATH: src/Mvp24Hours.slnx
+  COVERAGE_LINE_MIN: '55'
+  COVERAGE_LINE_TARGET: '95'
+  COVERAGE_ASSEMBLY_FILTERS: '+Mvp24Hours*;-Mvp24Hours*.Test*;-Mvp24Hours*.Tests*'
 
 jobs:
   build-and-test:
-    name: Build and Test
+    name: Build and Test (Unit)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -22,51 +25,126 @@ jobs:
       fail-fast: false
 
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Para GitVersion e análise de código
+        fetch-depth: 0
 
-    - name: 🔧 Setup .NET
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: 📦 Restore dependencies
+    - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    - name: 🏗️ Build
+    - name: Build
       run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    - name: 🧪 Run tests
-      run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build --verbosity normal --logger trx --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results
+    - name: Run unit tests
+      run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build --verbosity normal --logger trx --filter "Category!=Integration" --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results/unit
 
-    - name: 📊 Coverage regression gate
+    - name: Upload unit coverage
+      uses: actions/upload-artifact@v4
       if: matrix.os == 'ubuntu-latest'
-      shell: pwsh
-      env:
-        COVERAGE_LINE_MIN: '37'
-        COVERAGE_LINE_TARGET: '95'
-      run: |
-        dotnet tool install -g dotnet-reportgenerator-globaltool --ignore-failed-sources
-        reportgenerator -reports:"test-results/**/coverage.cobertura.xml" -targetdir:"./test-results/coverage-report" -reporttypes:"JsonSummary" -assemblyfilters:"+Mvp24Hours*"
-        ./scripts/check-coverage-gate.ps1 -SummaryJsonPath ./test-results/coverage-report/Summary.json -MinimumLineCoverage $env:COVERAGE_LINE_MIN -TargetLineCoverage $env:COVERAGE_LINE_TARGET
+      with:
+        name: coverage-unit
+        path: test-results/unit/**/coverage.cobertura.xml
 
-    - name: 📊 Upload test results
+    - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-${{ matrix.os }}
+        name: test-results-unit-${{ matrix.os }}
         path: '**/*.trx'
 
-    - name: 📈 Upload coverage to Codecov
+  build-and-test-integration:
+    name: Build and Test (Integration)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Verify Docker
+      run: docker info
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Build
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+
+    - name: Run integration tests
+      run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build --verbosity normal --logger trx --filter "Category=Integration" --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./test-results/integration
+
+    - name: Upload integration coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-integration
+        path: test-results/integration/**/coverage.cobertura.xml
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-integration-ubuntu
+        path: '**/*.trx'
+
+  coverage-gate:
+    name: Coverage Gate
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-and-test-integration]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download unit coverage
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-unit
+        path: ./coverage-download/unit
+
+    - name: Download integration coverage
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-integration
+        path: ./coverage-download/integration
+
+    - name: Merge coverage and run gate
+      shell: pwsh
+      env:
+        COVERAGE_LINE_MIN: ${{ env.COVERAGE_LINE_MIN }}
+        COVERAGE_LINE_TARGET: ${{ env.COVERAGE_LINE_TARGET }}
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool --ignore-failed-sources
+        $reports = @(
+          (Get-ChildItem -Path ./coverage-download -Recurse -Filter coverage.cobertura.xml | ForEach-Object { $_.FullName })
+        )
+        ./scripts/merge-coverage-report.ps1 `
+          -ReportPaths $reports `
+          -TargetDir ./test-results/coverage-report `
+          -AssemblyFilters $env:COVERAGE_ASSEMBLY_FILTERS
+        ./scripts/check-coverage-gate.ps1 `
+          -SummaryJsonPath ./test-results/coverage-report/Summary.json `
+          -MinimumLineCoverage $env:COVERAGE_LINE_MIN `
+          -TargetLineCoverage $env:COVERAGE_LINE_TARGET
+
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
-      if: matrix.os == 'ubuntu-latest'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: '**/coverage.cobertura.xml'
+        files: 'coverage-download/**/coverage.cobertura.xml'
         flags: unittests
-        name: codecov-${{ matrix.os }}
+        name: codecov-merged
 
   code-quality:
     name: Code Quality Analysis
@@ -74,56 +152,49 @@ jobs:
     if: github.event_name == 'pull_request'
 
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: 🔧 Setup .NET
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Full style gate (task 7.2 / v2): whitespace + imports + analyzer code-style fixes.
-    # Exclusions: IDE0130 crashes MSBuildWorkspace (dotnet/format#2192); IDE1006 has no
-    # Fix All (NamingStyleCodeFixProvider) and stays suggestion in .editorconfig.
-    # Solution lives under src/ — a bare `dotnet format` from repo root cannot find a solution file.
-    - name: 🎨 Check code formatting
+    - name: Check code formatting
       run: dotnet format ${{ env.SOLUTION_PATH }} --exclude-diagnostics IDE0130 IDE1006 --verify-no-changes --verbosity diagnostic
 
-    # Strict quality gate (task 7.1 / v2): TreatWarningsAsErrors=true. Residual list is
-    # only NU1510 (MvpResidualWarnings in src/Directory.Build.props).
-    # --no-incremental forces a full recompile so warnings are actually re-emitted.
-    - name: 🔍 Run static code analysis
+    - name: Run static code analysis
       run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-incremental /p:TreatWarningsAsErrors=true
 
   package:
     name: Create NuGet Packages
     runs-on: ubuntu-latest
-    needs: [build-and-test]
+    needs: [build-and-test, build-and-test-integration, coverage-gate]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: 🔧 Setup .NET
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: 📦 Restore dependencies
+    - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    - name: 🏗️ Build
+    - name: Build
       run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    - name: 📦 Pack
+    - name: Pack
       run: dotnet pack ${{ env.SOLUTION_PATH }} --configuration Release --no-build --output ./artifacts
 
-    - name: 📤 Upload artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: nuget-packages
@@ -136,30 +207,27 @@ jobs:
       security-events: write
 
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: 🔧 Setup .NET
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: 🔒 Run security scan
+    - name: Run security scan
       run: |
         set -o pipefail
-        # Solution lives under src/ — bare `dotnet list package` from repo root fails.
         dotnet list src/Mvp24Hours.slnx package --vulnerable --include-transitive 2>&1 | tee security-scan.log
-        # Exit code of `dotnet list` stays 0 even when advisories exist; fail the job on hits.
         if grep -Eiq 'has the following vulnerable packages|tem os seguintes pacotes vulneráveis' security-scan.log; then
           echo "::error::Vulnerable NuGet packages were detected (see security-scan.log)."
           exit 1
         fi
         echo "No vulnerable packages detected across the solution."
 
-    - name: 📤 Upload security scan results
+    - name: Upload security scan results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-scan-results
         path: security-scan.log
-

@@ -23,4 +23,35 @@ public class SlowQueryInterceptorTest
 
         act.Should().NotThrow();
     }
+
+    [Fact]
+    public void Constructor_WithCustomThresholdsAndCallback_ShouldCreateInstance()
+    {
+        bool callbackInvoked = false;
+        var interceptor = new SlowQueryInterceptor(
+            slowQueryThreshold: TimeSpan.FromMilliseconds(100),
+            writeSlowQueryThreshold: TimeSpan.FromMilliseconds(200),
+            logger: NullLogger.Instance,
+            createActivities: false,
+            onSlowQueryDetected: (_, _, _) => callbackInvoked = true);
+
+        interceptor.Should().NotBeNull();
+        callbackInvoked.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_WithInterceptor_DoesNotThrow()
+    {
+        var interceptor = new SlowQueryInterceptor(
+            slowQueryThreshold: TimeSpan.FromSeconds(10),
+            createActivities: false);
+
+        await using TestDbContext context = EfCoreTestHelpers.CreateContext(configure: options =>
+            options.AddInterceptors(interceptor));
+
+        context.Entities.Add(new TestEntity { Name = "SlowQueryAsync" });
+        Func<Task<int>> act = () => context.SaveChangesAsync();
+
+        await act.Should().NotThrowAsync();
+    }
 }

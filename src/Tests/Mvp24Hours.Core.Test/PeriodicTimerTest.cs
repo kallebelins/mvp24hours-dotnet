@@ -526,10 +526,11 @@ public class PeriodicTimerTest
     [Fact]
     public async Task PeriodicTimer_GracefulShutdownScenario()
     {
-        // Arrange
+        // Arrange — block work until cancel is signaled so slow CI agents cannot finish the delay first
         bool startedWork = false;
         bool completedWork = false;
         using var cts = new CancellationTokenSource();
+        var workStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // Act
         Task task = PeriodicTimerHelper.RunPeriodicImmediateAsync(
@@ -537,10 +538,11 @@ public class PeriodicTimerTest
             async ct =>
             {
                 startedWork = true;
+                workStarted.TrySetResult();
 
                 try
                 {
-                    await Task.Delay(500, ct); // Long running work
+                    await Task.Delay(Timeout.InfiniteTimeSpan, ct);
                     completedWork = true;
                 }
                 catch (OperationCanceledException)
@@ -550,17 +552,15 @@ public class PeriodicTimerTest
             },
             cts.Token);
 
-        // Wait for work to start
-        await Task.Delay(50);
+        await workStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(startedWork);
 
-        // Cancel gracefully
         cts.Cancel();
-        await task;
+        await task.WaitAsync(TimeSpan.FromSeconds(5));
 
         // Assert - Work was cancelled but no exception bubbled up
         Assert.True(startedWork);
-        Assert.False(completedWork); // Work was interrupted
+        Assert.False(completedWork);
     }
 
     #endregion

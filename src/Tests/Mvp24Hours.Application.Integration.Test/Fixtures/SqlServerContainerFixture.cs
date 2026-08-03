@@ -50,10 +50,12 @@ public class SqlServerContainerFixture : IAsyncLifetime
             ConnectionString = builder.ConnectionString;
 
             var services = new ServiceCollection();
+            services.AddLogging();
             services.AddDbContext<TestDbContext>(options =>
                 options.UseSqlServer(ConnectionString));
             services.AddMvp24HoursDbContext<TestDbContext>();
             services.AddMvp24HoursRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
+            services.AddMvp24HoursBulkOperationsRepositoryAsync(options => options.MaxQtyByQueryPage = 100);
             services.AddScoped<ProductService>();
             services.AddScoped<ProductPagingService>();
             services.AddScoped<CategoryService>();

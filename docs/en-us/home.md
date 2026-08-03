@@ -79,7 +79,7 @@ All **32** runnable sample solutions live in [`samples/`](https://github.com/kal
 * **Security**: Patched `System.Security.Cryptography.Xml` dependency chain with zero vulnerable packages in the recorded audit
 * **Modernized internals**: `Microsoft.Data.SqlClient`, current AWS credential resolution, and non-obsolete certificate/cryptography APIs
 * **Distributed locking**: Corrected lock release ordering in synchronous and asynchronous disposal
-* **Verification**: CI coverage floor of 37% across 18 test projects; CHANGELOG records 4,492 passing / 6 skipped from the v10 expansion
+* **Verification**: CI runs unit (`Category!=Integration`) and integration (`Category=Integration`) jobs, merges coverage, and enforces a **55%** line-coverage floor; product target **95%**. Current consolidated baseline: **59.4%** — see [coverage baseline](testing/coverage-baseline.md) and `./scripts/run-ci-local.ps1`
 
 ## Donations
 Please consider making a donation if you think this library is useful to you or that my work is valuable. I'm happy if you can help me [buy a cup of coffee](https://www.paypal.com/donate/?hosted_button_id=EKA2L256GJVQC). :heart:

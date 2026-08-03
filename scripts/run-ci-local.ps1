@@ -13,21 +13,29 @@
 .PARAMETER SkipCoverage
     Skip coverage collection and gate (faster iteration).
 
+.PARAMETER SkipIntegration
+    Skip integration tests (no Docker required).
+
 .PARAMETER SkipFormat
     Skip dotnet format verification.
 
 .PARAMETER SkipWarningsGate
     Skip TreatWarningsAsErrors build.
 
+.PARAMETER MinimumLineCoverage
+    Coverage floor (default 55 — Phase 1 gate).
+
 .EXAMPLE
     ./scripts/run-ci-local.ps1
-    ./scripts/run-ci-local.ps1 -SkipSamples -SkipCoverage
+    ./scripts/run-ci-local.ps1 -SkipSamples -SkipIntegration
 #>
 param(
     [switch]$SkipSamples,
     [switch]$SkipCoverage,
+    [switch]$SkipIntegration,
     [switch]$SkipFormat,
-    [switch]$SkipWarningsGate
+    [switch]$SkipWarningsGate,
+    [double]$MinimumLineCoverage = 55
 )
 
 $ErrorActionPreference = 'Stop'
@@ -56,31 +64,73 @@ try {
     }
 
     if ($SkipCoverage) {
-        Invoke-Step 'Test main solution (no coverage)' {
-            dotnet test src/Mvp24Hours.slnx --configuration Release --no-build --verbosity minimal
-        }
-    }
-    else {
-        Invoke-Step 'Test main solution (with coverage)' {
+        Invoke-Step 'Unit tests (no coverage)' {
             dotnet test src/Mvp24Hours.slnx `
                 --configuration Release `
                 --no-build `
+                --filter "Category!=Integration" `
+                --verbosity minimal
+        }
+
+        if (-not $SkipIntegration) {
+            Invoke-Step 'Integration tests (no coverage)' {
+                dotnet test src/Mvp24Hours.slnx `
+                    --configuration Release `
+                    --no-build `
+                    --filter "Category=Integration" `
+                    --verbosity minimal
+            }
+        }
+    }
+    else {
+        Invoke-Step 'Unit tests (with coverage)' {
+            if (Test-Path ./test-results/unit) {
+                Remove-Item ./test-results/unit -Recurse -Force
+            }
+            dotnet test src/Mvp24Hours.slnx `
+                --configuration Release `
+                --no-build `
+                --filter "Category!=Integration" `
                 --verbosity minimal `
                 --settings coverlet.runsettings `
                 --collect:"XPlat Code Coverage" `
-                --results-directory ./test-results
+                --results-directory ./test-results/unit
+        }
+
+        if (-not $SkipIntegration) {
+            Invoke-Step 'Integration tests (with coverage)' {
+                if (Test-Path ./test-results/integration) {
+                    Remove-Item ./test-results/integration -Recurse -Force
+                }
+                dotnet test src/Mvp24Hours.slnx `
+                    --configuration Release `
+                    --no-build `
+                    --filter "Category=Integration" `
+                    --verbosity minimal `
+                    --settings coverlet.runsettings `
+                    --collect:"XPlat Code Coverage" `
+                    --results-directory ./test-results/integration
+            }
         }
 
         Invoke-Step 'Coverage regression gate' {
             dotnet tool install -g dotnet-reportgenerator-globaltool --ignore-failed-sources 2>$null
-            reportgenerator `
-                -reports:"test-results/**/coverage.cobertura.xml" `
-                -targetdir:"./test-results/coverage-report" `
-                -reporttypes:"JsonSummary" `
-                -assemblyfilters:"+Mvp24Hours*"
+            $reports = @()
+            if (Test-Path ./test-results/unit) {
+                $reports += Get-ChildItem ./test-results/unit -Recurse -Filter coverage.cobertura.xml | ForEach-Object { $_.FullName }
+            }
+            if ((-not $SkipIntegration) -and (Test-Path ./test-results/integration)) {
+                $reports += Get-ChildItem ./test-results/integration -Recurse -Filter coverage.cobertura.xml | ForEach-Object { $_.FullName }
+            }
+            if ($reports.Count -eq 0) {
+                throw 'No coverage.cobertura.xml files found.'
+            }
+            & "$PSScriptRoot/merge-coverage-report.ps1" `
+                -ReportPaths $reports `
+                -TargetDir ./test-results/coverage-report
             & "$PSScriptRoot/check-coverage-gate.ps1" `
                 -SummaryJsonPath ./test-results/coverage-report/Summary.json `
-                -MinimumLineCoverage 37 `
+                -MinimumLineCoverage $MinimumLineCoverage `
                 -TargetLineCoverage 95
         }
     }

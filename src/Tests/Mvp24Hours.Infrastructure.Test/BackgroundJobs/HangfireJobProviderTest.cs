@@ -278,4 +278,13 @@ public class HangfireJobProviderTest
             new ServiceCollection().BuildServiceProvider(),
             options ?? BackgroundJobsTestHelpers.CreateHangfireOptions());
     }
+
+    [Fact]
+    public void HangfireJobOptions_DefaultStorageProvider_ShouldBeSqlServer()
+    {
+        var options = new HangfireJobOptions();
+
+        options.StorageProvider.Should().Be(HangfireStorageProvider.SqlServer);
+        options.EnableDashboard.Should().BeTrue();
+    }
 }

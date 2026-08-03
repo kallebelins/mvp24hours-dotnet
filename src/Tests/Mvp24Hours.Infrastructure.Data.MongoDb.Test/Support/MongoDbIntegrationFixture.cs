@@ -21,6 +21,8 @@ public sealed class MongoDbIntegrationFixture : IAsyncLifetime
 
     public IMongoDatabase Database { get; private set; } = null!;
 
+    public string ConnectionString { get; private set; } = string.Empty;
+
     public string DatabaseName { get; } = $"mvp24hours_test_{Guid.NewGuid():N}";
 
     public bool IsAvailable { get; private set; }
@@ -36,13 +38,15 @@ public sealed class MongoDbIntegrationFixture : IAsyncLifetime
         {
             _container = new MongoDbBuilder("mongo:6.0").Build();
             await _container.StartAsync().ConfigureAwait(false);
-            Client = new MongoClient(_container.GetConnectionString());
+            ConnectionString = _container.GetConnectionString();
+            Client = new MongoClient(ConnectionString);
             Database = Client.GetDatabase(DatabaseName);
             IsAvailable = true;
         }
         catch (Exception ex) when (IsDockerUnavailable(ex))
         {
             IsAvailable = false;
+            ConnectionString = string.Empty;
             Client = null!;
             Database = null!;
         }

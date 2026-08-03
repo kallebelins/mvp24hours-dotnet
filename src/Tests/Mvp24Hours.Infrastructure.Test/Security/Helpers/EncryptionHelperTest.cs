@@ -91,15 +91,23 @@ public class EncryptionHelperTest
     }
 
     [Fact]
-    public void DecryptWithAes_WithWrongIv_ShouldThrowCryptographicException()
+    public void DecryptWithAes_WithWrongIv_ShouldFailToDecryptOriginalPlaintext()
     {
         string key = EncryptionHelper.CreateKeyBase64();
         string cipher = EncryptionHelper.EncryptWithAes("secret", key, out _);
         EncryptionHelper.EncryptWithAes("other", key, out string otherIv);
 
-        Action act = () => EncryptionHelper.DecryptWithAes(cipher, key, otherIv);
+        string? decrypted = null;
+        Exception? exception = Record.Exception(() =>
+            decrypted = EncryptionHelper.DecryptWithAes(cipher, key, otherIv));
 
-        act.Should().Throw<CryptographicException>();
+        if (exception is CryptographicException)
+        {
+            return;
+        }
+
+        exception.Should().BeNull();
+        decrypted.Should().NotBe("secret");
     }
 
     [Fact]

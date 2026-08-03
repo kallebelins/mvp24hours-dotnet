@@ -15,8 +15,10 @@ using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Contract.Cache;
 using Mvp24Hours.Application.Contract.Events;
 using Mvp24Hours.Application.Logic;
+using Mvp24Hours.Application.Contract.Observability;
 using Mvp24Hours.Application.Logic.Cache;
 using Mvp24Hours.Application.Logic.Events;
+using Mvp24Hours.Application.Logic.Observability;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Domain.Specifications;
@@ -226,6 +228,20 @@ public sealed class TestCacheableApplicationService(
     IQueryCacheKeyGenerator keyGenerator,
     IValidator<AppTestEntity>? validator = null) : CacheableApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(unitOfWork, cacheProvider, cacheInvalidator, keyGenerator,
         NullLogger<TestCacheableApplicationService>.Instance, validator)
+{
+    public void SetCacheEnabled(bool enabled) => CacheEnabled = enabled;
+
+    public void SetAutoInvalidateOnCommand(bool enabled) => AutoInvalidateOnCommand = enabled;
+}
+
+public sealed class TestObservableApplicationService(
+    IUnitOfWorkAsync unitOfWork,
+    ILogger logger,
+    ICorrelationIdAccessor correlationId,
+    IOperationMetrics metrics,
+    IApplicationAuditStore? auditStore = null,
+    IValidator<AppTestEntity>? validator = null) : ObservableApplicationServiceBaseAsync<AppTestEntity, IUnitOfWorkAsync>(
+        unitOfWork, logger, correlationId, metrics, auditStore, validator)
 {
 }
 

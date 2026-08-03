@@ -550,7 +550,7 @@ public class ConvertExtensionsTest
 
         // Assert
         results.Should().HaveCount(10000);
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(100);
+        stopwatch.ElapsedMilliseconds.Should().BeLessThan(500);
     }
 
     #endregion

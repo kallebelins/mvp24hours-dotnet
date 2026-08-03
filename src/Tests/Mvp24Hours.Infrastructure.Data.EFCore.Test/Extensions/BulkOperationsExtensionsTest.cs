@@ -97,7 +97,7 @@ public class BulkOperationsExtensionsTest
         result.RowsAffected.Should().Be(0);
     }
 
-    [Fact(Skip = "InMemory provider does not support ExecuteUpdate/ExecuteDelete")]
+    [Fact(Skip = "InMemory provider does not support ExecuteUpdate/ExecuteDelete. See BulkOperationsIntegrationTest in Application.Integration.Test.")]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteUpdateAsync_ByProperty_ShouldUpdateMatchingEntities()
     {
@@ -113,7 +113,7 @@ public class BulkOperationsExtensionsTest
         (await context.Entities.CountAsync(e => e.Score == 0)).Should().BeGreaterThan(0);
     }
 
-    [Fact(Skip = "InMemory provider does not support ExecuteUpdate/ExecuteDelete")]
+    [Fact(Skip = "InMemory provider does not support ExecuteUpdate/ExecuteDelete. See BulkOperationsIntegrationTest in Application.Integration.Test.")]
     [Trait("Category", "RequiresRealDatabase")]
     public async Task ExecuteDeleteAsync_ShouldDeleteMatchingEntities()
     {

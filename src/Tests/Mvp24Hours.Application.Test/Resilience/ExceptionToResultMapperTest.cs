@@ -84,7 +84,7 @@ public class ExceptionToResultMapperTest
     public void Map_ValidationException_ShouldReturnValidationFailedStatusCode()
     {
         // Arrange
-        var exception = new ValidationException("Validation failed");
+        var exception = new Core.Exceptions.ValidationException("Validation failed");
 
         // Act
         IBusinessResultWithStatus<string> result = _mapper.Map<string>(exception);

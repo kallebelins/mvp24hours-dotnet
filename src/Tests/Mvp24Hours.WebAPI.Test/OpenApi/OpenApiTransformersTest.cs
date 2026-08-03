@@ -90,6 +90,49 @@ public class OpenApiTransformersTest
         document.Paths.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task DeprecationTransformer_Should_AddWarningToDeprecatedOperations()
+    {
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
+        OpenApiOperation operation = GetOrdersOperation(document);
+        operation.Deprecated = true;
+        operation.Description = "Original description";
+        var sut = new DeprecationTransformer(
+            "This endpoint will be removed soon.",
+            new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        operation.Description.Should().Contain("DEPRECATED");
+        operation.Description.Should().Contain("This endpoint will be removed soon.");
+        operation.Description.Should().Contain("2026-12-31");
+        operation.Description.Should().Contain("Original description");
+    }
+
+    [Fact]
+    public async Task DeprecationTransformer_Should_LeaveNonDeprecatedOperationsUnchanged()
+    {
+        OpenApiDocument document = CreateDocumentWithSingleOperation();
+        OpenApiOperation operation = GetOrdersOperation(document);
+        operation.Description = "Active endpoint";
+        var sut = new DeprecationTransformer();
+
+        await sut.TransformAsync(document, null!, CancellationToken.None);
+
+        operation.Description.Should().Be("Active endpoint");
+    }
+
+    [Fact]
+    public async Task DeprecationTransformer_Should_HandleNullPaths()
+    {
+        var document = new OpenApiDocument { Paths = null };
+        var sut = new DeprecationTransformer();
+
+        Func<Task> act = () => sut.TransformAsync(document, null!, CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+    }
+
     private static OpenApiOperation GetOrdersOperation(OpenApiDocument document)
     {
         return document.Paths!["/api/orders"]!.Operations!.Values.Single();

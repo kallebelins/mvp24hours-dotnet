@@ -278,4 +278,13 @@ public class QuartzJobProviderTest
             new ServiceCollection().BuildServiceProvider(),
             options ?? BackgroundJobsTestHelpers.CreateQuartzOptions());
     }
+
+    [Fact]
+    public void QuartzJobOptions_DefaultInstanceName_ShouldBeMvp24HoursScheduler()
+    {
+        var options = new QuartzJobOptions();
+
+        options.InstanceName.Should().Be("Mvp24HoursScheduler");
+        options.StorageProvider.Should().Be(QuartzStorageProvider.SqlServer);
+    }
 }

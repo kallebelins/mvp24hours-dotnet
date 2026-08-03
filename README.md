@@ -40,7 +40,7 @@ dotnet add package Mvp24Hours.WebAPI
 - 🔐 **Security updates** - Patched `System.Security.Cryptography.Xml` dependency chain
 - 🧰 **Modernized internals** - `Microsoft.Data.SqlClient`, current AWS credential resolution, and non-obsolete cryptography APIs
 - 🐛 **Distributed lock fix** - Lock handles now release the resource before marking themselves disposed
-- 🧪 **Expanded test coverage** - 18 test projects on .NET 10, a 37% CI coverage floor, and CHANGELOG-recorded expansion to 4,492 passing tests
+- 🧪 **Expanded test coverage** - 19 test projects on .NET 10, split unit/integration CI jobs, **55%** line-coverage floor (product target **95%**), consolidated baseline **59.4%**
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md) | [Release Notes](https://kallebelins.github.io/mvp24hours-dotnet/#/en-us/release)
 

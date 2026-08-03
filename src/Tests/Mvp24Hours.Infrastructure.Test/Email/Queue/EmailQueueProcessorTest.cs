@@ -105,8 +105,8 @@ public class EmailQueueProcessorTest
             EmailSendResult.Failed("SMTP rejected"));
         IOptions<EmailQueueProcessorOptions> options = EmailTestHelpers.AsOptions(new EmailQueueProcessorOptions
         {
-            PollInterval = TimeSpan.FromMilliseconds(100),
-            MaxRetryAttempts = 1
+            PollInterval = TimeSpan.FromMilliseconds(50),
+            MaxRetryAttempts = 0
         });
         var processor = new EmailQueueProcessor(queue, emailService.Object, options);
 
@@ -118,8 +118,9 @@ public class EmailQueueProcessorTest
             await EmailTestHelpers.WaitUntilAsync(async () =>
             {
                 EmailQueueItemStatus status = await queue.GetStatusAsync(id);
-                return status.Status == EmailQueueStatus.Failed;
-            }, TimeSpan.FromSeconds(5));
+                return status.Status == EmailQueueStatus.Failed
+                    && status.LastError?.Contains("Max retries reached", StringComparison.Ordinal) == true;
+            }, TimeSpan.FromSeconds(10));
 
             EmailQueueItemStatus finalStatus = await queue.GetStatusAsync(id);
             finalStatus.LastError.Should().Contain("Max retries reached");

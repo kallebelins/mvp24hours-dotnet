@@ -307,7 +307,7 @@ public static class BusinessResultWithStatusExtensions
     public static string? GetFirstError<T>(this IBusinessResultWithStatus<T> result)
     {
         return result?.Errors.Count > 0
-            ? result.Errors.GetEnumerator().Current?.Message
+            ? result.Errors.First().Message
             : null;
     }
 
@@ -317,7 +317,7 @@ public static class BusinessResultWithStatusExtensions
     public static string? GetFirstWarning<T>(this IBusinessResultWithStatus<T> result)
     {
         return result?.Warnings.Count > 0
-            ? result.Warnings.GetEnumerator().Current?.Message
+            ? result.Warnings.First().Message
             : null;
     }
 
