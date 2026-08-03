@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
-using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Dispatchers;
 

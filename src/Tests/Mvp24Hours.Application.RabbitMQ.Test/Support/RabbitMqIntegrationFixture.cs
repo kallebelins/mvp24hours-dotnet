@@ -6,7 +6,6 @@
 using DotNet.Testcontainers.Builders;
 using RabbitMQ.Client;
 using Testcontainers.RabbitMq;
-using Xunit;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Support;
 

@@ -4,7 +4,6 @@ using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Integration.OpenTelemetry;
 
 namespace Mvp24Hours.Application.Pipe.Test.Integration;

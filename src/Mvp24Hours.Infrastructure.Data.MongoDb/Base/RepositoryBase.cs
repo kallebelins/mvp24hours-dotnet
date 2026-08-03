@@ -11,6 +11,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Entities;
@@ -20,7 +21,7 @@ using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Base;
 
 /// <summary>
-///  <see cref="Core.Contract.Data.IRepository"/>
+///  <see cref="IRepository{T}"/>
 /// </summary>
 public abstract class RepositoryBase<T>(Mvp24HoursContext dbContext, IOptions<MongoDbRepositoryOptions> options, ILogger<RepositoryBase<T>>? logger = null)
     where T : class, IEntityBase

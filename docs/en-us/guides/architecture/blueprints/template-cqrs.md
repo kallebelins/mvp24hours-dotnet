@@ -5,6 +5,7 @@ shape: blueprint
 layers: [Core, Application, Infrastructure, WebAPI]
 dependencyRule: Core <- Application <- Infrastructure; use AddMvpMediator not MediatR
 samplePath: samples/src/complex-cqrs-ef-customer-api
+templatePath: templates/blueprints/cqrs
 mvp24hoursModules: [cqrs, application-services, database, webapi, testing]
 ---
 
@@ -57,3 +58,5 @@ Keep transaction boundaries in command handling. Queries must not introduce side
 See [CQRS Getting Started](../../../cqrs/getting-started.md), [Behaviors](../../../cqrs/behaviors.md), [Queries](../../../cqrs/queries.md), and [Inbox/Outbox](../../../cqrs/resilience/inbox-outbox.md).
 
 > **Sample:** [`complex-cqrs-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/README.md) — runnable CQRS reference with feature folders, validation behaviors, and notifications on .NET 10.
+>
+> **Template:** [`templates/blueprints/cqrs`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/templates/blueprints/cqrs) — compilable `Item` scaffold.

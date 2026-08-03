@@ -7,7 +7,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Caching.Providers;
 
 namespace Mvp24Hours.Infrastructure.Caching.Test.Support;
 

@@ -1,7 +1,6 @@
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Test.Support;
 using Mvp24Hours.Core.Contract.Logic;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
 
 namespace Mvp24Hours.Application.Test.Extensions;

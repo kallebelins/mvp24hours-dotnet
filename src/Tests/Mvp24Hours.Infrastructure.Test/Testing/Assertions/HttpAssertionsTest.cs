@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Net;
 using System.Text;
 using Mvp24Hours.Infrastructure.Testing.Assertions;
 using Mvp24Hours.Infrastructure.Testing.Http;

@@ -1,6 +1,5 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Application.Pipe.Test.Operations;
 using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe;

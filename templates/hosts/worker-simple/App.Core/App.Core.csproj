@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mvp24Hours.Core" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.Core\Mvp24Hours.Core.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+  </ItemGroup>
+</Project>

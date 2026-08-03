@@ -6,7 +6,6 @@ using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
-using Mvp24Hours.Infrastructure.Data.EFCore.Extensions;
 using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;

@@ -1,13 +1,9 @@
 using System.Threading.RateLimiting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Core.Contract.Infrastructure.RateLimiting;
 using Mvp24Hours.Core.Exceptions;
-using Mvp24Hours.Core.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Pipeline;

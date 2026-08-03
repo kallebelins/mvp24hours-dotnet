@@ -4,13 +4,9 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Extensions;
-using Mvp24Hours.Infrastructure.Cqrs.Implementations;
 using Mvp24Hours.Infrastructure.Cqrs.Messaging;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test.Messaging;

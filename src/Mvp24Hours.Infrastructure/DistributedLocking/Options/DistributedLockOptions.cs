@@ -3,6 +3,9 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Infrastructure.DistributedLocking.Exceptions;
+using Mvp24Hours.Infrastructure.DistributedLocking.Results;
+
 namespace Mvp24Hours.Infrastructure.DistributedLocking.Options;
 
 /// <summary>

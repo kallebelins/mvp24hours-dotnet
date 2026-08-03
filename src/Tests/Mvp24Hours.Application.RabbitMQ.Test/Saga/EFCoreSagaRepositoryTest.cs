@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga;
-using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Saga;

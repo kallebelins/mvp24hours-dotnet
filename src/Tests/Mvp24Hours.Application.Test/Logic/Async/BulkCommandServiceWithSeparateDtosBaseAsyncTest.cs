@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Application.Test.Support;
-using Mvp24Hours.Core.Contract.Logic;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
 namespace Mvp24Hours.Application.Test.Logic.Async;

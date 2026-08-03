@@ -1,10 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;
 using CoreHasDomainEvents = Mvp24Hours.Core.Contract.Domain.Entity.IHasDomainEvents;

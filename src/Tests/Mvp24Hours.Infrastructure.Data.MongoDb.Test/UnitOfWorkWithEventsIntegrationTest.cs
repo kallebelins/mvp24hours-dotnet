@@ -6,7 +6,6 @@ using Moq;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 

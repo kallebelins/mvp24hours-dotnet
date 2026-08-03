@@ -1,10 +1,8 @@
 //=====================================================================================
 // Tests for MongoDbRetryPolicy
 //=====================================================================================
-using FluentAssertions;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 

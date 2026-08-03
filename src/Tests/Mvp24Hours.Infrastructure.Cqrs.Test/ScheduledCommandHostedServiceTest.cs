@@ -1,8 +1,5 @@
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Scheduling;
 

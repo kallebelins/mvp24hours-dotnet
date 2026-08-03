@@ -1,7 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.SchemaValidation;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Mvp24Hours.Infrastructure.Data.EFCore.ReadWriteSplitting;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test.ReadWriteSplitting;

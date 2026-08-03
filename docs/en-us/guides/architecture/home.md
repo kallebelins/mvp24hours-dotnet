@@ -18,6 +18,14 @@ Use these guides to choose a solution shape before selecting implementation deta
 | Model a complex business domain | [Domain-Driven Design](blueprints/template-ddd.md) |
 | Split independently deployable services | [Microservices](blueprints/template-microservices.md) |
 | Package and deploy the host | [Containerization](../deployment/containerization.md) |
+| Copy a compilable scaffold | [Scaffolding templates](scaffolding-templates.md) |
+
+## Scaffolding templates
+
+Use [Scaffolding templates](scaffolding-templates.md) when you need a **compilable** starting solution (placeholder `Item`, `App.*` projects). Use [`samples/`](../../../samples/README.md) when you need a full teaching scenario.
+
+- Blueprints: Complex N-Layers, Clean Architecture, Hexagonal, CQRS, DDD, Event-Driven
+- Hosts: API (via Complex N-Layers), BFF, Azure Functions (minimal/simple/complex), Workers (minimal/simple/complex)
 
 ## Apply a guide
 

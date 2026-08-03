@@ -1,7 +1,3 @@
-using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
 
 namespace Mvp24Hours.Application.Test.Logic.Validation;

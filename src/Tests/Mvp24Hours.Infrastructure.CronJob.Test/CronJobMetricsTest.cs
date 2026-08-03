@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Collections.Concurrent;
-using FluentAssertions;
 using Mvp24Hours.Infrastructure.CronJob.Observability;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test;

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="App.Application/App.Application.csproj" />
+  <Project Path="App.Domain/App.Domain.csproj" />
+  <Project Path="App.Infrastructure/App.Infrastructure.csproj" />
+  <Project Path="App.WebAPI/App.WebAPI.csproj" />
+  <Project Path="App.Test/App.Test.csproj" />
+</Solution>

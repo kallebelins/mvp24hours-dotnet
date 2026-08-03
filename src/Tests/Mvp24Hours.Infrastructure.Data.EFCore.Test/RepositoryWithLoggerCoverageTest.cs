@@ -4,8 +4,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.Data.EFCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Migrations;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;

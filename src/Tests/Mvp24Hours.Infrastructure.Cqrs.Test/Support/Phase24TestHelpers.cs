@@ -7,7 +7,6 @@
 using System.Data;
 using FluentValidation;
 using FluentValidation.Results;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;

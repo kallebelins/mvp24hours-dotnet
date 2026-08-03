@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Mvp24Hours.Application.Contract.Events;
 using Mvp24Hours.Application.Logic.Events;
 using Mvp24Hours.Application.Test.Support;

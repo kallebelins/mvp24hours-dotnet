@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Infrastructure.Http.Contract;
 using Mvp24Hours.Infrastructure.Http.Extensions;
 using Mvp24Hours.Infrastructure.Http.Options;

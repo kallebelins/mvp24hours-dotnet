@@ -1,10 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Caching.Providers;
 using Mvp24Hours.Infrastructure.Caching.Serializers;
-using Mvp24Hours.Infrastructure.Caching.Synchronization;
 using Mvp24Hours.Infrastructure.Caching.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Caching.Test.Providers;

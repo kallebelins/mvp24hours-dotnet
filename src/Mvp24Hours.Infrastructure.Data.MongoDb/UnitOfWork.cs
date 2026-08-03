@@ -18,21 +18,21 @@ public class UnitOfWork : IUnitOfWork
 {
     #region [ Ctor ]
 
-    public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork>? logger = null)
+    public UnitOfWork(Mvp24HoursContext dbContext, Dictionary<Type, object> repositories, ILogger<UnitOfWork>? logger = null)
     {
         DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
+        this._repositories = repositories ?? throw new ArgumentNullException(nameof(repositories));
         _logger = logger;
 
         DbContext.StartSession();
     }
 
     [ActivatorUtilitiesConstructor]
-    public UnitOfWork(Mvp24HoursContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork>? logger = null)
+    public UnitOfWork(Mvp24HoursContext dbContext, IServiceProvider serviceProvider, ILogger<UnitOfWork>? logger = null)
     {
-        DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
-        serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
-        repositories = [];
+        DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _repositories = [];
         _logger = logger;
 
         DbContext.StartSession();
@@ -42,10 +42,10 @@ public class UnitOfWork : IUnitOfWork
 
     #region [ Properties ]
 
-    private readonly Dictionary<Type, object> repositories;
+    private readonly Dictionary<Type, object> _repositories;
 
     protected Mvp24HoursContext? DbContext { get; private set; }
-    private readonly IServiceProvider? serviceProvider;
+    private readonly IServiceProvider? _serviceProvider;
     private readonly ILogger<UnitOfWork>? _logger;
 
     /// <summary>
@@ -54,17 +54,17 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<T> GetRepository<T>()
         where T : class, IEntityBase
     {
-        if (!repositories.ContainsKey(typeof(T)))
+        if (!_repositories.ContainsKey(typeof(T)))
         {
-            if (serviceProvider is null)
+            if (_serviceProvider is null)
             {
                 throw new InvalidOperationException("This UnitOfWork instance was created without a service provider; repositories must be supplied explicitly.");
             }
-            IRepository<T> repository = serviceProvider.GetService<IRepository<T>>()
+            IRepository<T> repository = _serviceProvider.GetService<IRepository<T>>()
                 ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
-            repositories.Add(typeof(T), repository);
+            _repositories.Add(typeof(T), repository);
         }
-        return (IRepository<T>)repositories[typeof(T)];
+        return (IRepository<T>)_repositories[typeof(T)];
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Info Code Smell", "S1133:Deprecated code should be removed", Justification = "Maintain implementation reference standards.")]
@@ -98,7 +98,7 @@ public class UnitOfWork : IUnitOfWork
     #region [ Unit of Work ]
 
     /// <summary>
-    ///  <see cref="Mvp24Hours.Core.Contract.Data.IUnitOfWork.SaveChanges()"/>
+    ///  <see cref="IUnitOfWork.SaveChanges()"/>
     /// </summary>
     public int SaveChanges(CancellationToken cancellationToken = default)
     {

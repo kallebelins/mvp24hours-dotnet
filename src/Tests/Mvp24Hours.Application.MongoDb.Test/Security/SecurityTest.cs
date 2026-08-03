@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using System.Net.Security;
 using System.Security.Authentication;
 using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Security;

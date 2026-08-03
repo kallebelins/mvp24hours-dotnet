@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.CronJob.Context;
 using Mvp24Hours.Infrastructure.CronJob.Dependencies;
 using Mvp24Hours.Infrastructure.CronJob.Events;
-using Mvp24Hours.Infrastructure.CronJob.Extensions;
 using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.State;
 using Mvp24Hours.Infrastructure.CronJob.Test.Support;

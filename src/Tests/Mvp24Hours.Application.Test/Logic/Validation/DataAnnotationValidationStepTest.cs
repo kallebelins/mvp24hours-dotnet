@@ -1,4 +1,3 @@
-using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
 
 namespace Mvp24Hours.Application.Test.Logic.Validation;

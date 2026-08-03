@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Net;
-using Mvp24Hours.Infrastructure.Http.Resilience;
 using Mvp24Hours.Infrastructure.Test.Support;
 using Polly;
 using Polly.Timeout;

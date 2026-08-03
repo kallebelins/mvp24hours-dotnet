@@ -7,7 +7,6 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Caching.Extensions;
 using Mvp24Hours.Infrastructure.Caching.Invalidation;
 using Mvp24Hours.Infrastructure.Caching.KeyGenerators;
-using Mvp24Hours.Infrastructure.Caching.Providers;
 using Mvp24Hours.Infrastructure.Caching.Resilience;
 using Mvp24Hours.Infrastructure.Caching.Serializers;
 using Mvp24Hours.Infrastructure.Caching.Test.Support;

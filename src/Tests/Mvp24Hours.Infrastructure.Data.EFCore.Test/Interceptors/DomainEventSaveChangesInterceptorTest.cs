@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Infrastructure.Data.EFCore.Cqrs;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;

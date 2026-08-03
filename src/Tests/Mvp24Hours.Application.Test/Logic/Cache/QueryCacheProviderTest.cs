@@ -1,8 +1,5 @@
 using Mvp24Hours.Application.Contract.Cache;
-using Mvp24Hours.Application.Logic.Cache;
 using Mvp24Hours.Application.Test.Support;
-using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Test.Logic.Cache;
 

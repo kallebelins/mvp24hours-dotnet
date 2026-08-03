@@ -1,5 +1,4 @@
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
-using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Core.Test.Extensions;

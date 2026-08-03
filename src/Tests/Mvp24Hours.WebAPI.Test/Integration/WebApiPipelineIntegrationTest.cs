@@ -2,10 +2,7 @@ using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Extensions;
-using Mvp24Hours.WebAPI.Middlewares;
 using Mvp24Hours.WebAPI.Test.Support;
 
 namespace Mvp24Hours.WebAPI.Test.Integration;

@@ -1,5 +1,4 @@
 using Mvp24Hours.Application.Test.Support;
-using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Test.Logic;
 

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Mvp24Hours.WebAPI" Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'" />
+    <ProjectReference Include="$(Mvp24HoursSourceRoot)\Mvp24Hours.WebAPI\Mvp24Hours.WebAPI.csproj" Condition="'$(Mvp24HoursUseProjectReferences)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\App.Application\App.Application.csproj" />
+    <ProjectReference Include="..\App.Infrastructure\App.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

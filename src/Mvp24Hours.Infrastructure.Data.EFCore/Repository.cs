@@ -20,7 +20,7 @@ using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
 /// <summary>
-///  <see cref="Mvp24Hours.Core.Contract.Data.IRepository"/>
+///  <see cref="IRepository{T}"/>
 /// </summary>
 public class Repository<T>(DbContext dbContext, IOptions<EFCoreRepositoryOptions> options, ILogger<Repository<T>>? logger = null) : RepositoryBase<T>(dbContext, options), IRepository<T>
     where T : class, IEntityBase

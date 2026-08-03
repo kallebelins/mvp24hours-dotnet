@@ -1,0 +1,19 @@
+<Project>
+  <!-- Shared defaults for every project under templates/. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!--
+      In-repository builds use the current source projects. Set this to false
+      (and optionally Mvp24HoursPackageVersion) when copying a template out of
+      the monorepo and consuming published NuGet packages.
+    -->
+    <Mvp24HoursUseProjectReferences Condition="'$(Mvp24HoursUseProjectReferences)' == ''">true</Mvp24HoursUseProjectReferences>
+    <Mvp24HoursPackageVersion Condition="'$(Mvp24HoursPackageVersion)' == ''">10.0.0</Mvp24HoursPackageVersion>
+    <Mvp24HoursSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\src'))</Mvp24HoursSourceRoot>
+  </PropertyGroup>
+</Project>

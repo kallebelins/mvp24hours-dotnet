@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Application.Contract.Cache;
-using Mvp24Hours.Application.Logic.Cache;
 
 namespace Mvp24Hours.Application.Test.Contract;
 

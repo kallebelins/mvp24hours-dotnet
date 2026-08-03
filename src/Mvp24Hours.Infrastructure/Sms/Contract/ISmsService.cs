@@ -4,6 +4,7 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Infrastructure.Sms.Models;
+using Mvp24Hours.Infrastructure.Sms.Options;
 using Mvp24Hours.Infrastructure.Sms.Results;
 
 namespace Mvp24Hours.Infrastructure.Sms.Contract;

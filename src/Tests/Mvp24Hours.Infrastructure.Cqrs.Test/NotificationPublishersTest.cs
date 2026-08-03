@@ -5,7 +5,6 @@
 //=====================================================================================
 
 using Microsoft.Extensions.Logging.Abstractions;
-using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Cqrs.Test;

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;

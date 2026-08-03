@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.ContentNegotiation;
+using Mvp24Hours.WebAPI.Filters;
 
 namespace Mvp24Hours.WebAPI.Middlewares;
 

@@ -1,7 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
-using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
 
 namespace Mvp24Hours.Application.Test.Logic.Validation;

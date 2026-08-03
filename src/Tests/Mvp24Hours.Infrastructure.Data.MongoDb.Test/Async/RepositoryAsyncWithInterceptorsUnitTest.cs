@@ -1,10 +1,8 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 

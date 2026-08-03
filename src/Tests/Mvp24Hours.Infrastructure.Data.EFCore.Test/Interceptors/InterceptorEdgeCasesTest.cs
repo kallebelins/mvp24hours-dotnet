@@ -3,7 +3,6 @@ using Moq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.Entities;
-using Mvp24Hours.Infrastructure.Data.EFCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 

@@ -11,14 +11,12 @@ using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Deduplication;
-using Mvp24Hours.Infrastructure.RabbitMQ.HealthChecks;
 using Mvp24Hours.Infrastructure.RabbitMQ.Logging;
 using Mvp24Hours.Infrastructure.RabbitMQ.Metrics;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence;
 using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
-using Mvp24Hours.Infrastructure.RabbitMQ.Serialization;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Extensions;
 

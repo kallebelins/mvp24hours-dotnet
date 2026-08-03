@@ -1,6 +1,4 @@
-using Mvp24Hours.Application.Contract.Validation;
 using Mvp24Hours.Application.Logic.Validation;
-using Mvp24Hours.Core.Exceptions;
 
 namespace Mvp24Hours.Application.Test.Logic.Validation;
 

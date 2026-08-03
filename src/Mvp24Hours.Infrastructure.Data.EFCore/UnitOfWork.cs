@@ -22,7 +22,7 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(DbContext _dbContext, Dictionary<Type, object> _repositories, ILogger<UnitOfWork>? logger = null)
     {
         DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
-        repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
+        this._repositories = _repositories ?? throw new ArgumentNullException(nameof(_repositories));
         _logger = logger;
     }
 
@@ -30,8 +30,8 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(DbContext _dbContext, IServiceProvider _serviceProvider, ILogger<UnitOfWork>? logger = null)
     {
         DbContext = _dbContext ?? throw new ArgumentNullException(nameof(_dbContext));
-        serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
-        repositories = [];
+        this._serviceProvider = _serviceProvider ?? throw new ArgumentNullException(nameof(_serviceProvider));
+        _repositories = [];
         _logger = logger;
     }
 
@@ -40,25 +40,25 @@ public class UnitOfWork : IUnitOfWork
     #region [ Properties ]
 
     protected DbContext DbContext { get; private set; }
-    private readonly IServiceProvider? serviceProvider;
+    private readonly IServiceProvider? _serviceProvider;
     private readonly ILogger<UnitOfWork>? _logger;
 
-    private readonly Dictionary<Type, object> repositories;
+    private readonly Dictionary<Type, object> _repositories;
 
     public IRepository<T> GetRepository<T>()
         where T : class, IEntityBase
     {
-        if (!repositories.ContainsKey(typeof(T)))
+        if (!_repositories.ContainsKey(typeof(T)))
         {
-            if (serviceProvider is null)
+            if (_serviceProvider is null)
             {
                 throw new InvalidOperationException("This UnitOfWork instance was created without a service provider; repositories must be supplied explicitly.");
             }
-            IRepository<T> repository = serviceProvider.GetService<IRepository<T>>()
+            IRepository<T> repository = _serviceProvider.GetService<IRepository<T>>()
                 ?? throw new InvalidOperationException($"Repository for type {typeof(T).Name} is not registered.");
-            repositories.Add(typeof(T), repository);
+            _repositories.Add(typeof(T), repository);
         }
-        return (IRepository<T>)repositories[typeof(T)];
+        return (IRepository<T>)_repositories[typeof(T)];
     }
 
     public IDbConnection GetConnection()
@@ -90,7 +90,7 @@ public class UnitOfWork : IUnitOfWork
     #region [ Unit of Work ]
 
     /// <summary>
-    ///  <see cref="Mvp24Hours.Core.Contract.Data.IUnitOfWork.SaveChanges()"/>
+    ///  <see cref="IUnitOfWork.SaveChanges()"/>
     /// </summary>
     public int SaveChanges(CancellationToken cancellationToken = default)
     {

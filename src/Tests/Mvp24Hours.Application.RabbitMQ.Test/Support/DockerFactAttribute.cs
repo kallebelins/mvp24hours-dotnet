@@ -3,8 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using Xunit;
-
 namespace Mvp24Hours.Application.RabbitMQ.Test.Support;
 
 /// <summary>

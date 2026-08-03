@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;

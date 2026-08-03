@@ -1,7 +1,6 @@
 using Mvp24Hours.Application.Contract.Resilience;
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Logic.Resilience;
-using Mvp24Hours.Core.ValueObjects.Logic;
 
 namespace Mvp24Hours.Application.Test.Extensions;
 

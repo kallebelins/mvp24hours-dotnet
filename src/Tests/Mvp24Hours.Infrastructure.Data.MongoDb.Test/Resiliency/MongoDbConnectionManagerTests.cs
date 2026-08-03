@@ -1,9 +1,7 @@
 //=====================================================================================
 // Tests for MongoDbConnectionManager
 //=====================================================================================
-using FluentAssertions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 

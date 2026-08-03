@@ -3,8 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.EFCore;
-using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 using Mvp24Hours.Infrastructure.Data.EFCore.Testing;
 

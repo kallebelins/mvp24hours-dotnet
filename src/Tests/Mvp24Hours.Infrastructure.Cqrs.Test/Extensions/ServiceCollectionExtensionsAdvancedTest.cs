@@ -6,7 +6,6 @@
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Cqrs.Messaging;
 using Mvp24Hours.Infrastructure.Cqrs.Observability;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 

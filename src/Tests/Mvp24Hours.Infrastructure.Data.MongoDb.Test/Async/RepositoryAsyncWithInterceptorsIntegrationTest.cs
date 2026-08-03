@@ -3,7 +3,6 @@ using MongoDB.Driver;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.Infrastructure.Clock;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 

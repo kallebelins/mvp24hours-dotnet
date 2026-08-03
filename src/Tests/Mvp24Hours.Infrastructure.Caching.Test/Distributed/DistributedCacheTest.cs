@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
 using Moq;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
-using Mvp24Hours.Infrastructure.Caching.Providers;
 using Mvp24Hours.Infrastructure.Caching.Resilience;
 using Mvp24Hours.Infrastructure.Caching.Test.Support;
 

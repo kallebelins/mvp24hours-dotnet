@@ -1,5 +1,4 @@
 using MongoDB.Bson;
-using MongoDB.Driver;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 using MongoDbTimeSeries = Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.TimeSeries;

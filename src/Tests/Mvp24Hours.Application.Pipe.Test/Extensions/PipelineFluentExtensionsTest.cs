@@ -1,7 +1,6 @@
 using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe.Builders;
 using Mvp24Hours.Infrastructure.Pipe.Extensions;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using Mvp24Hours.Infrastructure.Pipe.Validation;

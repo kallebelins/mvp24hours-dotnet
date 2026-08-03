@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 
-using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.Cqrs.EventSourcing;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 using CoreDomainEvent = Mvp24Hours.Core.Contract.Domain.Entity.IDomainEvent;

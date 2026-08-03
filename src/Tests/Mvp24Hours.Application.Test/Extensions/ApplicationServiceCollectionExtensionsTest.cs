@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using AutoMapper;
-using FluentValidation;
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Test.Support;
 using Mvp24Hours.Core.Contract.Logic;

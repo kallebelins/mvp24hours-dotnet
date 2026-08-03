@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Contract.Data;
 using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Core.Contract.Data;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;

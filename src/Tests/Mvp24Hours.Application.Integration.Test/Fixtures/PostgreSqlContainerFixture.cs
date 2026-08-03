@@ -3,10 +3,8 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using DotNet.Testcontainers.Builders;
 using Mvp24Hours.Application.Integration.Test.Data;
 using Mvp24Hours.Application.Integration.Test.Services;
-using Mvp24Hours.Application.Integration.Test.Support;
 using Mvp24Hours.Extensions;
 using Testcontainers.PostgreSql;
 

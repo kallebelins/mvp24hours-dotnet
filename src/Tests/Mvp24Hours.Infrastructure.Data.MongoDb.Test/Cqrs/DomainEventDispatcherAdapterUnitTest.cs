@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Cqrs;
 

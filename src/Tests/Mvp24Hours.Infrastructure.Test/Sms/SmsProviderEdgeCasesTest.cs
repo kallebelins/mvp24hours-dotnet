@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Mvp24Hours.Infrastructure.Sms.Models;
-using Mvp24Hours.Infrastructure.Sms.Options;
 using Mvp24Hours.Infrastructure.Sms.Providers;
 using Mvp24Hours.Infrastructure.Sms.Results;
 using Mvp24Hours.Infrastructure.Test.Support;

@@ -1,11 +1,9 @@
 //=====================================================================================
 // Tests for MongoDbResiliencyExtensions
 //=====================================================================================
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 

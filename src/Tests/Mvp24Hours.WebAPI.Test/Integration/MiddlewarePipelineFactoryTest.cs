@@ -1,8 +1,5 @@
 using System.Net;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Extensions;
 using Mvp24Hours.WebAPI.Test.Support;

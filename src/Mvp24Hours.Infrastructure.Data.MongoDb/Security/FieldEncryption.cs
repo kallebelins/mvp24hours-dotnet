@@ -101,10 +101,7 @@ public class AesFieldEncryptor : IFieldEncryptor, IDisposable
     /// <exception cref="ArgumentException">Thrown when key is not 32 bytes.</exception>
     public AesFieldEncryptor(byte[] key)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentNullException.ThrowIfNull(key);
 
         if (key.Length != 32)
         {

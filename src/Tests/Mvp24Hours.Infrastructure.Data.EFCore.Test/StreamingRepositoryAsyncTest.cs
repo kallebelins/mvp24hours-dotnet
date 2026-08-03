@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Infrastructure.Data.EFCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Data.EFCore.Test;

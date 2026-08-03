@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\App.Core\App.Core.csproj" />
+  </ItemGroup>
+</Project>

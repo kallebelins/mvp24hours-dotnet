@@ -1,0 +1,83 @@
+﻿<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+  </Configurations>
+  <Folder Name="/blueprints/clean-architecture/">
+    <Project Path="blueprints/clean-architecture/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/clean-architecture/App.Domain/App.Domain.csproj" />
+    <Project Path="blueprints/clean-architecture/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/clean-architecture/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/clean-architecture/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/blueprints/complex-nlayers/">
+    <Project Path="blueprints/complex-nlayers/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/complex-nlayers/App.Core/App.Core.csproj" />
+    <Project Path="blueprints/complex-nlayers/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/complex-nlayers/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/complex-nlayers/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/blueprints/cqrs/">
+    <Project Path="blueprints/cqrs/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/cqrs/App.Core/App.Core.csproj" />
+    <Project Path="blueprints/cqrs/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/cqrs/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/cqrs/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/blueprints/ddd/">
+    <Project Path="blueprints/ddd/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/ddd/App.Core/App.Core.csproj" />
+    <Project Path="blueprints/ddd/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/ddd/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/ddd/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/blueprints/event-driven/">
+    <Project Path="blueprints/event-driven/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/event-driven/App.Domain/App.Domain.csproj" />
+    <Project Path="blueprints/event-driven/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/event-driven/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/event-driven/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/blueprints/hexagonal/">
+    <Project Path="blueprints/hexagonal/App.Application/App.Application.csproj" />
+    <Project Path="blueprints/hexagonal/App.Core/App.Core.csproj" />
+    <Project Path="blueprints/hexagonal/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="blueprints/hexagonal/App.Test/App.Test.csproj" />
+    <Project Path="blueprints/hexagonal/App.WebAPI/App.WebAPI.csproj" />
+  </Folder>
+  <Folder Name="/hosts/bff-complex-nlayers/">
+    <Project Path="hosts/bff-complex-nlayers/App.Application/App.Application.csproj" />
+    <Project Path="hosts/bff-complex-nlayers/App.BFF/App.BFF.csproj" />
+    <Project Path="hosts/bff-complex-nlayers/App.Core/App.Core.csproj" />
+    <Project Path="hosts/bff-complex-nlayers/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="hosts/bff-complex-nlayers/App.Test/App.Test.csproj" />
+  </Folder>
+  <Folder Name="/hosts/function-complex/">
+    <Project Path="hosts/function-complex/App.Application/App.Application.csproj" />
+    <Project Path="hosts/function-complex/App.Core/App.Core.csproj" />
+    <Project Path="hosts/function-complex/App.Function/App.Function.csproj" />
+    <Project Path="hosts/function-complex/App.Infrastructure/App.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/hosts/function-minimal/">
+    <Project Path="hosts/function-minimal/App.Function/App.Function.csproj" />
+  </Folder>
+  <Folder Name="/hosts/function-simple/">
+    <Project Path="hosts/function-simple/App.Application/App.Application.csproj" />
+    <Project Path="hosts/function-simple/App.Core/App.Core.csproj" />
+    <Project Path="hosts/function-simple/App.Function/App.Function.csproj" />
+  </Folder>
+  <Folder Name="/hosts/worker-complex/">
+    <Project Path="hosts/worker-complex/App.Application/App.Application.csproj" />
+    <Project Path="hosts/worker-complex/App.Core/App.Core.csproj" />
+    <Project Path="hosts/worker-complex/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="hosts/worker-complex/App.Worker/App.Worker.csproj" />
+  </Folder>
+  <Folder Name="/hosts/worker-minimal/">
+    <Project Path="hosts/worker-minimal/App.Worker/App.Worker.csproj" />
+  </Folder>
+  <Folder Name="/hosts/worker-simple/">
+    <Project Path="hosts/worker-simple/App.Application/App.Application.csproj" />
+    <Project Path="hosts/worker-simple/App.Core/App.Core.csproj" />
+    <Project Path="hosts/worker-simple/App.Worker/App.Worker.csproj" />
+  </Folder>
+</Solution>
+

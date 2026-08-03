@@ -1,5 +1,4 @@
 using System.Reflection;
-using Mvp24Hours.Application.Logic.Cache;
 using Mvp24Hours.Application.Test.Support;
 
 namespace Mvp24Hours.Application.Test.Logic.Cache;

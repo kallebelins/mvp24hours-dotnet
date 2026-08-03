@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Hosting;
 using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;

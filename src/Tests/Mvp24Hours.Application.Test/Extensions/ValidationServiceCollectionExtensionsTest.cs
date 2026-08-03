@@ -1,4 +1,3 @@
-using FluentValidation;
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Logic.Validation;
 using Mvp24Hours.Application.Test.Support;

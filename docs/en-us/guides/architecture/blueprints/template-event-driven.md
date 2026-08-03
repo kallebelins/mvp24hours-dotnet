@@ -5,6 +5,7 @@ shape: blueprint
 layers: [Core, Application, Infrastructure, WebAPI]
 dependencyRule: Durable outbox before publish; idempotent consumers with inbox
 samplePath: samples/src/complex-event-driven-rabbitmq-customer-api
+templatePath: templates/blueprints/event-driven
 mvp24hoursModules: [cqrs/domain-events, cqrs/integration-events, broker, cqrs/resilience/inbox-outbox]
 ---
 
@@ -35,3 +36,5 @@ Use Mvp24Hours domain events for in-process decoupling, the mediator notificatio
 See [Domain Events](../../../cqrs/domain-events.md), [Integration Events](../../../cqrs/integration-events.md), [RabbitMQ Integration](../../../cqrs/integration-rabbitmq.md), [RabbitMQ Advanced](../../../broker-advanced.md), and [Inbox/Outbox](../../../cqrs/resilience/inbox-outbox.md).
 
 > **Sample:** [`complex-event-driven-rabbitmq-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-event-driven-rabbitmq-customer-api/README.md) — durable outbox, RabbitMQ publish, consumer inbox/idempotency, and correlation IDs. Simpler messaging baseline: [`simple-rabbitmq-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/README.md).
+>
+> **Template:** [`templates/blueprints/event-driven`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/templates/blueprints/event-driven) — compilable scaffold with in-memory integration publisher (swap to RabbitMQ/outbox from the sample).

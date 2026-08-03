@@ -3,7 +3,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Extensions;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Extensions;
 

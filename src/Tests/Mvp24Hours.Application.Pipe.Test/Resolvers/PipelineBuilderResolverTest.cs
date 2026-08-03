@@ -1,6 +1,5 @@
 using Mvp24Hours.Core.Contract.Application.Pipe;
 using Mvp24Hours.Core.Contract.Infrastructure.Pipe;
-using Mvp24Hours.Infrastructure.Pipe;
 using Mvp24Hours.Infrastructure.Pipe.Operations;
 using Mvp24Hours.Infrastructure.Pipe.Resolvers;
 

@@ -1,8 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Core.Contract.Data;
-using Mvp24Hours.Extensions;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
-using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Testing;
 

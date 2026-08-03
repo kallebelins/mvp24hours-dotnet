@@ -1,5 +1,3 @@
-using Moq;
-using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Caching.Invalidation;
 using Mvp24Hours.Infrastructure.Caching.Test.Support;
 using InvalidationEvent = Mvp24Hours.Infrastructure.Caching.Invalidation.CacheInvalidationEvent;

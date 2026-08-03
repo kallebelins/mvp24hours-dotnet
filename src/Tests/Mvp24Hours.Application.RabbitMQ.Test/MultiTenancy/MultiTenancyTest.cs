@@ -8,7 +8,6 @@ using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
-using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
 using RabbitMQ.Client;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.MultiTenancy;

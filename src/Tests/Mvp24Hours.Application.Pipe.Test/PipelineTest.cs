@@ -12,7 +12,6 @@ using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Enums.Infrastructure;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.Pipe;
-using Xunit;
 using Xunit.Priority;
 
 namespace Mvp24Hours.Application.Pipe.Test;

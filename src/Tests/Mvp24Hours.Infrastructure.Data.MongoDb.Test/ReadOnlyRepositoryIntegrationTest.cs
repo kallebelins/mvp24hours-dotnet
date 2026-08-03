@@ -5,7 +5,6 @@ using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Domain.Specifications;
 using Mvp24Hours.Core.ValueObjects.Logic;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test;

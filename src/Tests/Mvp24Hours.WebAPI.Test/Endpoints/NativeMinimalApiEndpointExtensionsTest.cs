@@ -1,5 +1,4 @@
 using System.Net;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -7,7 +6,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +18,6 @@ using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.Infrastructure.Cqrs.Abstractions;
 using Mvp24Hours.WebAPI.Endpoints;
-using Mvp24Hours.WebAPI.Test.Support;
 
 namespace Mvp24Hours.WebAPI.Test.Endpoints;
 

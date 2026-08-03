@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
-using Mvp24Hours.Infrastructure.CronJob.Control;
-using Mvp24Hours.Infrastructure.CronJob.Resiliency;
 using Mvp24Hours.Infrastructure.CronJob.State;
 
 namespace Mvp24Hours.Infrastructure.CronJob.Test.State;

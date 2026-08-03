@@ -5,6 +5,7 @@ shape: blueprint
 layers: [Core, Application, Infrastructure, WebAPI]
 dependencyRule: Inbound/outbound ports; adapters at Infrastructure and WebAPI boundaries
 samplePath: samples/src/complex-hexagonal-customer-api
+templatePath: templates/blueprints/hexagonal
 mvp24hoursModules: [core/infrastructure-abstractions, application-services, database, infrastructure]
 ---
 
@@ -31,3 +32,5 @@ Mvp24Hours repositories, mediator requests, infrastructure abstractions, and pro
 See [Core Abstractions](../../../core/infrastructure-abstractions.md), [Application Services](../../../application-services.md), [Data & Persistence](../../../database/relational.md), and [Infrastructure Modules](../../../infrastructure/home.md).
 
 > **Sample:** [`complex-hexagonal-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-hexagonal-customer-api/README.md) — explicit inbound/outbound ports with EF Core and a resilient HTTP adapter. Pipeline-centric sibling: [`complex-pipeline-ports-adapters-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/README.md).
+>
+> **Template:** [`templates/blueprints/hexagonal`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/templates/blueprints/hexagonal) — compilable `Item` scaffold.

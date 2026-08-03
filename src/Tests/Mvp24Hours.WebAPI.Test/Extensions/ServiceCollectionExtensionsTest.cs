@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.ContentNegotiation;
@@ -10,9 +9,7 @@ using Mvp24Hours.WebAPI.Extensions;
 using Mvp24Hours.WebAPI.Filters;
 using Mvp24Hours.WebAPI.Http;
 using Mvp24Hours.WebAPI.Idempotency;
-using Mvp24Hours.WebAPI.RateLimiting;
 using Mvp24Hours.WebAPI.Services;
-using Mvp24Hours.WebAPI.Test.Support;
 using HealthCheckOptions = Mvp24Hours.WebAPI.Configuration.HealthCheckOptions;
 using SecurityHeadersOptions = Mvp24Hours.WebAPI.Configuration.SecurityHeadersOptions;
 

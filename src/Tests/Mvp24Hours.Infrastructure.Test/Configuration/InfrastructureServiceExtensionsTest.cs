@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.BackgroundJobs.Extensions;
 using Mvp24Hours.Infrastructure.Configuration;
 using Mvp24Hours.Infrastructure.DistributedLocking.Extensions;
 using Mvp24Hours.Infrastructure.Email.Contract;

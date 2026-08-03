@@ -5,7 +5,6 @@
 //=====================================================================================
 using System.Net;
 using Mvp24Hours.Infrastructure.Http.Options;
-using Mvp24Hours.Infrastructure.Http.Resilience;
 using Mvp24Hours.Infrastructure.Test.Support;
 using Polly;
 using Polly.CircuitBreaker;

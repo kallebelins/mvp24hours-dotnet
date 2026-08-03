@@ -5,8 +5,6 @@
 //=====================================================================================
 
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Infrastructure.Cqrs.Test.Support;
 

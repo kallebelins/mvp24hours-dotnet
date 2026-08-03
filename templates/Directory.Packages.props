@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Inherit Central Package Management and shared third-party versions from src/.
+    Template-only packages are appended below.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)..\src\Directory.Packages.props" />
+  <ItemGroup>
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
+  </ItemGroup>
+  <!-- Published-package fallback for standalone template consumption. -->
+  <ItemGroup Condition="'$(Mvp24HoursUseProjectReferences)' != 'true'">
+    <PackageVersion Include="Mvp24Hours.Application" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Core" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Caching" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.CronJob" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Cqrs" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Data.EFCore" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.Pipe" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.Infrastructure.RabbitMQ" Version="$(Mvp24HoursPackageVersion)" />
+    <PackageVersion Include="Mvp24Hours.WebAPI" Version="$(Mvp24HoursPackageVersion)" />
+  </ItemGroup>
+</Project>

@@ -5,6 +5,7 @@
 //=====================================================================================
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Interceptors;
 
@@ -224,7 +225,7 @@ public static class MongoDbInterceptorExtensions
     /// <remarks>
     /// <para>
     /// This interceptor automatically sets TenantId on insert for entities implementing
-    /// <see cref="Core.Contract.Domain.Entity.ITenantEntity"/> and validates tenant ownership
+    /// <see cref="ITenantEntity"/> and validates tenant ownership
     /// on update/delete operations.
     /// </para>
     /// <para>

@@ -1,6 +1,4 @@
-using MongoDB.Bson;
 using MongoDB.Driver;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Async;

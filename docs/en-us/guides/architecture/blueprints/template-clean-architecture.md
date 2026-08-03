@@ -5,6 +5,7 @@ shape: blueprint
 layers: [Domain, Application, Infrastructure, WebAPI]
 dependencyRule: Domain <- Application <- Infrastructure; inward dependency rule
 samplePath: samples/src/complex-clean-architecture-customer-api
+templatePath: templates/blueprints/clean-architecture
 mvp24hoursModules: [core, cqrs, application-services, testing]
 ---
 
@@ -26,3 +27,5 @@ Prefer `TimeProvider`, `ILogger<T>`, OpenTelemetry, native OpenAPI, and current 
 See [Project Structure](../project-structure.md), [CQRS](template-cqrs.md), [Core & Domain](../../../core/home.md), and [Testing](../../../testing/home.md).
 
 > **Sample:** [`complex-clean-architecture-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-clean-architecture-customer-api/README.md) — inward dependency rule with Domain, Application, Infrastructure, and WebAPI projects plus a dependency diagram.
+>
+> **Template:** [`templates/blueprints/clean-architecture`](https://github.com/kallebelins/mvp24hours-dotnet/tree/main/templates/blueprints/clean-architecture) — compilable `Item` scaffold.

@@ -19,7 +19,7 @@ using Mvp24Hours.Infrastructure.Data.EFCore.Configuration;
 namespace Mvp24Hours.Infrastructure.Data.EFCore;
 
 /// <summary>
-///  <see cref="Core.Contract.Data.Async.IRepositoryAsync{T}"/>
+///  <see cref="IRepositoryAsync{T}"/>
 /// </summary>
 public class RepositoryAsync<T>(DbContext _dbContext, IOptions<EFCoreRepositoryOptions> options) : RepositoryBase<T>(_dbContext, options), IRepositoryAsync<T>
     where T : class, IEntityBase

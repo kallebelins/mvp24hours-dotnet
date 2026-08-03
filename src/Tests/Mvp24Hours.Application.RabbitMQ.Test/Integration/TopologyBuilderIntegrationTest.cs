@@ -1,6 +1,5 @@
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology;
-using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 

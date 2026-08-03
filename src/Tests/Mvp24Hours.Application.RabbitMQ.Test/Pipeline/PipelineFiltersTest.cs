@@ -1,21 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
-using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
-using Mvp24Hours.Infrastructure.RabbitMQ.Channels;
-using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
-using Mvp24Hours.Infrastructure.RabbitMQ.Consumers;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
-using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Pipeline.Filters;
-using Mvp24Hours.Infrastructure.RabbitMQ.Serialization;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Pipeline;
 

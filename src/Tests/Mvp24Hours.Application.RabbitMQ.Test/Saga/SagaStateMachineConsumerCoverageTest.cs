@@ -1,8 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
-using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Saga.Persistence;

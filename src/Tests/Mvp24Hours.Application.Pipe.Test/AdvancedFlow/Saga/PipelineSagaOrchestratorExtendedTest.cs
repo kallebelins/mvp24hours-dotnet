@@ -1,7 +1,6 @@
 using Mvp24Hours.Application.Pipe.Test.Support;
 using Mvp24Hours.Infrastructure.Pipe.AdvancedFlow;
 using Mvp24Hours.Infrastructure.Pipe.AdvancedFlow.Saga;
-using Mvp24Hours.Infrastructure.Testing.Logging;
 
 namespace Mvp24Hours.Application.Pipe.Test.AdvancedFlow.Saga;
 

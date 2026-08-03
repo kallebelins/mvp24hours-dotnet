@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Core.Contract.Infrastructure;
 using Mvp24Hours.Core.ValueObjects.Logic;

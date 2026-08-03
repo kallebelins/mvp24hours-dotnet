@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Mvp24Hours.WebAPI.Binders;
 using Mvp24Hours.WebAPI.Test.Support;
 

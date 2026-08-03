@@ -1,4 +1,3 @@
-using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.Identity.Keycloak.WebAPI.Extensions;

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Infrastructure.Migrations;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Infrastructure;

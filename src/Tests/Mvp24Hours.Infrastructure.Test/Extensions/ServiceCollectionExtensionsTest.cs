@@ -5,7 +5,6 @@
 //=====================================================================================
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Extensions;
 using Mvp24Hours.Helpers;
 

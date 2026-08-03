@@ -4,13 +4,11 @@
 // part of task 4.3 (net10 warnings cleanup) to exercise the native Polly v8 pipeline
 // via Microsoft.Extensions.Resilience instead of the obsolete API.
 //=====================================================================================
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Resiliency;
 using Polly;
 using Polly.Registry;
 using Polly.Timeout;
-using Xunit;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Resiliency;
 

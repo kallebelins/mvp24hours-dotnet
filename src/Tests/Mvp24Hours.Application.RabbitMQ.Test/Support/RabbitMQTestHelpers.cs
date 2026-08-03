@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;

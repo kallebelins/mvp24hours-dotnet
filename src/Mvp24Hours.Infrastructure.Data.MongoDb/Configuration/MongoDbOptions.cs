@@ -3,6 +3,7 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
+using Mvp24Hours.Core.Contract.Domain.Entity;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Security;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
@@ -94,7 +95,7 @@ public sealed class MongoDbOptions
     /// Gets or sets whether to enable automatic multi-tenancy filtering.
     /// </summary>
     /// <remarks>
-    /// When enabled, entities implementing <see cref="Core.Contract.Domain.Entity.ITenantEntity"/>
+    /// When enabled, entities implementing <see cref="ITenantEntity"/>
     /// will have their TenantId automatically set on insert and queries will be filtered by tenant.
     /// </remarks>
     public bool EnableMultiTenancy { get; set; }

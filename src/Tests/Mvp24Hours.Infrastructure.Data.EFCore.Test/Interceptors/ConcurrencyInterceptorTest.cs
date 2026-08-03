@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Mvp24Hours.Infrastructure.Data.EFCore.Interceptors;
 using Mvp24Hours.Infrastructure.Data.EFCore.Test.Support;
 

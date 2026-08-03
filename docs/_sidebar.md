@@ -133,6 +133,7 @@
   * [Health Checks Catalog](en-us/infrastructure/health-checks.md)
 * Architecture Guides
   * [Overview](en-us/guides/architecture/home.md)
+  * [Scaffolding templates](en-us/guides/architecture/scaffolding-templates.md)
   * [Decision Matrix](en-us/guides/architecture/decision-matrix.md)
   * [Project Structure](en-us/guides/architecture/project-structure.md)
   * Project Structures

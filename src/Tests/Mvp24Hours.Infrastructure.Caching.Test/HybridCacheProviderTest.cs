@@ -1,6 +1,4 @@
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mvp24Hours.Core.Contract.Infrastructure.Caching;
 using Mvp24Hours.Infrastructure.Caching.HybridCache;
 

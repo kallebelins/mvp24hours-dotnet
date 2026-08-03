@@ -7,14 +7,12 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Mvp24Hours.Core.Contract.ValueObjects.Logic;
 using Mvp24Hours.Core.Enums;
 using Mvp24Hours.Core.Exceptions;
 using Mvp24Hours.Core.ValueObjects.Logic;
 using Mvp24Hours.WebAPI.Configuration;
 using Mvp24Hours.WebAPI.Exceptions;
 using Mvp24Hours.WebAPI.Extensions;
-using Mvp24Hours.WebAPI.Test.Support;
 
 namespace Mvp24Hours.WebAPI.Test.Extensions;
 

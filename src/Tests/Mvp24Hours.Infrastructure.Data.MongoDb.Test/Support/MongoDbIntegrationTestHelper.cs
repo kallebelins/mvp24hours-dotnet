@@ -4,8 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using Mvp24Hours.Infrastructure.Data.MongoDb;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Configuration;
 
 namespace Mvp24Hours.Infrastructure.Data.MongoDb.Test.Support;

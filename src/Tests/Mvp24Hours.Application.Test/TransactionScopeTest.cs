@@ -7,7 +7,6 @@ using Mvp24Hours.Application.Contract.Transaction;
 using Mvp24Hours.Application.Extensions;
 using Mvp24Hours.Application.Logic.Transaction;
 using Mvp24Hours.Application.Test.Support;
-using Mvp24Hours.Core.Contract.Data;
 
 namespace Mvp24Hours.Application.Test;
 

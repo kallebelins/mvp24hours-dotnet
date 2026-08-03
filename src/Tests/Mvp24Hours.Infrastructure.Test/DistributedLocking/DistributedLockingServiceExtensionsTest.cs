@@ -9,7 +9,6 @@ using Mvp24Hours.Infrastructure.DistributedLocking.Extensions;
 using Mvp24Hours.Infrastructure.DistributedLocking.Metrics;
 using Mvp24Hours.Infrastructure.DistributedLocking.Results;
 using Mvp24Hours.Infrastructure.Test.Support;
-using StackExchange.Redis;
 
 namespace Mvp24Hours.Infrastructure.Test.DistributedLocking;
 

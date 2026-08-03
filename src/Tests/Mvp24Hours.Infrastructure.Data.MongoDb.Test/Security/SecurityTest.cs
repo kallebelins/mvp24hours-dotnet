@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;

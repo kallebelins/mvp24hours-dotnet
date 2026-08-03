@@ -62,7 +62,7 @@ public interface IEmailAttachment
     /// <remarks>
     /// <para>
     /// This property provides the attachment content as a byte array. For large files,
-    /// consider using <see cref="GetContentStreamAsync"/> to avoid loading the entire
+    /// consider using <see cref="GetContentStream"/> to avoid loading the entire
     /// file into memory.
     /// </para>
     /// <para>

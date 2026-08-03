@@ -4,7 +4,6 @@ using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Enums;
 using Mvp24Hours.Infrastructure.RabbitMQ.Topology;
-using Mvp24Hours.Infrastructure.RabbitMQ.Topology.Contract;
 using RabbitMQ.Client;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test.Topology;

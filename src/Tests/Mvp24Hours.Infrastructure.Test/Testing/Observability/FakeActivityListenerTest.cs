@@ -4,7 +4,6 @@
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
 using System.Diagnostics;
-using Mvp24Hours.Infrastructure.Testing;
 using Mvp24Hours.Infrastructure.Testing.Observability;
 
 namespace Mvp24Hours.Infrastructure.Test.Testing.Observability;

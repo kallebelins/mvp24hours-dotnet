@@ -1,14 +1,10 @@
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
-using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Infrastructure.RabbitMQ.Configuration;
-using Mvp24Hours.Infrastructure.RabbitMQ.Deduplication;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Configuration;
 using Mvp24Hours.Infrastructure.RabbitMQ.MultiTenancy.Contract;
-using Mvp24Hours.Infrastructure.RabbitMQ.Scheduling;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 

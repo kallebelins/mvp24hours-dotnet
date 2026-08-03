@@ -3,7 +3,6 @@
 //=====================================================================================
 // Reproduction or sharing is free! Contribute to a better world!
 //=====================================================================================
-using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Mvp24Hours.Application.RabbitMQ.Test.Support;
 using Mvp24Hours.Application.RabbitMQ.Test.Support.Consumers;
@@ -12,7 +11,6 @@ using Mvp24Hours.Extensions;
 using Mvp24Hours.Infrastructure.RabbitMQ;
 using Mvp24Hours.Infrastructure.RabbitMQ.Core.Contract;
 using Testcontainers.RabbitMq;
-using Xunit;
 using Xunit.Priority;
 
 namespace Mvp24Hours.Application.RabbitMQ.Test;

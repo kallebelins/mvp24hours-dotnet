@@ -1,4 +1,3 @@
-using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using Mvp24Hours.Infrastructure.Data.MongoDb.Advanced.Collation;
