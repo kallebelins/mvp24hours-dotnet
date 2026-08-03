@@ -161,5 +161,5 @@ services.AddMvpMediator(options =>
 - [Queries](queries.md) - Implementing queries
 - [Behaviors](behaviors.md) - Pipeline behaviors in detail
 
-> **Sample:** [`complex-cqrs-ef-customer-api`](../../../samples/src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/README.md) — runnable CQRS reference with feature folders, validation behaviors, and notifications on .NET 10.
+> **Sample:** [`complex-cqrs-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-cqrs-ef-customer-api/CustomerAPI.WebAPI/README.md) — runnable CQRS reference with feature folders, validation behaviors, and notifications on .NET 10.
 

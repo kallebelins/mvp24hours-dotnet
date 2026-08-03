@@ -70,4 +70,4 @@ See [.NET Aspire integration](../modernization/aspire.md).
 
 `TelemetryHelper` and `ITelemetryService` are deprecated. Use `ILogger<T>`, `ActivitySource`, `Meter`, and the APIs above. Follow [Migration from legacy telemetry](migration.md).
 
-> **Sample:** [`simple-observability-customer-api`](../../../samples/src/simple-observability-customer-api/README.md) — OpenTelemetry logs, traces, and metrics with OTLP and console exporters wired on top of Mvp24Hours option models.
+> **Sample:** [`simple-observability-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/simple-observability-customer-api/README.md) — OpenTelemetry logs, traces, and metrics with OTLP and console exporters wired on top of Mvp24Hours option models.

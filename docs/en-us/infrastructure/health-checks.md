@@ -313,4 +313,4 @@ It does not add HTTP checks because each requires a typed client. It also does n
 - [Keycloak](../identity/keycloak.md)
 - [CronJob observability](../cronjob-observability.md)
 
-> **Sample:** [`simple-webstatus`](../../../samples/src/simple-webstatus/WebStatus/README.md) — health catalog for SQL Server, PostgreSQL, MySQL, Redis, MongoDB, and RabbitMQ with HealthChecks UI and Docker Compose.
+> **Sample:** [`simple-webstatus`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/simple-webstatus/WebStatus/README.md) — health catalog for SQL Server, PostgreSQL, MySQL, Redis, MongoDB, and RabbitMQ with HealthChecks UI and Docker Compose.

@@ -30,8 +30,8 @@ Domain types are not registered directly; Application handlers and Infrastructur
 
 ## Canonical samples
 
-- [`complex-clean-architecture-customer-api`](../../../../samples/src/complex-clean-architecture-customer-api) — inward dependency rule
-- [`complex-ddd-ef-customer-api`](../../../../samples/src/complex-ddd-ef-customer-api) — aggregates, value objects, domain events
+- [`complex-clean-architecture-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-clean-architecture-customer-api) — inward dependency rule
+- [`complex-ddd-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-ddd-ef-customer-api) — aggregates, value objects, domain events
 
 ## Related documentation
 

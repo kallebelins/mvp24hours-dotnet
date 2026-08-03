@@ -220,11 +220,11 @@ The [Infrastructure overview](infrastructure/home.md) maps the cross-cutting mod
 
 ## 🧪 Runnable Samples
 
-All **32** sample solutions live in [`samples/`](../../samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and ship English READMEs with run instructions and Docker Compose where applicable.
+All **32** sample solutions live in [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and ship English READMEs with run instructions and Docker Compose where applicable.
 
-Build every sample at once with [`samples/Mvp24Hours.Samples.slnx`](../../samples/Mvp24Hours.Samples.slnx). After Mvp24Hours **10.0.0** is published, switch to NuGet mode with `-p:Mvp24HoursUseProjectReferences=false` — see [Using samples with published NuGet packages](migration.md?id=using-samples-with-published-nuget-packages).
+Build every sample at once with [`samples/Mvp24Hours.Samples.slnx`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/Mvp24Hours.Samples.slnx). After Mvp24Hours **10.0.0** is published, switch to NuGet mode with `-p:Mvp24HoursUseProjectReferences=false` — see [Using samples with published NuGet packages](migration.md?id=using-samples-with-published-nuget-packages).
 
-Use the [sample catalog](../../samples/README.md#complete-catalog) for the full list, or the [“Which sample should I open first?”](../../samples/README.md#which-sample-should-i-open-first) table when you are choosing an architecture shape.
+Use the [sample catalog](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md#complete-catalog) for the full list, or the [“Which sample should I open first?”](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md#which-sample-should-i-open-first) table when you are choosing an architecture shape.
 
 | Sample project | Tier | Primary documentation |
 | --- | --- | --- |
@@ -261,7 +261,7 @@ Use the [sample catalog](../../samples/README.md#complete-catalog) for the full 
 | `complex-saga-rabbitmq-customer-api` | Capability | [Saga](cqrs/saga/home.md) |
 | `complex-event-sourcing-customer-api` | Capability (preview) | [Event sourcing](cqrs/event-sourcing/home.md) |
 
-Blueprint and capability samples include xUnit test projects. See the [sample testing baseline](../../samples/TESTING.md) before adding integration tests.
+Blueprint and capability samples include xUnit test projects. See the [sample testing baseline](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/TESTING.md) before adding integration tests.
 
 ## 📚 Next Steps
 
@@ -270,4 +270,4 @@ Blueprint and capability samples include xUnit test projects. See the [sample te
 3. **Add observability** for production monitoring
 4. **Choose an architecture** from the [Architecture Guides](guides/architecture/home.md)
 5. **Validate the application** with the [Testing cookbook](testing/home.md)
-6. **Explore runnable samples** in [`samples/`](../../samples/README.md) using the catalog and decision-matrix tables
+6. **Explore runnable samples** in [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md) using the catalog and decision-matrix tables

@@ -46,9 +46,9 @@ The `public partial class Program { }` declaration enables `WebApplicationFactor
 
 ## Canonical sample
 
-[`complex-crud-ef-customer-api`](../../../../samples/src/complex-crud-ef-customer-api/CustomerAPI.WebAPI) — controllers, DI extensions, and OpenAPI.
+[`complex-crud-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-crud-ef-customer-api/CustomerAPI.WebAPI) — controllers, DI extensions, and OpenAPI.
 
-Minimal API reference: [`minimal-crud-ef-customer-api`](../../../../samples/src/minimal-crud-ef-customer-api/CustomerAPI).
+Minimal API reference: [`minimal-crud-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/minimal-crud-ef-customer-api/CustomerAPI).
 
 ## Related documentation
 

@@ -32,7 +32,7 @@ Core types are typically registered from Infrastructure or Application; Core its
 
 ## Canonical sample
 
-[`complex-crud-ef-customer-api`](../../../../samples/src/complex-crud-ef-customer-api) — DTOs, validators, specifications, and repository contracts in `CustomerAPI.Core`.
+[`complex-crud-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-crud-ef-customer-api) — DTOs, validators, specifications, and repository contracts in `CustomerAPI.Core`.
 
 ## Related documentation
 

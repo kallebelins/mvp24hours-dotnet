@@ -28,4 +28,4 @@ Mvp24Hours provides entity interfaces, value-object helpers, smart enums, specif
 
 See [Core & Domain](../../../core/home.md), [Value Objects](../../../core/value-objects.md), [Entity Interfaces](../../../core/entity-interfaces.md), [Specification](../../../specification.md), and [Domain Events](../../../cqrs/domain-events.md).
 
-> **Sample:** [`complex-ddd-ef-customer-api`](../../../../../samples/src/complex-ddd-ef-customer-api/README.md) — Customer aggregate with value objects, domain events, and specifications in one bounded context.
+> **Sample:** [`complex-ddd-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-ddd-ef-customer-api/README.md) — Customer aggregate with value objects, domain events, and specifications in one bounded context.

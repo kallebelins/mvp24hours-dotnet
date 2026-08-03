@@ -25,4 +25,4 @@ Prefer `TimeProvider`, `ILogger<T>`, OpenTelemetry, native OpenAPI, and current 
 
 See [Project Structure](../project-structure.md), [CQRS](template-cqrs.md), [Core & Domain](../../../core/home.md), and [Testing](../../../testing/home.md).
 
-> **Sample:** [`complex-clean-architecture-customer-api`](../../../../../samples/src/complex-clean-architecture-customer-api/README.md) — inward dependency rule with Domain, Application, Infrastructure, and WebAPI projects plus a dependency diagram.
+> **Sample:** [`complex-clean-architecture-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-clean-architecture-customer-api/README.md) — inward dependency rule with Domain, Application, Infrastructure, and WebAPI projects plus a dependency diagram.

@@ -59,11 +59,11 @@ Start here:
 
 ## 📚 Examples
 
-All **32** runnable sample solutions live in [`samples/`](../../samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and include English READMEs with run instructions.
+All **32** runnable sample solutions live in [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md) in this repository. They target **`net10.0`**, use local project references to `src/` by default, and include English READMEs with run instructions.
 
-- [Sample catalog](../../samples/README.md#complete-catalog) — every sample with tier, purpose, and documentation links
-- [Which sample should I open first?](../../samples/README.md#which-sample-should-i-open-first) — decision-matrix guidance
-- [Sample testing baseline](../../samples/TESTING.md) — xUnit, FluentAssertions, and Testcontainers patterns
+- [Sample catalog](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md#complete-catalog) — every sample with tier, purpose, and documentation links
+- [Which sample should I open first?](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md#which-sample-should-i-open-first) — decision-matrix guidance
+- [Sample testing baseline](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/TESTING.md) — xUnit, FluentAssertions, and Testcontainers patterns
 
 ## 🔮 Next Steps
 * Implement integration with Kafka (message broker)

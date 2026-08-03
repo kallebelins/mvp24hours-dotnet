@@ -31,4 +31,4 @@ Do not choose microservices only for code organization, CQRS only to wrap CRUD, 
 
 ## Runnable samples
 
-Each row in the [decision matrix](decision-matrix.md) maps to a runnable sample under [`samples/`](../../../../samples/README.md). Start with the [“Which sample should I open first?”](../../../../samples/README.md#which-sample-should-i-open-first) table when you want a concrete project to clone rather than a blueprint alone.
+Each row in the [decision matrix](decision-matrix.md) maps to a runnable sample under [`samples/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md). Start with the [“Which sample should I open first?”](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/README.md#which-sample-should-i-open-first) table when you want a concrete project to clone rather than a blueprint alone.

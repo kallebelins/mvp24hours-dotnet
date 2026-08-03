@@ -38,9 +38,9 @@ services.AddMvpMediator(typeof({Product}ApplicationAssemblyMarker).Assembly);
 
 ## Canonical sample
 
-[`complex-crud-ef-customer-api`](../../../../samples/src/complex-crud-ef-customer-api) — `CustomerAPI.Application` with Facade and application services.
+[`complex-crud-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-crud-ef-customer-api) — `CustomerAPI.Application` with Facade and application services.
 
-CQRS reference: [`complex-cqrs-ef-customer-api`](../../../../samples/src/complex-cqrs-ef-customer-api).
+CQRS reference: [`complex-cqrs-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-cqrs-ef-customer-api).
 
 ## Related documentation
 

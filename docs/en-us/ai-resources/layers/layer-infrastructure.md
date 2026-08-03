@@ -44,7 +44,7 @@ public static IServiceCollection Add{Product}Infrastructure(
 
 ## Canonical sample
 
-[`complex-crud-ef-customer-api`](../../../../samples/src/complex-crud-ef-customer-api) — EF Core context, configurations, migrations, and repository implementations.
+[`complex-crud-ef-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-crud-ef-customer-api) — EF Core context, configurations, migrations, and repository implementations.
 
 ## Related documentation
 

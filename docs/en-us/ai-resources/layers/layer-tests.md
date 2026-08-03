@@ -1,6 +1,6 @@
 # Tests Layer Template
 
-Test projects mirror the production boundary they verify. Follow the [Sample testing baseline](../../../../samples/TESTING.md).
+Test projects mirror the production boundary they verify. Follow the [Sample testing baseline](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/TESTING.md).
 
 ## Folder layout
 
@@ -30,7 +30,7 @@ Test projects mirror the production boundary they verify. Follow the [Sample tes
 2. `OpenApiSmokeTests` asserts GET `/openapi/v1.json` status is below 500.
 3. Host exposes `public partial class Program { }`.
 
-Copy templates from [`samples/templates/`](../../../../samples/templates/):
+Copy templates from [`samples/templates/`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/templates/):
 
 - `SAMPLE_TEST_CustomerApiFactory.cs.template`
 - `SAMPLE_TEST_OpenApiSmokeTests.cs.template`
@@ -38,7 +38,7 @@ Copy templates from [`samples/templates/`](../../../../samples/templates/):
 
 ## Canonical sample
 
-[`complex-crud-ef-customer-api/CustomerAPI.Test`](../../../../samples/src/complex-crud-ef-customer-api/CustomerAPI.Test) — factory + OpenAPI smoke.
+[`complex-crud-ef-customer-api/CustomerAPI.Test`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-crud-ef-customer-api/CustomerAPI.Test) — factory + OpenAPI smoke.
 
 Testcontainers references:
 
@@ -48,4 +48,4 @@ Testcontainers references:
 ## Related documentation
 
 - [Testing Cookbook](../../testing/home.md)
-- [Sample TESTING.md](../../../../samples/TESTING.md)
+- [Sample TESTING.md](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/TESTING.md)

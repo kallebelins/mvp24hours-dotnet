@@ -145,4 +145,4 @@ The AMQP endpoint is `amqp://guest:guest@localhost:5672`; the management UI is `
 - [Inbox/outbox](cqrs/resilience/inbox-outbox.md)
 - [Observability](observability/home.md)
 
-> **Samples:** [`simple-rabbitmq-customer-api`](../../samples/src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/README.md) (direct publish/consume) · [`complex-event-driven-rabbitmq-customer-api`](../../samples/src/complex-event-driven-rabbitmq-customer-api/README.md) (durable outbox and inbox)
+> **Samples:** [`simple-rabbitmq-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/simple-rabbitmq-customer-api/CustomerAPI.WebAPI/README.md) (direct publish/consume) · [`complex-event-driven-rabbitmq-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-event-driven-rabbitmq-customer-api/README.md) (durable outbox and inbox)

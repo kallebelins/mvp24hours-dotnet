@@ -30,4 +30,4 @@ Mvp24Hours repositories, mediator requests, infrastructure abstractions, and pro
 
 See [Core Abstractions](../../../core/infrastructure-abstractions.md), [Application Services](../../../application-services.md), [Data & Persistence](../../../database/relational.md), and [Infrastructure Modules](../../../infrastructure/home.md).
 
-> **Sample:** [`complex-hexagonal-customer-api`](../../../../../samples/src/complex-hexagonal-customer-api/README.md) — explicit inbound/outbound ports with EF Core and a resilient HTTP adapter. Pipeline-centric sibling: [`complex-pipeline-ports-adapters-customer-api`](../../../../../samples/src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/README.md).
+> **Sample:** [`complex-hexagonal-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-hexagonal-customer-api/README.md) — explicit inbound/outbound ports with EF Core and a resilient HTTP adapter. Pipeline-centric sibling: [`complex-pipeline-ports-adapters-customer-api`](https://github.com/kallebelins/mvp24hours-dotnet/blob/main/samples/src/complex-pipeline-ports-adapters-customer-api/CustomerAPI.WebAPI/README.md).
